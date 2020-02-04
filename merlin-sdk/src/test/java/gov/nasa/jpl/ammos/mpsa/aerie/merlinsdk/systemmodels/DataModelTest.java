@@ -8,10 +8,11 @@ import static org.junit.Assert.assertEquals;
 
 public class DataModelTest {
     Registry registry = new Registry();
+    Instant simStartTime = registry.getStartTime();
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     {
-        registry.registerModel(new DataSystemModel(), new DataSystemModel.DataModelSlice(), (registrar) -> {
+        registry.registerModel(new DataSystemModel(), new DataSystemModel.DataModelSlice(simStartTime), (registrar) -> {
             registrar.provideResource(GlobalPronouns.dataRate, Double.class, slice -> slice.getDataRate());
             registrar.provideResource(GlobalPronouns.dataVolume, Double.class, slice -> slice.getDataVolume());
             registrar.provideResource(GlobalPronouns.dataProtocol, String.class, slice -> slice.getDataProtocol());
@@ -23,7 +24,6 @@ public class DataModelTest {
     SettableState<String> dataProtocol = registry.getSettable(GlobalPronouns.dataProtocol, String.class);
 
     /*----------------------------- SAMPLE SIM ---------------------------------------*/
-    Instant simStartTime = registry.getStartTime();
     Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
     Instant event2 = event1.plus(10, TimeUnit.SECONDS);
     Instant event3 = event2.plus(20, TimeUnit.SECONDS);
