@@ -72,7 +72,7 @@ final class Registry {
 
     private final Map<String, Pair<Class<? extends Slice>, Getter<?>>> modelToGetter = new HashMap<>();
     private final Map<String, SystemModel<?>> stateToModel = new HashMap<>();
-    private final Map<SystemModel<?>, Class<? extends Slice>> modelToSliceClass = new HashMap<>();
+    private final Map<SystemModel<?>, Slice> modelToInitialSlice = new HashMap<>();
 
     private static final Instant startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
@@ -105,9 +105,9 @@ final class Registry {
             .add(new Event(time, resourceName, stimulus));
     }
 
-    public <SliceType extends Slice> void registerModel(final SystemModel<SliceType> model, final Class<SliceType> sliceClass, final Consumer<ResourceRegistrar<SliceType>> registrant) {
-        this.modelToSliceClass.put(model, sliceClass);
-        registrant.accept(new Registrar<>(model, sliceClass));
+    public <SliceType extends Slice> void registerModel(final SystemModel<SliceType> model, final SliceType slice, final Consumer<ResourceRegistrar<SliceType>> registrant) {
+        this.modelToInitialSlice.put(model, slice);
+        registrant.accept(new Registrar<>(model, (Class<SliceType>)slice.getClass()));
     }
 
     public <ResourceType>

@@ -12,7 +12,7 @@ public class DataModelTest {
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     {
         final var model = new DataSystemModel();
-        registry.registerModel(model, DataSystemModel.DataModelSlice.class, (registrar) -> {
+        registry.registerModel(model, model.getInitialSlice(), (registrar) -> {
             registrar.provideResource(GlobalPronouns.dataRate, Double.class, slice -> slice.getDataRate());
             registrar.provideResource(GlobalPronouns.dataVolume, Double.class, slice -> slice.getDataVolume());
             registrar.provideResource(GlobalPronouns.dataProtocol, String.class, slice -> slice.getDataProtocol());
