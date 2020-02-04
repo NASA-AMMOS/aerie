@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
@@ -31,7 +33,7 @@ public class DataModelTest {
     Instant event5 = event4.plus(5, TimeUnit.SECONDS);
 
     @Test
-    public void dataVolumeTest() {
+    public void dataVolumeRegistryTest() {
         dataRate.add(1.0, event1);
         dataRate.add(9.0, event2);
         dataRate.add(5.0, event3);
@@ -46,9 +48,33 @@ public class DataModelTest {
         dataRate.add(10.0, event5);
         assertEquals(dataVolume.get(), 225, 0.0);
         assertEquals(dataVolume.get(), 225, 0.0);
+    }
 
-        System.out.println(dataRate.getHistory());
-        System.out.println(dataVolume.getHistory());
-        System.out.println(dataProtocol.getHistory());
+    @Test
+    public void dataVolumeTest() {
+        final var simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var slice = new DataSystemModel.DataModelSlice(simStartTime);
+
+        slice.step(Duration.fromQuantity(10, TimeUnit.SECONDS));
+        slice.accumulateDataRate(1.0);
+        slice.step(Duration.fromQuantity(10, TimeUnit.SECONDS));
+        slice.accumulateDataRate(9.0);
+        slice.step(Duration.fromQuantity(20, TimeUnit.SECONDS));
+        slice.accumulateDataRate(5.0);
+
+        assertEquals(0*10 + 1*10 + 10*20, slice.getDataVolume(), 0.0);
+
+        slice.step(Duration.fromQuantity(1, TimeUnit.SECONDS));
+        slice.accumulateDataRate(-15.0);
+
+        assertEquals(0*10 + 1*10 + 10*20 + 15*1, slice.getDataVolume(), 0.0);
+
+        slice.step(Duration.fromQuantity(5, TimeUnit.SECONDS));
+        slice.accumulateDataRate(10.0);
+
+        assertEquals(0*10 + 1*10 + 10*20 + 15*1 + 0*5, slice.getDataVolume(), 0.0);
+
+        System.out.println(slice.getDataRateHistory());
+        System.out.println(slice.getDataProtocolHistory());
     }
 }
