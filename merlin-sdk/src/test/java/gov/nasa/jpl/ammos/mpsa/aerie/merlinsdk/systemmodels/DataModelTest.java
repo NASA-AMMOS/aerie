@@ -10,9 +10,13 @@ public class DataModelTest {
     Registry registry = new Registry();
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
-    DataSystemModel dataSystemModel = new DataSystemModel();
     {
-        registry.registerModel(dataSystemModel, DataSystemModel.DataModelSlice.class);
+        final var model = new DataSystemModel();
+        registry.registerModel(model, DataSystemModel.DataModelSlice.class, (registrar) -> {
+            registrar.provideResource(GlobalPronouns.dataRate, Double.class, slice -> slice.getDataRate());
+            registrar.provideResource(GlobalPronouns.dataVolume, Double.class, slice -> slice.getDataVolume());
+            registrar.provideResource(GlobalPronouns.dataProtocol, String.class, slice -> slice.getDataProtocol());
+        });
     }
 
     CumulableState<Double, Double> dataRate = registry.getCumulable(GlobalPronouns.dataRate, Double.class, Double.class);

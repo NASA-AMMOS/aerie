@@ -7,6 +7,4 @@ public interface SystemModel<SliceType extends Slice> {
     */
 
     SliceType getInitialSlice();
-
-    default void registerResources(final ResourceRegistrar<SliceType> registrar) {}
 }

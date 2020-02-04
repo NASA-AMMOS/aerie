@@ -11,13 +11,6 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
         return new DataModelSlice();
     }
 
-    @Override
-    public void registerResources(final ResourceRegistrar<DataModelSlice> registrar){
-        registrar.provideResource(GlobalPronouns.dataRate, Double.class, DataModelSlice::getDataRate);
-        registrar.provideResource(GlobalPronouns.dataVolume, Double.class, DataModelSlice::getDataVolume);
-        registrar.provideResource(GlobalPronouns.dataProtocol, String.class, DataModelSlice::getDataProtocol);
-    }
-
     public static final class DataModelSlice implements Slice{
         private double dataRate = 0.0;
         private double dataVolume = 0.0;

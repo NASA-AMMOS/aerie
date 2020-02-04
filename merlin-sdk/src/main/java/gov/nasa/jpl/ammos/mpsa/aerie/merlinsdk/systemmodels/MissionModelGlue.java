@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 class Getter<ResourceType> {
@@ -104,9 +105,9 @@ final class Registry {
             .add(new Event(time, resourceName, stimulus));
     }
 
-    public <SliceType extends Slice> void registerModel(final SystemModel<SliceType> model, final Class<SliceType> sliceClass) {
+    public <SliceType extends Slice> void registerModel(final SystemModel<SliceType> model, final Class<SliceType> sliceClass, final Consumer<ResourceRegistrar<SliceType>> registrant) {
         this.modelToSliceClass.put(model, sliceClass);
-        model.registerResources(new Registrar<>(model, sliceClass));
+        registrant.accept(new Registrar<>(model, sliceClass));
     }
 
     public <ResourceType>
