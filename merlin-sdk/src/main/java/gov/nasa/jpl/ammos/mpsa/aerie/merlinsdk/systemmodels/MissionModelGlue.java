@@ -141,6 +141,10 @@ final class Registry {
         return new CumulableState<>(this, stateName, resourceClass, deltaClass, stateToModel.get(stateName));
     }
 
+    public Slice getInitialSlice(final SystemModel<?> systemModel) {
+        return systemModel.getInitialSlice();
+    }
+
     private final class Registrar<SliceType extends Slice> implements ResourceRegistrar<SliceType> {
         private final SystemModel<SliceType> systemModel;
         private final Class<SliceType> sliceClass;

@@ -32,7 +32,7 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
 
     @Override
     public final ResourceType get() {
-        final var slice = this.systemModel.getInitialSlice();
+        final var slice = this.registry.getInitialSlice(this.systemModel);
         final var getter = this.registry.getGetter(slice, this.name, this.resourceClass);
 
         // TODO: Obtain a simulation context from some central authority (who itself is provided via constructor).
@@ -57,7 +57,7 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
     public final Map<Instant, ResourceType> getHistory() {
         final var stateHistory = new TreeMap<Instant, ResourceType>();
 
-        final var slice = this.systemModel.getInitialSlice();
+        final var slice = this.registry.getInitialSlice(this.systemModel);
         final var getter = this.registry.getGetter(slice, this.name, resourceClass);
 
         var simulationTime = this.registry.getStartTime();
