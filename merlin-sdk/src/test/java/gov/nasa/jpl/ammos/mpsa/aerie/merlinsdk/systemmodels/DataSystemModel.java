@@ -13,16 +13,6 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
 
     @Override
     public void registerResources(final ResourceRegistrar<DataModelSlice> registrar){
-        registrar.subscribe(GlobalPronouns.dataRate, AccumulateStimulus.class, (slice, stimulus) -> {
-            slice.react(GlobalPronouns.dataRate, stimulus);
-        });
-        registrar.subscribe(GlobalPronouns.dataVolume, SetStimulus.class, (slice, stimulus) -> {
-            slice.react(GlobalPronouns.dataVolume, stimulus);
-        });
-        registrar.subscribe(GlobalPronouns.dataProtocol, SetStimulus.class, (slice, stimulus) -> {
-            slice.react(GlobalPronouns.dataProtocol, stimulus);
-        });
-
         registrar.provideResource(GlobalPronouns.dataRate, Double.class, DataModelSlice::getDataRate);
         registrar.provideResource(GlobalPronouns.dataVolume, Double.class, DataModelSlice::getDataVolume);
         registrar.provideResource(GlobalPronouns.dataProtocol, String.class, DataModelSlice::getDataProtocol);
@@ -78,26 +68,12 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
             return this.dataRate;
         }
 
-        public void accumulateDataRate(final double delta){
-            this.dataRate += delta;
-        }
-
-
         public double getDataVolume(){
             return this.dataVolume;
         }
 
-        public void setDataVolume(final double dataVolume){
-            this.dataVolume = dataVolume;
-        }
-
-
         public String getDataProtocol(){
             return this.dataProtocol;
-        }
-
-        public void setDataProtocol(final String dataProtocol){
-            this.dataProtocol = dataProtocol;
         }
     }
 }

@@ -40,15 +40,6 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
         //   to resume simulation from. We're currently just re-simulating everything on every `get`.
         var simulationTime = this.registry.getStartTime();
         for (final Event event : this.registry.getEventLog(this.systemModel)) {
-            final var setter = registry.getSetter(slice, event.resourceName);
-            if (setter == null) continue;
-            // ^^^ Currently, it isn't necessary to skip events for which we don't have a setter,
-            // because events are currently partitioned by which system model receives them. So we should
-            // never see an event for which we don't have a setter, so long as we perform this partitioning.
-            // However, it will eventually become possible for multiple system models to subscribe to events
-            // on a single resource, which may complicate things. We perform this check defensively for when
-            // this situation arises in the future.
-
             // Step the slice forward to the next event time.
             if (simulationTime.isBefore(event.time)) {
                 slice.step(event.time.durationFrom(simulationTime));
@@ -56,7 +47,7 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
             }
 
             // Apply the event to the slice.
-            setter.accept(slice, event.stimulus);
+            slice.react(event.resourceName, event.stimulus);
         }
 
         return resourceClass.cast(getter.apply(slice));
@@ -72,9 +63,6 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
         var simulationTime = this.registry.getStartTime();
         stateHistory.put(simulationTime, getter.apply(slice));
         for (final var event : this.registry.getEventLog(this.systemModel)) {
-            final Setter<?> setter = this.registry.getSetter(slice, event.resourceName);
-            if (setter == null) continue;
-
             // Step the slice forward to the next event time.
             if (simulationTime.isBefore(event.time)) {
                 slice.step(event.time.durationFrom(simulationTime));
@@ -82,7 +70,7 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
             }
 
             // Apply the event to the slice.
-            setter.accept(slice, event.stimulus);
+            slice.react(event.resourceName, event.stimulus);
 
             // Record the current value of this resource in the slice.
             if (Objects.equals(event.resourceName, this.name)) {

@@ -52,12 +52,6 @@ interface ResourceRegistrar<SliceType extends Slice> {
         final String resourceName,
         final Class<ResourceType> resourceClass,
         final Function<SliceType, ResourceType> getter);
-
-    <StimulusType>
-    void subscribe(
-        final String resourceName,
-        final Class<StimulusType> stimulusClass,
-        final BiConsumer<SliceType, StimulusType> setter);
 }
 
 final class Event {
@@ -73,11 +67,9 @@ final class Event {
 }
 
 final class Registry {
-
     private final Map<SystemModel<?>, List<Event>> modelToEventLog = new HashMap<>();
 
     private final Map<String, Pair<Class<? extends Slice>, Getter<?>>> modelToGetter = new HashMap<>();
-    private final Map<Pair<Class<? extends Slice>, String>, Setter<?>> modelToSetter = new HashMap<>();
     private final Map<String, SystemModel<?>> stateToModel = new HashMap<>();
     private final Map<SystemModel<?>, Class<? extends Slice>> modelToSliceClass = new HashMap<>();
 
@@ -104,11 +96,6 @@ final class Registry {
 
         // TODO: Use `resourceClass` to check that the Getter provides the expected type of resource.
         return (Getter<ResourceType>) entry.getRight();
-    }
-
-    public <SliceType extends Slice> Setter<?> getSetter(final SliceType slice, final String stateName) {
-        final Class<? extends Slice> sliceClass = slice.getClass();
-        return modelToSetter.get(Pair.of(sliceClass, stateName));
     }
 
     public void addEvent(final Instant time, final String resourceName, final Stimulus stimulus) {
@@ -172,17 +159,6 @@ final class Registry {
             modelToGetter.put(
                 resourceName,
                 Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
-        }
-
-        public <StimulusType> void subscribe(
-            final String resourceName,
-            final Class<StimulusType> stimulusClass,
-            final BiConsumer<SliceType, StimulusType> setter
-        ) {
-            modelToSetter.put(
-                Pair.of(sliceClass, resourceName),
-                new Setter<>(stimulusClass,
-                    (s, v) -> setter.accept(sliceClass.cast(s), stimulusClass.cast(v))));
         }
     }
 }
