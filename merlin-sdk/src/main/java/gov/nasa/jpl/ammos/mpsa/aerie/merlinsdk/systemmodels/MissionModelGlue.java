@@ -143,7 +143,7 @@ final class Registry {
     }
 
     public Slice getInitialSlice(final SystemModel<?> systemModel) {
-        return systemModel.getInitialSlice();
+        return this.modelToInitialSlice.get(systemModel).duplicate();
     }
 
     private final class Registrar<SliceType extends Slice> implements ResourceRegistrar<SliceType> {

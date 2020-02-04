@@ -6,17 +6,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSlice> {
     public DataSystemModel(){}
 
-    @Override
-    public DataModelSlice getInitialSlice(){
-        return new DataModelSlice();
-    }
-
     public static final class DataModelSlice implements Slice{
         private double dataRate = 0.0;
         private double dataVolume = 0.0;
         private String dataProtocol = GlobalPronouns.UART;
 
-        private DataModelSlice(){}
+        public DataModelSlice(){}
 
         public DataModelSlice(final DataModelSlice other) {
             this.dataRate = other.dataRate;
