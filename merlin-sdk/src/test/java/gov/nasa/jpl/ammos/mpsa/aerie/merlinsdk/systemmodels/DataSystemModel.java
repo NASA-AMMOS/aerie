@@ -18,7 +18,7 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
         registrar.provideResource(GlobalPronouns.dataProtocol, String.class, DataModelSlice::getDataProtocol);
     }
 
-    public static class DataModelSlice implements Slice{
+    public static final class DataModelSlice implements Slice{
         private double dataRate = 0.0;
         private double dataVolume = 0.0;
         private String dataProtocol = GlobalPronouns.UART;
@@ -39,9 +39,6 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
         @Override
         public void step(final Duration delta){
             this.dataVolume += this.dataRate * delta.asIntegerQuantity(TimeUnit.SECONDS);
-            if (this.dataRate > 100){
-                this.dataProtocol = GlobalPronouns.spacewire;
-            }
         }
 
         @Override
@@ -49,6 +46,9 @@ public class DataSystemModel implements SystemModel<DataSystemModel.DataModelSli
             switch (resourceName){
                 case GlobalPronouns.dataRate: {
                     this.dataRate += ((AccumulateStimulus)stimulus).getDelta(Double.class);
+                    if (this.dataRate > 100) {
+                        this.dataProtocol = GlobalPronouns.spacewire;
+                    }
                     break;
                 }
 
