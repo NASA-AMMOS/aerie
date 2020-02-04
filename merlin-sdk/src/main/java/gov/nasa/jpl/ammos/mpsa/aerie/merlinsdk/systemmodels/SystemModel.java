@@ -6,6 +6,7 @@ public interface SystemModel<SliceType extends Slice> {
     work in this current configuration.  We can rework later.
     */
 
-    void registerResources(ResourceRegistrar<SliceType> registrar);
     SliceType getInitialSlice();
+
+    default void registerResources(final ResourceRegistrar<SliceType> registrar) {}
 }
