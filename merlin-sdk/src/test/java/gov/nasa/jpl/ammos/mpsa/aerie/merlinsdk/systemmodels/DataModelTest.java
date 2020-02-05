@@ -14,7 +14,7 @@ public class DataModelTest {
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     {
-        registry.registerModel(new DataSystemModel(), new DataSystemModel.DataModelSlice(simStartTime), (registrar) -> {
+        registry.registerModel(new DataSystemModel.DataModelSlice(simStartTime), registrar -> {
             registrar.provideResource(GlobalPronouns.dataRate, Double.class, slice -> slice.getDataRate());
             registrar.provideResource(GlobalPronouns.dataVolume, Double.class, slice -> slice.getDataVolume());
             registrar.provideResource(GlobalPronouns.dataProtocol, String.class, slice -> slice.getDataProtocol());

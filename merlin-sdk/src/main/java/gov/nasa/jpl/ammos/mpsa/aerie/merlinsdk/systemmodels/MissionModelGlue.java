@@ -68,11 +68,10 @@ final class Event {
 }
 
 final class Registry {
-    private final Map<SystemModel<?>, List<Event>> modelToEventLog = new HashMap<>();
+    private final Map<Slice, List<Event>> modelToEventLog = new HashMap<>();
 
-    private final Map<String, Pair<Class<? extends Slice>, Getter<?>>> modelToGetter = new HashMap<>();
-    private final Map<String, SystemModel<?>> stateToModel = new HashMap<>();
-    private final Map<SystemModel<?>, Slice> modelToInitialSlice = new HashMap<>();
+    private final Map<String, Pair<Class<? extends Slice>, Getter<?>>> stateToGetter = new HashMap<>();
+    private final Map<String, Slice> stateToModel = new HashMap<>();
 
     private static final Instant startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
@@ -80,18 +79,14 @@ final class Registry {
         return startTime;
     }
 
-    public SystemModel<?> getModelForResource(final String resourceName) {
-        return this.stateToModel.get(resourceName);
-    }
-
-    public List<Event> getEventLog(final SystemModel<?> model) {
-        return List.copyOf(modelToEventLog.get(model));
+    public List<Event> getEventLog(final Slice initialSlice) {
+        return List.copyOf(modelToEventLog.get(initialSlice));
     }
 
     public <SliceType extends Slice, ResourceType> Getter<ResourceType> getGetter(
         final SliceType slice, final String stateName, final Class<ResourceType> resourceClass
     ) {
-        final var entry = modelToGetter.get(stateName);
+        final var entry = stateToGetter.get(stateName);
 
         if (!entry.getLeft().isInstance(slice)) return null;
 
@@ -100,19 +95,20 @@ final class Registry {
     }
 
     public void addEvent(final Instant time, final String resourceName, final Stimulus stimulus) {
+        final var initialSlice = this.stateToModel.get(resourceName);
+
         modelToEventLog
-            .computeIfAbsent(getModelForResource(resourceName), k -> new ArrayList<>())
+            .computeIfAbsent(initialSlice, k -> new ArrayList<>())
             .add(new Event(time, resourceName, stimulus));
     }
 
-    public <SliceType extends Slice> void registerModel(final SystemModel<SliceType> model, final SliceType slice, final Consumer<ResourceRegistrar<SliceType>> registrant) {
-        this.modelToInitialSlice.put(model, slice);
-        registrant.accept(new Registrar<>(model, (Class<SliceType>)slice.getClass()));
+    public <SliceType extends Slice> void registerModel(final SliceType slice, final Consumer<ResourceRegistrar<SliceType>> registrant) {
+        registrant.accept(new Registrar<>(slice, (Class<SliceType>)slice.getClass()));
     }
 
     public <ResourceType>
     SettableState<ResourceType> getSettable(final String stateName, final Class<ResourceType> resourceClass) {
-        final var actualResourceClass = modelToGetter.get(stateName).getRight().resourceClass;
+        final var actualResourceClass = stateToGetter.get(stateName).getRight().resourceClass;
         if (!Objects.equals(resourceClass, actualResourceClass)) {
             // TODO: Throw a finer-grained type of exception.
             throw new RuntimeException(
@@ -129,7 +125,7 @@ final class Registry {
         final Class<ResourceType> resourceClass,
         final Class<DeltaType> deltaClass
     ) {
-        final var actualResourceClass = modelToGetter.get(stateName).getRight().resourceClass;
+        final var actualResourceClass = stateToGetter.get(stateName).getRight().resourceClass;
         if (!Objects.equals(resourceClass, actualResourceClass)) {
             // TODO: Throw a finer-grained type of exception.
             throw new RuntimeException(
@@ -139,19 +135,16 @@ final class Registry {
 
         // TODO: Verify that the deltaClass is acceptable for the stimulus the resource was defined against.
 
-        return new CumulableState<>(this, stateName, resourceClass, deltaClass, stateToModel.get(stateName));
-    }
-
-    public Slice getInitialSlice(final SystemModel<?> systemModel) {
-        return this.modelToInitialSlice.get(systemModel).duplicate();
+        final var slice = stateToModel.get(stateName);
+        return new CumulableState<>(this, stateName, resourceClass, slice);
     }
 
     private final class Registrar<SliceType extends Slice> implements ResourceRegistrar<SliceType> {
-        private final SystemModel<SliceType> systemModel;
+        private final SliceType slice;
         private final Class<SliceType> sliceClass;
 
-        public Registrar(final SystemModel<SliceType> systemModel, final Class<SliceType> sliceClass) {
-            this.systemModel = systemModel;
+        public Registrar(final SliceType slice, final Class<SliceType> sliceClass) {
+            this.slice = slice;
             this.sliceClass = sliceClass;
         }
 
@@ -160,8 +153,8 @@ final class Registry {
             final Class<ResourceType> resourceClass,
             final Function<SliceType, ResourceType> getter
         ) {
-            stateToModel.put(resourceName, this.systemModel);
-            modelToGetter.put(
+            stateToModel.put(resourceName, slice);
+            stateToGetter.put(
                 resourceName,
                 Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
         }
