@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-public final class DataSystemModel implements Slice {
+public final class DataSystemModel implements SystemModel {
     private Instant now;
     private final Map<Instant, Double> dataRateHistory;
     private final Map<Instant, String> dataProtocolHistory;

@@ -11,18 +11,18 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
     protected final String name;
     protected final Class<ResourceType> resourceClass;
     protected final Registry registry;
-    protected final Slice initialSlice;
+    protected final SystemModel initialModel;
 
     public EventBasedState(
         final Registry registry,
         final String name,
         final Class<ResourceType> resourceClass,
-        final Slice initialSlice
+        final SystemModel initialModel
     ) {
         this.registry = registry;
         this.name = name;
         this.resourceClass = resourceClass;
-        this.initialSlice = initialSlice;
+        this.initialModel = initialModel;
     }
 
     @Override
@@ -32,51 +32,51 @@ abstract class EventBasedState<ResourceType> implements State<ResourceType> {
 
     @Override
     public final ResourceType get() {
-        final var slice = this.initialSlice.duplicate();
-        final var getter = this.registry.getGetter(slice, this.name, this.resourceClass);
+        final var model = this.initialModel.duplicate();
+        final var getter = this.registry.getGetter(model, this.name, this.resourceClass);
 
         // TODO: Obtain a simulation context from some central authority (who itself is provided via constructor).
         //   This central authority is probably responsible for performing simulation and choosing an optimal position
         //   to resume simulation from. We're currently just re-simulating everything on every `get`.
         var simulationTime = this.registry.getStartTime();
-        for (final Event event : this.registry.getEventLog(this.initialSlice)) {
-            // Step the slice forward to the next event time.
+        for (final Event event : this.registry.getEventLog(this.initialModel)) {
+            // Step the model forward to the next event time.
             if (simulationTime.isBefore(event.time)) {
-                slice.step(event.time.durationFrom(simulationTime));
+                model.step(event.time.durationFrom(simulationTime));
                 simulationTime = event.time;
             }
 
-            // Apply the event to the slice.
-            slice.react(event.resourceName, event.stimulus);
+            // Apply the event to the model.
+            model.react(event.resourceName, event.stimulus);
         }
 
-        return resourceClass.cast(getter.apply(slice));
+        return resourceClass.cast(getter.apply(model));
     }
 
     @Override
     public final Map<Instant, ResourceType> getHistory() {
         final var stateHistory = new TreeMap<Instant, ResourceType>();
 
-        final var slice = this.initialSlice.duplicate();
-        final var getter = this.registry.getGetter(slice, this.name, resourceClass);
+        final var model = this.initialModel.duplicate();
+        final var getter = this.registry.getGetter(model, this.name, resourceClass);
 
         var simulationTime = this.registry.getStartTime();
-        stateHistory.put(simulationTime, getter.apply(slice));
-        for (final var event : this.registry.getEventLog(this.initialSlice)) {
-            // Step the slice forward to the next event time.
+        stateHistory.put(simulationTime, getter.apply(model));
+        for (final var event : this.registry.getEventLog(this.initialModel)) {
+            // Step the model forward to the next event time.
             if (simulationTime.isBefore(event.time)) {
-                slice.step(event.time.durationFrom(simulationTime));
+                model.step(event.time.durationFrom(simulationTime));
                 simulationTime = event.time;
             }
 
-            // Apply the event to the slice.
-            slice.react(event.resourceName, event.stimulus);
+            // Apply the event to the model.
+            model.react(event.resourceName, event.stimulus);
 
-            // Record the current value of this resource in the slice.
+            // Record the current value of this resource in the model.
             if (Objects.equals(event.resourceName, this.name)) {
-                stateHistory.put(event.time, getter.apply(slice));
+                stateHistory.put(event.time, getter.apply(model));
             } else {
-                stateHistory.put(event.time, getter.apply(slice));
+                stateHistory.put(event.time, getter.apply(model));
             }
         }
 
@@ -89,9 +89,9 @@ public final class SettableState<ResourceType> extends EventBasedState<ResourceT
         final Registry registry,
         final String name,
         final Class<ResourceType> resourceClass,
-        final Slice initialSlice
+        final SystemModel initialModel
     ) {
-        super(registry, name, resourceClass, initialSlice);
+        super(registry, name, resourceClass, initialModel);
     }
 
     public void set(final ResourceType value, final Instant t) {
@@ -105,9 +105,9 @@ class CumulableState<ResourceType, DeltaType> extends EventBasedState<ResourceTy
         final Registry registry,
         final String name,
         final Class<ResourceType> resourceClass,
-        final Slice initialSlice
+        final SystemModel initialModel
     ) {
-        super(registry, name, resourceClass, initialSlice);
+        super(registry, name, resourceClass, initialModel);
     }
 
     public void add(final DeltaType delta, final Instant t) {

@@ -17,42 +17,42 @@ import java.util.function.Function;
 
 class Getter<ResourceType> {
     public final Class<ResourceType> resourceClass;
-    public final Function<Slice, ResourceType> getter;
+    public final Function<SystemModel, ResourceType> getter;
 
-    public Getter(final Class<ResourceType> resourceClass, final Function<Slice, ResourceType> getter) {
+    public Getter(final Class<ResourceType> resourceClass, final Function<SystemModel, ResourceType> getter) {
         this.resourceClass = resourceClass;
         this.getter = getter;
     }
 
-    public ResourceType apply(final Slice slice) {
-        return this.getter.apply(slice);
+    public ResourceType apply(final SystemModel model) {
+        return this.getter.apply(model);
     }
 }
 
 class Setter<StimulusType> {
     public final Class<StimulusType> stimulusClass;
-    public final BiConsumer<Slice, StimulusType> setter;
+    public final BiConsumer<SystemModel, StimulusType> setter;
 
-    public Setter(final Class<StimulusType> stimulusClass, final BiConsumer<Slice, StimulusType> setter) {
+    public Setter(final Class<StimulusType> stimulusClass, final BiConsumer<SystemModel, StimulusType> setter) {
         this.stimulusClass = stimulusClass;
         this.setter = setter;
     }
 
-    public void accept(final Slice slice, final Stimulus stimulus) {
+    public void accept(final SystemModel model, final Stimulus stimulus) {
         if (!stimulusClass.isInstance(stimulus)) {
             throw new ClassCastException("Type mismatch!");
         }
 
-        setter.accept(slice, stimulusClass.cast(stimulus));
+        setter.accept(model, stimulusClass.cast(stimulus));
     }
 }
 
-interface ResourceRegistrar<SliceType extends Slice> {
+interface ResourceRegistrar<ModelType extends SystemModel> {
     <ResourceType>
     void provideResource(
         final String resourceName,
         final Class<ResourceType> resourceClass,
-        final Function<SliceType, ResourceType> getter);
+        final Function<ModelType, ResourceType> getter);
 }
 
 final class Event {
@@ -68,10 +68,10 @@ final class Event {
 }
 
 final class Registry {
-    private final Map<Slice, List<Event>> modelToEventLog = new HashMap<>();
+    private final Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
 
-    private final Map<String, Pair<Class<? extends Slice>, Getter<?>>> stateToGetter = new HashMap<>();
-    private final Map<String, Slice> stateToModel = new HashMap<>();
+    private final Map<String, Pair<Class<? extends SystemModel>, Getter<?>>> stateToGetter = new HashMap<>();
+    private final Map<String, SystemModel> stateToModel = new HashMap<>();
 
     private static final Instant startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
@@ -79,31 +79,31 @@ final class Registry {
         return startTime;
     }
 
-    public List<Event> getEventLog(final Slice initialSlice) {
-        return List.copyOf(modelToEventLog.get(initialSlice));
+    public List<Event> getEventLog(final SystemModel model) {
+        return List.copyOf(modelToEventLog.get(model));
     }
 
-    public <SliceType extends Slice, ResourceType> Getter<ResourceType> getGetter(
-        final SliceType slice, final String stateName, final Class<ResourceType> resourceClass
+    public <ModelType extends SystemModel, ResourceType> Getter<ResourceType> getGetter(
+        final ModelType model, final String stateName, final Class<ResourceType> resourceClass
     ) {
         final var entry = stateToGetter.get(stateName);
 
-        if (!entry.getLeft().isInstance(slice)) return null;
+        if (!entry.getLeft().isInstance(model)) return null;
 
         // TODO: Use `resourceClass` to check that the Getter provides the expected type of resource.
         return (Getter<ResourceType>) entry.getRight();
     }
 
     public void addEvent(final Instant time, final String resourceName, final Stimulus stimulus) {
-        final var initialSlice = this.stateToModel.get(resourceName);
+        final var initialModel = this.stateToModel.get(resourceName);
 
         modelToEventLog
-            .computeIfAbsent(initialSlice, k -> new ArrayList<>())
+            .computeIfAbsent(initialModel, k -> new ArrayList<>())
             .add(new Event(time, resourceName, stimulus));
     }
 
-    public <SliceType extends Slice> void registerModel(final SliceType slice, final Consumer<ResourceRegistrar<SliceType>> registrant) {
-        registrant.accept(new Registrar<>(slice, (Class<SliceType>)slice.getClass()));
+    public <ModelType extends SystemModel> void registerModel(final ModelType model, final Consumer<ResourceRegistrar<ModelType>> registrant) {
+        registrant.accept(new Registrar<>(model, (Class<ModelType>)model.getClass()));
     }
 
     public <ResourceType>
@@ -135,28 +135,28 @@ final class Registry {
 
         // TODO: Verify that the deltaClass is acceptable for the stimulus the resource was defined against.
 
-        final var slice = stateToModel.get(stateName);
-        return new CumulableState<>(this, stateName, resourceClass, slice);
+        final var model = stateToModel.get(stateName);
+        return new CumulableState<>(this, stateName, resourceClass, model);
     }
 
-    private final class Registrar<SliceType extends Slice> implements ResourceRegistrar<SliceType> {
-        private final SliceType slice;
-        private final Class<SliceType> sliceClass;
+    private final class Registrar<ModelType extends SystemModel> implements ResourceRegistrar<ModelType> {
+        private final ModelType model;
+        private final Class<ModelType> modelClass;
 
-        public Registrar(final SliceType slice, final Class<SliceType> sliceClass) {
-            this.slice = slice;
-            this.sliceClass = sliceClass;
+        public Registrar(final ModelType model, final Class<ModelType> modelClass) {
+            this.model = model;
+            this.modelClass = modelClass;
         }
 
         public <ResourceType> void provideResource(
             final String resourceName,
             final Class<ResourceType> resourceClass,
-            final Function<SliceType, ResourceType> getter
+            final Function<ModelType, ResourceType> getter
         ) {
-            stateToModel.put(resourceName, slice);
+            stateToModel.put(resourceName, model);
             stateToGetter.put(
                 resourceName,
-                Pair.of(sliceClass, new Getter<>(resourceClass, s -> getter.apply(sliceClass.cast(s)))));
+                Pair.of(modelClass, new Getter<>(resourceClass, s -> getter.apply(modelClass.cast(s)))));
         }
     }
 }

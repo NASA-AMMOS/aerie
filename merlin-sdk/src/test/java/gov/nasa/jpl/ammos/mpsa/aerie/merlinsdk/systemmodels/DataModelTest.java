@@ -14,10 +14,10 @@ public class DataModelTest {
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     {
-        registry.registerModel(new DataSystemModel.DataModelSlice(simStartTime), registrar -> {
-            registrar.provideResource(GlobalPronouns.dataRate, Double.class, slice -> slice.getDataRate());
-            registrar.provideResource(GlobalPronouns.dataVolume, Double.class, slice -> slice.getDataVolume());
-            registrar.provideResource(GlobalPronouns.dataProtocol, String.class, slice -> slice.getDataProtocol());
+        registry.registerModel(new DataSystemModel(simStartTime), registrar -> {
+            registrar.provideResource(GlobalPronouns.dataRate, Double.class, model -> model.getDataRate());
+            registrar.provideResource(GlobalPronouns.dataVolume, Double.class, model -> model.getDataVolume());
+            registrar.provideResource(GlobalPronouns.dataProtocol, String.class, model -> model.getDataProtocol());
         });
     }
 
