@@ -3,7 +3,10 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -103,5 +106,36 @@ public final class DataSystemModel implements SystemModel {
 
     public Map<Instant, String> getDataProtocolHistory() {
         return new TreeMap<>(this.dataProtocolHistory);
+    }
+
+    public List<Window> whenRateGreaterThan(final double threshold) {
+        final var windows = new ArrayList<Window>();
+
+        final var iter = this.dataRateHistory.entrySet().iterator();
+        while (iter.hasNext()) {
+            Instant start = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (point.getValue() > threshold) {
+                    start = point.getKey();
+                    break;
+                }
+            }
+            if (start == null) break;
+
+            Instant end = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (point.getValue() <= threshold) {
+                    end = point.getKey();
+                    break;
+                }
+            }
+            if (end == null) break;
+
+            windows.add(Window.between(start, end));
+        }
+
+        return windows;
     }
 }
