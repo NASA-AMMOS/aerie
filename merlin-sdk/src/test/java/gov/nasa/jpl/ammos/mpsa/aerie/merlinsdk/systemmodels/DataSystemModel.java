@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.EventApplier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.MasterSystemModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -10,12 +10,11 @@ public class DataSystemModel implements SystemModel{
     private DataModelSlice initialSlice;
     private MissionModelGlue glue;
     private Registry registry;
-    public EventApplier eventApplier;
+    private String name = GlobalPronouns.DataSystemModel;
 
     public DataSystemModel(MissionModelGlue glue, Instant initialTime){
         this.glue = glue;
         registry = glue.registry();
-        eventApplier = glue.eventApplier();
         registerSelf();
         initialSlice = new DataModelSlice(initialTime);
     }
@@ -26,14 +25,18 @@ public class DataSystemModel implements SystemModel{
     }
 
     @Override
-    public EventApplier getEventAplier() {
-        return this.glue.eventApplier();
-    }
+    public MasterSystemModel getMasterSystemModel() { return this.glue.MasterSystemModel(); }
 
     @Override
     public Slice getInitialSlice(){
         return this.initialSlice.cloneSlice();
     }
+
+    @Override
+    public void mapStateNameToSystemModelName(String stateName){
+        this.glue.mapStateNameToSystemModelName(stateName, this.name);
+    }
+
 
     @Override
     public void step(Slice aSlice, Duration dt) {
@@ -42,6 +45,7 @@ public class DataSystemModel implements SystemModel{
         if (slice.dataRate > 100){
             slice.dataProtocol = GlobalPronouns.spacewire;
         }
+        slice.setTime(slice.time().plus(dt));
     }
 
     @Override
@@ -49,6 +53,11 @@ public class DataSystemModel implements SystemModel{
         registry.provideSettable(this, GlobalPronouns.dataRate, Double.class, this::setDataRate, this::getDataRate);
         registry.provideSettable(this, GlobalPronouns.dataProtocol, String.class, this::setDataProtocol, this::getDataProtocol);
         registry.provideSettable(this, GlobalPronouns.dataVolume, Double.class, this::setDataVolume, this::getDataVolume);
+    }
+
+    @Override
+    public String getName(){
+        return this.name;
     }
 
     public double getDataRate(Slice slice){
@@ -90,6 +99,7 @@ public class DataSystemModel implements SystemModel{
         private String dataProtocol = GlobalPronouns.UART;
         private Instant time;
 
+
         public DataModelSlice(Instant time){
             this.time = time;
         }
@@ -121,8 +131,8 @@ public class DataSystemModel implements SystemModel{
         }
 
         //will be used for review meeting then removed
-        /*public void printSlice(){
+        public void printSlice(){
             System.out.println("dataRate: " + dataRate + "\t" + " dataVolume: " + dataVolume + "\t" + " time: " + time);
-        }*/
+        }
     }
 }

@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Map;
@@ -15,11 +16,11 @@ public class DataModelTest {
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
     Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-    DataSystemModel dataSystemModel = new DataSystemModel(glue, simStartTime);
 
-    SettableState<Double> dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
-    SettableState<Double> dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
-    SettableState<String> dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+    DataSystemModel dataSystemModel;
+    SettableState<Double> dataRate;
+    SettableState<Double> dataVolume;
+    SettableState<String> dataProtocol;
 
     /*----------------------------- SAMPLE SIM ---------------------------------------*/
     Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
@@ -28,8 +29,43 @@ public class DataModelTest {
     Instant event4 = event3.plus(1, TimeUnit.SECONDS);
     Instant event5 = event4.plus(5, TimeUnit.SECONDS);
 
+    @Before
+    public void initialize(){
+        /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
+        dataSystemModel = new DataSystemModel(glue, simStartTime);
+        glue.createMasterSystemModel(simStartTime, dataSystemModel);
+
+        dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
+        dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
+        dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+    }
+
     @Test
     public void dataVolumeTest() {
+        MissionModelGlue glue = new MissionModelGlue();
+        Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+
+        DataSystemModel dataSystemModel;
+        SettableState<Double> dataRate;
+        SettableState<Double> dataVolume;
+        SettableState<String> dataProtocol;
+
+        /*----------------------------- SAMPLE SIM ---------------------------------------*/
+        Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
+        Instant event2 = event1.plus(10, TimeUnit.SECONDS);
+        Instant event3 = event2.plus(20, TimeUnit.SECONDS);
+        Instant event4 = event3.plus(1, TimeUnit.SECONDS);
+        Instant event5 = event4.plus(5, TimeUnit.SECONDS);
+
+        dataSystemModel = new DataSystemModel(glue, simStartTime);
+        glue.createMasterSystemModel(simStartTime, dataSystemModel);
+
+        dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
+        dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
+        dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+
+
+
         dataRate.set(1.0, event1);
         dataRate.set(10.0, event2);
         dataRate.set(15.0, event3);

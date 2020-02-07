@@ -1,12 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -46,28 +44,136 @@ class Setter<T> {
 public class MissionModelGlue {
 
     private Registry registry;
-    private EventApplier eventApplier;
+    private MasterSystemModel masterSystemModel;
 
     public MissionModelGlue(){
         registry = this.new Registry();
-        eventApplier = this.new EventApplier();
+    }
+
+    private Map<String, String> stateNameToSystemModelName = new HashMap<>();
+
+    public void mapStateNameToSystemModelName(String stateName, String systemModelname){
+        stateNameToSystemModelName.put(stateName, systemModelname);
+    }
+
+    public String getSystemModelNameFromStateName(String stateName){
+        return stateNameToSystemModelName.get(stateName);
     }
 
     public Registry registry(){
         return this.registry;
     }
 
-    public EventApplier eventApplier(){
-        return this.eventApplier;
+    public void createMasterSystemModel(Instant time, SystemModel... models){
+        masterSystemModel = this.new MasterSystemModel(time, models);
+    }
+
+    public MasterSystemModel MasterSystemModel() { return this.masterSystemModel; }
+
+    public class MasterSystemModel{
+
+        private List<SystemModel> systemModels = new ArrayList<>();
+
+        private MasterSlice initialMasterSlice;
+
+        MasterSystemModel(Instant initialTime, SystemModel... models){
+
+            List<Pair<String,Slice>> initialSlices = new ArrayList<>();
+
+            for (var model : models){
+                systemModels.add(model);
+                initialSlices.add(Pair.of(model.getName(), model.getInitialSlice()));
+            }
+
+            initialMasterSlice = new MasterSlice(initialTime,  initialSlices.toArray(new Pair[initialSlices.size()]));
+        }
+
+        //each get() on a state returns a cloned initial slice, compuation begins from initial slice by construction
+        public MasterSlice getInitialMasterSlice(){
+            return this.initialMasterSlice.cloneSlice();
+        }
+
+        public SystemModel getSystemModel(String systemModelName){
+            for(var x : this.systemModels){
+                if (x.getName().equals(systemModelName)){
+                    return x;
+                }
+            }
+            throw new RuntimeException("system model does not exist");
+        }
+
+        public void step(Slice aSlice, Duration dt){
+            MasterSlice masterSlice = (MasterSlice) aSlice;
+
+            //slice is stored in a map and modified in place
+            for (var model : systemModels){
+                Slice slice = masterSlice.systemModelNameToSlice.get(model.getName());
+                model.step(slice, dt);
+                masterSlice.time = slice.time();
+            }
+
+        }
+
+        public class MasterSlice implements Slice{
+            private Instant time;
+            private Map<String, Slice> systemModelNameToSlice = new HashMap<>();
+
+            public MasterSlice(Instant time, Pair<String, Slice>... namedSlices){
+                this.time = time;
+
+                for (var pair : namedSlices){
+                    this.systemModelNameToSlice.put(pair.getKey(), pair.getValue());
+                }
+            }
+
+            public String getSystemModelName(String stateName){
+                return MissionModelGlue.this.getSystemModelNameFromStateName(stateName);
+            }
+
+            public <T> T getState(String stateName){
+                String systemModelName = getSystemModelName(stateName);
+
+                Slice slice = systemModelNameToSlice.get(systemModelName);
+                SystemModel model = getSystemModel(systemModelName);
+
+                Getter<T> getter = registry.getGetter(model, stateName);
+                return getter.apply(slice);
+            }
+
+            public Slice getSlice(String name){
+                return systemModelNameToSlice.get(name);
+            }
+
+            @Override
+            public Instant time() {
+                return this.time;
+            }
+
+            @Override
+            public void setTime(Instant time) {
+                this.time = time;
+            }
+
+            public MasterSlice cloneSlice() {
+                List<Pair<String, Slice>> clonedMasterSlice = new ArrayList<>();
+
+                for (Map.Entry<String, Slice> entry : this.systemModelNameToSlice.entrySet()){
+                    clonedMasterSlice.add(Pair.of(entry.getKey(), entry.getValue().cloneSlice()));
+                }
+
+                return new MasterSlice(time, clonedMasterSlice.toArray(new Pair[clonedMasterSlice.size()]));
+            }
+
+        }
     }
 
     public class Registry{
 
-        private Map<SystemModel, List<Event>> modelToEventLog = new HashMap<>();
-
         private Map<Pair<SystemModel, String>, Getter<?>> modelToGetter = new HashMap<>();
 
         private Map<Pair<SystemModel, String>, Setter<?>> modelToSetter = new HashMap<>();
+
+        private List<Event> completeEventLog = new ArrayList<>();
 
         public Getter getGetter(SystemModel model,  String stateName){
             return modelToGetter.get(Pair.of(model, stateName));
@@ -75,17 +181,6 @@ public class MissionModelGlue {
 
         public Setter getSetter(SystemModel model,  String stateName){
             return modelToSetter.get(Pair.of(model, stateName));
-        }
-
-        public void addEvent(SystemModel model,  Event<?> event){
-            if(modelToEventLog.containsKey(model)){
-                modelToEventLog.get(model).add(event);
-            }
-            else {
-                List<Event> eventList = new ArrayList<>();
-                eventList.add(event);
-                modelToEventLog.put(model, eventList);
-            }
         }
 
         public <T> void registerGetter(SystemModel model,  String stateName, Class<T> resourceType,
@@ -108,10 +203,6 @@ public class MissionModelGlue {
             registerSetter(model, stateName, resourceType, setter);
         }
 
-        public List<Event> getEventLog(SystemModel model){
-            return modelToEventLog.get(model);
-        }
-
         public Map<String, Getter<?>> getStateGetters(){
             var stateGetters = new HashMap<String, Getter<?>>();
 
@@ -121,24 +212,32 @@ public class MissionModelGlue {
 
                 stateGetters.put(name, getter);
             }
-
             return stateGetters;
         }
-    }
 
-    public class EventApplier{
+        public void addEvent(Event<?> event){
+            completeEventLog.add(event);
+        }
 
-        public Slice applyEvents(Slice slice, SystemModel model, List<Event> eventLog){
-            Registry registry = model.getRegistry();
+        public void applyEvents(SystemModel model,  Slice aMasterSlice){
 
-            for (Event<?> event : eventLog){
-                Duration dt = event.time().durationFrom(slice.time());
-                model.step(slice, dt);
-                registry.getSetter(model, event.name()).accept(slice, event.value());
-                slice.setTime(event.time());
+            MasterSystemModel.MasterSlice  masterSlice = (MasterSystemModel.MasterSlice) aMasterSlice;
+
+            //this can be taken out of the for loop b/c their should only be one master system model for a set of models
+            MasterSystemModel masterSystemModel = model.getMasterSystemModel();
+
+            for(Event<?> event : this.completeEventLog){
+                //step the model up
+                Duration dt = event.time().durationFrom(masterSlice.time());
+                masterSystemModel.step(masterSlice, dt);
+
+                //now apply event
+                String systemModelName = MissionModelGlue.this.getSystemModelNameFromStateName(event.name());
+                Setter<?> setter = registry.getSetter(model, event.name());
+
+                Slice slice = masterSlice.getSlice(systemModelName);
+                setter.accept(slice, event.value());
             }
-
-            return slice;
         }
     }
 }

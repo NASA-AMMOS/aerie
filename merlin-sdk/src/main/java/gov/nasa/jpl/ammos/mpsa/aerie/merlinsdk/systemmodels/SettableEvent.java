@@ -28,4 +28,5 @@ public class SettableEvent<T> implements Event<T> {
     public Instant time(){
         return this.time;
     }
+
 }

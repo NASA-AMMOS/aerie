@@ -14,7 +14,11 @@ public interface SystemModel {
 
     public MissionModelGlue.Registry getRegistry();
 
-    public MissionModelGlue.EventApplier getEventAplier();
+    public MissionModelGlue.MasterSystemModel getMasterSystemModel();
 
     public Slice getInitialSlice();
+
+    public String getName();
+
+    public void mapStateNameToSystemModelName(String stateName);
 }

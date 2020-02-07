@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-import java.util.List;
 import java.util.Map;
 
 public class SettableState<T> implements State<T> {
@@ -13,20 +12,20 @@ public class SettableState<T> implements State<T> {
     public SettableState(String name, SystemModel dependentSystemModel){
         this.name = name;
         this.dependentSystemModel = dependentSystemModel;
+        dependentSystemModel.mapStateNameToSystemModelName(this.name);
     }
 
     public void set(T value, Instant t){
         SettableEvent<T> event = new SettableEvent<>(this.name, value, t);
-        dependentSystemModel.getRegistry().addEvent(dependentSystemModel, event);
+        dependentSystemModel.getRegistry().addEvent(event);
     }
 
     @Override
     public T get() {
-        Getter getter = dependentSystemModel.getRegistry().getGetter(dependentSystemModel, name);
-        List<Event> eventLog = dependentSystemModel.getRegistry().getEventLog(dependentSystemModel);
-        Slice slice = dependentSystemModel.getEventAplier().
-                applyEvents(dependentSystemModel.getInitialSlice(), dependentSystemModel, eventLog);
-        return (T) getter.apply(slice);
+        var masterSlice = dependentSystemModel.getMasterSystemModel().getInitialMasterSlice();
+        dependentSystemModel.getRegistry().applyEvents(dependentSystemModel, masterSlice);
+
+        return masterSlice.getState(name);
     }
 
     @Override
