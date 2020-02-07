@@ -1,29 +1,31 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.local;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MerlinCommandReceiver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidEntityException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
 
+import javax.json.Json;
+import javax.json.JsonValue;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.TreeMap;
+import java.text.ParseException;
+import java.util.*;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
   private final Map<String, Schedule> schedules = new HashMap<>();
@@ -31,7 +33,44 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
 
   @Override
   public void createPlan(String path) {
-    throw new NotImplementedException("TODO: implement");
+    if (!Files.isReadable(Path.of(path))) {
+      throw new RuntimeException("Path is not readable");
+    } else if (!Files.isRegularFile(Path.of(path))) {
+      throw new RuntimeException("Path is not a file");
+    }
+
+    final PlanDetail plan;
+    try {
+      JsonValue planJson = Json.createReader(Files.newInputStream(Path.of(path))).readValue();
+      plan = PlanDeserializer.deserializePlan(planJson);
+    } catch (IOException e) {
+      throw new Error("File exists and is readable, but something went wrong while reading it.");
+    } catch (InvalidEntityException e) {
+      System.err.println(e);
+      return;
+    }
+
+    String adaptationId = plan.getAdaptationId();
+    List<ScheduledActivity> scheduledActivities = new ArrayList<>();
+    List<ActivityInstance> plannedActivities = plan.getActivityInstances();
+    try {
+      for (ActivityInstance instance : plannedActivities) {
+        scheduledActivities.add(new ScheduledActivity(instance));
+      }
+    } catch (ParseException e) {
+      System.err.println(e);
+      return;
+    }
+
+    Schedule schedule = new Schedule(adaptationId, scheduledActivities);
+
+    String basename = Path.of(path).getFileName().toString();
+    String name = basename;
+    for (int i=1; this.schedules.containsKey(name); i++) {
+      name = basename + i;
+    }
+
+    this.schedules.put(name, schedule);
   }
 
   @Override

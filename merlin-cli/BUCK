@@ -9,6 +9,7 @@ java_library(
         "//third-party:commons-lang3",
         "//third-party:commons-logging",
         "//third-party:gson",
+        "//third-party:javax.json",
         "//third-party:httpclient",
         "//third-party:httpcore",
         "//third-party:httpmime",
@@ -36,6 +37,7 @@ java_library(
 
         "//third-party:assertj-core",
         "//third-party:gson",
+        "//third-party:javax.json",
         "//third-party:httpclient",
         "//third-party:httpcore",
         "//third-party:junit-jupiter",
