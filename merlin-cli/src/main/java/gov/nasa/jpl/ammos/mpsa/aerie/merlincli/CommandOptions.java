@@ -55,6 +55,7 @@ public class CommandOptions {
         planIdRequiredGroup.addOption(new Option("pull", "download-plan", true, "Download a plan into a file"));
         planIdRequiredGroup.addOption(new Option(null, "display-activity", true, "Display an activity from a plan"));
         planIdRequiredGroup.addOption(new Option(null, "delete-activity", true, "Delete an activity from a plan"));
+        planIdRequiredGroup.addOption(new Option("S", "simulate", false, "Simulate a plan"));
 
         // Options that take more than one arg must be made separately
         opt = new Option(null, "update-plan", true, "Update the plan metadata");
@@ -166,6 +167,8 @@ public class CommandOptions {
                         String activityId = cmd.getOptionValue("delete-activity");
                         commandReceiver.deleteActivityInstance(planId, activityId);
                         return true;
+                    } else if (cmd.hasOption("simulate")) {
+                        commandReceiver.performSimulation(planId);
                     } else {
                         return false;
                     }
