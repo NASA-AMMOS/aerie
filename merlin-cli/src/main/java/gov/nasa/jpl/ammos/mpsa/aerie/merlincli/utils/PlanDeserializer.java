@@ -2,9 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
@@ -20,6 +19,42 @@ import java.util.Optional;
 public final class PlanDeserializer {
     private PlanDeserializer() {}
 
+    public static SerializedParameter deserializeActivityParameter(JsonValue jsonValue) throws InvalidEntityException {
+        if (jsonValue == JsonValue.NULL) {
+            return SerializedParameter.NULL;
+        } else if (jsonValue == JsonValue.FALSE) {
+            return SerializedParameter.of(false);
+        } else if (jsonValue == JsonValue.TRUE) {
+            return SerializedParameter.of(true);
+        } else if (jsonValue instanceof JsonString) {
+            return SerializedParameter.of(deserializeString(jsonValue));
+        } else if (jsonValue instanceof JsonNumber) {
+            if (((JsonNumber)jsonValue).isIntegral()) {
+                return SerializedParameter.of(((JsonNumber)jsonValue).intValueExact());
+            } else {
+                return SerializedParameter.of(((JsonNumber)jsonValue).doubleValue());
+            }
+        } else if (jsonValue instanceof JsonArray) {
+            return SerializedParameter.of(deserializeActivityParameterList(jsonValue));
+        } else if (jsonValue instanceof JsonObject) {
+            return SerializedParameter.of(deserializeActivityParameterMap(jsonValue));
+        } else {
+            throw new InvalidEntityException();
+        }
+    }
+
+    public static List<SerializedParameter> deserializeActivityParameterList(final JsonValue jsonValue) throws InvalidEntityException {
+        if (!(jsonValue instanceof JsonArray)) throw new InvalidEntityException();
+        final JsonArray parameterMapJson = (JsonArray)jsonValue;
+
+        final List<SerializedParameter> parameters = new ArrayList<>();
+        for (final var item : parameterMapJson) {
+            parameters.add(deserializeActivityParameter(item));
+        }
+
+        return parameters;
+    }
+
     public static String deserializeString(final JsonValue jsonValue) throws InvalidEntityException {
         if (!(jsonValue instanceof JsonString)) throw new InvalidEntityException();
         final JsonString stringJson = (JsonString)jsonValue;
@@ -27,13 +62,13 @@ public final class PlanDeserializer {
         return stringJson.getString();
     }
 
-    public static List<ActivityInstanceParameter> deserializeActivityParameterMap(final JsonValue jsonValue) throws InvalidEntityException {
+    public static Map<String, SerializedParameter> deserializeActivityParameterMap(final JsonValue jsonValue) throws InvalidEntityException {
         if (!(jsonValue instanceof JsonObject)) throw new InvalidEntityException();
         final JsonObject parameterMapJson = (JsonObject)jsonValue;
 
-        final List<ActivityInstanceParameter> parameters = new ArrayList<>();
+        final Map<String, SerializedParameter> parameters = new HashMap<>();
         for (final var entry : parameterMapJson.entrySet()) {
-            parameters.add(new ActivityInstanceParameter(entry.getKey(), entry.getValue().toString()));
+            parameters.put(entry.getKey(), deserializeActivityParameter(entry.getValue()));
         }
 
         return parameters;
@@ -45,7 +80,7 @@ public final class PlanDeserializer {
 
         Optional<String> type = Optional.empty();
         Optional<String> startTimestamp = Optional.empty();
-        Optional<List<ActivityInstanceParameter>> parameters = Optional.empty();
+        Optional<Map<String, SerializedParameter>> parameters = Optional.empty();
 
         for (final var entry : activityInstanceJson.entrySet()) {
             final JsonValue entryValue = entry.getValue();
@@ -75,7 +110,7 @@ public final class PlanDeserializer {
         final ActivityInstance activityInstance = new ActivityInstance();
         activityInstance.setActivityType(type.orElseThrow(InvalidEntityException::new));
         activityInstance.setStartTimestamp(startTimestamp.orElseThrow(InvalidEntityException::new));
-        activityInstance.setParameters(parameters.orElseGet(ArrayList::new));
+        activityInstance.setParameters(parameters.orElseGet(HashMap::new));
 
         return activityInstance;
     }
@@ -86,7 +121,7 @@ public final class PlanDeserializer {
 
         Optional<String> type = Optional.empty();
         Optional<String> startTimestamp = Optional.empty();
-        Optional<List<ActivityInstanceParameter>> parameters = Optional.empty();
+        Optional<Map<String, SerializedParameter>> parameters = Optional.empty();
 
         for (final var entry : activityInstanceJson.entrySet()) {
             final JsonValue entryValue = entry.getValue();
