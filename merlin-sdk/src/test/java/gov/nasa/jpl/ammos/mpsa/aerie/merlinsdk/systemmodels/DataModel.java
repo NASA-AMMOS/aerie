@@ -11,70 +11,47 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-public final class DataSystemModel implements SystemModel {
+public final class DataModel {
+    public enum Protocol {
+        Spacewire,
+        UART,
+    }
+
     private Instant now;
-    private final Map<Instant, Double> dataRateHistory;
-    private final Map<Instant, String> dataProtocolHistory;
 
-    private double dataRate;
+    private final TreeMap<Instant, Double> dataRateHistory;
+    private final TreeMap<Instant, Protocol> dataProtocolHistory;
     private double dataVolume;
-    private String dataProtocol;
 
-    public DataSystemModel(final Instant startTime) {
+    public DataModel(final Instant startTime) {
         this.now = startTime;
         this.dataRateHistory = new TreeMap<>();
         this.dataProtocolHistory = new TreeMap<>();
-        this.dataRate = 0.0;
         this.dataVolume = 0.0;
-        this.dataProtocol = GlobalPronouns.UART;
 
-        this.dataRateHistory.put(this.now, this.dataRate);
-        this.dataProtocolHistory.put(this.now, this.dataProtocol);
+        this.dataRateHistory.put(this.now, 0.0);
+        this.dataProtocolHistory.put(this.now, Protocol.UART);
     }
 
-    public DataSystemModel(final DataSystemModel other) {
+    public DataModel(final DataModel other) {
         this.now = other.now;
         this.dataRateHistory = new TreeMap<>(other.dataRateHistory);
         this.dataProtocolHistory = new TreeMap<>(other.dataProtocolHistory);
-        this.dataRate = other.dataRate;
         this.dataVolume = other.dataVolume;
-        this.dataProtocol = other.dataProtocol;
     }
 
-    @Override
-    public DataSystemModel duplicate(){
-        return new DataSystemModel(this);
-    }
-
-    @Override
     public void step(final Duration delta){
         this.now = this.now.plus(delta);
-        this.dataVolume += this.dataRate * delta.asIntegerQuantity(TimeUnit.SECONDS);
-    }
-
-    @Override
-    public void react(final String resourceName, final Stimulus stimulus){
-        switch (resourceName){
-            case GlobalPronouns.dataRate:
-                this.accumulateDataRate(((AccumulateStimulus)stimulus).getDelta(Double.class));
-                break;
-
-            case GlobalPronouns.dataVolume:
-                this.setDataVolume(((SetStimulus)stimulus).getNewValue(Double.class));
-                break;
-
-            case GlobalPronouns.dataProtocol:
-                this.setDataProtocol(((SetStimulus)stimulus).getNewValue(String.class));
-                break;
-        }
+        this.dataVolume += this.dataRateHistory.lastEntry().getValue() * delta.asIntegerQuantity(TimeUnit.SECONDS);
     }
 
     public void accumulateDataRate(final double delta) {
-        this.dataRate += delta;
-        this.dataRateHistory.put(this.now, this.dataRate);
+        this.dataRateHistory.put(this.now, this.dataRateHistory.lastEntry().getValue() + delta);
 
-        if (this.dataRate > 100 && !Objects.equals(this.dataProtocol, GlobalPronouns.spacewire)) {
-            setDataProtocol(GlobalPronouns.spacewire);
+        if (this.dataRateHistory.lastEntry().getValue() > 100
+            && !Objects.equals(this.dataProtocolHistory.lastEntry().getValue(), Protocol.Spacewire))
+        {
+            setDataProtocol(Protocol.Spacewire);
         }
     }
 
@@ -82,31 +59,32 @@ public final class DataSystemModel implements SystemModel {
         this.dataVolume = volume;
     }
 
-    public void setDataProtocol(final String protocol) {
-        this.dataProtocol = protocol;
-        this.dataProtocolHistory.put(this.now, this.dataProtocol);
+    public void setDataProtocol(final Protocol protocol) {
+        this.dataProtocolHistory.put(this.now, protocol);
     }
 
 
     public double getDataRate(){
-        return this.dataRate;
+        return this.dataRateHistory.lastEntry().getValue();
     }
 
     public double getDataVolume(){
         return this.dataVolume;
     }
 
-    public String getDataProtocol(){
-        return this.dataProtocol;
+    public Protocol getDataProtocol(){
+        return this.dataProtocolHistory.lastEntry().getValue();
     }
+
 
     public Map<Instant, Double> getDataRateHistory() {
         return new TreeMap<>(this.dataRateHistory);
     }
 
-    public Map<Instant, String> getDataProtocolHistory() {
+    public Map<Instant, Protocol> getDataProtocolHistory() {
         return new TreeMap<>(this.dataProtocolHistory);
     }
+
 
     public List<Window> whenRateGreaterThan(final double threshold) {
         final var windows = new ArrayList<Window>();
@@ -131,7 +109,7 @@ public final class DataSystemModel implements SystemModel {
                     break;
                 }
             }
-            if (end == null) break;
+            if (end == null) end = now;
 
             windows.add(Window.between(start, end));
         }

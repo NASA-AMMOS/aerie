@@ -6,5 +6,4 @@ public interface SystemModel {
     SystemModel duplicate();
 
     default void step(final Duration dt) {}
-    default void react(final String resourceName, final Stimulus stimulus) {}
 }

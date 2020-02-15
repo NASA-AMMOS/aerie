@@ -6,75 +6,151 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import java.util.function.Function;
 
-public class DataModelTest {
-    Registry registry = new Registry();
-    Instant simStartTime = registry.getStartTime();
+final class MyEventLog {
+    public final EventTimeline<Channel.Key> timeline = new EventTimeline<>();
 
-    /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
-    {
-        registry.registerModel(new DataSystemModel(simStartTime), registrar -> {
-            registrar.provideResource(GlobalPronouns.dataRate, Double.class, model -> model.getDataRate());
-            registrar.provideResource(GlobalPronouns.dataVolume, Double.class, model -> model.getDataVolume());
-            registrar.provideResource(GlobalPronouns.dataProtocol, String.class, model -> model.getDataProtocol());
-        });
+    public final Channel<Double> addDataRate = new Channel<>(this.timeline);
+    public final Channel<DataModel.Protocol> setDataProtocol = new Channel<>(this.timeline);
+}
+
+final class MySystemModel {
+    public final DataModel dataModel;
+
+    public MySystemModel(final Instant initialInstant) {
+        this.dataModel = new DataModel(initialInstant);
     }
 
-    CumulableState<Double, Double> dataRate = registry.getCumulable(GlobalPronouns.dataRate, Double.class, Double.class);
-    SettableState<Double> dataVolume = registry.getSettable(GlobalPronouns.dataVolume, Double.class);
-    SettableState<String> dataProtocol = registry.getSettable(GlobalPronouns.dataProtocol, String.class);
-
-    /*----------------------------- SAMPLE SIM ---------------------------------------*/
-    Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
-    Instant event2 = event1.plus(10, TimeUnit.SECONDS);
-    Instant event3 = event2.plus(20, TimeUnit.SECONDS);
-    Instant event4 = event3.plus(1, TimeUnit.SECONDS);
-    Instant event5 = event4.plus(5, TimeUnit.SECONDS);
-
-    @Test
-    public void dataVolumeRegistryTest() {
-        dataRate.add(1.0, event1);
-        dataRate.add(9.0, event2);
-        dataRate.add(5.0, event3);
-
-        assertEquals(dataVolume.get(), 210, 0.0);
-        assertEquals(dataVolume.get(), 210, 0.0);
-
-        dataRate.add(-15.0, event4);
-        assertEquals(dataVolume.get(), 225, 0.0);
-        assertEquals(dataVolume.get(), 225, 0.0);
-
-        dataRate.add(10.0, event5);
-        assertEquals(dataVolume.get(), 225, 0.0);
-        assertEquals(dataVolume.get(), 225, 0.0);
+    public MySystemModel(final MySystemModel other) {
+        this.dataModel = new DataModel(other.dataModel);
     }
 
+    public MySystemModel duplicate() {
+        return new MySystemModel(this);
+    }
+
+    public void step(final Duration dt) {
+        // Step all models.
+        this.dataModel.step(dt);
+        // ...
+    }
+
+    public void apply(final MyEventLog eventLog, final Channel.Key key) {
+        // Apply the event to the appropriate models.
+        if (key.channelId == eventLog.addDataRate.id) {
+            final var stimulus = eventLog.addDataRate.getStimulusByKey(key);
+            this.dataModel.accumulateDataRate(stimulus);
+        } else if (key.channelId == eventLog.setDataProtocol.id) {
+            final var stimulus = eventLog.setDataProtocol.getStimulusByKey(key);
+            this.dataModel.setDataProtocol(stimulus);
+        }
+    }
+}
+
+public final class DataModelTest {
     @Test
-    public void dataVolumeTest() {
-        final var simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        final var slice = new DataSystemModel.DataModelSlice(simStartTime);
+    public void testDataModel() {
+        final Instant initialInstant = SimulationInstant.origin();
 
-        slice.step(Duration.fromQuantity(10, TimeUnit.SECONDS));
-        slice.accumulateDataRate(1.0);
-        slice.step(Duration.fromQuantity(10, TimeUnit.SECONDS));
-        slice.accumulateDataRate(9.0);
-        slice.step(Duration.fromQuantity(20, TimeUnit.SECONDS));
-        slice.accumulateDataRate(5.0);
+        final var eventLog = new MyEventLog();
+        final var initialSystemModel = new MySystemModel(initialInstant);
 
-        assertEquals(0*10 + 1*10 + 10*20, slice.getDataVolume(), 0.0);
+        final Function<Instant, MySystemModel> getAtTime = (time) -> {
+            final var accumulator = initialSystemModel.duplicate();
 
-        slice.step(Duration.fromQuantity(1, TimeUnit.SECONDS));
-        slice.accumulateDataRate(-15.0);
+            var now = initialInstant;
+            for (final var event : eventLog.timeline) {
+                if (event.time.isAfter(time)) break;
+                if (event.time.isBefore(now)) continue;
 
-        assertEquals(0*10 + 1*10 + 10*20 + 15*1, slice.getDataVolume(), 0.0);
+                if (now.isBefore(event.time)) {
+                    accumulator.step(now.durationTo(event.time));
+                    now = event.time;
+                }
 
-        slice.step(Duration.fromQuantity(5, TimeUnit.SECONDS));
-        slice.accumulateDataRate(10.0);
+                accumulator.apply(eventLog, event.stimulus);
+            }
 
-        assertEquals(0*10 + 1*10 + 10*20 + 15*1 + 0*5, slice.getDataVolume(), 0.0);
+            return accumulator;
+        };
 
-        System.out.println(slice.getDataRateHistory());
-        System.out.println(slice.getDataProtocolHistory());
+        // Simulate activities.
+        final Instant endTime;
+        {
+            // Keep track of what time it is as we execute the activity.
+            final var simClock = new Object() {
+                private Instant now = initialInstant;
+
+                public void add(final long quantity, final TimeUnit units) {
+                    this.now = this.now.plus(quantity, units);
+                }
+
+                public Instant getNow() {
+                    return this.now;
+                }
+            };
+
+            // Build time-aware wrappers around mission resources.
+            final var dataRate = new Object() {
+                public double get() {
+                    return getAtTime.apply(simClock.now).dataModel.getDataRate();
+                }
+
+                public void increaseBy(final double delta) {
+                    eventLog.addDataRate.scheduleEffect(simClock.getNow(), delta);
+                }
+
+                public void decreaseBy(final double delta) {
+                    eventLog.addDataRate.scheduleEffect(simClock.getNow(), -delta);
+                }
+            };
+
+            final var dataProtocol = new Object() {
+                public DataModel.Protocol get() {
+                    return getAtTime.apply(simClock.now).dataModel.getDataProtocol();
+                }
+
+                public void set(final DataModel.Protocol protocol) {
+                    eventLog.setDataProtocol.scheduleEffect(simClock.getNow(), protocol);
+                }
+            };
+
+            // Sequentially build up a timeline of effects.
+            {
+                simClock.add(10, TimeUnit.SECONDS);
+                dataRate.increaseBy(1.0);
+                dataProtocol.set(DataModel.Protocol.Spacewire);
+
+                simClock.add(10, TimeUnit.SECONDS);
+                dataRate.increaseBy(9.0);
+
+                simClock.add(20, TimeUnit.SECONDS);
+                dataRate.increaseBy(5.0);
+                dataProtocol.set(DataModel.Protocol.UART);
+
+                simClock.add(1, TimeUnit.SECONDS);
+                dataRate.decreaseBy(15.0);
+
+                simClock.add(5, TimeUnit.SECONDS);
+                dataRate.increaseBy(10.0);
+
+                simClock.add(1, TimeUnit.MICROSECONDS);
+
+                endTime = simClock.now;
+            }
+        }
+
+        // Analyze simulated effects.
+        var system = getAtTime.apply(endTime);
+
+        // Analyze the simulation results.
+        System.out.println(system.dataModel.getDataRateHistory());
+        System.out.println(system.dataModel.getDataProtocolHistory());
+        System.out.println(system.dataModel.whenRateGreaterThan(10));
+
+        if (!system.dataModel.whenRateGreaterThan(10).isEmpty()) {
+            System.out.println("Oh no! Constraint violated!");
+        }
     }
 }
