@@ -12,22 +12,22 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 public final class DataModel {
-    public enum Protocol {
-        Spacewire,
-        UART,
-    }
+    public enum Protocol { Spacewire, UART }
 
     private Instant now;
 
+    private final Instant initialInstant;
+    private final double initialDataVolume;
     private final TreeMap<Instant, Double> dataRateHistory;
     private final TreeMap<Instant, Protocol> dataProtocolHistory;
-    private double dataVolume;
 
     public DataModel(final Instant startTime) {
         this.now = startTime;
+
+        this.initialInstant = this.now;
+        this.initialDataVolume = 0.0;
         this.dataRateHistory = new TreeMap<>();
         this.dataProtocolHistory = new TreeMap<>();
-        this.dataVolume = 0.0;
 
         this.dataRateHistory.put(this.now, 0.0);
         this.dataProtocolHistory.put(this.now, Protocol.UART);
@@ -35,14 +35,15 @@ public final class DataModel {
 
     public DataModel(final DataModel other) {
         this.now = other.now;
+
+        this.initialInstant = other.initialInstant;
+        this.initialDataVolume = other.initialDataVolume;
         this.dataRateHistory = new TreeMap<>(other.dataRateHistory);
         this.dataProtocolHistory = new TreeMap<>(other.dataProtocolHistory);
-        this.dataVolume = other.dataVolume;
     }
 
     public void step(final Duration delta){
         this.now = this.now.plus(delta);
-        this.dataVolume += this.dataRateHistory.lastEntry().getValue() * delta.asIntegerQuantity(TimeUnit.SECONDS);
     }
 
     public void accumulateDataRate(final double delta) {
@@ -55,10 +56,6 @@ public final class DataModel {
         }
     }
 
-    public void setDataVolume(final double volume) {
-        this.dataVolume = volume;
-    }
-
     public void setDataProtocol(final Protocol protocol) {
         this.dataProtocolHistory.put(this.now, protocol);
     }
@@ -69,7 +66,24 @@ public final class DataModel {
     }
 
     public double getDataVolume(){
-        return this.dataVolume;
+        var volume = this.initialDataVolume;
+        var rate = 0.0;
+
+        var now = this.initialInstant;
+        for (final var entry : this.dataRateHistory.entrySet()) {
+            final var dt = now.durationTo(entry.getKey()).asIntegerQuantity(TimeUnit.SECONDS);
+            now = entry.getKey();
+            volume += rate * dt;
+
+            rate = entry.getValue();
+        }
+
+        if (now.isBefore(this.now)) {
+            final var dt = now.durationTo(this.now).asIntegerQuantity(TimeUnit.SECONDS);
+            volume += rate * dt;
+        }
+
+        return volume;
     }
 
     public Protocol getDataProtocol(){
