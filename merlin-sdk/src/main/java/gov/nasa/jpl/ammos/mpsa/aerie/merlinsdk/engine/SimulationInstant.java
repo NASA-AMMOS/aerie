@@ -14,26 +14,17 @@ public final class SimulationInstant implements Instant {
     this.microsecondsFromStart = microsecondsFromStart;
   }
 
-  public static SimulationInstant fromQuantity(final long quantity, final TimeUnit units) {
-    switch (units) {
-      case MICROSECONDS: return new SimulationInstant(quantity);
-      case MILLISECONDS: return new SimulationInstant(quantity * 1000L);
-      case SECONDS:      return new SimulationInstant(quantity * 1000000L);
-      case MINUTES:      return new SimulationInstant(quantity * 1000000L * 60L);
-      case HOURS:        return new SimulationInstant(quantity * 1000000L * 60L * 60L);
-      case DAYS:         return new SimulationInstant(quantity * 1000000L * 60L * 60L * 24L);
-      case WEEKS:        return new SimulationInstant(quantity * 1000000L * 60L * 60L * 24L * 7L);
-      default: throw new Error("Unknown TimeUnit value: " + units);
-    }
+  public static SimulationInstant origin() {
+    return new SimulationInstant(0);
   }
 
   @Override
-  public SimulationInstant plus(final Duration duration) {
+  public Instant plus(final Duration duration) {
     return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.durationInMicroseconds));
   }
 
   @Override
-  public SimulationInstant minus(final Duration duration) {
+  public Instant minus(final Duration duration) {
     return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.durationInMicroseconds));
   }
 

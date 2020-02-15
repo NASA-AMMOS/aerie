@@ -27,7 +27,7 @@ public class BasicStateTest {
         }
     }
     public SimulationEngine mockEngine = new SimulationEngine(
-        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
+        SimulationInstant.origin(),
         List.of(),
         new MockStateContainer());
 

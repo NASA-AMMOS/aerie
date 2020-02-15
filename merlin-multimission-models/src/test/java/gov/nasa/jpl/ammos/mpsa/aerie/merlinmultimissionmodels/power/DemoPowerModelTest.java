@@ -18,7 +18,7 @@ public class DemoPowerModelTest {
 
         DemoPowerModel demo = new DemoPowerModel();
         MockTimeSimulationEngine<DemoPowerModel.States> engine
-                = new MockTimeSimulationEngine<>(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS));
+                = new MockTimeSimulationEngine<>(SimulationInstant.origin());
         MockSimulationContext<DemoPowerModel.States> context
                 = new MockSimulationContext<>();
         demo.states.setEngine( engine );

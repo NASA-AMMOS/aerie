@@ -63,7 +63,7 @@ public class InstrumentOffTest {
     @Test public void modelEffectsWorks() {
         final double powerLoad_W = 10.0;
         final InstrumentPower powerState_W = new InstrumentPower();
-        powerState_W.setEngine( new MockTimeEmptySimulationEngine(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS)) );
+        powerState_W.setEngine( new MockTimeEmptySimulationEngine(SimulationInstant.origin()) );
         //TODO: use a mock state class, except right now it would be identical!
 
         final InstrumentOff<MockEmptyStateContainer> onAct =

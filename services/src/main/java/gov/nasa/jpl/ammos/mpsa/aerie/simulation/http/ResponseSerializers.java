@@ -61,7 +61,7 @@ public final class ResponseSerializers {
   }
 
   static public JsonValue serializeTimestamp(final Instant timestamp) {
-    final var duration = ((SimulationInstant)timestamp).durationFrom(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS));
+    final var duration = timestamp.durationFrom(SimulationInstant.origin());
     return Json.createValue(duration.durationInMicroseconds / 1000);
   }
 

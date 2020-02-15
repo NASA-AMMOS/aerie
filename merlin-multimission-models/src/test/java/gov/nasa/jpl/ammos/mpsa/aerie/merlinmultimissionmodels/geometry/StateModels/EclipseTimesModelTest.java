@@ -39,7 +39,7 @@ public class EclipseTimesModelTest {
         }
     }
     public SimulationEngine mockEngine = new SimulationEngine(
-        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
+        SimulationInstant.origin(),
         List.of(),
         new MockStateContainer());
 

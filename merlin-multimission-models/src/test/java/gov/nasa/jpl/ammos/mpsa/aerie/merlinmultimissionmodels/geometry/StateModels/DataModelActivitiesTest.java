@@ -27,7 +27,7 @@ public class DataModelActivitiesTest {
         System.out.println("\nBin activity init test start");
 
         //0. choose sim start time
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         //1. create activities and add to job list
         InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
@@ -57,7 +57,7 @@ public class DataModelActivitiesTest {
         System.out.println("\nTurn instruments on activity init test start");
 
         //0. choose sim start time
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
         Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
 
         //1. create activities and add to job list
@@ -105,7 +105,7 @@ public class DataModelActivitiesTest {
     public void turnInstrumentsOffActivity(){
         System.out.println("Turn instruments off activity test start\n");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
         Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
         Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
 
@@ -160,7 +160,7 @@ public class DataModelActivitiesTest {
     public void downlinkActivity(){
         System.out.println("Downlink activity test start\n");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
         Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
         Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
         Instant simDownlink = simStart.plus(5, TimeUnit.HOURS);

@@ -24,6 +24,10 @@ public interface Instant extends Comparable<Instant> {
     return this.minus(Duration.fromQuantity(quantity, units));
   }
 
+  default Duration durationTo(Instant other) {
+    return other.durationFrom(this);
+  }
+
   default boolean isBefore(final Instant other) {
     return this.compareTo(other) < 0;
   }

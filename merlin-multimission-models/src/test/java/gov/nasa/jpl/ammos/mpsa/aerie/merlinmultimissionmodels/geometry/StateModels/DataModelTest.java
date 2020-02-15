@@ -85,7 +85,7 @@ public class DataModelTest {
     @Test
     public void basic_sim_test(){
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
@@ -114,7 +114,7 @@ public class DataModelTest {
 
         System.out.println("\nBin Initialization test start");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
@@ -145,7 +145,7 @@ public class DataModelTest {
 
         System.out.println("\nTurn instrument on test start");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
         ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
@@ -177,7 +177,7 @@ public class DataModelTest {
 
         System.out.println("\nTurn instrument on test start");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         //Create activities
         InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();

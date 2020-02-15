@@ -20,9 +20,9 @@ public class InstrumentPowerRandomAccessTest {
     /**
      * reusable time points
      */
-    private final Instant t2020 = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
-    private final Instant t2020_10s = SimulationInstant.fromQuantity(10, TimeUnit.SECONDS);
-    private final Instant t2020_20s = SimulationInstant.fromQuantity(20, TimeUnit.SECONDS);
+    private final Instant t2020 = SimulationInstant.origin();
+    private final Instant t2020_10s = t2020.plus(10, TimeUnit.SECONDS);
+    private final Instant t2020_20s = t2020.plus(20, TimeUnit.SECONDS);
 
     /**
      * reusable simulation engine mocks
@@ -102,21 +102,22 @@ public class InstrumentPowerRandomAccessTest {
 
     @Test
     public void getAtTimeSeesSeriesOfPastSets() {
+        final Instant initialInstant = SimulationInstant.origin();
         final InstrumentPower instPower_W = new InstrumentPower();
         final Map<Instant,Double> sets = new TreeMap<>( Map.of(
-                SimulationInstant.fromQuantity(10, TimeUnit.SECONDS), 110.0,
-                SimulationInstant.fromQuantity(20, TimeUnit.SECONDS), 120.0,
-                SimulationInstant.fromQuantity(30, TimeUnit.SECONDS), 130.0 ) );
+                initialInstant.plus(10, TimeUnit.SECONDS), 110.0,
+                initialInstant.plus(20, TimeUnit.SECONDS), 120.0,
+                initialInstant.plus(30, TimeUnit.SECONDS), 130.0 ) );
         final Map<Instant,Double> expecteds =  Map.of(
-                SimulationInstant.fromQuantity(0, TimeUnit.SECONDS), 0.0,
-                SimulationInstant.fromQuantity(10, TimeUnit.SECONDS), 110.0,
-                SimulationInstant.fromQuantity(15, TimeUnit.SECONDS), 110.0,
-                SimulationInstant.fromQuantity(20, TimeUnit.SECONDS), 120.0,
-                SimulationInstant.fromQuantity(25, TimeUnit.SECONDS), 120.0,
-                SimulationInstant.fromQuantity(30, TimeUnit.SECONDS), 130.0,
-                SimulationInstant.fromQuantity(31, TimeUnit.SECONDS), 130.0 );
-        final Instant finalTime = SimulationInstant.fromQuantity(1, TimeUnit.MINUTES);
-        final MockTimeSimulationEngine engine = new MockTimeSimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.SECONDS) );
+                initialInstant.plus(0, TimeUnit.SECONDS),    0.0,
+                initialInstant.plus(10, TimeUnit.SECONDS), 110.0,
+                initialInstant.plus(15, TimeUnit.SECONDS), 110.0,
+                initialInstant.plus(20, TimeUnit.SECONDS), 120.0,
+                initialInstant.plus(25, TimeUnit.SECONDS), 120.0,
+                initialInstant.plus(30, TimeUnit.SECONDS), 130.0,
+                initialInstant.plus(31, TimeUnit.SECONDS), 130.0 );
+        final Instant finalTime = initialInstant.plus(1, TimeUnit.MINUTES);
+        final MockTimeSimulationEngine engine = new MockTimeSimulationEngine( initialInstant );
 
         instPower_W.setEngine( engine );
 

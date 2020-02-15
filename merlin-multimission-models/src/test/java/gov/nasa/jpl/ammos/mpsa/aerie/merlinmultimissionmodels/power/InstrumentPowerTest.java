@@ -38,7 +38,7 @@ public class InstrumentPowerTest {
     public void setWorks() {
         //configure the instrument power model (it starts at zero)
         SettableState<Double> instPower_W = new InstrumentPower();
-        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS) ) );
+        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.origin() ) );
 
         //set the power to some test value
         final double testValue_W = 330.0;
@@ -49,7 +49,7 @@ public class InstrumentPowerTest {
     public void getWorksAfterSet() {
         //configure the instrument power model (it starts at zero)
         SettableState<Double> instPower_W = new InstrumentPower();
-        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS) ) );
+        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.origin() ) );
 
         //set the power to some test value
         final double testValue_W = 330.0;

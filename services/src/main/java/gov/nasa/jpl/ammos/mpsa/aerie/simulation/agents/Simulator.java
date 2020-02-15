@@ -82,7 +82,7 @@ public final class Simulator<States extends StateContainer> {
 
     // TODO: Load planned activities into the scheduler for scheduling.
     // TODO: Be notified when the schedule changes.
-    final Instant simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    final Instant simulationStartTime = SimulationInstant.origin();
     final List<ActivityJob<?>> scheduledActivities = new ArrayList<>();
     for (final var entry : plannedActivities) {
       scheduledActivities.add(new ActivityJob<>(entry.getValue(), simulationStartTime.plus(entry.getKey().value, TimeUnit.MILLISECONDS)));

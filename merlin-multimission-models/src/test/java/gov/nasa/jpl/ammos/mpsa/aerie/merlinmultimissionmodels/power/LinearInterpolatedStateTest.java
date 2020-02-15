@@ -29,7 +29,7 @@ public class LinearInterpolatedStateTest {
     }
 
     private final SimulationEngine mockEngine = new SimulationEngine(
-        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
+        SimulationInstant.origin(),
         List.of(),
         new MockStateContainer());
 
@@ -44,7 +44,7 @@ public class LinearInterpolatedStateTest {
     private final Time t2020_20s = new Time();
     { t2020_20s.valueOf( "2020-001T00:00:20.000"); }
 
-    private final Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
+    private final Instant simStart = SimulationInstant.origin();
     private final Instant simStart_10s = simStart.plus(10, TimeUnit.SECONDS);
     private final Instant simStart_20s = simStart.plus(20, TimeUnit.SECONDS);
 
@@ -91,14 +91,13 @@ public class LinearInterpolatedStateTest {
     }
 
     @Test public void getPastLeftWorks() {
-        final MockTimeSimulationEngine<?> mockEngine = new MockTimeSimulationEngine<>(
-            SimulationInstant.fromQuantity(10, TimeUnit.SECONDS) );
+        final MockTimeSimulationEngine<?> mockEngine = new MockTimeSimulationEngine<>( simStart_10s );
 
         LinearInterpolatedState state  = new LinearInterpolatedState(
                 t2020_10s, 100, t2020_20s, 110 );
         state.setEngine(mockEngine);
 
-        mockEngine.setCurrentSimulationTime(SimulationInstant.fromQuantity(0, TimeUnit.SECONDS));
+        mockEngine.setCurrentSimulationTime(simStart);
         double result = state.get( simStart );
 
         assertThat(result).isCloseTo( 90, withinPercentage( 0.01 ) );

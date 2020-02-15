@@ -28,9 +28,9 @@ public class BatteryEnergyTest {
     /**
      * reusable time points
      */
-    private final Instant t2020 = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
-    private final Instant t2020_10s = SimulationInstant.fromQuantity(10, TimeUnit.SECONDS);
-    private final Instant t2020_20s = SimulationInstant.fromQuantity(20, TimeUnit.SECONDS);
+    private final Instant t2020 = SimulationInstant.origin();
+    private final Instant t2020_10s = t2020.plus(10, TimeUnit.SECONDS);
+    private final Instant t2020_20s = t2020.plus(20, TimeUnit.SECONDS);
 
     @Test
     public void ctorWorks() {

@@ -50,12 +50,13 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       return;
     }
 
+    final Instant originTime = SimulationInstant.origin();
     String adaptationId = plan.getAdaptationId();
     List<ScheduledActivity> scheduledActivities = new ArrayList<>();
     List<ActivityInstance> plannedActivities = plan.getActivityInstances();
     try {
       for (ActivityInstance instance : plannedActivities) {
-        scheduledActivities.add(new ScheduledActivity(instance));
+        scheduledActivities.add(new ScheduledActivity(originTime, instance));
       }
     } catch (ParseException e) {
       System.err.println(e);
@@ -189,7 +190,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       simulationJobs.add(new ActivityJob<>(activity, scheduledActivity.startTime));
     }
 
-    final var simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    final var simulationStartTime = SimulationInstant.origin();
     final var stateContainer = adaptation.createStateModels();
     final var engine = new SimulationEngine(simulationStartTime, simulationJobs, stateContainer);
 

@@ -24,14 +24,14 @@ public final class ScheduledActivity {
     this.activity = activity;
   }
 
-  public ScheduledActivity(final ActivityInstance instance) throws ParseException {
+  public ScheduledActivity(final Instant originTime, final ActivityInstance instance) throws ParseException {
     final Map<String, SerializedParameter> serializedParameters = new HashMap<>();
     final Map<String, SerializedParameter> instanceParameters = instance.getParameters();
     for (Map.Entry<String, SerializedParameter> entry : instanceParameters.entrySet()) {
       serializedParameters.put(entry.getKey(), entry.getValue());
     }
 
-    this.startTime = SimulationInstant.fromQuantity(timestampFormat.parse(instance.getStartTimestamp()).getTime(), TimeUnit.MILLISECONDS);
+    this.startTime = originTime.plus(timestampFormat.parse(instance.getStartTimestamp()).getTime(), TimeUnit.MILLISECONDS);
     this.activity = new SerializedActivity(instance.getActivityType(), serializedParameters);
   }
 

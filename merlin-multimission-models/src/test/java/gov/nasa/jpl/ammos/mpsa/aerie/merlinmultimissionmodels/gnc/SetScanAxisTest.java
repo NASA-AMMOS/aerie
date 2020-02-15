@@ -23,7 +23,7 @@ public class SetScanAxisTest {
         double y = 0.2;
         double z = 0.2;
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
         SetScanAxis setScanAxisActivity = new SetScanAxis(x, y, z);
         ActivityJob<GNCStates> gncActivities = new ActivityJob<>(setScanAxisActivity, simStart);
         GNCStates gncStates = new GNCStates();

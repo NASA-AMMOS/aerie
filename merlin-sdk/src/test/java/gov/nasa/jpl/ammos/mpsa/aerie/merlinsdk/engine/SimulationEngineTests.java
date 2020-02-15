@@ -91,7 +91,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void sequentialSimulationBaselineTest() {
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {
@@ -134,7 +134,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void timeOrderingTest() {
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         for (int i = 1; i <= 3; i++) {
@@ -178,7 +178,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void delayTest() {
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         DelayTestActivity act = new DelayTestActivity();
@@ -225,7 +225,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void spawnActivityTimingTest() {
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         SpawnTestParentActivity parent = new SpawnTestParentActivity();
@@ -271,7 +271,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void callActivityTimingTest() {
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         CallTestParentActivity parent = new CallTestParentActivity();
@@ -309,7 +309,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void simpleDurationTest() {
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         SimpleDurationTestActivity act = new SimpleDurationTestActivity();
@@ -362,7 +362,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void parentChildDurationTest() {
-        SimulationInstant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStart = SimulationInstant.origin();
 
         List<ActivityJob<?>> actList = new ArrayList<>();
         DurationTestParentActivity parent = new DurationTestParentActivity();
