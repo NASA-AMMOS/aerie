@@ -7,7 +7,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.PriorityQueue;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 final class MySystemModel implements SystemModel {
@@ -83,9 +85,13 @@ public final class DataModelTest {
             final var ctx = new Object() {
                 private Instant now = initialInstant;
 
-                public void after(final long quantity, final TimeUnit units, final Runnable action) {
+                public void after(final Duration duration, final Runnable action) {
                     // TODO: Keep track of the "containing context" for this action, i.e. the owning activity
-                    queue.add(Pair.of(this.now.plus(quantity, units), action));
+                    queue.add(Pair.of(this.now.plus(duration), action));
+                }
+
+                public void after(final long quantity, final TimeUnit units, final Runnable action) {
+                    this.after(Duration.fromQuantity(quantity, units), action);
                 }
 
                 public Instant now() {
@@ -95,6 +101,15 @@ public final class DataModelTest {
 
             // Schedule the activities to be simulated.
             {
+                /* can't have an `interface` inside a method for some reason. */
+                abstract class Foo {
+                    abstract void delay(final Duration duration);
+
+                    final void delay(final long quantity, final TimeUnit units) {
+                        this.delay(Duration.fromQuantity(quantity, units));
+                    }
+                }
+
                 // Build time-aware wrappers around mission resources.
                 final var dataRate = new Object() {
                     public double get() {
@@ -120,44 +135,60 @@ public final class DataModelTest {
                     }
                 };
 
-                {
-                    final var foo = new Object() {
-                        private volatile boolean threadActive = false;
-
-                        public void delay(final long quantity, final TimeUnit units) {
-                            ctx.after(quantity, units, () -> {
-                                // Resume the thread.
-                                this.threadActive = true;
-                                // Wait until the thread has yielded.
-                                while (this.threadActive) {}
-                            });
-
-                            // Yield control back to the coordinator.
-                            this.threadActive = false;
-                            // Wait until this thread is allowed to continue.
-                            while (!this.threadActive) {}
+                final List<Pair<Instant, Consumer<Foo>>> scheduledActivities = List.of(
+                    Pair.of(
+                        initialInstant.plus(10, TimeUnit.SECONDS),
+                        (foo) -> {
+                            dataRate.increaseBy(1.0);
+                            foo.delay(10, TimeUnit.SECONDS);
+                            dataRate.increaseBy(9.0);
+                            foo.delay(20, TimeUnit.SECONDS);
+                            dataRate.increaseBy(5.0);
+                            foo.delay(1, TimeUnit.SECONDS);
+                            dataRate.decreaseBy(15.0);
+                            foo.delay(5, TimeUnit.SECONDS);
+                            dataRate.increaseBy(10.0);
                         }
-                    };
+                    ),
+                    Pair.of(
+                        initialInstant.plus(10, TimeUnit.SECONDS),
+                        (foo) -> {
+                            dataProtocol.set(DataModel.Protocol.Spacewire);
+                            foo.delay(30, TimeUnit.SECONDS);
+                            dataProtocol.set(DataModel.Protocol.UART);
+                        }
+                    )
+                );
 
-                    final Runnable activity = () -> {
-                        dataRate.increaseBy(1.0);
-                        foo.delay(10, TimeUnit.SECONDS);
-                        dataRate.increaseBy(9.0);
-                        foo.delay(20, TimeUnit.SECONDS);
-                        dataRate.increaseBy(5.0);
-                        foo.delay(1, TimeUnit.SECONDS);
-                        dataRate.decreaseBy(15.0);
-                        foo.delay(5, TimeUnit.SECONDS);
-                        dataRate.increaseBy(10.0);
-                    };
+                for (final var scheduledActivity : scheduledActivities) {
+                    final var startTime = scheduledActivity.getKey();
+                    final var activity = scheduledActivity.getValue();
 
-                    ctx.after(10, TimeUnit.SECONDS, () -> {
+                    queue.add(Pair.of(startTime, () -> {
+                        final var foo = new Foo() {
+                            private volatile boolean threadActive = false;
+
+                            public void delay(final Duration duration) {
+                                ctx.after(duration, () -> {
+                                    // Resume the thread.
+                                    this.threadActive = true;
+                                    // Wait until the thread has yielded.
+                                    while (this.threadActive) {}
+                                });
+
+                                // Yield control back to the coordinator.
+                                this.threadActive = false;
+                                // Wait until this thread is allowed to continue.
+                                while (!this.threadActive) {}
+                            }
+                        };
+
                         // Spin up a new thread.
                         {
                             final var t = new Thread(() -> {
                                 // Wait until this thread is allowed to continue.
                                 while (!foo.threadActive) {}
-                                activity.run();
+                                activity.accept(foo);
                                 // Yield control back to the coordinator.
                                 foo.threadActive = false;
                             });
@@ -169,53 +200,7 @@ public final class DataModelTest {
                         foo.threadActive = true;
                         // Wait until the thread has yielded.
                         while (foo.threadActive) {}
-                    });
-                }
-
-                {
-                    final var foo = new Object() {
-                        private volatile boolean threadActive = false;
-
-                        public void delay(final long quantity, final TimeUnit units) {
-                            ctx.after(quantity, units, () -> {
-                                // Resume the thread.
-                                this.threadActive = true;
-                                // Wait until the thread has yielded.
-                                while (this.threadActive) {}
-                            });
-
-                            // Yield control back to the coordinator.
-                            this.threadActive = false;
-                            // Wait until this thread is allowed to continue.
-                            while (!this.threadActive) {}
-                        }
-                    };
-
-                    final Runnable activity = () -> {
-                        dataProtocol.set(DataModel.Protocol.Spacewire);
-                        foo.delay(30, TimeUnit.SECONDS);
-                        dataProtocol.set(DataModel.Protocol.UART);
-                    };
-
-                    ctx.after(10, TimeUnit.SECONDS, () -> {
-                        // Spin up a new thread.
-                        {
-                            final var t = new Thread(() -> {
-                                // Wait until this thread is allowed to continue.
-                                while (!foo.threadActive) {}
-                                activity.run();
-                                // Yield control back to the coordinator.
-                                foo.threadActive = false;
-                            });
-                            t.setDaemon(true);
-                            t.start();
-                        }
-
-                        // Resume the thread.
-                        foo.threadActive = true;
-                        // Wait until the thread has yielded.
-                        while (foo.threadActive) {}
-                    });
+                    }));
                 }
             }
 
