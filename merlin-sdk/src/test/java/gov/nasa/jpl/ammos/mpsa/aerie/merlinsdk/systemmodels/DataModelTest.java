@@ -4,7 +4,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.PriorityQueue;
 import java.util.function.Function;
 
 final class MySystemModel implements SystemModel {
@@ -75,13 +77,14 @@ public final class DataModelTest {
         // Simulate activities.
         Instant endTime = initialInstant;
         {
+            final var queue = new PriorityQueue<Pair<Instant, Runnable>>();
+
             // Keep track of what time it is as we execute the activity.
             final var ctx = new Object() {
                 private Instant now = initialInstant;
 
                 public void after(final long quantity, final TimeUnit units, final Runnable action) {
-                    this.now = this.now.plus(quantity, units);
-                    action.run();
+                    queue.add(Pair.of(this.now.plus(quantity, units), action));
                 }
 
                 public Instant now() {
@@ -132,17 +135,24 @@ public final class DataModelTest {
             };
 
             // Simulate the activity.
-            activity.run();
+            queue.add(Pair.of(ctx.now(), activity));
+            while (!queue.isEmpty()) {
+                final var job = queue.remove();
+                ctx.now = job.getLeft();
+                job.getRight().run();
+            }
+
             endTime = Instant.max(endTime, ctx.now());
         }
         {
+            final var queue = new PriorityQueue<Pair<Instant, Runnable>>();
+
             // Keep track of what time it is as we execute the activity.
             final var ctx = new Object() {
                 private Instant now = initialInstant;
 
                 public void after(final long quantity, final TimeUnit units, final Runnable action) {
-                    this.now = this.now.plus(quantity, units);
-                    action.run();
+                    queue.add(Pair.of(this.now.plus(quantity, units), action));
                 }
 
                 public Instant now() {
@@ -177,7 +187,13 @@ public final class DataModelTest {
             };
 
             // Simulate the activity.
-            activity.run();
+            queue.add(Pair.of(ctx.now(), activity));
+            while (!queue.isEmpty()) {
+                final var job = queue.remove();
+                ctx.now = job.getLeft();
+                job.getRight().run();
+            }
+
             endTime = Instant.max(endTime, ctx.now());
         }
 
