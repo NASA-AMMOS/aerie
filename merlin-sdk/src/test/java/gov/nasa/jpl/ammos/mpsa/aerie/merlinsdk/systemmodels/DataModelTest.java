@@ -7,8 +7,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.PriorityQueue;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 final class MySystemModel implements SystemModel {
@@ -85,7 +86,7 @@ public final class DataModelTest {
                 private Instant now = initialInstant;
 
                 public void after(final Duration duration, final Runnable action) {
-                    // TODO: Keep track of the "containing context" for this action, i.e. the owning activity
+                    if (duration.isNegative()) throw new RuntimeException("Cannot wait for a negative duration");
                     queue.add(Pair.of(this.now.plus(duration), action));
                 }
 
@@ -100,54 +101,6 @@ public final class DataModelTest {
 
             // Schedule the activities to be simulated.
             {
-                final class Foo {
-                    private volatile boolean threadActive = false;
-
-                    public void delay(final Duration duration) {
-                        ctx.after(duration, () -> {
-                            // Resume the thread.
-                            this.threadActive = true;
-                            // Wait until the thread has yielded.
-                            while (this.threadActive) {}
-                        });
-
-                        // Yield control back to the coordinator.
-                        this.threadActive = false;
-                        // Wait until this thread is allowed to continue.
-                        while (!this.threadActive) {}
-                    }
-
-                    public void spawn(final Duration duration, final Consumer<Foo> activity) {
-                        final var foo = new Foo();
-
-                        ctx.after(duration, () -> {
-                            final var t = new Thread(() -> {
-                                // Wait until this thread is allowed to continue.
-                                while (!foo.threadActive) {}
-                                // Kick off the activity.
-                                activity.accept(foo);
-                                // Yield control back to the coordinator.
-                                foo.threadActive = false;
-                            });
-                            t.setDaemon(true);
-                            t.start();
-
-                            // Resume the thread.
-                            foo.threadActive = true;
-                            // Wait until the thread has yielded.
-                            while (foo.threadActive) {}
-                        });
-                    }
-
-                    public void delay(final long quantity, final TimeUnit units) {
-                        this.delay(Duration.fromQuantity(quantity, units));
-                    }
-
-                    public void spawn(final long quantity, final TimeUnit units, final Consumer<Foo> activity) {
-                        this.spawn(Duration.fromQuantity(quantity, units), activity);
-                    }
-                }
-
                 // Build time-aware wrappers around mission resources.
                 final var dataRate = new Object() {
                     public double get() {
@@ -173,25 +126,28 @@ public final class DataModelTest {
                     }
                 };
 
-                final var spawner = new Foo();
-                queue.add(Pair.of(initialInstant, () -> {
-                    spawner.spawn(10, TimeUnit.SECONDS, (foo) -> {
-                        dataRate.increaseBy(1.0);
-                        foo.delay(10, TimeUnit.SECONDS);
-                        dataRate.increaseBy(9.0);
-                        foo.delay(20, TimeUnit.SECONDS);
-                        dataRate.increaseBy(5.0);
-                        foo.delay(1, TimeUnit.SECONDS);
-                        dataRate.decreaseBy(15.0);
-                        foo.delay(5, TimeUnit.SECONDS);
-                        dataRate.increaseBy(10.0);
+                final Runnable performSchedule = () -> {
+                    enter(new ActivityContext(ctx::after), () -> {
+                        spawn(10, TimeUnit.SECONDS, () -> {
+                            dataRate.increaseBy(1.0);
+                            delay(10, TimeUnit.SECONDS);
+                            dataRate.increaseBy(9.0);
+                            delay(20, TimeUnit.SECONDS);
+                            dataRate.increaseBy(5.0);
+                            delay(1, TimeUnit.SECONDS);
+                            dataRate.decreaseBy(15.0);
+                            delay(5, TimeUnit.SECONDS);
+                            dataRate.increaseBy(10.0);
+                        });
+                        spawn(10, TimeUnit.SECONDS, () -> {
+                            dataProtocol.set(DataModel.Protocol.Spacewire);
+                            delay(30, TimeUnit.SECONDS);
+                            dataProtocol.set(DataModel.Protocol.UART);
+                        });
                     });
-                    spawner.spawn(10, TimeUnit.SECONDS, (foo) -> {
-                        dataProtocol.set(DataModel.Protocol.Spacewire);
-                        foo.delay(30, TimeUnit.SECONDS);
-                        dataProtocol.set(DataModel.Protocol.UART);
-                    });
-                }));
+                };
+
+                ctx.after(0, TimeUnit.SECONDS, performSchedule);
             }
 
             while (!queue.isEmpty()) {
@@ -213,5 +169,74 @@ public final class DataModelTest {
         if (!system.dataModel.whenRateGreaterThan(10).isEmpty()) {
             System.out.println("Oh no! Constraint violated!");
         }
+    }
+
+    private static final class ActivityContext {
+        private final BiConsumer<Duration, Runnable> scheduleEvent;
+        private volatile boolean isActive = false;
+
+        public ActivityContext(final BiConsumer<Duration, Runnable> scheduleEvent) {
+            this.scheduleEvent = scheduleEvent;
+        }
+    }
+
+    private static final ThreadLocal<ActivityContext> activityContext = ThreadLocal.withInitial(() -> null);
+
+    public static void enter(final ActivityContext context, final Runnable scope) {
+        final var previousContext = activityContext.get();
+
+        activityContext.set(context);
+        try {
+            scope.run();
+        } finally {
+            activityContext.set(previousContext);
+        }
+    }
+
+    public static void delay(final Duration duration) {
+        final var self = Objects.requireNonNull(activityContext.get(), "delay cannot be called outside of activity context");
+
+        self.scheduleEvent.accept(duration, () -> {
+            // Resume the thread.
+            self.isActive = true;
+            // Wait until the thread has yielded.
+            while (self.isActive) {}
+        });
+
+        // Yield control back to the coordinator.
+        self.isActive = false;
+        // Wait until this thread is allowed to continue.
+        while (!self.isActive) {}
+    }
+
+    public static void spawn(final Duration duration, final Runnable activity) {
+        final var self = Objects.requireNonNull(activityContext.get(), "spawn cannot be called outside of activity context");
+        final var child = new ActivityContext(self.scheduleEvent);
+
+        self.scheduleEvent.accept(duration, () -> {
+            final var t = new Thread(() -> {
+                // Wait until this thread is allowed to continue.
+                while (!child.isActive) {}
+                // Kick off the activity.
+                enter(child, activity);
+                // Yield control back to the coordinator.
+                child.isActive = false;
+            });
+            t.setDaemon(true);
+            t.start();
+
+            // Resume the thread.
+            child.isActive = true;
+            // Wait until the thread has yielded.
+            while (child.isActive) {}
+        });
+    }
+
+    public static void delay(final long quantity, final TimeUnit units) {
+        delay(Duration.fromQuantity(quantity, units));
+    }
+
+    public static void spawn(final long quantity, final TimeUnit units, final Runnable activity) {
+        spawn(Duration.fromQuantity(quantity, units), activity);
     }
 }
