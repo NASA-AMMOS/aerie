@@ -12,6 +12,9 @@ import java.util.PriorityQueue;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.spawn;
+
 final class MySystemModel implements SystemModel {
     public final DataModel dataModel;
 
@@ -126,8 +129,8 @@ public final class DataModelTest {
                     }
                 };
 
-                final Runnable performSchedule = () -> {
-                    enter(new ActivityContext(ctx::after), () -> {
+                queue.add(Pair.of(initialInstant, () -> {
+                    ThreadedActivityEffects.enter(ctx::after, () -> {
                         spawn(10, TimeUnit.SECONDS, () -> {
                             dataRate.increaseBy(1.0);
                             delay(10, TimeUnit.SECONDS);
@@ -145,9 +148,7 @@ public final class DataModelTest {
                             dataProtocol.set(DataModel.Protocol.UART);
                         });
                     });
-                };
-
-                ctx.after(0, TimeUnit.SECONDS, performSchedule);
+                }));
             }
 
             while (!queue.isEmpty()) {
@@ -170,66 +171,42 @@ public final class DataModelTest {
             System.out.println("Oh no! Constraint violated!");
         }
     }
+}
 
-    private static final class ActivityContext {
-        private final BiConsumer<Duration, Runnable> scheduleEvent;
-        private volatile boolean isActive = false;
+final class ActivityEffects {
+    private ActivityEffects() {}
 
-        public ActivityContext(final BiConsumer<Duration, Runnable> scheduleEvent) {
-            this.scheduleEvent = scheduleEvent;
-        }
+    interface Provider {
+        void delay(final Duration duration);
+        void spawn(final Duration duration, final Runnable activity);
     }
 
-    private static final ThreadLocal<ActivityContext> activityContext = ThreadLocal.withInitial(() -> null);
+    // It's best to think of a `ThreadLocal` not as data, but as a dynamically-scoped variable that exists somewhere
+    // near the base of a thread's call stack. The actual `ThreadLocal` instance serves only to look up that data
+    // in the ambient context of the active thread.
+    private static final ThreadLocal<Provider> dynamicProvider = ThreadLocal.withInitial(() -> null);
 
-    public static void enter(final ActivityContext context, final Runnable scope) {
-        final var previousContext = activityContext.get();
+    public static void enter(final Provider provider, final Runnable scope) {
+        final var previous = dynamicProvider.get();
 
-        activityContext.set(context);
+        dynamicProvider.set(provider);
         try {
             scope.run();
         } finally {
-            activityContext.set(previousContext);
+            dynamicProvider.set(previous);
         }
     }
 
     public static void delay(final Duration duration) {
-        final var self = Objects.requireNonNull(activityContext.get(), "delay cannot be called outside of activity context");
-
-        self.scheduleEvent.accept(duration, () -> {
-            // Resume the thread.
-            self.isActive = true;
-            // Wait until the thread has yielded.
-            while (self.isActive) {}
-        });
-
-        // Yield control back to the coordinator.
-        self.isActive = false;
-        // Wait until this thread is allowed to continue.
-        while (!self.isActive) {}
+        Objects
+            .requireNonNull(dynamicProvider.get(), "delay cannot be called outside of activity context")
+            .delay(duration);
     }
 
     public static void spawn(final Duration duration, final Runnable activity) {
-        final var self = Objects.requireNonNull(activityContext.get(), "spawn cannot be called outside of activity context");
-        final var child = new ActivityContext(self.scheduleEvent);
-
-        self.scheduleEvent.accept(duration, () -> {
-            final var t = new Thread(() -> {
-                // Wait until this thread is allowed to continue.
-                while (!child.isActive) {}
-                // Kick off the activity.
-                enter(child, activity);
-                // Yield control back to the coordinator.
-                child.isActive = false;
-            });
-            t.setDaemon(true);
-            t.start();
-
-            // Resume the thread.
-            child.isActive = true;
-            // Wait until the thread has yielded.
-            while (child.isActive) {}
-        });
+        Objects
+            .requireNonNull(dynamicProvider.get(), "spawn cannot be called outside of activity context")
+            .spawn(duration, activity);
     }
 
     public static void delay(final long quantity, final TimeUnit units) {
@@ -238,5 +215,65 @@ public final class DataModelTest {
 
     public static void spawn(final long quantity, final TimeUnit units, final Runnable activity) {
         spawn(Duration.fromQuantity(quantity, units), activity);
+    }
+}
+
+final class ThreadedActivityEffects {
+    private final BiConsumer<Duration, Runnable> scheduleEvent;
+
+    private ThreadedActivityEffects(final BiConsumer<Duration, Runnable> scheduleEvent) {
+        this.scheduleEvent = scheduleEvent;
+    }
+
+    public static void enter(final BiConsumer<Duration, Runnable> scheduleEvent, final Runnable scope) {
+        final var effects = new ThreadedActivityEffects(scheduleEvent);
+        ActivityEffects.enter(
+            effects.new Provider(),
+            () -> ActivityEffects.spawn(Duration.ZERO, scope));
+    }
+
+    private final class Provider implements ActivityEffects.Provider {
+        private volatile boolean isActive = false;
+
+        public void delay(final Duration duration) {
+            ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
+                // Resume the thread.
+                this.isActive = true;
+                // Wait until the thread has yielded.
+                while (this.isActive) {}
+            });
+
+            // Yield control back to the coordinator.
+            this.isActive = false;
+            // Wait until this thread is allowed to continue.
+            while (!this.isActive) {}
+        }
+
+        public void spawn(final Duration duration, final Runnable activity) {
+            ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
+                final var child = new Provider();
+
+                final var t = new Thread(() -> {
+                    ActivityEffects.enter(child, () -> {
+                        try {
+                            // Wait until this thread is allowed to continue.
+                            while (!child.isActive) {}
+
+                            activity.run();
+                        } finally {
+                            // Yield control back to the coordinator.
+                            child.isActive = false;
+                        }
+                    });
+                });
+                t.setDaemon(true);
+                t.start();
+
+                // Resume the thread.
+                child.isActive = true;
+                // Wait until the thread has yielded.
+                while (child.isActive) {}
+            });
+        }
     }
 }
