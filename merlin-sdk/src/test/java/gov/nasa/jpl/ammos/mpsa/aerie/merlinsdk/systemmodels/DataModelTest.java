@@ -84,6 +84,7 @@ public final class DataModelTest {
                 private Instant now = initialInstant;
 
                 public void after(final long quantity, final TimeUnit units, final Runnable action) {
+                    // TODO: Keep track of the "containing context" for this action, i.e. the owning activity
                     queue.add(Pair.of(this.now.plus(quantity, units), action));
                 }
 
@@ -92,6 +93,7 @@ public final class DataModelTest {
                 }
             };
 
+            // Schedule the activities to be simulated.
             {
                 // Build time-aware wrappers around mission resources.
                 final var dataRate = new Object() {
@@ -118,34 +120,103 @@ public final class DataModelTest {
                     }
                 };
 
-                // Schedule the activities to be simulated.
-                ctx.after(10, TimeUnit.SECONDS, () -> {
-                    dataRate.increaseBy(1.0);
+                {
+                    final var foo = new Object() {
+                        private volatile boolean threadActive = false;
+
+                        public void delay(final long quantity, final TimeUnit units) {
+                            ctx.after(quantity, units, () -> {
+                                // Resume the thread.
+                                this.threadActive = true;
+                                // Wait until the thread has yielded.
+                                while (this.threadActive) {}
+                            });
+
+                            // Yield control back to the coordinator.
+                            this.threadActive = false;
+                            // Wait until this thread is allowed to continue.
+                            while (!this.threadActive) {}
+                        }
+                    };
+
+                    final Runnable activity = () -> {
+                        dataRate.increaseBy(1.0);
+                        foo.delay(10, TimeUnit.SECONDS);
+                        dataRate.increaseBy(9.0);
+                        foo.delay(20, TimeUnit.SECONDS);
+                        dataRate.increaseBy(5.0);
+                        foo.delay(1, TimeUnit.SECONDS);
+                        dataRate.decreaseBy(15.0);
+                        foo.delay(5, TimeUnit.SECONDS);
+                        dataRate.increaseBy(10.0);
+                    };
 
                     ctx.after(10, TimeUnit.SECONDS, () -> {
-                        dataRate.increaseBy(9.0);
-
-                        ctx.after(20, TimeUnit.SECONDS, () -> {
-                            dataRate.increaseBy(5.0);
-
-                            ctx.after(1, TimeUnit.SECONDS, () -> {
-                                dataRate.decreaseBy(15.0);
-
-                                ctx.after(5, TimeUnit.SECONDS, () -> {
-                                    dataRate.increaseBy(10.0);
-                                });
+                        // Spin up a new thread.
+                        {
+                            final var t = new Thread(() -> {
+                                // Wait until this thread is allowed to continue.
+                                while (!foo.threadActive) {}
+                                activity.run();
+                                // Yield control back to the coordinator.
+                                foo.threadActive = false;
                             });
-                        });
+                            t.setDaemon(true);
+                            t.start();
+                        }
+
+                        // Resume the thread.
+                        foo.threadActive = true;
+                        // Wait until the thread has yielded.
+                        while (foo.threadActive) {}
                     });
-                });
+                }
 
-                ctx.after(10, TimeUnit.SECONDS, () -> {
-                    dataProtocol.set(DataModel.Protocol.Spacewire);
+                {
+                    final var foo = new Object() {
+                        private volatile boolean threadActive = false;
 
-                    ctx.after(30, TimeUnit.SECONDS, () -> {
+                        public void delay(final long quantity, final TimeUnit units) {
+                            ctx.after(quantity, units, () -> {
+                                // Resume the thread.
+                                this.threadActive = true;
+                                // Wait until the thread has yielded.
+                                while (this.threadActive) {}
+                            });
+
+                            // Yield control back to the coordinator.
+                            this.threadActive = false;
+                            // Wait until this thread is allowed to continue.
+                            while (!this.threadActive) {}
+                        }
+                    };
+
+                    final Runnable activity = () -> {
+                        dataProtocol.set(DataModel.Protocol.Spacewire);
+                        foo.delay(30, TimeUnit.SECONDS);
                         dataProtocol.set(DataModel.Protocol.UART);
+                    };
+
+                    ctx.after(10, TimeUnit.SECONDS, () -> {
+                        // Spin up a new thread.
+                        {
+                            final var t = new Thread(() -> {
+                                // Wait until this thread is allowed to continue.
+                                while (!foo.threadActive) {}
+                                activity.run();
+                                // Yield control back to the coordinator.
+                                foo.threadActive = false;
+                            });
+                            t.setDaemon(true);
+                            t.start();
+                        }
+
+                        // Resume the thread.
+                        foo.threadActive = true;
+                        // Wait until the thread has yielded.
+                        while (foo.threadActive) {}
                     });
-                });
+                }
             }
 
             while (!queue.isEmpty()) {
