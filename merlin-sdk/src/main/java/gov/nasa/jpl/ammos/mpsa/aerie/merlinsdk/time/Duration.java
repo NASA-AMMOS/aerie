@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 public final class Duration implements Comparable<Duration> {
+  public static Duration ZERO = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
+
   // Range of -2^63 to 2^63 - 1.
   public final long durationInMicroseconds;
 
