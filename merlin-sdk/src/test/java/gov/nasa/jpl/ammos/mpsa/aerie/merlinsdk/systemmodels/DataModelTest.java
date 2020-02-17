@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.function.Function;
 
@@ -75,11 +76,10 @@ public final class DataModelTest {
         };
 
         // Simulate activities.
-        Instant endTime = initialInstant;
+        final Instant endTime;
         {
-            final var queue = new PriorityQueue<Pair<Instant, Runnable>>();
+            final var queue = new PriorityQueue<Pair<Instant, Runnable>>(Comparator.comparing(Pair::getLeft));
 
-            // Keep track of what time it is as we execute the activity.
             final var ctx = new Object() {
                 private Instant now = initialInstant;
 
@@ -90,29 +90,35 @@ public final class DataModelTest {
                 public Instant now() {
                     return this.now;
                 }
-
-                public MySystemModel getSystemModel() {
-                    return getAtTime.apply(this.now);
-                }
             };
 
-            // Build time-aware wrappers around mission resources.
-            final var dataRate = new Object() {
-                public double get() {
-                    return ctx.getSystemModel().dataModel.getDataRate();
-                }
+            {
+                // Build time-aware wrappers around mission resources.
+                final var dataRate = new Object() {
+                    public double get() {
+                        return getAtTime.apply(ctx.now()).dataModel.getDataRate();
+                    }
 
-                public void increaseBy(final double delta) {
-                    addDataRate.add(ctx.now(), delta);
-                }
+                    public void increaseBy(final double delta) {
+                        addDataRate.add(ctx.now(), delta);
+                    }
 
-                public void decreaseBy(final double delta) {
-                    addDataRate.add(ctx.now(), -delta);
-                }
-            };
+                    public void decreaseBy(final double delta) {
+                        addDataRate.add(ctx.now(), -delta);
+                    }
+                };
 
-            // Define the activity to be simulated.
-            final Runnable activity = () -> {
+                final var dataProtocol = new Object() {
+                    public DataModel.Protocol get() {
+                        return getAtTime.apply(ctx.now()).dataModel.getDataProtocol();
+                    }
+
+                    public void set(final DataModel.Protocol protocol) {
+                        setDataProtocol.add(ctx.now(), protocol);
+                    }
+                };
+
+                // Schedule the activities to be simulated.
                 ctx.after(10, TimeUnit.SECONDS, () -> {
                     dataRate.increaseBy(1.0);
 
@@ -132,51 +138,7 @@ public final class DataModelTest {
                         });
                     });
                 });
-            };
 
-            // Simulate the activity.
-            queue.add(Pair.of(ctx.now(), activity));
-            while (!queue.isEmpty()) {
-                final var job = queue.remove();
-                ctx.now = job.getLeft();
-                job.getRight().run();
-            }
-
-            endTime = Instant.max(endTime, ctx.now());
-        }
-        {
-            final var queue = new PriorityQueue<Pair<Instant, Runnable>>();
-
-            // Keep track of what time it is as we execute the activity.
-            final var ctx = new Object() {
-                private Instant now = initialInstant;
-
-                public void after(final long quantity, final TimeUnit units, final Runnable action) {
-                    queue.add(Pair.of(this.now.plus(quantity, units), action));
-                }
-
-                public Instant now() {
-                    return this.now;
-                }
-
-                public MySystemModel getSystemModel() {
-                    return getAtTime.apply(this.now);
-                }
-            };
-
-            // Build time-aware wrappers around mission resources.
-            final var dataProtocol = new Object() {
-                public DataModel.Protocol get() {
-                    return ctx.getSystemModel().dataModel.getDataProtocol();
-                }
-
-                public void set(final DataModel.Protocol protocol) {
-                    setDataProtocol.add(ctx.now(), protocol);
-                }
-            };
-
-            // Define the activity to be simulated.
-            final Runnable activity = () -> {
                 ctx.after(10, TimeUnit.SECONDS, () -> {
                     dataProtocol.set(DataModel.Protocol.Spacewire);
 
@@ -184,17 +146,15 @@ public final class DataModelTest {
                         dataProtocol.set(DataModel.Protocol.UART);
                     });
                 });
-            };
+            }
 
-            // Simulate the activity.
-            queue.add(Pair.of(ctx.now(), activity));
             while (!queue.isEmpty()) {
                 final var job = queue.remove();
                 ctx.now = job.getLeft();
                 job.getRight().run();
             }
 
-            endTime = Instant.max(endTime, ctx.now());
+            endTime = ctx.now();
         }
 
         // Analyze the simulation results.
