@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -101,12 +100,51 @@ public final class DataModelTest {
 
             // Schedule the activities to be simulated.
             {
-                /* can't have an `interface` inside a method for some reason. */
-                abstract class Foo {
-                    abstract void delay(final Duration duration);
+                final class Foo {
+                    private volatile boolean threadActive = false;
 
-                    final void delay(final long quantity, final TimeUnit units) {
+                    public void delay(final Duration duration) {
+                        ctx.after(duration, () -> {
+                            // Resume the thread.
+                            this.threadActive = true;
+                            // Wait until the thread has yielded.
+                            while (this.threadActive) {}
+                        });
+
+                        // Yield control back to the coordinator.
+                        this.threadActive = false;
+                        // Wait until this thread is allowed to continue.
+                        while (!this.threadActive) {}
+                    }
+
+                    public void spawn(final Duration duration, final Consumer<Foo> activity) {
+                        final var foo = new Foo();
+
+                        ctx.after(duration, () -> {
+                            final var t = new Thread(() -> {
+                                // Wait until this thread is allowed to continue.
+                                while (!foo.threadActive) {}
+                                // Kick off the activity.
+                                activity.accept(foo);
+                                // Yield control back to the coordinator.
+                                foo.threadActive = false;
+                            });
+                            t.setDaemon(true);
+                            t.start();
+
+                            // Resume the thread.
+                            foo.threadActive = true;
+                            // Wait until the thread has yielded.
+                            while (foo.threadActive) {}
+                        });
+                    }
+
+                    public void delay(final long quantity, final TimeUnit units) {
                         this.delay(Duration.fromQuantity(quantity, units));
+                    }
+
+                    public void spawn(final long quantity, final TimeUnit units, final Consumer<Foo> activity) {
+                        this.spawn(Duration.fromQuantity(quantity, units), activity);
                     }
                 }
 
@@ -135,73 +173,25 @@ public final class DataModelTest {
                     }
                 };
 
-                final List<Pair<Instant, Consumer<Foo>>> scheduledActivities = List.of(
-                    Pair.of(
-                        initialInstant.plus(10, TimeUnit.SECONDS),
-                        (foo) -> {
-                            dataRate.increaseBy(1.0);
-                            foo.delay(10, TimeUnit.SECONDS);
-                            dataRate.increaseBy(9.0);
-                            foo.delay(20, TimeUnit.SECONDS);
-                            dataRate.increaseBy(5.0);
-                            foo.delay(1, TimeUnit.SECONDS);
-                            dataRate.decreaseBy(15.0);
-                            foo.delay(5, TimeUnit.SECONDS);
-                            dataRate.increaseBy(10.0);
-                        }
-                    ),
-                    Pair.of(
-                        initialInstant.plus(10, TimeUnit.SECONDS),
-                        (foo) -> {
-                            dataProtocol.set(DataModel.Protocol.Spacewire);
-                            foo.delay(30, TimeUnit.SECONDS);
-                            dataProtocol.set(DataModel.Protocol.UART);
-                        }
-                    )
-                );
-
-                for (final var scheduledActivity : scheduledActivities) {
-                    final var startTime = scheduledActivity.getKey();
-                    final var activity = scheduledActivity.getValue();
-
-                    queue.add(Pair.of(startTime, () -> {
-                        final var foo = new Foo() {
-                            private volatile boolean threadActive = false;
-
-                            public void delay(final Duration duration) {
-                                ctx.after(duration, () -> {
-                                    // Resume the thread.
-                                    this.threadActive = true;
-                                    // Wait until the thread has yielded.
-                                    while (this.threadActive) {}
-                                });
-
-                                // Yield control back to the coordinator.
-                                this.threadActive = false;
-                                // Wait until this thread is allowed to continue.
-                                while (!this.threadActive) {}
-                            }
-                        };
-
-                        // Spin up a new thread.
-                        {
-                            final var t = new Thread(() -> {
-                                // Wait until this thread is allowed to continue.
-                                while (!foo.threadActive) {}
-                                activity.accept(foo);
-                                // Yield control back to the coordinator.
-                                foo.threadActive = false;
-                            });
-                            t.setDaemon(true);
-                            t.start();
-                        }
-
-                        // Resume the thread.
-                        foo.threadActive = true;
-                        // Wait until the thread has yielded.
-                        while (foo.threadActive) {}
-                    }));
-                }
+                final var spawner = new Foo();
+                queue.add(Pair.of(initialInstant, () -> {
+                    spawner.spawn(10, TimeUnit.SECONDS, (foo) -> {
+                        dataRate.increaseBy(1.0);
+                        foo.delay(10, TimeUnit.SECONDS);
+                        dataRate.increaseBy(9.0);
+                        foo.delay(20, TimeUnit.SECONDS);
+                        dataRate.increaseBy(5.0);
+                        foo.delay(1, TimeUnit.SECONDS);
+                        dataRate.decreaseBy(15.0);
+                        foo.delay(5, TimeUnit.SECONDS);
+                        dataRate.increaseBy(10.0);
+                    });
+                    spawner.spawn(10, TimeUnit.SECONDS, (foo) -> {
+                        dataProtocol.set(DataModel.Protocol.Spacewire);
+                        foo.delay(30, TimeUnit.SECONDS);
+                        dataProtocol.set(DataModel.Protocol.UART);
+                    });
+                }));
             }
 
             while (!queue.isEmpty()) {
