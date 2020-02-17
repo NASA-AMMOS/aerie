@@ -76,96 +76,109 @@ public final class DataModelTest {
         Instant endTime = initialInstant;
         {
             // Keep track of what time it is as we execute the activity.
-            final var simClock = new Object() {
+            final var ctx = new Object() {
                 private Instant now = initialInstant;
 
-                public void add(final long quantity, final TimeUnit units) {
+                public void after(final long quantity, final TimeUnit units, final Runnable action) {
                     this.now = this.now.plus(quantity, units);
+                    action.run();
                 }
 
-                public Instant getNow() {
+                public Instant now() {
                     return this.now;
+                }
+
+                public MySystemModel getSystemModel() {
+                    return getAtTime.apply(this.now);
                 }
             };
 
             // Build time-aware wrappers around mission resources.
             final var dataRate = new Object() {
                 public double get() {
-                    return getAtTime.apply(simClock.now).dataModel.getDataRate();
+                    return ctx.getSystemModel().dataModel.getDataRate();
                 }
 
                 public void increaseBy(final double delta) {
-                    addDataRate.add(simClock.getNow(), delta);
+                    addDataRate.add(ctx.now(), delta);
                 }
 
                 public void decreaseBy(final double delta) {
-                    addDataRate.add(simClock.getNow(), -delta);
+                    addDataRate.add(ctx.now(), -delta);
                 }
             };
 
             // Define the activity to be simulated.
-            final var activity = new Object() {
-                public void modelEffects() {
-                    simClock.add(10, TimeUnit.SECONDS);
+            final Runnable activity = () -> {
+                ctx.after(10, TimeUnit.SECONDS, () -> {
                     dataRate.increaseBy(1.0);
 
-                    simClock.add(10, TimeUnit.SECONDS);
-                    dataRate.increaseBy(9.0);
+                    ctx.after(10, TimeUnit.SECONDS, () -> {
+                        dataRate.increaseBy(9.0);
 
-                    simClock.add(20, TimeUnit.SECONDS);
-                    dataRate.increaseBy(5.0);
+                        ctx.after(20, TimeUnit.SECONDS, () -> {
+                            dataRate.increaseBy(5.0);
 
-                    simClock.add(1, TimeUnit.SECONDS);
-                    dataRate.decreaseBy(15.0);
+                            ctx.after(1, TimeUnit.SECONDS, () -> {
+                                dataRate.decreaseBy(15.0);
 
-                    simClock.add(5, TimeUnit.SECONDS);
-                    dataRate.increaseBy(10.0);
-                }
+                                ctx.after(5, TimeUnit.SECONDS, () -> {
+                                    dataRate.increaseBy(10.0);
+                                });
+                            });
+                        });
+                    });
+                });
             };
 
             // Simulate the activity.
-            activity.modelEffects();
-            endTime = Instant.max(endTime, simClock.now);
+            activity.run();
+            endTime = Instant.max(endTime, ctx.now());
         }
         {
             // Keep track of what time it is as we execute the activity.
-            final var simClock = new Object() {
+            final var ctx = new Object() {
                 private Instant now = initialInstant;
 
-                public void add(final long quantity, final TimeUnit units) {
+                public void after(final long quantity, final TimeUnit units, final Runnable action) {
                     this.now = this.now.plus(quantity, units);
+                    action.run();
                 }
 
-                public Instant getNow() {
+                public Instant now() {
                     return this.now;
+                }
+
+                public MySystemModel getSystemModel() {
+                    return getAtTime.apply(this.now);
                 }
             };
 
             // Build time-aware wrappers around mission resources.
             final var dataProtocol = new Object() {
                 public DataModel.Protocol get() {
-                    return getAtTime.apply(simClock.now).dataModel.getDataProtocol();
+                    return ctx.getSystemModel().dataModel.getDataProtocol();
                 }
 
                 public void set(final DataModel.Protocol protocol) {
-                    setDataProtocol.add(simClock.getNow(), protocol);
+                    setDataProtocol.add(ctx.now(), protocol);
                 }
             };
 
             // Define the activity to be simulated.
-            final var activity = new Object() {
-                public void modelEffects() {
-                    simClock.add(10, TimeUnit.SECONDS);
+            final Runnable activity = () -> {
+                ctx.after(10, TimeUnit.SECONDS, () -> {
                     dataProtocol.set(DataModel.Protocol.Spacewire);
 
-                    simClock.add(30, TimeUnit.SECONDS);
-                    dataProtocol.set(DataModel.Protocol.UART);
-                }
+                    ctx.after(30, TimeUnit.SECONDS, () -> {
+                        dataProtocol.set(DataModel.Protocol.UART);
+                    });
+                });
             };
 
             // Simulate the activity.
-            activity.modelEffects();
-            endTime = Instant.max(endTime, simClock.now);
+            activity.run();
+            endTime = Instant.max(endTime, ctx.now());
         }
 
         // Analyze the simulation results.
