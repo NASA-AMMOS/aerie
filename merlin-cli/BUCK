@@ -41,6 +41,7 @@ java_library(
         "//third-party:httpclient",
         "//third-party:httpcore",
         "//third-party:junit-jupiter",
+        "//merlin-sdk:merlin-sdk",
     ],
 )
 
