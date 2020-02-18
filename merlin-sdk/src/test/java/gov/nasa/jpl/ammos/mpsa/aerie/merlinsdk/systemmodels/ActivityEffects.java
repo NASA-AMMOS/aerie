@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import java.util.Objects;
@@ -12,6 +13,7 @@ public final class ActivityEffects {
         void delay(final Duration duration);
         void spawn(final Duration duration, final Runnable activity);
         void waitForChildren();
+        Instant now();
     }
 
     // It's best to think of a `ThreadLocal` not as data, but as a dynamically-scoped variable that exists somewhere
@@ -46,6 +48,12 @@ public final class ActivityEffects {
         Objects
             .requireNonNull(dynamicProvider.get(), "waitForChildren cannot be called outside of activity context")
             .waitForChildren();
+    }
+
+    public static Instant now() {
+        return Objects
+            .requireNonNull(dynamicProvider.get(), "now cannot be called outside of activity context")
+            .now();
     }
 
     public static void delay(final long quantity, final TimeUnit units) {

@@ -4,13 +4,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Comparator;
-import java.util.PriorityQueue;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.now;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.spawn;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.waitForChildren;
 
@@ -79,90 +77,54 @@ public final class DataModelTest {
             return accumulator;
         };
 
-        // Simulate activities.
-        final Instant endTime;
-        {
-            // Track the current time of the simulation.
-            final var clock = new Object() {
-                private Instant now = initialInstant;
-
-                public Instant now() {
-                    return this.now;
-                }
-            };
-
-            // Prepare a schedule of events.
-            final Runnable performSchedule;
-            {
-                // Build time-aware wrappers around mission resources.
-                final var dataRate = new Object() {
-                    public double get() {
-                        return getAtTime.apply(clock.now()).dataModel.getDataRate();
-                    }
-
-                    public void increaseBy(final double delta) {
-                        addDataRate.add(clock.now(), delta);
-                    }
-
-                    public void decreaseBy(final double delta) {
-                        addDataRate.add(clock.now(), -delta);
-                    }
-                };
-
-                final var dataProtocol = new Object() {
-                    public DataModel.Protocol get() {
-                        return getAtTime.apply(clock.now()).dataModel.getDataProtocol();
-                    }
-
-                    public void set(final DataModel.Protocol protocol) {
-                        setDataProtocol.add(clock.now(), protocol);
-                    }
-                };
-
-                performSchedule = () -> {
-                    spawn(10, TimeUnit.SECONDS, () -> {
-                        dataRate.increaseBy(1.0);
-                        delay(10, TimeUnit.SECONDS);
-                        dataRate.increaseBy(9.0);
-                        delay(20, TimeUnit.SECONDS);
-                        dataRate.increaseBy(5.0);
-                    });
-                    spawn(10, TimeUnit.SECONDS, () -> {
-                        dataProtocol.set(DataModel.Protocol.Spacewire);
-                        delay(30, TimeUnit.SECONDS);
-                        dataProtocol.set(DataModel.Protocol.UART);
-                    });
-                    waitForChildren();
-                    delay(1, TimeUnit.SECONDS);
-                    dataRate.decreaseBy(15.0);
-                    delay(5, TimeUnit.SECONDS);
-                    dataRate.increaseBy(10.0);
-                };
+        // Build time-aware wrappers around mission resources.
+        final var dataRate = new Object() {
+            public double get() {
+                return getAtTime.apply(now()).dataModel.getDataRate();
             }
 
-            // Execute the schedule.
-            {
-                final var queue = new PriorityQueue<Pair<Instant, Runnable>>(Comparator.comparing(Pair::getLeft));
-
-                queue.add(Pair.of(initialInstant, () -> {
-                    ThreadedActivityEffects.enter(
-                        (duration, action) -> {
-                            if (duration.isNegative()) throw new RuntimeException("Cannot wait for a negative duration");
-                            queue.add(Pair.of(clock.now().plus(duration), action));
-                        },
-                        performSchedule
-                    );
-                }));
-
-                while (!queue.isEmpty()) {
-                    final var job = queue.remove();
-                    clock.now = job.getLeft();
-                    job.getRight().run();
-                }
+            public void increaseBy(final double delta) {
+                addDataRate.add(now(), delta);
             }
 
-            endTime = clock.now();
-        }
+            public void decreaseBy(final double delta) {
+                addDataRate.add(now(), -delta);
+            }
+        };
+
+        final var dataProtocol = new Object() {
+            public DataModel.Protocol get() {
+                return getAtTime.apply(now()).dataModel.getDataProtocol();
+            }
+
+            public void set(final DataModel.Protocol protocol) {
+                setDataProtocol.add(now(), protocol);
+            }
+        };
+
+        // Prepare a schedule of events.
+        final Runnable performSchedule = () -> {
+            spawn(10, TimeUnit.SECONDS, () -> {
+                dataRate.increaseBy(1.0);
+                delay(10, TimeUnit.SECONDS);
+                dataRate.increaseBy(9.0);
+                delay(20, TimeUnit.SECONDS);
+                dataRate.increaseBy(5.0);
+            });
+            spawn(10, TimeUnit.SECONDS, () -> {
+                dataProtocol.set(DataModel.Protocol.Spacewire);
+                delay(30, TimeUnit.SECONDS);
+                dataProtocol.set(DataModel.Protocol.UART);
+            });
+            waitForChildren();
+            delay(1, TimeUnit.SECONDS);
+            dataRate.decreaseBy(15.0);
+            delay(5, TimeUnit.SECONDS);
+            dataRate.increaseBy(10.0);
+        };
+
+        // Execute the schedule.
+        final Instant endTime = ThreadedActivityEffects.execute(initialInstant, performSchedule);
 
         // Analyze the simulation results.
         var system = getAtTime.apply(endTime);
