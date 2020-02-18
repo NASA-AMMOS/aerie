@@ -82,82 +82,86 @@ public final class DataModelTest {
         // Simulate activities.
         final Instant endTime;
         {
-            final var queue = new PriorityQueue<Pair<Instant, Runnable>>(Comparator.comparing(Pair::getLeft));
-
-            final var ctx = new Object() {
+            // Track the current time of the simulation.
+            final var clock = new Object() {
                 private Instant now = initialInstant;
-
-                public void after(final Duration duration, final Runnable action) {
-                    if (duration.isNegative()) throw new RuntimeException("Cannot wait for a negative duration");
-                    queue.add(Pair.of(this.now.plus(duration), action));
-                }
-
-                public void after(final long quantity, final TimeUnit units, final Runnable action) {
-                    this.after(Duration.fromQuantity(quantity, units), action);
-                }
 
                 public Instant now() {
                     return this.now;
                 }
             };
 
-            // Schedule the activities to be simulated.
+            // Prepare a schedule of events.
+            final Runnable performSchedule;
             {
                 // Build time-aware wrappers around mission resources.
                 final var dataRate = new Object() {
                     public double get() {
-                        return getAtTime.apply(ctx.now()).dataModel.getDataRate();
+                        return getAtTime.apply(clock.now()).dataModel.getDataRate();
                     }
 
                     public void increaseBy(final double delta) {
-                        addDataRate.add(ctx.now(), delta);
+                        addDataRate.add(clock.now(), delta);
                     }
 
                     public void decreaseBy(final double delta) {
-                        addDataRate.add(ctx.now(), -delta);
+                        addDataRate.add(clock.now(), -delta);
                     }
                 };
 
                 final var dataProtocol = new Object() {
                     public DataModel.Protocol get() {
-                        return getAtTime.apply(ctx.now()).dataModel.getDataProtocol();
+                        return getAtTime.apply(clock.now()).dataModel.getDataProtocol();
                     }
 
                     public void set(final DataModel.Protocol protocol) {
-                        setDataProtocol.add(ctx.now(), protocol);
+                        setDataProtocol.add(clock.now(), protocol);
                     }
                 };
 
-                queue.add(Pair.of(initialInstant, () -> {
-                    ThreadedActivityEffects.enter(ctx::after, () -> {
-                        spawn(10, TimeUnit.SECONDS, () -> {
-                            dataRate.increaseBy(1.0);
-                            delay(10, TimeUnit.SECONDS);
-                            dataRate.increaseBy(9.0);
-                            delay(20, TimeUnit.SECONDS);
-                            dataRate.increaseBy(5.0);
-                        });
-                        spawn(10, TimeUnit.SECONDS, () -> {
-                            dataProtocol.set(DataModel.Protocol.Spacewire);
-                            delay(30, TimeUnit.SECONDS);
-                            dataProtocol.set(DataModel.Protocol.UART);
-                        });
-                        waitForChildren();
-                        delay(1, TimeUnit.SECONDS);
-                        dataRate.decreaseBy(15.0);
-                        delay(5, TimeUnit.SECONDS);
-                        dataRate.increaseBy(10.0);
+                performSchedule = () -> {
+                    spawn(10, TimeUnit.SECONDS, () -> {
+                        dataRate.increaseBy(1.0);
+                        delay(10, TimeUnit.SECONDS);
+                        dataRate.increaseBy(9.0);
+                        delay(20, TimeUnit.SECONDS);
+                        dataRate.increaseBy(5.0);
                     });
+                    spawn(10, TimeUnit.SECONDS, () -> {
+                        dataProtocol.set(DataModel.Protocol.Spacewire);
+                        delay(30, TimeUnit.SECONDS);
+                        dataProtocol.set(DataModel.Protocol.UART);
+                    });
+                    waitForChildren();
+                    delay(1, TimeUnit.SECONDS);
+                    dataRate.decreaseBy(15.0);
+                    delay(5, TimeUnit.SECONDS);
+                    dataRate.increaseBy(10.0);
+                };
+            }
+
+            // Execute the schedule.
+            {
+                final var queue = new PriorityQueue<Pair<Instant, Runnable>>(Comparator.comparing(Pair::getLeft));
+
+                queue.add(Pair.of(initialInstant, () -> {
+                    ThreadedActivityEffects.enter(
+                        (duration, action) -> {
+                            if (duration.isNegative()) throw new RuntimeException("Cannot wait for a negative duration");
+                            queue.add(Pair.of(clock.now().plus(duration), action));
+                        },
+                        performSchedule
+                    );
                 }));
+
+                while (!queue.isEmpty()) {
+                    final var job = queue.remove();
+                    clock.now = job.getLeft();
+                    job.getRight().run();
+                }
             }
 
-            while (!queue.isEmpty()) {
-                final var job = queue.remove();
-                ctx.now = job.getLeft();
-                job.getRight().run();
-            }
-
-            endTime = ctx.now();
+            endTime = clock.now();
         }
 
         // Analyze the simulation results.
