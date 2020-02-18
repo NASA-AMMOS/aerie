@@ -253,19 +253,56 @@ final class ThreadedActivityEffects {
             this.parent = parent;
         }
 
-        @Override
-        public void delay(final Duration duration) {
-            ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
-                // Resume the thread.
-                this.isActive = true;
-                // Wait until the thread has yielded.
-                while (this.isActive) {}
-            });
+        private void start(final Runnable activity) {
+            try {
+                // Wait until this activity is allowed to continue.
+                while (!this.isActive) {}
 
+                // Run the activity.
+                activity.run();
+
+                // Wait for any spawned activities to complete.
+                this.waitForChildren();
+
+                // Tell the parent that its child has completed.
+                if (this.parent != null) {
+                    this.parent.uncompletedChildren.remove(this);
+                    if (this.parent.uncompletedChildren.isEmpty() && this.parent.isWaitingForChildren) {
+                        ThreadedActivityEffects.this.scheduleEvent.accept(Duration.ZERO, this.parent::resumeFromChildren);
+                    }
+                }
+            } finally {
+                // Yield control back to the coordinator.
+                this.isActive = false;
+            }
+        }
+
+        private void yield() {
             // Yield control back to the coordinator.
             this.isActive = false;
-            // Wait until this thread is allowed to continue.
+            // Wait until this activity is allowed to continue.
             while (!this.isActive) {}
+        }
+
+        private void resume() {
+            // Resume the thread.
+            this.isActive = true;
+            // Wait until the thread has yielded.
+            while (this.isActive) {}
+        }
+
+        private void resumeFromChildren() {
+            // Mark this activity as no longer waiting for its children.
+            this.isWaitingForChildren = false;
+
+            this.resume();
+        }
+
+        @Override
+        public void delay(final Duration duration) {
+            ThreadedActivityEffects.this.scheduleEvent.accept(duration, this::resume);
+
+            this.yield();
         }
 
         @Override
@@ -274,45 +311,11 @@ final class ThreadedActivityEffects {
             this.uncompletedChildren.add(child);
 
             ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
-                final var t = new Thread(() -> {
-                    ActivityEffects.enter(child, () -> {
-                        try {
-                            // Wait until this activity is allowed to continue.
-                            while (!child.isActive) {}
-
-                            // Run the activity.
-                            activity.run();
-
-                            // Wait for any spawned activities to complete.
-                            child.waitForChildren();
-
-                            // Tell the parent that its child has completed.
-                            if (child.parent != null) {
-                                child.parent.uncompletedChildren.remove(child);
-                                if (child.parent.uncompletedChildren.isEmpty() && child.parent.isWaitingForChildren) {
-                                    ThreadedActivityEffects.this.scheduleEvent.accept(Duration.ZERO, () -> {
-                                        // Mark this activity as no longer waiting for its children.
-                                        child.parent.isWaitingForChildren = false;
-                                        // Resume the thread.
-                                        child.parent.isActive = true;
-                                        // Wait until the thread has yielded.
-                                        while (child.parent.isActive) {}
-                                    });
-                                }
-                            }
-                        } finally {
-                            // Yield control back to the coordinator.
-                            child.isActive = false;
-                        }
-                    });
-                });
+                final var t = new Thread(() -> ActivityEffects.enter(child, () -> child.start(activity)));
                 t.setDaemon(true);
                 t.start();
 
-                // Resume the thread.
-                child.isActive = true;
-                // Wait until the thread has yielded.
-                while (child.isActive) {}
+                child.resume();
             });
         }
 
@@ -321,10 +324,8 @@ final class ThreadedActivityEffects {
             if (!this.uncompletedChildren.isEmpty()) {
                 // Mark this activity as awaiting its children.
                 this.isWaitingForChildren = true;
-                // Yield control back to the coordinator.
-                this.isActive = false;
-                // Wait until this activity is allowed to continue.
-                while (!this.isActive) {}
+
+                this.yield();
             }
         }
     }
