@@ -7,13 +7,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.waitForChildren;
 
 final class MySystemModel implements SystemModel {
     public final DataModel dataModel;
@@ -137,16 +140,17 @@ public final class DataModelTest {
                             dataRate.increaseBy(9.0);
                             delay(20, TimeUnit.SECONDS);
                             dataRate.increaseBy(5.0);
-                            delay(1, TimeUnit.SECONDS);
-                            dataRate.decreaseBy(15.0);
-                            delay(5, TimeUnit.SECONDS);
-                            dataRate.increaseBy(10.0);
                         });
                         spawn(10, TimeUnit.SECONDS, () -> {
                             dataProtocol.set(DataModel.Protocol.Spacewire);
                             delay(30, TimeUnit.SECONDS);
                             dataProtocol.set(DataModel.Protocol.UART);
                         });
+                        waitForChildren();
+                        delay(1, TimeUnit.SECONDS);
+                        dataRate.decreaseBy(15.0);
+                        delay(5, TimeUnit.SECONDS);
+                        dataRate.increaseBy(10.0);
                     });
                 }));
             }
@@ -179,6 +183,7 @@ final class ActivityEffects {
     interface Provider {
         void delay(final Duration duration);
         void spawn(final Duration duration, final Runnable activity);
+        void waitForChildren();
     }
 
     // It's best to think of a `ThreadLocal` not as data, but as a dynamically-scoped variable that exists somewhere
@@ -209,6 +214,12 @@ final class ActivityEffects {
             .spawn(duration, activity);
     }
 
+    public static void waitForChildren() {
+        Objects
+            .requireNonNull(dynamicProvider.get(), "waitForChildren cannot be called outside of activity context")
+            .waitForChildren();
+    }
+
     public static void delay(final long quantity, final TimeUnit units) {
         delay(Duration.fromQuantity(quantity, units));
     }
@@ -228,13 +239,21 @@ final class ThreadedActivityEffects {
     public static void enter(final BiConsumer<Duration, Runnable> scheduleEvent, final Runnable scope) {
         final var effects = new ThreadedActivityEffects(scheduleEvent);
         ActivityEffects.enter(
-            effects.new Provider(),
+            effects.new Provider(null),
             () -> ActivityEffects.spawn(Duration.ZERO, scope));
     }
 
     private final class Provider implements ActivityEffects.Provider {
+        private final Provider parent;
+        private final Set<Provider> uncompletedChildren = new HashSet<>();
         private volatile boolean isActive = false;
+        private volatile boolean isWaitingForChildren = false;
 
+        public Provider(final Provider parent) {
+            this.parent = parent;
+        }
+
+        @Override
         public void delay(final Duration duration) {
             ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
                 // Resume the thread.
@@ -249,17 +268,38 @@ final class ThreadedActivityEffects {
             while (!this.isActive) {}
         }
 
+        @Override
         public void spawn(final Duration duration, final Runnable activity) {
-            ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
-                final var child = new Provider();
+            final var child = new Provider(this);
+            this.uncompletedChildren.add(child);
 
+            ThreadedActivityEffects.this.scheduleEvent.accept(duration, () -> {
                 final var t = new Thread(() -> {
                     ActivityEffects.enter(child, () -> {
                         try {
-                            // Wait until this thread is allowed to continue.
+                            // Wait until this activity is allowed to continue.
                             while (!child.isActive) {}
 
+                            // Run the activity.
                             activity.run();
+
+                            // Wait for any spawned activities to complete.
+                            child.waitForChildren();
+
+                            // Tell the parent that its child has completed.
+                            if (child.parent != null) {
+                                child.parent.uncompletedChildren.remove(child);
+                                if (child.parent.uncompletedChildren.isEmpty() && child.parent.isWaitingForChildren) {
+                                    ThreadedActivityEffects.this.scheduleEvent.accept(Duration.ZERO, () -> {
+                                        // Mark this activity as no longer waiting for its children.
+                                        child.parent.isWaitingForChildren = false;
+                                        // Resume the thread.
+                                        child.parent.isActive = true;
+                                        // Wait until the thread has yielded.
+                                        while (child.parent.isActive) {}
+                                    });
+                                }
+                            }
                         } finally {
                             // Yield control back to the coordinator.
                             child.isActive = false;
@@ -274,6 +314,18 @@ final class ThreadedActivityEffects {
                 // Wait until the thread has yielded.
                 while (child.isActive) {}
             });
+        }
+
+        @Override
+        public void waitForChildren() {
+            if (!this.uncompletedChildren.isEmpty()) {
+                // Mark this activity as awaiting its children.
+                this.isWaitingForChildren = true;
+                // Yield control back to the coordinator.
+                this.isActive = false;
+                // Wait until this activity is allowed to continue.
+                while (!this.isActive) {}
+            }
         }
     }
 }
