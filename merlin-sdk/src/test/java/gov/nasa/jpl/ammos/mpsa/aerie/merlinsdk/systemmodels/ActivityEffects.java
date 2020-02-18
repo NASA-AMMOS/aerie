@@ -55,4 +55,8 @@ public final class ActivityEffects {
     public static void spawn(final long quantity, final TimeUnit units, final Runnable activity) {
         spawn(Duration.fromQuantity(quantity, units), activity);
     }
+
+    public static void spawn(final Runnable activity) {
+        spawn(Duration.ZERO, activity);
+    }
 }
