@@ -244,9 +244,10 @@ final class ThreadedActivityEffects {
     }
 
     private final class Provider implements ActivityEffects.Provider {
+        private volatile boolean isActive = false;
+
         private final Provider parent;
         private final Set<Provider> uncompletedChildren = new HashSet<>();
-        private volatile boolean isActive = false;
         private volatile boolean isWaitingForChildren = false;
 
         public Provider(final Provider parent) {
@@ -258,10 +259,7 @@ final class ThreadedActivityEffects {
                 // Wait until this activity is allowed to continue.
                 while (!this.isActive) {}
 
-                // Run the activity.
                 activity.run();
-
-                // Wait for any spawned activities to complete.
                 this.waitForChildren();
 
                 // Tell the parent that its child has completed.
@@ -292,7 +290,6 @@ final class ThreadedActivityEffects {
         }
 
         private void resumeFromChildren() {
-            // Mark this activity as no longer waiting for its children.
             this.isWaitingForChildren = false;
 
             this.resume();
@@ -322,7 +319,6 @@ final class ThreadedActivityEffects {
         @Override
         public void waitForChildren() {
             if (!this.uncompletedChildren.isEmpty()) {
-                // Mark this activity as awaiting its children.
                 this.isWaitingForChildren = true;
 
                 this.yield();
