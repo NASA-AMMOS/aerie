@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import java.util.function.Function;
 
@@ -11,6 +10,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffec
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.now;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.spawn;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.waitForChildren;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit.*;
 
 final class MySystemModel implements SystemModel {
     public final DataModel dataModel;
@@ -104,22 +104,22 @@ public final class DataModelTest {
 
         // Prepare a schedule of events.
         final Runnable performSchedule = () -> {
-            spawn(10, TimeUnit.SECONDS, () -> {
+            spawn(10, SECONDS, () -> {
                 dataRate.increaseBy(1.0);
-                delay(10, TimeUnit.SECONDS);
+                delay(10, SECONDS);
                 dataRate.increaseBy(9.0);
-                delay(20, TimeUnit.SECONDS);
+                delay(20, SECONDS);
                 dataRate.increaseBy(5.0);
             });
-            spawn(10, TimeUnit.SECONDS, () -> {
+            spawn(10, SECONDS, () -> {
                 dataProtocol.set(DataModel.Protocol.Spacewire);
-                delay(30, TimeUnit.SECONDS);
+                delay(30, SECONDS);
                 dataProtocol.set(DataModel.Protocol.UART);
             });
             waitForChildren();
-            delay(1, TimeUnit.SECONDS);
+            delay(1, SECONDS);
             dataRate.decreaseBy(15.0);
-            delay(5, TimeUnit.SECONDS);
+            delay(5, SECONDS);
             dataRate.increaseBy(10.0);
         };
 
