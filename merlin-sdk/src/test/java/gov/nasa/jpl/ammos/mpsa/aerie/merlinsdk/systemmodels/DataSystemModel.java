@@ -1,9 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.MasterSystemModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DataSystemModel implements SystemModel{
 
@@ -92,6 +96,30 @@ public class DataSystemModel implements SystemModel{
     public void decrementDataRate(Slice slice,  double delta){
         ((DataModelSlice)slice).dataRate -= delta;
     }*/
+
+    public List<Window> whenDataRateLessThan(double x){
+        List<Window> windows = new ArrayList<>();
+        //todo: populate windows
+
+        System.out.println("Returning windows for data rate less than " + x);
+        return windows;
+    }
+
+    public List<Window> whenDataRateGreaterThan(double x){
+        List<Window> windows = new ArrayList<>();
+        //todo: populate windows
+
+        System.out.println("Returning windows for data rate greater than than " + x);
+        return windows;
+    }
+
+    public List<Window> whenDataVolumeGreaterThan(double x){
+        List<Window> windows = new ArrayList<>();
+        //todo: populate windows
+
+        System.out.println("Returning windows for data volume greater than than " + x);
+        return windows;
+    }
 
     private static class DataModelSlice implements Slice{
         private double dataRate = 0.0;

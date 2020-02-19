@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.And;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -141,4 +143,25 @@ public class DataModelTest {
         assertTrue(dataVolumeFound);
         assertTrue(dataProtocolFound);
     }
+
+    @Test
+    public void constraintTest(){
+        /**
+         * Constraint I want to build:
+         * In violation if dataRate > 10 AND dataVolume > 100 AND protocol == UART
+         */
+
+        Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(10.0);
+        Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(100.0);
+
+        dataRateMax.getWindows();
+
+        Constraint bdsVolumeLimit = (dataRateMax, dataVolumeMax);
+
+        Constraint bdsVol = new And(dataRateMax, dataVolumeMax);
+
+
+
+    }
+
 }
