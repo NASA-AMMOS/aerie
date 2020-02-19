@@ -20,13 +20,16 @@ public final class ThreadedActivityEffects {
 
     public static Instant execute(final Instant initialInstant, final Runnable scope) {
         final var effects = new ThreadedActivityEffects(initialInstant);
-        final var provider = effects.new Provider();
+        final var root = effects.new Provider();
 
-        final var t = new Thread(() -> ActivityEffects.enter(provider, () -> provider.start(scope)));
-        t.setDaemon(true);
-        t.start();
+        effects.queue.add(Pair.of(initialInstant, () -> {
+            final var t = new Thread(() -> ActivityEffects.enter(root, () -> root.start(scope)));
+            t.setDaemon(true);
+            t.start();
 
-        effects.queue.add(Pair.of(initialInstant, provider::resumeFromChildren));
+            root.resume();
+        }));
+
         while (!effects.queue.isEmpty()) {
             final var job = effects.queue.remove();
             effects.currentTime = job.getLeft();
