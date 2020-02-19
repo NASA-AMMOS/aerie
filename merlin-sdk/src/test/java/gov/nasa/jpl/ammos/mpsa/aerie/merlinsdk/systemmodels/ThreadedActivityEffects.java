@@ -11,7 +11,7 @@ import java.util.Queue;
 import java.util.Set;
 
 public final class ThreadedActivityEffects {
-    private final Queue<Pair<Instant, Runnable>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
+    private final Queue<Pair<Instant, Provider>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
     private Instant currentTime;
 
     private ThreadedActivityEffects(final Instant initialInstant) {
@@ -20,23 +20,37 @@ public final class ThreadedActivityEffects {
 
     public static Instant execute(final Instant initialInstant, final Runnable scope) {
         final var effects = new ThreadedActivityEffects(initialInstant);
-        final var root = effects.new Provider();
 
-        effects.queue.add(Pair.of(initialInstant, () -> {
-            final var t = new Thread(() -> ActivityEffects.enter(root, () -> root.start(scope)));
-            t.setDaemon(true);
-            t.start();
-
-            root.resume();
-        }));
+        {
+            final var root = effects.new Provider();
+            effects.spawnInThread(root, scope);
+            effects.resumeAfter(Duration.ZERO, root);
+        }
 
         while (!effects.queue.isEmpty()) {
             final var job = effects.queue.remove();
-            effects.currentTime = job.getLeft();
-            job.getRight().run();
+            final var jobTime = job.getKey();
+            final var provider = job.getValue();
+
+            effects.currentTime = jobTime;
+
+            // Resume the thread.
+            provider.isActive = true;
+            // Wait until the thread has yielded.
+            while (provider.isActive) {}
         }
 
         return effects.currentTime;
+    }
+
+    private void spawnInThread(final Provider provider, final Runnable scope) {
+        final var t = new Thread(() -> provider.start(scope));
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void resumeAfter(final Duration duration, final Provider provider) {
+        this.queue.add(Pair.of(this.currentTime.plus(duration), provider));
     }
 
     private final class Provider implements ActivityEffects.Provider {
@@ -59,14 +73,15 @@ public final class ThreadedActivityEffects {
                 // Wait until this activity is allowed to continue.
                 while (!this.isActive) {}
 
-                activity.run();
+                ActivityEffects.enter(this, activity);
                 this.waitForChildren();
 
                 // Tell the parent that its child has completed.
                 if (this.parent != null) {
                     this.parent.uncompletedChildren.remove(this);
                     if (this.parent.uncompletedChildren.isEmpty() && this.parent.isWaitingForChildren) {
-                        ThreadedActivityEffects.this.queue.add(Pair.of(ThreadedActivityEffects.this.currentTime, () -> this.parent.resumeFromChildren()));
+                        this.parent.isWaitingForChildren = false;
+                        ThreadedActivityEffects.this.resumeAfter(Duration.ZERO, this.parent);
                     }
                 }
             } finally {
@@ -82,42 +97,24 @@ public final class ThreadedActivityEffects {
             while (!this.isActive) {}
         }
 
-        private void resume() {
-            // Resume the thread.
-            this.isActive = true;
-            // Wait until the thread has yielded.
-            while (this.isActive) {}
-        }
-
-        private void resumeFromChildren() {
-            this.isWaitingForChildren = false;
-
-            this.resume();
-        }
-
         @Override
         public void delay(final Duration duration) {
             if (duration.isNegative()) throw new RuntimeException("Cannot wait for a negative duration");
 
-            ThreadedActivityEffects.this.queue.add(Pair.of(ThreadedActivityEffects.this.currentTime.plus(duration), this::resume));
+            ThreadedActivityEffects.this.resumeAfter(duration, this);
 
             this.yield();
         }
 
         @Override
-        public void spawn(final Duration duration, final Runnable activity) {
+        public void spawn(final Duration duration, final Runnable scope) {
             if (duration.isNegative()) throw new RuntimeException("Cannot wait for a negative duration");
 
             final var child = new Provider(this);
+            ThreadedActivityEffects.this.spawnInThread(child, scope);
+            ThreadedActivityEffects.this.resumeAfter(duration, child);
+
             this.uncompletedChildren.add(child);
-
-            ThreadedActivityEffects.this.queue.add(Pair.of(ThreadedActivityEffects.this.currentTime.plus(duration), () -> {
-                final var t = new Thread(() -> ActivityEffects.enter(child, () -> child.start(activity)));
-                t.setDaemon(true);
-                t.start();
-
-                child.resume();
-            }));
         }
 
         @Override
