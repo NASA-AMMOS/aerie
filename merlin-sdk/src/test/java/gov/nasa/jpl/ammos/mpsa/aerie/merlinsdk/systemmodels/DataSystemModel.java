@@ -121,6 +121,14 @@ public class DataSystemModel implements SystemModel{
         return windows;
     }
 
+    public List<Window> whenDataProtocol(String s){
+        List<Window> windows = new ArrayList<>();
+        //todo: populate windows
+
+        System.out.println("Returning windows for when data protocol is " + s);
+        return windows;
+    }
+
     private static class DataModelSlice implements Slice{
         private double dataRate = 0.0;
         private double dataVolume = 0.0;

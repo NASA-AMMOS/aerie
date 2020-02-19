@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.And;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
@@ -148,17 +148,16 @@ public class DataModelTest {
     public void constraintTest(){
         /**
          * Constraint I want to build:
-         * In violation if dataRate > 10 AND dataVolume > 100 AND protocol == UART
+         * In violation if dataRate > 10 AND dataVolume > 100 AND protocol == spacewire
          */
-
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(10.0);
         Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(100.0);
+        Constraint dataProtocolType = () -> dataSystemModel.whenDataProtocol(GlobalPronouns.spacewire);
 
         dataRateMax.getWindows();
 
-        Constraint bdsVolumeLimit = (dataRateMax, dataVolumeMax);
-
-        Constraint bdsVol = new And(dataRateMax, dataVolumeMax);
+        Constraint ratesAndVol = Operator.And(dataRateMax, dataVolumeMax);
+        Constraint dataSysModelConstraint = Operator.And(ratesAndVol, dataProtocolType);
 
 
 
