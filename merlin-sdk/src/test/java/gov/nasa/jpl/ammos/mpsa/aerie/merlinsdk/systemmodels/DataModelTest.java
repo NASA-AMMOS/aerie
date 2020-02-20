@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ThreadedActivityEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
@@ -8,10 +9,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import java.util.List;
 import java.util.function.Function;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.delay;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.now;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.spawn;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.waitForChildren;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.now;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.waitForChildren;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit.*;
 
 final class MySystemModel implements SystemModel {
