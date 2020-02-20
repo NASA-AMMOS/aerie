@@ -47,8 +47,8 @@ public class DataSystemModel implements SystemModel{
     @Override
     public void step(Slice aSlice, Duration dt) {
         DataModelSlice slice = (DataModelSlice) aSlice;
-        slice.dataVolume += slice.dataRate * (double)(dt.durationInMicroseconds / 1000000L);
-        if (slice.dataRate > 100){
+        slice.dataVolume += slice.dataRate.lastEntry().getValue() * (double)(dt.durationInMicroseconds / 1000000L);
+        if (slice.dataRate.lastEntry().getValue() > 100){
             slice.dataProtocol.put(slice.time, GlobalPronouns.spacewire);
         }
         slice.setTime(slice.time().plus(dt));
@@ -67,7 +67,7 @@ public class DataSystemModel implements SystemModel{
     }
 
     public double getDataRate(Slice slice){
-        return ((DataModelSlice)slice).dataRate;
+        return ((DataModelSlice)slice).dataRate.lastEntry().getValue();
     }
 
     public double getDataVolume(Slice slice){
@@ -78,8 +78,9 @@ public class DataSystemModel implements SystemModel{
         return ((DataModelSlice)slice).dataProtocol.lastEntry().getValue();
     }
 
-    public void setDataRate(Slice slice, Double dataRate){
-        ((DataModelSlice)slice).dataRate = dataRate;
+    public void setDataRate(Slice s, Double dataRate){
+        final var slice = (DataModelSlice) s;
+        slice.dataRate.put(slice.time, dataRate);
     }
 
     public void setDataVolume(Slice slice, Double dataVolume){
@@ -87,7 +88,7 @@ public class DataSystemModel implements SystemModel{
     }
 
     public void setDataProtocol(Slice s, String dataProtocol){
-        final DataModelSlice slice = (DataModelSlice) s;
+        final var slice = (DataModelSlice) s;
         slice.dataProtocol.put(slice.time, dataProtocol);
     }
 
@@ -160,7 +161,7 @@ public class DataSystemModel implements SystemModel{
     }
 
     private static class DataModelSlice implements Slice{
-        private double dataRate;
+        private final TreeMap<Instant, Double> dataRate;
         private double dataVolume;
         private final TreeMap<Instant, String> dataProtocol;
         private Instant time;
@@ -170,18 +171,19 @@ public class DataSystemModel implements SystemModel{
         }
 
         public DataModelSlice(final DataModelSlice other){
-            this.dataRate = other.dataRate;
+            this.dataRate = new TreeMap<>(other.dataRate);
             this.dataVolume = other.dataVolume;
             this.dataProtocol = new TreeMap<>(other.dataProtocol);
             this.time = other.time;
         }
 
         public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Instant startTime){
-            this.dataRate = dataRate;
+            this.dataRate = new TreeMap<>();
             this.dataVolume = dataVolume;
             this.dataProtocol = new TreeMap<>();
             this.time = startTime;
 
+            this.dataRate.put(startTime, dataRate);
             this.dataProtocol.put(startTime, dataProtocol);
         }
 
