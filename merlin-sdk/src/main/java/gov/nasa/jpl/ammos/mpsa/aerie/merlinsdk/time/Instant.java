@@ -60,4 +60,6 @@ public interface Instant extends Comparable<Instant> {
   static Instant max(final Instant x, final Instant y) {
     return x.max(y);
   }
+
+  public Instant clone();
 }

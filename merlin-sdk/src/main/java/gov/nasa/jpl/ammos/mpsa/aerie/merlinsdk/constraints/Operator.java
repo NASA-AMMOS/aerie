@@ -4,11 +4,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 public class Operator implements Comparator<Window> {
-
     /*
     w1 < w2: -1
     w1 == w2: 0
@@ -16,10 +16,10 @@ public class Operator implements Comparator<Window> {
      */
     @Override
     public int compare(Window w1, Window w2) {
-        Instant w1Start = w1.start;
-        Instant w2Start = w2.start;
+        Instant w1Start = w1.start();
+        Instant w2Start = w2.start();
 
-        if (w1Start.isBefore(w1Start)){
+        if (w1Start.isBefore(w2Start)){
             return -1;
         }
         else if (w1Start.isAfter(w2Start)){
@@ -28,37 +28,80 @@ public class Operator implements Comparator<Window> {
         return 0;
     }
 
-    //assumes list of windows are in time order
+    /*
+    Assumption: in both methods intersection and union,
+    a and b are composed of in-order, disjoint intervals
+    */
+
     public static List<Window> intersection(List<Window> a, List<Window> b){
-        return null;
+
+        List<Window> intersection = new ArrayList<>();
+        int i = 0, j = 0;
+
+        while (i < a.size() && j < b.size()){
+
+            Instant aStart = a.get(i).start();
+            Instant bStart = b.get(j).start();
+            Instant aEnd = a.get(i).end();
+            Instant bEnd = b.get(j).end();
+
+            //get the last start and the first end for the two windows
+            Instant maxStart = (aStart.isAfter(bStart) ? aStart : bStart);
+            Instant minEnd = (aEnd.isBefore(bEnd) ? aEnd : bEnd);
+
+            //see if there is an overlap (I think I should be making a new Instant here)
+            //also should isBefore check == in addition to <?
+            if (maxStart.isBefore(minEnd)){
+                intersection.add(new Window(maxStart, minEnd));
+            }
+
+            if (aEnd.isBefore(bEnd)){
+                i++;
+            }
+            else {
+                j++;
+            }
+        }
+
+        return intersection;
     }
 
-    //assumes list of windows are in time order
     public static List<Window> union(List<Window> a, List<Window> b){
 
         List<Window> temp = new ArrayList<>();
+
+        for (Window x : a){
+            temp.add(x.clone());
+        }
+
+        for (Window y : b){
+            temp.add(y.clone());
+        }
+
         List<Window> union = new ArrayList<>();
-        temp.addAll(a);
-        temp.addAll(b);
+
+        Collections.sort(temp, new Operator());
 
         for (Window window : temp){
 
             //empty list, add first window
             if (union.isEmpty()){
                 union.add(window);
+                continue;
             }
 
             Window lastAddedWindow = union.get(union.size()-1);
             //no overlap b/w last element in list and next element in temp list
-            if (lastAddedWindow.end.isBefore(window.start)){
+            if (lastAddedWindow.end().isBefore(window.start())){
                 union.add(window);
             }
 
             //there is an overlap
             else {
-                lastAddedWindow.end = (
-                        lastAddedWindow.end.isBefore(window.end) ?
-                                lastAddedWindow.end : window.end);
+               Instant end = (
+                        lastAddedWindow.end().isAfter(window.end()) ?
+                                lastAddedWindow.end() : window.end());
+               lastAddedWindow.setEnd(end);
             }
         }
 
