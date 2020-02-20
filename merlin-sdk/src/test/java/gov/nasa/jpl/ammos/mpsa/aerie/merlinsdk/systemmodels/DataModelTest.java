@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
@@ -203,21 +204,26 @@ public class DataModelTest {
 
     @Test
     public void constraintTest(){
-        /**
+        /*
          * Constraint I want to build:
          * In violation if dataRate > 10 AND dataVolume > 100 AND protocol == spacewire
          */
-        Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(10.0);
-        Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(100.0);
-        Constraint dataProtocolType = () -> dataSystemModel.whenDataProtocol(GlobalPronouns.spacewire);
+        final var dataModel = new DataSystemModel(glue, simStartTime);
+        final var dataSlice = dataModel.getInitialSlice();
 
-        dataRateMax.getWindows();
+        dataModel.setDataRate(dataSlice, 5.0);
+        dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.setDataRate(dataSlice, 15.0);
+        dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
 
+        Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);
+        Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(dataSlice, 100.0);
+        Constraint dataProtocolType = () -> dataSystemModel.whenDataProtocolEquals(dataSlice, GlobalPronouns.spacewire);
         Constraint ratesAndVol = Operator.And(dataRateMax, dataVolumeMax);
         Constraint dataSysModelConstraint = Operator.And(ratesAndVol, dataProtocolType);
 
-
-
+        System.out.println(dataRateMax.getWindows());
+        System.out.println(dataSysModelConstraint.getWindows());
     }
 
 }

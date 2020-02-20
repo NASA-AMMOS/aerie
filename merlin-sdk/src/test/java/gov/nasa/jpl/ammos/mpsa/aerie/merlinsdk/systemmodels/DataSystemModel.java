@@ -97,7 +97,8 @@ public class DataSystemModel implements SystemModel{
         ((DataModelSlice)slice).dataRate -= delta;
     }*/
 
-    public List<Window> whenDataRateLessThan(double x, DataModelSlice slice){
+    public List<Window> whenDataRateLessThan(final Slice s, final double x){
+        final DataModelSlice slice = (DataModelSlice) s;
         List<Window> windows = new ArrayList<>();
         //todo: populate windows
 
@@ -105,7 +106,8 @@ public class DataSystemModel implements SystemModel{
         return windows;
     }
 
-    public List<Window> whenDataRateGreaterThan(double x){
+    public List<Window> whenDataRateGreaterThan(final Slice s, final double x){
+        final DataModelSlice slice = (DataModelSlice) s;
         List<Window> windows = new ArrayList<>();
         //todo: populate windows
 
@@ -113,7 +115,8 @@ public class DataSystemModel implements SystemModel{
         return windows;
     }
 
-    public List<Window> whenDataVolumeGreaterThan(double x){
+    public List<Window> whenDataVolumeGreaterThan(final Slice s, final double x){
+        final DataModelSlice slice = (DataModelSlice) s;
         List<Window> windows = new ArrayList<>();
         //todo: populate windows
 
@@ -121,7 +124,8 @@ public class DataSystemModel implements SystemModel{
         return windows;
     }
 
-    public List<Window> whenDataProtocol(String s){
+    public List<Window> whenDataProtocolEquals(final Slice s, final String protocol){
+        final DataModelSlice slice = (DataModelSlice) s;
         List<Window> windows = new ArrayList<>();
         //todo: populate windows
 
