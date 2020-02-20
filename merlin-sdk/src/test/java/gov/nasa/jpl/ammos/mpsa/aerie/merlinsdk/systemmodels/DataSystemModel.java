@@ -161,10 +161,6 @@ public class DataSystemModel implements SystemModel{
             this.dataProtocol.put(startTime, dataProtocol);
         }
 
-        public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol, Instant time){
-            return new DataModelSlice(dataRate, dataVolume, dataProtocol, time);
-        }
-
         @Override
         public Instant time(){
             return this.time;
@@ -175,13 +171,9 @@ public class DataSystemModel implements SystemModel{
             this.time = time;
         }
 
+        @Override
         public DataModelSlice cloneSlice(){
             return new DataModelSlice(this);
-        }
-
-        //will be used for review meeting then removed
-        public void printSlice(){
-            System.out.println("dataRate: " + dataRate + "\t" + " dataVolume: " + dataVolume + "\t" + " time: " + time);
         }
     }
 }
