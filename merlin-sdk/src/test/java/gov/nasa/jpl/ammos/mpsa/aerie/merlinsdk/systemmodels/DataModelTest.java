@@ -3,7 +3,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
+import java.util.List;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEffects.delay;
@@ -83,12 +85,22 @@ public final class DataModelTest {
                 return getAtTime.apply(now()).dataModel.getDataRate();
             }
 
+            public List<Window> whenGreaterThan(final double threshold) {
+                return getAtTime.apply(now()).dataModel.whenRateGreaterThan(threshold);
+            }
+
             public void increaseBy(final double delta) {
                 addDataRate.add(now(), delta);
             }
 
             public void decreaseBy(final double delta) {
                 addDataRate.add(now(), -delta);
+            }
+        };
+
+        final var dataVolume = new Object() {
+            public double get() {
+                return getAtTime.apply(now()).dataModel.getDataVolume();
             }
         };
 
@@ -124,10 +136,10 @@ public final class DataModelTest {
         };
 
         // Execute the schedule.
-        final Instant endTime = ThreadedActivityEffects.execute(initialInstant, performSchedule);
+        final var endTime = ThreadedActivityEffects.execute(initialInstant, performSchedule);
 
         // Analyze the simulation results.
-        var system = getAtTime.apply(endTime);
+        final var system = getAtTime.apply(endTime);
 
         System.out.println(system.dataModel.getDataRateHistory());
         System.out.println(system.dataModel.getDataProtocolHistory());
