@@ -9,7 +9,7 @@ import java.util.Objects;
 public final class ActivityEffects {
     private ActivityEffects() {}
 
-    interface Provider {
+    public interface Provider {
         void delay(final Duration duration);
         void spawn(final Duration duration, final Runnable activity);
         void waitForChildren();
