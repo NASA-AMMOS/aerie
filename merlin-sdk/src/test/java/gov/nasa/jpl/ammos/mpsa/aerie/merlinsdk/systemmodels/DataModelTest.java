@@ -147,16 +147,6 @@ public class DataModelTest {
         assertTrue(dataProtocolFound);
     }
 
-    public void printWindow(Window x){
-        System.out.println("start: " + x.start().toString() + " end: " + x.end().toString());
-    }
-
-    public void printWindowList(List<Window> X){
-        for (Window x : X){
-            printWindow(x);
-        }
-    }
-
 
     @Test
     public void testUnion(){
@@ -172,23 +162,23 @@ public class DataModelTest {
 
         Instant win1S = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
         Instant win1E = win1S.plus(5, TimeUnit.SECONDS);
-        Window win1 = new Window(win1S, win1E);
+        Window win1 = Window.between(win1S, win1E);
 
         Instant win2S = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
         Instant win2E = win1S.plus(9, TimeUnit.SECONDS);
-        Window win2 = new Window(win2S, win2E);
+        Window win2 = Window.between(win2S, win2E);
 
         Instant win3S = win1S.plus(8, TimeUnit.SECONDS);
         Instant win3E = win3S.plus(5, TimeUnit.SECONDS);
-        Window win3 = new Window(win3S, win3E);
+        Window win3 = Window.between(win3S, win3E);
 
         Instant win4S = win1S.plus(15, TimeUnit.SECONDS);
         Instant win4E = win4S.plus(5, TimeUnit.SECONDS);
-        Window win4 = new Window(win4S, win4E);
+        Window win4 = Window.between(win4S, win4E);
 
         Instant win5S = win1S.plus(16, TimeUnit.SECONDS);
         Instant win5E = win5S.plus(3, TimeUnit.SECONDS);
-        Window win5 = new Window(win5S, win5E);
+        Window win5 = Window.between(win5S, win5E);
 
         /*
         a: [0,5] [8,13] [16,19]
@@ -204,14 +194,11 @@ public class DataModelTest {
 
         List<Window> union = Operator.union(a, b);
         System.out.println("\nUNION: ");
-        printWindowList(union);
+        union.forEach(System.out::println);
 
         List<Window> intersection = Operator.intersection(a, b);
         System.out.println("\nINTERSECTION: ");
-        printWindowList(intersection);
-
-
-
+        intersection.forEach(System.out::println);
     }
 
     @Test

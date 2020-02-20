@@ -16,13 +16,10 @@ public class Operator implements Comparator<Window> {
      */
     @Override
     public int compare(Window w1, Window w2) {
-        Instant w1Start = w1.start();
-        Instant w2Start = w2.start();
-
-        if (w1Start.isBefore(w2Start)){
+        if (w1.start.isBefore(w2.start)){
             return -1;
         }
-        else if (w1Start.isAfter(w2Start)){
+        else if (w1.start.isAfter(w2.start)){
             return 1;
         }
         return 0;
@@ -40,19 +37,19 @@ public class Operator implements Comparator<Window> {
 
         while (i < a.size() && j < b.size()){
 
-            Instant aStart = a.get(i).start();
-            Instant bStart = b.get(j).start();
-            Instant aEnd = a.get(i).end();
-            Instant bEnd = b.get(j).end();
+            Instant aStart = a.get(i).start;
+            Instant bStart = b.get(j).start;
+            Instant aEnd = a.get(i).end;
+            Instant bEnd = b.get(j).end;
 
             //get the last start and the first end for the two windows
             Instant maxStart = (aStart.isAfter(bStart) ? aStart : bStart);
             Instant minEnd = (aEnd.isBefore(bEnd) ? aEnd : bEnd);
 
-            //see if there is an overlap (I think I should be making a new Instant here)
+            //see if there is an overlap
             //also should isBefore check == in addition to <?
             if (maxStart.isBefore(minEnd)){
-                intersection.add(new Window(maxStart, minEnd));
+                intersection.add(Window.between(maxStart, minEnd));
             }
 
             if (aEnd.isBefore(bEnd)){
@@ -87,17 +84,17 @@ public class Operator implements Comparator<Window> {
 
             Window lastAddedWindow = union.get(union.size()-1);
             //no overlap b/w last element in list and next element in temp list
-            if (lastAddedWindow.end().isBefore(window.start())){
+            if (lastAddedWindow.end.isBefore(window.start)){
                 union.add(window);
             }
 
             //there is an overlap
             else {
                Instant end = (
-                        lastAddedWindow.end().isAfter(window.end()) ?
-                                lastAddedWindow.end() : window.end());
+                        lastAddedWindow.end.isAfter(window.end) ?
+                                lastAddedWindow.end : window.end);
 
-               Window merged = new Window(lastAddedWindow.start(), end);
+               Window merged = Window.between(lastAddedWindow.start, end);
 
                union.remove(union.size()-1);
                union.add(merged);
