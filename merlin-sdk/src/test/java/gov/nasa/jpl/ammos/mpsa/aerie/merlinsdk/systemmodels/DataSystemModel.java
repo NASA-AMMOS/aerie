@@ -97,7 +97,7 @@ public class DataSystemModel implements SystemModel{
         ((DataModelSlice)slice).dataRate -= delta;
     }*/
 
-    public List<Window> whenDataRateLessThan(double x){
+    public List<Window> whenDataRateLessThan(double x, DataModelSlice slice){
         List<Window> windows = new ArrayList<>();
         //todo: populate windows
 

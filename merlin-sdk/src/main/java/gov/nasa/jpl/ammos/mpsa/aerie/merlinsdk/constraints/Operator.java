@@ -70,13 +70,8 @@ public class Operator implements Comparator<Window> {
 
         List<Window> temp = new ArrayList<>();
 
-        for (Window x : a){
-            temp.add(x.clone());
-        }
-
-        for (Window y : b){
-            temp.add(y.clone());
-        }
+        temp.addAll(a);
+        temp.addAll(b);
 
         List<Window> union = new ArrayList<>();
 
@@ -101,7 +96,11 @@ public class Operator implements Comparator<Window> {
                Instant end = (
                         lastAddedWindow.end().isAfter(window.end()) ?
                                 lastAddedWindow.end() : window.end());
-               lastAddedWindow.setEnd(end);
+
+               Window merged = new Window(lastAddedWindow.start(), end);
+
+               union.remove(union.size()-1);
+               union.add(merged);
             }
         }
 
