@@ -213,8 +213,10 @@ public class DataModelTest {
 
         dataModel.setDataRate(dataSlice, 5.0);
         dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.setDataProtocol(dataSlice, GlobalPronouns.spacewire);
         dataModel.setDataRate(dataSlice, 15.0);
         dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.setDataProtocol(dataSlice, GlobalPronouns.UART);
 
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);
         Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(dataSlice, 100.0);
@@ -223,6 +225,7 @@ public class DataModelTest {
         Constraint dataSysModelConstraint = Operator.And(ratesAndVol, dataProtocolType);
 
         System.out.println(dataRateMax.getWindows());
+        System.out.println(dataProtocolType.getWindows());
         System.out.println(dataSysModelConstraint.getWindows());
     }
 

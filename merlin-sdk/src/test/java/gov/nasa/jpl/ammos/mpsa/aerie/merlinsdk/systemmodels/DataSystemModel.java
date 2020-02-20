@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class DataSystemModel implements SystemModel{
@@ -126,12 +127,35 @@ public class DataSystemModel implements SystemModel{
         return windows;
     }
 
-    public List<Window> whenDataProtocolEquals(final Slice s, final String protocol){
-        final DataModelSlice slice = (DataModelSlice) s;
-        List<Window> windows = new ArrayList<>();
-        //todo: populate windows
+    public List<Window> whenDataProtocolEquals(final Slice s, final String expectation){
+        final var slice = (DataModelSlice) s;
+        final var windows = new ArrayList<Window>();
 
-        System.out.println("Returning windows for when data protocol is " + s);
+        final var iter = slice.dataProtocol.entrySet().iterator();
+        while (iter.hasNext()) {
+            Instant start = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (Objects.equals(point.getValue(), expectation)) {
+                    start = point.getKey();
+                    break;
+                }
+            }
+            if (start == null) break;
+
+            Instant end = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (!Objects.equals(point.getValue(), expectation)) {
+                    end = point.getKey();
+                    break;
+                }
+            }
+            if (end == null) end = slice.time;
+
+            windows.add(Window.between(start, end));
+        }
+
         return windows;
     }
 
