@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeMap;
 
 public class DataSystemModel implements SystemModel{
 
@@ -47,7 +48,7 @@ public class DataSystemModel implements SystemModel{
         DataModelSlice slice = (DataModelSlice) aSlice;
         slice.dataVolume += slice.dataRate * (double)(dt.durationInMicroseconds / 1000000L);
         if (slice.dataRate > 100){
-            slice.dataProtocol = GlobalPronouns.spacewire;
+            slice.dataProtocol.put(slice.time, GlobalPronouns.spacewire);
         }
         slice.setTime(slice.time().plus(dt));
     }
@@ -73,19 +74,20 @@ public class DataSystemModel implements SystemModel{
     }
 
     public String getDataProtocol(Slice slice){
-        return ((DataModelSlice)slice).dataProtocol;
+        return ((DataModelSlice)slice).dataProtocol.lastEntry().getValue();
     }
 
     public void setDataRate(Slice slice, Double dataRate){
         ((DataModelSlice)slice).dataRate = dataRate;
     }
 
-    public void setDataVolume(Slice slice,  Double dataVolume){
+    public void setDataVolume(Slice slice, Double dataVolume){
         ((DataModelSlice)slice).dataVolume = dataVolume;
     }
 
-    public void setDataProtocol(Slice slice,  String dataProtocol){
-        ((DataModelSlice)slice).dataProtocol = dataProtocol;
+    public void setDataProtocol(Slice s, String dataProtocol){
+        final DataModelSlice slice = (DataModelSlice) s;
+        slice.dataProtocol.put(slice.time, dataProtocol);
     }
 
     /* Need to create a cumulative event interface
@@ -134,22 +136,29 @@ public class DataSystemModel implements SystemModel{
     }
 
     private static class DataModelSlice implements Slice{
-        private double dataRate = 0.0;
-        private double dataVolume = 0.0;
-        private String dataProtocol = GlobalPronouns.UART;
+        private double dataRate;
+        private double dataVolume;
+        private final TreeMap<Instant, String> dataProtocol;
         private Instant time;
 
-
-        public DataModelSlice(Instant time){
-            this.time = time;
+        public DataModelSlice(Instant startTime){
+            this(0.0, 0.0, GlobalPronouns.UART, startTime);
         }
 
-        //for now, time in constructor, will remove later
-        public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Instant time){
+        public DataModelSlice(final DataModelSlice other){
+            this.dataRate = other.dataRate;
+            this.dataVolume = other.dataVolume;
+            this.dataProtocol = new TreeMap<>(other.dataProtocol);
+            this.time = other.time;
+        }
+
+        public DataModelSlice(double dataRate, double dataVolume, String dataProtocol, Instant startTime){
             this.dataRate = dataRate;
             this.dataVolume = dataVolume;
-            this.dataProtocol = dataProtocol;
-            this.time = time;
+            this.dataProtocol = new TreeMap<>();
+            this.time = startTime;
+
+            this.dataProtocol.put(startTime, dataProtocol);
         }
 
         public DataModelSlice newSlice(double dataRate, double dataVolume, String dataProtocol, Instant time){
@@ -167,7 +176,7 @@ public class DataSystemModel implements SystemModel{
         }
 
         public DataModelSlice cloneSlice(){
-            return new DataModelSlice(dataRate, dataVolume, dataProtocol, time);
+            return new DataModelSlice(this);
         }
 
         //will be used for review meeting then removed
