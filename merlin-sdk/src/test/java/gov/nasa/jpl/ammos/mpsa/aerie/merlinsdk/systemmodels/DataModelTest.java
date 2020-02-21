@@ -221,8 +221,7 @@ public class DataModelTest {
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);
         Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(dataSlice, 15.0);
         Constraint dataProtocolType = () -> dataSystemModel.whenDataProtocolEquals(dataSlice, GlobalPronouns.spacewire);
-        Constraint ratesAndVol = Operator.And(dataRateMax, dataVolumeMax);
-        Constraint dataSysModelConstraint = Operator.And(ratesAndVol, dataProtocolType);
+        Constraint dataSysModelConstraint = dataRateMax.and(dataVolumeMax).and(dataProtocolType);
 
         System.out.println("rate > 10: " + dataRateMax.getWindows());
         System.out.println("volume > 15: " + dataVolumeMax.getWindows());

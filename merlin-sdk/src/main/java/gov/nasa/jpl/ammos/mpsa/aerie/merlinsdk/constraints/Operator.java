@@ -10,9 +10,9 @@ public final class Operator {
     private Operator() {}
 
     /*
-    Assumption: in both methods intersection and union,
-    a and b are composed of in-order, disjoint intervals
-    */
+     * Assumption: in both methods intersection and union,
+     * a and b are composed of in-order, disjoint intervals
+     */
 
     public static List<Window> intersection(final List<Window> a, final List<Window> b) {
         final var intersection = new ArrayList<Window>();
@@ -59,14 +59,5 @@ public final class Operator {
         }
 
         return union;
-    }
-
-
-    public static Constraint And(Constraint a, Constraint b) {
-        return () -> intersection(a.getWindows(), b.getWindows());
-    }
-
-    public static Constraint Or(Constraint a, Constraint b) {
-        return () -> union(a.getWindows(), b.getWindows());
     }
 }
