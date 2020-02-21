@@ -110,21 +110,67 @@ public class DataSystemModel implements SystemModel{
         ((DataModelSlice)slice).dataRate -= delta;
     }*/
 
-    public List<Window> whenDataRateLessThan(final Slice s, final double x){
-        final DataModelSlice slice = (DataModelSlice) s;
-        List<Window> windows = new ArrayList<>();
-        //todo: populate windows
+    public List<Window> whenDataRateLessThan(final Slice s, final double threshold){
+        final var slice = (DataModelSlice) s;
+        final var windows = new ArrayList<Window>();
 
-        System.out.println("Returning windows for data rate less than " + x);
+        final var iter = slice.dataRate.entrySet().iterator();
+        while (iter.hasNext()) {
+            Instant start = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (point.getValue() < threshold) {
+                    start = point.getKey();
+                    break;
+                }
+            }
+            if (start == null) break;
+
+            Instant end = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (point.getValue() >= threshold) {
+                    end = point.getKey();
+                    break;
+                }
+            }
+            if (end == null) end = slice.time;
+
+            windows.add(Window.between(start, end));
+        }
+
         return windows;
     }
 
-    public List<Window> whenDataRateGreaterThan(final Slice s, final double x){
-        final DataModelSlice slice = (DataModelSlice) s;
-        List<Window> windows = new ArrayList<>();
-        //todo: populate windows
+    public List<Window> whenDataRateGreaterThan(final Slice s, final double threshold){
+        final var slice = (DataModelSlice) s;
+        final var windows = new ArrayList<Window>();
 
-        System.out.println("Returning windows for data rate greater than than " + x);
+        final var iter = slice.dataRate.entrySet().iterator();
+        while (iter.hasNext()) {
+            Instant start = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (point.getValue() > threshold) {
+                    start = point.getKey();
+                    break;
+                }
+            }
+            if (start == null) break;
+
+            Instant end = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+                if (point.getValue() <= threshold) {
+                    end = point.getKey();
+                    break;
+                }
+            }
+            if (end == null) end = slice.time;
+
+            windows.add(Window.between(start, end));
+        }
+
         return windows;
     }
 
