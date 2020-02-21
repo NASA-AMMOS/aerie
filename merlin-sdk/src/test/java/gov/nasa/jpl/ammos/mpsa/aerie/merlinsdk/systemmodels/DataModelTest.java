@@ -206,7 +206,7 @@ public class DataModelTest {
     public void constraintTest(){
         /*
          * Constraint I want to build:
-         * In violation if dataRate > 10 AND dataVolume > 100 AND protocol == spacewire
+         * In violation if dataRate > 10 AND dataVolume > 15 AND protocol == spacewire
          */
         final var dataModel = new DataSystemModel(glue, simStartTime);
         final var dataSlice = dataModel.getInitialSlice();
@@ -219,13 +219,14 @@ public class DataModelTest {
         dataModel.setDataProtocol(dataSlice, GlobalPronouns.UART);
 
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);
-        Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(dataSlice, 100.0);
+        Constraint dataVolumeMax = () -> dataSystemModel.whenDataVolumeGreaterThan(dataSlice, 15.0);
         Constraint dataProtocolType = () -> dataSystemModel.whenDataProtocolEquals(dataSlice, GlobalPronouns.spacewire);
         Constraint ratesAndVol = Operator.And(dataRateMax, dataVolumeMax);
         Constraint dataSysModelConstraint = Operator.And(ratesAndVol, dataProtocolType);
 
-        System.out.println(dataRateMax.getWindows());
-        System.out.println(dataProtocolType.getWindows());
+        System.out.println("rate > 10: " + dataRateMax.getWindows());
+        System.out.println("volume > 15: " + dataVolumeMax.getWindows());
+        System.out.println("protocol = spacewire: " + dataProtocolType.getWindows());
         System.out.println(dataSysModelConstraint.getWindows());
     }
 

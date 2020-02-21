@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Mas
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.MissionModelGlue.Registry;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.ArrayList;
@@ -127,12 +128,79 @@ public class DataSystemModel implements SystemModel{
         return windows;
     }
 
-    public List<Window> whenDataVolumeGreaterThan(final Slice s, final double x){
+    public List<Window> whenDataVolumeGreaterThan(final Slice s, final double threshold){
         final DataModelSlice slice = (DataModelSlice) s;
-        List<Window> windows = new ArrayList<>();
-        //todo: populate windows
+        final var windows = new ArrayList<Window>();
 
-        System.out.println("Returning windows for data volume greater than than " + x);
+        var dataVolume = slice.initialVolume;
+        var dataRate = 0.0;
+        var currentTime = slice.startTime;
+
+        final var iter = slice.dataRate.entrySet().iterator();
+        while (iter.hasNext()) {
+            Instant start = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+
+                final var prevDataVolume = dataVolume;
+                final var prevDataRate = dataRate;
+                final var prevTime = currentTime;
+
+                final var dt = point.getKey().durationFrom(currentTime);
+                dataVolume += dataRate * (double)(dt.durationInMicroseconds / 1000000L);
+                dataRate = point.getValue();
+                currentTime = point.getKey();
+
+                if (dataRate > 0) {
+                    final var projection = Duration.fromQuantity((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
+
+                    if (prevTime.plus(projection).compareTo(point.getKey()) < 0) {
+                        start = prevTime.plus(projection);
+                        break;
+                    }
+                }
+            }
+            if (start == null) break;
+
+            Instant end = null;
+            while (iter.hasNext()) {
+                final var point = iter.next();
+
+                final var prevDataVolume = dataVolume;
+                final var prevDataRate = dataRate;
+                final var prevTime = currentTime;
+
+                final var dt = point.getKey().durationFrom(currentTime);
+                dataVolume += dataRate * (double)(dt.durationInMicroseconds / 1000000L);
+                dataRate = point.getValue();
+                currentTime = point.getKey();
+
+                if (dataRate < 0) {
+                    final var projection = Duration.fromQuantity((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
+
+                    if (prevTime.plus(projection).compareTo(point.getKey()) < 0) {
+                        end = prevTime.plus(projection);
+                        break;
+                    }
+                }
+            }
+
+            if (end == null) {
+                if (dataRate < 0) {
+                    final var prevDataVolume = dataVolume;
+                    final var prevDataRate = dataRate;
+                    final var prevTime = currentTime;
+
+                    final var projection = Duration.fromQuantity((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
+                    end = prevTime.plus(projection);
+                } else {
+                    end = slice.time;
+                }
+            }
+
+            windows.add(Window.between(start, end));
+        }
+
         return windows;
     }
 
