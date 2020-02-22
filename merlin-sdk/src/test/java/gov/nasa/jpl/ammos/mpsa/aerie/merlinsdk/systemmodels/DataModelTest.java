@@ -78,14 +78,14 @@ public final class DataModelTest {
             var currentTime = initialInstant;
             for (final var event : timeline) {
                 if (event.time.isBefore(currentTime)) continue;
-                if (event.time.isAfter(endTime)) break;
 
                 final var nextTime = endTime.min(event.time);
-
                 accumulator.step(currentTime.durationTo(nextTime));
-                accumulator.react(event.key, event.value);
-
                 currentTime = nextTime;
+
+                if (event.time.isAfter(endTime)) break;
+
+                accumulator.react(event.key, event.value);
             }
 
             return accumulator;
