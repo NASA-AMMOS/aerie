@@ -19,13 +19,23 @@ public final class SimulationInstant implements Instant {
   }
 
   @Override
-  public Instant plus(final Duration duration) {
+  public SimulationInstant plus(final Duration duration) {
     return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.durationInMicroseconds));
   }
 
   @Override
-  public Instant minus(final Duration duration) {
+  public SimulationInstant minus(final Duration duration) {
     return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.durationInMicroseconds));
+  }
+
+  @Override
+  public SimulationInstant min(final Instant other) {
+    return (SimulationInstant) Instant.super.min(other);
+  }
+
+  @Override
+  public SimulationInstant max(final Instant other) {
+    return (SimulationInstant) Instant.super.max(other);
   }
 
   @Override
