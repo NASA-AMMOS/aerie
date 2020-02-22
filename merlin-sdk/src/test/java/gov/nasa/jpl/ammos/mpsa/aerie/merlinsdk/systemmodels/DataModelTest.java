@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.now;
@@ -56,62 +57,73 @@ public final class DataModelTest {
 
         // Create an event timeline.
         final var timeline = new EventTimeline();
-        final var addDataRate = timeline.<Double>createChannel("ADD /data/rate");
-        final var setDataProtocol = timeline.<DataModel.Protocol>createChannel("SET /data/protocol");
+        final var addDataRate = new Object() {
+            private final Channel<Double> channel = timeline.createChannel("ADD /data/rate");
+            public void add(final double effect) {
+                this.channel.add(now(), effect);
+            }
+        };
+        final var setDataProtocol = new Object() {
+            private final Channel<DataModel.Protocol> channel = timeline.createChannel("SET /data/protocol");
+            public void add(final DataModel.Protocol effect) {
+                this.channel.add(now(), effect);
+            }
+        };
 
         // Define a means of getting a system model at a given point in time.
         final var initialSystemModel = new MySystemModel(initialInstant);
-        final Function<Instant, MySystemModel> getAtTime = (time) -> {
+        final Function<Instant, MySystemModel> getModelAt = (endTime) -> {
             final var accumulator = initialSystemModel.duplicate();
 
-            var now = initialInstant;
+            var currentTime = initialInstant;
             for (final var event : timeline) {
-                if (event.time.isAfter(time)) break;
-                if (event.time.isBefore(now)) continue;
+                if (event.time.isBefore(currentTime)) continue;
+                if (event.time.isAfter(endTime)) break;
 
-                if (now.isBefore(event.time)) {
-                    accumulator.step(now.durationTo(event.time));
-                    now = event.time;
-                }
+                final var nextTime = endTime.min(event.time);
 
+                accumulator.step(currentTime.durationTo(nextTime));
                 accumulator.react(event.key, event.value);
+
+                currentTime = nextTime;
             }
 
             return accumulator;
         };
+        final Supplier<MySystemModel> currentModel = () -> getModelAt.apply(now());
 
         // Build time-aware wrappers around mission resources.
         final var dataRate = new Object() {
             public double get() {
-                return getAtTime.apply(now()).dataModel.getDataRate();
+                return currentModel.get().dataModel.getDataRate();
             }
 
             public List<Window> whenGreaterThan(final double threshold) {
-                return getAtTime.apply(now()).dataModel.whenRateGreaterThan(threshold);
+                return currentModel.get().dataModel.whenRateGreaterThan(threshold);
             }
 
             public void increaseBy(final double delta) {
-                addDataRate.add(now(), delta);
+                addDataRate.add(delta);
             }
 
             public void decreaseBy(final double delta) {
-                addDataRate.add(now(), -delta);
+                addDataRate.add(-delta);
             }
         };
 
         final var dataVolume = new Object() {
             public double get() {
-                return getAtTime.apply(now()).dataModel.getDataVolume();
+                return currentModel.get().dataModel.getDataVolume();
             }
         };
 
         final var dataProtocol = new Object() {
             public DataModel.Protocol get() {
-                return getAtTime.apply(now()).dataModel.getDataProtocol();
+                return currentModel.get().dataModel.getDataProtocol();
             }
 
             public void set(final DataModel.Protocol protocol) {
-                setDataProtocol.add(now(), protocol);
+                setDataProtocol.add(protocol);
             }
         };
 
@@ -140,7 +152,7 @@ public final class DataModelTest {
         final var endTime = ThreadedActivityEffects.execute(initialInstant, performSchedule);
 
         // Analyze the simulation results.
-        final var system = getAtTime.apply(endTime);
+        final var system = getModelAt.apply(endTime);
 
         System.out.println(system.dataModel.getDataRateHistory());
         System.out.println(system.dataModel.getDataProtocolHistory());
