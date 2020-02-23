@@ -130,5 +130,10 @@ public final class ThreadedActivityEffects {
         public Instant now() {
             return ThreadedActivityEffects.this.currentTime;
         }
+
+        @Override
+        public boolean replaying() {
+            return false;
+        }
     }
 }

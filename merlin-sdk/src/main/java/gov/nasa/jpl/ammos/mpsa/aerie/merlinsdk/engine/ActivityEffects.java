@@ -14,6 +14,7 @@ public final class ActivityEffects {
         void spawn(final Duration duration, final Runnable activity);
         void waitForChildren();
         Instant now();
+        boolean replaying();
     }
 
     // It's best to think of a `ThreadLocal` not as data, but as a dynamically-scoped variable that exists somewhere
@@ -54,6 +55,12 @@ public final class ActivityEffects {
         return Objects
             .requireNonNull(dynamicProvider.get(), "now cannot be called outside of activity context")
             .now();
+    }
+
+    public static boolean replaying() {
+        return Objects
+            .requireNonNull(dynamicProvider.get(), "replaying cannot be called outside of activity context")
+            .replaying();
     }
 
     public static void delay(final long quantity, final TimeUnit units) {

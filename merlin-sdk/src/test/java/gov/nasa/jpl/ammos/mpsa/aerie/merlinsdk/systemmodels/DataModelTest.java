@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.RestartingActivityEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ThreadedActivityEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -10,10 +11,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.delay;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.now;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.spawn;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.waitForChildren;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityEffects.*;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit.*;
 
 final class MySystemModel implements SystemModel {
@@ -60,13 +58,13 @@ public final class DataModelTest {
         final var addDataRate = new Object() {
             private final Channel<Double> channel = timeline.createChannel("ADD /data/rate");
             public void add(final double effect) {
-                this.channel.add(now(), effect);
+                if (!replaying()) this.channel.add(now(), effect);
             }
         };
         final var setDataProtocol = new Object() {
             private final Channel<DataModel.Protocol> channel = timeline.createChannel("SET /data/protocol");
             public void add(final DataModel.Protocol effect) {
-                this.channel.add(now(), effect);
+                if (!replaying()) this.channel.add(now(), effect);
             }
         };
 
@@ -149,7 +147,7 @@ public final class DataModelTest {
         };
 
         // Execute the schedule.
-        final var endTime = ThreadedActivityEffects.execute(initialInstant, performSchedule);
+        final var endTime = RestartingActivityEffects.execute(initialInstant, performSchedule);
 
         // Analyze the simulation results.
         final var system = getModelAt.apply(endTime);
