@@ -9,8 +9,20 @@ import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 public final class ThreadedActivityEffects {
+    // TODO: Accept a thread pool on construction, instead of sharing a single static pool.
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool(r -> {
+        // Daemonize all threads in this pool, so that they don't block the application on shutdown.
+        // TODO: Properly call `shutdown` on the pool instead, once the pool is provided at construction time.
+        final var t = Executors.defaultThreadFactory().newThread(r);
+        t.setDaemon(true);
+        return t;
+    });
+
     private final Queue<Pair<Instant, Provider>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
     private Instant currentTime;
 
@@ -44,9 +56,7 @@ public final class ThreadedActivityEffects {
     }
 
     private void spawnInThread(final Provider provider, final Runnable scope) {
-        final var t = new Thread(() -> provider.start(scope));
-        t.setDaemon(true);
-        t.start();
+        threadPool.execute(() -> provider.start(scope));
     }
 
     private void resumeAfter(final Duration duration, final Provider provider) {
