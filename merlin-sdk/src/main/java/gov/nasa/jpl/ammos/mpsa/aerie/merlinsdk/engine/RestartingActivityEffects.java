@@ -19,7 +19,7 @@ public final class RestartingActivityEffects implements ActivityEffects.Provider
 
     private RestartingActivityEffects(final Instant initialInstant, final Runnable rootScope) {
         this.currentTime = initialInstant;
-        this.queue.add(new Task(initialInstant, initialInstant, rootScope, null));
+        this.queue.add(new Task(rootScope, initialInstant, null));
     }
 
     public static Instant execute(final Instant initialInstant, final Runnable scope) {
@@ -76,7 +76,7 @@ public final class RestartingActivityEffects implements ActivityEffects.Provider
         if (this.replaying()) return;
 
         final var resumeTime = this.currentTime.plus(duration);
-        final var newTask = new Task(resumeTime, resumeTime, activity, this.currentTask);
+        final var newTask = new Task(activity, resumeTime, this.currentTask);
 
         this.currentTask.runningChildren.add(newTask);
         this.queue.add(newTask);
@@ -111,20 +111,21 @@ public final class RestartingActivityEffects implements ActivityEffects.Provider
     }
 
     private static final class Task {
-        public final Instant startTime;
         public final Runnable scope;
+        public final Instant startTime;
+        public Instant resumeTime;
+
         public final Task parent;
         public final Set<Task> runningChildren = new HashSet<>();
+        public boolean waitingForChildren = false;
+
         public final List<Instant> childrenResumptions = new ArrayList<>();
         public int nextChildrenResumption = 0;
 
-        public Instant resumeTime;
-        public boolean waitingForChildren = false;
-
-        public Task(final Instant startTime, final Instant resumeTime, final Runnable scope, final Task parent) {
-            this.startTime = startTime;
-            this.resumeTime = resumeTime;
+        public Task(final Runnable scope, final Instant startTime, final Task parent) {
             this.scope = scope;
+            this.startTime = startTime;
+            this.resumeTime = startTime;
             this.parent = parent;
         }
     }
