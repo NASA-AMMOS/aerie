@@ -75,8 +75,8 @@ public final class RestartingActivityEffects implements ActivityEffects.Provider
     public void spawn(final Duration duration, final Runnable activity) {
         if (this.replaying()) return;
 
-        final var resumeTime = this.currentTime.plus(duration);
-        final var newTask = new Task(activity, resumeTime, this.currentTask);
+        final var spawnTime = this.currentTime.plus(duration);
+        final var newTask = new Task(activity, spawnTime, this.currentTask);
 
         this.currentTask.runningChildren.add(newTask);
         this.queue.add(newTask);
