@@ -64,10 +64,10 @@ public final class RestartingActivityEffects implements ActivityEffects.Provider
         }
 
         final var task = this.currentTask;
-        this.queue.add(task);
-
         task.resumeTime = resumeTime;
         task.nextChildrenResumption = 0;
+
+        this.queue.add(task);
         throw Rescheduled;
     }
 
