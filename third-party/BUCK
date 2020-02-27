@@ -95,6 +95,60 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+    name = 'javax.servlet-api',
+    binary_jar = 'javax.servlet-api-3.1.0.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-http',
+    binary_jar = 'jetty-http-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-io',
+    binary_jar = 'jetty-io-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-security',
+    binary_jar = 'jetty-security-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-server',
+    binary_jar = 'jetty-server-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-servlet',
+    binary_jar = 'jetty-servlet-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-util',
+    binary_jar = 'jetty-util-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-webapp',
+    binary_jar = 'jetty-webapp-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+    name = 'jetty-xml',
+    binary_jar = 'jetty-xml-9.4.19.v20190610.jar',
+    visibility = ['PUBLIC']
+)
+
 prebuilt_jar( 
     name = 'JNISpice',
     binary_jar = 'JNISpice-1.0-20190517.205223-2.jar',
@@ -155,39 +209,45 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
-prebuilt_jar( 
+prebuilt_jar(
+    name = 'slf4j-api',
+    binary_jar = 'slf4j-api-1.7.26.jar',
+    visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
     name = 'slf4j-simple',
     binary_jar = 'slf4j-simple-1.7.29.jar',
     visibility = ['PUBLIC']
 )
 
-prebuilt_jar( 
-    name = 'spring-beans',
-    binary_jar = 'spring-beans-4.3.25.RELEASE.jar',
+prebuilt_jar(
+    name = 'kotlin-stdlib',
+    binary_jar = 'kotlin-stdlib-1.3.31.jar',
     visibility = ['PUBLIC']
 )
 
-prebuilt_jar( 
-    name = 'spring-context',
-    binary_jar = 'spring-context-4.3.25.RELEASE.jar',
+prebuilt_jar(
+    name = 'websocket-api',
+    binary_jar = 'websocket-api-9.4.19.v20190610.jar',
     visibility = ['PUBLIC']
 )
 
-prebuilt_jar( 
-    name = 'spring-core',
-    binary_jar = 'spring-core-4.3.25.RELEASE.jar',
+prebuilt_jar(
+    name = 'websocket-common',
+    binary_jar = 'websocket-common-9.4.19.v20190610.jar',
     visibility = ['PUBLIC']
 )
 
-prebuilt_jar( 
-    name = 'spring-test',
-    binary_jar = 'spring-test-3.2.18.RELEASE.jar',
+prebuilt_jar(
+    name = 'websocket-server',
+    binary_jar = 'websocket-server-9.4.19.v20190610.jar',
     visibility = ['PUBLIC']
 )
 
-prebuilt_jar( 
-    name = 'spring-web',
-    binary_jar = 'spring-web-4.3.25.RELEASE.jar',
+prebuilt_jar(
+    name = 'websocket-servlet',
+    binary_jar = 'websocket-servlet-9.4.19.v20190610.jar',
     visibility = ['PUBLIC']
 )
 
@@ -197,6 +257,20 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+java_library(
+    name = 'jetty',
+    exported_deps = [
+        ":jetty-http",
+        ":jetty-io",
+        ":jetty-security",
+        ":jetty-server",
+        ":jetty-servlet",
+        ":jetty-util",
+        ":jetty-webapp",
+        ":jetty-xml",
+    ],
+    visibility = ['PUBLIC'],
+)
 
 java_library(
     name = 'junit-jupiter',
@@ -208,6 +282,17 @@ java_library(
         ":junit-platform-engine",
         ":junit-platform-launcher",
         ":opentest4j",
+    ],
+    visibility = ['PUBLIC'],
+)
+
+java_library(
+    name = 'websocket',
+    exported_deps = [
+        ":websocket-api",
+        ":websocket-common",
+        ":websocket-server",
+        ":websocket-servlet",
     ],
     visibility = ['PUBLIC'],
 )
