@@ -191,6 +191,13 @@ pipeline {
 								echo 'pushing images to ECR'
 								sh "docker push ${AWS_ECR}/aerie/plan:${GIT_BRANCH}"
 								sh "docker push ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}"
+
+
+								echo 'cleaning up images'
+								sh "docker image prune -f"
+
+								echo 'Logging out docker'
+								sh 'docker logout || true'
 						}
 					}
 				}
