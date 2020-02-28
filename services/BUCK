@@ -1,15 +1,22 @@
 java_library(
     name = "services",
     srcs = glob(["src/main/java/**/*.java"]),
+    resources = glob(["src/main/resources/**"]),
+    resources_root = 'src/main/resources',
     deps = [
         "//third-party:assertj-core",
         "//third-party:commons-lang3",
         "//third-party:javalin",
         "//third-party:javax.json",
         "//third-party:javax.json.bind-api",
+        "//third-party:javax.servlet-api",
         "//third-party:junit-jupiter-engine",
+        "//third-party:jetty",
+        "//third-party:kotlin-stdlib",
         "//third-party:mongo-java-driver",
         "//third-party:slf4j-simple",
+        "//third-party:slf4j-api",
+        "//third-party:websocket",
         "//third-party:yasson",
 
         # Modules
@@ -21,7 +28,7 @@ java_library(
 java_binary(
     name = "adaptation-service", 
     deps = [
-        ':services'
+        ':services',
     ],
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.adaptation.AerieAppDriver"
 )
@@ -53,6 +60,7 @@ java_test(
         "//third-party:javalin",
         "//third-party:javax.json.bind-api",
         "//third-party:javax.json",
+        "//third-party:junit",
         "//third-party:junit-jupiter",
         "//third-party:mongo-java-driver",
         "//third-party:slf4j-simple",
