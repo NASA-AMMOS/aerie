@@ -131,5 +131,8 @@ public final class RestartingActivityEffects implements ActivityEffects.Provider
     }
 
     private static class Rescheduled extends RuntimeException {}
+    // By creating a single fixed exception instance, we avoid the cost of capturing a stack trace
+    // every time the exception is used. The exception does not represent an unexpected circumstance,
+    // so the stack trace machinery is unnecessary overhead.
     private static final Rescheduled Rescheduled = new Rescheduled();
 }
