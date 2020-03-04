@@ -114,12 +114,6 @@ else
   changed=$(ls -1)
 fi
 
-printf "\nPublishing schemas...\n\n"
-cd schemas
-mvn -B -s settings.xml deploy -DskipTests
-[ $? -ne 0 ] && error_exit "mvn deploy failed"
-cd $root
-
 printf "\nPublishing merlin-sdk...\n\n"
 cd merlin-sdk
 mvn -B -s settings.xml deploy -DskipTests
