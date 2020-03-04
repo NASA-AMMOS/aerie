@@ -2,7 +2,7 @@ java_library(
     name = "lib",
     srcs = glob(["src/main/java/**/*"]),
     resources = glob(["src/main/resources/**/*"]),
-    resources_root = "src/test/resources/",
+    resources_root = "src/main/resources/",
     extra_arguments = ["-Xlint:all"],
     deps = [
         "//third-party:commons-cli",
