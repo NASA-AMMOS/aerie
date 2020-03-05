@@ -24,10 +24,7 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 class MapperMaker {
   private final Elements elementUtils;
@@ -73,6 +70,10 @@ class MapperMaker {
             case "char":
             case "string":
               blockBuilder.addStatement("$L.put($S, $T.STRING)", parametersVarName, parameterName, ParameterSchema.class);
+              break;
+
+            case "array_int":
+              blockBuilder.addStatement("$L.put($S, $T.ofList($T.INT))", parametersVarName, parameterName, ParameterSchema.class, ParameterSchema.class);
               break;
 
             default:
@@ -153,6 +154,10 @@ class MapperMaker {
               break;
             case "string":
               blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, String.class, parameterName, Optional.class);
+              break;
+              
+            case "array_int":
+              blockBuilder.addStatement("$T<int[]> param_$L = $T.empty()", Optional.class, parameterName, Optional.class);
               break;
 
             default:
@@ -238,6 +243,18 @@ class MapperMaker {
                   .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
               break;
 
+            case "array_int":
+              blockBuilder
+                      .addStatement("final var givenValue = $L.getValue().asList().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected array_int\"))", entryVarName)
+                      .addStatement("int[] convertedValue = new int[givenValue.size()]")
+                      .add(         "for (int index=0; index<givenValue.size(); index++) {\n")
+                      .add(         "    long value = givenValue.get(index).asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"));\n")
+                      .add(         "    if (value != (int)value) throw new RuntimeException(\"Invalid parameter; value outside range of `int`\");\n")
+                      .add(         "    convertedValue[index] = (int)value;\n")
+                      .add(         "}\n")
+                      .addStatement("param_$L = $T.of(convertedValue)", parameterName, Optional.class);
+              break;
+
             default:
               throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
           }
@@ -319,6 +336,11 @@ class MapperMaker {
         if (parameterTypeReference.isPrimitive) {
           if (Objects.equals(parameterTypeReference.typeName, "char")) {
             blockBuilder.addStatement("$L.put($S, $T.of(Character.toString($L.$L)))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
+          } else if (Objects.equals(parameterTypeReference.typeName, "array_int")) {
+            blockBuilder
+                    .addStatement("$T<$T> arr = new $T<>()", List.class, SerializedParameter.class, ArrayList.class)
+                    .addStatement("for (var val : $L.$L) arr.add($T.of(val))", activityVarName, parameterName, SerializedParameter.class)
+                    .addStatement("$L.put($S, $T.of(arr))", parametersVarName, parameterName, SerializedParameter.class);
           } else {
             blockBuilder.addStatement("$L.put($S, $T.of($L.$L))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
           }
