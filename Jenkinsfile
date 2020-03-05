@@ -1,15 +1,3 @@
-def getTag() {
-	def branchName = env.GIT_BRANCH.replaceAll('/', '_').replace('release_', '')
-	def shortDate = new Date().format('yyyyMMdd')
-	def shortCommit = env.GIT_COMMIT.take(7)
-
-	if (GIT_BRANCH ==~ /(release.*)/) {
-		return "${branchName}"
-	} else {
-	return "${branchName}+b${BUILD_NUMBER}.r${shortCommit}.${shortDate}"
-	}
-}
-
 def getDockerCompatibleTag(tag){
 	def fixedTag = tag.replaceAll('\\+', '-')
 	return fixedTag
@@ -18,7 +6,7 @@ def getDockerCompatibleTag(tag){
 def getArtifactoryUrl() {
 	echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
 
-    if (GIT_BRANCH ==~ /(release.*)/){
+    if (GIT_BRANCH ==~ /release/){
 		echo "Publishing to 16002-STAGE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16002"
     }
@@ -31,14 +19,18 @@ def getArtifactoryUrl() {
 pipeline {
 
 	agent {
-		//NOTE: DEPLOY WILL ONLY WORK WITH Coronado SERVER SINCE AWS CLI VERSION 2 IS ONLY INSTALLED ON THAT SERVER.
-		//label 'coronado || Pismo || San-clemente || Sugarloaf'
+		// NOTE: DEPLOY WILL ONLY WORK WITH Coronado SERVER SINCE AWS CLI VERSION 2 IS ONLY INSTALLED ON THAT SERVER.
+		// label 'coronado || Pismo || San-clemente || Sugarloaf'
 		label 'coronado'
 	}
 
 	environment {
-		ARTIFACT_TAG = "${getTag()}"
+		ARTIFACT_TAG = "${GIT_BRANCH}"
 		ARTIFACTORY_URL = "${getArtifactoryUrl()}"
+		AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
+    	AWS_DEFAULT_REGION = 'us-gov-west-1'
+		AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
+    	AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
 		BUCK_HOME = "/usr/local/bin"
 		BUCK_OUT = "${env.WORKSPACE}/buck-out"
 		DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
@@ -46,13 +38,6 @@ pipeline {
 		JDK11_HOME = "/usr/lib/jvm/java-11-openjdk"
 		LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
 		WATCHMAN_HOME = "/opt/watchman"
-
-		AWS_ACCESS_KEY_ID     = credentials('aerie-aws-access-key')
-    AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
-    AWS_DEFAULT_REGION    = 'us-gov-west-1'
-
-		AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
-
 	}
 
 	stages {
@@ -81,14 +66,14 @@ pipeline {
 
 		stage ('Test') {
 			steps {
-				echo "Merging building all Test targets"
-				//sh "buck test //..."
+				echo "TODO: Run tests via BUCK"
+				// sh "buck test //..."
 			}
 		}
 
 		stage ('Docker') {
 			when {
-				expression { GIT_BRANCH ==~ /(develop|release.*|PR-.*)/ }
+				expression { GIT_BRANCH ==~ /(develop|staging|release)/ }
 			}
 			steps {
 				withCredentials([usernamePassword(credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86', passwordVariable: 'DOCKER_LOGIN_PASSWORD', usernameVariable: 'DOCKER_LOGIN_USERNAME')]) {
@@ -121,7 +106,7 @@ pipeline {
 
 		stage ('Archive') {
 			when {
-				expression { GIT_BRANCH ==~ /(develop|release.*|PR-.*)/ }
+				expression { GIT_BRANCH ==~ /(develop|staging|release)/ }
 			}
 			steps {
 				// TODO: Publish Merlin-SDK.jar to Maven/Artifactory
@@ -166,7 +151,7 @@ pipeline {
 
 		stage('Deploy') {
 			when {
-				expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
+				expression { GIT_BRANCH ==~ /(develop|staging|release)/ }
 			}
 			steps {
 				echo 'Deployment stage started...'
@@ -176,21 +161,20 @@ pipeline {
 						sh 'docker logout || true'
 
 						echo 'Logging into ECR'
-						//aws version 2
 						sh ('aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR')
 
 						docker.withRegistry(AWS_ECR){
-								echo "tagging docker images to point to AWS ECR"
-								sh '''
-								docker tag $(docker images | awk '\$1 ~ /plan/ { print \$3; exit }') ${AWS_ECR}/aerie/plan:${GIT_BRANCH}
-								'''
-								sh '''
-								docker tag $(docker images | awk '\$1 ~ /adaptation/ { print \$3; exit }') ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}
-								'''
+							echo "Tagging docker images to point to AWS ECR"
+							sh '''
+							docker tag $(docker images | awk '\$1 ~ /plan/ { print \$3; exit }') ${AWS_ECR}/aerie/plan:${GIT_BRANCH}
+							'''
+							sh '''
+							docker tag $(docker images | awk '\$1 ~ /adaptation/ { print \$3; exit }') ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}
+							'''
 
-								echo 'pushing images to ECR'
-								sh "docker push ${AWS_ECR}/aerie/plan:${GIT_BRANCH}"
-								sh "docker push ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}"
+							echo 'Pushing images to ECR'
+							sh "docker push ${AWS_ECR}/aerie/plan:${GIT_BRANCH}"
+							sh "docker push ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}"
 						}
 					}
 				}
@@ -200,7 +184,7 @@ pipeline {
 
 	post {
 		always {
-			echo 'cleaning up images'
+			echo 'Cleaning up images'
 			sh "docker image prune -f"
 
 			echo 'Logging out docker'
