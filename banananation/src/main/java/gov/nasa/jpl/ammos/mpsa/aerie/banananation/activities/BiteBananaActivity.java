@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Bite a banana.
@@ -23,6 +24,19 @@ import java.util.List;
 public final class BiteBananaActivity implements Activity<BananaStates> {
   @Parameter
   public double biteSize = 1.0;
+
+  @Parameter
+  public Integer[] intArray = null;
+
+  @Parameter
+  public List<Integer> intList = null;
+
+  @Parameter
+  public List<List<String>> stringList = null;
+
+
+  //@Parameter
+  //public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
 
   @Override
   public List<String> validateParameters() {

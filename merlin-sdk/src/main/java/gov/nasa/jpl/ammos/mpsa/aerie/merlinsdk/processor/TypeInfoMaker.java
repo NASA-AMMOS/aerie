@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -16,6 +17,7 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import java.util.List;
 
 class ParameterTypeException extends Exception {
@@ -33,15 +35,21 @@ class ParameterTypeException extends Exception {
 
 class TypeInfoMaker {
   private final TypeMirror STRING_TYPE;
+  private final TypeMirror INTEGER_TYPE;
+  private final TypeMirror LIST_TYPE;
 
   private final DocTrees docTrees;
   private final Types typeUtils;
+  private final Messager messager;
 
   public TypeInfoMaker(final ProcessingEnvironment processingEnv) {
     this.docTrees = DocTrees.instance(processingEnv);
     this.typeUtils = processingEnv.getTypeUtils();
+    this.messager = processingEnv.getMessager();
 
     this.STRING_TYPE = processingEnv.getElementUtils().getTypeElement(String.class.getCanonicalName()).asType();
+    this.INTEGER_TYPE = processingEnv.getElementUtils().getTypeElement(Integer.class.getCanonicalName()).asType();
+    this.LIST_TYPE = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName()).asType();
   }
 
   public ParameterTypeReference getParameterReferenceInfo(final Element parameterElement) throws ParameterTypeException {
@@ -85,6 +93,9 @@ class TypeInfoMaker {
         if (typeUtils.isSameType(STRING_TYPE, parameterType)) {
           typeReference.isPrimitive = true;
           typeReference.typeName = "string";
+        } else if (typeUtils.isAssignable(((DeclaredType)parameterType).asElement().asType(), LIST_TYPE)) {
+          typeReference.isPrimitive = true;
+          typeReference.typeName = getListTypeString((DeclaredType)parameterType, parameterElement);
         } else {
           typeReference.isPrimitive = false;
           typeReference.typeName = ((TypeElement)((DeclaredType)parameterType).asElement()).getQualifiedName().toString();
@@ -92,13 +103,86 @@ class TypeInfoMaker {
         break;
       case ARRAY:
         typeReference.isPrimitive = true;
-        typeReference.typeName = "array_" + ((ArrayType)parameterType).getComponentType().getKind().name().toLowerCase();
+        typeReference.typeName = getArrayTypeString((ArrayType)parameterType, parameterElement);
         break;
       default:
         throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), parameterElement);
     }
 
     return typeReference;
+  }
+
+  // Write more of these for List and Map then instead of a loop, use recursion among the three functions
+  private String getListTypeString(DeclaredType providedType, Element parameterElement) throws ParameterTypeException {
+    String typeName = "list_";
+
+    TypeMirror componentType = providedType.getTypeArguments().get(0);
+    String type = componentType.getKind().name();
+    String actualType;
+    switch(type) {
+      case "DOUBLE":
+      case "FLOAT":
+      case "BYTE":
+      case "SHORT":
+      case "INT":
+      case "LONG":
+      case "BOOLEAN":
+      case "CHAR":
+      case "ARRAY":
+        actualType = getArrayTypeString((ArrayType)componentType, parameterElement);
+        break;
+      case "DECLARED":
+        if (typeUtils.isSameType(STRING_TYPE, componentType)) {
+          actualType = "string";
+        } else if (typeUtils.isSameType(INTEGER_TYPE, componentType)) {
+          actualType = "int";
+        } else if (typeUtils.isAssignable(((DeclaredType)componentType).asElement().asType(), LIST_TYPE)) {
+          actualType = getListTypeString((DeclaredType)componentType, parameterElement);
+        } else {
+          actualType = ((TypeElement)((DeclaredType)componentType).asElement()).getQualifiedName().toString();
+        }
+        break;
+      default:
+        throw new ParameterTypeException("Unknown parameter type: " + componentType.toString(), parameterElement);
+    }
+
+    return typeName + actualType;
+  }
+
+  private String getArrayTypeString(ArrayType providedType, Element parameterElement) throws ParameterTypeException {
+    String typeName = "array_";
+
+    TypeMirror componentType = providedType.getComponentType();
+    String type = componentType.getKind().name();
+    String actualType;
+    switch(type) {
+      case "DOUBLE":
+      case "FLOAT":
+      case "BYTE":
+      case "SHORT":
+      case "INT":
+      case "LONG":
+      case "BOOLEAN":
+      case "CHAR":
+      case "ARRAY":
+        actualType = getArrayTypeString((ArrayType)componentType, parameterElement);
+        break;
+      case "DECLARED":
+        if (typeUtils.isSameType(STRING_TYPE, componentType)) {
+          actualType = "string";
+        } else if (typeUtils.isSameType(INTEGER_TYPE, componentType)) {
+          actualType = "int";
+        } else if (typeUtils.isAssignable(((DeclaredType)componentType).asElement().asType(), LIST_TYPE)) {
+          actualType = getListTypeString((DeclaredType)componentType, parameterElement);
+        } else {
+          actualType = ((TypeElement)((DeclaredType)componentType).asElement()).getQualifiedName().toString();
+        }
+        break;
+      default:
+        throw new ParameterTypeException("Unknown parameter type: " + componentType.toString(), parameterElement);
+    }
+
+    return typeName + actualType;
   }
 
   public ParameterTypeInfo getParameterInfo(final Element typeElement) throws ParameterTypeException {

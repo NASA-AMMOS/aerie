@@ -18,6 +18,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Paramet
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.*;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -35,6 +36,36 @@ class MapperMaker {
     this.typeUtils = processingEnv.getTypeUtils();
   }
 
+  // Works for lists and arrays, will need to be refactored.
+  private String makeSubtypeSchema(String type) {
+    switch (type.split("_")[0]) {
+      case "double": case "float":
+        return "$1T.REAL";
+
+      case "byte": case "short": case "int": case "long":
+        return "$1T.INT";
+
+      case "boolean":
+        return "$1T.BOOLEAN";
+
+      case "char": case "string":
+        return "$1T.STRING";
+
+      case "list": case "array":
+        return "$1T.ofList(" + makeSubtypeSchema(type.substring(type.indexOf('_')+1)) + ")";
+
+      default:
+        // TODO: Deal with this
+        throw new RuntimeException("Unknown type " + type);
+    }
+  }
+
+  private CodeBlock makeTypeSchema(String type) {
+    return CodeBlock.builder()
+            .add(makeSubtypeSchema(type), ParameterSchema.class)
+            .build();
+  }
+
   protected MethodSpec makeGetActivitySchemas(
       final FieldSpec activityTypeNameSpec,
       final ActivityTypeInfo activityTypeInfo
@@ -50,35 +81,7 @@ class MapperMaker {
         final var parameterTypeReference = entry.getValue();
 
         if (parameterTypeReference.isPrimitive) {
-          switch (parameterTypeReference.typeName) {
-            case "double":
-            case "float":
-              blockBuilder.addStatement("$L.put($S, $T.REAL)", parametersVarName, parameterName, ParameterSchema.class);
-              break;
-
-            case "byte":
-            case "short":
-            case "int":
-            case "long":
-              blockBuilder.addStatement("$L.put($S, $T.INT)", parametersVarName, parameterName, ParameterSchema.class);
-              break;
-
-            case "boolean":
-              blockBuilder.addStatement("$L.put($S, $T.BOOLEAN)", parametersVarName, parameterName, ParameterSchema.class);
-              break;
-
-            case "char":
-            case "string":
-              blockBuilder.addStatement("$L.put($S, $T.STRING)", parametersVarName, parameterName, ParameterSchema.class);
-              break;
-
-            case "array_int":
-              blockBuilder.addStatement("$L.put($S, $T.ofList($T.INT))", parametersVarName, parameterName, ParameterSchema.class, ParameterSchema.class);
-              break;
-
-            default:
-              throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
-          }
+          blockBuilder.addStatement("$L.put($S, $L)", parametersVarName, parameterName, makeTypeSchema(parameterTypeReference.typeName));
         } else {
           throw new RuntimeException("Found parameter of unknown type `" + parameterTypeReference.typeName + "`");
         }
@@ -105,6 +108,101 @@ class MapperMaker {
         .build();
   }
 
+  private void addMapper(CodeBlock.Builder blockBuilder, String type) {
+    switch (type.split("_")[0]) {
+      case "double":
+        blockBuilder.add("new $T()", DoubleParameterMapper.class);
+        break;
+      case "float":
+        blockBuilder.add("new $T()", FloatParameterMapper.class);
+        break;
+      case "byte":
+        blockBuilder.add("new $T()", ByteParameterMapper.class);
+        break;
+      case "short":
+        blockBuilder.add("new $T()", ShortParameterMapper.class);
+        break;
+      case "int":
+        blockBuilder.add("new $T()", IntegerParameterMapper.class);
+        break;
+      case "long":
+        blockBuilder.add("new $T()", LongParameterMapper.class);
+        break;
+      case "boolean":
+        blockBuilder.add("new $T()", BooleanParameterMapper.class);
+        break;
+      case "char":
+        blockBuilder.add("new $T()", CharacterParameterMapper.class);
+        break;
+      case "string":
+        blockBuilder.add("new $T()", StringParameterMapper.class);
+        break;
+      case "list": {
+        String elementType = type.substring(type.indexOf('_') + 1);
+        blockBuilder.add("new $T<>(", ListParameterMapper.class);
+        addMapper(blockBuilder, elementType);
+        blockBuilder.add(")");
+        break;
+      }
+      case "array": {
+        String elementType = type.substring(type.indexOf('_') + 1);
+        blockBuilder.add("new $T<>(", ArrayParameterMapper.class);
+        addMapper(blockBuilder, elementType);
+        blockBuilder.add(", ");
+        addType(blockBuilder, elementType);
+        blockBuilder.add(".class)");
+        break;
+      }
+      default:
+        // TODO: Deal with this
+        throw new RuntimeException("Unknown array type " + type);
+    }
+  }
+
+  private void addType(CodeBlock.Builder blockBuilder, String type) {
+    switch (type.split("_")[0]) {
+      case "double":
+        blockBuilder.add("$T", Double.class);
+        break;
+      case "float":
+        blockBuilder.add("$T", Float.class);
+        break;
+      case "byte":
+        blockBuilder.add("$T", Byte.class);
+        break;
+      case "short":
+        blockBuilder.add("$T", Short.class);
+        break;
+      case "int":
+        blockBuilder.add("$T", Integer.class);
+        break;
+      case "long":
+        blockBuilder.add("$T", Long.class);
+        break;
+      case "boolean":
+        blockBuilder.add("$T", Boolean.class);
+        break;
+      case "char":
+        blockBuilder.add("$T", Character.class);
+        break;
+      case "string":
+        blockBuilder.add("$T", String.class);
+        break;
+      case "list":
+        blockBuilder.add("$T<", List.class);
+        addType(blockBuilder, type.substring(type.indexOf('_')+1));
+        blockBuilder.add(">");
+        break;
+      case "array":
+        addType(blockBuilder, type.substring(type.indexOf('_')+1));
+        blockBuilder.add("[]");
+        break;
+      default:
+        // TODO: Deal with this
+        throw new RuntimeException("Unknown array type " + type);
+    }
+  }
+
   protected MethodSpec makeDeserializeActivity(
       final FieldSpec activityTypeNameSpec,
       final ActivityTypeInfo activityTypeInfo
@@ -124,45 +222,9 @@ class MapperMaker {
         final var parameterTypeReference = entry.getValue();
 
         if (parameterTypeReference.isPrimitive) {
-          switch (parameterTypeReference.typeName) {
-            case "double":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Double.class, parameterName, Optional.class);
-              break;
-            case "float":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Float.class, parameterName, Optional.class);
-              break;
-
-            case "byte":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Byte.class, parameterName, Optional.class);
-              break;
-            case "short":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Short.class, parameterName, Optional.class);
-              break;
-            case "int":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Integer.class, parameterName, Optional.class);
-              break;
-            case "long":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Long.class, parameterName, Optional.class);
-              break;
-
-            case "boolean":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Boolean.class, parameterName, Optional.class);
-              break;
-
-            case "char":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, Character.class, parameterName, Optional.class);
-              break;
-            case "string":
-              blockBuilder.addStatement("$T<$T> param_$L = $T.empty()", Optional.class, String.class, parameterName, Optional.class);
-              break;
-              
-            case "array_int":
-              blockBuilder.addStatement("$T<int[]> param_$L = $T.empty()", Optional.class, parameterName, Optional.class);
-              break;
-
-            default:
-              throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
-          }
+          blockBuilder.add("$T<", Optional.class);
+          addType(blockBuilder, parameterTypeReference.typeName);
+          blockBuilder.add("> param_$L = $T.empty();\n", parameterName, Optional.class);
         } else {
           throw new RuntimeException("Found parameter of unknown type `" + parameterTypeReference.typeName + "`");
         }
@@ -184,7 +246,7 @@ class MapperMaker {
 
         blockBuilder.beginControlFlow("case $S:", parameterName);
         if (parameterTypeReference.isPrimitive) {
-          switch (parameterTypeReference.typeName) {
+          switch (parameterTypeReference.typeName.split("_")[0]) {
             case "double":
               blockBuilder
                   .addStatement("final var givenValue = $L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected real number\"))", entryVarName)
@@ -242,17 +304,13 @@ class MapperMaker {
                   .addStatement("final var givenValue = $L.getValue().asString().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected string\"))", entryVarName)
                   .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
               break;
-
-            case "array_int":
-              blockBuilder
-                      .addStatement("final var givenValue = $L.getValue().asList().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected array_int\"))", entryVarName)
-                      .addStatement("int[] convertedValue = new int[givenValue.size()]")
-                      .add(         "for (int index=0; index<givenValue.size(); index++) {\n")
-                      .add(         "    long value = givenValue.get(index).asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"));\n")
-                      .add(         "    if (value != (int)value) throw new RuntimeException(\"Invalid parameter; value outside range of `int`\");\n")
-                      .add(         "    convertedValue[index] = (int)value;\n")
-                      .add(         "}\n")
-                      .addStatement("param_$L = $T.of(convertedValue)", parameterName, Optional.class);
+            case "list":
+            case "array":
+              blockBuilder.add("final var mapper = ");
+              addMapper(blockBuilder, parameterTypeReference.typeName);
+              blockBuilder.add(";\n");
+              blockBuilder.addStatement("final var givenValue = mapper.deserializeParameter($L.getValue()).getSuccessOrThrow()", entryVarName);
+              blockBuilder.addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
               break;
 
             default:
@@ -336,11 +394,16 @@ class MapperMaker {
         if (parameterTypeReference.isPrimitive) {
           if (Objects.equals(parameterTypeReference.typeName, "char")) {
             blockBuilder.addStatement("$L.put($S, $T.of(Character.toString($L.$L)))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
-          } else if (Objects.equals(parameterTypeReference.typeName, "array_int")) {
-            blockBuilder
-                    .addStatement("$T<$T> arr = new $T<>()", List.class, SerializedParameter.class, ArrayList.class)
-                    .addStatement("for (var val : $L.$L) arr.add($T.of(val))", activityVarName, parameterName, SerializedParameter.class)
-                    .addStatement("$L.put($S, $T.of(arr))", parametersVarName, parameterName, SerializedParameter.class);
+          } else if (
+                  List.of("array", "list").contains(parameterTypeReference.typeName.split("_")[0])
+          ) {
+            blockBuilder.beginControlFlow("");
+            blockBuilder.add("final var mapper = ");
+            addMapper(blockBuilder, parameterTypeReference.typeName);
+            blockBuilder.add(";\n");
+            blockBuilder.addStatement("$L.put($S, mapper.serializeParameter($L.$L))", parametersVarName, parameterName, activityVarName, parameterName);
+            blockBuilder.endControlFlow();
+
           } else {
             blockBuilder.addStatement("$L.put($S, $T.of($L.$L))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
           }
