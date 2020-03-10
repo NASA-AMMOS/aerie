@@ -177,10 +177,14 @@ pipeline {
 							sh "docker push ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}"
 
 							sleep 5
-							echo "restarting the task in ECS cluster"
-							sh '''
-							aws ecs stop-task --cluster "aerie-${GIT_BRANCH}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${GIT_BRANCH}-cluster" --output text --query taskArns[0])
-							'''
+							try {
+								sh '''
+								aws ecs stop-task --cluster "aerie-${GIT_BRANCH}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${GIT_BRANCH}-cluster" --output text --query taskArns[0])
+								'''
+							} catch (Exception e) {
+								echo "Restarting failed since the task does not exist."
+								echo e.getMessage()
+							}
 						}
 					}
 				}
