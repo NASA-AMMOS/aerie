@@ -56,7 +56,102 @@ class MapperMaker {
 
       default:
         // TODO: Deal with this
-        throw new RuntimeException("Unknown type " + type);
+        throw new RuntimeException("Unknown parameter type " + type);
+    }
+  }
+
+  private void addMapper(CodeBlock.Builder blockBuilder, String type) {
+    switch (type.split("_")[0]) {
+      case "double":
+        blockBuilder.add("new $T()", DoubleParameterMapper.class);
+        break;
+      case "float":
+        blockBuilder.add("new $T()", FloatParameterMapper.class);
+        break;
+      case "byte":
+        blockBuilder.add("new $T()", ByteParameterMapper.class);
+        break;
+      case "short":
+        blockBuilder.add("new $T()", ShortParameterMapper.class);
+        break;
+      case "int":
+        blockBuilder.add("new $T()", IntegerParameterMapper.class);
+        break;
+      case "long":
+        blockBuilder.add("new $T()", LongParameterMapper.class);
+        break;
+      case "boolean":
+        blockBuilder.add("new $T()", BooleanParameterMapper.class);
+        break;
+      case "char":
+        blockBuilder.add("new $T()", CharacterParameterMapper.class);
+        break;
+      case "string":
+        blockBuilder.add("new $T()", StringParameterMapper.class);
+        break;
+      case "list": {
+        String elementType = type.substring(type.indexOf('_') + 1);
+        blockBuilder.add("new $T<>(", ListParameterMapper.class);
+        addMapper(blockBuilder, elementType);
+        blockBuilder.add(")");
+        break;
+      }
+      case "array": {
+        String elementType = type.substring(type.indexOf('_') + 1);
+        blockBuilder.add("new $T<>(", ArrayParameterMapper.class);
+        addMapper(blockBuilder, elementType);
+        blockBuilder.add(", ");
+        addType(blockBuilder, elementType);
+        blockBuilder.add(".class)");
+        break;
+      }
+      default:
+        // TODO: Deal with this
+        throw new RuntimeException("Unknown parameter type " + type);
+    }
+  }
+
+  private void addType(CodeBlock.Builder blockBuilder, String type) {
+    switch (type.split("_")[0]) {
+      case "double":
+        blockBuilder.add("$T", Double.class);
+        break;
+      case "float":
+        blockBuilder.add("$T", Float.class);
+        break;
+      case "byte":
+        blockBuilder.add("$T", Byte.class);
+        break;
+      case "short":
+        blockBuilder.add("$T", Short.class);
+        break;
+      case "int":
+        blockBuilder.add("$T", Integer.class);
+        break;
+      case "long":
+        blockBuilder.add("$T", Long.class);
+        break;
+      case "boolean":
+        blockBuilder.add("$T", Boolean.class);
+        break;
+      case "char":
+        blockBuilder.add("$T", Character.class);
+        break;
+      case "string":
+        blockBuilder.add("$T", String.class);
+        break;
+      case "list":
+        blockBuilder.add("$T<", List.class);
+        addType(blockBuilder, type.substring(type.indexOf('_')+1));
+        blockBuilder.add(">");
+        break;
+      case "array":
+        addType(blockBuilder, type.substring(type.indexOf('_')+1));
+        blockBuilder.add("[]");
+        break;
+      default:
+        // TODO: Deal with this
+        throw new RuntimeException("Unknown array type " + type);
     }
   }
 
@@ -108,101 +203,6 @@ class MapperMaker {
         .build();
   }
 
-  private void addMapper(CodeBlock.Builder blockBuilder, String type) {
-    switch (type.split("_")[0]) {
-      case "double":
-        blockBuilder.add("new $T()", DoubleParameterMapper.class);
-        break;
-      case "float":
-        blockBuilder.add("new $T()", FloatParameterMapper.class);
-        break;
-      case "byte":
-        blockBuilder.add("new $T()", ByteParameterMapper.class);
-        break;
-      case "short":
-        blockBuilder.add("new $T()", ShortParameterMapper.class);
-        break;
-      case "int":
-        blockBuilder.add("new $T()", IntegerParameterMapper.class);
-        break;
-      case "long":
-        blockBuilder.add("new $T()", LongParameterMapper.class);
-        break;
-      case "boolean":
-        blockBuilder.add("new $T()", BooleanParameterMapper.class);
-        break;
-      case "char":
-        blockBuilder.add("new $T()", CharacterParameterMapper.class);
-        break;
-      case "string":
-        blockBuilder.add("new $T()", StringParameterMapper.class);
-        break;
-      case "list": {
-        String elementType = type.substring(type.indexOf('_') + 1);
-        blockBuilder.add("new $T<>(", ListParameterMapper.class);
-        addMapper(blockBuilder, elementType);
-        blockBuilder.add(")");
-        break;
-      }
-      case "array": {
-        String elementType = type.substring(type.indexOf('_') + 1);
-        blockBuilder.add("new $T<>(", ArrayParameterMapper.class);
-        addMapper(blockBuilder, elementType);
-        blockBuilder.add(", ");
-        addType(blockBuilder, elementType);
-        blockBuilder.add(".class)");
-        break;
-      }
-      default:
-        // TODO: Deal with this
-        throw new RuntimeException("Unknown array type " + type);
-    }
-  }
-
-  private void addType(CodeBlock.Builder blockBuilder, String type) {
-    switch (type.split("_")[0]) {
-      case "double":
-        blockBuilder.add("$T", Double.class);
-        break;
-      case "float":
-        blockBuilder.add("$T", Float.class);
-        break;
-      case "byte":
-        blockBuilder.add("$T", Byte.class);
-        break;
-      case "short":
-        blockBuilder.add("$T", Short.class);
-        break;
-      case "int":
-        blockBuilder.add("$T", Integer.class);
-        break;
-      case "long":
-        blockBuilder.add("$T", Long.class);
-        break;
-      case "boolean":
-        blockBuilder.add("$T", Boolean.class);
-        break;
-      case "char":
-        blockBuilder.add("$T", Character.class);
-        break;
-      case "string":
-        blockBuilder.add("$T", String.class);
-        break;
-      case "list":
-        blockBuilder.add("$T<", List.class);
-        addType(blockBuilder, type.substring(type.indexOf('_')+1));
-        blockBuilder.add(">");
-        break;
-      case "array":
-        addType(blockBuilder, type.substring(type.indexOf('_')+1));
-        blockBuilder.add("[]");
-        break;
-      default:
-        // TODO: Deal with this
-        throw new RuntimeException("Unknown array type " + type);
-    }
-  }
-
   protected MethodSpec makeDeserializeActivity(
       final FieldSpec activityTypeNameSpec,
       final ActivityTypeInfo activityTypeInfo
@@ -246,76 +246,11 @@ class MapperMaker {
 
         blockBuilder.beginControlFlow("case $S:", parameterName);
         if (parameterTypeReference.isPrimitive) {
-          switch (parameterTypeReference.typeName.split("_")[0]) {
-            case "double":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected real number\"))", entryVarName)
-                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
-              break;
-            case "float":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asReal().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected real number\"))", entryVarName)
-                  .addStatement("final var coercedValue = givenValue.floatValue()")
-                  // TODO: check if value converted losslessly, or at least within a tolerance?
-                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
-              break;
-
-            case "byte":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
-                  .addStatement("final var coercedValue = givenValue.byteValue()")
-                  .addStatement("if (((long)givenValue) != coercedValue) throw new RuntimeException(\"Invalid parameter; value outside range of `byte`\")")
-                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
-              break;
-            case "short":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
-                  .addStatement("final var coercedValue = givenValue.shortValue()")
-                  .addStatement("if (((long)givenValue) != coercedValue) throw new RuntimeException(\"Invalid parameter; value outside range of `short`\")")
-                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
-              break;
-            case "int":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
-                  .addStatement("final var coercedValue = givenValue.intValue()")
-                  .addStatement("if (((long)givenValue) != coercedValue) throw new RuntimeException(\"Invalid parameter; value outside range of `int`\")")
-                  .addStatement("param_$L = $T.of(coercedValue)", parameterName, Optional.class);
-              break;
-            case "long":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asInt().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected integral number\"))", entryVarName)
-                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
-              break;
-
-            case "boolean":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asBoolean().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected boolean\"))", entryVarName)
-                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
-              break;
-
-            case "char":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asString().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected character\"))", entryVarName)
-                  .addStatement("if (givenValue.length() != 1) throw new RuntimeException(\"Invalid parameter; expected single-character string\")")
-                  .addStatement("param_$L = $T.of(givenValue.charAt(0))", parameterName, Optional.class);
-              break;
-            case "string":
-              blockBuilder
-                  .addStatement("final var givenValue = $L.getValue().asString().orElseThrow(() -> new RuntimeException(\"Invalid parameter; expected string\"))", entryVarName)
-                  .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
-              break;
-            case "list":
-            case "array":
-              blockBuilder.add("final var mapper = ");
-              addMapper(blockBuilder, parameterTypeReference.typeName);
-              blockBuilder.add(";\n");
-              blockBuilder.addStatement("final var givenValue = mapper.deserializeParameter($L.getValue()).getSuccessOrThrow()", entryVarName);
-              blockBuilder.addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
-              break;
-
-            default:
-              throw new RuntimeException("Found parameter of unknown primitive type `" + parameterTypeReference.typeName + "`");
-          }
+          blockBuilder.add("final var mapper = ");
+          addMapper(blockBuilder, parameterTypeReference.typeName);
+          blockBuilder.add(";\n");
+          blockBuilder.addStatement("final var givenValue = mapper.deserializeParameter($L.getValue()).getSuccessOrThrow()", entryVarName);
+          blockBuilder.addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class);
         } else {
           throw new RuntimeException("Found parameter of unknown type `" + parameterTypeReference.typeName + "`");
         }
@@ -394,9 +329,7 @@ class MapperMaker {
         if (parameterTypeReference.isPrimitive) {
           if (Objects.equals(parameterTypeReference.typeName, "char")) {
             blockBuilder.addStatement("$L.put($S, $T.of(Character.toString($L.$L)))", parametersVarName, parameterName, SerializedParameter.class, activityVarName, parameterName);
-          } else if (
-                  List.of("array", "list").contains(parameterTypeReference.typeName.split("_")[0])
-          ) {
+          } else if ( List.of("array", "list").contains(parameterTypeReference.typeName.split("_")[0]) ) {
             blockBuilder.beginControlFlow("");
             blockBuilder.add("final var mapper = ");
             addMapper(blockBuilder, parameterTypeReference.typeName);

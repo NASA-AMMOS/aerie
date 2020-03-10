@@ -6,8 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 
 public final class ListParameterMapper<T> implements ParameterMapper<List<T>> {
   private final ParameterMapper<T> elementMapper;
@@ -22,7 +20,7 @@ public final class ListParameterMapper<T> implements ParameterMapper<List<T>> {
   }
 
   @Override
-  public Result<List<T>, String> deserializeParameter(final SerializedParameter serializedParameter) {whoam
+  public Result<List<T>, String> deserializeParameter(final SerializedParameter serializedParameter) {
     return serializedParameter
         .asList()
         .map(Result::<List<SerializedParameter>, String>success)
