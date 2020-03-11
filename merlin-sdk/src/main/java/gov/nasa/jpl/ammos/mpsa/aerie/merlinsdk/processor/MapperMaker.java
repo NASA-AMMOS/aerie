@@ -50,7 +50,11 @@ class MapperMaker {
         final var parameterName = entry.getKey();
         final var parameterTypeReference = entry.getValue();
 
-        blockBuilder.addStatement("$L.put($S, $L)", parametersVarName, parameterName, parameterTypeReference.getParameterSchema());
+        blockBuilder
+            .beginControlFlow("")
+            .addStatement("final var mapper = $L", parameterTypeReference.getMapper())
+            .addStatement("$L.put($S, mapper.getParameterSchema())", parametersVarName, parameterName)
+            .endControlFlow();
       }
 
       schemasBlock = blockBuilder.build();

@@ -17,6 +17,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 import java.util.List;
+import java.util.Map;
 
 class ParameterTypeException extends Exception {
   private final Element relatedElement;
@@ -42,6 +43,7 @@ class TypeInfoMaker {
   private final TypeMirror CHAR_TYPE;
   private final TypeMirror STRING_TYPE;
   private final TypeMirror LIST_TYPE;
+  private final TypeMirror MAP_TYPE;
 
   private final DocTrees docTrees;
   private final Types typeUtils;
@@ -62,6 +64,7 @@ class TypeInfoMaker {
     this.CHAR_TYPE = processingEnv.getElementUtils().getTypeElement(Character.class.getCanonicalName()).asType();
     this.STRING_TYPE = processingEnv.getElementUtils().getTypeElement(String.class.getCanonicalName()).asType();
     this.LIST_TYPE = processingEnv.getElementUtils().getTypeElement(List.class.getCanonicalName()).asType();
+    this.MAP_TYPE = processingEnv.getElementUtils().getTypeElement(Map.class.getCanonicalName()).asType();
   }
 
   public ParameterTypeReference getParameterTypeReference(final Element parameterElement) throws ParameterTypeException {
@@ -98,7 +101,12 @@ class TypeInfoMaker {
         } else if (typeUtils.isSameType(CHAR_TYPE, parameterType)) {
           return ParameterTypeReference.CHAR;
         } else if (typeUtils.isAssignable(((DeclaredType)parameterType).asElement().asType(), LIST_TYPE)) {
-          return ParameterTypeReference.ofList(getParameterTypeReference(declaration, ((DeclaredType)parameterType).getTypeArguments().get(0)));
+          return ParameterTypeReference.ofList(
+              getParameterTypeReference(declaration, ((DeclaredType)parameterType).getTypeArguments().get(0)));
+        } else if (typeUtils.isAssignable(((DeclaredType)parameterType).asElement().asType(), MAP_TYPE)) {
+          return ParameterTypeReference.ofMap(
+              getParameterTypeReference(declaration, ((DeclaredType)parameterType).getTypeArguments().get(0)),
+              getParameterTypeReference(declaration, ((DeclaredType)parameterType).getTypeArguments().get(1)));
         } else {
           throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), declaration);
         }

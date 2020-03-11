@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
 import com.squareup.javapoet.CodeBlock;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ArrayParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ByteParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.CharacterParameterMapper;
@@ -11,12 +10,44 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.FloatParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.IntegerParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ListParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.LongParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.MapParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ShortParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.StringParameterMapper;
 
 import java.util.List;
 import java.util.Map;
+
+final class MapType implements ParameterTypeReference {
+  private final ParameterTypeReference keyType;
+  private final ParameterTypeReference elementType;
+
+  public MapType(final ParameterTypeReference keyType, final ParameterTypeReference elementType) {
+    this.keyType = keyType;
+    this.elementType = elementType;
+  }
+
+  @Override
+  public CodeBlock getParameterSchema() {
+    return CodeBlock.builder()
+        .add("$T.ofMap($L, $L)", ParameterSchema.class, this.keyType.getParameterSchema(), this.elementType.getParameterSchema())
+        .build();
+  }
+
+  @Override
+  public CodeBlock getMapper() {
+    return CodeBlock.builder()
+        .add("new $T<>($L, $L)", MapParameterMapper.class, this.keyType.getMapper(), this.elementType.getMapper())
+        .build();
+  }
+
+  @Override
+  public CodeBlock getType() {
+    return CodeBlock.builder()
+        .add("$T<$L, $L>", Map.class, this.keyType.getType(), this.elementType.getType())
+        .build();
+  }
+}
 
 final class ListType implements ParameterTypeReference {
   private final ParameterTypeReference elementType;
@@ -119,5 +150,9 @@ interface ParameterTypeReference {
 
   static ParameterTypeReference ofList(final ParameterTypeReference elementType) {
     return new ListType(elementType);
+  }
+
+  static ParameterTypeReference ofMap(final ParameterTypeReference keyType, final ParameterTypeReference elementType) {
+    return new MapType(keyType, elementType);
   }
 }

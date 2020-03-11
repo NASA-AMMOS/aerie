@@ -31,6 +31,9 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   @Parameter
   public List<List<String>> stringList = null;
 
+  @Parameter
+  public Map<Integer, List<String>> mappyBoi = null;
+
   // an obnoxious ideal
   //@Parameter
   //public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
