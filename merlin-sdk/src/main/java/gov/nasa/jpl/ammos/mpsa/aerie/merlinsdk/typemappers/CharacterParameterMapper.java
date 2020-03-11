@@ -30,6 +30,6 @@ public final class CharacterParameterMapper implements ParameterMapper<Character
 
   @Override
   public SerializedParameter serializeParameter(final Character parameter) {
-    return SerializedParameter.of(parameter.toString());
+    return SerializedParameter.of(Character.toString(parameter));
   }
 }

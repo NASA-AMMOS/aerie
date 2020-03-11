@@ -26,15 +26,12 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   public double biteSize = 1.0;
 
   @Parameter
-  public Integer[] intArray = null;
-
-  @Parameter
   public List<Integer> intList = null;
 
   @Parameter
   public List<List<String>> stringList = null;
 
-
+  // an obnoxious ideal
   //@Parameter
   //public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
 
