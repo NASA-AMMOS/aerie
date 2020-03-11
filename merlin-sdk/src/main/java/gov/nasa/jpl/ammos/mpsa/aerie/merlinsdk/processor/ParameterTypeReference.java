@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
 import com.squareup.javapoet.CodeBlock;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ByteParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.CharacterParameterMapper;
@@ -28,13 +27,6 @@ final class MapType implements ParameterTypeReference {
   }
 
   @Override
-  public CodeBlock getParameterSchema() {
-    return CodeBlock.builder()
-        .add("$T.ofMap($L, $L)", ParameterSchema.class, this.keyType.getParameterSchema(), this.elementType.getParameterSchema())
-        .build();
-  }
-
-  @Override
   public CodeBlock getMapper() {
     return CodeBlock.builder()
         .add("new $T<>($L, $L)", MapParameterMapper.class, this.keyType.getMapper(), this.elementType.getMapper())
@@ -57,13 +49,6 @@ final class ListType implements ParameterTypeReference {
   }
 
   @Override
-  public CodeBlock getParameterSchema() {
-    return CodeBlock.builder()
-        .add("$T.ofList($L)", ParameterSchema.class, this.elementType.getParameterSchema())
-        .build();
-  }
-
-  @Override
   public CodeBlock getMapper() {
     return CodeBlock.builder()
         .add("new $T<>($L)", ListParameterMapper.class, this.elementType.getMapper())
@@ -79,47 +64,15 @@ final class ListType implements ParameterTypeReference {
 }
 
 final class NullaryType<ParameterType> implements ParameterTypeReference {
-  private final ParameterSchema schema;
   private final Class<? extends ParameterMapper<ParameterType>> mapperClass;
   private final Class<? extends ParameterType> parameterClass;
 
   public NullaryType(
-      final ParameterSchema schema,
       final Class<? extends ParameterMapper<ParameterType>> mapperClass,
       final Class<? extends ParameterType> parameterClass
   ) {
-    this.schema = schema;
     this.mapperClass = mapperClass;
     this.parameterClass = parameterClass;
-  }
-
-  @Override
-  public CodeBlock getParameterSchema() {
-    final var literal = this.schema.match(new ParameterSchema.Visitor<>() {
-      @Override
-      public String onReal() { return "REAL"; }
-
-      @Override
-      public String onInt() { return "INT"; }
-
-      @Override
-      public String onBoolean() { return "BOOLEAN"; }
-
-      @Override
-      public String onString() { return "STRING"; }
-
-      @Override
-      public String onList(final ParameterSchema value) {
-        throw new Error("Unexpectedly got a List in the NullaryType.");
-      }
-
-      @Override
-      public String onMap(final Map<String, ParameterSchema> value) {
-        throw new Error("Unexpectedly got a Map in the NullaryType");
-      }
-    });
-
-    return CodeBlock.builder().add("$T.$L", ParameterSchema.class, literal).build();
   }
 
   @Override
@@ -134,19 +87,18 @@ final class NullaryType<ParameterType> implements ParameterTypeReference {
 }
 
 interface ParameterTypeReference {
-  CodeBlock getParameterSchema();
   CodeBlock getMapper();
   CodeBlock getType();
 
-  ParameterTypeReference BYTE = new NullaryType<>(ParameterSchema.INT, ByteParameterMapper.class, Byte.class);
-  ParameterTypeReference SHORT = new NullaryType<>(ParameterSchema.INT, ShortParameterMapper.class, Short.class);
-  ParameterTypeReference INT = new NullaryType<>(ParameterSchema.INT, IntegerParameterMapper.class, Integer.class);
-  ParameterTypeReference LONG = new NullaryType<>(ParameterSchema.INT, LongParameterMapper.class, Long.class);
-  ParameterTypeReference FLOAT = new NullaryType<>(ParameterSchema.REAL, FloatParameterMapper.class, Float.class);
-  ParameterTypeReference DOUBLE = new NullaryType<>(ParameterSchema.REAL, DoubleParameterMapper.class, Double.class);
-  ParameterTypeReference CHAR = new NullaryType<>(ParameterSchema.STRING, CharacterParameterMapper.class, Character.class);
-  ParameterTypeReference STRING = new NullaryType<>(ParameterSchema.STRING, StringParameterMapper.class, String.class);
-  ParameterTypeReference BOOLEAN = new NullaryType<>(ParameterSchema.BOOLEAN, BooleanParameterMapper.class, Boolean.class);
+  ParameterTypeReference BYTE = new NullaryType<>(ByteParameterMapper.class, Byte.class);
+  ParameterTypeReference SHORT = new NullaryType<>(ShortParameterMapper.class, Short.class);
+  ParameterTypeReference INT = new NullaryType<>(IntegerParameterMapper.class, Integer.class);
+  ParameterTypeReference LONG = new NullaryType<>(LongParameterMapper.class, Long.class);
+  ParameterTypeReference FLOAT = new NullaryType<>(FloatParameterMapper.class, Float.class);
+  ParameterTypeReference DOUBLE = new NullaryType<>(DoubleParameterMapper.class, Double.class);
+  ParameterTypeReference CHAR = new NullaryType<>(CharacterParameterMapper.class, Character.class);
+  ParameterTypeReference STRING = new NullaryType<>(StringParameterMapper.class, String.class);
+  ParameterTypeReference BOOLEAN = new NullaryType<>(BooleanParameterMapper.class, Boolean.class);
 
   static ParameterTypeReference ofList(final ParameterTypeReference elementType) {
     return new ListType(elementType);
