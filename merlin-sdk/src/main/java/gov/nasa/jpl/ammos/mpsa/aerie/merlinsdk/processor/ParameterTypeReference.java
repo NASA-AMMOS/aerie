@@ -1,6 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ByteParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.CharacterParameterMapper;
@@ -27,16 +30,14 @@ final class MapType implements ParameterTypeReference {
   }
 
   @Override
-  public CodeBlock getMapper() {
-    return CodeBlock.builder()
-        .add("new $T<>($L, $L)", MapParameterMapper.class, this.keyType.getMapper(), this.elementType.getMapper())
-        .build();
+  public TypeName getTypeName() {
+    return ParameterizedTypeName.get(ClassName.get(Map.class), keyType.getTypeName(), elementType.getTypeName());
   }
 
   @Override
-  public CodeBlock getType() {
+  public CodeBlock getMapper() {
     return CodeBlock.builder()
-        .add("$T<$L, $L>", Map.class, this.keyType.getType(), this.elementType.getType())
+        .add("new $T<>($L, $L)", MapParameterMapper.class, this.keyType.getMapper(), this.elementType.getMapper())
         .build();
   }
 }
@@ -49,16 +50,14 @@ final class ListType implements ParameterTypeReference {
   }
 
   @Override
-  public CodeBlock getMapper() {
-    return CodeBlock.builder()
-        .add("new $T<>($L)", ListParameterMapper.class, this.elementType.getMapper())
-        .build();
+  public TypeName getTypeName() {
+    return ParameterizedTypeName.get(ClassName.get(List.class), elementType.getTypeName());
   }
 
   @Override
-  public CodeBlock getType() {
+  public CodeBlock getMapper() {
     return CodeBlock.builder()
-        .add("$T<$L>", List.class, this.elementType.getType())
+        .add("new $T<>($L)", ListParameterMapper.class, this.elementType.getMapper())
         .build();
   }
 }
@@ -76,19 +75,19 @@ final class NullaryType<ParameterType> implements ParameterTypeReference {
   }
 
   @Override
-  public CodeBlock getMapper() {
-    return CodeBlock.builder().add("new $T()", this.mapperClass).build();
+  public TypeName getTypeName() {
+    return ClassName.get(this.parameterClass);
   }
 
   @Override
-  public CodeBlock getType() {
-    return CodeBlock.builder().add("$T", this.parameterClass).build();
+  public CodeBlock getMapper() {
+    return CodeBlock.builder().add("new $T()", this.mapperClass).build();
   }
 }
 
 interface ParameterTypeReference {
+  TypeName getTypeName();
   CodeBlock getMapper();
-  CodeBlock getType();
 
   ParameterTypeReference BYTE = new NullaryType<>(ByteParameterMapper.class, Byte.class);
   ParameterTypeReference SHORT = new NullaryType<>(ShortParameterMapper.class, Short.class);

@@ -18,7 +18,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Paramet
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -36,6 +36,24 @@ class MapperMaker {
     this.typeUtils = processingEnv.getTypeUtils();
   }
 
+  protected List<FieldSpec> makeMapperFieldSpecs(final ActivityTypeInfo activityTypeInfo) {
+    final var mapperFieldSpecs = new ArrayList<FieldSpec>();
+    for (final var entry : activityTypeInfo.parameters) {
+      final var parameterName = entry.getKey();
+      final var parameterTypeReference = entry.getValue();
+
+      mapperFieldSpecs.add(FieldSpec
+        .builder(
+            ParameterizedTypeName.get(ClassName.get(ParameterMapper.class), parameterTypeReference.getTypeName()),
+            "mapper_" + parameterName,
+            Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+        .initializer("$L", parameterTypeReference.getMapper())
+        .build());
+    }
+
+    return mapperFieldSpecs;
+  }
+
   protected MethodSpec makeGetActivitySchemas(
       final FieldSpec activityTypeNameSpec,
       final ActivityTypeInfo activityTypeInfo
@@ -48,13 +66,8 @@ class MapperMaker {
 
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
-        final var parameterTypeReference = entry.getValue();
 
-        blockBuilder
-            .beginControlFlow("")
-            .addStatement("final var mapper = $L", parameterTypeReference.getMapper())
-            .addStatement("$L.put($S, mapper.getParameterSchema())", parametersVarName, parameterName)
-            .endControlFlow();
+        blockBuilder.addStatement("$1L.put($2S, this.mapper_$2L.getParameterSchema())", parametersVarName, parameterName);
       }
 
       schemasBlock = blockBuilder.build();
@@ -73,7 +86,6 @@ class MapperMaker {
                 elementUtils.getTypeElement(ParameterSchema.class.getCanonicalName()).asType()))))
         .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, ParameterSchema.class)
         .addCode(schemasBlock)
-        .addCode("\n")
         .addStatement("return $T.of($L, $L)", Map.class, activityTypeNameSpec.name, parametersVarName)
         .build();
   }
@@ -88,20 +100,6 @@ class MapperMaker {
     final String entryVarName = "entry";
     final String activityVarName = "activity";
 
-    final CodeBlock parameterDeclarationsBlock;
-    {
-      final CodeBlock.Builder blockBuilder = CodeBlock.builder();
-
-      for (final var entry : activityTypeInfo.parameters) {
-        final var parameterName = entry.getKey();
-        final var parameterTypeReference = entry.getValue();
-
-        blockBuilder.addStatement("$T<$L> param_$L = $T.empty()", Optional.class, parameterTypeReference.getType(), parameterName, Optional.class);
-      }
-
-      parameterDeclarationsBlock = blockBuilder.build();
-    }
-
     final CodeBlock parameterDeserializeBlock;
     {
       final CodeBlock.Builder blockBuilder = CodeBlock.builder();
@@ -111,15 +109,14 @@ class MapperMaker {
           .beginControlFlow("switch ($L.getKey())", entryVarName);
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
-        final var parameterTypeReference = entry.getValue();
 
         blockBuilder
-            .beginControlFlow("case $S:", parameterName)
-            .addStatement("final var mapper = $L", parameterTypeReference.getMapper())
-            .addStatement("final var givenValue = mapper.deserializeParameter($L.getValue()).getSuccessOrThrow()", entryVarName)
-            .addStatement("param_$L = $T.of(givenValue)", parameterName, Optional.class)
+            .add("case $S:\n", parameterName)
+            .indent()
+            .addStatement("$L.$L = this.mapper_$L.deserializeParameter($L.getValue()).getSuccessOrThrow()",
+                activityVarName, parameterName, parameterName, entryVarName)
             .addStatement("break")
-            .endControlFlow();
+            .unindent();
       }
       blockBuilder
           .add("default:\n")
@@ -132,19 +129,6 @@ class MapperMaker {
       parameterDeserializeBlock = blockBuilder.build();
     }
 
-    final CodeBlock parameterInjectionBlock;
-    {
-      final CodeBlock.Builder blockBuilder = CodeBlock.builder();
-
-      for (final var entry : activityTypeInfo.parameters) {
-        final String parameterName = entry.getKey();
-
-        blockBuilder.addStatement("param_$L.ifPresent(p -> $L.$L = p)", parameterName, activityVarName, parameterName);
-      }
-
-      parameterInjectionBlock = blockBuilder.build();
-    }
-    
     return MethodSpec
         .methodBuilder("deserializeActivity")
         .addModifiers(Modifier.PUBLIC)
@@ -159,12 +143,8 @@ class MapperMaker {
         .addStatement("return $T.empty()", Optional.class)
         .endControlFlow()
         .addCode("\n")
-        .addCode(parameterDeclarationsBlock)
-        .addCode("\n")
-        .addCode(parameterDeserializeBlock)
-        .addCode("\n")
         .addStatement("final var $L = new $T()", activityVarName, activityTypeInfo.javaType)
-        .addCode(parameterInjectionBlock)
+        .addCode(parameterDeserializeBlock)
         .addCode("\n")
         .addStatement("return $T.of($L)", Optional.class, activityVarName)
         .build();
@@ -187,13 +167,9 @@ class MapperMaker {
 
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
-        final var parameterTypeReference = entry.getValue();
 
-        blockBuilder
-            .beginControlFlow("")
-            .addStatement("final var mapper = $L", parameterTypeReference.getMapper())
-            .addStatement("$L.put($S, mapper.serializeParameter($L.$L))", parametersVarName, parameterName, activityVarName, parameterName)
-            .endControlFlow();
+        blockBuilder.addStatement("$L.put($S, this.mapper_$L.serializeParameter($L.$L))",
+            parametersVarName, parameterName, parameterName, activityVarName, parameterName);
       }
 
       serializeParametersBlock = blockBuilder.build();
@@ -207,10 +183,7 @@ class MapperMaker {
         .returns(TypeName.get(typeUtils.getDeclaredType(
             elementUtils.getTypeElement(Optional.class.getCanonicalName()),
             elementUtils.getTypeElement(SerializedActivity.class.getCanonicalName()).asType())))
-        .beginControlFlow("if (!($L instanceof $T))", abstractActivitySpec.name, activityTypeInfo.javaType)
-          .addStatement("return $T.empty()", Optional.class)
-        .endControlFlow()
-        .addCode("\n")
+        .addStatement("if (!($L instanceof $T)) return $T.empty()", abstractActivitySpec.name, activityTypeInfo.javaType, Optional.class)
         .addStatement("final $T $L = ($T)abstractActivity", activityTypeInfo.javaType, activityVarName, activityTypeInfo.javaType)
         .addCode("\n")
         .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, SerializedParameter.class)
@@ -226,9 +199,12 @@ class MapperMaker {
         .initializer("$S", activityTypeInfo.name)
         .build();
 
+    final List<FieldSpec> mapperFieldSpecs = makeMapperFieldSpecs(activityTypeInfo);
+
     final MethodSpec getActivitySchemasSpec = makeGetActivitySchemas(activityTypeNameSpec, activityTypeInfo);
     final MethodSpec deserializeActivitySpec = makeDeserializeActivity(activityTypeNameSpec, activityTypeInfo);
     final MethodSpec serializeActivitySpec = makeSerializeActivity(activityTypeNameSpec, activityTypeInfo);
+
 
     final TypeSpec activityMapperSpec = TypeSpec
         .classBuilder(activityTypeInfo.javaType.asElement().getSimpleName().toString() + "$$ActivityMapper")
@@ -243,6 +219,7 @@ class MapperMaker {
             .addMember("value", "$T.class", activityTypeInfo.javaType)
             .build())
         .addField(activityTypeNameSpec)
+        .addFields(mapperFieldSpecs)
         .addMethod(getActivitySchemasSpec)
         .addMethod(deserializeActivitySpec)
         .addMethod(serializeActivitySpec)
