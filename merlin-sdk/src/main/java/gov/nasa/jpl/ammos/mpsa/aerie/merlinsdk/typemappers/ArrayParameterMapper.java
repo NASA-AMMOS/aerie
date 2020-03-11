@@ -10,9 +10,9 @@ import java.util.List;
 
 public class ArrayParameterMapper<T> implements ParameterMapper<T[]> {
     private final ParameterMapper<T> elementMapper;
-    private final Class<T> elementClass;
+    private final Class<? super T> elementClass;
 
-    public ArrayParameterMapper(final ParameterMapper<T> elementMapper, Class<T> elementClass) {
+    public ArrayParameterMapper(final ParameterMapper<T> elementMapper, Class<? super T> elementClass) {
         this.elementMapper = elementMapper;
         this.elementClass = elementClass;
     }

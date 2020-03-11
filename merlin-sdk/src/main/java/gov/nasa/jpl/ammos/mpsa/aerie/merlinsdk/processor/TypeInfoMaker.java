@@ -12,6 +12,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
@@ -109,6 +110,9 @@ class TypeInfoMaker {
         } else {
           throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), declaration);
         }
+      case ARRAY:
+        return ParameterTypeReference.ofArray(
+            getParameterTypeReference(declaration, ((ArrayType)parameterType).getComponentType()));
       default:
         throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), declaration);
     }

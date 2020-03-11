@@ -1,9 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
+import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ArrayParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ByteParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.CharacterParameterMapper;
@@ -30,8 +32,13 @@ final class MapType implements ParameterTypeReference {
   }
 
   @Override
-  public TypeName getTypeName() {
+  public ParameterizedTypeName getTypeName() {
     return ParameterizedTypeName.get(ClassName.get(Map.class), keyType.getTypeName(), elementType.getTypeName());
+  }
+
+  @Override
+  public TypeName getRawTypeName() {
+    return this.getTypeName().rawType;
   }
 
   @Override
@@ -50,14 +57,44 @@ final class ListType implements ParameterTypeReference {
   }
 
   @Override
-  public TypeName getTypeName() {
+  public ParameterizedTypeName getTypeName() {
     return ParameterizedTypeName.get(ClassName.get(List.class), elementType.getTypeName());
+  }
+
+  @Override
+  public TypeName getRawTypeName() {
+    return this.getTypeName().rawType;
   }
 
   @Override
   public CodeBlock getMapper() {
     return CodeBlock.builder()
         .add("new $T<>($L)", ListParameterMapper.class, this.elementType.getMapper())
+        .build();
+  }
+}
+
+final class ArrayType implements ParameterTypeReference {
+  private final ParameterTypeReference elementType;
+
+  public ArrayType(final ParameterTypeReference elementType) {
+    this.elementType = elementType;
+  }
+
+  @Override
+  public TypeName getTypeName() {
+    return ArrayTypeName.of(elementType.getTypeName());
+  }
+
+  @Override
+  public TypeName getRawTypeName() {
+    return ArrayTypeName.of(elementType.getRawTypeName());
+  }
+
+  @Override
+  public CodeBlock getMapper() {
+    return CodeBlock.builder()
+        .add("new $T<>($L, $T.class)", ArrayParameterMapper.class, this.elementType.getMapper(), this.elementType.getRawTypeName())
         .build();
   }
 }
@@ -80,6 +117,11 @@ final class NullaryType<ParameterType> implements ParameterTypeReference {
   }
 
   @Override
+  public TypeName getRawTypeName() {
+    return this.getTypeName();
+  }
+
+  @Override
   public CodeBlock getMapper() {
     return CodeBlock.builder().add("new $T()", this.mapperClass).build();
   }
@@ -87,6 +129,7 @@ final class NullaryType<ParameterType> implements ParameterTypeReference {
 
 interface ParameterTypeReference {
   TypeName getTypeName();
+  TypeName getRawTypeName();
   CodeBlock getMapper();
 
   ParameterTypeReference BYTE = new NullaryType<>(ByteParameterMapper.class, Byte.class);
@@ -98,6 +141,10 @@ interface ParameterTypeReference {
   ParameterTypeReference CHAR = new NullaryType<>(CharacterParameterMapper.class, Character.class);
   ParameterTypeReference STRING = new NullaryType<>(StringParameterMapper.class, String.class);
   ParameterTypeReference BOOLEAN = new NullaryType<>(BooleanParameterMapper.class, Boolean.class);
+
+  static ParameterTypeReference ofArray(final ParameterTypeReference elementType) {
+    return new ArrayType(elementType);
+  }
 
   static ParameterTypeReference ofList(final ParameterTypeReference elementType) {
     return new ListType(elementType);
