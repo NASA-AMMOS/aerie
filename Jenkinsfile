@@ -3,6 +3,19 @@ def getDockerCompatibleTag(tag){
 	return fixedTag
 }
 
+def getAWSTag(tag){
+	if (GIT_BRANCH ==~ /release/) {
+		return release
+	}
+	if (GIT_BRANCH ==~ /develop/) {
+		return develop
+	}
+	if (GIT_BRANCH ==~ /staging/) {
+		return staging
+	}
+	return ''
+}
+
 def getArtifactoryUrl() {
 	echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
 
@@ -34,6 +47,7 @@ pipeline {
 		BUCK_HOME = "/usr/local/bin"
 		BUCK_OUT = "${env.WORKSPACE}/buck-out"
 		DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
+		AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
 		DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
 		JDK11_HOME = "/usr/lib/jvm/java-11-openjdk"
 		LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
@@ -166,15 +180,15 @@ pipeline {
 						docker.withRegistry(AWS_ECR){
 							echo "Tagging docker images to point to AWS ECR"
 							sh '''
-							docker tag $(docker images | awk '\$1 ~ /plan/ { print \$3; exit }') ${AWS_ECR}/aerie/plan:${GIT_BRANCH}
+							docker tag "${ARTIFACTORY_URL}/gov/nasa/jpl/ammos/mpsa/aerie/plan:${DOCKER_TAG}" ${AWS_ECR}/aerie/plan:${AWS_TAG}
 							'''
 							sh '''
-							docker tag $(docker images | awk '\$1 ~ /adaptation/ { print \$3; exit }') ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}
+							docker tag "${ARTIFACTORY_URL}/gov/nasa/jpl/ammos/mpsa/aerie/adaptation:${DOCKER_TAG}" ${AWS_ECR}/aerie/adaptation:${AWS_TAG}
 							'''
 
 							echo 'Pushing images to ECR'
-							sh "docker push ${AWS_ECR}/aerie/plan:${GIT_BRANCH}"
-							sh "docker push ${AWS_ECR}/aerie/adaptation:${GIT_BRANCH}"
+							sh "docker push ${AWS_ECR}/aerie/plan:${AWS_TAG}"
+							sh "docker push ${AWS_ECR}/aerie/adaptation:${AWS_TAG}"
 
 							sleep 5
 							try {
