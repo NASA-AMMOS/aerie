@@ -43,6 +43,11 @@ final class ActivityTypeInfo {
   public String contact = null;
 
   /**
+   * Whether to generate a mapper for this activity type.
+   */
+  public boolean needsGeneratedMapper = false;
+
+  /**
    * Produce a debug representation of this type.
    *
    * @return A debug representation of this type.

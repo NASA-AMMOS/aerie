@@ -18,7 +18,7 @@ import java.util.List;
  * @subsystem fruit
  * @contact John Doe
  */
-@ActivityType(name="BiteBanana", states=BananaStates.class)
+@ActivityType(name="BiteBanana", states=BananaStates.class, generateMapper=true)
 public final class BiteBananaActivity implements Activity<BananaStates> {
   @Parameter
   public double biteSize = 1.0;

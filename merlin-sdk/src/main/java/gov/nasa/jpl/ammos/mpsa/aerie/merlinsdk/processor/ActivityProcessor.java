@@ -124,7 +124,7 @@ public final class ActivityProcessor extends AbstractProcessor {
       }
 
       // Synthesize a class for serializing and de-serializing this activity type.
-      {
+      if (activityTypeInfo.needsGeneratedMapper) {
         final JavaFile file = this.mapperMaker.makeActivityMapper(activityTypeInfo);
         try {
           file.writeTo(this.processingEnv.getFiler());
