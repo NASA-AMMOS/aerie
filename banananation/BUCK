@@ -3,11 +3,27 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
-    deps = [
+    exported_deps = [
         "//third-party:commons-lang3",
         "//third-party:JNISpice",
         "//merlin-sdk:merlin-sdk",
     ],
     annotation_processors = ["gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor.ActivityProcessor"],
     annotation_processor_deps = ["//merlin-sdk:merlin-sdk"]
+)
+
+java_test(
+    name = "test",
+    srcs = glob(["src/test/**/*.java"]),
+    resources = glob(["src/test/resources/**/*"]),
+    resources_root = "src/test/resources/",
+    deps = [
+        # Third Party
+        "//third-party:assertj-core",
+        "//third-party:hamcrest-all",
+        "//third-party:junit",
+
+        # Aerie
+        ":banananation"
+    ]
 )
