@@ -35,7 +35,7 @@ public class TurnInstrumentOn implements Activity<SampleMissionStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext ctx, SampleMissionStates states){
+    public void modelEffects(SampleMissionStates states){
         states.instrumentData.turnOn(instrumentRate);
         states.instrumentPower_W.set(instrumentPower_W);
     }

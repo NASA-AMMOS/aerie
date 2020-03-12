@@ -5,6 +5,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ActivityJob<T extends StateContainer> implements Comparable<ActivityJob<T>> {
 
     // TODO: detach threads for garbage collection?
@@ -64,8 +69,10 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.status = ActivityStatus.InProgress;
         Instant startTime = this.ctx.now();
 
-        activity.modelEffects(this.ctx, (T) this.stateContainer);
-        this.ctx.waitForAllChildren();
+        SimulationEffects.withEffects(this.ctx, () -> {
+            activity.modelEffects((T) this.stateContainer);
+            SimulationEffects.waitForChildren();
+        });
         this.status = ActivityStatus.Complete;
 
         Duration activityDuration = this.ctx.now().durationFrom(startTime);

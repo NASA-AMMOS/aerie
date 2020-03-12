@@ -49,7 +49,7 @@ public class SetScanAxis implements Activity<GNCStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext ctx, GNCStates states){
+    public void modelEffects(GNCStates states){
         BasicState<Vector3D> vectorState = states.getVectorState(GNCStates.scanAxisName);
         Vector3D axisVector = new Vector3D(this.x_value, this.y_value, this.z_value);
         axisVector.normalize();

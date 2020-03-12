@@ -1,5 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawnAndWait;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -52,18 +55,18 @@ public class SimulationEngineTests {
         public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             ChildActivity child = new ChildActivity();
             {
                 child.booleanValue = this.booleanValue;
                 child.durationValue = this.durationValue;
             }
-            ctx.spawnActivity(child);
+            spawn(child);
 
             SettableState<Double> floatState = states.floatState;
             Double currentFloatValue = floatState.get();
             floatState.set(floatValue);
-            ctx.delay(5L, TimeUnit.SECONDS);
+            delay(5L, TimeUnit.SECONDS);
             states.stringState.set(stringValue);
             states.arrayState.set(arrayValue);
 
@@ -80,8 +83,8 @@ public class SimulationEngineTests {
         public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(durationValue);
+        public void modelEffects(DiverseStates states) {
+            delay(durationValue);
             states.booleanState.set(booleanValue);
         }
     }
@@ -123,7 +126,7 @@ public class SimulationEngineTests {
         Double floatValue = 0.0;
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             states.floatState.set(floatValue);
         }
     }
@@ -166,9 +169,9 @@ public class SimulationEngineTests {
     public class DelayTestActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             states.floatState.set(1.0);
-            ctx.delay(1, TimeUnit.HOURS);
+            delay(1, TimeUnit.HOURS);
             states.floatState.set(2.0);
         }
     }
@@ -205,16 +208,16 @@ public class SimulationEngineTests {
     public class SpawnTestParentActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             SpawnTestChildActivity child = new SpawnTestChildActivity();
-            ctx.spawnActivity(child);
+            spawn(child);
         }
     }
 
     @ActivityType(name="SpawnTestChildActivity", states=DiverseStates.class)
     public class SpawnTestChildActivity implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             states.floatState.set(5.0);
         }
     }
@@ -251,9 +254,9 @@ public class SimulationEngineTests {
     public class CallTestParentActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             CallTestChildActivity child = new CallTestChildActivity();
-            ctx.callActivity(child);
+            spawnAndWait(child);
             states.floatState.set(5.0);
         }
     }
@@ -261,8 +264,8 @@ public class SimulationEngineTests {
     @ActivityType(name="CallTestChildActivity", states=DiverseStates.class)
     public class CallTestChildActivity implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(2, TimeUnit.HOURS);
+        public void modelEffects(DiverseStates states) {
+            delay(2, TimeUnit.HOURS);
         }
     }
 
@@ -298,8 +301,8 @@ public class SimulationEngineTests {
     public class SimpleDurationTestActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(10, TimeUnit.SECONDS);
+        public void modelEffects(DiverseStates states) {
+            delay(10, TimeUnit.SECONDS);
         }
     }
 
@@ -333,27 +336,27 @@ public class SimulationEngineTests {
     public class DurationTestParentActivity implements Activity<DiverseStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
+        public void modelEffects(DiverseStates states) {
             DurationTestChildActivity1 child1 = new DurationTestChildActivity1();
             DurationTestChildActivity2 child2 = new DurationTestChildActivity2();
-            ctx.spawnActivity(child1);
-            ctx.spawnActivity(child2);
+            spawn(child1);
+            spawn(child2);
         }
     }
 
     @ActivityType(name="DurationTestChildActivity1", states=DiverseStates.class)
     public class DurationTestChildActivity1 implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(10, TimeUnit.SECONDS);
+        public void modelEffects(DiverseStates states) {
+            delay(10, TimeUnit.SECONDS);
         }
     }
 
     @ActivityType(name="DurationTestChildActivity2", states=DiverseStates.class)
     public class DurationTestChildActivity2 implements Activity<DiverseStates> {
         @Override
-        public void modelEffects(SimulationContext ctx, DiverseStates states) {
-            ctx.delay(5, TimeUnit.SECONDS);
+        public void modelEffects(DiverseStates states) {
+            delay(5, TimeUnit.SECONDS);
         }
     }
 

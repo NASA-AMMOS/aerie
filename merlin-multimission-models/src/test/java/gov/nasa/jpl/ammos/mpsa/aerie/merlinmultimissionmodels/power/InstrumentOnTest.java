@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockEmptyStateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockSimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeEmptySimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
@@ -89,7 +90,7 @@ public class InstrumentOnTest {
         final InstrumentOn<MockEmptyStateContainer> onAct =
                 new InstrumentOn<>( powerLoad_W, powerState_W );
 
-        onAct.modelEffects( mockContext, mockStates );
+        SimulationEffects.withEffects(mockContext, () -> onAct.modelEffects(mockStates));
 
         final double resultPower_W = powerState_W.get();
         assertThat(resultPower_W).isCloseTo( powerLoad_W, withinPercentage(0.01));

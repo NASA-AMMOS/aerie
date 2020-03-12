@@ -32,7 +32,7 @@ public class TurnInstrumentOn implements Activity<OnboardDataModelStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
+    public void modelEffects(OnboardDataModelStates states){
         InstrumentModel instrument = states.getInstrumentByName(instrumentName);
         instrument.turnOn(instrumentRate);
     }

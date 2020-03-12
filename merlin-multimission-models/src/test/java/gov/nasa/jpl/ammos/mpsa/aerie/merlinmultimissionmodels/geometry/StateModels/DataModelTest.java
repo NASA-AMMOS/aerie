@@ -17,6 +17,8 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+
 public class DataModelTest {
 
     public class DataModelStates implements StateContainer {
@@ -44,7 +46,7 @@ public class DataModelTest {
 
 
         @Override
-        public void modelEffects(SimulationContext ctx, DataModelStates states){
+        public void modelEffects(DataModelStates states){
 
             states.bin_1.initializeBinData();
             states.bin_2.initializeBinData();
@@ -56,9 +58,9 @@ public class DataModelTest {
     public static class TurnInstrumentAOn implements Activity<DataModelStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DataModelStates states){
+        public void modelEffects(DataModelStates states){
 
-            ctx.delay(1, TimeUnit.HOURS);
+            delay(1, TimeUnit.HOURS);
 
             InstrumentModel some_a_instrument = states.instrument_a_data_rate;
             some_a_instrument.set(10.0);
@@ -69,9 +71,9 @@ public class DataModelTest {
     public static class DownlinkData implements Activity<DataModelStates>{
 
         @Override
-        public void modelEffects(SimulationContext ctx, DataModelStates states){
+        public void modelEffects(DataModelStates states){
 
-            ctx.delay(2, TimeUnit.HOURS);
+            delay(2, TimeUnit.HOURS);
 
             states.bin_1.downlink();
 

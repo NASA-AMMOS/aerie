@@ -95,7 +95,7 @@ public class InstrumentOn<StatesT extends StateContainer> implements Activity<St
      *
      */
     @Override
-    public void modelEffects( SimulationContext ctx, StatesT states ) {
+    public void modelEffects( StatesT states ) {
         assert( validateParameters().isEmpty() );
 
         //find the specified instrument's power state

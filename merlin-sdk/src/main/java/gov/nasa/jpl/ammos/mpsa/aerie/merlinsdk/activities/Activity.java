@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
@@ -32,7 +33,7 @@ public interface Activity<T extends StateContainer> {
    * It is expected that effects are effected upon state acquired from a State Controller,
    * injected into the activity by the Merlin Framework.
    */
-  default void modelEffects(SimulationContext ctx, T states) { }
+  default void modelEffects(T states) { }
   
   default Class<?> getStateContainerType() {
     ActivityType type = this.getClass().getAnnotation(ActivityType.class);

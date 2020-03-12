@@ -36,7 +36,7 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext ctx, BananaStates states) {
+  public void modelEffects(BananaStates states) {
     SettableState<Double> fruitState = states.fruitState;
     fruitState.set(fruitState.get() - biteSize);
   }

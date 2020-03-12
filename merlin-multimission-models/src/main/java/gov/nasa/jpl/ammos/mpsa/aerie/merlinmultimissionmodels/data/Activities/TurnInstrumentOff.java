@@ -14,7 +14,7 @@ public class TurnInstrumentOff implements Activity<OnboardDataModelStates> {
     public String instrumentName = "";
 
     @Override
-    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
+    public void modelEffects(OnboardDataModelStates states){
         InstrumentModel instrument = states.getInstrumentByName(instrumentName);
         instrument.turnOff();
     }
