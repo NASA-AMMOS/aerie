@@ -15,10 +15,6 @@ def getDockerImageName(folder){
             println("File not added " + token[0])
         }
     }
-    for (def item : list) {
-        println("File name = "+item)
-    }
-
     return list
 
 }
@@ -109,7 +105,7 @@ pipeline {
         stage ('Test') {
             steps {
                 echo "TODO: Run tests via BUCK"
-                // sh "buck test //..."
+                sh "buck test //..."
             }
         }
 
