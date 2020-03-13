@@ -238,15 +238,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Inserts an activity job into the pending event queue
-     * 
-     * @param activityJob the job to be inserted
-     */
-    public void insertIntoQueue(ActivityJob<?> activityJob) {
-        this.pendingEventQueue.add(activityJob);
-    }
-
-    /**
      * Returns the activity job associated with a given activity
      * 
      * @param activity the `Activity` whose owning job is desired
@@ -289,7 +280,7 @@ public class SimulationEngine {
                 throw new IllegalArgumentException("Duration `d` must be non-negative");
             }
             this.activityJob.setEventTime(this.activityJob.getEventTime().plus(d));
-            SimulationEngine.this.insertIntoQueue(this.activityJob);
+            SimulationEngine.this.pendingEventQueue.add(activityJob);
             this.activityJob.suspend();
         }
 
@@ -306,7 +297,7 @@ public class SimulationEngine {
                 throw new IllegalArgumentException("Time `t` must occur in the future");
             }
             this.activityJob.setEventTime(t);
-            SimulationEngine.this.insertIntoQueue(this.activityJob);
+            SimulationEngine.this.pendingEventQueue.add(activityJob);
             this.activityJob.suspend();
         }
 
