@@ -257,16 +257,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Returns the listeners on a given activity job
-     * 
-     * @param target the target activity whose completion listeners are blocking on
-     * @return a set of the listeners that are blocked on the target's completion
-     */
-    public Set<Activity<?>> getActivityListeners(Activity<?> target) {
-        return Collections.unmodifiableSet(activityListenerMap.getOrDefault(target, Collections.emptySet()));
-    }
-
-    /**
      * Functions as a bridge between the simulation engine and an activity job
      *
      * The `JobContext` is designed to manage the interaction between the `SimulationEngine` and `ActivityJob`
@@ -401,7 +391,10 @@ public class SimulationEngine {
          * TODO: we may want to refactor this and allow for generic listener behavior
          */
         public void notifyActivityListeners() {
-            for (Activity<?> listener: SimulationEngine.this.getActivityListeners(this.activityJob.getActivity())) {
+            final var listeners = SimulationEngine.this.activityListenerMap
+                .getOrDefault(this.activityJob.getActivity(), Collections.emptySet());
+
+            for (final var listener : listeners) {
                 SimulationEngine.this.removeActivityListener(this.activityJob.getActivity(), listener);
 
                 ActivityJob<?> listenerThread = SimulationEngine.this.getActivityJob(listener);
