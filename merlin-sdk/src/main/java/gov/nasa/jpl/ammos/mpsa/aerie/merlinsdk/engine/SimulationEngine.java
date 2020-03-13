@@ -50,23 +50,23 @@ public class SimulationEngine {
     /**
      * The job to which any SimulationEffects calls shall be ascribed.
      */
-    private ActivityJob<?> activeJob = null;
+    private ActivityJob activeJob = null;
 
     /**
      * The priority queue of time-ordered `ActivityJob`s
      */
-    private PriorityQueue<Pair<Instant, ActivityJob<?>>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
+    private PriorityQueue<Pair<Instant, ActivityJob>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     /**
      * A map of parent activity instances to their children
      */
-    private Map<ActivityJob<?>, List<ActivityJob<?>>> parentChildMap = new HashMap<>();
+    private Map<ActivityJob, List<ActivityJob>> parentChildMap = new HashMap<>();
 
     /**
      * A map of target activity to their listeners (activities that are blocking on
      * the target's completion)
      */
-    private Map<ActivityJob<?>, Set<ActivityJob<?>>> activityListenerMap = new HashMap<>();
+    private Map<ActivityJob, Set<ActivityJob>> activityListenerMap = new HashMap<>();
 
     private StateContainer stateContainer;
 
@@ -113,7 +113,7 @@ public class SimulationEngine {
             final var startTime = entry.getLeft();
             final var activity = entry.getRight();
 
-            final var job = new ActivityJob<>(activity);
+            final var job = new ActivityJob(activity);
 
             this.pendingEventQueue.add(Pair.of(startTime, job));
         }
@@ -204,7 +204,7 @@ public class SimulationEngine {
      * 
      * @param activityJob the activity job to start or resume
      */
-    private <T extends StateContainer> void executeActivity(ActivityJob<T> activityJob) {
+    private void executeActivity(ActivityJob activityJob) {
         switch (activityJob.status) {
         case NotStarted:
             final var ctx = new JobContext();
@@ -214,7 +214,7 @@ public class SimulationEngine {
 
                 activityJob.status = ActivityJob.ActivityStatus.InProgress;
                 SimulationEffects.withEffects(ctx, () -> {
-                    activityJob.activity.modelEffects((T) this.stateContainer);
+                    ((Activity<StateContainer>)activityJob.activity).modelEffects(this.stateContainer);
                     SimulationEffects.waitForChildren();
                 });
                 activityJob.status = ActivityJob.ActivityStatus.Complete;
@@ -235,8 +235,8 @@ public class SimulationEngine {
         activityJob.channel.takeControl();
     }
 
-    private ActivityJob<?> spawnActivity(final Activity<?> child) {
-        final var childActivityJob = new ActivityJob<>(child);
+    private ActivityJob spawnActivity(final Activity<?> child) {
+        final var childActivityJob = new ActivityJob(child);
 
         this.parentChildMap.putIfAbsent(this.activeJob, new ArrayList<>());
         this.parentChildMap.get(this.activeJob).add(childActivityJob);
@@ -252,11 +252,13 @@ public class SimulationEngine {
         }
 
         this.pendingEventQueue.add(Pair.of(resumeTime, this.activeJob));
-        this.activeJob.channel.yieldControl();
-        this.activeJob.channel.takeControl();
+
+        final var activeJob = this.activeJob;
+        activeJob.channel.yieldControl();
+        activeJob.channel.takeControl();
     }
 
-    private void waitForActivity(final ActivityJob<?> jobToAwait) {
+    private void waitForActivity(final ActivityJob jobToAwait) {
         // handle case where activity is already complete:
         // we don't want to block on it because we will never receive a notification that it is complete
         if (jobToAwait.status == ActivityJob.ActivityStatus.Complete) return;
@@ -264,8 +266,10 @@ public class SimulationEngine {
         this.activityListenerMap
             .computeIfAbsent(jobToAwait, (_k) -> new HashSet<>())
             .add(this.activeJob);
-        this.activeJob.channel.yieldControl();
-        this.activeJob.channel.takeControl();
+
+        final var activeJob = this.activeJob;
+        activeJob.channel.yieldControl();
+        activeJob.channel.takeControl();
     }
 
     /**
