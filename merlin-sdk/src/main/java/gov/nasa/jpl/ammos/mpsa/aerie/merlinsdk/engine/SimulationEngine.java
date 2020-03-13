@@ -226,23 +226,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Adds a target-listener relationship to the engine's map of said relationships
-     * 
-     * Blocked listener activities will be notified upon the target activity's
-     * completion, giving the listeners the opportunity to resume their effect
-     * models.
-     * 
-     * @param target   the activity whose completion the listener is blocking
-     *                 against
-     * @param listener the activity that is blocked until the target's effect model
-     *                 completes
-     */
-    public void addActivityListener(Activity<?> target, Activity<?> listener) {
-        this.activityListenerMap.putIfAbsent(target, new HashSet<>());
-        this.activityListenerMap.get(target).add(listener);
-    }
-
-    /**
      * Removes a target-listener relationship from the engine's map of said relationships
      * 
      * @param target   the activity whose completion the listener is blocking
@@ -404,7 +387,9 @@ public class SimulationEngine {
             if (childActivityJob.getStatus() == ActivityJob.ActivityStatus.Complete) {
                 return;
             }
-            SimulationEngine.this.addActivityListener(childActivity, this.activityJob.getActivity());
+            SimulationEngine.this.activityListenerMap
+                .computeIfAbsent(childActivity, (_k) -> new HashSet<>())
+                .add(this.activityJob.getActivity());
             this.activityJob.suspend();
         }
 
