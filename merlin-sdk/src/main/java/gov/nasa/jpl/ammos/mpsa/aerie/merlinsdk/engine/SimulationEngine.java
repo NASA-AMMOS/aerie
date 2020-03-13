@@ -26,7 +26,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
  * jobs are organized by time in a `PendingEventQueue` stored within the
  * engine. As it loops through the queue, the engine dequeues these jobs and
  * steps forward in time to the event time of each job. The engine then either
- * supplies the actvitiy job to a thread pool to begin execution or resumes the
+ * supplies the activity job to a thread pool to begin execution or resumes the
  * thread's execution (if it had already started but had `delay()` calls in its
  * effect model). The engine hands execution control over to the activity job's
  * thread via a `ControlChannel` and blocks until the thread gives that control
@@ -39,7 +39,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
  * - activities and their listeners (other activities blocking on the key's completion)
  */
 public class SimulationEngine {
-
     /**
      * The current simulation time of the engine
      */
@@ -132,7 +131,7 @@ public class SimulationEngine {
         return engine.getCurrentSimulationTime();
     }
 
-    public void setSamplingHook(final Duration samplingPeriod, final Consumer<Instant> samplingHook) {
+    private void setSamplingHook(final Duration samplingPeriod, final Consumer<Instant> samplingHook) {
         if (samplingHook == null || !samplingPeriod.isPositive()) {
             this.samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
             this.samplingHook = (now) -> {};
@@ -150,7 +149,7 @@ public class SimulationEngine {
      * 
      * See the class-level docs for more information.
      */
-    public void run() {
+    private void run() {
         var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.
@@ -180,27 +179,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Dispatches a `JobContext` to a specific activity job
-     * 
-     * @param activityJob the activity job to which the engine should dispatch
-     *                    a `JobContext`
-     */
-    public void dispatchContext(ActivityJob<?> activityJob) {
-        JobContext ctx = new JobContext(this, activityJob);
-        activityJob.setContext(ctx);
-    }
-
-    /**
-     * Dispatches the engine's state index structure to a specific activity job
-     * 
-     * @param activityJob the activity job to which the engine should dispatch
-     *                    states
-     */
-    public void dispatchStates(ActivityJob<?> activityJob) {
-        activityJob.setStates(this.stateContainer);
-    }
-
-    /**
      * Returns the engine's current simulation time
      * 
      * @return the current simulation time
@@ -221,13 +199,13 @@ public class SimulationEngine {
      * 
      * @param activityJob the activity job to start or resume
      */
-    public void executeActivity(ActivityJob<?> activityJob) {
+    private void executeActivity(ActivityJob<?> activityJob) {
         ControlChannel channel;
 
         switch (activityJob.getStatus()) {
         case NotStarted:
-            this.dispatchContext(activityJob);
-            this.dispatchStates(activityJob);
+            activityJob.setContext(new JobContext(this, activityJob));
+            activityJob.setStates(this.stateContainer);
             channel = new ControlChannel();
             activityJob.setChannel(channel);
 
@@ -247,15 +225,13 @@ public class SimulationEngine {
         channel.takeControl();
     }
 
-    /**
-     * Adds a parent-child relationship to the engine's map of said relationships
-     * 
-     * @param parent the parent activity that is decomposing into the child
-     * @param child  the child activity into which the parent is decomposing
-     */
-    public void addParentChildRelationship(Activity<?> parent, Activity<?> child) {
+    public void spawnActivityFromParent(final Activity<?> child, final Activity<?> parent) {
+        final var childActivityJob = new ActivityJob<>(child, this.currentSimulationTime);
+
         this.parentChildMap.putIfAbsent(parent, new ArrayList<>());
         this.parentChildMap.get(parent).add(child);
+        this.pendingEventQueue.add(childActivityJob);
+        this.activityToJobMap.put(child, childActivityJob);
     }
 
     /**
@@ -294,17 +270,6 @@ public class SimulationEngine {
      */
     public void insertIntoQueue(ActivityJob<?> activityJob) {
         this.pendingEventQueue.add(activityJob);
-    }
-
-    /**
-     * Registers an activity and its owning job in the engine's map of said
-     * relationships
-     * 
-     * @param activity    the `Activity` owned by the `ActivityJob`
-     * @param activityJob the `ActivityJob` that owns the `Activity`
-     */
-    public void registerActivityAndJob(Activity<?> activity, ActivityJob<?> activityJob) {
-        this.activityToJobMap.put(activity, activityJob);
     }
 
     /**

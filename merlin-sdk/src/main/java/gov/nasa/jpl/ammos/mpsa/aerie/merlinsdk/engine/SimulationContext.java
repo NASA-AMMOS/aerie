@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -10,12 +11,12 @@ public interface SimulationContext {
     /**
      * spawns a child activity and blocks until its completion
      */
-    public Activity<?> callActivity(Activity<?> childActivity);
+    public <T extends StateContainer> Activity<T> callActivity(Activity<T> childActivity);
 
     /**
      * spawns a child activity in the background
      */
-    public Activity<?> spawnActivity(Activity<?> childActivity);
+    public <T extends StateContainer> Activity<T> spawnActivity(Activity<T> childActivity);
 
     /**
      * delays the simulation for some specified amount of time

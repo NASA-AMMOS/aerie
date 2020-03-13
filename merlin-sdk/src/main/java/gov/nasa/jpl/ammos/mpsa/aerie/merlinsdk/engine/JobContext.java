@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob.ActivityStatus;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -16,7 +17,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
  * effect models.
  */
 public class JobContext implements SimulationContext {
-    
     /**
      * A reference to the simulation engine that dispatched this context
      */
@@ -30,15 +30,6 @@ public class JobContext implements SimulationContext {
     public JobContext(SimulationEngine engine, ActivityJob<?> activityJob) {
         this.engine = engine;
         this.activityJob = activityJob;
-    }
-
-    /**
-     * Returns this context's activityJob
-     *
-     * @return
-     */
-    public ActivityJob<?> getActivityJob() {
-        return this.activityJob;
     }
 
     /**
@@ -90,11 +81,8 @@ public class JobContext implements SimulationContext {
      * @return the input child activity
      */
     @Override
-    public Activity<?> spawnActivity(Activity<?> childActivity) {
-        ActivityJob<?> childActivityJob = new ActivityJob<>(childActivity, this.now());
-        this.engine.addParentChildRelationship(this.activityJob.getActivity(), childActivityJob.getActivity());
-        this.engine.insertIntoQueue(childActivityJob);
-        this.engine.registerActivityAndJob(childActivity, childActivityJob);
+    public <T extends StateContainer> Activity<T> spawnActivity(final Activity<T> childActivity) {
+        this.engine.spawnActivityFromParent(childActivity, this.activityJob.getActivity());
         return childActivity;
     }
 
@@ -115,11 +103,8 @@ public class JobContext implements SimulationContext {
      * @return the input child activity
      */
     @Override
-    public Activity<?> callActivity(Activity<?> childActivity) {
-        ActivityJob<?> childActivityJob = new ActivityJob<>(childActivity, this.now());
-        this.engine.addParentChildRelationship(this.activityJob.getActivity(), childActivity);
-        this.engine.insertIntoQueue(childActivityJob);
-        this.engine.registerActivityAndJob(childActivity, childActivityJob);
+    public <T extends StateContainer> Activity<T> callActivity(final Activity<T> childActivity) {
+        this.spawnActivity(childActivity);
         this.waitForChild(childActivity);
         return childActivity;
     }
