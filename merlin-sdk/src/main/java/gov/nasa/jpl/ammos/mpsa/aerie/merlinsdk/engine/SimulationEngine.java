@@ -300,16 +300,20 @@ public class SimulationEngine {
          * child, respectively, within the engine's map. This method does NOT block until the child's effect model is
          * complete. If that behavior is desired, see `callActivity()`.
          *
-         * This method returns the input `childActivity` to allow the user to instantiate the activity in-line with the
-         * spawn call, store the activity in a variable, and block on it later if desirable.
-         *
          * @param childActivity the child activity that should be spawned in the background at the current simulation time
-         * @return the input child activity
+         * @return a handle to the spawned activity
          */
         @Override
-        public <T extends StateContainer> Activity<T> spawnActivity(final Activity<T> childActivity) {
+        public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
             SimulationEngine.this.spawnActivityFromParent(childActivity, this.activityJob.getActivity());
-            return childActivity;
+
+            return new SpawnedActivityHandle() {
+                @Override
+                public void await() {
+                    final var childActivityJob = SimulationEngine.this.activityToJobMap.get(childActivity);
+                    JobContext.this.waitForActivity(childActivityJob);
+                }
+            };
         }
 
         /**
@@ -322,37 +326,11 @@ public class SimulationEngine {
          *
          * If non-blocking behavior is desired, see `spawnActivity()`.
          *
-         * This method returns the input `childActivity` to allow the user to instantiate the activity in-line with the
-         * `callActivity()` call and store it in a variable for later usage.
-         *
          * @param childActivity the child activity that should be spawned and blocked on
-         * @return the input child activity
          */
         @Override
-        public <T extends StateContainer> Activity<T> callActivity(final Activity<T> childActivity) {
-            this.spawnActivity(childActivity);
-            this.waitForChild(childActivity);
-            return childActivity;
-        }
-
-        /**
-         * Blocks a parent activity job on the completion of a child's effect model
-         *
-         * @param childActivity the target activity on which to block
-         */
-        @Override
-        public void waitForChild(Activity<?> childActivity) {
-            final var childActivityJob = SimulationEngine.this.activityToJobMap.get(childActivity);
-
-            // handle case where activity is already complete:
-            // we don't want to block on it because we will never receive a notification that it is complete
-            if (childActivityJob.getStatus() == ActivityJob.ActivityStatus.Complete) {
-                return;
-            }
-            SimulationEngine.this.activityListenerMap
-                .computeIfAbsent(childActivityJob, (_k) -> new HashSet<>())
-                .add(this.activityJob);
-            this.activityJob.suspend();
+        public void callActivity(final Activity<?> childActivity) {
+            this.spawnActivity(childActivity).await();
         }
 
         /**
@@ -363,7 +341,18 @@ public class SimulationEngine {
             final var children = SimulationEngine.this.parentChildMap
                 .getOrDefault(this.activityJob, Collections.emptyList());
 
-            for (final var child : children) this.waitForChild(child.getActivity());
+            for (final var child : children) this.waitForActivity(child);
+        }
+
+        private void waitForActivity(final ActivityJob<?> job) {
+            // handle case where activity is already complete:
+            // we don't want to block on it because we will never receive a notification that it is complete
+            if (job.getStatus() == ActivityJob.ActivityStatus.Complete) return;
+
+            SimulationEngine.this.activityListenerMap
+                .computeIfAbsent(job, (_k) -> new HashSet<>())
+                .add(this.activityJob);
+            this.activityJob.suspend();
         }
 
         /**

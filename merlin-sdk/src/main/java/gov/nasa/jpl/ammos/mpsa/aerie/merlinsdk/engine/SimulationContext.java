@@ -11,22 +11,17 @@ public interface SimulationContext {
     /**
      * spawns a child activity and blocks until its completion
      */
-    public <T extends StateContainer> Activity<T> callActivity(Activity<T> childActivity);
+    public void callActivity(Activity<?> childActivity);
 
     /**
      * spawns a child activity in the background
      */
-    public <T extends StateContainer> Activity<T> spawnActivity(Activity<T> childActivity);
+    public SpawnedActivityHandle spawnActivity(Activity<?> childActivity);
 
     /**
      * delays the simulation for some specified amount of time
      */
     public void delay(Duration duration);
-
-    /**
-     * blocks until the specified child activity is complete
-     */
-    public void waitForChild(Activity<?> childActivity);
 
     /**
      * blocks until all of an activity's children are complete
@@ -48,5 +43,9 @@ public interface SimulationContext {
 
     default void delay(long quantity, TimeUnit units) {
         this.delay(Duration.fromQuantity(quantity, units));
+    }
+
+    interface SpawnedActivityHandle {
+        void await();
     }
 }
