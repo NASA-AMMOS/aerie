@@ -24,7 +24,7 @@ def getDockerImageName(folder){
 }
 
 def getAWSTag(tag){
-    if (tag ==~ /release/) {
+    if (tag ==~ /release.*/) {
         return "release"
     }
     if (tag ==~ /develop/) {
@@ -33,7 +33,7 @@ def getAWSTag(tag){
     if (tag ==~ /staging/) {
         return "staging"
     }
-    return "testing"
+    return "unknown"
 }
 
 def getArtifactoryUrl() {
@@ -49,7 +49,9 @@ def getArtifactoryUrl() {
     }
 }
 
+// Save built image name:tag
 def buildImages = []
+// Save dockerfile name inside scipt/Dockerfiles
 def imageNames = []
 
 pipeline {
@@ -113,7 +115,7 @@ pipeline {
 
         stage ('Archive') {
             when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release)/ }
+                expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
             }
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
@@ -158,7 +160,7 @@ pipeline {
 
         stage ('Docker') {
             when {
-                expression { GIT_BRANCH ==~ /(AERIE-664-Deployment-Problem|develop|staging|release)/ }
+                expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
             }
             steps {
                 script {
@@ -179,7 +181,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                expression { GIT_BRANCH ==~ /(AERIE.*|develop|staging|release)/ }
+                expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
             }
             steps {
                 echo 'Deployment stage started...'
