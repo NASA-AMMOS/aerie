@@ -1,11 +1,18 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeSimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
+
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -29,8 +36,6 @@ public class BatteryEnergyTest {
      * reusable time points
      */
     private final Instant t2020 = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
-    private final Instant t2020_10s = SimulationInstant.fromQuantity(10, TimeUnit.SECONDS);
-    private final Instant t2020_20s = SimulationInstant.fromQuantity(20, TimeUnit.SECONDS);
 
     @Test
     public void ctorWorks() {
@@ -39,22 +44,20 @@ public class BatteryEnergyTest {
 
     @Test
     public void ctorFailsOnNullPower() {
-        final Throwable thrown = catchThrowable( ()->{
-            new BatteryEnergy( 1110.0, null, mockState10k_J );
-        });
+        final var thrown = catchThrowable(() -> new BatteryEnergy(1110.0, null, mockState10k_J));
 
-        assertThat(thrown).isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "null" );
+        assertThat(thrown)
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("null");
     }
 
     @Test
     public void ctorFailsOnNullMax() {
-        final Throwable thrown = catchThrowable( ()->{
-            new BatteryEnergy( 1110.0, mockState50_W, null );
-        });
+        final var thrown = catchThrowable(() -> new BatteryEnergy(1110.0, mockState50_W, null));
 
-        assertThat(thrown).isInstanceOf( IllegalArgumentException.class )
-                .hasMessageContaining( "null" );
+        assertThat(thrown)
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("null");
     }
 
     @Test
@@ -62,13 +65,19 @@ public class BatteryEnergyTest {
         final double initialCharge_J = 1110.0;
         final double expected_J = 1110.0;
 
-        final MockTimeSimulationEngine<?> mockSim = new MockTimeSimulationEngine<>( t2020 );
-        final BatteryEnergy chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
-        chargeState_J.setEngine( mockSim );
+        final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        final var activity = new Activity<>() {
+            @Override
+            public void modelEffects(StateContainer states) {
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            }
+        };
 
-        final double result_J = chargeState_J.get();
-
-        assertThat( result_J ).isCloseTo( expected_J, withinPercentage( 0.01 ) );
+        final var engine = new SimulationEngine(
+            t2020,
+            List.of(new ActivityJob<>(activity, t2020)),
+            () -> List.of(chargeState_J));
+        engine.simulate();
     }
 
 
@@ -77,14 +86,20 @@ public class BatteryEnergyTest {
         final double initialCharge_J = 0.0;
         final double expected_J = 500.0; //0J + 10s of 50W = 500J
 
-        final MockTimeSimulationEngine<?> mockSim = new MockTimeSimulationEngine<>( t2020 );
-        final BatteryEnergy chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
-        chargeState_J.setEngine( mockSim );
+        final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        final var activity = new Activity<>() {
+            @Override
+            public void modelEffects(StateContainer states) {
+                SimulationEffects.delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            }
+        };
 
-        mockSim.setCurrentSimulationTime(t2020_10s);
-        final double result_J = chargeState_J.get();
-
-        assertThat( result_J ).isCloseTo( expected_J, withinPercentage( 0.01 ) );
+        final var engine = new SimulationEngine(
+            t2020,
+            List.of(new ActivityJob<>(activity, t2020)),
+            () -> List.of(chargeState_J));
+        engine.simulate();
     }
 
 
@@ -93,37 +108,45 @@ public class BatteryEnergyTest {
         final double initialCharge_J = 0.0;
         final double expected_J = 500.0; //0J + 10s of 50W = 500J
 
-        final MockTimeSimulationEngine<?> mockSim = new MockTimeSimulationEngine<>( t2020 );
-        final BatteryEnergy chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
-        chargeState_J.setEngine( mockSim );
+        final var chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
+        final var activity = new Activity<>() {
+            @Override
+            public void modelEffects(StateContainer states) {
+                SimulationEffects.delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            }
+        };
 
-        mockSim.setCurrentSimulationTime(t2020_10s);
-
-        final double result0_J = chargeState_J.get();
-        final double result1_J = chargeState_J.get();
-
-        assertThat( result0_J ).isCloseTo( expected_J, withinPercentage( 0.01 ) );
-        assertThat( result1_J ).isCloseTo( expected_J, withinPercentage( 0.01 ) );
+        final var engine = new SimulationEngine(
+            t2020,
+            List.of(new ActivityJob<>(activity, t2020)),
+            () -> List.of(chargeState_J));
+        engine.simulate();
     }
 
     @Test
     public void getWorksOnSequentialIntegrationQueries() {
         final double initialCharge_J = 0.0;
-
-        final MockTimeSimulationEngine<?> mockSim = new MockTimeSimulationEngine<>( t2020 );
-        BatteryEnergy chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
-        chargeState_J.setEngine( mockSim );
-
-        chargeState_J.get();
-
-        mockSim.setCurrentSimulationTime( t2020_10s );
-        chargeState_J.get();
-
-        mockSim.setCurrentSimulationTime( t2020_20s );
-        final double result20_J = chargeState_J.get();
-
         final double expected20_J = 1000.0; //0J + 10s of 50W + 10s of 50W = 1000J
-        assertThat( result20_J ).isCloseTo( expected20_J, withinPercentage( 0.01 ) );
+
+        final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        final var activity = new Activity<>() {
+            @Override
+            public void modelEffects(StateContainer states) {
+                chargeState_J.get();
+                SimulationEffects.delay(10, TimeUnit.SECONDS);
+                chargeState_J.get();
+                SimulationEffects.delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected20_J, withinPercentage(0.01));
+            }
+        };
+
+        final var engine = new SimulationEngine(
+            t2020,
+            List.of(new ActivityJob<>(activity, t2020)),
+            () -> List.of(chargeState_J));
+        engine.simulate();
     }
 
     @Test
@@ -131,14 +154,19 @@ public class BatteryEnergyTest {
         final double initialCharge_J = 9900.0;
         final double expected_J = 10000.0; //9900J + 10s of 50W = 10400J, clamp to 10kJ
 
-        final MockTimeSimulationEngine<?> mockSim = new MockTimeSimulationEngine<>( t2020 );
-        final BatteryEnergy chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
-        chargeState_J.setEngine( mockSim );
+        final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        final var activity = new Activity<>() {
+            @Override
+            public void modelEffects(StateContainer states) {
+                SimulationEffects.delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            }
+        };
 
-        mockSim.setCurrentSimulationTime(t2020_10s);
-        final double result_J = chargeState_J.get();
-
-        assertThat( result_J ).isCloseTo( expected_J, withinPercentage( 0.01 ) );
+        final var engine = new SimulationEngine(
+            t2020,
+            List.of(new ActivityJob<>(activity, t2020)),
+            () -> List.of(chargeState_J));
+        engine.simulate();
     }
-
 }

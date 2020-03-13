@@ -1,10 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.statemodels.data;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.classes.CustomEnums.InstrumentMode;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.statemodels.data.BinModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -23,8 +22,6 @@ public class InstrumentDataRateModel implements SettableState<Double> {
     // but I feel like this makes the parent class unwieldy.  It also suggests a relationship between the
     // child and parent class that might not always be what the adapter wants.
     private BinModel bin;
-
-    private SimulationEngine engine;
 
     private Map<Instant, Double> stateHistory = new LinkedHashMap<>();
 
@@ -104,7 +101,7 @@ public class InstrumentDataRateModel implements SettableState<Double> {
 
     @Override
     public void set(Double newRate){
-        Instant curTime = engine.getCurrentSimulationTime();
+        Instant curTime = SimulationEffects.now();
         bin.updateRate(curTime, newRate - this.rate);
         this.rate = newRate;
         if (this.rate > 0.0){
@@ -114,11 +111,6 @@ public class InstrumentDataRateModel implements SettableState<Double> {
             mode = InstrumentMode.OFF;
         }
         stateHistory.put(curTime, this.rate);
-    }
-
-    @Override
-    public void setEngine(SimulationEngine engine) {
-        this.engine = engine;
     }
 
     @Override

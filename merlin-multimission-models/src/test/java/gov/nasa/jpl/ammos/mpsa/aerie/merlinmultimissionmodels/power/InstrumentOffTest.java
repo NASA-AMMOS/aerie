@@ -1,10 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockEmptyStateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockSimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeEmptySimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
@@ -19,64 +20,53 @@ import static org.assertj.core.api.Assertions.withinPercentage;
  * these unit tests do not run the actual merlin simulation engine
  */
 public class InstrumentOffTest {
-
-    /**
-     * reusable mock of state container with no states
-     */
-    private final MockEmptyStateContainer mockStates = new MockEmptyStateContainer();
-
-    /**
-     * reusable mock of a non-functional simulation context that throws on any calls
-     */
-    private final MockSimulationContext mockContext = new MockSimulationContext();
-
-
-    @Test public void defaultCtorWorks() {
-        new InstrumentOff();
+    @Test
+    public void defaultCtorWorks() {
+        new InstrumentOff<>();
     }
 
-    @Test public void argCtorWorks() {
-        final InstrumentPower powerState_W = new InstrumentPower();
-        new InstrumentOff<MockEmptyStateContainer>( powerState_W );
+    @Test
+    public void argCtorWorks() {
+        final var state = new InstrumentPower();
+        new InstrumentOff<>(state);
     }
 
-    @Test public void validationWorks() {
-        final InstrumentPower powerState_W = new InstrumentPower();
-        final InstrumentOff<MockEmptyStateContainer> onAct =
-                new InstrumentOff<>( powerState_W );
+    @Test
+    public void validationWorks() {
+        final var state = new InstrumentPower();
+        final var activity = new InstrumentOff<>(state);
 
-        final List<String> errors = onAct.validateParameters();
-
-        assertThat(errors).hasSize( 0 );
+        assertThat(activity.validateParameters()).isEmpty();
     }
 
-    @Test public void validationFailsOnNullState() {
-        final InstrumentOff<MockEmptyStateContainer> onAct =
-                new InstrumentOff<>( null );
+    @Test
+    public void validationFailsOnNullState() {
+        final var activity = new InstrumentOff<>(null);
 
-        final List<String> errors = onAct.validateParameters();
-
-        assertThat(errors).hasSize( 1 )
-                .usingElementComparator((a,b)->a.contains(b)?0:1).contains("null");
+        assertThat(activity.validateParameters())
+            .hasSize(1)
+            .usingElementComparator((a, b) -> a.contains(b) ? 0 : 1)
+            .contains("null");
     }
 
+    @Test
+    public void modelEffectsWorks() {
+        final var powerState = new InstrumentPower();
+        final var activity = new Activity<>() {
+            @Override
+            public void modelEffects(final StateContainer _states) {
+                powerState.set(10.0);
+                SimulationEffects.spawnAndWait(new InstrumentOff<>(powerState));
 
-    @Test public void modelEffectsWorks() {
-        final double powerLoad_W = 10.0;
-        final InstrumentPower powerState_W = new InstrumentPower();
-        powerState_W.setEngine( new MockTimeEmptySimulationEngine(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS)) );
-        //TODO: use a mock state class, except right now it would be identical!
+                assertThat(powerState.get()).isCloseTo( 0.0, withinPercentage(0.01));
+            }
+        };
 
-        final InstrumentOff<MockEmptyStateContainer> onAct =
-                new InstrumentOff<>( powerState_W );
-
-        powerState_W.set( powerLoad_W );
-        SimulationEffects.withEffects(mockContext, () -> onAct.modelEffects(mockStates));
-
-        final double resultPower_W = powerState_W.get();
-        assertThat(resultPower_W).isCloseTo( 0.0, withinPercentage(0.01));
+        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var engine = new SimulationEngine(
+            startTime,
+            List.of(new ActivityJob<>(activity, startTime)),
+            () -> List.of(powerState));
+        engine.simulate();
     }
-
-
-
 }

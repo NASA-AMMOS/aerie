@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -62,8 +62,7 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
     @Override
     public Double get( Instant queryTime ) {
         assert ! powerHistory_W.isEmpty() : "history is empty";
-        assert simEngine != null : "simulation engine is null";
-        if( queryTime.isAfter( simEngine.getCurrentSimulationTime() ) ) {
+        if( queryTime.isAfter( SimulationEffects.now() ) ) {
             throw new IllegalArgumentException( "query for state value in future" ); }
 
         //note that history initializer ensures that there is always a lowest key,
@@ -88,10 +87,7 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
     public void set( Double value_W ) {
         power_W = value_W;
 
-        //TODO: the temporal context of the set should probably be passed to the state
-        //      model rather than requiring us to inspect basically global time state
-        assert simEngine != null : "simulation engine reference is null";
-        final Instant setTime = simEngine.getCurrentSimulationTime();
+        final Instant setTime = SimulationEffects.now();
         assert !setTime.isBefore( powerHistory_W.lastKey() )
                 : "set occurs at simulation time prior to last set call";
         powerHistory_W.put( setTime, value_W ); //discard prior value if any
@@ -129,14 +125,10 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
         return super.toString();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void setEngine(SimulationEngine engine) {
+    public void initialize(final Instant initialTime) {
         // Insert the initial power value as soon as we know the earliest simulation time.
-        powerHistory_W.put(engine.getCurrentSimulationTime(), power_W);
-        this.simEngine = engine;
+        powerHistory_W.put(initialTime, power_W);
     }
 
     /**
@@ -146,13 +138,5 @@ public class InstrumentPower implements SettableState<Double>, RandomAccessState
     public Map<Instant, Double> getHistory() {
         return powerHistory_W;
     }
-
-    /**
-     * this is a stop-gap reference to the simulation engine required by the current
-     * simulation implementation and used to determine the current simulation time or
-     * tag history values. eventually that kind of context would be provided by the
-     * engine itself in any call to the state model
-     */
-    private SimulationEngine simEngine;
 
 }

@@ -40,6 +40,22 @@ public final class Duration implements Comparable<Duration> {
     return Collections.max(List.of(x, y));
   }
 
+  public Duration plus(final Duration other) throws ArithmeticException {
+    return Duration.add(this, other);
+  }
+
+  public Duration plus(final long quantity, final TimeUnit units) throws ArithmeticException {
+    return Duration.add(this, Duration.fromQuantity(quantity, units));
+  }
+
+  public Duration minus(final Duration other) throws ArithmeticException {
+    return Duration.subtract(this, other);
+  }
+
+  public Duration minus(final long quantity, final TimeUnit units) throws ArithmeticException {
+    return Duration.subtract(this, Duration.fromQuantity(quantity, units));
+  }
+
   public boolean shorterThan(final Duration other) {
     return this.compareTo(other) < 0;
   }

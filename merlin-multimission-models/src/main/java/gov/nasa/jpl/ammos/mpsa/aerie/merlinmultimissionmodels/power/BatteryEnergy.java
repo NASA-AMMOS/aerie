@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
@@ -10,7 +10,7 @@ import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.events.EventHandler;
 import org.apache.commons.math3.ode.nonstiff.ClassicalRungeKuttaIntegrator;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -84,7 +84,6 @@ public class BatteryEnergy implements State<Double> {
         assert this.netPowerState_W != null : "net power state is null";
         assert this.maxChargeState_J != null : "maximum charge state is null";
         assert this.lastCalculationT != null : "last calculation time is null";
-        assert this.simEngine != null : "simulation engine is null";
 
         //to be fully accurate, we should ask more of the net power state: instead
         //of single values at a query times, it would be better to understand the
@@ -98,7 +97,7 @@ public class BatteryEnergy implements State<Double> {
 
         //TODO: this critically assumes that the simulation is driven forward in time only
         //(though only really to save itself from re-integrating the entire timeline each query)
-        Instant curT = this.simEngine.getCurrentSimulationTime();
+        Instant curT = SimulationEffects.now();
         assert !curT.isBefore( this.lastCalculationT )
                 : "query for value in past, but only implemented for forward simulation";
 
@@ -264,9 +263,8 @@ public class BatteryEnergy implements State<Double> {
      * {@inheritDoc}
      */
     @Override
-    public void setEngine(SimulationEngine engine) {
-        this.lastCalculationT = engine.getCurrentSimulationTime();
-        this.simEngine = engine;
+    public void initialize(final Instant startTime) {
+        this.lastCalculationT = startTime;
     }
 
     /**
@@ -276,14 +274,6 @@ public class BatteryEnergy implements State<Double> {
      */
     @Override
     public Map<Instant, Double> getHistory() {
-        return new LinkedHashMap<Instant,Double>();
+        return Collections.emptyMap();
     }
-
-    /**
-     * this is a stop-gap reference to the simulation engine required by the current
-     * simulation implementation and used to determine the current simulation time or
-     * tag history values. eventually that kind of context would be provided by the
-     * engine itself in any call to the state model
-     */
-    private SimulationEngine simEngine;
 }

@@ -75,11 +75,6 @@ public class SimulationEngine {
     private StateContainer stateContainer;
 
     /**
-     * The thread in which the simulation engine is running
-     */
-    private Thread engineThread;
-
-    /**
      * A thread pool used for executing `ActivityJob`s
      */
     private ExecutorService threadPool = Executors.newCachedThreadPool();
@@ -110,7 +105,9 @@ public class SimulationEngine {
         this.stateContainer = stateContainer;
         this.currentSimulationTime = simulationStartTime;
 
-        registerStates(stateContainer.getStateList());
+        for (final var state : stateContainer.getStateList()) {
+            state.initialize(simulationStartTime);
+        }
 
         for (ActivityJob<?> job : activityJobs) {
             this.pendingEventQueue.add(job);
@@ -142,8 +139,6 @@ public class SimulationEngine {
      * See the class-level docs for more information.
      */
     public void simulate() {
-        this.engineThread = Thread.currentThread();
-
         var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.
@@ -278,17 +273,6 @@ public class SimulationEngine {
      */
     public void removeActivityListener(Activity<?> target, Activity<?> listener) {
         this.activityListenerMap.get(target).remove(listener);
-    }
-
-    /**
-     * Given a list of states, registers the engine in each state
-     * 
-     * @param stateList the list of states to be registered
-     */
-    public void registerStates(List<State<?>> stateList) {
-        for (State<?> state : stateList) {
-            state.setEngine(this);
-        }
     }
 
     /**

@@ -66,7 +66,6 @@ public interface CumulativeState<T extends Number> extends State<T> {
 
         private int value;
         private String name;
-        private SimulationEngine engine;
         private Map<Instant, java.lang.Integer> stateHistory = new LinkedHashMap<>();
 
         /**
@@ -115,12 +114,6 @@ public interface CumulativeState<T extends Number> extends State<T> {
 
         //this is a temporary method in order to integrate w/ the current SimulationEngine
         @Override
-        public void setEngine(SimulationEngine engine) {
-            this.engine = engine;
-        }
-
-        //this is a temporary method in order to integrate w/ the current SimulationEngine
-        @Override
         public Map<Instant, java.lang.Integer> getHistory() {
             return stateHistory;
         }
@@ -131,8 +124,6 @@ public interface CumulativeState<T extends Number> extends State<T> {
 
         private double value;
         private String name;
-        //will need to be set when using syntactic sugar or derived states
-        private SimulationEngine engine;
         private Map<Instant, java.lang.Double> stateHistory = new LinkedHashMap<>();
 
         /**
@@ -177,12 +168,6 @@ public interface CumulativeState<T extends Number> extends State<T> {
         @Override
         public void decrement(java.lang.Double delta) {
             value = value - delta;
-        }
-
-        //this is a temporary method in order to integrate w/ the current SimulationEngine
-        @Override
-        public void setEngine(SimulationEngine engine) {
-            this.engine = engine;
         }
 
         //this is a temporary method in order to integrate w/ the current SimulationEngine

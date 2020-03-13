@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.RandomAccessState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.Map;
@@ -58,15 +57,6 @@ public class MockState<T> implements RandomAccessState<T> {
     public T get( Instant queryTime ) {
         return value;
     }
-
-
-    /**
-     * required by engine but not used by the mock
-     *
-     * @param engine the controlling simulation engine
-     */
-    @Override
-    public void setEngine(SimulationEngine engine) { }
 
     /**
      * required by engine but not used by the mock

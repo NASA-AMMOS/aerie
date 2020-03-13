@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.Map;
@@ -81,16 +80,11 @@ public interface State<T> {
     String getName();
 
     /**
-     * This is a temporary method used to enable the current SimulationEngine unit tests
-     * to compile and run without modification (yet). It is used to time-tag state
-     * assignments so that the history can be reported to the unit tests for the
-     * simulation engine.
+     * Initialize the state with knowledge of the time from which it will evolve forward.
      *
-     * @param engine the controlling simulation engine
+     * @param startTime The simulation start time.
      */
-    // TODO: Refactor sim engine to no longer require this at this state level
-    @Deprecated(forRemoval = true)
-    default void setEngine(final SimulationEngine engine) {}
+    default void initialize(final Instant startTime) {}
 
     /**
      * this is a temporary method in order to integrate w/ the current SimulationEngine

@@ -1,14 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.List;
 
 public class CumulativeStatesTest {
 
@@ -22,21 +16,9 @@ public class CumulativeStatesTest {
     public CumulativeState<Integer> state1 = new CumulativeState.Integer(name1, value1);
     public CumulativeState<Double> state2 = new CumulativeState.Double(name2, value2);
 
-    public class MockStateContainer implements StateContainer {
-        public List<State<?>> getStateList() {
-            return List.of();
-        }
-    }
-    public SimulationEngine mockEngine = new SimulationEngine(
-        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
-        List.of(),
-        new MockStateContainer());
-
 
     @Before
     public void setup(){
-        state1.setEngine(mockEngine);
-        state2.setEngine(mockEngine);
         assert(state1.get() == value1);
         assert(state2.get() == value2);
     }

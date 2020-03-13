@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -69,26 +69,8 @@ public class BasicState<T> implements SettableState<T> {
     @Override
     public void set(T value) {
         this.value = value;
-        //this variety of state version is only used for the time being
-        //this will instead integrate with Amruta's work
-        //this is necessary for sim engine to work
-        stateHistory.put(engine.getCurrentSimulationTime(), value);
+        this.stateHistory.put(SimulationEffects.now(), value);
     }
-
-
-    /**
-     * This is a temporary method used to enable the current SimulationEngine unit tests
-     * to compile and run without modification (yet). It is used to time-tag state
-     * assignments so that the history can be reported to the unit tests for the
-     * simulation engine.
-     *
-     * @param engine the controlling simulation engine
-     */
-    @Override
-    public void setEngine(SimulationEngine engine) {
-        this.engine = engine;
-    }
-
 
     @Override
     public String getName() { return this.name; }
@@ -114,13 +96,6 @@ public class BasicState<T> implements SettableState<T> {
      * the name of the state
      */
     private String name;
-
-    /**
-     * the engine that this state is registered to
-     * <p>
-     * used temporarily to support the initial implementation of the simulation engine
-     */
-    private SimulationEngine engine;
 
     /**
      * history of values that the state has been assigned to, indexec by the simulation
