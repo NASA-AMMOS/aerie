@@ -163,7 +163,7 @@ pipeline {
             steps {
                 script {
                     imageNames = getDockerImageName(env.DOCKERFILE_DIR)
-                    docker.withRegistry('https://cae-artifactory.jpl.nasa.gov:16001', '9db65bd3-f8f0-4de0-b344-449ae2782b86') {
+                    docker.withRegistry("https://$ARTIFACTORY_URL", '9db65bd3-f8f0-4de0-b344-449ae2782b86') {
                         for (def name: imageNames) {
                             def tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
                             def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm ." )
@@ -179,7 +179,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                expression { GIT_BRANCH ==~ /(AERIE-664-Deployment-Problem|develop|staging|release)/ }
+                expression { GIT_BRANCH ==~ /(AERIE.*|develop|staging|release)/ }
             }
             steps {
                 echo 'Deployment stage started...'
@@ -220,7 +220,6 @@ pipeline {
                     sh removeCmd
                 }
             }
-
             echo 'Cleaning up images'
             sh "docker image prune -f"
 
