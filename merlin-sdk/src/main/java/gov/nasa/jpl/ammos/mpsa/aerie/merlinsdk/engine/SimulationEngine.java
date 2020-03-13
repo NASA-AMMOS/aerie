@@ -319,23 +319,6 @@ public class SimulationEngine {
         }
 
         /**
-         * Spawns a child activity and blocks on the completion of its effect model
-         *
-         * This method will create an `ActivityJob` for the given `childActivity` and insert it into the engine's pending
-         * event queue at the current simulation time. It registers this activity job as a listener on the child job,
-         * and it will block on the child activity until the child's effect model is complete. It also registers the
-         * spawning and spawned job as parent and child, respectively, within the engine's map.
-         *
-         * If non-blocking behavior is desired, see `spawnActivity()`.
-         *
-         * @param childActivity the child activity that should be spawned and blocked on
-         */
-        @Override
-        public void callActivity(final Activity<?> childActivity) {
-            this.spawnActivity(childActivity).await();
-        }
-
-        /**
          * Blocks a parent activity thread on the completion of all of its children
          */
         @Override

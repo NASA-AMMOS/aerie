@@ -7,45 +7,51 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 public interface SimulationContext {
-
-    /**
-     * spawns a child activity and blocks until its completion
-     */
-    public void callActivity(Activity<?> childActivity);
-
     /**
      * spawns a child activity in the background
      */
-    public SpawnedActivityHandle spawnActivity(Activity<?> childActivity);
+    SpawnedActivityHandle spawnActivity(Activity<?> childActivity);
 
     /**
      * delays the simulation for some specified amount of time
      */
-    public void delay(Duration duration);
-
-    /**
-     * blocks until all of an activity's children are complete
-     */
-    public void waitForAllChildren();
+    void delay(Duration duration);
 
     /**
      * delays the effect model until the specified point in time
      */
-    public void delayUntil(Instant time);
+    void delayUntil(Instant time);
+
+    /**
+     * blocks until all of an activity's children are complete
+     */
+    void waitForAllChildren();
 
     /**
      * Returns the engine's current simulation time
      * 
      * @return current simulation time
      */
-    public Instant now();
+    Instant now();
 
-
-    default void delay(long quantity, TimeUnit units) {
-        this.delay(Duration.fromQuantity(quantity, units));
-    }
 
     interface SpawnedActivityHandle {
         void await();
+    }
+
+
+    /**
+     * Spawns a child activity and blocks on the completion of its effect model
+     *
+     * If non-blocking behavior is desired, see `spawnActivity()`.
+     *
+     * @param childActivity the child activity that should be spawned and blocked on
+     */
+    default void callActivity(final Activity<?> childActivity) {
+        this.spawnActivity(childActivity).await();
+    }
+
+    default void delay(final long quantity, final TimeUnit units) {
+        this.delay(Duration.fromQuantity(quantity, units));
     }
 }
