@@ -102,11 +102,8 @@ public class DataModelTest {
 
         DataModelStates states = new DataModelStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-
-        engine.run();
-
-        System.out.println(engine.getCurrentSimulationTime());
+        final var simEnd = SimulationEngine.simulate(simStart, activityJobList, states);
+        System.out.println(simEnd);
 
     }
 
@@ -126,8 +123,7 @@ public class DataModelTest {
 
         DataModelStates states = new DataModelStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         states.bin_1.printHistory();
         states.bin_2.printHistory();
@@ -161,8 +157,7 @@ public class DataModelTest {
         ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
         activityJobList.add(instrumentOn);
 
-        SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         states.bin_1.printHistory();
         states.bin_2.printHistory();
@@ -198,8 +193,7 @@ public class DataModelTest {
 
         DataModelStates states = new DataModelStates();
 
-        SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         states.bin_1.printHistory();
         states.bin_2.printHistory();

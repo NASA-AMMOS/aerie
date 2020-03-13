@@ -39,8 +39,7 @@ public class DataModelActivitiesTest {
         OnboardDataModelStates states = new OnboardDataModelStates();
 
         //3. create engine and simulate
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         for (BinModel x : states.getBinModelList()){
             x.printHistory();
@@ -75,8 +74,7 @@ public class DataModelActivitiesTest {
         OnboardDataModelStates states = new OnboardDataModelStates();
 
         //3. create engine and simulate
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
         assert(binMap.size() == 2);
@@ -130,8 +128,7 @@ public class DataModelActivitiesTest {
             activityJobList.add(activityJob);
         }
 
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         for (InstrumentModel x : states.getInstrumentModelList()){
             x.printHistory();
@@ -192,8 +189,7 @@ public class DataModelActivitiesTest {
         ActivityJob<OnboardDataModelStates> downlinkJob = new ActivityJob<>(downlinkActivity, simDownlink);
         activityJobList.add(downlinkJob);
 
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, activityJobList, states);
 
         for (InstrumentModel x : states.getInstrumentModelList()){
             x.printHistoryGraphFormat();

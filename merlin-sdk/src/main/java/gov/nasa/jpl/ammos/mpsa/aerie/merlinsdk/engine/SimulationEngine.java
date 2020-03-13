@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -85,7 +85,7 @@ public class SimulationEngine {
      *
      * Defaults to a no-op hook.
      */
-    private Runnable samplingHook = () -> {};
+    private Consumer<Instant> samplingHook = (now) -> {};
 
     /**
      * Initializes the simulation engine
@@ -94,7 +94,7 @@ public class SimulationEngine {
      * @param activityJobs
      * @param stateContainer
      */
-    public SimulationEngine(Instant simulationStartTime, List<ActivityJob<?>> activityJobs,
+    private SimulationEngine(Instant simulationStartTime, List<ActivityJob<?>> activityJobs,
                             StateContainer stateContainer) {
         this.stateContainer = stateContainer;
         this.currentSimulationTime = simulationStartTime;
@@ -109,20 +109,38 @@ public class SimulationEngine {
         }
     }
 
-    // TODO: REMOVE. ADDED FOR TESTING PURPOSES (see LazyEvaluationTest)
-    public SimulationEngine() {
-
+    public static Instant simulate(
+        final Instant simulationStartTime,
+        final List<ActivityJob<?>> activityJobs,
+        final StateContainer stateContainer
+    ) {
+        final var engine = new SimulationEngine(simulationStartTime, activityJobs, stateContainer);
+        engine.run();
+        return engine.getCurrentSimulationTime();
     }
 
-    public void setSamplingHook(final Duration d, final Runnable samplingHook) {
-        if (samplingHook == null || !d.isPositive()) {
+    public static Instant simulate(
+        final Instant simulationStartTime,
+        final List<ActivityJob<?>> activityJobs,
+        final StateContainer stateContainer,
+        final Duration samplingPeriod,
+        final Consumer<Instant> samplingHook
+    ) {
+        final var engine = new SimulationEngine(simulationStartTime, activityJobs, stateContainer);
+        engine.setSamplingHook(samplingPeriod, samplingHook);
+        engine.run();
+        return engine.getCurrentSimulationTime();
+    }
+
+    public void setSamplingHook(final Duration samplingPeriod, final Consumer<Instant> samplingHook) {
+        if (samplingHook == null || !samplingPeriod.isPositive()) {
             this.samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
-            this.samplingHook = () -> {};
+            this.samplingHook = (now) -> {};
         } else {
             if (this.samplingPeriod.isPositive()) {
                 System.err.println("[WARNING] Overriding existing sampling hook");
             }
-            this.samplingPeriod = d;
+            this.samplingPeriod = samplingPeriod;
             this.samplingHook = samplingHook;
         }
     }
@@ -145,7 +163,7 @@ public class SimulationEngine {
                 while (nextSampleTime.isBefore(eventTime)) {
                     this.currentSimulationTime = nextSampleTime;
 
-                    this.samplingHook.run();
+                    this.samplingHook.accept(this.currentSimulationTime);
                     nextSampleTime = nextSampleTime.plus(this.samplingPeriod);
                 }
             }
@@ -155,7 +173,7 @@ public class SimulationEngine {
         }
 
         if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
-            this.samplingHook.run();
+            this.samplingHook.accept(this.currentSimulationTime);
         }
 
         this.threadPool.shutdown();

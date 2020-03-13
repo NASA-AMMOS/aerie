@@ -114,8 +114,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, actList, states);
     }
 
     /* --------------------------- TIME-ORDERING TEST --------------------------- */
@@ -153,8 +152,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, actList, states);
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -193,8 +191,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, actList, states);
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -240,8 +237,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, actList, states);
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -286,8 +282,7 @@ public class SimulationEngineTests {
 
         DiverseStates states = new DiverseStates();
 
-        SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.run();
+        SimulationEngine.simulate(simStart, actList, states);
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
         Instant queryTime = parentExecutionTime.plus(2, TimeUnit.HOURS);

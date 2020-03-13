@@ -34,11 +34,10 @@ public class InstrumentPowerRandomAccessTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -54,11 +53,10 @@ public class InstrumentPowerRandomAccessTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -77,11 +75,10 @@ public class InstrumentPowerRandomAccessTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -101,11 +98,10 @@ public class InstrumentPowerRandomAccessTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -125,11 +121,10 @@ public class InstrumentPowerRandomAccessTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -168,10 +163,9 @@ public class InstrumentPowerRandomAccessTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.run();
     }
 }

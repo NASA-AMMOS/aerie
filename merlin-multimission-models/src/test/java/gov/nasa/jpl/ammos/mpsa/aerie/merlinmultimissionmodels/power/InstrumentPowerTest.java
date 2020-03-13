@@ -40,11 +40,10 @@ public class InstrumentPowerTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -59,11 +58,10 @@ public class InstrumentPowerTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -82,10 +80,9 @@ public class InstrumentPowerTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 }

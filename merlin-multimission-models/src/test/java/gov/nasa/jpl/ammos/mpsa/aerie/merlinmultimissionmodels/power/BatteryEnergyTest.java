@@ -73,11 +73,10 @@ public class BatteryEnergyTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.run();
     }
 
 
@@ -95,11 +94,10 @@ public class BatteryEnergyTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.run();
     }
 
 
@@ -118,11 +116,10 @@ public class BatteryEnergyTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.run();
     }
 
     @Test
@@ -142,11 +139,10 @@ public class BatteryEnergyTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.run();
     }
 
     @Test
@@ -163,10 +159,9 @@ public class BatteryEnergyTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.run();
     }
 }

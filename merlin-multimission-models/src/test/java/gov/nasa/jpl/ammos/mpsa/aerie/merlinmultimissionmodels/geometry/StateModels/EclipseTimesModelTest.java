@@ -180,10 +180,9 @@ public class EclipseTimesModelTest {
         };
 
         final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(eclipseModel));
-        engine.run();
     }
 }

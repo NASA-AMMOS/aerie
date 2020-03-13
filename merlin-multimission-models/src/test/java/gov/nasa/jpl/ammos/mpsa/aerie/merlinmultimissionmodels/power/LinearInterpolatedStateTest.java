@@ -53,11 +53,10 @@ public class LinearInterpolatedStateTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -71,11 +70,10 @@ public class LinearInterpolatedStateTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -89,11 +87,10 @@ public class LinearInterpolatedStateTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -107,11 +104,10 @@ public class LinearInterpolatedStateTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart.plus(10, TimeUnit.SECONDS),
             List.of(new ActivityJob<>(activity, simStart.plus(10, TimeUnit.SECONDS))),
             () -> List.of(state));
-        engine.run();
     }
 
     @Test
@@ -125,10 +121,9 @@ public class LinearInterpolatedStateTest {
             }
         };
 
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.run();
     }
 }

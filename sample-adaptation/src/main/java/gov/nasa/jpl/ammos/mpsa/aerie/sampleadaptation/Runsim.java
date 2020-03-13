@@ -18,8 +18,7 @@ public class Runsim {
         List<ActivityJob<?>> plan = Plan.createPlan(config, simStartTime);
         SampleMissionStates sampleMissionStates = new SampleMissionStates(config);
 
-        SimulationEngine engine = new SimulationEngine(simStartTime, plan, sampleMissionStates);
-        engine.run();
+        SimulationEngine.simulate(simStartTime, plan, sampleMissionStates);
 
         // note that this currently doesn't have the initial value since that isn't stored in the history
         Map<Instant, InstrumentMode> modeHistory = sampleMissionStates.instrumentMode.getHistory();

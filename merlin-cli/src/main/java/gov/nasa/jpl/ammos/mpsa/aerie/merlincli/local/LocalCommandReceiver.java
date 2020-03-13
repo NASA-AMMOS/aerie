@@ -191,9 +191,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
 
     final var simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
     final var stateContainer = adaptation.createStateModels();
-    final var engine = new SimulationEngine(simulationStartTime, simulationJobs, stateContainer);
-
-    engine.run();
+    SimulationEngine.simulate(simulationStartTime, simulationJobs, stateContainer);
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();
     for (final var state : stateContainer.getStateList()) {

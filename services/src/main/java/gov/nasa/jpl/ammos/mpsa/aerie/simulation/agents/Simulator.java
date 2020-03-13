@@ -30,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class Simulator<States extends StateContainer> {
   static private TypeRegistry registry = new TypeRegistry();
@@ -92,10 +93,6 @@ public final class Simulator<States extends StateContainer> {
     final States stateContainer = this.adaptation.createStateModels();
     // TODO: Work with state models instead of individual states.
 
-    // Initialize the simulation engine with a set of initial states.
-    final SimulationEngine engine =
-        new SimulationEngine(simulationStartTime, scheduledActivities, stateContainer);
-
     // Initialize a set of tables into which to store state samples periodically.
     // TODO: Work with state models instead of individual states.
     final List<Instant> timestamps = new ArrayList<>();
@@ -107,18 +104,14 @@ public final class Simulator<States extends StateContainer> {
     final List<List<SerializedParameter>> timelines = new ArrayList<>();
     for (final var _serializingState : serializingStates) timelines.add(new ArrayList<>());
 
+    // Simulate the entire plan to completion.
     // Sample all states periodically while simulation is occurring.
-    final Runnable sampler = () -> {
-      timestamps.add(engine.getCurrentSimulationTime());
+    SimulationEngine.simulate(simulationStartTime, scheduledActivities, stateContainer, SAMPLING_PERIOD_MS, (now) -> {
+      timestamps.add(now);
       for (int i = 0; i < serializingStates.size(); ++i) {
         timelines.get(i).add(serializingStates.get(i).get());
       }
-    };
-    engine.setSamplingHook(SAMPLING_PERIOD_MS, sampler);
-
-    // Simulate the entire plan to completion.
-    engine.run();
-    sampler.run();
+    });
 
     return new SimulationResults(timestamps, timelines);
   }

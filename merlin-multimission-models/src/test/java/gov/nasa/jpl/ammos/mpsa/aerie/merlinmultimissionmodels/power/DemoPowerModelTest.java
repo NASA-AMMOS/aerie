@@ -85,10 +85,9 @@ public class DemoPowerModelTest {
         };
 
         final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        final var engine = new SimulationEngine(
+        SimulationEngine.simulate(
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             demo.states);
-        engine.run();
     }
 }
