@@ -60,7 +60,7 @@ public class SimulationEngine {
     /**
      * A map of parent activity instances to their children
      */
-    private Map<Activity<?>, List<Activity<?>>> parentChildMap = new HashMap<>();
+    private Map<ActivityJob<?>, List<ActivityJob<?>>> parentChildMap = new HashMap<>();
 
     /**
      * A map of target activity to their listeners (activities that are blocking on
@@ -229,9 +229,10 @@ public class SimulationEngine {
 
     public void spawnActivityFromParent(final Activity<?> child, final Activity<?> parent) {
         final var childActivityJob = new ActivityJob<>(child);
+        final var parentActivityJob = this.activityToJobMap.get(parent);
 
-        this.parentChildMap.putIfAbsent(parent, new ArrayList<>());
-        this.parentChildMap.get(parent).add(child);
+        this.parentChildMap.putIfAbsent(parentActivityJob, new ArrayList<>());
+        this.parentChildMap.get(parentActivityJob).add(childActivityJob);
         this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, childActivityJob));
         this.activityToJobMap.put(child, childActivityJob);
     }
@@ -342,6 +343,7 @@ public class SimulationEngine {
         @Override
         public void waitForChild(Activity<?> childActivity) {
             final var childActivityJob = SimulationEngine.this.activityToJobMap.get(childActivity);
+
             // handle case where activity is already complete:
             // we don't want to block on it because we will never receive a notification that it is complete
             if (childActivityJob.getStatus() == ActivityJob.ActivityStatus.Complete) {
@@ -359,9 +361,9 @@ public class SimulationEngine {
         @Override
         public void waitForAllChildren() {
             final var children = SimulationEngine.this.parentChildMap
-                .getOrDefault(this.activityJob.getActivity(), Collections.emptyList());
+                .getOrDefault(this.activityJob, Collections.emptyList());
 
-            for (final var child : children) this.waitForChild(child);
+            for (final var child : children) this.waitForChild(child.getActivity());
         }
 
         /**
