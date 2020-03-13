@@ -50,6 +50,7 @@ def getArtifactoryUrl() {
 }
 
 def buildImages = []
+def imageNames = []
 
 pipeline {
 
@@ -161,13 +162,13 @@ pipeline {
             }
             steps {
                 script {
-                    def filenames = getDockerImageName(env.DOCKERFILE_DIR)
+                    imageNames = getDockerImageName(env.DOCKERFILE_DIR)
                     docker.withRegistry('https://cae-artifactory.jpl.nasa.gov:16001', '9db65bd3-f8f0-4de0-b344-449ae2782b86') {
-                        for (def file: filenames) {
-                            def tag_name="$ARTIFACT_PATH/$file:$DOCKER_TAG"
-                            def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${file}.Dockerfile --rm ." )
+                        for (def name: imageNames) {
+                            def tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
+                            def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm ." )
                             image.push()
-                            echo "file name is ${file}"
+                            buildImages.push(tag_name)
                         }
                     }
 
@@ -191,15 +192,16 @@ pipeline {
 
                         def filenames = getDockerImageName(env.DOCKERFILE_DIR)
                         docker.withRegistry(AWS_ECR){
-                            for (def file: filenames) {
-                                def old_tag_name="$ARTIFACT_PATH/$file:$DOCKER_TAG"
-                                def new_tag_name="$AWS_ECR_PATH/$file:$AWS_TAG"
+                            for (def name: imageNames) {
+                                def old_tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
+                                def new_tag_name="$AWS_ECR_PATH/$name:$AWS_TAG"
                                 def changeTagCmd = "docker tag $old_tag_name $new_tag_name"
                                 def pushCmd = "docker push $new_tag_name"
 
                                 // retag the image and push to aws
                                 sh changeTagCmd
                                 sh pushCmd
+                                buildImages.remove(old_tag_name)
                                 buildImages.push(new_tag_name)
                             }
                         }
