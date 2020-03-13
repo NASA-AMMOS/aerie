@@ -226,18 +226,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Removes a target-listener relationship from the engine's map of said relationships
-     * 
-     * @param target   the activity whose completion the listener is blocking
-     *                 against
-     * @param listener the activity that is blocked until the target's effect model
-     *                 completes
-     */
-    public void removeActivityListener(Activity<?> target, Activity<?> listener) {
-        this.activityListenerMap.get(target).remove(listener);
-    }
-
-    /**
      * Returns the activity job associated with a given activity
      * 
      * @param activity the `Activity` whose owning job is desired
@@ -386,7 +374,7 @@ public class SimulationEngine {
                 .getOrDefault(this.activityJob.getActivity(), Collections.emptySet());
 
             for (final var listener : listeners) {
-                SimulationEngine.this.removeActivityListener(this.activityJob.getActivity(), listener);
+                SimulationEngine.this.activityListenerMap.get(this.activityJob.getActivity()).remove(listener);
 
                 ActivityJob<?> listenerThread = SimulationEngine.this.getActivityJob(listener);
                 listenerThread.setEventTime(this.now());
