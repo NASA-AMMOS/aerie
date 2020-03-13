@@ -48,6 +48,11 @@ public class SimulationEngine {
     private Instant currentSimulationTime;
 
     /**
+     * The job to which any SimulationEffects calls shall be ascribed.
+     */
+    private ActivityJob<?> activeJob = null;
+
+    /**
      * The priority queue of time-ordered `ActivityJob`s
      */
     private PriorityQueue<Pair<Instant, ActivityJob<?>>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
@@ -175,7 +180,9 @@ public class SimulationEngine {
             }
 
             this.currentSimulationTime = eventTime;
+            this.activeJob = job;
             this.executeActivity(job);
+            this.activeJob = null;
         }
 
         if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
@@ -202,7 +209,7 @@ public class SimulationEngine {
 
         switch (activityJob.getStatus()) {
         case NotStarted:
-            activityJob.setContext(new JobContext(activityJob));
+            activityJob.setContext(new JobContext());
             activityJob.setStates(this.stateContainer);
             channel = new ControlChannel();
             activityJob.setChannel(channel);
@@ -221,15 +228,35 @@ public class SimulationEngine {
         channel.takeControl();
     }
 
-    private ActivityJob<?> spawnActivityFromParent(final Activity<?> child, final ActivityJob<?> parentActivityJob) {
+    private ActivityJob<?> spawnActivity(final Activity<?> child) {
         final var childActivityJob = new ActivityJob<>(child);
 
-        this.parentChildMap.putIfAbsent(parentActivityJob, new ArrayList<>());
-        this.parentChildMap.get(parentActivityJob).add(childActivityJob);
+        this.parentChildMap.putIfAbsent(this.activeJob, new ArrayList<>());
+        this.parentChildMap.get(this.activeJob).add(childActivityJob);
 
         this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, childActivityJob));
 
         return childActivityJob;
+    }
+
+    private void delay(final Instant resumeTime) {
+        if (resumeTime.isBefore(this.currentSimulationTime)) {
+            throw new IllegalArgumentException("Resumption time must occur in the future");
+        }
+
+        this.pendingEventQueue.add(Pair.of(resumeTime, this.activeJob));
+        this.activeJob.suspend();
+    }
+
+    private void waitForActivity(final ActivityJob<?> jobToAwait) {
+        // handle case where activity is already complete:
+        // we don't want to block on it because we will never receive a notification that it is complete
+        if (jobToAwait.getStatus() == ActivityJob.ActivityStatus.Complete) return;
+
+        this.activityListenerMap
+            .computeIfAbsent(jobToAwait, (_k) -> new HashSet<>())
+            .add(this.activeJob);
+        this.activeJob.suspend();
     }
 
     /**
@@ -244,15 +271,6 @@ public class SimulationEngine {
      */
     public final class JobContext implements SimulationContext {
         /**
-         * A reference to the activity job to which this context was dispatched
-         */
-        private final ActivityJob<?> activityJob;
-
-        private JobContext(ActivityJob<?> activityJob) {
-            this.activityJob = activityJob;
-        }
-
-        /**
          * Delays an activity job's thread's execution for some duration `d`
          *
          * This operation alters the event time of the activity job, re-inserts it into the engine's pending event
@@ -260,14 +278,9 @@ public class SimulationEngine {
          * and resumes it.
          */
         @Override
-        public void delay(Duration d) {
-            if (d.isNegative()) {
-                throw new IllegalArgumentException("Duration `d` must be non-negative");
-            }
-            final var resumeTime = SimulationEngine.this.currentSimulationTime.plus(d);
-
-            SimulationEngine.this.pendingEventQueue.add(Pair.of(resumeTime, activityJob));
-            this.activityJob.suspend();
+        public void delay(final Duration d) {
+            if (d.isNegative()) throw new IllegalArgumentException("Duration `d` must be non-negative");
+            SimulationEngine.this.delay(SimulationEngine.this.currentSimulationTime.plus(d));
         }
 
         /**
@@ -279,12 +292,7 @@ public class SimulationEngine {
          */
         @Override
         public void delayUntil(final Instant resumeTime) {
-            if (resumeTime.isBefore(this.now())) {
-                throw new IllegalArgumentException("Time `t` must occur in the future");
-            }
-
-            SimulationEngine.this.pendingEventQueue.add(Pair.of(resumeTime, activityJob));
-            this.activityJob.suspend();
+            SimulationEngine.this.delay(resumeTime);
         }
 
         /**
@@ -300,12 +308,12 @@ public class SimulationEngine {
          */
         @Override
         public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
-            final var childActivityJob = SimulationEngine.this.spawnActivityFromParent(childActivity, this.activityJob);
+            final var childActivityJob = SimulationEngine.this.spawnActivity(childActivity);
 
-            return new SpawnedActivityHandle() {
+            return new SimulationContext.SpawnedActivityHandle() {
                 @Override
                 public void await() {
-                    JobContext.this.waitForActivity(childActivityJob);
+                    SimulationEngine.this.waitForActivity(childActivityJob);
                 }
             };
         }
@@ -333,20 +341,9 @@ public class SimulationEngine {
         @Override
         public void waitForAllChildren() {
             final var children = SimulationEngine.this.parentChildMap
-                .getOrDefault(this.activityJob, Collections.emptyList());
+                .getOrDefault(SimulationEngine.this.activeJob, Collections.emptyList());
 
-            for (final var child : children) this.waitForActivity(child);
-        }
-
-        private void waitForActivity(final ActivityJob<?> job) {
-            // handle case where activity is already complete:
-            // we don't want to block on it because we will never receive a notification that it is complete
-            if (job.getStatus() == ActivityJob.ActivityStatus.Complete) return;
-
-            SimulationEngine.this.activityListenerMap
-                .computeIfAbsent(job, (_k) -> new HashSet<>())
-                .add(this.activityJob);
-            this.activityJob.suspend();
+            for (final var child : children) SimulationEngine.this.waitForActivity(child);
         }
 
         /**
@@ -356,11 +353,11 @@ public class SimulationEngine {
          */
         public void notifyActivityListeners() {
             final var listeners = SimulationEngine.this.activityListenerMap
-                .getOrDefault(this.activityJob, Collections.emptySet());
+                .getOrDefault(SimulationEngine.this.activeJob, Collections.emptySet());
 
             for (final var listener : listeners) {
                 SimulationEngine.this.activityListenerMap
-                    .get(this.activityJob)
+                    .get(SimulationEngine.this.activeJob)
                     .remove(listener);
 
                 SimulationEngine.this.pendingEventQueue
