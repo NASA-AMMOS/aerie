@@ -204,7 +204,7 @@ public class SimulationEngine {
 
         switch (activityJob.getStatus()) {
         case NotStarted:
-            activityJob.setContext(new JobContext(this, activityJob));
+            activityJob.setContext(new JobContext(activityJob));
             activityJob.setStates(this.stateContainer);
             channel = new ControlChannel();
             activityJob.setChannel(channel);
@@ -301,5 +301,160 @@ public class SimulationEngine {
      */
     public List<Activity<?>> getActivityChildren(Activity<?> activity) {
         return Collections.unmodifiableList(parentChildMap.getOrDefault(activity, Collections.emptyList()));
+    }
+
+    /**
+     * Functions as a bridge between the simulation engine and an activity job
+     *
+     * The `JobContext` is designed to manage the interaction between the `SimulationEngine` and `ActivityJob`
+     * objects, allowing for operations like spawning children or delaying effect models from within activities and
+     * and ensuring that those operations correctly bubble up to the engine level. This class is also injected into an
+     * activity's effect model but under the `SimulationContext` interface. This is to ensure that certain job/thread and
+     * engine behaviors (like adding listeners) are exposed to the `ActivityJob` class but NOT to adapters in their
+     * effect models.
+     */
+    public final class JobContext implements SimulationContext {
+        /**
+         * A reference to the activity job to which this context was dispatched
+         */
+        private final ActivityJob<?> activityJob;
+
+        private JobContext(ActivityJob<?> activityJob) {
+            this.activityJob = activityJob;
+        }
+
+        /**
+         * Delays an activity job's thread's execution for some duration `d`
+         *
+         * This operation alters the event time of the activity job, re-inserts it into the engine's pending event
+         * queue, and suspends the job's thread. The thread blocks until the engine de-queues it in future simulation time
+         * and resumes it.
+         */
+        @Override
+        public void delay(Duration d) {
+            if (d.isNegative()) {
+                throw new IllegalArgumentException("Duration `d` must be non-negative");
+            }
+            this.activityJob.setEventTime(this.activityJob.getEventTime().plus(d));
+            SimulationEngine.this.insertIntoQueue(this.activityJob);
+            this.activityJob.suspend();
+        }
+
+        /**
+         * Delays an activity job's thread's execution until some time `t`
+         *
+         * This operation alters the event time of the activity job, re-inserts it into the engine's pending event
+         * queue, and suspends the job's thread. The thread blocks until the engine de-queues it in future simulation time
+         * and resumes it.
+         */
+        @Override
+        public void delayUntil(Instant t) {
+            if (t.isBefore(this.now())) {
+                throw new IllegalArgumentException("Time `t` must occur in the future");
+            }
+            this.activityJob.setEventTime(t);
+            SimulationEngine.this.insertIntoQueue(this.activityJob);
+            this.activityJob.suspend();
+        }
+
+        /**
+         * Spawns a child activity in the background
+         *
+         * This method will create an `ActivityJob` for the given `childActivity` and insert it into the engine's pending
+         * event queue at the current simulation time. It also registers the spawning and spawned job as parent and
+         * child, respectively, within the engine's map. This method does NOT block until the child's effect model is
+         * complete. If that behavior is desired, see `callActivity()`.
+         *
+         * This method returns the input `childActivity` to allow the user to instantiate the activity in-line with the
+         * spawn call, store the activity in a variable, and block on it later if desirable.
+         *
+         * @param childActivity the child activity that should be spawned in the background at the current simulation time
+         * @return the input child activity
+         */
+        @Override
+        public <T extends StateContainer> Activity<T> spawnActivity(final Activity<T> childActivity) {
+            SimulationEngine.this.spawnActivityFromParent(childActivity, this.activityJob.getActivity());
+            return childActivity;
+        }
+
+        /**
+         * Spawns a child activity and blocks on the completion of its effect model
+         *
+         * This method will create an `ActivityJob` for the given `childActivity` and insert it into the engine's pending
+         * event queue at the current simulation time. It registers this activity job as a listener on the child job,
+         * and it will block on the child activity until the child's effect model is complete. It also registers the
+         * spawning and spawned job as parent and child, respectively, within the engine's map.
+         *
+         * If non-blocking behavior is desired, see `spawnActivity()`.
+         *
+         * This method returns the input `childActivity` to allow the user to instantiate the activity in-line with the
+         * `callActivity()` call and store it in a variable for later usage.
+         *
+         * @param childActivity the child activity that should be spawned and blocked on
+         * @return the input child activity
+         */
+        @Override
+        public <T extends StateContainer> Activity<T> callActivity(final Activity<T> childActivity) {
+            this.spawnActivity(childActivity);
+            this.waitForChild(childActivity);
+            return childActivity;
+        }
+
+        /**
+         * Blocks a parent activity job on the completion of a child's effect model
+         *
+         * @param childActivity the target activity on which to block
+         */
+        @Override
+        public void waitForChild(Activity<?> childActivity) {
+            ActivityJob<?> childActivityJob = SimulationEngine.this.getActivityJob(childActivity);
+            // handle case where activity is already complete:
+            // we don't want to block on it because we will never receive a notification that it is complete
+            if (childActivityJob.getStatus() == ActivityJob.ActivityStatus.Complete) {
+                return;
+            }
+            SimulationEngine.this.addActivityListener(childActivity, this.activityJob.getActivity());
+            this.activityJob.suspend();
+        }
+
+        /**
+         * Blocks a parent activity thread on the completion of all of its children
+         */
+        @Override
+        public void waitForAllChildren() {
+            for (Activity<?> child: SimulationEngine.this.getActivityChildren(this.activityJob.getActivity())) {
+                this.waitForChild(child);
+            }
+        }
+
+        /**
+         * Notifies an activity job's listeners that it has completed
+         *
+         * This also currently yields control to listeners to their effect models to continue.
+         *
+         * TODO: we may want to refactor this and allow for generic listener behavior
+         */
+        public void notifyActivityListeners() {
+            for (Activity<?> listener: SimulationEngine.this.getActivityListeners(this.activityJob.getActivity())) {
+                SimulationEngine.this.removeActivityListener(this.activityJob.getActivity(), listener);
+
+                ActivityJob<?> listenerThread = SimulationEngine.this.getActivityJob(listener);
+                listenerThread.setEventTime(this.now());
+
+                ControlChannel channel = listenerThread.getChannel();
+                channel.yieldControl();
+                channel.takeControl();
+            }
+        }
+
+        /**
+         * Returns the engine's current simulation time
+         *
+         * @return current simulation time
+         */
+        @Override
+        public Instant now() {
+            return SimulationEngine.this.getCurrentSimulationTime();
+        }
     }
 }

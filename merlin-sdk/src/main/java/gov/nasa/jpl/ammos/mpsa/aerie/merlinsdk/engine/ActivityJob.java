@@ -2,13 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class ActivityJob<T extends StateContainer> implements Comparable<ActivityJob<T>> {
 
@@ -36,7 +30,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
      * Serves as a bridge between this job and the engine. It is passed down to the activity's effect model as the
      * `SimulationContext` type to prevent adapter access to certain engine-related methods.
      */
-    private JobContext ctx;
+    private SimulationEngine.JobContext ctx;
 
     /**
      * A means of synchronously passing execution control between this job's thread and others (primarily the engine).
@@ -101,7 +95,7 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         return this.activity;
     }
 
-    public void setContext(JobContext ctx) {
+    public void setContext(SimulationEngine.JobContext ctx) {
         this.ctx = ctx;
     }
 
