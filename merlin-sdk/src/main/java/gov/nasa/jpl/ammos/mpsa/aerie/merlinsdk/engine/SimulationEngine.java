@@ -267,17 +267,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Returns a list of child activities for a given parent (or null if no children
-     * exist)
-     * 
-     * @param activity the parent activity
-     * @return the list of child activities
-     */
-    public List<Activity<?>> getActivityChildren(Activity<?> activity) {
-        return Collections.unmodifiableList(parentChildMap.getOrDefault(activity, Collections.emptyList()));
-    }
-
-    /**
      * Functions as a bridge between the simulation engine and an activity job
      *
      * The `JobContext` is designed to manage the interaction between the `SimulationEngine` and `ActivityJob`
@@ -398,9 +387,10 @@ public class SimulationEngine {
          */
         @Override
         public void waitForAllChildren() {
-            for (Activity<?> child: SimulationEngine.this.getActivityChildren(this.activityJob.getActivity())) {
-                this.waitForChild(child);
-            }
+            final var children = SimulationEngine.this.parentChildMap
+                .getOrDefault(this.activityJob.getActivity(), Collections.emptyList());
+
+            for (final var child : children) this.waitForChild(child);
         }
 
         /**
