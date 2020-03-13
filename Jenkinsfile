@@ -213,11 +213,14 @@ pipeline {
 
     post {
         always {
-            println(buildImages)
-            for (def image: buildImages) {
-                def removeCmd = "docker rmi $image"
-                sh removeCmd
+            script {
+                println(buildImages)
+                for (def image: buildImages) {
+                    def removeCmd = "docker rmi $image"
+                    sh removeCmd
+                }
             }
+
             echo 'Cleaning up images'
             sh "docker image prune -f"
 
