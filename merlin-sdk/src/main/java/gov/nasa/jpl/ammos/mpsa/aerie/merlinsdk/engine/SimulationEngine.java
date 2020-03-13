@@ -53,11 +53,6 @@ public class SimulationEngine {
     private PriorityQueue<Pair<Instant, ActivityJob<?>>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     /**
-     * A map of activity instances to their owning jobs
-     */
-    private Map<Activity<?>, ActivityJob<?>> activityToJobMap = new HashMap<>();
-
-    /**
      * A map of parent activity instances to their children
      */
     private Map<ActivityJob<?>, List<ActivityJob<?>>> parentChildMap = new HashMap<>();
@@ -116,7 +111,6 @@ public class SimulationEngine {
             final var job = new ActivityJob<>(activity);
 
             this.pendingEventQueue.add(Pair.of(startTime, job));
-            this.activityToJobMap.put(activity, job);
         }
     }
 
@@ -227,14 +221,15 @@ public class SimulationEngine {
         channel.takeControl();
     }
 
-    public void spawnActivityFromParent(final Activity<?> child, final Activity<?> parent) {
+    private ActivityJob<?> spawnActivityFromParent(final Activity<?> child, final ActivityJob<?> parentActivityJob) {
         final var childActivityJob = new ActivityJob<>(child);
-        final var parentActivityJob = this.activityToJobMap.get(parent);
 
         this.parentChildMap.putIfAbsent(parentActivityJob, new ArrayList<>());
         this.parentChildMap.get(parentActivityJob).add(childActivityJob);
+
         this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, childActivityJob));
-        this.activityToJobMap.put(child, childActivityJob);
+
+        return childActivityJob;
     }
 
     /**
@@ -305,12 +300,11 @@ public class SimulationEngine {
          */
         @Override
         public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
-            SimulationEngine.this.spawnActivityFromParent(childActivity, this.activityJob.getActivity());
+            final var childActivityJob = SimulationEngine.this.spawnActivityFromParent(childActivity, this.activityJob);
 
             return new SpawnedActivityHandle() {
                 @Override
                 public void await() {
-                    final var childActivityJob = SimulationEngine.this.activityToJobMap.get(childActivity);
                     JobContext.this.waitForActivity(childActivityJob);
                 }
             };
