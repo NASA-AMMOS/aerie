@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This class contains the core event loop of a simulation in which activities
@@ -48,7 +50,7 @@ public class SimulationEngine {
     /**
      * The priority queue of time-ordered `ActivityJob`s
      */
-    private PriorityQueue<ActivityJob<?>> pendingEventQueue = new PriorityQueue<>();
+    private PriorityQueue<Pair<Instant, ActivityJob<?>>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     /**
      * A map of activity instances to their owning jobs
@@ -104,7 +106,7 @@ public class SimulationEngine {
         }
 
         for (ActivityJob<?> job : activityJobs) {
-            this.pendingEventQueue.add(job);
+            this.pendingEventQueue.add(Pair.of(job.getEventTime(), job));
             this.activityToJobMap.put(job.getActivity(), job);
         }
     }
@@ -155,8 +157,9 @@ public class SimulationEngine {
 
         // Run until we've handled all outstanding activity events.
         while (!this.pendingEventQueue.isEmpty()) {
-            final ActivityJob<?> job = pendingEventQueue.remove();
-            final var eventTime = job.getEventTime();
+            final var event = pendingEventQueue.remove();
+            final var eventTime = event.getLeft();
+            final var job = event.getRight();
 
             // Handle all of the sampling events that occur before the next activity event.
             if (this.samplingPeriod.isPositive()) {
@@ -222,7 +225,7 @@ public class SimulationEngine {
 
         this.parentChildMap.putIfAbsent(parent, new ArrayList<>());
         this.parentChildMap.get(parent).add(child);
-        this.pendingEventQueue.add(childActivityJob);
+        this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, childActivityJob));
         this.activityToJobMap.put(child, childActivityJob);
     }
 
@@ -258,8 +261,10 @@ public class SimulationEngine {
             if (d.isNegative()) {
                 throw new IllegalArgumentException("Duration `d` must be non-negative");
             }
-            this.activityJob.setEventTime(this.activityJob.getEventTime().plus(d));
-            SimulationEngine.this.pendingEventQueue.add(activityJob);
+            final var resumeTime = SimulationEngine.this.currentSimulationTime.plus(d);
+
+            this.activityJob.setEventTime(resumeTime);
+            SimulationEngine.this.pendingEventQueue.add(Pair.of(resumeTime, activityJob));
             this.activityJob.suspend();
         }
 
@@ -271,12 +276,12 @@ public class SimulationEngine {
          * and resumes it.
          */
         @Override
-        public void delayUntil(Instant t) {
-            if (t.isBefore(this.now())) {
+        public void delayUntil(final Instant resumeTime) {
+            if (resumeTime.isBefore(this.now())) {
                 throw new IllegalArgumentException("Time `t` must occur in the future");
             }
-            this.activityJob.setEventTime(t);
-            SimulationEngine.this.pendingEventQueue.add(activityJob);
+            this.activityJob.setEventTime(resumeTime);
+            SimulationEngine.this.pendingEventQueue.add(Pair.of(resumeTime, activityJob));
             this.activityJob.suspend();
         }
 

@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-public class ActivityJob<T extends StateContainer> implements Comparable<ActivityJob<T>> {
+public class ActivityJob<T extends StateContainer> {
 
     // TODO: detach threads for garbage collection?
 
@@ -77,14 +77,6 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
     public synchronized void suspend() {
         this.channel.yieldControl();
         this.channel.takeControl();
-    }
-    
-    /**
-     * Compares `ActivityJob` objects by their event times
-     */
-    @Override
-    public int compareTo(ActivityJob<T> other) {
-        return this.eventTime.compareTo(other.eventTime);
     }
 
     public Instant getEventTime() {
