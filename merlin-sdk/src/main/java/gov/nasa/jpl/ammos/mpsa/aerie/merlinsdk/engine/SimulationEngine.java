@@ -204,28 +204,35 @@ public class SimulationEngine {
      * 
      * @param activityJob the activity job to start or resume
      */
-    private void executeActivity(ActivityJob<?> activityJob) {
-        ControlChannel channel;
-
-        switch (activityJob.getStatus()) {
+    private <T extends StateContainer> void executeActivity(ActivityJob<T> activityJob) {
+        switch (activityJob.status) {
         case NotStarted:
-            activityJob.setContext(new JobContext());
-            activityJob.setStates(this.stateContainer);
-            channel = new ControlChannel();
-            activityJob.setChannel(channel);
+            final var ctx = new JobContext();
 
-            threadPool.execute(activityJob::execute);
+            threadPool.execute(() -> {
+                activityJob.channel.takeControl();
+
+                activityJob.status = ActivityJob.ActivityStatus.InProgress;
+                SimulationEffects.withEffects(ctx, () -> {
+                    activityJob.activity.modelEffects((T) this.stateContainer);
+                    SimulationEffects.waitForChildren();
+                });
+                activityJob.status = ActivityJob.ActivityStatus.Complete;
+
+                ctx.notifyActivityListeners();
+                activityJob.channel.yieldControl();
+            });
             break;
         case InProgress:
-            channel = activityJob.getChannel();
             break;
         case Complete:
             throw new IllegalStateException("Completed activity is somehow in the pending event queue.");
         default:
             throw new IllegalStateException("Unknown activity status");
         }
-        channel.yieldControl();
-        channel.takeControl();
+
+        activityJob.channel.yieldControl();
+        activityJob.channel.takeControl();
     }
 
     private ActivityJob<?> spawnActivity(final Activity<?> child) {
@@ -245,18 +252,20 @@ public class SimulationEngine {
         }
 
         this.pendingEventQueue.add(Pair.of(resumeTime, this.activeJob));
-        this.activeJob.suspend();
+        this.activeJob.channel.yieldControl();
+        this.activeJob.channel.takeControl();
     }
 
     private void waitForActivity(final ActivityJob<?> jobToAwait) {
         // handle case where activity is already complete:
         // we don't want to block on it because we will never receive a notification that it is complete
-        if (jobToAwait.getStatus() == ActivityJob.ActivityStatus.Complete) return;
+        if (jobToAwait.status == ActivityJob.ActivityStatus.Complete) return;
 
         this.activityListenerMap
             .computeIfAbsent(jobToAwait, (_k) -> new HashSet<>())
             .add(this.activeJob);
-        this.activeJob.suspend();
+        this.activeJob.channel.yieldControl();
+        this.activeJob.channel.takeControl();
     }
 
     /**
