@@ -115,7 +115,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
     }
 
     /* --------------------------- TIME-ORDERING TEST --------------------------- */
@@ -154,7 +154,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -194,7 +194,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -241,7 +241,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -287,7 +287,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
         Instant queryTime = parentExecutionTime.plus(2, TimeUnit.HOURS);
@@ -325,7 +325,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
 
         assertEquals(Duration.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(act));
     }
@@ -377,7 +377,7 @@ public class SimulationEngineTests {
         DiverseStates states = new DiverseStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, actList, states);
-        engine.simulate();
+        engine.run();
 
         assertEquals(Duration.fromQuantity(10, TimeUnit.SECONDS), engine.getActivityDuration(parent));
     }

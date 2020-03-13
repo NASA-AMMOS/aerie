@@ -138,7 +138,7 @@ public class SimulationEngine {
      * 
      * See the class-level docs for more information.
      */
-    public void simulate() {
+    public void run() {
         var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.

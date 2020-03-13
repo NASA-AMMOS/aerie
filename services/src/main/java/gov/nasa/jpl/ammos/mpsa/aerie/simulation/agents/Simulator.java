@@ -117,7 +117,7 @@ public final class Simulator<States extends StateContainer> {
     engine.setSamplingHook(SAMPLING_PERIOD_MS, sampler);
 
     // Simulate the entire plan to completion.
-    engine.simulate();
+    engine.run();
     sampler.run();
 
     return new SimulationResults(timestamps, timelines);

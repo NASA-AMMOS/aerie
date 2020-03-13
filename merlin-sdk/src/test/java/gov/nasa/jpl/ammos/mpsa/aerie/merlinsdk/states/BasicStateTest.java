@@ -24,11 +24,15 @@ public class BasicStateTest {
         };
 
         final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        SimulationEngine.run(
+            startTime,
+            List.of(new ActivityJob<>(activity, startTime)),
+            () -> List.of(state));
         final var engine = new SimulationEngine(
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -47,7 +51,7 @@ public class BasicStateTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 }
 

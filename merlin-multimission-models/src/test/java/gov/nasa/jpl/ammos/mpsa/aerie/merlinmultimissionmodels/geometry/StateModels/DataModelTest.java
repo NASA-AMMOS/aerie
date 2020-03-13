@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.I
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -105,7 +104,7 @@ public class DataModelTest {
 
         SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
 
-        engine.simulate();
+        engine.run();
 
         System.out.println(engine.getCurrentSimulationTime());
 
@@ -128,7 +127,7 @@ public class DataModelTest {
         DataModelStates states = new DataModelStates();
 
         SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
+        engine.run();
 
         states.bin_1.printHistory();
         states.bin_2.printHistory();
@@ -163,7 +162,7 @@ public class DataModelTest {
         activityJobList.add(instrumentOn);
 
         SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
+        engine.run();
 
         states.bin_1.printHistory();
         states.bin_2.printHistory();
@@ -200,7 +199,7 @@ public class DataModelTest {
         DataModelStates states = new DataModelStates();
 
         SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
+        engine.run();
 
         states.bin_1.printHistory();
         states.bin_2.printHistory();

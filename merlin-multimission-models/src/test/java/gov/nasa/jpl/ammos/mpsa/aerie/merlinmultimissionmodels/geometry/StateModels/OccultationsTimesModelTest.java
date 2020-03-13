@@ -192,6 +192,6 @@ public class OccultationsTimesModelTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(earthMoonSunOccultationsModel));
-        engine.simulate();
+        engine.run();
     }
 }

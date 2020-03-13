@@ -44,7 +44,7 @@ public class InstrumentPowerTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -63,7 +63,7 @@ public class InstrumentPowerTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -86,6 +86,6 @@ public class InstrumentPowerTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 }

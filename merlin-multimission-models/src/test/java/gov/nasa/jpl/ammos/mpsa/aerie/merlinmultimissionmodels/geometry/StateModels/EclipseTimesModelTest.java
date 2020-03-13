@@ -184,6 +184,6 @@ public class EclipseTimesModelTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(eclipseModel));
-        engine.simulate();
+        engine.run();
     }
 }

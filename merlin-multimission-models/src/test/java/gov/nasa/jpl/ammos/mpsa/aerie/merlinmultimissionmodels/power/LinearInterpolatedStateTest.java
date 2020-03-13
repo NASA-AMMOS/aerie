@@ -57,7 +57,7 @@ public class LinearInterpolatedStateTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -75,7 +75,7 @@ public class LinearInterpolatedStateTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -93,7 +93,7 @@ public class LinearInterpolatedStateTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -111,7 +111,7 @@ public class LinearInterpolatedStateTest {
             simStart.plus(10, TimeUnit.SECONDS),
             List.of(new ActivityJob<>(activity, simStart.plus(10, TimeUnit.SECONDS))),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -129,6 +129,6 @@ public class LinearInterpolatedStateTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 }

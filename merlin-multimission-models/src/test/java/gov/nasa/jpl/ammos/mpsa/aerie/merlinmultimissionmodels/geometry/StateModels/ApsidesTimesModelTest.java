@@ -141,6 +141,6 @@ public class ApsidesTimesModelTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(earthSunApsidesModel));
-        engine.simulate();
+        engine.run();
     }
 }

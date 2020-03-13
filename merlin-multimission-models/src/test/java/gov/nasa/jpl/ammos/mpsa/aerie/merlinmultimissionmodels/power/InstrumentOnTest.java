@@ -88,6 +88,6 @@ public class InstrumentOnTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(powerState));
-        engine.simulate();
+        engine.run();
     }
 }

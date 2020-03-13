@@ -38,7 +38,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -58,7 +58,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -81,7 +81,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -105,7 +105,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -129,7 +129,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -172,6 +172,6 @@ public class InstrumentPowerRandomAccessTest {
             startTime,
             List.of(new ActivityJob<>(activity, startTime)),
             () -> List.of(state));
-        engine.simulate();
+        engine.run();
     }
 }

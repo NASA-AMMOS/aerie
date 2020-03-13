@@ -89,6 +89,6 @@ public class DemoPowerModelTest {
             simStart,
             List.of(new ActivityJob<>(activity, simStart)),
             demo.states);
-        engine.simulate();
+        engine.run();
     }
 }

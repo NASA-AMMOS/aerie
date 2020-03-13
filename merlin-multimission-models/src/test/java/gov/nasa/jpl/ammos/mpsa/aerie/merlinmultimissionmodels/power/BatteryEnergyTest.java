@@ -77,7 +77,7 @@ public class BatteryEnergyTest {
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.simulate();
+        engine.run();
     }
 
 
@@ -99,7 +99,7 @@ public class BatteryEnergyTest {
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.simulate();
+        engine.run();
     }
 
 
@@ -122,7 +122,7 @@ public class BatteryEnergyTest {
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -146,7 +146,7 @@ public class BatteryEnergyTest {
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.simulate();
+        engine.run();
     }
 
     @Test
@@ -167,6 +167,6 @@ public class BatteryEnergyTest {
             t2020,
             List.of(new ActivityJob<>(activity, t2020)),
             () -> List.of(chargeState_J));
-        engine.simulate();
+        engine.run();
     }
 }

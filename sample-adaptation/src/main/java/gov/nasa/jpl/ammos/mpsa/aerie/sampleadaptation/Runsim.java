@@ -19,7 +19,7 @@ public class Runsim {
         SampleMissionStates sampleMissionStates = new SampleMissionStates(config);
 
         SimulationEngine engine = new SimulationEngine(simStartTime, plan, sampleMissionStates);
-        engine.simulate();
+        engine.run();
 
         // note that this currently doesn't have the initial value since that isn't stored in the history
         Map<Instant, InstrumentMode> modeHistory = sampleMissionStates.instrumentMode.getHistory();
