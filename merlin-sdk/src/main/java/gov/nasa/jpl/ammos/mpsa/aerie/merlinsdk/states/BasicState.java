@@ -42,6 +42,7 @@ public class BasicState<T> implements SettableState<T> {
      * @param value default value of the state absent any initial conditions
      */
     public BasicState(String name, T value) {
+        this.name = name;
         this.value = value;
     }
 
@@ -90,7 +91,7 @@ public class BasicState<T> implements SettableState<T> {
 
 
     @Override
-    public String getName() { return this.getName(); }
+    public String getName() { return this.name; }
 
     /**
      * this is a temporary method in order to integrate w/ the current SimulationEngine

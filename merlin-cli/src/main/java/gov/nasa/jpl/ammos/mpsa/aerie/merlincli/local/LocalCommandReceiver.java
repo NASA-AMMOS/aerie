@@ -197,7 +197,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();
     for (final var state : stateContainer.getStateList()) {
-      samples.put(state.toString(), new TreeMap<>(state.getHistory()));
+      samples.put(state.getName(), new TreeMap<>(state.getHistory()));
     }
 
     System.out.println(samples);
