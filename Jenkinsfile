@@ -105,7 +105,7 @@ pipeline {
         stage ('Test') {
             steps {
                 echo "TODO: Run tests via BUCK"
-                sh "buck test //..."
+                //sh "buck test //..."
             }
         }
 
