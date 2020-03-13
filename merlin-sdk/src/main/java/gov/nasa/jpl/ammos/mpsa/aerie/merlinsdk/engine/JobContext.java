@@ -34,7 +34,7 @@ public class JobContext implements SimulationContext {
 
     /**
      * Returns this context's activityJob
-     * 
+     *
      * @return
      */
     public ActivityJob<?> getActivityJob() {
@@ -180,14 +180,4 @@ public class JobContext implements SimulationContext {
     public Instant now() {
         return this.engine.getCurrentSimulationTime();
     }
-
-    /**
-     * Logs the duration of an activity instance in the engine's map of activities and durations
-     * 
-     * @param d the length in simulation time of the activity's effect model
-     */
-    public void logActivityDuration(Duration d) {
-        this.engine.logActivityDuration(this.activityJob.getActivity(), d);
-    }
-
 }

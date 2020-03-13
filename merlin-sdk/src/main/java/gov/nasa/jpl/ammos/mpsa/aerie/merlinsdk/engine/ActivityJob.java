@@ -67,18 +67,13 @@ public class ActivityJob<T extends StateContainer> implements Comparable<Activit
         this.channel.takeControl();
 
         this.status = ActivityStatus.InProgress;
-        Instant startTime = this.ctx.now();
-
         SimulationEffects.withEffects(this.ctx, () -> {
             activity.modelEffects((T) this.stateContainer);
             SimulationEffects.waitForChildren();
         });
         this.status = ActivityStatus.Complete;
 
-        Duration activityDuration = this.ctx.now().durationFrom(startTime);
-        this.ctx.logActivityDuration(activityDuration);
         this.ctx.notifyActivityListeners();
-        
         this.channel.yieldControl();
     }
 

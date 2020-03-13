@@ -61,12 +61,6 @@ public class SimulationEngine {
     private Map<Activity<?>, List<Activity<?>>> parentChildMap = new HashMap<>();
 
     /**
-     * A map of activity instances to their durations (the length of the effect
-     * model in simulation time)
-     */
-    private Map<Activity<?>, Duration> activityDurationMap = new HashMap<>();
-
-    /**
      * A map of target activity to their listeners (activities that are blocking on
      * the target's completion)
      */
@@ -325,27 +319,4 @@ public class SimulationEngine {
     public List<Activity<?>> getActivityChildren(Activity<?> activity) {
         return Collections.unmodifiableList(parentChildMap.getOrDefault(activity, Collections.emptyList()));
     }
-
-    /**
-     * Logs the duration of an activity instance in the engine's map of activities
-     * and durations
-     * 
-     * @param activity the activity instance modeled in the simulation
-     * @param d        the length in simulation time of the activity's effect model
-     */
-    public void logActivityDuration(Activity<?> activity, Duration d) {
-        this.activityDurationMap.put(activity, d);
-    }
-
-    /**
-     * Returns the duration of an activity instance from the engine's map of
-     * activities and durations
-     * 
-     * @param activity the activity instance whose duration is desired
-     * @return the length in simulation time of that activity's effect model
-     */
-    public Duration getActivityDuration(Activity<?> activity) {
-        return this.activityDurationMap.get(activity);
-    }
-
 }
