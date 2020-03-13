@@ -202,6 +202,15 @@ pipeline {
                                 buildImages.remove(old_tag_name)
                                 buildImages.push(new_tag_name)
                             }
+                            sleep 5
+                            try {
+                                sh '''
+                                aws ecs stop-task --cluster "aerie-${AWS_TAG}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${AWS_TAG}-cluster" --output text --query taskArns[0])
+                                '''
+                            } catch (Exception e) {
+                                echo "Restarting failed since the task does not exist."
+                                echo e.getMessage()
+                            }
                         }
                     }
                 }
