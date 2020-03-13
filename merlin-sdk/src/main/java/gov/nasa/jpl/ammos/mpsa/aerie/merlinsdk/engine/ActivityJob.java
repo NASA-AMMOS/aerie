@@ -2,24 +2,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-public class ActivityJob<T extends StateContainer> {
+class ActivityJob<T extends StateContainer> {
 
     // TODO: detach threads for garbage collection?
 
     public enum ActivityStatus {
         NotStarted, InProgress, Complete
     }
-
-    /**
-     * The start or resumption time of the effect model owned by this job.
-     * 
-     * At instantiation: the start time of the activity. Upon delays, this field is updated to reflect the resumption
-     * time so that it may be re-inserted into the engine's pending event queue at the appropriate wake-up time. This 
-     * value is the index by which the engine's priority queue orders activities.
-     */
-    private Instant eventTime;
 
     /**
      * The activity instance that this job "owns"
@@ -44,9 +34,8 @@ public class ActivityJob<T extends StateContainer> {
 
     private ActivityStatus status = ActivityStatus.NotStarted;
 
-    public ActivityJob(Activity<T> activityInstance, Instant startTime) {
+    public ActivityJob(Activity<T> activityInstance) {
         this.activity = activityInstance;
-        this.eventTime = startTime;
     }
 
     /**
@@ -79,20 +68,12 @@ public class ActivityJob<T extends StateContainer> {
         this.channel.takeControl();
     }
 
-    public Instant getEventTime() {
-        return this.eventTime;
-    }
-
     public Activity<T> getActivity() {
         return this.activity;
     }
 
     public void setContext(SimulationEngine.JobContext ctx) {
         this.ctx = ctx;
-    }
-
-    public void setEventTime(Instant t) {
-        this.eventTime = t;
     }
 
     public ControlChannel getChannel() {

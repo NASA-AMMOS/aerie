@@ -7,12 +7,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.Activities.Tu
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.OnboardDataModelStates;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -30,10 +30,9 @@ public class DataModelActivitiesTest {
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         //1. create activities and add to job list
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binInitJob);
+        final List<Pair<Instant, ? extends Activity<OnboardDataModelStates>>> activityJobList = List.of(
+            Pair.of(simStart, new InitializeBinDataVolume())
+        );
 
         //2. create states
         OnboardDataModelStates states = new OnboardDataModelStates();
@@ -57,18 +56,18 @@ public class DataModelActivitiesTest {
 
         //0. choose sim start time
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
 
         //1. create activities and add to job list
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
-
         TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
-        instrumentOn.instrumentName = "instrument 1";
-        instrumentOn.instrumentRate = 10.0;
-        ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
+        {
+            instrumentOn.instrumentName = "instrument 1";
+            instrumentOn.instrumentRate = 10.0;
+        }
 
-        List<ActivityJob<?>> activityJobList = List.of(instrumentOnJob, binInitJob);
+        final List<Pair<Instant, ? extends Activity<OnboardDataModelStates>>> activityJobList = List.of(
+            Pair.of(simStart, new InitializeBinDataVolume()),
+            Pair.of(simStart.plus(1, TimeUnit.HOURS), instrumentOn)
+        );
 
         //2. create states
         OnboardDataModelStates states = new OnboardDataModelStates();
@@ -103,29 +102,27 @@ public class DataModelActivitiesTest {
     public void turnInstrumentsOffActivity(){
         System.out.println("Turn instruments off activity test start\n");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
-        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
+        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var states = new OnboardDataModelStates();
 
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
+        final List<Pair<Instant, ? extends Activity<OnboardDataModelStates>>> activityJobList = new ArrayList<>();
+        {
+            TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
+            {
+                instrumentOn.instrumentName = "instrument 1";
+                instrumentOn.instrumentRate = 10.0;
+            }
+            activityJobList.add(Pair.of(simStart, new InitializeBinDataVolume()));
 
-        TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
-        instrumentOn.instrumentName = "instrument 1";
-        instrumentOn.instrumentRate = 10.0;
-        ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
+            for (final var model : states.getInstrumentModelList()) {
+                TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
+                {
+                    instrumentOff.instrumentName = model.getName();
+                }
+                activityJobList.add(Pair.of(simStart.plus(1, TimeUnit.MINUTES), instrumentOff));
+            }
 
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binInitJob);
-        activityJobList.add(instrumentOnJob);
-
-        OnboardDataModelStates states = new OnboardDataModelStates();
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
-            instrumentOff.instrumentName = x.getName();
-            ActivityJob<OnboardDataModelStates> activityJob = new ActivityJob<>(instrumentOff, simInstOff);
-            activityJobList.add(activityJob);
+            activityJobList.add(Pair.of(simStart.plus(1, TimeUnit.HOURS), instrumentOn));
         }
 
         SimulationEngine.simulate(simStart, activityJobList, states);
@@ -157,37 +154,34 @@ public class DataModelActivitiesTest {
     public void downlinkActivity(){
         System.out.println("Downlink activity test start\n");
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
-        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
-        Instant simDownlink = simStart.plus(5, TimeUnit.HOURS);
+        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var states = new OnboardDataModelStates();
+        final List<Pair<Instant, ? extends Activity<OnboardDataModelStates>>> activityJobList = new ArrayList<>();
+        {
+            activityJobList.add(Pair.of(simStart, new InitializeBinDataVolume()));
 
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
+            for (final var model : states.getInstrumentModelList()) {
+                TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
+                {
+                    instrumentOff.instrumentName = model.getName();
+                }
+                activityJobList.add(Pair.of(simStart.plus(1, TimeUnit.MINUTES), instrumentOff));
+            }
 
-        TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
-        instrumentOn.instrumentName = "instrument 1";
-        instrumentOn.instrumentRate = 10.0;
-        ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
+            TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
+            {
+                instrumentOn.instrumentName = "instrument 1";
+                instrumentOn.instrumentRate = 10.0;
+            }
+            activityJobList.add(Pair.of(simStart.plus(1, TimeUnit.HOURS), instrumentOn));
 
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binInitJob);
-        activityJobList.add(instrumentOnJob);
-
-        OnboardDataModelStates states = new OnboardDataModelStates();
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
-            instrumentOff.instrumentName = x.getName();
-            ActivityJob<OnboardDataModelStates> activityJob = new ActivityJob<>(instrumentOff, simInstOff);
-            activityJobList.add(activityJob);
+            DownlinkData downlinkActivity = new DownlinkData();
+            {
+                downlinkActivity.binID = "Bin 1";
+                downlinkActivity.downlinkAll = true;
+            }
+            activityJobList.add(Pair.of(simStart.plus(5, TimeUnit.HOURS), downlinkActivity));
         }
-
-        DownlinkData downlinkActivity = new DownlinkData();
-        downlinkActivity.binID = "Bin 1";
-        downlinkActivity.downlinkAll = true;
-        ActivityJob<OnboardDataModelStates> downlinkJob = new ActivityJob<>(downlinkActivity, simDownlink);
-        activityJobList.add(downlinkJob);
 
         SimulationEngine.simulate(simStart, activityJobList, states);
 
@@ -200,13 +194,6 @@ public class DataModelActivitiesTest {
         }
 
         Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
-
-
-        Duration delta = simDownlink.durationFrom(simInstOn);
-        System.out.println("DELTA IS " + delta);
-        System.out.println("Volume collected " + (delta.durationInMicroseconds / 1000000.0) * 10.0);
-        assert((delta.durationInMicroseconds / 1000000.0) * 10 == (10.0 * 4 * 60 * 60));
-
         Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
 
         System.out.println("Downlink activity test end\n");

@@ -4,58 +4,54 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.DownlinkData;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.InitializeBinDataVolume;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOff;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn;
+import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class Plan {
     
-    public static List<ActivityJob<?>> createPlan( Config config, Instant simStartTime ) {
+    public static List<Pair<Instant, ? extends Activity<SampleMissionStates>>> createPlan(Config config, Instant simStartTime ) {
         final Function<Time, Instant> timeToInstant = (Time time) ->
             simStartTime.plus(time.minus(config.missionStartTime).getMicroseconds(), TimeUnit.MICROSECONDS);
 
-        List<ActivityJob<?>> activityList = new ArrayList<>();
+        final List<Pair<Instant, ? extends Activity<SampleMissionStates>>> activityList = new ArrayList<>();
 
         // initialize data volume at mission start
         InitializeBinDataVolume initBinsActivity = new InitializeBinDataVolume();
-        activityList.add(new ActivityJob<>(initBinsActivity, simStartTime));
-
-        Duration oneHour = Duration.fromHours(1);
+        activityList.add(Pair.of(simStartTime, initBinsActivity));
 
         Geometry.loadSpiceAndKernels();
-        List<Time> periapsidesTimes = Geometry.getPeriapsides(config);
-        
-        for (Time periapseTime : periapsidesTimes) {
+
+        for (Time periapseTime : Geometry.getPeriapsides(config)) {
             TurnInstrumentOn turnInstrumentOnActivity = new TurnInstrumentOn();
             TurnInstrumentOff turnInstrumentOffActivity = new TurnInstrumentOff();
 
-            activityList.add(new ActivityJob<>(
-                turnInstrumentOnActivity,
-                timeToInstant.apply(periapseTime).minus(1, TimeUnit.HOURS)
+            activityList.add(Pair.of(
+                timeToInstant.apply(periapseTime).minus(1, TimeUnit.HOURS),
+                turnInstrumentOnActivity
             ));
 
-            activityList.add(new ActivityJob<>(
-                turnInstrumentOffActivity,
-                timeToInstant.apply(periapseTime).plus(1, TimeUnit.HOURS)
+            activityList.add(Pair.of(
+                timeToInstant.apply(periapseTime).plus(1, TimeUnit.HOURS),
+                turnInstrumentOffActivity
             ));
         }
 
-        List<Time> apoapsidesTimes = Geometry.getApoapsides(config);
-        
-        for (Time apoapseTime : apoapsidesTimes) {
+        for (Time apoapseTime : Geometry.getApoapsides(config)) {
             DownlinkData downlinkActivity = new DownlinkData();
             {
                 downlinkActivity.downlinkAll = true;
             }
-            activityList.add(new ActivityJob<>(
-                downlinkActivity,
-                timeToInstant.apply(apoapseTime).minus(1, TimeUnit.HOURS)
+            activityList.add(Pair.of(
+                timeToInstant.apply(apoapseTime).minus(1, TimeUnit.HOURS),
+                downlinkActivity
             ));
         }
 

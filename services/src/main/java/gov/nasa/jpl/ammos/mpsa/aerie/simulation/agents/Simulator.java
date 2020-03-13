@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.simulation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
@@ -84,9 +83,10 @@ public final class Simulator<States extends StateContainer> {
     // TODO: Load planned activities into the scheduler for scheduling.
     // TODO: Be notified when the schedule changes.
     final Instant simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-    final List<ActivityJob<?>> scheduledActivities = new ArrayList<>();
+    final List<Pair<Instant, ? extends Activity<States>>> scheduledActivities = new ArrayList<>();
     for (final var entry : plannedActivities) {
-      scheduledActivities.add(new ActivityJob<>(entry.getValue(), simulationStartTime.plus(entry.getKey().value, TimeUnit.MILLISECONDS)));
+      final var startTime = simulationStartTime.plus(entry.getKey().value, TimeUnit.MILLISECONDS);
+      scheduledActivities.add(Pair.of(startTime, entry.getValue()));
     }
 
     // TODO: Initialize the requested state models from the adaptation.

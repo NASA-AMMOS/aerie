@@ -2,11 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc;
 
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.activities.SetScanAxis;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -25,10 +25,10 @@ public class SetScanAxisTest {
 
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
         SetScanAxis setScanAxisActivity = new SetScanAxis(x, y, z);
-        ActivityJob<GNCStates> gncActivities = new ActivityJob<>(setScanAxisActivity, simStart);
+
         GNCStates gncStates = new GNCStates();
 
-        SimulationEngine.simulate(simStart, List.of(gncActivities), gncStates);
+        SimulationEngine.simulate(simStart, List.of(Pair.of(simStart, setScanAxisActivity)), gncStates);
 
         Map<Instant, Vector3D> history = gncStates.getVectorState(GNCStates.scanAxisName).getHistory();
 

@@ -1,9 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import java.util.List;
 import java.util.Map;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
@@ -15,7 +13,7 @@ public class Runsim {
     public static void runSimulation(Config config) {
         final Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
-        List<ActivityJob<?>> plan = Plan.createPlan(config, simStartTime);
+        final var plan = Plan.createPlan(config, simStartTime);
         SampleMissionStates sampleMissionStates = new SampleMissionStates(config);
 
         SimulationEngine.simulate(simStartTime, plan, sampleMissionStates);

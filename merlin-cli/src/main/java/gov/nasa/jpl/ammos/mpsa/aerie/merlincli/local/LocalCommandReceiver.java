@@ -8,13 +8,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -180,17 +180,17 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     final var adaptation = loadAdaptationProvider(adaptationJar.jarPath).get();
     final var activityMapper = adaptation.getActivityMapper();
 
-    final var simulationJobs = new ArrayList<ActivityJob<?>>();
+    final List<Pair<Instant, ? extends Activity<StateContainer>>> simulationJobs = new ArrayList<>();
     for (final var scheduledActivity : schedule.scheduledActivities) {
       final Activity<? extends StateContainer> activity = activityMapper
           .deserializeActivity(scheduledActivity.activity)
           .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
 
-      simulationJobs.add(new ActivityJob<>(activity, scheduledActivity.startTime));
+      simulationJobs.add(Pair.of(scheduledActivity.startTime, (Activity<StateContainer>)activity));
     }
 
     final var simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-    final var stateContainer = adaptation.createStateModels();
+    final StateContainer stateContainer = adaptation.createStateModels();
     SimulationEngine.simulate(simulationStartTime, simulationJobs, stateContainer);
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();

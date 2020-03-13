@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
@@ -36,7 +36,7 @@ public class InstrumentPowerRandomAccessTest {
 
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(state));
     }
 
@@ -55,7 +55,7 @@ public class InstrumentPowerRandomAccessTest {
 
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(state));
     }
 
@@ -77,7 +77,7 @@ public class InstrumentPowerRandomAccessTest {
 
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(state));
     }
 
@@ -100,7 +100,7 @@ public class InstrumentPowerRandomAccessTest {
 
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(state));
     }
 
@@ -123,7 +123,7 @@ public class InstrumentPowerRandomAccessTest {
 
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(state));
     }
 
@@ -165,7 +165,7 @@ public class InstrumentPowerRandomAccessTest {
 
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(state));
     }
 }

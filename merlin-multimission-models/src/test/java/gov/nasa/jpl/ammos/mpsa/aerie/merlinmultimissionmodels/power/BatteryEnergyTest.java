@@ -2,13 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
@@ -75,7 +75,7 @@ public class BatteryEnergyTest {
 
         SimulationEngine.simulate(
             t2020,
-            List.of(new ActivityJob<>(activity, t2020)),
+            List.of(Pair.of(t2020, activity)),
             () -> List.of(chargeState_J));
     }
 
@@ -96,7 +96,7 @@ public class BatteryEnergyTest {
 
         SimulationEngine.simulate(
             t2020,
-            List.of(new ActivityJob<>(activity, t2020)),
+            List.of(Pair.of(t2020, activity)),
             () -> List.of(chargeState_J));
     }
 
@@ -118,7 +118,7 @@ public class BatteryEnergyTest {
 
         SimulationEngine.simulate(
             t2020,
-            List.of(new ActivityJob<>(activity, t2020)),
+            List.of(Pair.of(t2020, activity)),
             () -> List.of(chargeState_J));
     }
 
@@ -141,7 +141,7 @@ public class BatteryEnergyTest {
 
         SimulationEngine.simulate(
             t2020,
-            List.of(new ActivityJob<>(activity, t2020)),
+            List.of(Pair.of(t2020, activity)),
             () -> List.of(chargeState_J));
     }
 
@@ -161,7 +161,7 @@ public class BatteryEnergyTest {
 
         SimulationEngine.simulate(
             t2020,
-            List.of(new ActivityJob<>(activity, t2020)),
+            List.of(Pair.of(t2020, activity)),
             () -> List.of(chargeState_J));
     }
 }

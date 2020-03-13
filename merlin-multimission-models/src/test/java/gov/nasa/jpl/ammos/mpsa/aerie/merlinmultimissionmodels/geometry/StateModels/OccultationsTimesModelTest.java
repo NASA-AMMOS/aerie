@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.List;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.io.FileUtils;
@@ -190,7 +189,7 @@ public class OccultationsTimesModelTest {
         final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
         SimulationEngine.simulate(
             startTime,
-            List.of(new ActivityJob<>(activity, startTime)),
+            List.of(Pair.of(startTime, activity)),
             () -> List.of(earthMoonSunOccultationsModel));
     }
 }

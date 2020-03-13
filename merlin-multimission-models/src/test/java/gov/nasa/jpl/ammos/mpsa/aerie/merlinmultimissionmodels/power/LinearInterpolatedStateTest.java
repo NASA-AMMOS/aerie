@@ -6,13 +6,13 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
@@ -55,7 +55,7 @@ public class LinearInterpolatedStateTest {
 
         SimulationEngine.simulate(
             simStart,
-            List.of(new ActivityJob<>(activity, simStart)),
+            List.of(Pair.of(simStart, activity)),
             () -> List.of(state));
     }
 
@@ -72,7 +72,7 @@ public class LinearInterpolatedStateTest {
 
         SimulationEngine.simulate(
             simStart,
-            List.of(new ActivityJob<>(activity, simStart)),
+            List.of(Pair.of(simStart, activity)),
             () -> List.of(state));
     }
 
@@ -89,7 +89,7 @@ public class LinearInterpolatedStateTest {
 
         SimulationEngine.simulate(
             simStart,
-            List.of(new ActivityJob<>(activity, simStart)),
+            List.of(Pair.of(simStart, activity)),
             () -> List.of(state));
     }
 
@@ -106,7 +106,7 @@ public class LinearInterpolatedStateTest {
 
         SimulationEngine.simulate(
             simStart.plus(10, TimeUnit.SECONDS),
-            List.of(new ActivityJob<>(activity, simStart.plus(10, TimeUnit.SECONDS))),
+            List.of(Pair.of(simStart.plus(10, TimeUnit.SECONDS), activity)),
             () -> List.of(state));
     }
 
@@ -123,7 +123,7 @@ public class LinearInterpolatedStateTest {
 
         SimulationEngine.simulate(
             simStart,
-            List.of(new ActivityJob<>(activity, simStart)),
+            List.of(Pair.of(simStart, activity)),
             () -> List.of(state));
     }
 }

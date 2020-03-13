@@ -93,11 +93,15 @@ public class SimulationEngine {
      * Initializes the simulation engine
      * 
      * @param simulationStartTime
-     * @param activityJobs
+     * @param activities
      * @param stateContainer
      */
-    private SimulationEngine(Instant simulationStartTime, List<ActivityJob<?>> activityJobs,
-                            StateContainer stateContainer) {
+    private <T extends StateContainer>
+    SimulationEngine(
+        Instant simulationStartTime,
+        List<Pair<Instant, ? extends Activity<T>>> activities,
+        T stateContainer
+    ) {
         this.stateContainer = stateContainer;
         this.currentSimulationTime = simulationStartTime;
 
@@ -105,30 +109,35 @@ public class SimulationEngine {
             state.initialize(simulationStartTime);
         }
 
-        for (ActivityJob<?> job : activityJobs) {
-            this.pendingEventQueue.add(Pair.of(job.getEventTime(), job));
-            this.activityToJobMap.put(job.getActivity(), job);
+        for (final var entry : activities) {
+            final var startTime = entry.getLeft();
+            final var activity = entry.getRight();
+
+            final var job = new ActivityJob<>(activity);
+
+            this.pendingEventQueue.add(Pair.of(startTime, job));
+            this.activityToJobMap.put(activity, job);
         }
     }
 
-    public static Instant simulate(
+    public static <T extends StateContainer> Instant simulate(
         final Instant simulationStartTime,
-        final List<ActivityJob<?>> activityJobs,
-        final StateContainer stateContainer
+        final List<Pair<Instant, ? extends Activity<T>>> activities,
+        final T stateContainer
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, activityJobs, stateContainer);
+        final var engine = new SimulationEngine(simulationStartTime, activities, stateContainer);
         engine.run();
         return engine.currentSimulationTime;
     }
 
-    public static Instant simulate(
+    public static <T extends StateContainer> Instant simulate(
         final Instant simulationStartTime,
-        final List<ActivityJob<?>> activityJobs,
-        final StateContainer stateContainer,
+        final List<Pair<Instant, ? extends Activity<T>>> activities,
+        final T stateContainer,
         final Duration samplingPeriod,
         final Consumer<Instant> samplingHook
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, activityJobs, stateContainer);
+        final var engine = new SimulationEngine(simulationStartTime, activities, stateContainer);
         engine.setSamplingHook(samplingPeriod, samplingHook);
         engine.run();
         return engine.currentSimulationTime;
@@ -221,7 +230,7 @@ public class SimulationEngine {
     }
 
     public void spawnActivityFromParent(final Activity<?> child, final Activity<?> parent) {
-        final var childActivityJob = new ActivityJob<>(child, this.currentSimulationTime);
+        final var childActivityJob = new ActivityJob<>(child);
 
         this.parentChildMap.putIfAbsent(parent, new ArrayList<>());
         this.parentChildMap.get(parent).add(child);
@@ -263,7 +272,6 @@ public class SimulationEngine {
             }
             final var resumeTime = SimulationEngine.this.currentSimulationTime.plus(d);
 
-            this.activityJob.setEventTime(resumeTime);
             SimulationEngine.this.pendingEventQueue.add(Pair.of(resumeTime, activityJob));
             this.activityJob.suspend();
         }
@@ -280,7 +288,7 @@ public class SimulationEngine {
             if (resumeTime.isBefore(this.now())) {
                 throw new IllegalArgumentException("Time `t` must occur in the future");
             }
-            this.activityJob.setEventTime(resumeTime);
+
             SimulationEngine.this.pendingEventQueue.add(Pair.of(resumeTime, activityJob));
             this.activityJob.suspend();
         }
@@ -375,7 +383,6 @@ public class SimulationEngine {
                     .remove(listener);
 
                 final var listenerThread = SimulationEngine.this.activityToJobMap.get(listener);
-                listenerThread.setEventTime(this.now());
 
                 final var channel = listenerThread.getChannel();
                 channel.yieldControl();

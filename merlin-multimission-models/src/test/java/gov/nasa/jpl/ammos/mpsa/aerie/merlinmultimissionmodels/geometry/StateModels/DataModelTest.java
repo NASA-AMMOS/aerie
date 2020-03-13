@@ -4,16 +4,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
@@ -88,21 +87,14 @@ public class DataModelTest {
 
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
-
-
-        ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
-        ActivityJob<DataModelStates> binData = new ActivityJob<>(binDataVolumes, simStart);
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-
-        activityJobList.add(instrumentOn);
-        activityJobList.add(binData);
+        final var activityList = List.of(
+            Pair.of(simStart, new TurnInstrumentAOn()),
+            Pair.of(simStart, new InitBinDataVolumes())
+        );
 
         DataModelStates states = new DataModelStates();
 
-        final var simEnd = SimulationEngine.simulate(simStart, activityJobList, states);
+        final var simEnd = SimulationEngine.simulate(simStart, activityList, states);
         System.out.println(simEnd);
 
     }
@@ -114,12 +106,9 @@ public class DataModelTest {
 
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binDataInit);
-
+        final List<Pair<Instant, ? extends Activity<DataModelStates>>> activityJobList = List.of(
+            Pair.of(simStart, new InitBinDataVolumes())
+        );
 
         DataModelStates states = new DataModelStates();
 
@@ -144,18 +133,12 @@ public class DataModelTest {
 
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binDataInit);
-
+        final List<Pair<Instant, ? extends Activity<DataModelStates>>> activityJobList = List.of(
+            Pair.of(simStart, new InitBinDataVolumes()),
+            Pair.of(simStart, new TurnInstrumentAOn())
+        );
 
         DataModelStates states = new DataModelStates();
-
-        TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
-        ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
-        activityJobList.add(instrumentOn);
 
         SimulationEngine.simulate(simStart, activityJobList, states);
 
@@ -176,20 +159,11 @@ public class DataModelTest {
         Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
 
         //Create activities
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
-
-        TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
-        ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
-
-        DownlinkData downlinkData = new DownlinkData();
-        ActivityJob<DataModelStates> downlinkAct = new ActivityJob<>(downlinkData, simStart);
-
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binDataInit);
-        activityJobList.add(instrumentOn);
-        activityJobList.add(downlinkAct);
+        final List<Pair<Instant, ? extends Activity<DataModelStates>>> activityJobList = List.of(
+            Pair.of(simStart, new InitBinDataVolumes()),
+            Pair.of(simStart, new TurnInstrumentAOn()),
+            Pair.of(simStart, new DownlinkData())
+        );
 
         DataModelStates states = new DataModelStates();
 
