@@ -115,7 +115,7 @@ public class SimulationEngine {
     ) {
         final var engine = new SimulationEngine(simulationStartTime, activityJobs, stateContainer);
         engine.run();
-        return engine.getCurrentSimulationTime();
+        return engine.currentSimulationTime;
     }
 
     public static Instant simulate(
@@ -128,7 +128,7 @@ public class SimulationEngine {
         final var engine = new SimulationEngine(simulationStartTime, activityJobs, stateContainer);
         engine.setSamplingHook(samplingPeriod, samplingHook);
         engine.run();
-        return engine.getCurrentSimulationTime();
+        return engine.currentSimulationTime;
     }
 
     private void setSamplingHook(final Duration samplingPeriod, final Consumer<Instant> samplingHook) {
@@ -176,15 +176,6 @@ public class SimulationEngine {
         }
 
         this.threadPool.shutdown();
-    }
-
-    /**
-     * Returns the engine's current simulation time
-     * 
-     * @return the current simulation time
-     */
-    public Instant getCurrentSimulationTime() {
-        return this.currentSimulationTime;
     }
 
     /**
@@ -454,7 +445,7 @@ public class SimulationEngine {
          */
         @Override
         public Instant now() {
-            return SimulationEngine.this.getCurrentSimulationTime();
+            return SimulationEngine.this.currentSimulationTime;
         }
     }
 }
