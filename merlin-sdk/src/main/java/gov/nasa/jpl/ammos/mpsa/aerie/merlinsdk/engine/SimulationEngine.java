@@ -226,16 +226,6 @@ public class SimulationEngine {
     }
 
     /**
-     * Returns the activity job associated with a given activity
-     * 
-     * @param activity the `Activity` whose owning job is desired
-     * @return the `ActivityJob` that owns the given activity
-     */
-    public ActivityJob<?> getActivityJob(Activity<?> activity) {
-        return this.activityToJobMap.get(activity);
-    }
-
-    /**
      * Functions as a bridge between the simulation engine and an activity job
      *
      * The `JobContext` is designed to manage the interaction between the `SimulationEngine` and `ActivityJob`
@@ -339,7 +329,7 @@ public class SimulationEngine {
          */
         @Override
         public void waitForChild(Activity<?> childActivity) {
-            ActivityJob<?> childActivityJob = SimulationEngine.this.getActivityJob(childActivity);
+            final var childActivityJob = SimulationEngine.this.activityToJobMap.get(childActivity);
             // handle case where activity is already complete:
             // we don't want to block on it because we will never receive a notification that it is complete
             if (childActivityJob.getStatus() == ActivityJob.ActivityStatus.Complete) {
@@ -374,12 +364,14 @@ public class SimulationEngine {
                 .getOrDefault(this.activityJob.getActivity(), Collections.emptySet());
 
             for (final var listener : listeners) {
-                SimulationEngine.this.activityListenerMap.get(this.activityJob.getActivity()).remove(listener);
+                SimulationEngine.this.activityListenerMap
+                    .get(this.activityJob.getActivity())
+                    .remove(listener);
 
-                ActivityJob<?> listenerThread = SimulationEngine.this.getActivityJob(listener);
+                final var listenerThread = SimulationEngine.this.activityToJobMap.get(listener);
                 listenerThread.setEventTime(this.now());
 
-                ControlChannel channel = listenerThread.getChannel();
+                final var channel = listenerThread.getChannel();
                 channel.yieldControl();
                 channel.takeControl();
             }
