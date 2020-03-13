@@ -66,7 +66,7 @@ public class SimulationEngine {
      * A map of target activity to their listeners (activities that are blocking on
      * the target's completion)
      */
-    private Map<Activity<?>, Set<Activity<?>>> activityListenerMap = new HashMap<>();
+    private Map<ActivityJob<?>, Set<ActivityJob<?>>> activityListenerMap = new HashMap<>();
 
     private StateContainer stateContainer;
 
@@ -213,9 +213,7 @@ public class SimulationEngine {
             channel = new ControlChannel();
             activityJob.setChannel(channel);
 
-            threadPool.execute( () -> {
-                activityJob.execute();
-            });
+            threadPool.execute(activityJob::execute);
             break;
         case InProgress:
             channel = activityJob.getChannel();
@@ -350,8 +348,8 @@ public class SimulationEngine {
                 return;
             }
             SimulationEngine.this.activityListenerMap
-                .computeIfAbsent(childActivity, (_k) -> new HashSet<>())
-                .add(this.activityJob.getActivity());
+                .computeIfAbsent(childActivityJob, (_k) -> new HashSet<>())
+                .add(this.activityJob);
             this.activityJob.suspend();
         }
 
@@ -369,24 +367,19 @@ public class SimulationEngine {
         /**
          * Notifies an activity job's listeners that it has completed
          *
-         * This also currently yields control to listeners to their effect models to continue.
-         *
          * TODO: we may want to refactor this and allow for generic listener behavior
          */
         public void notifyActivityListeners() {
             final var listeners = SimulationEngine.this.activityListenerMap
-                .getOrDefault(this.activityJob.getActivity(), Collections.emptySet());
+                .getOrDefault(this.activityJob, Collections.emptySet());
 
             for (final var listener : listeners) {
                 SimulationEngine.this.activityListenerMap
-                    .get(this.activityJob.getActivity())
+                    .get(this.activityJob)
                     .remove(listener);
 
-                final var listenerThread = SimulationEngine.this.activityToJobMap.get(listener);
-
-                final var channel = listenerThread.getChannel();
-                channel.yieldControl();
-                channel.takeControl();
+                SimulationEngine.this.pendingEventQueue
+                    .add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
             }
         }
 
