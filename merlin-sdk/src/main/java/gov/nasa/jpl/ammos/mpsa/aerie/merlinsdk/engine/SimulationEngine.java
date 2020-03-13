@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +48,7 @@ public class SimulationEngine {
     /**
      * The priority queue of time-ordered `ActivityJob`s
      */
-    private PendingEventQueue pendingEventQueue = new PendingEventQueue();
+    private PriorityQueue<ActivityJob<?>> pendingEventQueue = new PriorityQueue<>();
 
     /**
      * A map of activity instances to their owning jobs
