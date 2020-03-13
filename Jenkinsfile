@@ -35,7 +35,7 @@ def getAWSTag(tag){
 def getArtifactoryUrl() {
     echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
 
-    if (GIT_BRANCH ==~ /release/){
+    if (GIT_BRANCH ==~ /release.*/){
         echo "Publishing to 16002-STAGE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16002"
     }
