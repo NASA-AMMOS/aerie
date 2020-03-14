@@ -8,6 +8,7 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
 import java.util.function.Consumer;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
@@ -153,7 +154,8 @@ public final class SimulationEngine {
             }
 
             this.currentSimulationTime = eventTime;
-            job.resume();
+            job.yieldControl();
+            job.takeControl();
         }
 
         if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
@@ -184,14 +186,16 @@ public final class SimulationEngine {
      * effect models.
      */
     private final class JobContext implements SimulationContext {
-        private final ControlChannel channel = new ControlChannel();
+        private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
+        private final Object CONTROL_TOKEN = new Object();
+
         private final List<JobContext> children = new ArrayList<>();
         private final Set<JobContext> listeners = new HashSet<>();
 
         public ActivityStatus status = ActivityStatus.NotStarted;
 
         public void start(final Runnable effectsModel) {
-            this.channel.takeControl();
+            this.takeControl();
 
             this.status = ActivityStatus.InProgress;
             SimulationEffects.withEffects(this, () -> effectsModel.run());
@@ -204,17 +208,29 @@ public final class SimulationEngine {
                 SimulationEngine.this.eventQueue.add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
             }
 
-            this.channel.yieldControl();
+            this.yieldControl();
         }
 
-        public void yield() {
-            this.channel.yieldControl();
-            this.channel.takeControl();
+        public void yieldControl() {
+            while (true) {
+                try {
+                    this.channel.put(CONTROL_TOKEN);
+                    break;
+                } catch (final InterruptedException ex) {
+                    continue;
+                }
+            }
         }
 
-        public void resume() {
-            this.channel.yieldControl();
-            this.channel.takeControl();
+        public void takeControl() {
+            while (true) {
+                try {
+                    this.channel.take();
+                    break;
+                } catch (final InterruptedException ex) {
+                    continue;
+                }
+            }
         }
 
         @Override
@@ -239,7 +255,8 @@ public final class SimulationEngine {
             if (duration.isNegative()) throw new IllegalArgumentException("Duration must be non-negative");
 
             SimulationEngine.this.resumeAfter(duration, this);
-            this.yield();
+            this.yieldControl();
+            this.takeControl();
         }
 
         private void waitForActivity(final JobContext jobToAwait) {
@@ -248,7 +265,8 @@ public final class SimulationEngine {
             if (jobToAwait.status == ActivityStatus.Complete) return;
 
             jobToAwait.listeners.add(this);
-            this.yield();
+            this.yieldControl();
+            this.takeControl();
         }
 
         @Override
