@@ -199,33 +199,17 @@ public final class SimulationEngine implements SimulationContext {
     private void executeActivity(JobContext activityJob) {
         switch (activityJob.status) {
         case NotStarted:
-            threadPool.execute(() -> SimulationEffects.withEffects(this, () -> {
-                activityJob.channel.takeControl();
-
-                activityJob.status = ActivityStatus.InProgress;
-                ((Activity<StateContainer>)activityJob.activity).modelEffects(this.stateContainer);
-                SimulationEffects.waitForChildren();
-                activityJob.status = ActivityStatus.Complete;
-
-                // Notify any listeners that we've finished.
-                for (final var listener : this.activeJob.listeners) {
-                    this.activeJob.listeners.remove(listener);
-                    this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, listener));
-                }
-
-                activityJob.channel.yieldControl();
-            }));
+            this.threadPool.execute(() -> SimulationEffects.withEffects(this, activityJob::start));
+            activityJob.resume();
             break;
         case InProgress:
+            activityJob.resume();
             break;
         case Complete:
             throw new IllegalStateException("Completed activity is somehow in the pending event queue.");
         default:
             throw new IllegalStateException("Unknown activity status");
         }
-
-        activityJob.channel.yieldControl();
-        activityJob.channel.takeControl();
     }
 
     private JobContext spawnJobContext(final Activity<?> child) {
@@ -245,9 +229,7 @@ public final class SimulationEngine implements SimulationContext {
 
         this.pendingEventQueue.add(Pair.of(resumeTime, this.activeJob));
 
-        final var activeJob = this.activeJob;
-        activeJob.channel.yieldControl();
-        activeJob.channel.takeControl();
+        this.activeJob.yield();
     }
 
     private void waitForActivity(final JobContext jobToAwait) {
@@ -257,9 +239,7 @@ public final class SimulationEngine implements SimulationContext {
 
         jobToAwait.listeners.add(this.activeJob);
 
-        final var activeJob = this.activeJob;
-        activeJob.channel.yieldControl();
-        activeJob.channel.takeControl();
+        this.activeJob.yield();
     }
 
     @Override
@@ -302,15 +282,43 @@ public final class SimulationEngine implements SimulationContext {
      * engine behaviors (like adding listeners) are exposed to the `ActivityJob` class but NOT to adapters in their
      * effect models.
      */
-    private static final class JobContext {
+    private final class JobContext {
+        private final ControlChannel channel = new ControlChannel();
+
         public final Activity<?> activity;
-        public final ControlChannel channel = new ControlChannel();
         public final List<JobContext> children = new ArrayList<>();
         public final Set<JobContext> listeners = new HashSet<>();
         public ActivityStatus status = ActivityStatus.NotStarted;
 
         public JobContext(final Activity<?> activity) {
             this.activity = activity;
+        }
+
+        public void start() {
+            this.channel.takeControl();
+
+            this.status = ActivityStatus.InProgress;
+            ((Activity<StateContainer>)this.activity).modelEffects(SimulationEngine.this.stateContainer);
+            SimulationEffects.waitForChildren();
+            this.status = ActivityStatus.Complete;
+
+            // Notify any listeners that we've finished.
+            for (final var listener : this.listeners) {
+                this.listeners.remove(listener);
+                SimulationEngine.this.pendingEventQueue.add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
+            }
+
+            this.channel.yieldControl();
+        }
+
+        public void yield() {
+            this.channel.yieldControl();
+            this.channel.takeControl();
+        }
+
+        public void resume() {
+            this.channel.yieldControl();
+            this.channel.takeControl();
         }
     }
 }
