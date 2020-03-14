@@ -58,11 +58,6 @@ public class SimulationEngine {
     private PriorityQueue<Pair<Instant, JobContext>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     /**
-     * A map of parent activity instances to their children
-     */
-    private Map<JobContext, List<JobContext>> parentChildMap = new HashMap<>();
-
-    /**
      * A map of target activity to their listeners (activities that are blocking on
      * the target's completion)
      */
@@ -236,8 +231,7 @@ public class SimulationEngine {
     private JobContext spawnActivity(final Activity<?> child) {
         final var childActivityJob = new JobContext(child);
 
-        this.parentChildMap.putIfAbsent(this.activeJob, new ArrayList<>());
-        this.parentChildMap.get(this.activeJob).add(childActivityJob);
+        this.activeJob.children.add(childActivityJob);
 
         this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, childActivityJob));
 
@@ -285,6 +279,7 @@ public class SimulationEngine {
     public final class JobContext implements SimulationContext {
         public final Activity<?> activity;
         public final ControlChannel channel = new ControlChannel();
+        public final List<JobContext> children = new ArrayList<>();
         public ActivityStatus status = ActivityStatus.NotStarted;
 
         public JobContext(final Activity<?> activity) {
@@ -344,10 +339,7 @@ public class SimulationEngine {
          */
         @Override
         public void waitForAllChildren() {
-            final var children = SimulationEngine.this.parentChildMap
-                .getOrDefault(SimulationEngine.this.activeJob, Collections.emptyList());
-
-            for (final var child : children) SimulationEngine.this.waitForActivity(child);
+            for (final var child : SimulationEngine.this.activeJob.children) SimulationEngine.this.waitForActivity(child);
         }
 
         /**
