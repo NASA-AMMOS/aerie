@@ -18,11 +18,6 @@ public interface SimulationContext {
     void delay(Duration duration);
 
     /**
-     * delays the effect model until the specified point in time
-     */
-    void delayUntil(Instant time);
-
-    /**
      * blocks until all of an activity's children are complete
      */
     void waitForAllChildren();
@@ -49,6 +44,10 @@ public interface SimulationContext {
      */
     default void callActivity(final Activity<?> childActivity) {
         this.spawnActivity(childActivity).await();
+    }
+
+    default void delayUntil(Instant time) {
+        this.delay(time.durationFrom(this.now()));
     }
 
     default void delay(final long quantity, final TimeUnit units) {

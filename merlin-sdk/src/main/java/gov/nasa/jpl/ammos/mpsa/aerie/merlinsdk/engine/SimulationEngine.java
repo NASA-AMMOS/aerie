@@ -38,7 +38,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * - activities and their durations (in simulation time)
  * - activities and their listeners (other activities blocking on the key's completion)
  */
-public class SimulationEngine {
+public final class SimulationEngine implements SimulationContext {
     /**
      * The current simulation time of the engine
      */
@@ -193,19 +193,22 @@ public class SimulationEngine {
     private void executeActivity(JobContext activityJob) {
         switch (activityJob.status) {
         case NotStarted:
-            threadPool.execute(() -> {
+            threadPool.execute(() -> SimulationEffects.withEffects(this, () -> {
                 activityJob.channel.takeControl();
 
                 activityJob.status = ActivityStatus.InProgress;
-                SimulationEffects.withEffects(activityJob, () -> {
-                    ((Activity<StateContainer>)activityJob.activity).modelEffects(this.stateContainer);
-                    SimulationEffects.waitForChildren();
-                });
+                ((Activity<StateContainer>)activityJob.activity).modelEffects(this.stateContainer);
+                SimulationEffects.waitForChildren();
                 activityJob.status = ActivityStatus.Complete;
 
-                activityJob.notifyActivityListeners();
+                // Notify any listeners that we've finished.
+                for (final var listener : this.activeJob.listeners) {
+                    this.activeJob.listeners.remove(listener);
+                    this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, listener));
+                }
+
                 activityJob.channel.yieldControl();
-            });
+            }));
             break;
         case InProgress:
             break;
@@ -219,7 +222,7 @@ public class SimulationEngine {
         activityJob.channel.takeControl();
     }
 
-    private JobContext spawnActivity(final Activity<?> child) {
+    private JobContext spawnJobContext(final Activity<?> child) {
         final var childActivityJob = new JobContext(child);
 
         this.activeJob.children.add(childActivityJob);
@@ -253,6 +256,34 @@ public class SimulationEngine {
         activeJob.channel.takeControl();
     }
 
+    @Override
+    public SpawnedActivityHandle spawnActivity(Activity<?> childActivity) {
+        final var childActivityJob = this.spawnJobContext(childActivity);
+
+        return new SimulationContext.SpawnedActivityHandle() {
+            @Override
+            public void await() {
+                SimulationEngine.this.waitForActivity(childActivityJob);
+            }
+        };
+    }
+
+    @Override
+    public void delay(Duration duration) {
+        if (duration.isNegative()) throw new IllegalArgumentException("Duration must be non-negative");
+        this.delay(this.currentSimulationTime.plus(duration));
+    }
+
+    @Override
+    public void waitForAllChildren() {
+        for (final var child : this.activeJob.children) this.waitForActivity(child);
+    }
+
+    @Override
+    public Instant now() {
+        return this.currentSimulationTime;
+    }
+
     public enum ActivityStatus { NotStarted, InProgress, Complete }
 
     /**
@@ -265,7 +296,7 @@ public class SimulationEngine {
      * engine behaviors (like adding listeners) are exposed to the `ActivityJob` class but NOT to adapters in their
      * effect models.
      */
-    public final class JobContext implements SimulationContext {
+    private static final class JobContext {
         public final Activity<?> activity;
         public final ControlChannel channel = new ControlChannel();
         public final List<JobContext> children = new ArrayList<>();
@@ -274,86 +305,6 @@ public class SimulationEngine {
 
         public JobContext(final Activity<?> activity) {
             this.activity = activity;
-        }
-
-        /**
-         * Delays an activity job's thread's execution for some duration `d`
-         *
-         * This operation alters the event time of the activity job, re-inserts it into the engine's pending event
-         * queue, and suspends the job's thread. The thread blocks until the engine de-queues it in future simulation time
-         * and resumes it.
-         */
-        @Override
-        public void delay(final Duration d) {
-            if (d.isNegative()) throw new IllegalArgumentException("Duration `d` must be non-negative");
-            SimulationEngine.this.delay(SimulationEngine.this.currentSimulationTime.plus(d));
-        }
-
-        /**
-         * Delays an activity job's thread's execution until some time `t`
-         *
-         * This operation alters the event time of the activity job, re-inserts it into the engine's pending event
-         * queue, and suspends the job's thread. The thread blocks until the engine de-queues it in future simulation time
-         * and resumes it.
-         */
-        @Override
-        public void delayUntil(final Instant resumeTime) {
-            SimulationEngine.this.delay(resumeTime);
-        }
-
-        /**
-         * Spawns a child activity in the background
-         *
-         * This method will create an `ActivityJob` for the given `childActivity` and insert it into the engine's pending
-         * event queue at the current simulation time. It also registers the spawning and spawned job as parent and
-         * child, respectively, within the engine's map. This method does NOT block until the child's effect model is
-         * complete. If that behavior is desired, see `callActivity()`.
-         *
-         * @param childActivity the child activity that should be spawned in the background at the current simulation time
-         * @return a handle to the spawned activity
-         */
-        @Override
-        public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
-            final var childActivityJob = SimulationEngine.this.spawnActivity(childActivity);
-
-            return new SimulationContext.SpawnedActivityHandle() {
-                @Override
-                public void await() {
-                    SimulationEngine.this.waitForActivity(childActivityJob);
-                }
-            };
-        }
-
-        /**
-         * Blocks a parent activity thread on the completion of all of its children
-         */
-        @Override
-        public void waitForAllChildren() {
-            for (final var child : SimulationEngine.this.activeJob.children) SimulationEngine.this.waitForActivity(child);
-        }
-
-        /**
-         * Notifies an activity job's listeners that it has completed
-         *
-         * TODO: we may want to refactor this and allow for generic listener behavior
-         */
-        public void notifyActivityListeners() {
-            for (final var listener : SimulationEngine.this.activeJob.listeners) {
-                SimulationEngine.this.activeJob.listeners.remove(listener);
-
-                SimulationEngine.this.pendingEventQueue
-                    .add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
-            }
-        }
-
-        /**
-         * Returns the engine's current simulation time
-         *
-         * @return current simulation time
-         */
-        @Override
-        public Instant now() {
-            return SimulationEngine.this.currentSimulationTime;
         }
     }
 }
