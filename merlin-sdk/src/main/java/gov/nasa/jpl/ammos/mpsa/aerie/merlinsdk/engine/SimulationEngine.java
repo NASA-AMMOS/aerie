@@ -1,12 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -56,12 +53,6 @@ public class SimulationEngine {
      * The priority queue of time-ordered activity resumption points
      */
     private PriorityQueue<Pair<Instant, JobContext>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
-
-    /**
-     * A map of target activity to their listeners (activities that are blocking on
-     * the target's completion)
-     */
-    private Map<JobContext, Set<JobContext>> activityListenerMap = new HashMap<>();
 
     private StateContainer stateContainer;
 
@@ -255,9 +246,7 @@ public class SimulationEngine {
         // we don't want to block on it because we will never receive a notification that it is complete
         if (jobToAwait.status == ActivityStatus.Complete) return;
 
-        this.activityListenerMap
-            .computeIfAbsent(jobToAwait, (_k) -> new HashSet<>())
-            .add(this.activeJob);
+        jobToAwait.listeners.add(this.activeJob);
 
         final var activeJob = this.activeJob;
         activeJob.channel.yieldControl();
@@ -280,6 +269,7 @@ public class SimulationEngine {
         public final Activity<?> activity;
         public final ControlChannel channel = new ControlChannel();
         public final List<JobContext> children = new ArrayList<>();
+        public final Set<JobContext> listeners = new HashSet<>();
         public ActivityStatus status = ActivityStatus.NotStarted;
 
         public JobContext(final Activity<?> activity) {
@@ -348,13 +338,8 @@ public class SimulationEngine {
          * TODO: we may want to refactor this and allow for generic listener behavior
          */
         public void notifyActivityListeners() {
-            final var listeners = SimulationEngine.this.activityListenerMap
-                .getOrDefault(SimulationEngine.this.activeJob, Collections.emptySet());
-
-            for (final var listener : listeners) {
-                SimulationEngine.this.activityListenerMap
-                    .get(SimulationEngine.this.activeJob)
-                    .remove(listener);
+            for (final var listener : SimulationEngine.this.activeJob.listeners) {
+                SimulationEngine.this.activeJob.listeners.remove(listener);
 
                 SimulationEngine.this.pendingEventQueue
                     .add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
