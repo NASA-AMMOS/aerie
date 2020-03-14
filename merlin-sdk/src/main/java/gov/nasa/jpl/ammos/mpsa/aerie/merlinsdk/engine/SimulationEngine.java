@@ -59,7 +59,13 @@ public final class SimulationEngine implements SimulationContext {
     /**
      * A thread pool used for executing `ActivityJob`s
      */
-    private ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ExecutorService threadPool = Executors.newCachedThreadPool(r -> {
+        // Daemonize all threads in this pool, so that they don't block the application on shutdown.
+        // TODO: Properly call `shutdown` on the pool instead, once the pool is provided at construction time.
+        final var t = Executors.defaultThreadFactory().newThread(r);
+        t.setDaemon(true);
+        return t;
+    });
 
     /**
      * How often to call the sampling hook during simulation
