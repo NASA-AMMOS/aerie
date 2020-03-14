@@ -51,7 +51,7 @@ public class SimulationEngineTests {
         public Boolean booleanValue = true;
 
         @Parameter
-        public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
+        public Duration durationValue = Duration.of(10, TimeUnit.SECONDS);
 
         @Override
         public void modelEffects(DiverseStates states) {
@@ -77,7 +77,7 @@ public class SimulationEngineTests {
         public Boolean booleanValue = true;
 
         @Parameter
-        public Duration durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
+        public Duration durationValue = Duration.of(10, TimeUnit.SECONDS);
 
         @Override
         public void modelEffects(DiverseStates states) {
@@ -91,7 +91,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void sequentialSimulationBaselineTest() {
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -101,7 +101,7 @@ public class SimulationEngineTests {
                 act.stringValue = "B";
                 act.arrayValue = List.of(0.0, 1.0, 0.0);
                 act.booleanValue = false;
-                act.durationValue = Duration.fromQuantity(10, TimeUnit.SECONDS);
+                act.durationValue = Duration.of(10, TimeUnit.SECONDS);
 
                 defer(i, TimeUnit.HOURS, act);
             }
@@ -127,7 +127,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void timeOrderingTest() {
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -164,7 +164,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void delayTest() {
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -202,7 +202,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void spawnActivityTimingTest() {
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
         final var endTime = SimulationEngine.simulate(simStart, states, () -> {
@@ -239,7 +239,7 @@ public class SimulationEngineTests {
      */
     @Test
     public void callActivityTimingTest() {
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
         final var endTime = SimulationEngine.simulate(simStart, states, () -> {

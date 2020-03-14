@@ -17,11 +17,15 @@ public interface Instant extends Comparable<Instant> {
 
 
   default Instant plus(final long quantity, final TimeUnit units) {
-    return this.plus(Duration.fromQuantity(quantity, units));
+    return this.plus(Duration.of(quantity, units));
   }
 
   default Instant minus(final long quantity, final TimeUnit units) {
-    return this.minus(Duration.fromQuantity(quantity, units));
+    return this.minus(Duration.of(quantity, units));
+  }
+
+  default Duration durationTo(Instant other) {
+    return other.durationFrom(this);
   }
 
   default boolean isBefore(final Instant other) {
@@ -49,8 +53,8 @@ public interface Instant extends Comparable<Instant> {
     return base.minus(duration);
   }
 
-  static Duration durationBetween(final Instant head, final Instant base) {
-    return head.durationFrom(base);
+  static Duration durationBetween(final Instant base, final Instant head) {
+    return base.durationTo(head);
   }
 
   static Instant min(final Instant x, final Instant y) {

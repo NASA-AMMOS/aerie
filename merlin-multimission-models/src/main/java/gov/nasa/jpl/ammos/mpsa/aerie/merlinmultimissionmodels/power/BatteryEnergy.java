@@ -140,7 +140,7 @@ public class BatteryEnergy implements State<Double> {
                 //calculate query time based on integration starting at last calc
                 //(to avoid conflating integrators/merlin's time representations)
                 //TODO: the duration/time api needs some work to avoid exposed representation
-                final Instant queryTime = lastCalculationT.plus( Duration.fromQuantity((long)t, TimeUnit.SECONDS) );
+                final Instant queryTime = lastCalculationT.plus( Duration.of((long)t, TimeUnit.SECONDS) );
 
                 //query the input states for their values at requested time point
                 final double maxCharge_J = maxChargeState_J.get(queryTime);
@@ -169,7 +169,7 @@ public class BatteryEnergy implements State<Double> {
             //provides g()==0 clues to integrator about when discontinuities occur;
             //must be continuous near roots and must change sign after each!
             @Override public double g(double t, double[] y) {
-                final Instant queryTime = lastCalculationT.plus( Duration.fromQuantity((long)t, TimeUnit.SECONDS) );
+                final Instant queryTime = lastCalculationT.plus( Duration.of((long)t, TimeUnit.SECONDS) );
 
                 //an overcharge event occurs when the current charge exceeds max
                 final double energy_J = y[0];
@@ -184,7 +184,7 @@ public class BatteryEnergy implements State<Double> {
             }
             //modifies the state vector after a g()==0 event and RESET_STATE occur
             @Override public void resetState(double t, double[] y) {
-                final Instant queryTime = lastCalculationT.plus( Duration.fromQuantity((long)t, TimeUnit.SECONDS) );
+                final Instant queryTime = lastCalculationT.plus( Duration.of((long)t, TimeUnit.SECONDS) );
 
                 //reset to maximum charge
                 final double maxCharge_J = maxChargeState_J.get(queryTime);

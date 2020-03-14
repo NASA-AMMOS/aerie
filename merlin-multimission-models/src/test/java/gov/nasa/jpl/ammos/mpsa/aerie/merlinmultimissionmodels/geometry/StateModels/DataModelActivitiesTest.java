@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class DataModelActivitiesTest {
     @Test
     public void initBinsActivity(){
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new OnboardDataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -37,7 +37,7 @@ public class DataModelActivitiesTest {
 
     @Test
     public void turnInstrumentsOnActivity(){
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new OnboardDataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -63,7 +63,7 @@ public class DataModelActivitiesTest {
 
     @Test
     public void turnInstrumentsOffActivity(){
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new OnboardDataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -95,7 +95,7 @@ public class DataModelActivitiesTest {
 
     @Test
     public void downlinkActivity(){
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new OnboardDataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -126,7 +126,7 @@ public class DataModelActivitiesTest {
         final var bin1 = new BinModel("bin 1", ethemis);
         final var reason = new InstrumentModel("REASON", 12.0, bin1);
 
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final StateContainer states = () -> List.of(ethemis, suda, bin1, reason);
 
         SimulationEngine.simulate(simStart, states, () -> {

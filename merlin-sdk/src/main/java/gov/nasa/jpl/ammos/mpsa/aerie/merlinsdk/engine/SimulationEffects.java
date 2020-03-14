@@ -21,11 +21,11 @@ public final class SimulationEffects {
   }
 
   public static SimulationContext.SpawnedActivityHandle defer(final long quantity, final TimeUnit units, final Activity<?> activity) {
-    return defer(Duration.fromQuantity(quantity, units), activity);
+    return defer(Duration.of(quantity, units), activity);
   }
 
   public static SimulationContext.SpawnedActivityHandle deferTo(final Instant instant, final Activity<?> activity) {
-    return defer(instant.durationFrom(now()), activity);
+    return defer(now().durationTo(instant), activity);
   }
 
   public static SimulationContext.SpawnedActivityHandle spawn(final Activity<?> activity) {
@@ -42,7 +42,7 @@ public final class SimulationEffects {
   }
 
   public static void delay(final long quantity, final TimeUnit units) {
-    delay(Duration.fromQuantity(quantity, units));
+    delay(Duration.of(quantity, units));
   }
 
 

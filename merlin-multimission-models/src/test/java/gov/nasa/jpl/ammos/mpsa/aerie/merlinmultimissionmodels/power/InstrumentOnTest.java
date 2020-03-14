@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.List;
@@ -73,7 +72,7 @@ public class InstrumentOnTest {
         final double powerLoadWatts = 10.0;
         final var powerState = new InstrumentPower();
 
-        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var startTime = SimulationInstant.ORIGIN;
         SimulationEngine.simulate(
             startTime,
             () -> List.of(powerState),

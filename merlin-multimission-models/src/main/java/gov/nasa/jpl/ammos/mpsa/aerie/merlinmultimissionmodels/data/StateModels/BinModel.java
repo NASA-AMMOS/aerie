@@ -123,7 +123,7 @@ public class BinModel implements State<Double> {
 
         //increase the current time by the smallest step possible (1ms)
         //otherwise the time key will be the same as the previous entry (with max volume)
-        Instant curTimePlusDeltaT = curTime.plus(Duration.fromQuantity(1, TimeUnit.MICROSECONDS));
+        Instant curTimePlusDeltaT = curTime.plus(Duration.of(1, TimeUnit.MICROSECONDS));
 
         //update the history
         stateHistory.put(curTimePlusDeltaT, this.currentDataVolume);
@@ -142,7 +142,7 @@ public class BinModel implements State<Double> {
 
         //increase the current time by the smallest step possible (1ms)
         //otherwise the time key will be the same as the previous entry (with max volume)
-        Instant curTimePlusDeltaT = curTime.plus(Duration.fromQuantity(1, TimeUnit.MICROSECONDS));
+        Instant curTimePlusDeltaT = curTime.plus(Duration.of(1, TimeUnit.MICROSECONDS));
 
         //update the history
         stateHistory.put(curTimePlusDeltaT, this.currentDataVolume);

@@ -83,7 +83,7 @@ public class DataModelTest {
 
     @Test
     public void bin_initialization() {
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -93,7 +93,7 @@ public class DataModelTest {
 
     @Test
     public void turn_instrument_on(){
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {
@@ -104,7 +104,7 @@ public class DataModelTest {
 
     @Test
     public void downlink_data(){
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var states = new DataModelStates();
 
         SimulationEngine.simulate(simStart, states, () -> {

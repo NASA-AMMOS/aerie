@@ -31,7 +31,7 @@ public final class ScheduledActivity {
       serializedParameters.put(entry.getKey(), entry.getValue());
     }
 
-    this.startTime = SimulationInstant.fromQuantity(timestampFormat.parse(instance.getStartTimestamp()).getTime(), TimeUnit.MILLISECONDS);
+    this.startTime = SimulationInstant.ORIGIN.plus(timestampFormat.parse(instance.getStartTimestamp()).getTime(), TimeUnit.MILLISECONDS);
     this.activity = new SerializedActivity(instance.getActivityType(), serializedParameters);
   }
 

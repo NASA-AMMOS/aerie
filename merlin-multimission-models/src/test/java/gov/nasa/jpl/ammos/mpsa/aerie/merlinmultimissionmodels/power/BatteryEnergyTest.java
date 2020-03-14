@@ -32,7 +32,7 @@ public class BatteryEnergyTest {
     /**
      * reusable time points
      */
-    private final Instant t2020 = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
+    private final Instant t2020 = SimulationInstant.ORIGIN;
 
     @Test
     public void ctorWorks() {

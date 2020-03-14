@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.List;
@@ -15,7 +14,7 @@ import static org.assertj.core.api.Assertions.withinPercentage;
  * exercises the basic (non-random access) functionality of the instrument power state
  */
 public class InstrumentPowerTest {
-    private static final Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    private static final Instant simStart = SimulationInstant.ORIGIN;
 
     @Test
     public void defaultCtorWorks() {

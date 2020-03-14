@@ -2,14 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 public class Runsim {
     public static void runSimulation(Config config) {
         Geometry.loadSpiceAndKernels();
 
-        final var simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStartTime = SimulationInstant.ORIGIN;
         final var sampleMissionStates = new SampleMissionStates(config);
 
         SimulationEngine.simulate(simStartTime, sampleMissionStates, () -> {

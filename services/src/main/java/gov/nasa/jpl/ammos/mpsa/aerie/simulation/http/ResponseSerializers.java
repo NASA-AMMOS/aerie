@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.simulation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.utils.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.simulation.utils.InvalidEntityFailure;
@@ -61,7 +60,7 @@ public final class ResponseSerializers {
   }
 
   static public JsonValue serializeTimestamp(final Instant timestamp) {
-    final var duration = ((SimulationInstant)timestamp).durationFrom(SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS));
+    final var duration = SimulationInstant.ORIGIN.durationTo(timestamp);
     return Json.createValue(duration.durationInMicroseconds / 1000);
   }
 

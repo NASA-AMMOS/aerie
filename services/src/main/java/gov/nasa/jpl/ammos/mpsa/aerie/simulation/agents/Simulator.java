@@ -49,7 +49,7 @@ public final class Simulator<States extends StateContainer> {
     //   type will look like, meaning we have to account for type parameters.
   }
 
-  static private Duration SAMPLING_PERIOD_MS = Duration.fromQuantity(500, TimeUnit.MILLISECONDS);
+  static private Duration SAMPLING_PERIOD_MS = Duration.of(500, TimeUnit.MILLISECONDS);
 
   private final Plan<States> plan;
   private final MerlinAdaptation<States> adaptation;
@@ -97,7 +97,7 @@ public final class Simulator<States extends StateContainer> {
 
     // Simulate the entire plan to completion.
     // Sample all states periodically while simulation is occurring.
-    final Instant simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    final Instant simulationStartTime = SimulationInstant.ORIGIN;
     SimulationEngine.simulate(simulationStartTime, stateContainer, () -> {
       for (final var entry : plannedActivities) {
         SimulationEffects.defer(entry.getKey().value, TimeUnit.MILLISECONDS, entry.getValue());

@@ -12,7 +12,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
 
 import javax.json.Json;
@@ -181,7 +180,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     final var adaptation = loadAdaptationProvider(adaptationJar.jarPath).get();
     final var activityMapper = adaptation.getActivityMapper();
 
-    final var simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    final var simulationStartTime = SimulationInstant.ORIGIN;
     final StateContainer stateContainer = adaptation.createStateModels();
 
     SimulationEngine.simulate(simulationStartTime, stateContainer, () -> {

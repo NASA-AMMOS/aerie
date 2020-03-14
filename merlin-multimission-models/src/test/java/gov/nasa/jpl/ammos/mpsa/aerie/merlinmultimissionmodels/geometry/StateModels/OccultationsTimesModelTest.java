@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.List;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -122,7 +121,7 @@ public class OccultationsTimesModelTest {
 
     @Test
     public void testOccultationTimesModel() {
-        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var startTime = SimulationInstant.ORIGIN;
         final var earthMoonSunOccultationsModel = new OccultationTimesModel();
         earthMoonSunOccultationsModel.setStart(Time.fromTimezoneString("2001-335T00:00:00.0", "UTC"));
         earthMoonSunOccultationsModel.setEnd(Time.fromTimezoneString("2002-001T00:00:00.0", "UTC"));

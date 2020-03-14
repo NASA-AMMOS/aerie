@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.gnc.activities.SetScanAxis;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
@@ -20,7 +19,7 @@ public class SetScanAxisTest {
         final var expected = new Vector3D(x, y, z);
         expected.normalize();
 
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         final var gncStates = new GNCStates();
 
         SimulationEngine.simulate(simStart, gncStates, () -> {

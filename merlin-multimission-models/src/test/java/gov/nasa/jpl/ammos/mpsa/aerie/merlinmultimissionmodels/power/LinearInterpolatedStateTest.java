@@ -18,7 +18,7 @@ import java.util.List;
  * exercises basic functionality and mathematics of the simple linear interpolation state
  */
 public class LinearInterpolatedStateTest {
-    private final Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
+    private final Instant simStart = SimulationInstant.ORIGIN;
     private final Time t2020 = new Time("2020-001T00:00:00.000");
     private final Time t2020_10s = new Time("2020-001T00:00:10.000");
     private final Time t2020_20s = new Time("2020-001T00:00:20.000");

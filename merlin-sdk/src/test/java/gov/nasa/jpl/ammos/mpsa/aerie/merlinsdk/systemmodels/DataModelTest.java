@@ -21,7 +21,7 @@ public class DataModelTest {
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
-    Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    Instant simStartTime = SimulationInstant.ORIGIN;
 
     DataSystemModel dataSystemModel;
     SettableState<Double> dataRate;
@@ -49,7 +49,7 @@ public class DataModelTest {
     @Test
     public void dataVolumeTest() {
         MissionModelGlue glue = new MissionModelGlue();
-        Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStartTime = SimulationInstant.ORIGIN;
 
         DataSystemModel dataSystemModel;
         SettableState<Double> dataRate;
@@ -133,11 +133,11 @@ public class DataModelTest {
         List<Window> a = new ArrayList<>();
         List<Window> b = new ArrayList<>();
 
-        Instant win1S = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant win1S = SimulationInstant.ORIGIN;
         Instant win1E = win1S.plus(5, TimeUnit.SECONDS);
         Window win1 = Window.between(win1S, win1E);
 
-        Instant win2S = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant win2S = SimulationInstant.ORIGIN;
         Instant win2E = win1S.plus(9, TimeUnit.SECONDS);
         Window win2 = Window.between(win2S, win2E);
 
@@ -184,10 +184,10 @@ public class DataModelTest {
         final var dataSlice = dataModel.getInitialSlice();
 
         dataModel.setDataRate(dataSlice, 5.0);
-        dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.step(dataSlice, Duration.ZERO);
         dataModel.setDataProtocol(dataSlice, GlobalPronouns.spacewire);
         dataModel.setDataRate(dataSlice, 15.0);
-        dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.step(dataSlice, Duration.ZERO);
         dataModel.setDataProtocol(dataSlice, GlobalPronouns.UART);
 
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);

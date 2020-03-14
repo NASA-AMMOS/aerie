@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 import java.util.List;
@@ -23,7 +22,7 @@ public class BasicStateTest {
             }
         };
 
-        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var startTime = SimulationInstant.ORIGIN;
         SimulationEngine.simulate(
             startTime,
             () -> List.of(state),
@@ -41,7 +40,7 @@ public class BasicStateTest {
             }
         };
 
-        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var startTime = SimulationInstant.ORIGIN;
         SimulationEngine.simulate(
             startTime,
             () -> List.of(state),

@@ -10,8 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.Initialize
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOff;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.defer;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 
 public class Plan {
@@ -26,15 +25,15 @@ public class Plan {
             TurnInstrumentOn turnInstrumentOnActivity = new TurnInstrumentOn();
             TurnInstrumentOff turnInstrumentOffActivity = new TurnInstrumentOff();
 
-            defer(timeToInstant.apply(periapseTime).minus(1, TimeUnit.HOURS).durationFrom(now()), turnInstrumentOnActivity);
-            defer(timeToInstant.apply(periapseTime).plus(1, TimeUnit.HOURS).durationFrom(now()), turnInstrumentOffActivity);
+            deferTo(timeToInstant.apply(periapseTime).minus(1, TimeUnit.HOURS), turnInstrumentOnActivity);
+            deferTo(timeToInstant.apply(periapseTime).plus(1, TimeUnit.HOURS), turnInstrumentOffActivity);
         }
 
         for (Time apoapseTime : Geometry.getApoapsides(config)) {
             DownlinkData downlinkActivity = new DownlinkData();
             downlinkActivity.downlinkAll = true;
 
-            defer(timeToInstant.apply(apoapseTime).minus(1, TimeUnit.HOURS).durationFrom(now()), downlinkActivity);
+            deferTo(timeToInstant.apply(apoapseTime).minus(1, TimeUnit.HOURS), downlinkActivity);
         }
     }
 }

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.withinPercentage;
  * exercises the random-access functionality of the instrument power state
  */
 public class InstrumentPowerRandomAccessTest {
-    private final Instant startTime = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
+    private final Instant startTime = SimulationInstant.ORIGIN;
 
     @Test
     public void getAtTimeStartsAtZeroPower() {
@@ -127,11 +127,11 @@ public class InstrumentPowerRandomAccessTest {
             () -> {
                 //run all sets in test vector sequentially (thanks to TreeMap being sorted)
                 for (final var set : sets.entrySet()) {
-                    delay(set.getKey().durationFrom(now()));
+                    delay(now().durationTo(set.getKey()));
                     state.set(set.getValue());
                 }
 
-                delay(startTime.plus(1, TimeUnit.MINUTES).durationFrom(now()));
+                delay(now().durationTo(startTime.plus(1, TimeUnit.MINUTES)));
 
                 for (final var expected : expecteds.entrySet()) {
                     assertThat(state.get(expected.getKey()))

@@ -14,7 +14,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -67,7 +66,7 @@ public final class SimulationEngine {
      *
      * Defaults to never.
      */
-    private Duration samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
+    private Duration samplingPeriod = Duration.ZERO;
 
     /**
      * The sampling hook to call every sampling period
@@ -90,7 +89,7 @@ public final class SimulationEngine {
 
         final var rootJob = new JobContext();
         SimulationEngine.this.spawnInThread(rootJob, topLevel);
-        SimulationEngine.this.resumeAfter(Duration.fromQuantity(0, TimeUnit.MICROSECONDS), rootJob);
+        SimulationEngine.this.resumeAfter(Duration.ZERO, rootJob);
     }
 
     public static <T extends StateContainer> Instant simulate(
@@ -118,7 +117,7 @@ public final class SimulationEngine {
 
     private void setSamplingHook(final Duration samplingPeriod, final Consumer<Instant> samplingHook) {
         if (samplingHook == null || !samplingPeriod.isPositive()) {
-            this.samplingPeriod = Duration.fromQuantity(0, TimeUnit.MICROSECONDS);
+            this.samplingPeriod = Duration.ZERO;
             this.samplingHook = (now) -> {};
         } else {
             if (this.samplingPeriod.isPositive()) {

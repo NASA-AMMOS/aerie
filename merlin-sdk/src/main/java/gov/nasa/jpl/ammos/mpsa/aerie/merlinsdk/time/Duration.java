@@ -11,7 +11,9 @@ public final class Duration implements Comparable<Duration> {
     this.durationInMicroseconds = durationInMicroseconds;
   }
 
-  public static Duration fromQuantity(final long quantity, final TimeUnit units) {
+  public static final Duration ZERO = Duration.of(0, TimeUnit.MICROSECONDS);
+
+  public static Duration of(final long quantity, final TimeUnit units) {
     switch (units) {
       case MICROSECONDS: return new Duration(quantity);
       case MILLISECONDS: return new Duration(quantity * 1000L);
@@ -45,7 +47,7 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public Duration plus(final long quantity, final TimeUnit units) throws ArithmeticException {
-    return Duration.add(this, Duration.fromQuantity(quantity, units));
+    return Duration.add(this, Duration.of(quantity, units));
   }
 
   public Duration minus(final Duration other) throws ArithmeticException {
@@ -53,7 +55,7 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public Duration minus(final long quantity, final TimeUnit units) throws ArithmeticException {
-    return Duration.subtract(this, Duration.fromQuantity(quantity, units));
+    return Duration.subtract(this, Duration.of(quantity, units));
   }
 
   public boolean shorterThan(final Duration other) {

@@ -16,7 +16,7 @@ public class DemoPowerModelTest {
     public void testDemo() {
         final var demo = new DemoPowerModel();
 
-        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var simStart = SimulationInstant.ORIGIN;
         SimulationEngine.simulate(simStart, demo.states, () -> {
             //check initial conditions match setup
             assertThat(demo.states.solarPowerState_W.get())
@@ -73,7 +73,7 @@ public class DemoPowerModelTest {
                     .isCloseTo( 0.0, withinPercentage(0.01 ) );
 
             //leave it to charge for a day to hit max battery
-            delay(Duration.fromQuantity(1, TimeUnit.DAYS).minus(2000, TimeUnit.SECONDS));
+            delay(Duration.of(1, TimeUnit.DAYS).minus(2000, TimeUnit.SECONDS));
             assertThat(demo.states.batterStateOfChargeState_pct.get())
                     .isCloseTo( 100.0, withinPercentage( 1.0 ) );
         });
