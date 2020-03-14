@@ -105,7 +105,7 @@ public final class SimulationEngine implements SimulationContext {
             final var startTime = entry.getLeft();
             final var activity = entry.getRight();
 
-            this.spawnJobContext(startTime, activity);
+            this.spawnJobContext(startTime, () -> activity.modelEffects(stateContainer));
         }
     }
 
@@ -182,8 +182,8 @@ public final class SimulationEngine implements SimulationContext {
         this.threadPool.shutdown();
     }
 
-    private JobContext spawnJobContext(final Instant startTime, final Activity<?> child) {
-        final var childActivityJob = new JobContext(child);
+    private JobContext spawnJobContext(final Instant startTime, final Runnable effectsModel) {
+        final var childActivityJob = new JobContext(effectsModel);
 
         if (this.activeJob != null) this.activeJob.children.add(childActivityJob);
 
@@ -213,9 +213,8 @@ public final class SimulationEngine implements SimulationContext {
         this.activeJob.yield();
     }
 
-    @Override
-    public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
-        final var childActivityJob = this.spawnJobContext(this.currentSimulationTime, childActivity);
+    public SpawnedActivityHandle spawnActivity(final Runnable effectsModel) {
+        final var childActivityJob = this.spawnJobContext(this.currentSimulationTime, effectsModel);
 
         return new SimulationContext.SpawnedActivityHandle() {
             @Override
@@ -223,6 +222,11 @@ public final class SimulationEngine implements SimulationContext {
                 SimulationEngine.this.waitForActivity(childActivityJob);
             }
         };
+    }
+
+    @Override
+    public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
+        return this.spawnActivity(() -> ((Activity<StateContainer>)childActivity).modelEffects(this.stateContainer));
     }
 
     @Override
@@ -256,20 +260,20 @@ public final class SimulationEngine implements SimulationContext {
     private final class JobContext {
         private final ControlChannel channel = new ControlChannel();
 
-        public final Activity<?> activity;
+        public final Runnable effectsModel;
         public final List<JobContext> children = new ArrayList<>();
         public final Set<JobContext> listeners = new HashSet<>();
         public ActivityStatus status = ActivityStatus.NotStarted;
 
-        public JobContext(final Activity<?> activity) {
-            this.activity = activity;
+        public JobContext(final Runnable effectsModel) {
+            this.effectsModel = effectsModel;
         }
 
         public void start() {
             this.channel.takeControl();
 
             this.status = ActivityStatus.InProgress;
-            ((Activity<StateContainer>)this.activity).modelEffects(SimulationEngine.this.stateContainer);
+            this.effectsModel.run();
             SimulationEffects.waitForChildren();
             this.status = ActivityStatus.Complete;
 
