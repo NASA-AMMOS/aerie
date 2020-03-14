@@ -1,18 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -66,17 +63,13 @@ public class BatteryEnergyTest {
         final double expected_J = 1110.0;
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             t2020,
-            List.of(Pair.of(t2020, activity)),
-            () -> List.of(chargeState_J));
+            () -> List.of(chargeState_J),
+            () -> {
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            });
     }
 
 
@@ -86,18 +79,14 @@ public class BatteryEnergyTest {
         final double expected_J = 500.0; //0J + 10s of 50W = 500J
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             t2020,
-            List.of(Pair.of(t2020, activity)),
-            () -> List.of(chargeState_J));
+            () -> List.of(chargeState_J),
+            () -> {
+                delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            });
     }
 
 
@@ -107,19 +96,15 @@ public class BatteryEnergyTest {
         final double expected_J = 500.0; //0J + 10s of 50W = 500J
 
         final var chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             t2020,
-            List.of(Pair.of(t2020, activity)),
-            () -> List.of(chargeState_J));
+            () -> List.of(chargeState_J),
+            () -> {
+                delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            });
     }
 
     @Test
@@ -128,21 +113,17 @@ public class BatteryEnergyTest {
         final double expected20_J = 1000.0; //0J + 10s of 50W + 10s of 50W = 1000J
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                chargeState_J.get();
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-                chargeState_J.get();
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected20_J, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             t2020,
-            List.of(Pair.of(t2020, activity)),
-            () -> List.of(chargeState_J));
+            () -> List.of(chargeState_J),
+            () -> {
+                chargeState_J.get();
+                delay(10, TimeUnit.SECONDS);
+                chargeState_J.get();
+                delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected20_J, withinPercentage(0.01));
+            });
     }
 
     @Test
@@ -151,17 +132,13 @@ public class BatteryEnergyTest {
         final double expected_J = 10000.0; //9900J + 10s of 50W = 10400J, clamp to 10kJ
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             t2020,
-            List.of(Pair.of(t2020, activity)),
-            () -> List.of(chargeState_J));
+            () -> List.of(chargeState_J),
+            () -> {
+                delay(10, TimeUnit.SECONDS);
+                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            });
     }
 }

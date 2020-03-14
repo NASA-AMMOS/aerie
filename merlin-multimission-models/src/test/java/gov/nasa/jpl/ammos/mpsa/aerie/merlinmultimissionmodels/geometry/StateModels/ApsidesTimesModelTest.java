@@ -9,11 +9,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -23,12 +21,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrappers.ApsidesTest;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
-
 
 @Ignore
 public class ApsidesTimesModelTest {
@@ -90,6 +86,7 @@ public class ApsidesTimesModelTest {
             Time.fromTimezoneString("2002-187T03:47:00.0", "UTC"),
             Time.fromTimezoneString("2003-185T05:40:00.0", "UTC"));
 
+        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
         final var earthSunApsidesModel = new ApsidesTimesModel();
         earthSunApsidesModel.setStart(Time.fromTimezoneString("2001-001T00:00:00.0", "UTC"));
         earthSunApsidesModel.setEnd(Time.fromTimezoneString("2003-001T00:00:00.0", "UTC"));
@@ -98,9 +95,10 @@ public class ApsidesTimesModelTest {
         earthSunApsidesModel.setObserver(Body.EARTH);
         earthSunApsidesModel.setApsisType(Apsis.APOAPSIS);
 
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(final StateContainer _states) {
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(earthSunApsidesModel),
+            () -> {
                 List<Time> aphelionTimes = earthSunApsidesModel.get();
                 assertEquals("1 aphelion time expected; '" + aphelionTimes.size() + "' received.", 1, aphelionTimes.size());
 
@@ -133,13 +131,6 @@ public class ApsidesTimesModelTest {
                         + "' should be less than 1 minute.";
                     assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
                 }
-            }
-        };
-
-        final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        SimulationEngine.simulate(
-            startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(earthSunApsidesModel));
+            });
     }
 }

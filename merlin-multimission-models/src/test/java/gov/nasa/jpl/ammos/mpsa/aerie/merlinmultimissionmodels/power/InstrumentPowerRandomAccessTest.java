@@ -1,19 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
@@ -26,105 +24,83 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeStartsAtZeroPower() {
         final var state = new InstrumentPower();
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                assertThat(state.get(SimulationEffects.now()))
-                    .isCloseTo(0.0, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                assertThat(state.get(now())).isCloseTo(0.0, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesContemporarySet() {
         final var state = new InstrumentPower();
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                final double testValue = 300.0;
-                state.set(testValue);
-                assertThat(state.get(SimulationEffects.now()))
-                    .isCloseTo(testValue, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                final double testValue = 300.0;
+                state.set(testValue);
+                assertThat(state.get(now())).isCloseTo(testValue, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesPastSet() {
         final var state = new InstrumentPower();
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                final double testValue_W = 300.0;
-                state.set(testValue_W);
-
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-
-                assertThat(state.get(startTime))
-                    .isCloseTo(testValue_W, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                final double testValue_W = 300.0;
+                state.set(testValue_W);
+
+                delay(10, TimeUnit.SECONDS);
+
+                assertThat(state.get(startTime)).isCloseTo(testValue_W, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesPastSetDespiteNewSet() {
         final var state = new InstrumentPower();
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                final double testValue_W = 300.0;
-                state.set(testValue_W);
-
-                SimulationEffects.delay(10, TimeUnit.SECONDS);
-
-                state.set(888.0);
-                assertThat(state.get(SimulationEffects.now().minus(10, TimeUnit.SECONDS)))
-                    .isCloseTo(testValue_W, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                final double testValue_W = 300.0;
+                state.set(testValue_W);
+
+                final var time = now();
+                delay(10, TimeUnit.SECONDS);
+
+                state.set(888.0);
+                assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesIntermediatePastSet() {
         final var state = new InstrumentPower();
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                final double testValue_W = 300.0;
-                state.set(testValue_W);
-
-                SimulationEffects.delay(20, TimeUnit.SECONDS);
-
-                state.set(888.0);
-                assertThat(state.get(SimulationEffects.now().minus(10, TimeUnit.SECONDS)))
-                    .isCloseTo(testValue_W, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                final double testValue_W = 300.0;
+                state.set(testValue_W);
+
+                delay(10, TimeUnit.SECONDS);
+                final var time = now();
+                delay(10, TimeUnit.SECONDS);
+
+                state.set(888.0);
+                assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
+            });
     }
 
     @Test
@@ -135,7 +111,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime.plus(20, TimeUnit.SECONDS), 120.0,
             startTime.plus(30, TimeUnit.SECONDS), 130.0
         ));
-        final var expecteds =  Map.of(
+        final var expecteds = Map.of(
             startTime.plus( 0, TimeUnit.SECONDS), 0.0,
             startTime.plus(10, TimeUnit.SECONDS), 110.0,
             startTime.plus(15, TimeUnit.SECONDS), 110.0,
@@ -145,27 +121,22 @@ public class InstrumentPowerRandomAccessTest {
             startTime.plus(31, TimeUnit.SECONDS), 130.0
         );
 
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(final StateContainer _states) {
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
                 //run all sets in test vector sequentially (thanks to TreeMap being sorted)
                 for (final var set : sets.entrySet()) {
-                    SimulationEffects.delay(set.getKey().durationFrom(SimulationEffects.now()));
+                    delay(set.getKey().durationFrom(now()));
                     state.set(set.getValue());
                 }
 
-                SimulationEffects.delay(startTime.plus(1, TimeUnit.MINUTES).durationFrom(SimulationEffects.now()));
+                delay(startTime.plus(1, TimeUnit.MINUTES).durationFrom(now()));
 
                 for (final var expected : expecteds.entrySet()) {
                     assertThat(state.get(expected.getKey()))
                         .isCloseTo(expected.getValue(), withinPercentage(0.01));
                 }
-            }
-        };
-
-        SimulationEngine.simulate(
-            startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(state));
+            });
     }
 }

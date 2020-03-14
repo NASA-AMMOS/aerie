@@ -76,16 +76,9 @@ public final class SimulationEngine {
      */
     private Consumer<Instant> samplingHook = (now) -> {};
 
-    /**
-     * Initializes the simulation engine
-     * 
-     * @param simulationStartTime
-     * @param activities
-     * @param stateContainer
-     */
     private <T extends StateContainer> SimulationEngine(
         final Instant simulationStartTime,
-        final List<Pair<Instant, ? extends Activity<T>>> activities,
+        final Runnable topLevel,
         final T stateContainer
     ) {
         this.stateContainer = stateContainer;
@@ -95,34 +88,29 @@ public final class SimulationEngine {
             state.initialize(simulationStartTime);
         }
 
-        for (final var entry : activities) {
-            final var startTime = entry.getLeft();
-            final var activity = entry.getRight();
-
-            final var childActivityJob = new JobContext();
-            SimulationEngine.this.spawnInThread(childActivityJob, () -> activity.modelEffects(stateContainer));
-            SimulationEngine.this.resumeAfter(startTime.durationFrom(this.currentSimulationTime), childActivityJob);
-        }
+        final var rootJob = new JobContext();
+        SimulationEngine.this.spawnInThread(rootJob, topLevel);
+        SimulationEngine.this.resumeAfter(Duration.fromQuantity(0, TimeUnit.MICROSECONDS), rootJob);
     }
 
     public static <T extends StateContainer> Instant simulate(
         final Instant simulationStartTime,
-        final List<Pair<Instant, ? extends Activity<T>>> activities,
-        final T stateContainer
+        final T stateContainer,
+        final Runnable topLevel
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, activities, stateContainer);
+        final var engine = new SimulationEngine(simulationStartTime, topLevel, stateContainer);
         engine.run();
         return engine.currentSimulationTime;
     }
 
     public static <T extends StateContainer> Instant simulate(
         final Instant simulationStartTime,
-        final List<Pair<Instant, ? extends Activity<T>>> activities,
         final T stateContainer,
+        final Runnable topLevel,
         final Duration samplingPeriod,
         final Consumer<Instant> samplingHook
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, activities, stateContainer);
+        final var engine = new SimulationEngine(simulationStartTime, topLevel, stateContainer);
         engine.setSamplingHook(samplingPeriod, samplingHook);
         engine.run();
         return engine.currentSimulationTime;
@@ -231,13 +219,13 @@ public final class SimulationEngine {
         }
 
         @Override
-        public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
+        public SpawnedActivityHandle defer(final Duration duration, final Activity<?> childActivity) {
             final var childActivityJob = new JobContext();
             this.children.add(childActivityJob);
 
             final Runnable effectsModel = () -> ((Activity<StateContainer>)childActivity).modelEffects(SimulationEngine.this.stateContainer);
             SimulationEngine.this.spawnInThread(childActivityJob, effectsModel);
-            SimulationEngine.this.resumeAfter(Duration.fromQuantity(0, TimeUnit.MICROSECONDS), childActivityJob);
+            SimulationEngine.this.resumeAfter(duration, childActivityJob);
 
             return new SpawnedActivityHandle() {
                 @Override

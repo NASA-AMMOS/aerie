@@ -1,16 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
@@ -75,18 +72,14 @@ public class InstrumentOnTest {
     public void modelEffectsWorks() {
         final double powerLoadWatts = 10.0;
         final var powerState = new InstrumentPower();
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(final StateContainer _states) {
-                SimulationEffects.spawnAndWait(new InstrumentOn<>(powerLoadWatts, powerState));
-                assertThat(powerState.get()).isCloseTo( powerLoadWatts, withinPercentage(0.01));
-            }
-        };
 
         final var startTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
         SimulationEngine.simulate(
             startTime,
-            List.of(Pair.of(startTime, activity)),
-            () -> List.of(powerState));
+            () -> List.of(powerState),
+            () -> {
+                spawn(new InstrumentOn<>(powerLoadWatts, powerState)).await();
+                assertThat(powerState.get()).isCloseTo(powerLoadWatts, withinPercentage(0.01));
+            });
     }
 }

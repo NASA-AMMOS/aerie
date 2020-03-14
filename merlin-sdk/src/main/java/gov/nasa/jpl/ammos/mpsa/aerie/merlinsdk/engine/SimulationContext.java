@@ -10,7 +10,7 @@ public interface SimulationContext {
     /**
      * spawns a child activity in the background
      */
-    SpawnedActivityHandle spawnActivity(Activity<?> childActivity);
+    SpawnedActivityHandle defer(Duration duration, Activity<?> activity);
 
     /**
      * delays the simulation for some specified amount of time
@@ -29,28 +29,7 @@ public interface SimulationContext {
      */
     Instant now();
 
-
     interface SpawnedActivityHandle {
         void await();
-    }
-
-
-    /**
-     * Spawns a child activity and blocks on the completion of its effect model
-     *
-     * If non-blocking behavior is desired, see `spawnActivity()`.
-     *
-     * @param childActivity the child activity that should be spawned and blocked on
-     */
-    default void callActivity(final Activity<?> childActivity) {
-        this.spawnActivity(childActivity).await();
-    }
-
-    default void delayUntil(Instant time) {
-        this.delay(time.durationFrom(this.now()));
-    }
-
-    default void delay(final long quantity, final TimeUnit units) {
-        this.delay(Duration.fromQuantity(quantity, units));
     }
 }

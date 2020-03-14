@@ -14,7 +14,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -26,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
   private final Map<String, Schedule> schedules = new HashMap<>();
@@ -180,18 +181,18 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     final var adaptation = loadAdaptationProvider(adaptationJar.jarPath).get();
     final var activityMapper = adaptation.getActivityMapper();
 
-    final List<Pair<Instant, ? extends Activity<StateContainer>>> simulationJobs = new ArrayList<>();
-    for (final var scheduledActivity : schedule.scheduledActivities) {
-      final Activity<? extends StateContainer> activity = activityMapper
-          .deserializeActivity(scheduledActivity.activity)
-          .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
-
-      simulationJobs.add(Pair.of(scheduledActivity.startTime, (Activity<StateContainer>)activity));
-    }
-
     final var simulationStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
     final StateContainer stateContainer = adaptation.createStateModels();
-    SimulationEngine.simulate(simulationStartTime, simulationJobs, stateContainer);
+
+    SimulationEngine.simulate(simulationStartTime, stateContainer, () -> {
+      for (final var scheduledActivity : schedule.scheduledActivities) {
+        final Activity<? extends StateContainer> activity = activityMapper
+            .deserializeActivity(scheduledActivity.activity)
+            .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
+
+        deferTo(scheduledActivity.startTime, activity);
+      }
+    });
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();
     for (final var state : stateContainer.getStateList()) {

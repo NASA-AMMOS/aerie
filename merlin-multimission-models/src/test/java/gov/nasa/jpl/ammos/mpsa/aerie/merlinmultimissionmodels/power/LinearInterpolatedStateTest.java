@@ -1,22 +1,18 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
-
 
 /**
  * exercises basic functionality and mathematics of the simple linear interpolation state
@@ -45,85 +41,65 @@ public class LinearInterpolatedStateTest {
     @Test
     public void getAtLeftWorks() {
         final var state = new LinearInterpolatedState(t2020, 100, t2020_10s, 110);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(final StateContainer _states) {
-                double result = state.get(SimulationEffects.now());
-                assertThat(result).isCloseTo(100, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             simStart,
-            List.of(Pair.of(simStart, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                double result = state.get(now());
+                assertThat(result).isCloseTo(100, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtRightWorks() {
         final var state = new LinearInterpolatedState(t2020, 100, t2020_10s, 110);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                double result = state.get(SimulationEffects.now().plus(10, TimeUnit.SECONDS));
-                assertThat(result).isCloseTo(110, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             simStart,
-            List.of(Pair.of(simStart, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                double result = state.get(now().plus(10, TimeUnit.SECONDS));
+                assertThat(result).isCloseTo(110, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtMiddleWorks() {
         final var state = new LinearInterpolatedState(t2020, 100, t2020_20s, 120);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                double result = state.get(SimulationEffects.now().plus(10, TimeUnit.SECONDS));
-                assertThat(result).isCloseTo(110, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             simStart,
-            List.of(Pair.of(simStart, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                double result = state.get(now().plus(10, TimeUnit.SECONDS));
+                assertThat(result).isCloseTo(110, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getPastLeftWorks() {
         final var state = new LinearInterpolatedState(t2020_10s, 100, t2020_20s, 110);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                double result = state.get(SimulationEffects.now().minus(10, TimeUnit.SECONDS));
-                assertThat(result).isCloseTo(90, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             simStart.plus(10, TimeUnit.SECONDS),
-            List.of(Pair.of(simStart.plus(10, TimeUnit.SECONDS), activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                double result = state.get(now().minus(10, TimeUnit.SECONDS));
+                assertThat(result).isCloseTo(90, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getPastRightWorks() {
         final var state = new LinearInterpolatedState(t2020, 100, t2020_10s, 110);
-        final var activity = new Activity<>() {
-            @Override
-            public void modelEffects(StateContainer states) {
-                double result = state.get(SimulationEffects.now().plus(20, TimeUnit.SECONDS));
-                assertThat(result).isCloseTo(120, withinPercentage(0.01));
-            }
-        };
 
         SimulationEngine.simulate(
             simStart,
-            List.of(Pair.of(simStart, activity)),
-            () -> List.of(state));
+            () -> List.of(state),
+            () -> {
+                double result = state.get(now().plus(20, TimeUnit.SECONDS));
+                assertThat(result).isCloseTo(120, withinPercentage(0.01));
+            });
     }
 }

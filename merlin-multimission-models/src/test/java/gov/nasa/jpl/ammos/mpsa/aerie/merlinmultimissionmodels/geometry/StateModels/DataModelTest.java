@@ -8,14 +8,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.List;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 
 public class DataModelTest {
 
@@ -83,99 +82,35 @@ public class DataModelTest {
     /*----------------------------------------------------------------------------------------------------*/
 
     @Test
-    public void basic_sim_test(){
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        final var activityList = List.of(
-            Pair.of(simStart, new TurnInstrumentAOn()),
-            Pair.of(simStart, new InitBinDataVolumes())
-        );
-
-        DataModelStates states = new DataModelStates();
-
-        final var simEnd = SimulationEngine.simulate(simStart, activityList, states);
-        System.out.println(simEnd);
-
-    }
-
-    @Test
     public void bin_initialization() {
+        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var states = new DataModelStates();
 
-        System.out.println("\nBin Initialization test start");
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        final List<Pair<Instant, ? extends Activity<DataModelStates>>> activityJobList = List.of(
-            Pair.of(simStart, new InitBinDataVolumes())
-        );
-
-        DataModelStates states = new DataModelStates();
-
-        SimulationEngine.simulate(simStart, activityJobList, states);
-
-        states.bin_1.printHistory();
-        states.bin_2.printHistory();
-        states.bin_3.printHistory();
-        System.out.println("Bin Initialization test end\n");
-        //add assert statements*/
-
-        /*--------------------------------*/
-
-
-
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitBinDataVolumes());
+        });
     }
 
     @Test
     public void turn_instrument_on(){
+        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var states = new DataModelStates();
 
-        System.out.println("\nTurn instrument on test start");
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        final List<Pair<Instant, ? extends Activity<DataModelStates>>> activityJobList = List.of(
-            Pair.of(simStart, new InitBinDataVolumes()),
-            Pair.of(simStart, new TurnInstrumentAOn())
-        );
-
-        DataModelStates states = new DataModelStates();
-
-        SimulationEngine.simulate(simStart, activityJobList, states);
-
-        states.bin_1.printHistory();
-        states.bin_2.printHistory();
-        states.bin_3.printHistory();
-
-        states.instrument_a_data_rate.printHistory();
-
-        System.out.println("Turn instrument on test end\n");
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+        });
     }
 
     @Test
     public void downlink_data(){
+        final var simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        final var states = new DataModelStates();
 
-        System.out.println("\nTurn instrument on test start");
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        //Create activities
-        final List<Pair<Instant, ? extends Activity<DataModelStates>>> activityJobList = List.of(
-            Pair.of(simStart, new InitBinDataVolumes()),
-            Pair.of(simStart, new TurnInstrumentAOn()),
-            Pair.of(simStart, new DownlinkData())
-        );
-
-        DataModelStates states = new DataModelStates();
-
-        SimulationEngine.simulate(simStart, activityJobList, states);
-
-        states.bin_1.printHistory();
-        states.bin_2.printHistory();
-        states.bin_3.printHistory();
-
-        states.instrument_a_data_rate.printHistory();
-
-        System.out.println("Turn instrument on test end\n");
-
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+            spawn(new DownlinkData());
+        });
     }
 }
