@@ -105,9 +105,7 @@ public final class SimulationEngine implements SimulationContext {
             final var startTime = entry.getLeft();
             final var activity = entry.getRight();
 
-            final var job = new JobContext(activity);
-
-            this.pendingEventQueue.add(Pair.of(startTime, job));
+            this.spawnJobContext(startTime, activity);
         }
     }
 
@@ -173,7 +171,7 @@ public final class SimulationEngine implements SimulationContext {
 
             this.currentSimulationTime = eventTime;
             this.activeJob = job;
-            this.executeActivity(job);
+            job.resume();
             this.activeJob = null;
         }
 
@@ -184,40 +182,13 @@ public final class SimulationEngine implements SimulationContext {
         this.threadPool.shutdown();
     }
 
-    /**
-     * Executes the effect model of an `ActivityJob`
-     *
-     * This method either starts or resumes an activity job (depending upon if it
-     * had already been started and suspended in the past). If the job needs to
-     * be started, this method dispatches a `JobContext` and the engine's states
-     * to the job. The engine uses a `ControlChannel` to yield control to the
-     * activity job's thread and block until it returns that control (upon effect model
-     * completion OR a delay).
-     * 
-     * @param activityJob the activity job to start or resume
-     */
-    private void executeActivity(JobContext activityJob) {
-        switch (activityJob.status) {
-        case NotStarted:
-            this.threadPool.execute(() -> SimulationEffects.withEffects(this, activityJob::start));
-            activityJob.resume();
-            break;
-        case InProgress:
-            activityJob.resume();
-            break;
-        case Complete:
-            throw new IllegalStateException("Completed activity is somehow in the pending event queue.");
-        default:
-            throw new IllegalStateException("Unknown activity status");
-        }
-    }
-
-    private JobContext spawnJobContext(final Activity<?> child) {
+    private JobContext spawnJobContext(final Instant startTime, final Activity<?> child) {
         final var childActivityJob = new JobContext(child);
 
-        this.activeJob.children.add(childActivityJob);
+        if (this.activeJob != null) this.activeJob.children.add(childActivityJob);
 
-        this.pendingEventQueue.add(Pair.of(this.currentSimulationTime, childActivityJob));
+        this.threadPool.execute(() -> SimulationEffects.withEffects(this, childActivityJob::start));
+        this.pendingEventQueue.add(Pair.of(startTime, childActivityJob));
 
         return childActivityJob;
     }
@@ -243,8 +214,8 @@ public final class SimulationEngine implements SimulationContext {
     }
 
     @Override
-    public SpawnedActivityHandle spawnActivity(Activity<?> childActivity) {
-        final var childActivityJob = this.spawnJobContext(childActivity);
+    public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
+        final var childActivityJob = this.spawnJobContext(this.currentSimulationTime, childActivity);
 
         return new SimulationContext.SpawnedActivityHandle() {
             @Override
