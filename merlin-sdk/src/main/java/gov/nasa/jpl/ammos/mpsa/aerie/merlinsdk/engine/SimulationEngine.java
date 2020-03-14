@@ -38,21 +38,16 @@ import org.apache.commons.lang3.tuple.Pair;
  * - activities and their durations (in simulation time)
  * - activities and their listeners (other activities blocking on the key's completion)
  */
-public final class SimulationEngine implements SimulationContext {
+public final class SimulationEngine {
     /**
      * The current simulation time of the engine
      */
     private Instant currentSimulationTime;
 
     /**
-     * The job to which any SimulationEffects calls shall be ascribed.
-     */
-    private JobContext activeJob = null;
-
-    /**
      * The priority queue of time-ordered activity resumption points
      */
-    private PriorityQueue<Pair<Instant, JobContext>> pendingEventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
+    private PriorityQueue<Pair<Instant, JobContext>> eventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     private StateContainer stateContainer;
 
@@ -88,11 +83,10 @@ public final class SimulationEngine implements SimulationContext {
      * @param activities
      * @param stateContainer
      */
-    private <T extends StateContainer>
-    SimulationEngine(
-        Instant simulationStartTime,
-        List<Pair<Instant, ? extends Activity<T>>> activities,
-        T stateContainer
+    private <T extends StateContainer> SimulationEngine(
+        final Instant simulationStartTime,
+        final List<Pair<Instant, ? extends Activity<T>>> activities,
+        final T stateContainer
     ) {
         this.stateContainer = stateContainer;
         this.currentSimulationTime = simulationStartTime;
@@ -105,7 +99,9 @@ public final class SimulationEngine implements SimulationContext {
             final var startTime = entry.getLeft();
             final var activity = entry.getRight();
 
-            this.spawnJobContext(startTime, () -> activity.modelEffects(stateContainer));
+            final var childActivityJob = new JobContext();
+            SimulationEngine.this.spawnInThread(childActivityJob, () -> activity.modelEffects(stateContainer));
+            SimulationEngine.this.resumeAfter(startTime.durationFrom(this.currentSimulationTime), childActivityJob);
         }
     }
 
@@ -154,8 +150,8 @@ public final class SimulationEngine implements SimulationContext {
         var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.
-        while (!this.pendingEventQueue.isEmpty()) {
-            final var event = pendingEventQueue.remove();
+        while (!this.eventQueue.isEmpty()) {
+            final var event = eventQueue.remove();
             final var eventTime = event.getLeft();
             final var job = event.getRight();
 
@@ -170,9 +166,7 @@ public final class SimulationEngine implements SimulationContext {
             }
 
             this.currentSimulationTime = eventTime;
-            this.activeJob = job;
             job.resume();
-            this.activeJob = null;
         }
 
         if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
@@ -182,70 +176,15 @@ public final class SimulationEngine implements SimulationContext {
         this.threadPool.shutdown();
     }
 
-    private JobContext spawnJobContext(final Instant startTime, final Runnable effectsModel) {
-        final var childActivityJob = new JobContext(effectsModel);
-
-        if (this.activeJob != null) this.activeJob.children.add(childActivityJob);
-
-        this.threadPool.execute(() -> SimulationEffects.withEffects(this, childActivityJob::start));
-        this.pendingEventQueue.add(Pair.of(startTime, childActivityJob));
-
-        return childActivityJob;
+    private void spawnInThread(final JobContext job, final Runnable effectsModel) {
+        this.threadPool.execute(() -> job.start(effectsModel));
     }
 
-    private void delay(final Instant resumeTime) {
-        if (resumeTime.isBefore(this.currentSimulationTime)) {
-            throw new IllegalArgumentException("Resumption time must occur in the future");
-        }
-
-        this.pendingEventQueue.add(Pair.of(resumeTime, this.activeJob));
-
-        this.activeJob.yield();
+    private void resumeAfter(final Duration duration, final JobContext job) {
+        this.eventQueue.add(Pair.of(this.currentSimulationTime.plus(duration), job));
     }
 
-    private void waitForActivity(final JobContext jobToAwait) {
-        // handle case where activity is already complete:
-        // we don't want to block on it because we will never receive a notification that it is complete
-        if (jobToAwait.status == ActivityStatus.Complete) return;
-
-        jobToAwait.listeners.add(this.activeJob);
-
-        this.activeJob.yield();
-    }
-
-    public SpawnedActivityHandle spawnActivity(final Runnable effectsModel) {
-        final var childActivityJob = this.spawnJobContext(this.currentSimulationTime, effectsModel);
-
-        return new SimulationContext.SpawnedActivityHandle() {
-            @Override
-            public void await() {
-                SimulationEngine.this.waitForActivity(childActivityJob);
-            }
-        };
-    }
-
-    @Override
-    public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
-        return this.spawnActivity(() -> ((Activity<StateContainer>)childActivity).modelEffects(this.stateContainer));
-    }
-
-    @Override
-    public void delay(Duration duration) {
-        if (duration.isNegative()) throw new IllegalArgumentException("Duration must be non-negative");
-        this.delay(this.currentSimulationTime.plus(duration));
-    }
-
-    @Override
-    public void waitForAllChildren() {
-        for (final var child : this.activeJob.children) this.waitForActivity(child);
-    }
-
-    @Override
-    public Instant now() {
-        return this.currentSimulationTime;
-    }
-
-    public enum ActivityStatus { NotStarted, InProgress, Complete }
+    private enum ActivityStatus { NotStarted, InProgress, Complete }
 
     /**
      * Functions as a bridge between the simulation engine and an activity job
@@ -257,30 +196,25 @@ public final class SimulationEngine implements SimulationContext {
      * engine behaviors (like adding listeners) are exposed to the `ActivityJob` class but NOT to adapters in their
      * effect models.
      */
-    private final class JobContext {
+    private final class JobContext implements SimulationContext {
         private final ControlChannel channel = new ControlChannel();
+        private final List<JobContext> children = new ArrayList<>();
+        private final Set<JobContext> listeners = new HashSet<>();
 
-        public final Runnable effectsModel;
-        public final List<JobContext> children = new ArrayList<>();
-        public final Set<JobContext> listeners = new HashSet<>();
         public ActivityStatus status = ActivityStatus.NotStarted;
 
-        public JobContext(final Runnable effectsModel) {
-            this.effectsModel = effectsModel;
-        }
-
-        public void start() {
+        public void start(final Runnable effectsModel) {
             this.channel.takeControl();
 
             this.status = ActivityStatus.InProgress;
-            this.effectsModel.run();
-            SimulationEffects.waitForChildren();
+            SimulationEffects.withEffects(this, () -> effectsModel.run());
+            this.waitForAllChildren();
             this.status = ActivityStatus.Complete;
 
             // Notify any listeners that we've finished.
             for (final var listener : this.listeners) {
                 this.listeners.remove(listener);
-                SimulationEngine.this.pendingEventQueue.add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
+                SimulationEngine.this.eventQueue.add(Pair.of(SimulationEngine.this.currentSimulationTime, listener));
             }
 
             this.channel.yieldControl();
@@ -294,6 +228,50 @@ public final class SimulationEngine implements SimulationContext {
         public void resume() {
             this.channel.yieldControl();
             this.channel.takeControl();
+        }
+
+        @Override
+        public SpawnedActivityHandle spawnActivity(final Activity<?> childActivity) {
+            final var childActivityJob = new JobContext();
+            this.children.add(childActivityJob);
+
+            final Runnable effectsModel = () -> ((Activity<StateContainer>)childActivity).modelEffects(SimulationEngine.this.stateContainer);
+            SimulationEngine.this.spawnInThread(childActivityJob, effectsModel);
+            SimulationEngine.this.resumeAfter(Duration.fromQuantity(0, TimeUnit.MICROSECONDS), childActivityJob);
+
+            return new SpawnedActivityHandle() {
+                @Override
+                public void await() {
+                    JobContext.this.waitForActivity(childActivityJob);
+                }
+            };
+        }
+
+        @Override
+        public void delay(Duration duration) {
+            if (duration.isNegative()) throw new IllegalArgumentException("Duration must be non-negative");
+
+            SimulationEngine.this.resumeAfter(duration, this);
+            this.yield();
+        }
+
+        private void waitForActivity(final JobContext jobToAwait) {
+            // handle case where activity is already complete:
+            // we don't want to block on it because we will never receive a notification that it is complete
+            if (jobToAwait.status == ActivityStatus.Complete) return;
+
+            jobToAwait.listeners.add(this);
+            this.yield();
+        }
+
+        @Override
+        public void waitForAllChildren() {
+            for (final var child : this.children) this.waitForActivity(child);
+        }
+
+        @Override
+        public Instant now() {
+            return SimulationEngine.this.currentSimulationTime;
         }
     }
 }
