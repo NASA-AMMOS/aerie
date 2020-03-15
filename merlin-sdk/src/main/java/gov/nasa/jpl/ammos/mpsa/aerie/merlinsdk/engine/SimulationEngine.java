@@ -79,7 +79,6 @@ public final class SimulationEngine {
 
     private <T extends StateContainer> SimulationEngine(
         final Instant simulationStartTime,
-        final Runnable topLevel,
         final T stateContainer
     ) {
         this.effectsProvider = new EffectsProvider(stateContainer);
@@ -88,10 +87,6 @@ public final class SimulationEngine {
         for (final var state : stateContainer.getStateList()) {
             state.initialize(simulationStartTime);
         }
-
-        final var rootJob = new JobContext();
-        SimulationEngine.this.spawnInThread(rootJob, topLevel);
-        SimulationEngine.this.resumeAfter(Duration.ZERO, rootJob);
     }
 
     public static <T extends StateContainer> Instant simulate(
@@ -99,8 +94,8 @@ public final class SimulationEngine {
         final T stateContainer,
         final Runnable topLevel
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, topLevel, stateContainer);
-        engine.run();
+        final var engine = new SimulationEngine(simulationStartTime, stateContainer);
+        engine.run(topLevel);
         return engine.currentSimulationTime;
     }
 
@@ -111,9 +106,9 @@ public final class SimulationEngine {
         final Duration samplingPeriod,
         final Consumer<Instant> samplingHook
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, topLevel, stateContainer);
+        final var engine = new SimulationEngine(simulationStartTime, stateContainer);
         engine.setSamplingHook(samplingPeriod, samplingHook);
-        engine.run();
+        engine.run(topLevel);
         return engine.currentSimulationTime;
     }
 
@@ -135,7 +130,11 @@ public final class SimulationEngine {
      * 
      * See the class-level docs for more information.
      */
-    private void run() {
+    private void run(final Runnable topLevel) {
+        final var rootJob = new JobContext();
+        SimulationEngine.this.spawnInThread(rootJob, topLevel);
+        SimulationEngine.this.resumeAfter(Duration.ZERO, rootJob);
+
         var nextSampleTime = this.currentSimulationTime;
 
         // Run until we've handled all outstanding activity events.
