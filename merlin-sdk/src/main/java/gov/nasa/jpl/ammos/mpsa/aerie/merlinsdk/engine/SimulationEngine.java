@@ -11,7 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.function.Consumer;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
@@ -44,12 +43,14 @@ public final class SimulationEngine {
      */
     private Instant currentSimulationTime;
 
+    private JobContext activeJob = null;
+
     /**
      * The priority queue of time-ordered activity resumption points
      */
     private PriorityQueue<Pair<Instant, JobContext>> eventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
-    private StateContainer stateContainer;
+    private final SimulationContext effectsProvider;
 
     /**
      * A thread pool used for executing `ActivityJob`s
@@ -81,7 +82,7 @@ public final class SimulationEngine {
         final Runnable topLevel,
         final T stateContainer
     ) {
-        this.stateContainer = stateContainer;
+        this.effectsProvider = new EffectsProvider(stateContainer);
         this.currentSimulationTime = simulationStartTime;
 
         for (final var state : stateContainer.getStateList()) {
@@ -154,8 +155,10 @@ public final class SimulationEngine {
             }
 
             this.currentSimulationTime = eventTime;
+            this.activeJob = job;
             job.yieldControl();
             job.takeControl();
+            this.activeJob = null;
         }
 
         if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
@@ -165,8 +168,8 @@ public final class SimulationEngine {
         this.threadPool.shutdown();
     }
 
-    private void spawnInThread(final JobContext job, final Runnable effectsModel) {
-        this.threadPool.execute(() -> job.start(effectsModel));
+    private void spawnInThread(final JobContext job, final Runnable scope) {
+        this.threadPool.execute(() -> SimulationEffects.withEffects(this.effectsProvider, () -> job.start(scope)));
     }
 
     private void resumeAfter(final Duration duration, final JobContext job) {
@@ -185,7 +188,7 @@ public final class SimulationEngine {
      * engine behaviors (like adding listeners) are exposed to the `ActivityJob` class but NOT to adapters in their
      * effect models.
      */
-    private final class JobContext implements SimulationContext {
+    private final class JobContext {
         private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
         private final Object CONTROL_TOKEN = new Object();
 
@@ -194,12 +197,12 @@ public final class SimulationEngine {
 
         public ActivityStatus status = ActivityStatus.NotStarted;
 
-        public void start(final Runnable effectsModel) {
+        public void start(final Runnable scope) {
             this.takeControl();
 
             this.status = ActivityStatus.InProgress;
-            SimulationEffects.withEffects(this, () -> effectsModel.run());
-            this.waitForAllChildren();
+            scope.run();
+            this.waitForChildren();
             this.status = ActivityStatus.Complete;
 
             // Notify any listeners that we've finished.
@@ -209,6 +212,20 @@ public final class SimulationEngine {
             }
 
             this.yieldControl();
+        }
+
+        public void waitForActivity(final JobContext jobToAwait) {
+            // handle case where activity is already complete:
+            // we don't want to block on it because we will never receive a notification that it is complete
+            if (jobToAwait.status == ActivityStatus.Complete) return;
+
+            jobToAwait.listeners.add(this);
+            this.yieldControl();
+            this.takeControl();
+        }
+
+        public void waitForChildren() {
+            for (final var child : this.children) this.waitForActivity(child);
         }
 
         public void yieldControl() {
@@ -232,20 +249,27 @@ public final class SimulationEngine {
                 }
             }
         }
+    }
+
+    private final class EffectsProvider implements SimulationContext {
+        private final StateContainer stateContainer;
+
+        public EffectsProvider(final StateContainer stateContainer) {
+            this.stateContainer = stateContainer;
+        }
 
         @Override
-        public SpawnedActivityHandle defer(final Duration duration, final Activity<?> childActivity) {
+        public SpawnedActivityHandle defer(final Duration duration, final Runnable childActivity) {
             final var childActivityJob = new JobContext();
-            this.children.add(childActivityJob);
+            SimulationEngine.this.activeJob.children.add(childActivityJob);
 
-            final Runnable effectsModel = () -> ((Activity<StateContainer>)childActivity).modelEffects(SimulationEngine.this.stateContainer);
-            SimulationEngine.this.spawnInThread(childActivityJob, effectsModel);
+            SimulationEngine.this.spawnInThread(childActivityJob, childActivity);
             SimulationEngine.this.resumeAfter(duration, childActivityJob);
 
             return new SpawnedActivityHandle() {
                 @Override
                 public void await() {
-                    JobContext.this.waitForActivity(childActivityJob);
+                    SimulationEngine.this.activeJob.waitForActivity(childActivityJob);
                 }
             };
         }
@@ -254,29 +278,26 @@ public final class SimulationEngine {
         public void delay(Duration duration) {
             if (duration.isNegative()) throw new IllegalArgumentException("Duration must be non-negative");
 
-            SimulationEngine.this.resumeAfter(duration, this);
-            this.yieldControl();
-            this.takeControl();
-        }
+            final var job = SimulationEngine.this.activeJob;
 
-        private void waitForActivity(final JobContext jobToAwait) {
-            // handle case where activity is already complete:
-            // we don't want to block on it because we will never receive a notification that it is complete
-            if (jobToAwait.status == ActivityStatus.Complete) return;
-
-            jobToAwait.listeners.add(this);
-            this.yieldControl();
-            this.takeControl();
+            SimulationEngine.this.resumeAfter(duration, job);
+            job.yieldControl();
+            job.takeControl();
         }
 
         @Override
         public void waitForAllChildren() {
-            for (final var child : this.children) this.waitForActivity(child);
+            SimulationEngine.this.activeJob.waitForChildren();
         }
 
         @Override
         public Instant now() {
             return SimulationEngine.this.currentSimulationTime;
+        }
+
+        @Override
+        public StateContainer getActiveStateContainer() {
+            return this.stateContainer;
         }
     }
 }

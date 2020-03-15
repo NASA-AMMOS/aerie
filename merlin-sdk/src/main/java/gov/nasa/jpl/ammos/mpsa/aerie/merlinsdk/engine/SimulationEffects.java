@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -17,7 +18,8 @@ public final class SimulationEffects {
 
 
   public static SimulationContext.SpawnedActivityHandle defer(final Duration duration, final Activity<?> activity) {
-     return activeContext.get().defer(duration, activity);
+    final var context = activeContext.get();
+    return context.defer(duration, () -> ((Activity<StateContainer>)activity).modelEffects(context.getActiveStateContainer()));
   }
 
   public static SimulationContext.SpawnedActivityHandle defer(final long quantity, final TimeUnit units, final Activity<?> activity) {
