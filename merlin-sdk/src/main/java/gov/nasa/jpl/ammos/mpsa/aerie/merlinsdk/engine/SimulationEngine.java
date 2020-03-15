@@ -65,24 +65,30 @@ public final class SimulationEngine {
 
     /**
      * How often to call the sampling hook during simulation
-     *
-     * Defaults to never.
      */
-    private Duration samplingPeriod = Duration.ZERO;
+    private final Duration samplingPeriod;
 
     /**
      * The sampling hook to call every sampling period
-     *
-     * Defaults to a no-op hook.
      */
-    private Consumer<Instant> samplingHook = (now) -> {};
+    private final Consumer<Instant> samplingHook;
 
     private <T extends StateContainer> SimulationEngine(
         final Instant simulationStartTime,
-        final T stateContainer
+        final T stateContainer,
+        final Duration samplingPeriod,
+        final Consumer<Instant> samplingHook
     ) {
         this.effectsProvider = new EffectsProvider(stateContainer);
         this.currentSimulationTime = simulationStartTime;
+
+        if (samplingHook != null && samplingPeriod.isPositive()) {
+            this.samplingPeriod = samplingPeriod;
+            this.samplingHook = samplingHook;
+        } else {
+            this.samplingPeriod = Duration.ZERO;
+            this.samplingHook = (now) -> {};
+        }
 
         for (final var state : stateContainer.getStateList()) {
             state.initialize(simulationStartTime);
@@ -94,9 +100,7 @@ public final class SimulationEngine {
         final T stateContainer,
         final Runnable topLevel
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, stateContainer);
-        engine.run(topLevel);
-        return engine.currentSimulationTime;
+        return simulate(simulationStartTime, stateContainer, topLevel, Duration.ZERO, null);
     }
 
     public static <T extends StateContainer> Instant simulate(
@@ -106,23 +110,9 @@ public final class SimulationEngine {
         final Duration samplingPeriod,
         final Consumer<Instant> samplingHook
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, stateContainer);
-        engine.setSamplingHook(samplingPeriod, samplingHook);
+        final var engine = new SimulationEngine(simulationStartTime, stateContainer, samplingPeriod, samplingHook);
         engine.run(topLevel);
         return engine.currentSimulationTime;
-    }
-
-    private void setSamplingHook(final Duration samplingPeriod, final Consumer<Instant> samplingHook) {
-        if (samplingHook == null || !samplingPeriod.isPositive()) {
-            this.samplingPeriod = Duration.ZERO;
-            this.samplingHook = (now) -> {};
-        } else {
-            if (this.samplingPeriod.isPositive()) {
-                System.err.println("[WARNING] Overriding existing sampling hook");
-            }
-            this.samplingPeriod = samplingPeriod;
-            this.samplingHook = samplingHook;
-        }
     }
 
     /**
