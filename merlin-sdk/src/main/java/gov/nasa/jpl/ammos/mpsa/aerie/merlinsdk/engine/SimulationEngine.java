@@ -43,7 +43,7 @@ public final class SimulationEngine {
      */
     private Instant currentSimulationTime;
 
-    private JobContext activeJob = null;
+    private volatile JobContext activeJob = null;
 
     /**
      * The priority queue of time-ordered activity resumption points
