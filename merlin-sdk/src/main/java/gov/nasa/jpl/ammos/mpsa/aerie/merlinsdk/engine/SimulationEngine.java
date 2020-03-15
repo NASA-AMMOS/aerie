@@ -111,7 +111,7 @@ public final class SimulationEngine {
         final Consumer<Instant> samplingHook
     ) {
         final var engine = new SimulationEngine(simulationStartTime, stateContainer, samplingPeriod, samplingHook);
-        engine.run(topLevel);
+        engine.run((ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
         return engine.currentSimulationTime;
     }
 
@@ -120,7 +120,7 @@ public final class SimulationEngine {
      * 
      * See the class-level docs for more information.
      */
-    private void run(final Runnable topLevel) {
+    private void run(final Consumer<SimulationContext> topLevel) {
         final var rootJob = new JobContext();
         SimulationEngine.this.spawnInThread(rootJob, topLevel);
         SimulationEngine.this.resumeAfter(Duration.ZERO, rootJob);
@@ -157,8 +157,8 @@ public final class SimulationEngine {
         this.threadPool.shutdown();
     }
 
-    private void spawnInThread(final JobContext job, final Runnable scope) {
-        this.threadPool.execute(() -> SimulationEffects.withEffects(this.effectsProvider, () -> job.start(scope)));
+    private void spawnInThread(final JobContext job, final Consumer<SimulationContext> scope) {
+        this.threadPool.execute(() -> job.start(scope));
     }
 
     private void resumeAfter(final Duration duration, final JobContext job) {
@@ -186,11 +186,11 @@ public final class SimulationEngine {
 
         public ActivityStatus status = ActivityStatus.NotStarted;
 
-        public void start(final Runnable scope) {
+        public void start(final Consumer<SimulationContext> scope) {
             this.takeControl();
 
             this.status = ActivityStatus.InProgress;
-            scope.run();
+            scope.accept(SimulationEngine.this.effectsProvider);
             this.waitForChildren();
             this.status = ActivityStatus.Complete;
 
@@ -248,7 +248,7 @@ public final class SimulationEngine {
         }
 
         @Override
-        public SpawnedActivityHandle defer(final Duration duration, final Runnable childActivity) {
+        public SpawnedActivityHandle defer(final Duration duration, final Consumer<SimulationContext> childActivity) {
             final var childActivityJob = new JobContext();
             SimulationEngine.this.activeJob.children.add(childActivityJob);
 
