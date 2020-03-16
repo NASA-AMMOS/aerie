@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.squareup.javapoet.JavaFile;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
 
@@ -11,19 +12,25 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @SupportedAnnotationTypes({
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter",
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public final class ActivityProcessor extends AbstractProcessor {
@@ -32,7 +39,8 @@ public final class ActivityProcessor extends AbstractProcessor {
   private final JsonFactory jsonFactory = new JsonFactory();
 
   // The set of the names of all activity types seen so far.
-  private final Set<String> activityTypesFound = new HashSet<>();
+  private final Set<ActivityTypeInfo> activityTypesFound = new HashSet<>();
+  private final Set<TypeMirror> activityTypesWithMappers = new HashSet<>();
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
@@ -93,7 +101,8 @@ public final class ActivityProcessor extends AbstractProcessor {
       final ParameterTypeInfo parameterTypeInfo;
       try {
         parameterTypeInfo = this.infoMaker.getParameterInfo(element);
-      } catch (final ParameterTypeException ex) {
+      }
+      catch (final ParameterTypeException ex) {
         this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), ex.getRelatedElement());
         continue;
       }
@@ -107,7 +116,8 @@ public final class ActivityProcessor extends AbstractProcessor {
       final ActivityTypeInfo activityTypeInfo;
       try {
         activityTypeInfo = this.infoMaker.getActivityInfo(element);
-      } catch (final ParameterTypeException ex) {
+      }
+      catch (final ParameterTypeException ex) {
         this.processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, ex.getMessage(), ex.getRelatedElement());
         continue;
       }
@@ -115,12 +125,13 @@ public final class ActivityProcessor extends AbstractProcessor {
       // If this activity type's name collides with another's, report that and bail.
       if (this.activityTypesFound.contains(activityTypeInfo.name)) {
         this.processingEnv.getMessager().printMessage(
-            Diagnostic.Kind.ERROR,
-            "Multiple activity types found with name `" + activityTypeInfo.name + "`",
-            activityTypeInfo.javaType.asElement());
+                Diagnostic.Kind.ERROR,
+                "Multiple activity types found with name `" + activityTypeInfo.name + "`",
+                activityTypeInfo.javaType.asElement());
         continue;
-      } else {
-        this.activityTypesFound.add(activityTypeInfo.name);
+      }
+      else {
+        this.activityTypesFound.add(activityTypeInfo);
       }
 
       // Synthesize a class for serializing and de-serializing this activity type.
@@ -128,11 +139,12 @@ public final class ActivityProcessor extends AbstractProcessor {
         final JavaFile file = this.mapperMaker.makeActivityMapper(activityTypeInfo);
         try {
           file.writeTo(this.processingEnv.getFiler());
-        } catch (final IOException e) {
+        }
+        catch (final IOException e) {
           this.processingEnv.getMessager().printMessage(
-            Diagnostic.Kind.ERROR,
-            "Unable to open file to generate class `" + file.packageName + "." + file.typeSpec.name + "` -- does it already exist?",
-            activityTypeInfo.javaType.asElement());
+                  Diagnostic.Kind.ERROR,
+                  "Unable to open file to generate class `" + file.packageName + "." + file.typeSpec.name + "` -- does it already exist?",
+                  activityTypeInfo.javaType.asElement());
           continue;
         }
       }
@@ -140,26 +152,65 @@ public final class ActivityProcessor extends AbstractProcessor {
       // Save activity type metadata in a META-INF collection.
       try {
         final FileObject resourceFile = this.processingEnv.getFiler().createResource(
-            StandardLocation.CLASS_OUTPUT,
-            "",
-            "META-INF/merlin/activities/" + activityTypeInfo.name,
-            activityTypeInfo.javaType.asElement()
+                StandardLocation.CLASS_OUTPUT,
+                "",
+                "META-INF/merlin/activities/" + activityTypeInfo.name,
+                activityTypeInfo.javaType.asElement()
         );
         writeActivityMetadata(resourceFile, activityTypeInfo);
-      } catch (final IOException e) {
+      }
+      catch (final IOException e) {
         this.processingEnv.getMessager().printMessage(
-            Diagnostic.Kind.ERROR,
-            "Unable to write activity metadata for activity `" + activityTypeInfo.name + "` -- does it already exist?",
-            activityTypeInfo.javaType.asElement());
+                Diagnostic.Kind.ERROR,
+                "Unable to write activity metadata for activity `" + activityTypeInfo.name + "` -- does it already exist?",
+                activityTypeInfo.javaType.asElement());
         continue;
+      }
+    }
+
+    // Take note of any activity mappers. This gets ugly because Java isn't great for handling
+    // annotations with class values
+    final TypeMirror activitiesMappedType = processingEnv.getElementUtils().getTypeElement(ActivitiesMapped.class.getName()).asType();
+    for (final Element element : roundEnv.getElementsAnnotatedWith(ActivitiesMapped.class)) {
+      for (final AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
+        if (annotationMirror.getAnnotationType().equals(activitiesMappedType)) {
+          List<TypeMirror> newActivitiesWithMappers = findActivityTypesWithMappers(annotationMirror);
+          for (TypeMirror mappedActivity : newActivitiesWithMappers) {
+            if (activityTypesWithMappers.contains(mappedActivity)) {
+              throw new RuntimeException("More than one activity mapper found for activity type " + mappedActivity.toString());
+            }
+            activityTypesWithMappers.add(mappedActivity);
+          }
+        }
       }
     }
 
     if (roundEnv.processingOver()) {
       // TODO: Check that every activity/parameter type references only other parameter types.
       //       This may include primitives like double / Double.
-    }
 
+      // Check that every activity type has one and only one associated mapper
+      for (ActivityTypeInfo activityTypeInfo : activityTypesFound) {
+        TypeMirror className = activityTypeInfo.javaType;
+        if (!activityTypesWithMappers.contains(activityTypeInfo.javaType)) {
+          throw new RuntimeException("No mapper specified for activity type " + className);
+        }
+      }
+    }
     return true;
+  }
+
+  private List<TypeMirror> findActivityTypesWithMappers(AnnotationMirror annotationMirror) {
+    List<TypeMirror> activityTypesWithMappers = new ArrayList<>();
+    for (var entry : annotationMirror.getElementValues().entrySet()) {
+      if ("value".equals(entry.getKey().getSimpleName().toString())) {
+        List<? extends AnnotationValue> mappedClasses = (List<? extends AnnotationValue>)entry.getValue().getValue();
+        for (var mappedClass : mappedClasses) {
+          TypeMirror mappedClassMirror = (TypeMirror)mappedClass.getValue();
+          activityTypesWithMappers.add(mappedClassMirror);
+        }
+      }
+    }
+    return activityTypesWithMappers;
   }
 }

@@ -19,7 +19,7 @@ import java.util.List;
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType(name="PeelBanana", states=BananaStates.class, generateMapper=true)
+@ActivityType(name="PeelBanana", states=BananaStates.class)
 public final class PeelBananaActivity implements Activity<BananaStates> {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
