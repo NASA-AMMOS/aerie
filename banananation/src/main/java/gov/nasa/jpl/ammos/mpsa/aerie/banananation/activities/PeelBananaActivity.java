@@ -38,7 +38,7 @@ public final class PeelBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext ctx, BananaStates states) {
+  public void modelEffects(BananaStates states) {
     if (peelDirection.equals("fromStem")) {
       states.fruitState.set(states.fruitState.get() - MASHED_BANANA_AMOUNT);
     }

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
@@ -21,8 +22,6 @@ public class InstrumentModel implements SettableState<Double> {
     // but I feel like this makes the parent class unwieldy.  It also suggests a relationship between the
     // child and parent class that might not always be what the adapter wants.
     private BinModel bin;
-
-    private SimulationEngine engine;
 
     private Map<Instant, Double> stateHistory = new LinkedHashMap<>();
 
@@ -53,21 +52,6 @@ public class InstrumentModel implements SettableState<Double> {
         }
         this.bin = bin;
     }
-
-    /** If everyone is OK w/ me adding getName() to the state interface I will remove this comment block.
-
-
-    // I need this b/c in my OnboardDataModelStates constructor I use the name to add each state to a map.
-    // B/c I'm cycling thru all the States, I'm using the generic State object and need a method that the State object has
-    // I'm guessing it's not kosher to override the toString method to return a name/identifier
-    //I think I should probably make a OnboardData state interface and this implement it
-    //Or I can just create a getName method in both data related classes and then just force the adapter to specify which
-    //implemented state class they are using
-    //I'll fix this before PR
-    @Override
-    public String toString(){
-        return this.name;
-    }*/
 
     @Override
     public String getName() { return this.name; }
@@ -104,7 +88,7 @@ public class InstrumentModel implements SettableState<Double> {
 
     @Override
     public void set(Double newRate){
-        Instant curTime = engine.getCurrentSimulationTime();
+        Instant curTime = SimulationEffects.now();
         bin.updateRate(curTime, newRate - this.rate);
         this.rate = newRate;
         if (this.rate > 0.0){
@@ -114,11 +98,6 @@ public class InstrumentModel implements SettableState<Double> {
             this.on_status = false;
         }
         stateHistory.put(curTime, this.rate);
-    }
-
-    @Override
-    public void setEngine(SimulationEngine engine) {
-        this.engine = engine;
     }
 
     @Override

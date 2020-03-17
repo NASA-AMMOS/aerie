@@ -1,9 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -170,28 +169,11 @@ public class SolarArrayPower implements RandomAccessState<Double> {
 
     /**
      * {@inheritDoc}
-     */
-    @Override
-    public void setEngine(SimulationEngine engine) {
-        this.simEngine = engine;
-    }
-
-    /**
-     * {@inheritDoc}
      *
      * since this is a stopgap, this method is non-functional: just returns an empty map
      */
     @Override
     public Map<Instant, Double> getHistory() {
-        return new LinkedHashMap<Instant,Double>();
+        return Collections.emptyMap();
     }
-
-    /**
-     * this is a stop-gap reference to the simulation engine required by the current
-     * simulation implementation and used to determine the current simulation time or
-     * tag history values. eventually that kind of context would be provided by the
-     * engine itself in any call to the state model
-     */
-    private SimulationEngine simEngine;
-
 }

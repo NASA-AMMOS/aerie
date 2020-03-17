@@ -17,7 +17,7 @@ import java.util.List;
 public class InitializeBinDataVolume implements Activity<SampleMissionStates> {
     //this activitiy initializes the state history of each bin with the current sim time and total data rate
     @Override
-    public void modelEffects(SimulationContext ctx, SampleMissionStates states){
+    public void modelEffects(SampleMissionStates states){
 
         List<BinModel> bins = states.getBinModelList();
         for (BinModel x : bins){

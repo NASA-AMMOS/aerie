@@ -23,6 +23,7 @@ java_test(
     resources = glob(["src/test/resources/**/*"]),
     resources_root = "src/test/resources/",
     deps = [
+        "//third-party:assertj-core",
         "//third-party:JNISpice",
         "//third-party:junit",
         "//third-party:hamcrest-all",

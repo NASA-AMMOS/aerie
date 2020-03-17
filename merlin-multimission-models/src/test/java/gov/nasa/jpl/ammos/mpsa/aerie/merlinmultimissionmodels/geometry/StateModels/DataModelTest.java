@@ -4,18 +4,17 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 
 public class DataModelTest {
 
@@ -44,7 +43,7 @@ public class DataModelTest {
 
 
         @Override
-        public void modelEffects(SimulationContext ctx, DataModelStates states){
+        public void modelEffects(DataModelStates states){
 
             states.bin_1.initializeBinData();
             states.bin_2.initializeBinData();
@@ -56,9 +55,9 @@ public class DataModelTest {
     public static class TurnInstrumentAOn implements Activity<DataModelStates> {
 
         @Override
-        public void modelEffects(SimulationContext ctx, DataModelStates states){
+        public void modelEffects(DataModelStates states){
 
-            ctx.delay(1, TimeUnit.HOURS);
+            delay(1, TimeUnit.HOURS);
 
             InstrumentModel some_a_instrument = states.instrument_a_data_rate;
             some_a_instrument.set(10.0);
@@ -69,9 +68,9 @@ public class DataModelTest {
     public static class DownlinkData implements Activity<DataModelStates>{
 
         @Override
-        public void modelEffects(SimulationContext ctx, DataModelStates states){
+        public void modelEffects(DataModelStates states){
 
-            ctx.delay(2, TimeUnit.HOURS);
+            delay(2, TimeUnit.HOURS);
 
             states.bin_1.downlink();
 
@@ -83,130 +82,35 @@ public class DataModelTest {
     /*----------------------------------------------------------------------------------------------------*/
 
     @Test
-    public void basic_sim_test(){
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
-
-
-        ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
-        ActivityJob<DataModelStates> binData = new ActivityJob<>(binDataVolumes, simStart);
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-
-        activityJobList.add(instrumentOn);
-        activityJobList.add(binData);
-
-        DataModelStates states = new DataModelStates();
-
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-
-        engine.simulate();
-
-        System.out.println(engine.getCurrentSimulationTime());
-
-    }
-
-    @Test
     public void bin_initialization() {
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new DataModelStates();
 
-        System.out.println("\nBin Initialization test start");
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binDataInit);
-
-
-        DataModelStates states = new DataModelStates();
-
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        states.bin_1.printHistory();
-        states.bin_2.printHistory();
-        states.bin_3.printHistory();
-        System.out.println("Bin Initialization test end\n");
-        //add assert statements*/
-
-        /*--------------------------------*/
-
-
-
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitBinDataVolumes());
+        });
     }
 
     @Test
     public void turn_instrument_on(){
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new DataModelStates();
 
-        System.out.println("\nTurn instrument on test start");
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binDataInit);
-
-
-        DataModelStates states = new DataModelStates();
-
-        TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
-        ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
-        activityJobList.add(instrumentOn);
-
-        SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        states.bin_1.printHistory();
-        states.bin_2.printHistory();
-        states.bin_3.printHistory();
-
-        states.instrument_a_data_rate.printHistory();
-
-        System.out.println("Turn instrument on test end\n");
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+        });
     }
 
     @Test
     public void downlink_data(){
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new DataModelStates();
 
-        System.out.println("\nTurn instrument on test start");
-
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-
-        //Create activities
-        InitBinDataVolumes binDataVolumes = new InitBinDataVolumes();
-        ActivityJob<DataModelStates> binDataInit = new ActivityJob<>(binDataVolumes, simStart);
-
-        TurnInstrumentAOn instrumentAOnAct = new TurnInstrumentAOn();
-        ActivityJob<DataModelStates> instrumentOn= new ActivityJob<>(instrumentAOnAct, simStart);
-
-        DownlinkData downlinkData = new DownlinkData();
-        ActivityJob<DataModelStates> downlinkAct = new ActivityJob<>(downlinkData, simStart);
-
-
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binDataInit);
-        activityJobList.add(instrumentOn);
-        activityJobList.add(downlinkAct);
-
-        DataModelStates states = new DataModelStates();
-
-        SimulationEngine  engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        states.bin_1.printHistory();
-        states.bin_2.printHistory();
-        states.bin_3.printHistory();
-
-        states.instrument_a_data_rate.printHistory();
-
-        System.out.println("Turn instrument on test end\n");
-
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+            spawn(new DownlinkData());
+        });
     }
 }

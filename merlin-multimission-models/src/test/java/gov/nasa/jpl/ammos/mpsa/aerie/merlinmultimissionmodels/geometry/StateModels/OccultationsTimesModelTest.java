@@ -10,7 +10,6 @@ import java.net.URL;
 import java.util.List;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -25,27 +24,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.S
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrappers.OccultationsTest;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 
-
 @Ignore
 public class OccultationsTimesModelTest {
-    
-    public class MockStateContainer implements StateContainer {
-        public List<State<?>> getStateList() {
-            return List.of();
-        }
-    }
-    public SimulationEngine mockEngine = new SimulationEngine(
-        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
-        List.of(),
-        new MockStateContainer());
-
     @BeforeClass
     public static void loadSpiceAndKernels() {
         SpiceLoader.loadSpice();
@@ -136,14 +121,10 @@ public class OccultationsTimesModelTest {
 
     @Test
     public void testOccultationTimesModel() {
-
-        Time start = Time.fromTimezoneString("2001-335T00:00:00.0", "UTC");
-        Time end = Time.fromTimezoneString("2002-001T00:00:00.0", "UTC");
-
-        OccultationTimesModel earthMoonSunOccultationsModel = new OccultationTimesModel();
-        earthMoonSunOccultationsModel.setEngine(mockEngine);
-        earthMoonSunOccultationsModel.setStart(start);
-        earthMoonSunOccultationsModel.setEnd(end);
+        final var startTime = SimulationInstant.ORIGIN;
+        final var earthMoonSunOccultationsModel = new OccultationTimesModel();
+        earthMoonSunOccultationsModel.setStart(Time.fromTimezoneString("2001-335T00:00:00.0", "UTC"));
+        earthMoonSunOccultationsModel.setEnd(Time.fromTimezoneString("2002-001T00:00:00.0", "UTC"));
         earthMoonSunOccultationsModel.setOccType(OccultationType.ANY);
         earthMoonSunOccultationsModel.setFrontBody(Body.MOON);
         earthMoonSunOccultationsModel.setFrontShape(Shape.ELLIPSOID);
@@ -155,47 +136,51 @@ public class OccultationsTimesModelTest {
         earthMoonSunOccultationsModel.setObserver(Body.EARTH);
         earthMoonSunOccultationsModel.setStepSize(Duration.fromMinutes(3));
 
-        List<Pair<Time, Time>> occTimes = earthMoonSunOccultationsModel.get();
-        assertEquals("1 occultation window expected; '" + occTimes.size() + "' received.", 1, occTimes.size());
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(earthMoonSunOccultationsModel),
+            () -> {
+                List<Pair<Time, Time>> occTimes = earthMoonSunOccultationsModel.get();
+                assertEquals("1 occultation window expected; '" + occTimes.size() + "' received.", 1, occTimes.size());
 
-        Time expectedStart = Time.fromTimezoneString("2001-348T20:10:14.195952", "UTC");
-        Time expectedEnd = Time.fromTimezoneString("2001-348T21:35:50.317994", "UTC");
-        
-        Time actualStart = occTimes.get(0).getLeft();
-        Time actualEnd = occTimes.get(0).getRight();
+                Time expectedStart = Time.fromTimezoneString("2001-348T20:10:14.195952", "UTC");
+                Time expectedEnd = Time.fromTimezoneString("2001-348T21:35:50.317994", "UTC");
 
-        // assert that the difference between each SPICE-predicted occultation and actual
-        // occultation is less than three minutes (our stepSize)
+                Time actualStart = occTimes.get(0).getLeft();
+                Time actualEnd = occTimes.get(0).getRight();
 
-        Duration startDifference = expectedStart.absoluteDifference(actualStart);
-        String message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
-                + "' should be less than 3 minutes.";
-        assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+                // assert that the difference between each SPICE-predicted occultation and actual
+                // occultation is less than three minutes (our stepSize)
 
-        Duration endDifference = expectedEnd.absoluteDifference(actualEnd);
-        message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
-                + "' should be less than 3 minutes.";
-        assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+                Duration startDifference = expectedStart.absoluteDifference(actualStart);
+                String message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
+                        + "' should be less than 3 minutes.";
+                assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
 
-        // change Moon reference frame (should not impact correct time much)
-        earthMoonSunOccultationsModel.setFrontFrame(ReferenceFrame.MOON_PA);
-        occTimes = earthMoonSunOccultationsModel.get();
-        
-        actualStart = occTimes.get(0).getLeft();
-        actualEnd = occTimes.get(0).getRight();
+                Duration endDifference = expectedEnd.absoluteDifference(actualEnd);
+                message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
+                        + "' should be less than 3 minutes.";
+                assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
 
-        // assert that the difference between each SPICE-predicted occultation and actual
-        // occultation is less than three minutes (our stepSize)
+                // change Moon reference frame (should not impact correct time much)
+                earthMoonSunOccultationsModel.setFrontFrame(ReferenceFrame.MOON_PA);
+                occTimes = earthMoonSunOccultationsModel.get();
 
-        startDifference = expectedStart.absoluteDifference(actualStart);
-        message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
-                + "' should be less than 3 minutes.";
-        assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+                actualStart = occTimes.get(0).getLeft();
+                actualEnd = occTimes.get(0).getRight();
 
-        endDifference = expectedEnd.absoluteDifference(actualEnd);
-        message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
-                + "' should be less than 3 minutes.";
-        assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+                // assert that the difference between each SPICE-predicted occultation and actual
+                // occultation is less than three minutes (our stepSize)
 
+                startDifference = expectedStart.absoluteDifference(actualStart);
+                message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
+                        + "' should be less than 3 minutes.";
+                assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+
+                endDifference = expectedEnd.absoluteDifference(actualEnd);
+                message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
+                        + "' should be less than 3 minutes.";
+                assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+            });
     }
 }

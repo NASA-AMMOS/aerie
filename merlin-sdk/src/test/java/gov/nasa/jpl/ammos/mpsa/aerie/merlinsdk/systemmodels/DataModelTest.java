@@ -12,8 +12,8 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class DataModelTest {
@@ -21,7 +21,7 @@ public class DataModelTest {
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
-    Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+    Instant simStartTime = SimulationInstant.ORIGIN;
 
     DataSystemModel dataSystemModel;
     SettableState<Double> dataRate;
@@ -49,7 +49,7 @@ public class DataModelTest {
     @Test
     public void dataVolumeTest() {
         MissionModelGlue glue = new MissionModelGlue();
-        Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant simStartTime = SimulationInstant.ORIGIN;
 
         DataSystemModel dataSystemModel;
         SettableState<Double> dataRate;
@@ -90,62 +90,34 @@ public class DataModelTest {
 
     @Test
     public void testSamplingGetter(){
-        boolean dataRateFound = false;
-        boolean dataVolumeFound = false;
-        boolean dataProtocolFound = false;
+        final var getters = glue.registry().getStateGetters();
+        assertThat(getters).containsOnlyKeys("data rate", "data volume", "data protocol");
 
-        Map<String,Getter<?>> stateGetters = glue.registry().getStateGetters();
+        for (var x : getters.entrySet()){
+            final String name = x.getKey();
+            final Getter<?> getter = x.getValue();
 
-
-        dataRate.set(12.2, event1);
-        dataProtocol.set(GlobalPronouns.spacewire, event2);
-        dataVolume.set(14.4, event3);
-
-        assertTrue(dataRate.get()==12.2);
-        assertTrue(dataProtocol.get().equals(GlobalPronouns.spacewire));
-        assertTrue(dataVolume.get()==14.4);
-
-        for (var x : stateGetters.entrySet()){
-
-            Getter<?> getter = x.getValue();
-            String name = x.getKey();
-            Slice slice = dataSystemModel.getInitialSlice();
+            final var slice = dataSystemModel.getInitialSlice();
 
             if (name.equals(GlobalPronouns.dataRate)){
-                dataRateFound = true;
+                assertThat((Double) getter.apply(slice)).isNotEqualTo(12.2);
 
                 var setter = glue.registry().getSetter(dataSystemModel, name);
                 setter.accept(slice, 12.2);
 
-                assertTrue(getter.klass.equals(Double.class));
-                var value = (Double) getter.apply(slice);
-                assertTrue(value == 12.2);
+                assertThat(getter.klass).isEqualTo(Double.class);
+                assertThat((Double) getter.apply(slice)).isEqualTo(12.2);
 
-            }
-            if (name.equals(GlobalPronouns.dataVolume)){
-                dataVolumeFound = true;
-
-                var setter = glue.registry().getSetter(dataSystemModel, name);
-                setter.accept(slice, 33.3);
-
-                assertTrue(getter.klass.equals(Double.class));
-                var value = (Double) getter.apply(slice);
-                assertTrue(value == 33.3);
-            }
-            if (name.equals(GlobalPronouns.dataProtocol)){
-                dataProtocolFound = true;
+            } else if (name.equals(GlobalPronouns.dataProtocol)){
+                assertThat((String) getter.apply(slice)).isNotEqualTo(GlobalPronouns.spacewire);
 
                 var setter = glue.registry().getSetter(dataSystemModel, name);
                 setter.accept(slice, GlobalPronouns.spacewire);
 
-                assertTrue(getter.klass.equals(String.class));
-                var value = (String) getter.apply(slice);
-                assertTrue(value.equals(GlobalPronouns.spacewire));
+                assertThat(getter.klass).isEqualTo(String.class);
+                assertThat((String) getter.apply(slice)).isEqualTo(GlobalPronouns.spacewire);
             }
         }
-        assertTrue(dataRateFound);
-        assertTrue(dataVolumeFound);
-        assertTrue(dataProtocolFound);
     }
 
 
@@ -161,11 +133,11 @@ public class DataModelTest {
         List<Window> a = new ArrayList<>();
         List<Window> b = new ArrayList<>();
 
-        Instant win1S = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant win1S = SimulationInstant.ORIGIN;
         Instant win1E = win1S.plus(5, TimeUnit.SECONDS);
         Window win1 = Window.between(win1S, win1E);
 
-        Instant win2S = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Instant win2S = SimulationInstant.ORIGIN;
         Instant win2E = win1S.plus(9, TimeUnit.SECONDS);
         Window win2 = Window.between(win2S, win2E);
 
@@ -212,10 +184,10 @@ public class DataModelTest {
         final var dataSlice = dataModel.getInitialSlice();
 
         dataModel.setDataRate(dataSlice, 5.0);
-        dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.step(dataSlice, Duration.ZERO);
         dataModel.setDataProtocol(dataSlice, GlobalPronouns.spacewire);
         dataModel.setDataRate(dataSlice, 15.0);
-        dataModel.step(dataSlice, Duration.fromQuantity(5, TimeUnit.SECONDS));
+        dataModel.step(dataSlice, Duration.ZERO);
         dataModel.setDataProtocol(dataSlice, GlobalPronouns.UART);
 
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);

@@ -7,239 +7,148 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.Activities.Tu
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.OnboardDataModelStates;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.defer;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DataModelActivitiesTest {
-
-
     @Test
     public void initBinsActivity(){
-        System.out.println("\nBin activity init test start");
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new OnboardDataModelStates();
 
-        //0. choose sim start time
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitializeBinDataVolume());
+        });
 
-        //1. create activities and add to job list
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binInitJob);
-
-        //2. create states
-        OnboardDataModelStates states = new OnboardDataModelStates();
-
-        //3. create engine and simulate
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        for (BinModel x : states.getBinModelList()){
-            x.printHistory();
-            assert(x.getHistory().size() == 1.0);
-            assert(x.getHistory().containsValue(0.0));
+        for (final var x : states.getBinModelList()){
+            assertThat(x.getHistory()).hasSize(1);
+            assertThat(x.getHistory()).containsValue(0.0);
         }
-
-        System.out.println("Bin activity init test end\n");
     }
-
 
     @Test
     public void turnInstrumentsOnActivity(){
-        System.out.println("\nTurn instruments on activity init test start");
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new OnboardDataModelStates();
 
-        //0. choose sim start time
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitializeBinDataVolume());
 
-        //1. create activities and add to job list
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
+            TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
+            instrumentOn.instrumentName = "instrument 1";
+            instrumentOn.instrumentRate = 10.0;
+            defer(1, TimeUnit.HOURS, instrumentOn);
+        });
 
-        TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
-        instrumentOn.instrumentName = "instrument 1";
-        instrumentOn.instrumentRate = 10.0;
-        ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
-
-        List<ActivityJob<?>> activityJobList = List.of(instrumentOnJob, binInitJob);
-
-        //2. create states
-        OnboardDataModelStates states = new OnboardDataModelStates();
-
-        //3. create engine and simulate
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
-        assert(binMap.size() == 2);
-        for (Double value : binMap.values()){
-            assert(value == 0.0);
+        final var binMap = states.getBinByName("Bin 1").getHistory();
+        assertThat(binMap).hasSize(2);
+        for (final double value : binMap.values()) {
+            assertThat(value).isEqualTo(0.0);
         }
 
-        Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
-        assert(instrumentMap.size() == 1);
-        assert(instrumentMap.containsValue(10.0));
-        assert(states.getInstrumentByName("instrument 1").onStatus());
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            x.printHistory();
-        }
-
-        for (BinModel x : states.getBinModelList()){
-            x.printHistory();
-        }
-
-
-        System.out.println("Turn instruments on activity test end\n");
+        final var instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
+        assertThat(instrumentMap).hasSize(1);
+        assertThat(instrumentMap).containsValue(10.0);
+        assertThat(states.getInstrumentByName("instrument 1").onStatus()).isTrue();
     }
 
     @Test
     public void turnInstrumentsOffActivity(){
-        System.out.println("Turn instruments off activity test start\n");
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new OnboardDataModelStates();
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
-        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitializeBinDataVolume());
 
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
+            for (final var model : states.getInstrumentModelList()) {
+                TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
+                instrumentOff.instrumentName = model.getName();
+                defer(1, TimeUnit.MINUTES, instrumentOff);
+            }
 
-        TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
-        instrumentOn.instrumentName = "instrument 1";
-        instrumentOn.instrumentRate = 10.0;
-        ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
+            TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
+            instrumentOn.instrumentName = "instrument 1";
+            instrumentOn.instrumentRate = 10.0;
+            defer(1, TimeUnit.HOURS, instrumentOn);
+        });
 
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binInitJob);
-        activityJobList.add(instrumentOnJob);
+        final var instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
+        assertThat(instrumentMap).hasSize(2);
+        assertThat(instrumentMap).containsValue(0.0);
+        assertThat(instrumentMap).containsValue(10.0);
 
-        OnboardDataModelStates states = new OnboardDataModelStates();
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
-            instrumentOff.instrumentName = x.getName();
-            ActivityJob<OnboardDataModelStates> activityJob = new ActivityJob<>(instrumentOff, simInstOff);
-            activityJobList.add(activityJob);
+        final var binMap = states.getBinByName("Bin 1").getHistory();
+        assertThat(binMap).hasSize(3);
+        for (final double x : binMap.values()) {
+            assertThat(x).isEqualTo(0.0);
         }
-
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            x.printHistory();
-        }
-
-        for (BinModel x : states.getBinModelList()){
-            x.printHistory();
-        }
-
-        Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
-
-        Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
-
-        assert(instrumentMap.size() == 2);
-        assert(instrumentMap.containsValue(0.0));
-        assert(instrumentMap.containsValue(10.0));
-
-        assert(binMap.size() == 3);
-        for (double x : binMap.values()){
-            assert(x == 0.0);
-        }
-        System.out.println("Turn instruments off activity test end\n");
     }
 
     @Test
     public void downlinkActivity(){
-        System.out.println("Downlink activity test start\n");
+        final var simStart = SimulationInstant.ORIGIN;
+        final var states = new OnboardDataModelStates();
 
-        Instant simStart = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
-        Instant simInstOff = simStart.plus(1, TimeUnit.MINUTES);
-        Instant simInstOn  = simStart.plus(1, TimeUnit.HOURS);
-        Instant simDownlink = simStart.plus(5, TimeUnit.HOURS);
+        SimulationEngine.simulate(simStart, states, () -> {
+            spawn(new InitializeBinDataVolume());
 
-        InitializeBinDataVolume binInitActivity = new InitializeBinDataVolume();
-        ActivityJob<OnboardDataModelStates> binInitJob = new ActivityJob<>(binInitActivity, simStart);
+            for (final var model : states.getInstrumentModelList()) {
+                TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
+                instrumentOff.instrumentName = model.getName();
+                defer(1, TimeUnit.MINUTES, instrumentOff);
+            }
 
-        TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
-        instrumentOn.instrumentName = "instrument 1";
-        instrumentOn.instrumentRate = 10.0;
-        ActivityJob<OnboardDataModelStates> instrumentOnJob = new ActivityJob<>(instrumentOn, simInstOn);
+            TurnInstrumentOn instrumentOn = new TurnInstrumentOn();
+            instrumentOn.instrumentName = "instrument 1";
+            instrumentOn.instrumentRate = 10.0;
+            defer(1, TimeUnit.HOURS, instrumentOn);
 
-        List<ActivityJob<?>> activityJobList = new ArrayList<>();
-        activityJobList.add(binInitJob);
-        activityJobList.add(instrumentOnJob);
-
-        OnboardDataModelStates states = new OnboardDataModelStates();
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            TurnInstrumentOff instrumentOff = new TurnInstrumentOff();
-            instrumentOff.instrumentName = x.getName();
-            ActivityJob<OnboardDataModelStates> activityJob = new ActivityJob<>(instrumentOff, simInstOff);
-            activityJobList.add(activityJob);
-        }
-
-        DownlinkData downlinkActivity = new DownlinkData();
-        downlinkActivity.binID = "Bin 1";
-        downlinkActivity.downlinkAll = true;
-        ActivityJob<OnboardDataModelStates> downlinkJob = new ActivityJob<>(downlinkActivity, simDownlink);
-        activityJobList.add(downlinkJob);
-
-        SimulationEngine engine = new SimulationEngine(simStart, activityJobList, states);
-        engine.simulate();
-
-        for (InstrumentModel x : states.getInstrumentModelList()){
-            x.printHistoryGraphFormat();
-        }
-
-        for (BinModel x : states.getBinModelList()){
-            x.printHistoryGraphFormat();
-        }
-
-        Map<Instant, Double> binMap = states.getBinByName("Bin 1").getHistory();
-
-
-        Duration delta = simDownlink.durationFrom(simInstOn);
-        System.out.println("DELTA IS " + delta);
-        System.out.println("Volume collected " + (delta.durationInMicroseconds / 1000000.0) * 10.0);
-        assert((delta.durationInMicroseconds / 1000000.0) * 10 == (10.0 * 4 * 60 * 60));
-
-        Map<Instant, Double> instrumentMap = states.getInstrumentByName("instrument 1").getHistory();
-
-        System.out.println("Downlink activity test end\n");
+            DownlinkData downlinkActivity = new DownlinkData();
+            downlinkActivity.binID = "Bin 1";
+            downlinkActivity.downlinkAll = true;
+            defer(5, TimeUnit.HOURS, downlinkActivity);
+        });
     }
 
     @Test
     public void instrumentModel(){
-        InstrumentModel ethemis = new InstrumentModel("E-THEMIS", 0.0);
-        assert(!ethemis.onStatus());
-        assert(ethemis.get() == 0.0);
+        final var ethemis = new InstrumentModel("E-THEMIS", 0.0);
+        final var suda = new InstrumentModel("SUDA", 10.0);
+        final var bin1 = new BinModel("bin 1", ethemis);
+        final var reason = new InstrumentModel("REASON", 12.0, bin1);
 
-        InstrumentModel suda = new InstrumentModel("SUDA", 10.0);
-        assert(suda.onStatus());
-        assert(suda.get() == 10.0);
+        final var simStart = SimulationInstant.ORIGIN;
+        final StateContainer states = () -> List.of(ethemis, suda, bin1, reason);
 
-        ethemis.setDataProtocol("Spacewire");
-        assert(ethemis.getDataProtocol().equals("Spacewire"));
+        SimulationEngine.simulate(simStart, states, () -> {
+            assertThat(ethemis.onStatus()).isFalse();
+            assertThat(ethemis.get()).isEqualTo(0.0);
 
-        BinModel bin1 = new BinModel("bin 1", ethemis);
-        ethemis.setBin(bin1);
-        assert(ethemis.getBinName().equals("bin 1"));
+            assertThat(suda.onStatus()).isTrue();
+            assertThat(suda.get()).isEqualTo(10.0);
 
-        InstrumentModel reason = new InstrumentModel("REASON", 12.0, bin1);
-        assert(reason.onStatus());
-        assert(reason.getBinName().equals("bin 1"));
-        assert(reason.get() == 12.0);
+            ethemis.setDataProtocol("Spacewire");
+            assertThat(ethemis.getDataProtocol()).isEqualTo("Spacewire");
 
-        reason.setDataProtocol("UART");
-        assert(reason.getDataProtocol().equals("UART"));
+            ethemis.setBin(bin1);
+            assertThat(ethemis.getBinName()).isEqualTo("bin 1");
+
+            assertThat(reason.onStatus()).isTrue();
+            assertThat(reason.getBinName()).isEqualTo("bin 1");
+            assertThat(reason.get()).isEqualTo(12.0);
+
+            reason.setDataProtocol("UART");
+            assertThat(reason.getDataProtocol()).isEqualTo("UART");
+        });
     }
 }
 

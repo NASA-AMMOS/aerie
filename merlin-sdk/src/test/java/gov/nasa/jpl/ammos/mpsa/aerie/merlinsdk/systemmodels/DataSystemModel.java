@@ -198,7 +198,7 @@ public class DataSystemModel implements SystemModel{
                 currentTime = point.getKey();
 
                 if (dataRate > 0) {
-                    final var projection = Duration.fromQuantity((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
+                    final var projection = Duration.of((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
 
                     if (prevTime.plus(projection).compareTo(point.getKey()) < 0) {
                         start = prevTime.plus(projection);
@@ -222,7 +222,7 @@ public class DataSystemModel implements SystemModel{
                 currentTime = point.getKey();
 
                 if (dataRate < 0) {
-                    final var projection = Duration.fromQuantity((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
+                    final var projection = Duration.of((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
 
                     if (prevTime.plus(projection).compareTo(point.getKey()) < 0) {
                         end = prevTime.plus(projection);
@@ -237,7 +237,7 @@ public class DataSystemModel implements SystemModel{
                     final var prevDataRate = dataRate;
                     final var prevTime = currentTime;
 
-                    final var projection = Duration.fromQuantity((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
+                    final var projection = Duration.of((long) ((threshold - prevDataVolume) / prevDataRate * 1000000.0), TimeUnit.MICROSECONDS);;
                     end = prevTime.plus(projection);
                 } else {
                     end = slice.time;

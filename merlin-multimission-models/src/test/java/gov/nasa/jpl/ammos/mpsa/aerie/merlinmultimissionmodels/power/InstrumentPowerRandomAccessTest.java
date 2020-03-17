@@ -1,14 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeSimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
@@ -16,125 +19,124 @@ import static org.assertj.core.api.Assertions.withinPercentage;
  * exercises the random-access functionality of the instrument power state
  */
 public class InstrumentPowerRandomAccessTest {
-
-    /**
-     * reusable time points
-     */
-    private final Instant t2020 = SimulationInstant.fromQuantity(0, TimeUnit.SECONDS);
-    private final Instant t2020_10s = SimulationInstant.fromQuantity(10, TimeUnit.SECONDS);
-    private final Instant t2020_20s = SimulationInstant.fromQuantity(20, TimeUnit.SECONDS);
-
-    /**
-     * reusable simulation engine mocks
-     */
-    private final MockTimeSimulationEngine mockSimEngine2020 = new MockTimeSimulationEngine( t2020 );
-    private final MockTimeSimulationEngine mockSimEngine2020_10s = new MockTimeSimulationEngine( t2020_10s );
-    private final MockTimeSimulationEngine mockSimEngine2020_20s = new MockTimeSimulationEngine( t2020_20s );
-
+    private final Instant startTime = SimulationInstant.ORIGIN;
 
     @Test
     public void getAtTimeStartsAtZeroPower() {
-        final InstrumentPower instPower_W = new InstrumentPower();
-        instPower_W.setEngine( mockSimEngine2020 );
+        final var state = new InstrumentPower();
 
-        final double resultValue_W = instPower_W.get( t2020 );
-
-        assertThat( resultValue_W ).isCloseTo( 0.0, withinPercentage( 0.01 ) );
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
+                assertThat(state.get(now())).isCloseTo(0.0, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesContemporarySet() {
-        final InstrumentPower instPower_W = new InstrumentPower();
-        instPower_W.setEngine( mockSimEngine2020 );
-        final double testValue_W = 300.0;
+        final var state = new InstrumentPower();
 
-        instPower_W.set( testValue_W );
-        final double resultValue_W = instPower_W.get( t2020 );
-
-        assertThat( resultValue_W ).isCloseTo( testValue_W, withinPercentage( 0.01 ) );
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
+                final double testValue = 300.0;
+                state.set(testValue);
+                assertThat(state.get(now())).isCloseTo(testValue, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesPastSet() {
-        final InstrumentPower instPower_W = new InstrumentPower();
+        final var state = new InstrumentPower();
 
-        final double testValue_W = 300.0;
-        instPower_W.setEngine( mockSimEngine2020 );
-        instPower_W.set( testValue_W );
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
+                final double testValue_W = 300.0;
+                state.set(testValue_W);
 
-        instPower_W.setEngine( mockSimEngine2020_10s );
-        final double resultValue_W = instPower_W.get( t2020 );
+                delay(10, TimeUnit.SECONDS);
 
-        assertThat( resultValue_W ).isCloseTo( testValue_W, withinPercentage( 0.01 ) );
+                assertThat(state.get(startTime)).isCloseTo(testValue_W, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesPastSetDespiteNewSet() {
-        final InstrumentPower instPower_W = new InstrumentPower();
+        final var state = new InstrumentPower();
 
-        final double testValue_W = 300.0;
-        instPower_W.setEngine( mockSimEngine2020 );
-        instPower_W.set( testValue_W );
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
+                final double testValue_W = 300.0;
+                state.set(testValue_W);
 
-        instPower_W.setEngine( mockSimEngine2020_10s );
-        instPower_W.set( 888.0 );
+                final var time = now();
+                delay(10, TimeUnit.SECONDS);
 
-        final double resultValue_W = instPower_W.get( t2020 );
-
-        assertThat( resultValue_W ).isCloseTo( testValue_W, withinPercentage( 0.01 ) );
+                state.set(888.0);
+                assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesIntermediatePastSet() {
-        final InstrumentPower instPower_W = new InstrumentPower();
+        final var state = new InstrumentPower();
 
-        final double testValue_W = 300.0;
-        instPower_W.setEngine( mockSimEngine2020 );
-        instPower_W.set( testValue_W );
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
+                final double testValue_W = 300.0;
+                state.set(testValue_W);
 
-        instPower_W.setEngine( mockSimEngine2020_20s );
-        instPower_W.set( 888.0 );
+                delay(10, TimeUnit.SECONDS);
+                final var time = now();
+                delay(10, TimeUnit.SECONDS);
 
-        final double resultValue_W = instPower_W.get( t2020_10s );
-
-        assertThat( resultValue_W ).isCloseTo( testValue_W, withinPercentage( 0.01 ) );
+                state.set(888.0);
+                assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
+            });
     }
 
     @Test
     public void getAtTimeSeesSeriesOfPastSets() {
-        final InstrumentPower instPower_W = new InstrumentPower();
-        final Map<Instant,Double> sets = new TreeMap<>( Map.of(
-                SimulationInstant.fromQuantity(10, TimeUnit.SECONDS), 110.0,
-                SimulationInstant.fromQuantity(20, TimeUnit.SECONDS), 120.0,
-                SimulationInstant.fromQuantity(30, TimeUnit.SECONDS), 130.0 ) );
-        final Map<Instant,Double> expecteds =  Map.of(
-                SimulationInstant.fromQuantity(0, TimeUnit.SECONDS), 0.0,
-                SimulationInstant.fromQuantity(10, TimeUnit.SECONDS), 110.0,
-                SimulationInstant.fromQuantity(15, TimeUnit.SECONDS), 110.0,
-                SimulationInstant.fromQuantity(20, TimeUnit.SECONDS), 120.0,
-                SimulationInstant.fromQuantity(25, TimeUnit.SECONDS), 120.0,
-                SimulationInstant.fromQuantity(30, TimeUnit.SECONDS), 130.0,
-                SimulationInstant.fromQuantity(31, TimeUnit.SECONDS), 130.0 );
-        final Instant finalTime = SimulationInstant.fromQuantity(1, TimeUnit.MINUTES);
-        final MockTimeSimulationEngine engine = new MockTimeSimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.SECONDS) );
+        final var state = new InstrumentPower();
+        final var sets = new TreeMap<>(Map.of(
+            startTime.plus(10, TimeUnit.SECONDS), 110.0,
+            startTime.plus(20, TimeUnit.SECONDS), 120.0,
+            startTime.plus(30, TimeUnit.SECONDS), 130.0
+        ));
+        final var expecteds = Map.of(
+            startTime.plus( 0, TimeUnit.SECONDS), 0.0,
+            startTime.plus(10, TimeUnit.SECONDS), 110.0,
+            startTime.plus(15, TimeUnit.SECONDS), 110.0,
+            startTime.plus(20, TimeUnit.SECONDS), 120.0,
+            startTime.plus(25, TimeUnit.SECONDS), 120.0,
+            startTime.plus(30, TimeUnit.SECONDS), 130.0,
+            startTime.plus(31, TimeUnit.SECONDS), 130.0
+        );
 
-        instPower_W.setEngine( engine );
+        SimulationEngine.simulate(
+            startTime,
+            () -> List.of(state),
+            () -> {
+                //run all sets in test vector sequentially (thanks to TreeMap being sorted)
+                for (final var set : sets.entrySet()) {
+                    delay(now().durationTo(set.getKey()));
+                    state.set(set.getValue());
+                }
 
-        //run all sets in test vector sequentially (thanks to TreeMap being sorted)
-        for( Map.Entry<Instant,Double> set : sets.entrySet() ) {
-            engine.setCurrentSimulationTime(set.getKey());
-            instPower_W.set( set.getValue() );
-        }
+                delay(now().durationTo(startTime.plus(1, TimeUnit.MINUTES)));
 
-        //jump past end of simulation steps
-        engine.setCurrentSimulationTime(finalTime);
-
-        //now test each expected point in random access pattern (thanks HashMap...)
-        for( Map.Entry<Instant,Double> expected : expecteds.entrySet() ) {
-            final double resultValue_W = instPower_W.get( expected.getKey() );
-
-            assertThat( resultValue_W ).isCloseTo( expected.getValue(), withinPercentage( 0.01 ) );
-        }
+                for (final var expected : expecteds.entrySet()) {
+                    assertThat(state.get(expected.getKey()))
+                        .isCloseTo(expected.getValue(), withinPercentage(0.01));
+                }
+            });
     }
-
 }

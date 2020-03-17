@@ -10,7 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 public class TurnInstrumentOff implements Activity<SampleMissionStates> {
 
     @Override
-    public void modelEffects(SimulationContext ctx, SampleMissionStates states){
+    public void modelEffects(SampleMissionStates states){
         states.instrumentData.turnOff();
         states.instrumentPower_W.set(0.0);
     }

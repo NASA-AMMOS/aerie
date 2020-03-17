@@ -112,8 +112,4 @@ public class ApsidesTimesModel implements State<List<Time>> {
     public Map<Instant, List<Time>> getHistory() {
         return null;
     }
-
-    @Override
-    public void setEngine(SimulationEngine engine) {
-    }
 }

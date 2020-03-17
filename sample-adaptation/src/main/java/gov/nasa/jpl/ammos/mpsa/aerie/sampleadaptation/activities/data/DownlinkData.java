@@ -38,7 +38,7 @@ public class DownlinkData implements Activity<SampleMissionStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext ctx, SampleMissionStates states){
+    public void modelEffects(SampleMissionStates states){
         if (downlinkAll){
             states.dataBin.downlink();
         }

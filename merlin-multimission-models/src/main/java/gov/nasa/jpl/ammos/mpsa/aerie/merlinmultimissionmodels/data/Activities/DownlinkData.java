@@ -42,7 +42,7 @@ public class DownlinkData implements Activity<OnboardDataModelStates> {
     }
 
     @Override
-    public void modelEffects(SimulationContext ctx, OnboardDataModelStates states){
+    public void modelEffects(OnboardDataModelStates states){
         if (downlinkAll){
             states.getBinByName(binID).downlink();
         }

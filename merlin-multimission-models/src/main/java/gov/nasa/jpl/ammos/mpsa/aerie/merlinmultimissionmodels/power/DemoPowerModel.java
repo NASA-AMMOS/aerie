@@ -130,30 +130,16 @@ public class DemoPowerModel {
                 batteryEnergyState_J, batteryCapacityState_J);
         //now hear the word of the Lord
 
-        @Override public List<State<?>> getStateList() {
+        @Override
+        public List<State<?>> getStateList() {
             return List.of( solarDistanceState_m, batteryCapacityState_J, solarPowerState_W,
                     instrumentAPowerState_W, instrumentBPowerState_W,
                     batteryEnergyState_J, batterStateOfChargeState_pct );
         }
-
-        /**
-         * allows quickly resetting engines for all states
-         *
-         * @param engine the new engine to set for all states
-         */
-        public void setEngine(SimulationEngine engine) {
-            getStateList().forEach(s->s.setEngine(engine));
-        }
-
     }//States
 
     /**
      * initialized and wired-together states for the demo
      */
     public States states = new States();
-
-    /**
-     * initialized list of activities for demo
-     */
-    List<Activity<States>> activities = new LinkedList<>();
 }
