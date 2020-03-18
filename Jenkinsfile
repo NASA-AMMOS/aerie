@@ -199,7 +199,6 @@ pipeline {
                                 // retag the image and push to aws
                                 sh changeTagCmd
                                 sh pushCmd
-                                buildImages.remove(old_tag_name)
                                 buildImages.push(new_tag_name)
                             }
                             sleep 5
