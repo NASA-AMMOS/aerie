@@ -1,8 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -24,9 +28,26 @@ public class DataModelTest {
     Instant simStartTime = SimulationInstant.ORIGIN;
 
     DataSystemModel dataSystemModel;
-    SettableState<Double> dataRate;
-    SettableState<Double> dataVolume;
-    SettableState<String> dataProtocol;
+
+    public class DataStates implements StateContainer {
+        SettableState<Double> dataRate;
+        SettableState<Double> dataVolume;
+        SettableState<String> dataProtocol;
+
+        public List<State<?>> getStateList() {
+            return List.of(dataRate, dataVolume, dataProtocol);
+        }
+    }
+
+    @ActivityType(name="SomeDataActivity", states = DataStates.class)
+    public class SomeDataActivity implements Activity<DataStates>{
+        @Override
+        public void modelEffects(DataStates states) {
+        }
+    }
+
+    DataStates dataStates = new DataStates();
+
 
     /*----------------------------- SAMPLE SIM ---------------------------------------*/
     Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
@@ -41,9 +62,9 @@ public class DataModelTest {
         dataSystemModel = new DataSystemModel(glue, simStartTime);
         glue.createMasterSystemModel(simStartTime, dataSystemModel);
 
-        dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
-        dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
-        dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+        dataStates.dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
+        dataStates.dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
+        dataStates.dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
     }
 
     @Test
@@ -203,6 +224,9 @@ public class DataModelTest {
 
     @Test
     public void temporalConstraintTest(){
+
+
+
 
     }
 
