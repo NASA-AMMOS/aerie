@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public final class ListParameterMapper<T> implements ParameterMapper<List<T>> {
   private final ParameterMapper<T> elementMapper;
 

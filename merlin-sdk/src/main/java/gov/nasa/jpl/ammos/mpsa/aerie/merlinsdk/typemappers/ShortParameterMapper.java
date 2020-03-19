@@ -16,7 +16,17 @@ public final class ShortParameterMapper implements ParameterMapper<Short> {
         .asInt()
         .map(Result::<Long, String>success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedParameter.toString()))
-        .mapSuccess(Number::shortValue);
+        .match(
+            (Long x) -> {
+              final var y = x.shortValue();
+              if (x != y) {
+                return Result.failure("Invalid parameter; value outside range of `short`");
+              } else {
+                return Result.success(y);
+              }
+            },
+            Result::failure
+        );
   }
 
   @Override
