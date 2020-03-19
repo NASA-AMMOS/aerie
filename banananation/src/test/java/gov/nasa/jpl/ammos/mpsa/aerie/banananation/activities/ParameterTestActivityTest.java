@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
@@ -20,45 +21,85 @@ public class ParameterTestActivityTest {
     }
 
     @Test
-    public void testSerializedToSerialized() {
-        SerializedActivity sourceActivity = createSerializedInstance();
-        var maybeDeserializedActivity = mapper.deserializeActivity(sourceActivity);
+    public void testDeserialization() {
+        final SerializedActivity sourceActivity = createSerializedInstance();
+        final ParameterTestActivity testValues = ParameterTestActivity.createTestActivity();
+        final var maybeDeserializedActivity = mapper.deserializeActivity(sourceActivity);
 
         if (maybeDeserializedActivity.isEmpty()) {
             fail("Deserialization failed!");
         }
 
-        ParameterTestActivity deserializedActivity = (ParameterTestActivity)maybeDeserializedActivity.get();
+        final ParameterTestActivity deserializedActivity = (ParameterTestActivity)maybeDeserializedActivity.get();
 
-        Optional<SerializedActivity> maybeReserializedActivity = mapper.serializeActivity(deserializedActivity);
-
-        if (maybeReserializedActivity.isEmpty()) {
-            fail("Serialization failed!");
-        }
-
-        SerializedActivity reserializedActivity = maybeReserializedActivity.get();
-
-        assertEquals(sourceActivity, reserializedActivity);
+        // Verify the deserialized activity contains the expected values
+        assertEquals(deserializedActivity.primitiveDouble, testValues.primitiveDouble, 0.0);
+        assertEquals(deserializedActivity.primitiveFloat, testValues.primitiveFloat, 0.0);
+        assertEquals(deserializedActivity.primitiveByte, testValues.primitiveByte);
+        assertEquals(deserializedActivity.primitiveShort, testValues.primitiveShort);
+        assertEquals(deserializedActivity.primitiveInt, testValues.primitiveInt);
+        assertEquals(deserializedActivity.primitiveLong, testValues.primitiveLong);
+        assertEquals(deserializedActivity.primitiveChar, testValues.primitiveChar);
+        assertEquals(deserializedActivity.primitiveBoolean, testValues.primitiveBoolean);
+        assertEquals(deserializedActivity.boxedDouble, testValues.boxedDouble);
+        assertEquals(deserializedActivity.boxedFloat, testValues.boxedFloat);
+        assertEquals(deserializedActivity.boxedByte, testValues.boxedByte);
+        assertEquals(deserializedActivity.boxedShort, testValues.boxedShort);
+        assertEquals(deserializedActivity.boxedInt, testValues.boxedInt);
+        assertEquals(deserializedActivity.boxedLong, testValues.boxedLong);
+        assertEquals(deserializedActivity.boxedChar, testValues.boxedChar);
+        assertEquals(deserializedActivity.boxedBoolean, testValues.boxedBoolean);
+        assertEquals(deserializedActivity.string, testValues.string);
+        assertArrayEquals(deserializedActivity.doubleArray, testValues.doubleArray);
+        assertArrayEquals(deserializedActivity.floatArray, testValues.floatArray);
+        assertArrayEquals(deserializedActivity.byteArray, testValues.byteArray);
+        assertArrayEquals(deserializedActivity.shortArray, testValues.shortArray);
+        assertArrayEquals(deserializedActivity.intArray, testValues.intArray);
+        assertArrayEquals(deserializedActivity.longArray, testValues.longArray);
+        assertArrayEquals(deserializedActivity.charArray, testValues.charArray);
+        assertArrayEquals(deserializedActivity.booleanArray, testValues.booleanArray);
+        assertArrayEquals(deserializedActivity.stringArray, testValues.stringArray);
+        assertEquals(deserializedActivity.doubleList, testValues.doubleList);
+        assertEquals(deserializedActivity.floatList, testValues.floatList);
+        assertEquals(deserializedActivity.byteList, testValues.byteList);
+        assertEquals(deserializedActivity.shortList, testValues.shortList);
+        assertEquals(deserializedActivity.intList, testValues.intList);
+        assertEquals(deserializedActivity.longList, testValues.longList);
+        assertEquals(deserializedActivity.charList, testValues.charList);
+        assertEquals(deserializedActivity.booleanList, testValues.booleanList);
+        assertEquals(deserializedActivity.stringList, testValues.stringList);
+        assertEquals(deserializedActivity.doubleMap, testValues.doubleMap);
+        assertEquals(deserializedActivity.floatMap, testValues.floatMap);
+        assertEquals(deserializedActivity.byteMap, testValues.byteMap);
+        assertEquals(deserializedActivity.shortMap, testValues.shortMap);
+        assertEquals(deserializedActivity.intMap, testValues.intMap);
+        assertEquals(deserializedActivity.longMap, testValues.longMap);
+        assertEquals(deserializedActivity.charMap, testValues.charMap);
+        assertEquals(deserializedActivity.booleanMap, testValues.booleanMap);
+        assertEquals(deserializedActivity.stringMap, testValues.stringMap);
+        assertEquals(deserializedActivity.mappyBoi, testValues.mappyBoi);
+        assertArrayEquals(deserializedActivity.intListArrayArray, testValues.intListArrayArray);
+        // TODO; Check equality for obnoxious (this is quite complex)
     }
 
     @Test
-    public void testDeserializedToDeserialized() {
-        ParameterTestActivity sourceActivity = createParameterTestActivityInstance();
-        Optional<SerializedActivity> maybeSerializedActivity = mapper.serializeActivity(sourceActivity);
+    public void testSerialization() {
+        final ParameterTestActivity sourceActivity = createParameterTestActivityInstance();
+        final Optional<SerializedActivity> maybeSerializedActivity = mapper.serializeActivity(sourceActivity);
 
         if (maybeSerializedActivity.isEmpty()) {
             fail("Serialization failed!");
         }
 
-        SerializedActivity serializedActivity = maybeSerializedActivity.get();
+        final SerializedActivity serializedActivity = maybeSerializedActivity.get();
 
-        var maybeDeserializedActivity = mapper.deserializeActivity(serializedActivity);
+        final var maybeDeserializedActivity = mapper.deserializeActivity(serializedActivity);
 
         if (maybeDeserializedActivity.isEmpty()) {
             fail("Deserialization failed!");
         }
 
-        ParameterTestActivity deserializedActivity = (ParameterTestActivity)maybeDeserializedActivity.get();
+        final ParameterTestActivity deserializedActivity = (ParameterTestActivity)maybeDeserializedActivity.get();
 
         assertEquals(sourceActivity.primitiveDouble, deserializedActivity.primitiveDouble, 0.0);
         assertEquals(sourceActivity.primitiveFloat, deserializedActivity.primitiveFloat, 0.0);
@@ -110,216 +151,228 @@ public class ParameterTestActivityTest {
     }
 
     private SerializedActivity createSerializedInstance() {
-        Map<String, SerializedParameter> parameters = new HashMap<>();
+        final ParameterTestActivity testValues = ParameterTestActivity.createTestActivity();
+        final Map<String, SerializedParameter> parameters = new HashMap<>();
 
         // Primitive parameters
-        parameters.put("primitiveDouble", SerializedParameter.of(3.141));
-        parameters.put("primitiveFloat", SerializedParameter.of(1.618f));
-        parameters.put("primitiveByte", SerializedParameter.of(16));
-        parameters.put("primitiveShort", SerializedParameter.of(32));
-        parameters.put("primitiveInt", SerializedParameter.of(64));
-        parameters.put("primitiveLong", SerializedParameter.of(128));
-        parameters.put("primitiveChar", SerializedParameter.of("g"));
-        parameters.put("primitiveBoolean", SerializedParameter.of(true));
+        parameters.put("primitiveDouble", SerializedParameter.of(testValues.primitiveDouble));
+        parameters.put("primitiveFloat", SerializedParameter.of(testValues.primitiveFloat));
+        parameters.put("primitiveByte", SerializedParameter.of(testValues.primitiveByte));
+        parameters.put("primitiveShort", SerializedParameter.of(testValues.primitiveShort));
+        parameters.put("primitiveInt", SerializedParameter.of(testValues.primitiveInt));
+        parameters.put("primitiveLong", SerializedParameter.of(testValues.primitiveLong));
+        parameters.put("primitiveChar", SerializedParameter.of("" + testValues.primitiveChar));
+        parameters.put("primitiveBoolean", SerializedParameter.of(testValues.primitiveBoolean));
 
         // Boxed parameters
-        parameters.put("boxedDouble", SerializedParameter.of(6.282));
-        parameters.put("boxedFloat", SerializedParameter.of(3.236f));
-        parameters.put("boxedByte", SerializedParameter.of(116));
-        parameters.put("boxedShort", SerializedParameter.of(132));
-        parameters.put("boxedInt", SerializedParameter.of(164));
-        parameters.put("boxedLong", SerializedParameter.of(1128L));
-        parameters.put("boxedChar", SerializedParameter.of("G"));
-        parameters.put("boxedBoolean", SerializedParameter.of(false));
-        parameters.put("string", SerializedParameter.of("h"));
+        parameters.put("boxedDouble", SerializedParameter.of(testValues.boxedDouble));
+        parameters.put("boxedFloat", SerializedParameter.of(testValues.boxedFloat));
+        parameters.put("boxedByte", SerializedParameter.of(testValues.boxedByte));
+        parameters.put("boxedShort", SerializedParameter.of(testValues.boxedShort));
+        parameters.put("boxedInt", SerializedParameter.of(testValues.boxedInt));
+        parameters.put("boxedLong", SerializedParameter.of(testValues.boxedLong));
+        parameters.put("boxedChar", SerializedParameter.of("" + testValues.boxedChar));
+        parameters.put("boxedBoolean", SerializedParameter.of(testValues.boxedBoolean));
+        parameters.put("string", SerializedParameter.of(testValues.string));
 
         // Array parameters
         parameters.put("doubleArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(1.0),
-                        SerializedParameter.of(2.0)
+                        SerializedParameter.of(testValues.doubleArray[0]),
+                        SerializedParameter.of(testValues.doubleArray[1])
                 )
         ));
         parameters.put("floatArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(3.0),
-                        SerializedParameter.of(4.0)
+                        SerializedParameter.of(testValues.floatArray[0]),
+                        SerializedParameter.of(testValues.floatArray[1])
                 )
         ));
         parameters.put("byteArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(5),
-                        SerializedParameter.of(6)
+                        SerializedParameter.of(testValues.byteArray[0]),
+                        SerializedParameter.of(testValues.byteArray[1])
                 )
         ));
         parameters.put("shortArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(7),
-                        SerializedParameter.of(8)
+                        SerializedParameter.of(testValues.shortArray[0]),
+                        SerializedParameter.of(testValues.shortArray[1])
                 )
         ));
         parameters.put("intArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(9),
-                        SerializedParameter.of(10)
+                        SerializedParameter.of(testValues.intArray[0]),
+                        SerializedParameter.of(testValues.intArray[1])
                 )
         ));
         parameters.put("longArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(11),
-                        SerializedParameter.of(12)
+                        SerializedParameter.of(testValues.longArray[0]),
+                        SerializedParameter.of(testValues.longArray[1])
                 )
         ));
         parameters.put("charArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of("a"),
-                        SerializedParameter.of("b")
+                        SerializedParameter.of("" + testValues.charArray[0]),
+                        SerializedParameter.of("" + testValues.charArray[1])
                 )
         ));
         parameters.put("booleanArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(true),
-                        SerializedParameter.of(false)
+                        SerializedParameter.of(testValues.booleanArray[0]),
+                        SerializedParameter.of(testValues.booleanArray[1])
                 )
         ));
         parameters.put("stringArray", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of("17"),
-                        SerializedParameter.of("18")
+                        SerializedParameter.of(testValues.stringArray[0]),
+                        SerializedParameter.of(testValues.stringArray[1])
                 )
         ));
 
         // List parameters
         parameters.put("doubleList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(19.0),
-                        SerializedParameter.of(20.0)
+                        SerializedParameter.of(testValues.doubleList.get(0)),
+                        SerializedParameter.of(testValues.doubleList.get(1))
                 )
         ));
         parameters.put("floatList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(21.0),
-                        SerializedParameter.of(22.0)
+                        SerializedParameter.of(testValues.floatList.get(0)),
+                        SerializedParameter.of(testValues.floatList.get(1))
                 )
         ));
         parameters.put("byteList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(23),
-                        SerializedParameter.of(24)
+                        SerializedParameter.of(testValues.byteList.get(0)),
+                        SerializedParameter.of(testValues.byteList.get(1))
                 )
         ));
         parameters.put("shortList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(25),
-                        SerializedParameter.of(26)
+                        SerializedParameter.of(testValues.shortList.get(0)),
+                        SerializedParameter.of(testValues.shortList.get(1))
                 )
         ));
         parameters.put("intList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(27),
-                        SerializedParameter.of(28)
+                        SerializedParameter.of(testValues.intList.get(0)),
+                        SerializedParameter.of(testValues.intList.get(1))
                 )
         ));
         parameters.put("longList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(29),
-                        SerializedParameter.of(30)
+                        SerializedParameter.of(testValues.longList.get(0)),
+                        SerializedParameter.of(testValues.longList.get(1))
                 )
         ));
         parameters.put("charList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of("c"),
-                        SerializedParameter.of("d")
+                        SerializedParameter.of("" + testValues.charList.get(0)),
+                        SerializedParameter.of("" + testValues.charList.get(1))
                 )
         ));
         parameters.put("booleanList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of(false),
-                        SerializedParameter.of(true)
+                        SerializedParameter.of(testValues.booleanList.get(0)),
+                        SerializedParameter.of(testValues.booleanList.get(1))
                 )
         ));
         parameters.put("stringList", SerializedParameter.of(
                 List.of(
-                        SerializedParameter.of("35"),
-                        SerializedParameter.of("36")
+                        SerializedParameter.of(testValues.stringList.get(0)),
+                        SerializedParameter.of(testValues.stringList.get(1))
                 )
         ));
 
 
         // Map Parameters
+        Map.Entry<Double, Double>[] doubleMapEntries = testValues.doubleMap.entrySet().toArray(new Map.Entry[testValues.doubleMap.size()]);
         parameters.put("doubleMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(37.0), SerializedParameter.of(39.0))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(38.0), SerializedParameter.of(40.0)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(doubleMapEntries[0].getKey()), SerializedParameter.of(doubleMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(doubleMapEntries[0].getValue()), SerializedParameter.of(doubleMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Float, Float>[] floatMapEntries = testValues.floatMap.entrySet().toArray(new Map.Entry[testValues.floatMap.size()]);
         parameters.put("floatMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(41.0), SerializedParameter.of(43.0))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(42.0), SerializedParameter.of(44.0)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(floatMapEntries[0].getKey()), SerializedParameter.of(floatMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(floatMapEntries[0].getValue()), SerializedParameter.of(floatMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Byte, Byte>[] byteMapEntries = testValues.byteMap.entrySet().toArray(new Map.Entry[testValues.byteMap.size()]);
         parameters.put("byteMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(45), SerializedParameter.of(47))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(46), SerializedParameter.of(48)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(byteMapEntries[0].getKey()), SerializedParameter.of(byteMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(byteMapEntries[0].getValue()), SerializedParameter.of(byteMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Short, Short>[] shortMapEntries = testValues.shortMap.entrySet().toArray(new Map.Entry[testValues.shortMap.size()]);
         parameters.put("shortMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(49), SerializedParameter.of(51))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(50), SerializedParameter.of(52)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(shortMapEntries[0].getKey()), SerializedParameter.of(shortMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(shortMapEntries[0].getValue()), SerializedParameter.of(shortMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Integer, Integer>[] intMapEntries = testValues.intMap.entrySet().toArray(new Map.Entry[testValues.intMap.size()]);
         parameters.put("intMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(53), SerializedParameter.of(55))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(54), SerializedParameter.of(56)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(intMapEntries[0].getKey()), SerializedParameter.of(intMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(intMapEntries[0].getValue()), SerializedParameter.of(intMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Long, Long>[] longMapEntries = testValues.longMap.entrySet().toArray(new Map.Entry[testValues.longMap.size()]);
         parameters.put("longMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(57), SerializedParameter.of(59))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(58), SerializedParameter.of(60)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(longMapEntries[0].getKey()), SerializedParameter.of(longMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(longMapEntries[0].getValue()), SerializedParameter.of(longMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Character, Character>[] charMapEntries = testValues.charMap.entrySet().toArray(new Map.Entry[testValues.charMap.size()]);
         parameters.put("charMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of("e"), SerializedParameter.of("g"))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of("f"), SerializedParameter.of("h")))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of("" + charMapEntries[0].getKey()), SerializedParameter.of("" + charMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of("" + charMapEntries[0].getValue()), SerializedParameter.of("" + charMapEntries[1].getValue())))
                 )
         ));
+        Map.Entry<Boolean, Boolean>[] booleanMapEntries = testValues.booleanMap.entrySet().toArray(new Map.Entry[testValues.booleanMap.size()]);
         parameters.put("booleanMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(false), SerializedParameter.of(true))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(true), SerializedParameter.of(false)))
                 )
         ));
+        Map.Entry<String, String>[] stringMapEntries = testValues.stringMap.entrySet().toArray(new Map.Entry[testValues.stringMap.size()]);
         parameters.put("stringMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of("69"), SerializedParameter.of("71"))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of("70"), SerializedParameter.of("72")))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(stringMapEntries[0].getKey()), SerializedParameter.of(stringMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(stringMapEntries[0].getValue()), SerializedParameter.of(stringMapEntries[1].getValue())))
                 )
         ));
 
         // Complex Parameters
+
+        Map.Entry<Integer, List<String>>[] mappyBoiEntries = testValues.mappyBoi.entrySet().toArray(new Map.Entry[testValues.mappyBoi.size()]);
         parameters.put("mappyBoi", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(
                                 List.of(
-                                        SerializedParameter.of(101),
-                                        SerializedParameter.of(104)
+                                        SerializedParameter.of(mappyBoiEntries[0].getKey()),
+                                        SerializedParameter.of(mappyBoiEntries[1].getKey())
                                 )
                         ),
                         "values", SerializedParameter.of(
                                 List.of(
                                         SerializedParameter.of(List.of(
-                                                SerializedParameter.of("102"),
-                                                SerializedParameter.of("103")
+                                                SerializedParameter.of(mappyBoiEntries[0].getValue().get(0)),
+                                                SerializedParameter.of(mappyBoiEntries[0].getValue().get(1))
                                         )),
                                         SerializedParameter.of(List.of(
-                                                SerializedParameter.of("105"),
-                                                SerializedParameter.of("106")
+                                                SerializedParameter.of(mappyBoiEntries[1].getValue().get(0)),
+                                                SerializedParameter.of(mappyBoiEntries[1].getValue().get(1))
                                         ))
                                 )
                         )
@@ -330,105 +383,182 @@ public class ParameterTestActivityTest {
                 List.of(
                         SerializedParameter.of(List.of(
                                 SerializedParameter.of(List.of(
-                                        SerializedParameter.of(110),
-                                        SerializedParameter.of(111)
+                                        SerializedParameter.of(testValues.intListArrayArray[0][0].get(0)),
+                                        SerializedParameter.of(testValues.intListArrayArray[0][0].get(1))
                                 )),
                                 SerializedParameter.of(List.of(
-                                        SerializedParameter.of(112),
-                                        SerializedParameter.of(113)
+                                        SerializedParameter.of(testValues.intListArrayArray[0][1].get(0)),
+                                        SerializedParameter.of(testValues.intListArrayArray[0][1].get(1))
                                 ))
                         )),
                         SerializedParameter.of(List.of(
                                 SerializedParameter.of(List.of(
-                                        SerializedParameter.of(114),
-                                        SerializedParameter.of(115)
+                                        SerializedParameter.of(testValues.intListArrayArray[1][0].get(0)),
+                                        SerializedParameter.of(testValues.intListArrayArray[1][0].get(1))
                                 )),
                                 SerializedParameter.of(List.of(
-                                        SerializedParameter.of(116),
-                                        SerializedParameter.of(117)
+                                        SerializedParameter.of(testValues.intListArrayArray[1][1].get(0)),
+                                        SerializedParameter.of(testValues.intListArrayArray[1][1].get(1))
                                 ))
                         ))
                 )
         ));
 
+        // Because obnixous is so obnoxious, we'll just hardcode it twice :(
         parameters.put("obnoxious", SerializedParameter.of(
                 List.of(
                         SerializedParameter.of(Map.of(
                                 "keys", SerializedParameter.of(List.of(
                                         SerializedParameter.of(List.of(
                                                 SerializedParameter.of(List.of(
-                                                        SerializedParameter.of("200"),
-                                                        SerializedParameter.of("201")
+                                                        SerializedParameter.of("300"),
+                                                        SerializedParameter.of("301")
                                                 )),
                                                 SerializedParameter.of(List.of(
-                                                        SerializedParameter.of("202"),
-                                                        SerializedParameter.of("203")
+                                                        SerializedParameter.of("302"),
+                                                        SerializedParameter.of("303")
                                                 ))
                                         )),
                                         SerializedParameter.of(List.of(
                                                 SerializedParameter.of(List.of(
-                                                        SerializedParameter.of("204"),
-                                                        SerializedParameter.of("205")
+                                                        SerializedParameter.of("304"),
+                                                        SerializedParameter.of("305")
                                                 )),
                                                 SerializedParameter.of(List.of(
-                                                        SerializedParameter.of("206"),
-                                                        SerializedParameter.of("207")
+                                                        SerializedParameter.of("306"),
+                                                        SerializedParameter.of("307")
+                                                ))
+                                        )),
+                                        SerializedParameter.of(List.of(
+                                                SerializedParameter.of(List.of(
+                                                        SerializedParameter.of("308"),
+                                                        SerializedParameter.of("309")
+                                                )),
+                                                SerializedParameter.of(List.of(
+                                                        SerializedParameter.of("310"),
+                                                        SerializedParameter.of("311")
+                                                ))
+                                        )),
+                                        SerializedParameter.of(List.of(
+                                                SerializedParameter.of(List.of(
+                                                        SerializedParameter.of("312"),
+                                                        SerializedParameter.of("313")
+                                                )),
+                                                SerializedParameter.of(List.of(
+                                                        SerializedParameter.of("314"),
+                                                        SerializedParameter.of("315")
                                                 ))
                                         ))
                                 )),
                                 "values", SerializedParameter.of(List.of(
                                         SerializedParameter.of(Map.of(
                                                 "keys", SerializedParameter.of(List.of(
-                                                        SerializedParameter.of(208),
-                                                        SerializedParameter.of(209)
+                                                        SerializedParameter.of(500),
+                                                        SerializedParameter.of(501)
                                                 )),
                                                 "values", SerializedParameter.of(List.of(
                                                         SerializedParameter.of(List.of(
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(210.0),
-                                                                        SerializedParameter.of(211.0)
+                                                                        SerializedParameter.of(400.0f),
+                                                                        SerializedParameter.of(401.0f)
                                                                 )),
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(212.0),
-                                                                        SerializedParameter.of(213.0)
+                                                                        SerializedParameter.of(402.0f),
+                                                                        SerializedParameter.of(403.0f)
                                                                 ))
                                                         )),
                                                         SerializedParameter.of(List.of(
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(214.0),
-                                                                        SerializedParameter.of(215.0)
+                                                                        SerializedParameter.of(404.0f),
+                                                                        SerializedParameter.of(405.0f)
                                                                 )),
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(216.0),
-                                                                        SerializedParameter.of(217.0)
+                                                                        SerializedParameter.of(406.0f),
+                                                                        SerializedParameter.of(407.0f)
                                                                 ))
                                                         ))
                                                 ))
                                         )),
                                         SerializedParameter.of(Map.of(
                                                 "keys", SerializedParameter.of(List.of(
-                                                        SerializedParameter.of(218),
-                                                        SerializedParameter.of(219)
+                                                        SerializedParameter.of(502),
+                                                        SerializedParameter.of(503)
                                                 )),
                                                 "values", SerializedParameter.of(List.of(
                                                         SerializedParameter.of(List.of(
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(220.0),
-                                                                        SerializedParameter.of(221.0)
+                                                                        SerializedParameter.of(408.0f),
+                                                                        SerializedParameter.of(409.0f)
                                                                 )),
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(222.0),
-                                                                        SerializedParameter.of(223.0)
+                                                                        SerializedParameter.of(410.0f),
+                                                                        SerializedParameter.of(411.0f)
                                                                 ))
                                                         )),
                                                         SerializedParameter.of(List.of(
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(224.0),
-                                                                        SerializedParameter.of(225.0)
+                                                                        SerializedParameter.of(412.0f),
+                                                                        SerializedParameter.of(413.0f)
                                                                 )),
                                                                 SerializedParameter.of(List.of(
-                                                                        SerializedParameter.of(226.0),
-                                                                        SerializedParameter.of(227.0)
+                                                                        SerializedParameter.of(414.0f),
+                                                                        SerializedParameter.of(415.0f)
+                                                                ))
+                                                        ))
+                                                ))
+                                        )),
+                                        SerializedParameter.of(Map.of(
+                                                "keys", SerializedParameter.of(List.of(
+                                                        SerializedParameter.of(504),
+                                                        SerializedParameter.of(505)
+                                                )),
+                                                "values", SerializedParameter.of(List.of(
+                                                        SerializedParameter.of(List.of(
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(416.0f),
+                                                                        SerializedParameter.of(417.0f)
+                                                                )),
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(418.0f),
+                                                                        SerializedParameter.of(419.0f)
+                                                                ))
+                                                        )),
+                                                        SerializedParameter.of(List.of(
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(420.0f),
+                                                                        SerializedParameter.of(421.0f)
+                                                                )),
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(422.0f),
+                                                                        SerializedParameter.of(423.0f)
+                                                                ))
+                                                        ))
+                                                ))
+                                        )),
+                                        SerializedParameter.of(Map.of(
+                                                "keys", SerializedParameter.of(List.of(
+                                                        SerializedParameter.of(506),
+                                                        SerializedParameter.of(507)
+                                                )),
+                                                "values", SerializedParameter.of(List.of(
+                                                        SerializedParameter.of(List.of(
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(424.0f),
+                                                                        SerializedParameter.of(425.0f)
+                                                                )),
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(426.0f),
+                                                                        SerializedParameter.of(427.0f)
+                                                                ))
+                                                        )),
+                                                        SerializedParameter.of(List.of(
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(428.0f),
+                                                                        SerializedParameter.of(429.0f)
+                                                                )),
+                                                                SerializedParameter.of(List.of(
+                                                                        SerializedParameter.of(430.0f),
+                                                                        SerializedParameter.of(431.0f)
                                                                 ))
                                                         ))
                                                 ))
@@ -442,144 +572,6 @@ public class ParameterTestActivityTest {
     }
 
     private ParameterTestActivity createParameterTestActivityInstance() {
-        ParameterTestActivity activity = new ParameterTestActivity();
-
-        // Primitive parameters
-        activity.primitiveDouble = 1.0;
-        activity.primitiveFloat = 2.0f;
-        activity.primitiveByte = 3;
-        activity.primitiveShort = 4;
-        activity.primitiveInt = 5;
-        activity.primitiveLong = 6;
-        activity.primitiveChar = '7';
-        activity.primitiveBoolean = true;
-
-        // Boxed parameters
-        activity.boxedDouble = 8.0;
-        activity.boxedFloat = 9.0f;
-        activity.boxedByte = 10;
-        activity.boxedShort = 11;
-        activity.boxedInt = 12;
-        activity.boxedLong = 13L;
-        activity.boxedChar = 'n';
-        activity.boxedBoolean = false;
-        activity.string = "p";
-
-        // Array parameters
-        activity.doubleArray = new Double[] {17.0, 18.0};
-        activity.floatArray = new Float[] {19.0f, 20.0f};
-        activity.byteArray = new Byte[] {21, 22};
-        activity.shortArray = new Short[] {23, 24};
-        activity.intArray = new Integer[] {25, 26};
-        activity.longArray = new Long[] {27L, 28L};
-        activity.charArray = new Character[] {'C', 'D'};
-        activity.booleanArray = new Boolean[] {true, false};
-        activity.stringArray = new String[] {"33", "34"};
-
-        // List parameters
-        activity.doubleList = List.of(35.0, 36.0);
-        activity.floatList = List.of(37.0f, 38.0f);
-        activity.byteList = List.of((byte)39, (byte)40);
-        activity.shortList = List.of((short)41, (short)42);
-        activity.intList = List.of(43, 44);
-        activity.longList = List.of(45L, 46L);
-        activity.charList = List.of('U', 'V');
-        activity.booleanList = List.of(false, true);
-        activity.stringList = List.of("51", "52");
-
-        // Map Parameters
-        activity.doubleMap = Map.of(53.0, 54.0, 55.0, 56.0);
-        activity.floatMap = Map.of(57.0f, 58.0f, 59.0f, 60.0f);
-        activity.byteMap = Map.of((byte)61, (byte)62, (byte)63, (byte)64);
-        activity.shortMap = Map.of((short)65, (short)66, (short)67, (short)68);
-        activity.intMap = Map.of(69, 70, 71, 72);
-        activity.longMap = Map.of(73L, 74L, 75L, 76L);
-        activity.charMap = Map.of('a', 'b', 'x', 'y');
-        activity.booleanMap = Map.of(false, true, true, false);
-        activity.stringMap = Map.of("A", "X", "B", "Y");
-
-        // Complex Parameters
-        activity.mappyBoi = Map.of(
-                100, List.of("abc", "xyz"),
-                200, List.of("def", "uvw")
-        );
-
-        @SuppressWarnings("unchecked")
-        List<Integer>[][] intListArrArr = new List[][] {
-                new List[] {
-                        List.of(200, 201),
-                        List.of(202, 203),
-                },
-                new List[] {
-                        List.of(204, 205),
-                        List.of(206, 207)
-                }
-        };
-        activity.intListArrayArray = intListArrArr;
-
-        //List<Map<String[][], Map<Integer, List<Float>[]>>> obnox =
-
-        @SuppressWarnings("unchecked")
-        List<Map<String[][], Map<Integer, List<Float>[]>>> obnox = List.of(
-                Map.of(
-                        new String[][] {
-                                new String[] {"300", "301"},
-                                new String[] {"302", "303"}
-                        }, Map.of(
-                                500, new List[] {
-                                        List.of(400.0f, 401.0f),
-                                        List.of(402.0f, 403.0f)
-                                },
-                                501, new List[] {
-                                        List.of(404.0f, 405.0f),
-                                        List.of(406.0f, 407.0f)
-                                }
-                        ),
-                        new String[][] {
-                                new String[] {"304", "305"},
-                                new String[] {"306", "307"}
-                        }, Map.of(
-                                502, new List[] {
-                                        List.of(408.0f, 409.0f),
-                                        List.of(410.0f, 411.0f)
-                                },
-                                503, new List[] {
-                                        List.of(412.0f, 413.0f),
-                                        List.of(414.0f, 415.0f)
-                                }
-                        )
-                ),
-                Map.of(
-                        new String[][] {
-                                new String[] {"308", "309"},
-                                new String[] {"310", "311"}
-                        }, Map.of(
-                                504, new List[] {
-                                        List.of(416.0f, 417.0f),
-                                        List.of(418.0f, 419.0f)
-                                },
-                                505, new List[] {
-                                        List.of(420.0f, 421.0f),
-                                        List.of(422.0f, 423.0f)
-                                }
-                        ),
-                        new String[][] {
-                                new String[] {"312", "313"},
-                                new String[] {"314", "315"}
-                        }, Map.of(
-                                506, new List[] {
-                                        List.of(424.0f, 425.0f),
-                                        List.of(426.0f, 427.0f)
-                                },
-                                507, new List[] {
-                                        List.of(428.0f, 429.0f),
-                                        List.of(430.0f, 431.0f)
-                                }
-                        )
-                )
-        );
-        activity.obnoxious = obnox;
-
-        return activity;
+        return ParameterTestActivity.createTestActivity();
     }
 }
