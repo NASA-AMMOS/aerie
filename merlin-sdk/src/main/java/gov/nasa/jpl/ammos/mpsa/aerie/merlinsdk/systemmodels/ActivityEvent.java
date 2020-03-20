@@ -14,13 +14,11 @@ public class ActivityEvent<Activity> implements Event<Activity> {
     private Activity activity;
     private Instant startTime;
     private Duration duration;
-    private Instant endTime;
 
     public ActivityEvent(String name, Instant startTime, Duration duration){
         this.name = name;
         this.startTime = startTime;
         this.duration = duration;
-        this.endTime = startTime.plus(duration);
     }
 
     @Override
@@ -43,7 +41,7 @@ public class ActivityEvent<Activity> implements Event<Activity> {
     }
 
     public Instant endTime(){
-        return this.endTime;
+        return this.startTime.plus(this.duration);
     }
 
     public Duration duration(){
