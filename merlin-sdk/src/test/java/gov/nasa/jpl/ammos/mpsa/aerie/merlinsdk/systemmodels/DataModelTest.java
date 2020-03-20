@@ -1,8 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintJudgement;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.DataActivityQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -18,15 +22,23 @@ import static org.junit.Assert.assertTrue;
 
 public class DataModelTest {
 
-
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
     Instant simStartTime = SimulationInstant.ORIGIN;
 
     DataSystemModel dataSystemModel;
-    SettableState<Double> dataRate;
-    SettableState<Double> dataVolume;
-    SettableState<String> dataProtocol;
+
+    public class DataStates implements StateContainer {
+        SettableState<Double> dataRate;
+        SettableState<Double> dataVolume;
+        SettableState<String> dataProtocol;
+
+        public List<State<?>> getStateList() {
+            return List.of(dataRate, dataVolume, dataProtocol);
+        }
+    }
+
+    DataStates dataStates = new DataStates();
 
     /*----------------------------- SAMPLE SIM ---------------------------------------*/
     Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
@@ -41,9 +53,9 @@ public class DataModelTest {
         dataSystemModel = new DataSystemModel(glue, simStartTime);
         glue.createMasterSystemModel(simStartTime, dataSystemModel);
 
-        dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
-        dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
-        dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+        dataStates.dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
+        dataStates.dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
+        dataStates.dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
     }
 
     @Test
@@ -66,26 +78,20 @@ public class DataModelTest {
         dataSystemModel = new DataSystemModel(glue, simStartTime);
         glue.createMasterSystemModel(simStartTime, dataSystemModel);
 
-        dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
-        dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
-        dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+        dataStates.dataRate.set(1.0, event1);
+        dataStates.dataRate.set(10.0, event2);
+        dataStates.dataRate.set(15.0, event3);
 
+        assertTrue(dataStates.dataVolume.get()==210);
+        assertTrue(dataStates.dataVolume.get()==210);
 
+        dataStates.dataRate.set(0.0, event4);
+        assertTrue(dataStates.dataVolume.get()==225);
+        assertTrue(dataStates.dataVolume.get()==225);
 
-        dataRate.set(1.0, event1);
-        dataRate.set(10.0, event2);
-        dataRate.set(15.0, event3);
-
-        assertTrue(dataVolume.get()==210);
-        assertTrue(dataVolume.get()==210);
-
-        dataRate.set(0.0, event4);
-        assertTrue(dataVolume.get()==225);
-        assertTrue(dataVolume.get()==225);
-
-        dataRate.set(10.0, event5);
-        assertTrue(dataVolume.get()==225);
-        assertTrue(dataVolume.get()==225);
+        dataStates.dataRate.set(10.0, event5);
+        assertTrue(dataStates.dataVolume.get()==225);
+        assertTrue(dataStates.dataVolume.get()==225);
     }
 
     @Test
@@ -179,15 +185,26 @@ public class DataModelTest {
         /*
          * Constraint I want to build:
          * In violation if dataRate > 10 AND dataVolume > 15 AND protocol == spacewire
+         *
+         * dataRate > 10: [10, 23]
+         * dataVolume > 15: [3, 23]
+         * dataProtocol = spacewire: [20, 23];
          */
         final var dataModel = new DataSystemModel(glue, simStartTime);
         final var dataSlice = dataModel.getInitialSlice();
 
+        Duration duration1 = Duration.of(10,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(3,TimeUnit.SECONDS);
+
         dataModel.setDataRate(dataSlice, 5.0);
-        dataModel.step(dataSlice, Duration.ZERO);
-        dataModel.setDataProtocol(dataSlice, GlobalPronouns.spacewire);
+        dataModel.step(dataSlice, duration1);
+
         dataModel.setDataRate(dataSlice, 15.0);
-        dataModel.step(dataSlice, Duration.ZERO);
+        dataModel.step(dataSlice, duration1);
+
+        dataModel.setDataProtocol(dataSlice, GlobalPronouns.spacewire);
+        dataModel.step(dataSlice, duration2);
+
         dataModel.setDataProtocol(dataSlice, GlobalPronouns.UART);
 
         Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);
@@ -201,4 +218,69 @@ public class DataModelTest {
         System.out.println(dataSysModelConstraint.getWindows());
     }
 
+    @Test
+    public void temporalConstraintTest(){
+
+        Instant time1 = SimulationInstant.ORIGIN;
+        Instant time2 = time1.plus(5, TimeUnit.SECONDS);
+        Instant time3 = time1.plus(30, TimeUnit.SECONDS);
+
+        Duration duration1 = Duration.of(10,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(3,TimeUnit.SECONDS);
+
+        String activityName = "SomeDataActivity A";
+
+        //[5,15]
+        ActivityEvent activityEvent1 = new ActivityEvent(activityName, time2, duration1);
+
+        //[30,33]
+        ActivityEvent activityEvent2 = new ActivityEvent(activityName, time3, duration2);
+
+        //this should be done elsewhere (sim engine?)
+        glue.registry().addActivityEvent(activityEvent1);
+        glue.registry().addActivityEvent(activityEvent2);
+
+        DataActivityQuerier dataActivityQuerier = new DataActivityQuerier();
+        dataActivityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
+
+        assertTrue(glue.registry().getActivityEvents(activityName).size() == 2);
+
+        //[5,15] , [30,33]
+        //todo: add an assertTrue statement
+        System.out.println("Activity occurs during these windows: " + dataActivityQuerier.whenActivityExists());
+
+        Constraint dataActivityOccuring = () -> dataActivityQuerier.whenActivityExists();
+
+        //[5,15] , [30,33]
+        //todo: add an assertTrue statement
+        System.out.println("\nWe can see when the activity occurs using constraints" + dataActivityOccuring.getWindows());
+
+        //During activity the data prtoocol must be spacewire
+        final var dataModel = new DataSystemModel(glue, simStartTime);
+        final var dataSlice = dataModel.getInitialSlice();
+
+        Duration duration3 = Duration.of(13,TimeUnit.SECONDS);
+
+        //change this to 11 to see it pass
+        dataModel.setDataRate(dataSlice, 10.0);
+        dataModel.step(dataSlice, duration1);
+
+        dataModel.setDataRate(dataSlice, 15.0);
+        dataModel.step(dataSlice, duration1);
+
+        dataModel.setDataProtocol(dataSlice, GlobalPronouns.spacewire);
+        dataModel.step(dataSlice, duration3);
+
+        //dataRate > 10: [10, 33]
+        Constraint dataRateMax = () -> dataSystemModel.whenDataRateGreaterThan(dataSlice, 10.0);
+        System.out.println(dataRateMax.getWindows());
+
+        //[10,15], [30,33]
+        Constraint rateAndActiviy = dataRateMax.and(dataActivityOccuring);
+        System.out.println("Temporal and State: " + rateAndActiviy.getWindows());
+
+        String result = ConstraintJudgement.activityDurationRequirement(dataActivityOccuring, dataRateMax);
+
+        System.out.println(result);
+    }
 }

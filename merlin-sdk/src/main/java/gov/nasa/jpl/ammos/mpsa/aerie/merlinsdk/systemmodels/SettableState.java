@@ -17,13 +17,13 @@ public class SettableState<T> implements State<T> {
 
     public void set(T value, Instant t){
         SettableEvent<T> event = new SettableEvent<>(this.name, value, t);
-        dependentSystemModel.getRegistry().addEvent(event);
+        dependentSystemModel.getRegistry().addStateEvent(event);
     }
 
     @Override
     public T get() {
         var masterSlice = dependentSystemModel.getMasterSystemModel().getInitialMasterSlice();
-        dependentSystemModel.getRegistry().applyEvents(dependentSystemModel, masterSlice);
+        dependentSystemModel.getRegistry().applyStateEvents(dependentSystemModel, masterSlice);
 
         return masterSlice.getState(name);
     }
