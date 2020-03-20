@@ -16,7 +16,17 @@ public final class ByteParameterMapper implements ParameterMapper<Byte> {
         .asInt()
         .map(Result::<Long, String>success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedParameter.toString()))
-        .mapSuccess(Number::byteValue);
+        .match(
+            (Long x) -> {
+              final var y = x.byteValue();
+              if (x != y) {
+                return Result.failure("Invalid parameter; value outside range of `byte`");
+              } else {
+                return Result.success(y);
+              }
+            },
+            Result::failure
+        );
   }
 
   @Override

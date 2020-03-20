@@ -16,7 +16,17 @@ public final class IntegerParameterMapper implements ParameterMapper<Integer> {
         .asInt()
         .map(Result::<Long, String>success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedParameter.toString()))
-        .mapSuccess(Number::intValue);
+        .match(
+            (Long x) -> {
+              final var y = x.intValue();
+              if (x != y) {
+                return Result.failure("Invalid parameter; value outside range of `int`");
+              } else {
+                return Result.success(y);
+              }
+            },
+            Result::failure
+        );
   }
 
   @Override
