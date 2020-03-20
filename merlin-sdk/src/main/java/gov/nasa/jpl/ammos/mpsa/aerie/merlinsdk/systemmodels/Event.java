@@ -8,6 +8,4 @@ public interface Event<T> {
     public String name();
     public T value();
     public Instant time();
-
-
 }

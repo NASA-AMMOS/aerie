@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataActivityQuerier implements EventLogQuerier{
+public class DataActivityQuerier {
 
     private List<ActivityEvent> eventLog;
 
@@ -23,6 +23,4 @@ public class DataActivityQuerier implements EventLogQuerier{
         }
         return windows;
     }
-
-
 }

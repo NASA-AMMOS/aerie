@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintJudgement;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.DataActivityQuerier;
@@ -24,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 public class DataModelTest {
 
-
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
     Instant simStartTime = SimulationInstant.ORIGIN;
@@ -41,15 +38,7 @@ public class DataModelTest {
         }
     }
 
-    @ActivityType(name="SomeDataActivity", states = DataStates.class)
-    public class SomeDataActivity implements Activity<DataStates>{
-        @Override
-        public void modelEffects(DataStates states) {
-        }
-    }
-
     DataStates dataStates = new DataStates();
-
 
     /*----------------------------- SAMPLE SIM ---------------------------------------*/
     Instant event1 = simStartTime.plus(10, TimeUnit.SECONDS);
@@ -250,6 +239,7 @@ public class DataModelTest {
         //this should be done elsewhere (sim engine?)
         glue.registry().addActivityEvent(activityEvent1);
         glue.registry().addActivityEvent(activityEvent2);
+
         DataActivityQuerier dataActivityQuerier = new DataActivityQuerier();
         dataActivityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
 
@@ -257,13 +247,13 @@ public class DataModelTest {
 
         //[5,15] , [30,33]
         //todo: add an assertTrue statement
-        System.out.println(dataActivityQuerier.whenActivityExists());
+        System.out.println("Activity occurs during these windows: " + dataActivityQuerier.whenActivityExists());
 
         Constraint dataActivityOccuring = () -> dataActivityQuerier.whenActivityExists();
 
         //[5,15] , [30,33]
         //todo: add an assertTrue statement
-        System.out.println(dataActivityOccuring.getWindows());
+        System.out.println("\nWe can see when the activity occurs using constraints" + dataActivityOccuring.getWindows());
 
         //During activity the data prtoocol must be spacewire
         final var dataModel = new DataSystemModel(glue, simStartTime);
@@ -272,7 +262,7 @@ public class DataModelTest {
         Duration duration3 = Duration.of(13,TimeUnit.SECONDS);
 
         //change this to 11 to see it pass
-        dataModel.setDataRate(dataSlice, 5.0);
+        dataModel.setDataRate(dataSlice, 10.0);
         dataModel.step(dataSlice, duration1);
 
         dataModel.setDataRate(dataSlice, 15.0);
@@ -292,11 +282,5 @@ public class DataModelTest {
         String result = ConstraintJudgement.activityDurationRequirement(dataActivityOccuring, dataRateMax);
 
         System.out.println(result);
-
-
-
-
-
     }
-
 }

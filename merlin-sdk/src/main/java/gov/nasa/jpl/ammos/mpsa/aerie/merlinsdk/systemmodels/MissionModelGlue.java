@@ -4,10 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -246,18 +243,13 @@ public class MissionModelGlue {
         }
 
         public void addActivityEvent(ActivityEvent activityEvent){
-            if (completeActivityEventMap.containsKey(activityEvent.name())){
-                completeActivityEventMap.get(activityEvent.name()).add(activityEvent);
-            }
-            else {
-                List<ActivityEvent> events = new ArrayList<>();
-                events.add(activityEvent);
-                completeActivityEventMap.put(activityEvent.name(), events);
-            }
+            completeActivityEventMap
+                    .computeIfAbsent(activityEvent.name(), x -> new ArrayList<>())
+                    .add(activityEvent);
         }
 
         public List<ActivityEvent>getActivityEvents(String name){
-            return completeActivityEventMap.get(name);
+            return Collections.unmodifiableList(completeActivityEventMap.get(name));
         }
     }
 }
