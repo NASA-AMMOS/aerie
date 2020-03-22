@@ -1,12 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import org.apache.commons.lang3.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -145,5 +148,10 @@ public final class StubApp implements App {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public SimulationResults runSimulation(final CreateSimulationMessage message) {
+        throw new NotImplementedException("TODO");
     }
 }
