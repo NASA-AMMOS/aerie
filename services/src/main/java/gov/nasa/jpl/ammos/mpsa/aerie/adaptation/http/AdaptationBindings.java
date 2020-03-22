@@ -1,9 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
@@ -13,11 +16,13 @@ import io.javalin.http.UploadedFile;
 
 import javax.json.Json;
 import javax.json.JsonValue;
+import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsers.createSimulationMessageP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
@@ -67,6 +72,12 @@ public final class AdaptationBindings implements Plugin {
                         });
                     });
                 });
+            });
+
+            path("simulations", () -> {
+                before(ctx -> ctx.contentType("application/json"));
+
+                post(this::runSimulation);
             });
         });
     }
@@ -171,6 +182,30 @@ public final class AdaptationBindings implements Plugin {
         }
     }
 
+    private void runSimulation(final Context ctx) {
+        try {
+            final CreateSimulationMessage message = parseJson(ctx.body(), createSimulationMessageP);
+
+            final var results = this.app.runSimulation(message);
+
+            ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
+        } catch (final JsonParsingException ex) {
+            // Request entity is not valid JSON.
+            // TODO: report this failure with a better response body
+            ctx.status(400).result(Json.createObjectBuilder().build().toString());
+        } catch (final InvalidEntityException ex) {
+            // Request entity does not have the expected shape.
+            ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            // The requested adaptation does not exist.
+            ctx.status(404);
+        } catch (final Adaptation.UnconstructableActivityInstanceException | Adaptation.NoSuchActivityTypeException e) {
+            // The adaptation could not instantiate the provided activities.
+            // TODO: report these failures with a better response body
+            ctx.status(400).result(Json.createObjectBuilder().build().toString());
+        }
+      }
+
     private NewAdaptation readNewAdaptation(final Context ctx) throws ValidationException {
         final List<String> validationErrors = new ArrayList<>();
 
@@ -237,5 +272,10 @@ public final class AdaptationBindings implements Plugin {
             .setOwner(ctx.formParam("owner"))
             .setJarSource(uploadedFile.getContent())
             .build();
+    }
+
+    private <T> T parseJson(final String subject, final JsonParser<T> parser) throws InvalidEntityException {
+        final var requestJson = Json.createReader(new StringReader(subject)).readValue();
+        return parser.parse(requestJson).getSuccessOrThrow(() -> new InvalidEntityException());
     }
 }

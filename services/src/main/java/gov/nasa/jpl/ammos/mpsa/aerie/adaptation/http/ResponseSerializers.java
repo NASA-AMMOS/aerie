@@ -5,9 +5,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
@@ -107,6 +110,38 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
         .add("id", entityId)
         .build();
+  }
+
+  static public JsonValue serializeParameter(final SerializedParameter parameter) {
+    return parameter.match(new ParameterSerializer());
+  }
+
+  static public JsonValue serializeTimeline(final List<SerializedParameter> elements) {
+    final var builder = Json.createArrayBuilder();
+    for (final var element : elements) {
+      builder.add(serializeParameter(element));
+    }
+    return builder.build();
+  }
+
+  static public JsonValue serializeTimestamp(final Instant timestamp) {
+    final var duration = SimulationInstant.ORIGIN.durationTo(timestamp);
+    return Json.createValue(duration.durationInMicroseconds);
+  }
+
+  static public JsonValue serializeTimestamps(final List<Instant> elements) {
+    final var builder = Json.createArrayBuilder();
+    for (final var element : elements) {
+      builder.add(serializeTimestamp(element));
+    }
+    return builder.build();
+  }
+
+  static public JsonValue serializeSimulationResults(final SimulationResults results) {
+    final var builder = Json.createObjectBuilder();
+    builder.add("times", serializeTimestamps(results.timestamps));
+    builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
+    return builder.build();
   }
 
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
