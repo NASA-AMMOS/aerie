@@ -47,28 +47,9 @@ public final class SimulationEngine {
         return t;
     });
 
-    /// The frequency with which call the provided sampling hook.
-    private final Duration samplingFrequency;
-
-    /// A user-provided hook to call whenever a certain amount of time has passed.
-    private final Consumer<Instant> samplingHook;
-
-    private <T extends StateContainer> SimulationEngine(
-        final Instant simulationStartTime,
-        final T stateContainer,
-        final Duration samplingFrequency,
-        final Consumer<Instant> samplingHook
-    ) {
+    private <T extends StateContainer> SimulationEngine(final Instant simulationStartTime, final T stateContainer) {
         this.effectsProvider = new EffectsProvider(stateContainer);
         this.currentSimulationTime = simulationStartTime;
-
-        if (samplingHook != null && samplingFrequency.isPositive()) {
-            this.samplingFrequency = samplingFrequency;
-            this.samplingHook = samplingHook;
-        } else {
-            this.samplingFrequency = Duration.ZERO;
-            this.samplingHook = (now) -> {};
-        }
 
         for (final var state : stateContainer.getStateList()) {
             state.initialize(simulationStartTime);
@@ -80,17 +61,7 @@ public final class SimulationEngine {
         final T stateContainer,
         final Runnable topLevel
     ) {
-        return simulate(simulationStartTime, stateContainer, topLevel, Duration.ZERO, null);
-    }
-
-    public static <T extends StateContainer> Instant simulate(
-        final Instant simulationStartTime,
-        final T stateContainer,
-        final Runnable topLevel,
-        final Duration samplingPeriod,
-        final Consumer<Instant> samplingHook
-    ) {
-        final var engine = new SimulationEngine(simulationStartTime, stateContainer, samplingPeriod, samplingHook);
+        final var engine = new SimulationEngine(simulationStartTime, stateContainer);
         engine.run((ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
         return engine.currentSimulationTime;
     }
@@ -103,33 +74,17 @@ public final class SimulationEngine {
         this.spawnInThread(rootJob, topLevel);
         this.resumeAfter(Duration.ZERO, rootJob);
 
-        var nextSampleTime = this.currentSimulationTime;
-
         // Run until we've handled all outstanding activity events.
         while (!this.eventQueue.isEmpty()) {
             final var event = this.eventQueue.remove();
             final var eventTime = event.getLeft();
             final var job = event.getRight();
 
-            // Handle all of the sampling events that occur before the next activity event.
-            if (this.samplingFrequency.isPositive()) {
-                while (nextSampleTime.isBefore(eventTime)) {
-                    this.currentSimulationTime = nextSampleTime;
-
-                    this.samplingHook.accept(this.currentSimulationTime);
-                    nextSampleTime = nextSampleTime.plus(this.samplingFrequency);
-                }
-            }
-
             this.currentSimulationTime = eventTime;
             this.activeJob = job;
             job.yieldControl();
             job.takeControl();
             this.activeJob = null;
-        }
-
-        if (!nextSampleTime.isAfter(this.currentSimulationTime)) {
-            this.samplingHook.accept(this.currentSimulationTime);
         }
 
         this.threadPool.shutdown();
