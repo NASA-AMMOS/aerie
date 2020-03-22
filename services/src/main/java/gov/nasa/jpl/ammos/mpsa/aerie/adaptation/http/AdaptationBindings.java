@@ -15,7 +15,6 @@ import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 
 import javax.json.Json;
-import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -23,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsers.serializedParameterP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
@@ -168,8 +169,7 @@ public final class AdaptationBindings implements Plugin {
             final String adaptationId = ctx.pathParam("adaptationId");
             final String activityTypeId = ctx.pathParam("activityTypeId");
 
-            final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
-            final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
+            final Map<String, SerializedParameter> activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
             final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
             final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
