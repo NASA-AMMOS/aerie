@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@ActivityType(name="TurnInstrumentOn", states=SampleMissionStates.class)
+@ActivityType(name="TurnInstrumentOn", states=SampleMissionStates.class, generateMapper=true)
 public class TurnInstrumentOn implements Activity<SampleMissionStates> {
 
     @Parameter

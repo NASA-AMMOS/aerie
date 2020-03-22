@@ -17,7 +17,7 @@ import java.util.List;
  * @contact mkumar
  */
 
-@ActivityType(name="DownlinkData", states=SampleMissionStates.class)
+@ActivityType(name="DownlinkData", states=SampleMissionStates.class, generateMapper=true)
 public class DownlinkData implements Activity<SampleMissionStates> {
 
     @Parameter
