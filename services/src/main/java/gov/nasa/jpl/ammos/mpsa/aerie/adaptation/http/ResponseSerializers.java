@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
@@ -8,14 +9,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -112,11 +118,11 @@ public final class ResponseSerializers {
         .build();
   }
 
-  static public JsonValue serializeParameter(final SerializedParameter parameter) {
+  public static JsonValue serializeParameter(final SerializedParameter parameter) {
     return parameter.match(new ParameterSerializer());
   }
 
-  static public JsonValue serializeTimeline(final List<SerializedParameter> elements) {
+  public static JsonValue serializeTimeline(final List<SerializedParameter> elements) {
     final var builder = Json.createArrayBuilder();
     for (final var element : elements) {
       builder.add(serializeParameter(element));
@@ -124,12 +130,12 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
-  static public JsonValue serializeTimestamp(final Instant timestamp) {
+  public static JsonValue serializeTimestamp(final Instant timestamp) {
     final var duration = SimulationInstant.ORIGIN.durationTo(timestamp);
     return Json.createValue(duration.durationInMicroseconds);
   }
 
-  static public JsonValue serializeTimestamps(final List<Instant> elements) {
+  public static JsonValue serializeTimestamps(final List<Instant> elements) {
     final var builder = Json.createArrayBuilder();
     for (final var element : elements) {
       builder.add(serializeTimestamp(element));
@@ -137,11 +143,37 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
-  static public JsonValue serializeSimulationResults(final SimulationResults results) {
+  public static JsonValue serializeSimulationResults(final SimulationResults results) {
     final var builder = Json.createObjectBuilder();
     builder.add("times", serializeTimestamps(results.timestamps));
     builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
     return builder.build();
+  }
+
+  public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
+    return Json.createObjectBuilder()
+        .add("defer", scheduledActivity.getLeft().durationInMicroseconds)
+        .add("type", scheduledActivity.getRight().getTypeName())
+        .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
+        .build();
+  }
+
+  public static JsonValue serializeScheduledActivities(final List<Pair<Duration, SerializedActivity>> activities) {
+    final var builder = Json.createArrayBuilder();
+    for (final var activity : activities) {
+      builder.add(serializeScheduledActivity(activity));
+    }
+    return builder.build();
+  }
+
+  public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
+    return Json.createObjectBuilder()
+        .add("adaptationId", message.adaptationId)
+        .add("startTime", DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn").withZone(ZoneOffset.UTC).format(message.startTime))
+        .add("samplingDuration", message.samplingDuration.durationInMicroseconds)
+        .add("samplingPeriod", message.samplingPeriod.durationInMicroseconds)
+        .add("activities", serializeScheduledActivities(message.activityInstances))
+        .build();
   }
 
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {

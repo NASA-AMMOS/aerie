@@ -49,6 +49,8 @@ public final class StubApp implements App {
     public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
     public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of("Unconstructable activity instance");
 
+    public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(List.of(), Map.of());
+
     static {
         VALID_NEW_ADAPTATION = new HashMap<>();
         VALID_NEW_ADAPTATION.put("name", "adaptation");
@@ -151,7 +153,11 @@ public final class StubApp implements App {
     }
 
     @Override
-    public SimulationResults runSimulation(final CreateSimulationMessage message) {
-        throw new NotImplementedException("TODO");
+    public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
+        if (!Objects.equals(message.adaptationId, EXISTENT_ADAPTATION_ID)) {
+            throw new NoSuchAdaptationException(message.adaptationId);
+        }
+
+        return SUCCESSFUL_SIMULATION_RESULTS;
     }
 }
