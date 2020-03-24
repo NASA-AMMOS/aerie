@@ -174,7 +174,7 @@ public final class ActivityProcessor extends AbstractProcessor {
     for (final Element element : roundEnv.getElementsAnnotatedWith(ActivitiesMapped.class)) {
       for (final AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
         if (annotationMirror.getAnnotationType().equals(activitiesMappedType)) {
-          List<TypeMirror> newActivitiesWithMappers = findActivityTypesWithMappers(annotationMirror);
+          List<TypeMirror> newActivitiesWithMappers = getActivitiesMappedBy(annotationMirror);
           for (TypeMirror mappedActivity : newActivitiesWithMappers) {
             if (activityTypesWithMappers.contains(mappedActivity)) {
               processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "More than one activity mapper found for activity type " + mappedActivity.toString(), element);
@@ -201,7 +201,7 @@ public final class ActivityProcessor extends AbstractProcessor {
     return true;
   }
 
-  private List<TypeMirror> findActivityTypesWithMappers(AnnotationMirror annotationMirror) {
+  private List<TypeMirror> getActivitiesMappedBy(AnnotationMirror annotationMirror) {
     List<TypeMirror> activityTypesWithMappers = new ArrayList<>();
     for (var entry : annotationMirror.getElementValues().entrySet()) {
       if ("value".equals(entry.getKey().getSimpleName().toString())) {
