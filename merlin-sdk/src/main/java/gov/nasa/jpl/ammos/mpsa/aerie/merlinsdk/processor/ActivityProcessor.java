@@ -177,9 +177,10 @@ public final class ActivityProcessor extends AbstractProcessor {
           List<TypeMirror> newActivitiesWithMappers = findActivityTypesWithMappers(annotationMirror);
           for (TypeMirror mappedActivity : newActivitiesWithMappers) {
             if (activityTypesWithMappers.contains(mappedActivity)) {
-              throw new RuntimeException("More than one activity mapper found for activity type " + mappedActivity.toString());
+              processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "More than one activity mapper found for activity type " + mappedActivity.toString(), element);
+            } else {
+              activityTypesWithMappers.add(mappedActivity);
             }
-            activityTypesWithMappers.add(mappedActivity);
           }
         }
       }
@@ -193,7 +194,7 @@ public final class ActivityProcessor extends AbstractProcessor {
       for (ActivityTypeInfo activityTypeInfo : activityTypesFound) {
         TypeMirror className = activityTypeInfo.javaType;
         if (!activityTypesWithMappers.contains(activityTypeInfo.javaType)) {
-          throw new RuntimeException("No mapper specified for activity type " + className);
+          processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No mapper specified for activity type " + className, activityTypeInfo.javaType.asElement());
         }
       }
     }
