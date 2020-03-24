@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
@@ -18,6 +17,11 @@ public class ParameterTestActivityTest {
 
     public ParameterTestActivityTest() {
         mapper = new ParameterTestActivity$$ActivityMapper();
+    }
+
+    @Test
+    public void testDefaultSerializationDoesNotThrow() {
+      this.mapper.serializeActivity(new ParameterTestActivity()).orElseThrow();
     }
 
     @Test
