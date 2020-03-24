@@ -41,14 +41,6 @@ java_binary(
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.plan.AerieAppDriver"
 )
 
-java_binary(
-    name = "simulation-service", 
-    deps = [
-        ':services'
-    ],
-    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.simulation.App"
-)
-
 java_test(
     name = "test_services",
     srcs = glob(["src/**/*.java"]),
