@@ -15,6 +15,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.IntegerParameterMappe
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ListParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.LongParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.MapParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.NullableParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ShortParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.StringParameterMapper;
@@ -99,6 +100,31 @@ final class ArrayType implements ParameterTypeReference {
   }
 }
 
+final class NullableType implements ParameterTypeReference {
+  private final ParameterTypeReference valueType;
+
+  public NullableType(final ParameterTypeReference valueType) {
+    this.valueType = valueType;
+  }
+
+  @Override
+  public TypeName getTypeName() {
+    return valueType.getTypeName();
+  }
+
+  @Override
+  public TypeName getRawTypeName() {
+    return valueType.getRawTypeName();
+  }
+
+  @Override
+  public CodeBlock getMapper() {
+    return CodeBlock.builder()
+        .add("new $T<>($L)", NullableParameterMapper.class, this.valueType.getMapper())
+        .build();
+  }
+}
+
 final class NullaryType<ParameterType> implements ParameterTypeReference {
   private final Class<? extends ParameterMapper<ParameterType>> mapperClass;
   private final Class<? extends ParameterType> parameterClass;
@@ -141,6 +167,10 @@ interface ParameterTypeReference {
   ParameterTypeReference CHAR = new NullaryType<>(CharacterParameterMapper.class, Character.class);
   ParameterTypeReference STRING = new NullaryType<>(StringParameterMapper.class, String.class);
   ParameterTypeReference BOOLEAN = new NullaryType<>(BooleanParameterMapper.class, Boolean.class);
+
+  static ParameterTypeReference nullable(final ParameterTypeReference valueType) {
+    return new NullableType(valueType);
+  }
 
   static ParameterTypeReference ofArray(final ParameterTypeReference elementType) {
     return new ArrayType(elementType);

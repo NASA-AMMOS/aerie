@@ -68,7 +68,7 @@ class TypeInfoMaker {
   }
 
   public ParameterTypeReference getParameterTypeReference(final Element parameterElement) throws ParameterTypeException {
-    return getParameterTypeReference(parameterElement, parameterElement.asType());
+    return ParameterTypeReference.nullable(getParameterTypeReference(parameterElement, parameterElement.asType()));
   }
 
   private ParameterTypeReference getParameterTypeReference(final Element declaration, final TypeMirror parameterType) throws ParameterTypeException {
