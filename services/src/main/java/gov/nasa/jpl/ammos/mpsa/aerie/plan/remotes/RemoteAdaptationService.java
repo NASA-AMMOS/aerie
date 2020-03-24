@@ -29,7 +29,7 @@ public final class RemoteAdaptationService implements AdaptationService {
   public boolean isMissionModelDefined(final String adaptationId) {
     final HttpResponse<String> response;
     try {
-      response = this.client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
+      response = this.client.sendRequest("HEAD", "/adaptations/" + adaptationId);
     } catch (final IOException | InterruptedException ex) {
       throw new AdaptationAccessException(ex);
     }

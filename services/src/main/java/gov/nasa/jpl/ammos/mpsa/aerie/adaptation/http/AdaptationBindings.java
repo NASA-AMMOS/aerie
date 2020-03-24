@@ -21,6 +21,7 @@ import java.util.Map;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.head;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
@@ -53,6 +54,7 @@ public final class AdaptationBindings implements Plugin {
                 get(this::getAdaptations);
                 post(this::postAdaptation);
                 path(":adaptationId", () -> {
+                    head(this::doesAdaptationExist);
                     get(this::getAdaptation);
                     delete(this::deleteAdaptation);
                     path("activities", () -> {
@@ -88,6 +90,18 @@ public final class AdaptationBindings implements Plugin {
             ctx.status(400).result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString());
         } catch (final ValidationException ex) {
             ctx.status(400).result(ResponseSerializers.serializeValidationException(ex).toString());
+        }
+    }
+
+    private void doesAdaptationExist(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
+
+            this.app.getAdaptationById(adaptationId);
+
+            ctx.status(200);
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
         }
     }
 
