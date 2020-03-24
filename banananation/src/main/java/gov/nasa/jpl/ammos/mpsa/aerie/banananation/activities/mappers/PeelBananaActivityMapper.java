@@ -28,19 +28,22 @@ public final class PeelBananaActivityMapper implements ActivityMapper {
   }
 
   @Override
-  public Optional<Activity<? extends StateContainer>> deserializeActivity(
-      final SerializedActivity serializedActivity) {
+  public Optional<Activity<? extends StateContainer>> deserializeActivity(final SerializedActivity serializedActivity) {
     if (!serializedActivity.getTypeName().equals(ACTIVITY_TYPE)) {
       return Optional.empty();
     }
 
-    Optional<String> param_peelDirection = Optional.empty();
+    final var activity = new PeelBananaActivity();
 
     for (final var entry : serializedActivity.getParameters().entrySet()) {
+      final var value = entry.getValue();
       switch (entry.getKey()) {
         case "peelDirection": {
-          final var givenValue = entry.getValue().asString().orElseThrow(() -> new RuntimeException("Invalid parameter; expected string"));
-          param_peelDirection = Optional.of(givenValue);
+          if (value.isNull()) {
+            activity.peelDirection = null;
+          } else {
+            activity.peelDirection = value.asString().orElseThrow(() -> new RuntimeException("Invalid parameter; expected string"));
+          }
           break;
         }
         default:
@@ -48,14 +51,11 @@ public final class PeelBananaActivityMapper implements ActivityMapper {
       }
     }
 
-    final var activity = new PeelBananaActivity();
-    param_peelDirection.ifPresent(p -> activity.peelDirection = p);
-
     return Optional.of(activity);
   }
 
   @Override
-  public Optional<SerializedActivity> serializeActivity(final Activity abstractActivity) {
+  public Optional<SerializedActivity> serializeActivity(final Activity<?> abstractActivity) {
     if (!(abstractActivity instanceof PeelBananaActivity)) {
       return Optional.empty();
     }
@@ -63,7 +63,7 @@ public final class PeelBananaActivityMapper implements ActivityMapper {
     final PeelBananaActivity activity = (PeelBananaActivity)abstractActivity;
 
     final var parameters = new HashMap<String, SerializedParameter>();
-    parameters.put("peelDirection", SerializedParameter.of(activity.peelDirection));
+    parameters.put("peelDirection", (activity.peelDirection != null) ? SerializedParameter.of(activity.peelDirection) : SerializedParameter.NULL);
 
     return Optional.of(new SerializedActivity(ACTIVITY_TYPE, parameters));
   }

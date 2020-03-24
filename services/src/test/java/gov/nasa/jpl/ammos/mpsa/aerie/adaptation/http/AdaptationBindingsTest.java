@@ -113,6 +113,30 @@ public final class AdaptationBindingsTest {
     }
 
     @Test
+    public void shouldConfirmAdaptationExists() throws IOException, InterruptedException {
+        // GIVEN
+        final String adaptationId = StubApp.EXISTENT_ADAPTATION_ID;
+
+        // WHEN
+        final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId);
+
+        // THEN
+        assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_OK);
+    }
+
+    @Test
+    public void shouldDenyNonexistentAdaptationExists() throws IOException, InterruptedException {
+        // GIVEN
+        final String adaptationId = StubApp.NONEXISTENT_ADAPTATION_ID;
+
+        // WHEN
+        final HttpResponse<String> response = sendRequest("GET", "/adaptations/" + adaptationId);
+
+        // THEN
+        assertThat(response.statusCode()).isEqualTo(HttpURLConnection.HTTP_NOT_FOUND);
+    }
+
+    @Test
     public void shouldAddValidAdaptation() throws IOException, InterruptedException {
         // GIVEN
         final Map<String, Object> adaptationRequest = StubApp.VALID_NEW_ADAPTATION;

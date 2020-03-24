@@ -174,12 +174,13 @@ public final class ActivityProcessor extends AbstractProcessor {
     for (final Element element : roundEnv.getElementsAnnotatedWith(ActivitiesMapped.class)) {
       for (final AnnotationMirror annotationMirror : element.getAnnotationMirrors()) {
         if (annotationMirror.getAnnotationType().equals(activitiesMappedType)) {
-          List<TypeMirror> newActivitiesWithMappers = findActivityTypesWithMappers(annotationMirror);
+          List<TypeMirror> newActivitiesWithMappers = getActivitiesMappedBy(annotationMirror);
           for (TypeMirror mappedActivity : newActivitiesWithMappers) {
             if (activityTypesWithMappers.contains(mappedActivity)) {
-              throw new RuntimeException("More than one activity mapper found for activity type " + mappedActivity.toString());
+              processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "More than one activity mapper found for activity type " + mappedActivity.toString(), element);
+            } else {
+              activityTypesWithMappers.add(mappedActivity);
             }
-            activityTypesWithMappers.add(mappedActivity);
           }
         }
       }
@@ -193,14 +194,14 @@ public final class ActivityProcessor extends AbstractProcessor {
       for (ActivityTypeInfo activityTypeInfo : activityTypesFound) {
         TypeMirror className = activityTypeInfo.javaType;
         if (!activityTypesWithMappers.contains(activityTypeInfo.javaType)) {
-          throw new RuntimeException("No mapper specified for activity type " + className);
+          processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No mapper specified for activity type " + className, activityTypeInfo.javaType.asElement());
         }
       }
     }
     return true;
   }
 
-  private List<TypeMirror> findActivityTypesWithMappers(AnnotationMirror annotationMirror) {
+  private List<TypeMirror> getActivitiesMappedBy(AnnotationMirror annotationMirror) {
     List<TypeMirror> activityTypesWithMappers = new ArrayList<>();
     for (var entry : annotationMirror.getElementValues().entrySet()) {
       if ("value".equals(entry.getKey().getSimpleName().toString())) {
