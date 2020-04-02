@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintJudgement;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.DataActivityQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ActivityQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -240,16 +240,16 @@ public class DataModelTest {
         glue.registry().addActivityEvent(activityEvent1);
         glue.registry().addActivityEvent(activityEvent2);
 
-        DataActivityQuerier dataActivityQuerier = new DataActivityQuerier();
-        dataActivityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
 
         assertTrue(glue.registry().getActivityEvents(activityName).size() == 2);
 
         //[5,15] , [30,33]
         //todo: add an assertTrue statement
-        System.out.println("Activity occurs during these windows: " + dataActivityQuerier.whenActivityExists());
+        System.out.println("Activity occurs during these windows: " + activityQuerier.whenActivityExists());
 
-        Constraint dataActivityOccuring = () -> dataActivityQuerier.whenActivityExists();
+        Constraint dataActivityOccuring = () -> activityQuerier.whenActivityExists();
 
         //[5,15] , [30,33]
         //todo: add an assertTrue statement
