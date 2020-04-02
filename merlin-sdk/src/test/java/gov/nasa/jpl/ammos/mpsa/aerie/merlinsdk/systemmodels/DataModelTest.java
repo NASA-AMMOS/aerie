@@ -323,10 +323,16 @@ public class DataModelTest {
         assertTrue(dataActivityMaximumDuration.getWindows().get(0).end.equals(time2.plus(duration1)));
 
         Duration minimumDuration = Duration.of(10, TimeUnit.SECONDS);
+        Constraint dataActivityMinimumDuration = () -> activityQuerier.whenActivityHasDurationLessThan(activityName, minimumDuration);
 
         assertTrue(dataActivityDuration.getWindows().size() == 1);
         assertTrue(dataActivityDuration.getWindows().get(0).start.equals(time3));
         assertTrue(dataActivityDuration.getWindows().get(0).end.equals(time3.plus(duration2)));
+    }
+
+    @Test
+    public void temporalActivityConstraints(){
+
     }
 
 
