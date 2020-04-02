@@ -308,6 +308,25 @@ public class DataModelTest {
         ActivityQuerier activityQuerier = new ActivityQuerier();
         activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
 
+        Duration requiredDuration = Duration.of(10,TimeUnit.SECONDS);
+        Constraint dataActivityDuration = () -> activityQuerier.whenActivityDoesNotHaveDuration(activityName, requiredDuration);
+
+        assertTrue(dataActivityDuration.getWindows().size() == 1);
+        assertTrue(dataActivityDuration.getWindows().get(0).start.equals(time3));
+        assertTrue(dataActivityDuration.getWindows().get(0).end.equals(time3.plus(duration2)));
+
+        Duration maximumDuration = Duration.of(8, TimeUnit.SECONDS);
+        Constraint dataActivityMaximumDuration = () -> activityQuerier.whenActivityHasDurationGreaterThan(activityName, maximumDuration);
+
+        assertTrue(dataActivityMaximumDuration.getWindows().size() == 1);
+        assertTrue(dataActivityMaximumDuration.getWindows().get(0).start.equals(time2));
+        assertTrue(dataActivityMaximumDuration.getWindows().get(0).end.equals(time2.plus(duration1)));
+
+        Duration minimumDuration = Duration.of(10, TimeUnit.SECONDS);
+
+        assertTrue(dataActivityDuration.getWindows().size() == 1);
+        assertTrue(dataActivityDuration.getWindows().get(0).start.equals(time3));
+        assertTrue(dataActivityDuration.getWindows().get(0).end.equals(time3.plus(duration2)));
     }
 
 
