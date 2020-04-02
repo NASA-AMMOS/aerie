@@ -251,5 +251,9 @@ public class MissionModelGlue {
         public List<ActivityEvent>getActivityEvents(String name){
             return Collections.unmodifiableList(completeActivityEventMap.get(name));
         }
+
+        public Map<String, List<ActivityEvent>> getCompleteActivityEventMap(){
+            return Collections.unmodifiableMap(this.completeActivityEventMap);
+        }
     }
 }

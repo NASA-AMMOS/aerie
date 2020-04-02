@@ -283,4 +283,32 @@ public class DataModelTest {
 
         System.out.println(result);
     }
+
+    @Test
+    public void durationConstraintTest(){
+
+        Instant time1 = SimulationInstant.ORIGIN;
+        Instant time2 = time1.plus(5, TimeUnit.SECONDS);
+        Instant time3 = time1.plus(30, TimeUnit.SECONDS);
+
+        Duration duration1 = Duration.of(10,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(3,TimeUnit.SECONDS);
+
+        String activityName = "SomeDataActivity A";
+
+        //[5,15]
+        ActivityEvent activityEvent1 = new ActivityEvent(activityName, time2, duration1);
+
+        //[30,33]
+        ActivityEvent activityEvent2 = new ActivityEvent(activityName, time3, duration2);
+
+        glue.registry().addActivityEvent(activityEvent1);
+        glue.registry().addActivityEvent(activityEvent2);
+
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+    }
+
+
 }
