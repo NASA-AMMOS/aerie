@@ -242,7 +242,7 @@ public class MissionModelGlue {
             }
         }
 
-        public void addActivityEvent(ActivityEvent activityEvent){
+        public void addActivityEvent(ActivityEvent<?> activityEvent){
             completeActivityEventMap
                     .computeIfAbsent(activityEvent.name(), x -> new ArrayList<>())
                     .add(activityEvent);

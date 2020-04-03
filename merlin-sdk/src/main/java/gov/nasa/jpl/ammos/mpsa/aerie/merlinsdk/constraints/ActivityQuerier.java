@@ -26,7 +26,7 @@ public class ActivityQuerier {
     public List<Window> whenActivityExists(){
         final var windows = new ArrayList<Window>();
 
-        for (ActivityEvent event : eventLog){
+        for (ActivityEvent<?> event : eventLog){
             windows.add(Window.between(event.startTime(), event.endTime()));
         }
         return windows;
