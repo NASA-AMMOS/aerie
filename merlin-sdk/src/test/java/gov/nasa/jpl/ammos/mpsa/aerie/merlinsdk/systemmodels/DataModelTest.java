@@ -232,10 +232,10 @@ public class DataModelTest {
         String activityName = "SomeDataActivity A";
 
         //[5,15]
-        ActivityEvent<?> activityEvent1 = new ActivityEvent(activityName, time2, duration1);
+        ActivityEvent<?> activityEvent1 = new ActivityEvent<>(activityName, time2, duration1);
 
         //[30,33]
-        ActivityEvent<?> activityEvent2 = new ActivityEvent(activityName, time3, duration2);
+        ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityName, time3, duration2);
 
         //this should be done elsewhere (sim engine?)
         glue.registry().addActivityEvent(activityEvent1);
@@ -298,10 +298,10 @@ public class DataModelTest {
         String activityName = "SomeDataActivity A";
 
         //[5,15]
-        ActivityEvent<?> activityEvent1 = new ActivityEvent(activityName, time2, duration1);
+        ActivityEvent<?> activityEvent1 = new ActivityEvent<>(activityName, time2, duration1);
 
         //[30,33]
-        ActivityEvent<?> activityEvent2 = new ActivityEvent(activityName, time3, duration2);
+        ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityName, time3, duration2);
 
         glue.registry().addActivityEvent(activityEvent1);
         glue.registry().addActivityEvent(activityEvent2);
