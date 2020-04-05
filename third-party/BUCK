@@ -73,7 +73,7 @@ prebuilt_jar(
 
 prebuilt_jar( 
     name = 'javalin',
-    binary_jar = 'javalin-3.4.1.jar',
+    binary_jar = 'javalin-3.8.0.jar',
     visibility = ['PUBLIC']
 )
 
