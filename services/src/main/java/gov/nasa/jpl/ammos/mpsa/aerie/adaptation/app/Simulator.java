@@ -66,7 +66,7 @@ public final class Simulator {
 
     // Initialize a set of tables into which to store state samples periodically.
     // TODO: Work with state models instead of individual states.
-    final var timestamps = new ArrayList<Instant>();
+    final var timestamps = new ArrayList<Duration>();
 
     final var states = stateContainer.getStates();
 
@@ -83,24 +83,23 @@ public final class Simulator {
 
       // Spawn a sampler.
       if (samplingDuration.isPositive() && samplingPeriod.isPositive()) {
+        final var startTime = now();
         final var endTime = now().plus(samplingDuration);
-        spawn(() -> {
-          timestamps.add(now());
+
+        final Runnable addSamples = () -> {
+          timestamps.add(startTime.durationTo(now()));
           for (final var entry : timelines.entrySet()) {
             final var stateName = entry.getKey();
             final var timeline = entry.getValue();
             timeline.add(serializeState(states.get(stateName)));
           }
+        };
 
+        spawn(() -> {
+          addSamples.run();
           while (now().isBefore(endTime)) {
             delay(Duration.min(samplingPeriod, now().durationTo(endTime)));
-
-            timestamps.add(now());
-            for (final var entry : timelines.entrySet()) {
-              final var stateName = entry.getKey();
-              final var timeline = entry.getValue();
-              timeline.add(serializeState(states.get(stateName)));
-            }
+            addSamples.run();
           }
         });
       }

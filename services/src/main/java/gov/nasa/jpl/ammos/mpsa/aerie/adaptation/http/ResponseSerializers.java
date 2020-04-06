@@ -11,9 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationReposito
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -115,12 +113,11 @@ public final class ResponseSerializers {
     return serializeList(ResponseSerializers::serializeParameter, elements);
   }
 
-  public static JsonValue serializeTimestamp(final Instant timestamp) {
-    final var duration = SimulationInstant.ORIGIN.durationTo(timestamp);
-    return Json.createValue(duration.durationInMicroseconds);
+  public static JsonValue serializeTimestamp(final Duration timestamp) {
+    return Json.createValue(timestamp.durationInMicroseconds);
   }
 
-  public static JsonValue serializeTimestamps(final List<Instant> elements) {
+  public static JsonValue serializeTimestamps(final List<Duration> elements) {
     return serializeList(ResponseSerializers::serializeTimestamp, elements);
   }
 
