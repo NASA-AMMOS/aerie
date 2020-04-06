@@ -242,7 +242,7 @@ public class MissionModelGlue {
             }
         }
 
-        public void addActivityEvent(ActivityEvent activityEvent){
+        public void addActivityEvent(ActivityEvent<?> activityEvent){
             completeActivityEventMap
                     .computeIfAbsent(activityEvent.name(), x -> new ArrayList<>())
                     .add(activityEvent);
@@ -250,6 +250,10 @@ public class MissionModelGlue {
 
         public List<ActivityEvent>getActivityEvents(String name){
             return Collections.unmodifiableList(completeActivityEventMap.get(name));
+        }
+
+        public Map<String, List<ActivityEvent>> getCompleteActivityEventMap(){
+            return Collections.unmodifiableMap(this.completeActivityEventMap);
         }
     }
 }

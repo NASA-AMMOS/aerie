@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintJudgement;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.DataActivityQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ActivityQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class DataModelTest {
@@ -231,25 +232,25 @@ public class DataModelTest {
         String activityName = "SomeDataActivity A";
 
         //[5,15]
-        ActivityEvent activityEvent1 = new ActivityEvent(activityName, time2, duration1);
+        ActivityEvent<?> activityEvent1 = new ActivityEvent<>(activityName, time2, duration1);
 
         //[30,33]
-        ActivityEvent activityEvent2 = new ActivityEvent(activityName, time3, duration2);
+        ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityName, time3, duration2);
 
         //this should be done elsewhere (sim engine?)
         glue.registry().addActivityEvent(activityEvent1);
         glue.registry().addActivityEvent(activityEvent2);
 
-        DataActivityQuerier dataActivityQuerier = new DataActivityQuerier();
-        dataActivityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
 
         assertTrue(glue.registry().getActivityEvents(activityName).size() == 2);
 
         //[5,15] , [30,33]
         //todo: add an assertTrue statement
-        System.out.println("Activity occurs during these windows: " + dataActivityQuerier.whenActivityExists());
+        System.out.println("Activity occurs during these windows: " + activityQuerier.whenActivityExists());
 
-        Constraint dataActivityOccuring = () -> dataActivityQuerier.whenActivityExists();
+        Constraint dataActivityOccuring = () -> activityQuerier.whenActivityExists();
 
         //[5,15] , [30,33]
         //todo: add an assertTrue statement
@@ -283,4 +284,51 @@ public class DataModelTest {
 
         System.out.println(result);
     }
+
+    @Test
+    public void durationConstraintTest(){
+
+        Instant time1 = SimulationInstant.ORIGIN;
+        Instant time2 = time1.plus(5, TimeUnit.SECONDS);
+        Instant time3 = time1.plus(30, TimeUnit.SECONDS);
+
+        Duration duration1 = Duration.of(10,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(3,TimeUnit.SECONDS);
+
+        String activityName = "SomeDataActivity A";
+
+        //[5,15]
+        ActivityEvent<?> activityEvent1 = new ActivityEvent<>(activityName, time2, duration1);
+
+        //[30,33]
+        ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityName, time3, duration2);
+
+        glue.registry().addActivityEvent(activityEvent1);
+        glue.registry().addActivityEvent(activityEvent2);
+
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+        Duration requiredDuration = Duration.of(10,TimeUnit.SECONDS);
+        Constraint dataActivityDuration = () -> activityQuerier.whenActivityDoesNotHaveDuration(activityName, requiredDuration);
+
+        assertEquals(dataActivityDuration.getWindows().size(), 1);
+        assertEquals(dataActivityDuration.getWindows().get(0).start, time3);
+        assertEquals(dataActivityDuration.getWindows().get(0).end, time3.plus(duration2));
+
+        Duration maximumDuration = Duration.of(8, TimeUnit.SECONDS);
+        Constraint dataActivityMaximumDuration = () -> activityQuerier.whenActivityHasDurationGreaterThan(activityName, maximumDuration);
+
+        assertEquals(dataActivityMaximumDuration.getWindows().size(), 1);
+        assertEquals(dataActivityMaximumDuration.getWindows().get(0).start, time2);
+        assertEquals(dataActivityMaximumDuration.getWindows().get(0).end, time2.plus(duration1));
+
+        Duration minimumDuration = Duration.of(10, TimeUnit.SECONDS);
+        Constraint dataActivityMinimumDuration = () -> activityQuerier.whenActivityHasDurationLessThan(activityName, minimumDuration);
+
+        assertEquals(dataActivityMinimumDuration.getWindows().size(), 1);
+        assertEquals(dataActivityMinimumDuration.getWindows().get(0).start, time3);
+        assertEquals(dataActivityMinimumDuration.getWindows().get(0).end, time3.plus(duration2));
+    }
+
 }
