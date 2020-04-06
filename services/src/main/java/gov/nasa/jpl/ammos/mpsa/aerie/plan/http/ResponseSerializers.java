@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import javax.json.bind.JsonbException;
 import javax.json.stream.JsonParsingException;
 import java.util.List;
 import java.util.Map;
@@ -156,12 +155,6 @@ public final class ResponseSerializers {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
         .add("message", "no such activity instance")
-        .build();
-  }
-
-  public static JsonValue serializeJsonbException(final JsonbException ex) {
-    return Json.createObjectBuilder()
-        .add("message", "invalid json")
         .build();
   }
 
