@@ -15,22 +15,32 @@ import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class ResponseSerializers {
+  public static <T> JsonValue serializeList(final Function<T, JsonValue> elementSerializer, final List<T> elements) {
+    if (elements == null) return JsonValue.NULL;
+
+    final var builder = Json.createArrayBuilder();
+    for (final var element : elements) builder.add(elementSerializer.apply(element));
+    return builder.build();
+  }
+
+  public static <T> JsonValue serializeMap(final Function<T, JsonValue> fieldSerializer, final Map<String, T> fields) {
+    if (fields == null) return JsonValue.NULL;
+
+    final var builder = Json.createObjectBuilder();
+    for (final var entry : fields.entrySet()) builder.add(entry.getKey(), fieldSerializer.apply(entry.getValue()));
+    return builder.build();
+  }
+
   public static JsonValue serializeString(final String value) {
     if (value == null) return JsonValue.NULL;
     return Json.createValue(value);
   }
 
   public static JsonValue serializeStringList(final List<String> elements) {
-    if (elements == null) return JsonValue.NULL;
-
-    final var builder = Json.createArrayBuilder();
-    for (final var element : elements) {
-      builder.add(element);
-    }
-
-    return builder.build();
+    return serializeList(x -> serializeString(x), elements);
   }
 
   public static JsonValue serializeActivityParameter(final SerializedParameter parameter) {
@@ -39,14 +49,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityParameterMap(final Map<String, SerializedParameter> fields) {
-    if (fields == null) return JsonValue.NULL;
-
-    final var builder = Json.createObjectBuilder();
-    for (final var field : fields.entrySet()) {
-      builder.add(field.getKey(), serializeActivityParameter(field.getValue()));
-    }
-
-    return builder.build();
+    return serializeMap(x -> serializeActivityParameter(x), fields);
   }
 
   public static JsonValue serializeActivityInstance(final ActivityInstance activityInstance) {
@@ -60,11 +63,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityInstanceMap(final Map<String, ActivityInstance> fields) {
-    final var builder = Json.createObjectBuilder();
-    for (final var field : fields.entrySet()) {
-      builder.add(field.getKey(), serializeActivityInstance(field.getValue()));
-    }
-    return builder.build();
+    return serializeMap(x -> serializeActivityInstance(x), fields);
   }
 
   public static JsonValue serializePlan(final Plan plan) {
@@ -78,11 +77,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializePlanMap(final Map<String, Plan> fields) {
-    final var builder = Json.createObjectBuilder();
-    for (final var field : fields.entrySet()) {
-      builder.add(field.getKey(), serializePlan(field.getValue()));
-    }
-    return builder.build();
+    return serializeMap(x -> serializePlan(x), fields);
   }
 
   public static JsonValue serializeCreatedEntity(final CreatedEntity entity) {
@@ -106,24 +101,14 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeValidationMessage(final List<Breadcrumb> breadcrumbs, final String message) {
-    final var breadcrumbsJson = Json.createArrayBuilder();
-    for (final var breadcrumb : breadcrumbs) {
-      breadcrumbsJson.add(serializeBreadcrumb(breadcrumb));
-    }
-
     return Json.createObjectBuilder()
-        .add("breadcrumbs", breadcrumbsJson)
+        .add("breadcrumbs", serializeList(ResponseSerializers::serializeBreadcrumb, breadcrumbs))
         .add("message", message)
         .build();
   }
 
   public static JsonValue serializeValidationMessages(final List<Pair<List<Breadcrumb>, String>> messages) {
-    final var messageJson = Json.createArrayBuilder();
-    for (final var entry : messages) {
-      messageJson.add(serializeValidationMessage(entry.getKey(), entry.getValue()));
-    }
-
-    return messageJson.build();
+    return serializeList(x -> serializeValidationMessage(x.getKey(), x.getValue()), messages);
   }
 
   public static JsonValue serializeValidationException(final ValidationException ex) {
@@ -186,20 +171,12 @@ public final class ResponseSerializers {
 
     @Override
     public JsonValue onMap(final Map<String, SerializedParameter> fields) {
-      final var builder = Json.createObjectBuilder();
-      for (final var field : fields.entrySet()) {
-        builder.add(field.getKey(), field.getValue().match(this));
-      }
-      return builder.build();
+      return serializeMap(x -> x.match(this), fields);
     }
 
     @Override
     public JsonValue onList(final List<SerializedParameter> elements) {
-      final var builder = Json.createArrayBuilder();
-      for (final var element : elements) {
-        builder.add(element.match(this));
-      }
-      return builder.build();
+      return serializeList(x -> x.match(this), elements);
     }
   }
 }
