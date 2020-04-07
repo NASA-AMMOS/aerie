@@ -11,6 +11,7 @@ import org.apache.http.client.methods.HttpPost;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 
 public class RemoteAdaptationRepository implements AdaptationRepository {
 
@@ -24,12 +25,12 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
     @Override
     public String createAdaptation(Adaptation adaptation, File adaptationJar) throws InvalidAdaptationException {
-        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-                .addBinaryBody("file", adaptationJar)
-                .addTextBody("name", adaptation.getName())
-                .addTextBody("version", adaptation.getVersion())
-                .addTextBody("mission", adaptation.getMission())
-                .addTextBody("owner", adaptation.getOwner());
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+        entityBuilder.addBinaryBody("file", adaptationJar);
+        if (adaptation.getName() != null) entityBuilder.addTextBody("name", adaptation.getName());
+        if (adaptation.getVersion() != null) entityBuilder.addTextBody("version", adaptation.getVersion());
+        if (adaptation.getMission() != null) entityBuilder.addTextBody("mission", adaptation.getMission());
+        if (adaptation.getOwner() != null) entityBuilder.addTextBody("owner", adaptation.getOwner());
 
         HttpResponse response;
         try {
