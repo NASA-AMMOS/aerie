@@ -10,7 +10,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.CompositeActivityMappe
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 
+import java.util.List;
 import java.util.Map;
 
 @Adaptation(name="Banananation", version="0.0.1")
@@ -28,7 +30,7 @@ public class Banananation implements MerlinAdaptation {
 
   @Override
   public StateContainer createStateModels() {
-    return new BananaStates();
+    return () -> List.of(BananaStates.fruitState, BananaStates.peelState);
   }
 
   static {

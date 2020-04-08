@@ -4,11 +4,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.fruitState;
 
 /**
  * Bite a banana.
@@ -19,7 +20,7 @@ import java.util.List;
  * @contact John Doe
  */
 @ActivityType(name="BiteBanana", states=BananaStates.class, generateMapper=true)
-public final class BiteBananaActivity implements Activity<BananaStates> {
+public final class BiteBananaActivity implements Activity<StateContainer> {
   @Parameter
   public double biteSize = 1.0;
 
@@ -35,8 +36,7 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(BananaStates states) {
-    SettableState<Double> fruitState = states.fruitState;
+  public void modelEffects(@Deprecated(forRemoval=true) StateContainer states) {
     fruitState.set(fruitState.get() - biteSize);
   }
 }
