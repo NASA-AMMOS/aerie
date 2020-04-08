@@ -3,8 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.ArrayList;
@@ -12,8 +11,7 @@ import java.util.List;
 
 
 @ActivityType(name="TurnInstrumentOn", states=SampleMissionStates.class, generateMapper=true)
-public class TurnInstrumentOn implements Activity<SampleMissionStates> {
-
+public class TurnInstrumentOn implements Activity<StateContainer> {
     @Parameter
     public double instrumentRate = 10.0;
 
@@ -35,7 +33,8 @@ public class TurnInstrumentOn implements Activity<SampleMissionStates> {
     }
 
     @Override
-    public void modelEffects(SampleMissionStates states){
+    public void modelEffects(@Deprecated(forRemoval=true) StateContainer _states) {
+        final var states = SampleMissionStates.getModel();
         states.instrumentData.turnOn(instrumentRate);
         states.instrumentPower_W.set(instrumentPower_W);
     }

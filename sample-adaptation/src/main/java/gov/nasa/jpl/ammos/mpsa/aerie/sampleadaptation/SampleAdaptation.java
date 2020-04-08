@@ -11,10 +11,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.Turn
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn$$ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
+import java.util.List;
 import java.util.Map;
 
 @Adaptation(name="sample-adaptation", version="0.1")
-public class SampleAdaptation implements MerlinAdaptation {
+public class SampleAdaptation implements MerlinAdaptation<StateContainer> {
     private final ActivityMapper activityMapper = new CompositeActivityMapper(Map.of(
             "DownlinkData", new DownlinkData$$ActivityMapper(),
             "InitializeBinDataVolume", new InitializeBinDataVolume$$ActivityMapper(),
@@ -29,6 +30,7 @@ public class SampleAdaptation implements MerlinAdaptation {
 
     @Override
     public StateContainer createStateModels() {
-        return new SampleMissionStates(new Config());
+        final var model = SampleMissionStates.getModel();
+        return () -> List.of(model.instrumentPower_W, model.instrumentData, model.dataBin);
     }
 }
