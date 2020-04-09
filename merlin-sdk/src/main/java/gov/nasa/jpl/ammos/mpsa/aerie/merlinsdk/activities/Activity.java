@@ -34,13 +34,4 @@ public interface Activity<T extends StateContainer> {
    * injected into the activity by the Merlin Framework.
    */
   default void modelEffects(T states) { }
-  
-  default Class<?> getStateContainerType() {
-    ActivityType type = this.getClass().getAnnotation(ActivityType.class);
-    if (type == null) {
-        throw new Error("Activity `" + this.getClass().getName() + "` is missing or has an improper annotation");
-    }
-    return type.states();
-  }
-  
 }
