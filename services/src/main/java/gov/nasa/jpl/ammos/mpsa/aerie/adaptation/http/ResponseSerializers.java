@@ -20,6 +20,7 @@ import javax.json.Json;
 import javax.json.JsonValue;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -246,6 +247,19 @@ public final class ResponseSerializers {
           .add("type", "map")
           .add("items", serializeMap(x -> x.match(this), parameterSchemas))
           .build();
+    }
+
+    @Override
+    public JsonValue onEnum(Class<? extends Enum<?>> enumeration) {
+      var enumValues = Arrays.asList(enumeration.getEnumConstants());
+      return Json
+              .createObjectBuilder()
+              .add("type", "enumerated")
+              .add("items", serializeList(v -> Json.createObjectBuilder()
+                      .add("key", v.name())
+                      .add("label", v.toString())
+                      .build(), enumValues))
+              .build();
     }
   }
 
