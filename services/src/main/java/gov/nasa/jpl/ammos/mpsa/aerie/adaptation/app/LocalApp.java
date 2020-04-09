@@ -139,7 +139,7 @@ public final class LocalApp implements App {
     public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
         throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoadException
     {
-        final Activity<?> activity;
+        final Activity activity;
         try {
             activity = this.loadAdaptation(adaptationId).instantiateActivity(activityParameters);
         } catch (final Adaptation.NoSuchActivityTypeException ex) {
@@ -174,7 +174,7 @@ public final class LocalApp implements App {
         final var adaptation = loadAdaptation(message.adaptationId);
         final var simulator = new Simulator(adaptation);
 
-        final var activityInstances = new ArrayList<Pair<Duration, Activity<?>>>(message.activityInstances.size());
+        final var activityInstances = new ArrayList<Pair<Duration, Activity>>(message.activityInstances.size());
         for (final var entry : message.activityInstances) {
             final var startDelta = entry.getLeft();
             final var serializedInstance = entry.getRight();

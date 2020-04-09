@@ -41,7 +41,7 @@ public class DataModelTest {
 
     /* --------------------------------- DATA MODEL SAMPLE ACTIVITIES ------------------------------------*/
     @ActivityType(name="InitBinDataVolumes", states=DataModelStates.class)
-    public static class InitBinDataVolumes implements Activity<DataModelStates>{
+    public static class InitBinDataVolumes implements Activity {
 
 
         @Override
@@ -55,7 +55,7 @@ public class DataModelTest {
     }
 
     @ActivityType(name="TurnInstrumentAOn", states=DataModelStates.class)
-    public static class TurnInstrumentAOn implements Activity<DataModelStates> {
+    public static class TurnInstrumentAOn implements Activity {
 
         @Override
         public void modelEffects() {
@@ -69,7 +69,7 @@ public class DataModelTest {
     }
 
     @ActivityType(name="DownlinkData", states=DataModelStates.class)
-    public static class DownlinkData implements Activity<DataModelStates>{
+    public static class DownlinkData implements Activity {
 
         @Override
         public void modelEffects(){

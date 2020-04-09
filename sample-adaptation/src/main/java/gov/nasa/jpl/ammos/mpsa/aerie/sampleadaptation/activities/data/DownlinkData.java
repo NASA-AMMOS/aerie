@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.ArrayList;
@@ -17,7 +16,7 @@ import java.util.List;
  * @contact mkumar
  */
 @ActivityType(name="DownlinkData", states=SampleMissionStates.class, generateMapper=true)
-public class DownlinkData implements Activity<StateContainer> {
+public class DownlinkData implements Activity {
 
     @Parameter
     public boolean downlinkAll = true;

@@ -31,7 +31,7 @@ public class CompositeActivityMapper implements ActivityMapper {
   }
 
   @Override
-  public Optional<Activity<? extends StateContainer>> deserializeActivity(final SerializedActivity activity) {
+  public Optional<Activity> deserializeActivity(final SerializedActivity activity) {
     final String activityType = activity.getTypeName();
     return lookupMapper(activityType).flatMap(m -> m.deserializeActivity(activity));
   }

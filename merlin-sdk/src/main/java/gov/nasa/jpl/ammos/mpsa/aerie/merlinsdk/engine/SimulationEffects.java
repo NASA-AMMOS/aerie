@@ -21,10 +21,8 @@ public final class SimulationEffects {
   /**
    * Spawn a new activity as a child of the currently-running activity after a given span of time.
    */
-  public static SimulationContext.SpawnedActivityHandle defer(final Duration duration, final Activity<?> activity) {
-    return activeContext.get().defer(duration, (ctx) -> {
-      withEffects(ctx, () -> activity.modelEffects());
-    });
+  public static SimulationContext.SpawnedActivityHandle defer(final Duration duration, final Activity activity) {
+    return activeContext.get().defer(duration, (ctx) -> withEffects(ctx, activity::modelEffects));
   }
 
   /**
@@ -59,21 +57,21 @@ public final class SimulationEffects {
   /**
    * Spawn a new activity as a child of the currently-running activity after a given span of time.
    */
-  public static SimulationContext.SpawnedActivityHandle defer(final long quantity, final TimeUnit units, final Activity<?> activity) {
+  public static SimulationContext.SpawnedActivityHandle defer(final long quantity, final TimeUnit units, final Activity activity) {
     return defer(Duration.of(quantity, units), activity);
   }
 
   /**
    * Spawn a new activity as a child of the currently-running activity at a given point in time.
    */
-  public static SimulationContext.SpawnedActivityHandle deferTo(final Instant instant, final Activity<?> activity) {
+  public static SimulationContext.SpawnedActivityHandle deferTo(final Instant instant, final Activity activity) {
     return defer(now().durationTo(instant), activity);
   }
 
   /**
    * Spawn a new activity as a child of the currently-running activity.
    */
-  public static SimulationContext.SpawnedActivityHandle spawn(final Activity<?> activity) {
+  public static SimulationContext.SpawnedActivityHandle spawn(final Activity activity) {
     return defer(Duration.ZERO, activity);
   }
 
@@ -81,7 +79,7 @@ public final class SimulationEffects {
    * Spawn a new activity as a child of the currently-running activity, and wait until it completes.
    * @param activity
    */
-  public static void call(final Activity<?> activity) {
+  public static void call(final Activity activity) {
     spawn(activity).await();
   }
 

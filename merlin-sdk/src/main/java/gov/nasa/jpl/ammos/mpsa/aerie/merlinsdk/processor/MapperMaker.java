@@ -136,9 +136,7 @@ class MapperMaker {
         .addParameter(serializedActivitySpec)
         .returns(ParameterizedTypeName.get(
                 ClassName.get(Optional.class),
-                ParameterizedTypeName.get(
-                        ClassName.get(Activity.class),
-                        WildcardTypeName.subtypeOf(StateContainer.class))))
+                ClassName.get(Activity.class)))
         .beginControlFlow("if (!$L.getTypeName().equals($L))", serializedActivitySpec.name, activityTypeNameSpec.name)
         .addStatement("return $T.empty()", Optional.class)
         .endControlFlow()

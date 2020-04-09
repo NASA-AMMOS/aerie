@@ -91,7 +91,7 @@ public final class Main {
     final List<Pair<Double, SerializedActivity>> newSchedule = new ArrayList<>();
     for (final Pair<Double, Activity> entry : activities) {
       final double time = entry.getLeft();
-      final Activity<? extends StateContainer> activity = entry.getRight();
+      final Activity activity = entry.getRight();
 
       final SerializedActivity serializedActivity = activityMapper
               .serializeActivity(activity)

@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +26,7 @@ public interface ActivityMapper {
    *   or an empty {@link Optional} if this mapper does not know the activity type named
    *   by {@code activity.getTypeName()}.
    */
-  Optional<Activity<? extends StateContainer>> deserializeActivity(SerializedActivity serializedActivity);
+  Optional<Activity> deserializeActivity(SerializedActivity serializedActivity);
 
   /**
    * Produces a mission-agnostic representation of an adaptation-specific activity domain object.
@@ -36,5 +35,5 @@ public interface ActivityMapper {
    * @return A mission-agnostic representation of {@code activity}, or an empty {@link Optional}
    *   if this mapper does not understand the provided activity instance.
    */
-  Optional<SerializedActivity> serializeActivity(Activity<? extends StateContainer> activity);
+  Optional<SerializedActivity> serializeActivity(Activity activity);
 }

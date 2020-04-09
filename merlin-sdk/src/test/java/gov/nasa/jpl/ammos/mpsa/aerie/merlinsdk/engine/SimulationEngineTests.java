@@ -37,7 +37,7 @@ public class SimulationEngineTests {
 
     /* ------------------------ SIMULATION BASELINE TEST ------------------------ */
     @ActivityType(name="ParentActivity", states=DiverseStates.class)
-    public class ParentActivity implements Activity<StateContainer> {
+    public class ParentActivity implements Activity {
 
         @Parameter
         public Double floatValue = 0.0;
@@ -74,7 +74,7 @@ public class SimulationEngineTests {
     }
     
     @ActivityType(name="ChildActivity", states=DiverseStates.class)
-    public class ChildActivity implements Activity<DiverseStates> {
+    public class ChildActivity implements Activity {
 
         @Parameter
         public Boolean booleanValue = true;
@@ -117,7 +117,7 @@ public class SimulationEngineTests {
 
     /* --------------------------- TIME-ORDERING TEST --------------------------- */
     @ActivityType(name="TimeOrderingTestActivity", states=DiverseStates.class)
-    public class TimeOrderingTestActivity implements Activity<DiverseStates> {
+    public class TimeOrderingTestActivity implements Activity {
 
         @Parameter
         Double floatValue = 0.0;
@@ -160,7 +160,7 @@ public class SimulationEngineTests {
     /* ------------------------------- DELAY TEST ------------------------------- */
 
     @ActivityType(name="DelayTestActivity", states=DiverseStates.class)
-    public class DelayTestActivity implements Activity<DiverseStates> {
+    public class DelayTestActivity implements Activity {
         @Override
         public void modelEffects() {
             final var states = statesRef.get();
@@ -194,7 +194,7 @@ public class SimulationEngineTests {
     /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
 
     @ActivityType(name="SpawnTestParentActivity", states=DiverseStates.class)
-    public class SpawnTestParentActivity implements Activity<DiverseStates> {
+    public class SpawnTestParentActivity implements Activity {
 
         @Override
         public void modelEffects() {
@@ -203,7 +203,7 @@ public class SimulationEngineTests {
     }
 
     @ActivityType(name="SpawnTestChildActivity", states=DiverseStates.class)
-    public class SpawnTestChildActivity implements Activity<DiverseStates> {
+    public class SpawnTestChildActivity implements Activity {
         @Override
         public void modelEffects() {
             final var states = statesRef.get();
@@ -234,8 +234,7 @@ public class SimulationEngineTests {
     /* --------------------------- CALL ACTIVITY TEST --------------------------- */
 
     @ActivityType(name="CallTestParentActivity", states=DiverseStates.class)
-    public class CallTestParentActivity implements Activity<DiverseStates> {
-
+    public class CallTestParentActivity implements Activity {
         @Override
         public void modelEffects() {
             final var states = statesRef.get();
@@ -246,7 +245,7 @@ public class SimulationEngineTests {
     }
 
     @ActivityType(name="CallTestChildActivity", states=DiverseStates.class)
-    public class CallTestChildActivity implements Activity<DiverseStates> {
+    public class CallTestChildActivity implements Activity {
         @Override
         public void modelEffects() {
             delay(2, TimeUnit.HOURS);

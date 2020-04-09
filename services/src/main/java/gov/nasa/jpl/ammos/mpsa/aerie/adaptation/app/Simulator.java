@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.defer;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
@@ -59,7 +58,7 @@ public final class Simulator {
   public SimulationResults run(
       final Duration samplingDuration,
       final Duration samplingPeriod,
-      final Collection<Pair<Duration, Activity<?>>> scheduledActivities
+      final Collection<Pair<Duration, Activity>> scheduledActivities
   ) {
     // TODO: Initialize the requested state models from the adaptation.
     final var stateContainer = this.adaptation.getStateContainer();
@@ -78,7 +77,7 @@ public final class Simulator {
     // Sample all states periodically while simulation is occurring.
     SimulationEngine.simulate(SimulationInstant.ORIGIN, stateContainer,getStateList(), () -> {
       // Spawn all scheduled activities.
-      for (final Pair<Duration, Activity<?>> entry : scheduledActivities) {
+      for (final Pair<Duration, Activity> entry : scheduledActivities) {
         defer(entry.getLeft(), entry.getRight());
       }
 

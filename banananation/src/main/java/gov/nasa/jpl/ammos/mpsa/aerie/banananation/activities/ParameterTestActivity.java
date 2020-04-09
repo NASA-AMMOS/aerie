@@ -4,13 +4,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import java.util.List;
 import java.util.Map;
 
 @ActivityType(name="ParameterTest", states=BananaStates.class, generateMapper=true)
-public class ParameterTestActivity implements Activity<StateContainer> {
+public class ParameterTestActivity implements Activity {
   // Primitive parameters
   @Parameter public double primitiveDouble = 3.141;
   @Parameter public float primitiveFloat = 1.618f;

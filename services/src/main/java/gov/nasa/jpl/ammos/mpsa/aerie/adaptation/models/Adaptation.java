@@ -38,7 +38,7 @@ public final class Adaptation {
 
         final Map<String, ActivityType> activityTypes = new HashMap<>();
         for (final var schema : activitySchemas.entrySet()) {
-            final Activity<?> activity;
+            final Activity activity;
             try {
                 activity = instantiateActivity(new SerializedActivity(schema.getKey(), Collections.emptyMap()));
             } catch (final NoSuchActivityTypeException ex) {
@@ -63,7 +63,7 @@ public final class Adaptation {
         final Map<String, ParameterSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
         if (activitySchema == null) throw new NoSuchActivityTypeException();
 
-        final Activity<?> activity;
+        final Activity activity;
         try {
             activity = instantiateActivity(new SerializedActivity(activityTypeId, Collections.emptyMap()));
         } catch (final NoSuchActivityTypeException ex) {
@@ -78,10 +78,10 @@ public final class Adaptation {
         return new ActivityType(activityTypeId, activitySchemas.get(activityTypeId), defaultActivity.get().getParameters());
     }
 
-    public Activity<?> instantiateActivity(final SerializedActivity activityParameters)
+    public Activity instantiateActivity(final SerializedActivity activityParameters)
         throws AdaptationContractException, NoSuchActivityTypeException, UnconstructableActivityInstanceException
     {
-        Optional<Activity<?>> mapperResult;
+        Optional<Activity> mapperResult;
         try {
             mapperResult = this.activityMapper.deserializeActivity(activityParameters);
         } catch (final RuntimeException ex) {

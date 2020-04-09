@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +19,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.frui
  * @contact John Doe
  */
 @ActivityType(name="BiteBanana", states=BananaStates.class, generateMapper=true)
-public final class BiteBananaActivity implements Activity<StateContainer> {
+public final class BiteBananaActivity implements Activity {
   @Parameter
   public double biteSize = 1.0;
 

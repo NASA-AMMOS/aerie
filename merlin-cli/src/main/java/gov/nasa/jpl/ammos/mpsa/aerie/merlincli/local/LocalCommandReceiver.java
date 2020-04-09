@@ -185,7 +185,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
 
     SimulationEngine.simulate(simulationStartTime, stateContainer.getStateList(), () -> {
       for (final var scheduledActivity : schedule.scheduledActivities) {
-        final Activity<? extends StateContainer> activity = activityMapper
+        final Activity activity = activityMapper
             .deserializeActivity(scheduledActivity.activity)
             .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
 

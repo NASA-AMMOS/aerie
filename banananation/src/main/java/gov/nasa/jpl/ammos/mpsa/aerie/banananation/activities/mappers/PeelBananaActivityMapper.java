@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Activities
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import java.lang.Override;
 import java.lang.RuntimeException;
 import java.lang.String;
@@ -28,7 +27,7 @@ public final class PeelBananaActivityMapper implements ActivityMapper {
   }
 
   @Override
-  public Optional<Activity<? extends StateContainer>> deserializeActivity(final SerializedActivity serializedActivity) {
+  public Optional<Activity> deserializeActivity(final SerializedActivity serializedActivity) {
     if (!serializedActivity.getTypeName().equals(ACTIVITY_TYPE)) {
       return Optional.empty();
     }
@@ -55,7 +54,7 @@ public final class PeelBananaActivityMapper implements ActivityMapper {
   }
 
   @Override
-  public Optional<SerializedActivity> serializeActivity(final Activity<?> abstractActivity) {
+  public Optional<SerializedActivity> serializeActivity(final Activity abstractActivity) {
     if (!(abstractActivity instanceof PeelBananaActivity)) {
       return Optional.empty();
     }

@@ -15,7 +15,7 @@ public class BasicStateTest {
     public void integerState() {
         final var state = new BasicState<>("State 1", 0);
 
-        final var activity = new Activity<>() {
+        final var activity = new Activity() {
             @Override
             public void modelEffects() {
                 state.set(12);
@@ -34,7 +34,7 @@ public class BasicStateTest {
     public void stringState() {
         final var state = new BasicState<>("State 2", "");
 
-        final var activity = new Activity<>() {
+        final var activity = new Activity() {
             @Override
             public void modelEffects() {
                 state.set("NADIR");

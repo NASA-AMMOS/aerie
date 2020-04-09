@@ -3,14 +3,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @ActivityType(name="TurnInstrumentOn", states=SampleMissionStates.class, generateMapper=true)
-public class TurnInstrumentOn implements Activity<StateContainer> {
+public class TurnInstrumentOn implements Activity {
     @Parameter
     public double instrumentRate = 10.0;
 

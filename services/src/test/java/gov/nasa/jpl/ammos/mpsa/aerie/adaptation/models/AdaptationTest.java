@@ -74,7 +74,7 @@ public final class AdaptationTest {
             Map.of("biteSize", SerializedParameter.of(1.0)));
 
         // WHEN
-        final Activity<?> activityInstance = adaptation.instantiateActivity(serializedActivity);
+        final Activity activityInstance = adaptation.instantiateActivity(serializedActivity);
 
         // THEN
         assertThat(activityInstance).isNotNull();
