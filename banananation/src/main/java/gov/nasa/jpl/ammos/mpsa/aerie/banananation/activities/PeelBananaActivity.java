@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
@@ -21,7 +20,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.peel
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType(name="PeelBanana", states=BananaStates.class)
+@ActivityType(name="PeelBanana")
 public final class PeelBananaActivity implements Activity {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 

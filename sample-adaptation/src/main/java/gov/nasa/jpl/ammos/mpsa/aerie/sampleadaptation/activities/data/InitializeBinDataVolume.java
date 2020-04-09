@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 //but this would only occur when the first instrument is turned on or another action which triggers the integratoin
 //so then you won't start recording until that point in time.  You won't get the (0,0) value.
 
-@ActivityType(name="InitializeBinDataVolume", states=SampleMissionStates.class, generateMapper=true)
+@ActivityType(name="InitializeBinDataVolume", generateMapper=true)
 public class InitializeBinDataVolume implements Activity {
     //this activity initializes the state history of each bin with the current sim time and total data rate
     @Override

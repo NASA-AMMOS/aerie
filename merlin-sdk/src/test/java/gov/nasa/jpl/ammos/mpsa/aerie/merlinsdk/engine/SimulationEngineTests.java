@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -35,8 +34,6 @@ public class SimulationEngineTests {
 
     private final DynamicCell<DiverseStates> statesRef = DynamicCell.inheritableCell();
 
-    /* ------------------------ SIMULATION BASELINE TEST ------------------------ */
-    @ActivityType(name="ParentActivity", states=DiverseStates.class)
     public class ParentActivity implements Activity {
 
         @Parameter
@@ -72,8 +69,7 @@ public class SimulationEngineTests {
 
         }
     }
-    
-    @ActivityType(name="ChildActivity", states=DiverseStates.class)
+
     public class ChildActivity implements Activity {
 
         @Parameter
@@ -115,8 +111,6 @@ public class SimulationEngineTests {
         });
     }
 
-    /* --------------------------- TIME-ORDERING TEST --------------------------- */
-    @ActivityType(name="TimeOrderingTestActivity", states=DiverseStates.class)
     public class TimeOrderingTestActivity implements Activity {
 
         @Parameter
@@ -158,8 +152,6 @@ public class SimulationEngineTests {
     }
 
     /* ------------------------------- DELAY TEST ------------------------------- */
-
-    @ActivityType(name="DelayTestActivity", states=DiverseStates.class)
     public class DelayTestActivity implements Activity {
         @Override
         public void modelEffects() {
@@ -193,7 +185,6 @@ public class SimulationEngineTests {
 
     /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
 
-    @ActivityType(name="SpawnTestParentActivity", states=DiverseStates.class)
     public class SpawnTestParentActivity implements Activity {
 
         @Override
@@ -202,7 +193,6 @@ public class SimulationEngineTests {
         }
     }
 
-    @ActivityType(name="SpawnTestChildActivity", states=DiverseStates.class)
     public class SpawnTestChildActivity implements Activity {
         @Override
         public void modelEffects() {
@@ -233,7 +223,6 @@ public class SimulationEngineTests {
 
     /* --------------------------- CALL ACTIVITY TEST --------------------------- */
 
-    @ActivityType(name="CallTestParentActivity", states=DiverseStates.class)
     public class CallTestParentActivity implements Activity {
         @Override
         public void modelEffects() {
@@ -244,7 +233,6 @@ public class SimulationEngineTests {
         }
     }
 
-    @ActivityType(name="CallTestChildActivity", states=DiverseStates.class)
     public class CallTestChildActivity implements Activity {
         @Override
         public void modelEffects() {

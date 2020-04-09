@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 
-@ActivityType(name="TurnInstrumentOff", states=SampleMissionStates.class, generateMapper=true)
+@ActivityType(name="TurnInstrumentOff", generateMapper=true)
 public class TurnInstrumentOff implements Activity {
     @Override
     public void modelEffects() {

@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 import java.util.ArrayList;
 import java.util.List;
 
-@ActivityType(name="TurnInstrumentOn", states=SampleMissionStates.class, generateMapper=true)
+@ActivityType(name="TurnInstrumentOn", generateMapper=true)
 public class TurnInstrumentOn implements Activity {
     @Parameter
     public double instrumentRate = 10.0;

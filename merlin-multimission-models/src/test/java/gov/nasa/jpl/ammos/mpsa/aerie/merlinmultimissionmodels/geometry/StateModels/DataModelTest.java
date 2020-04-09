@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateMod
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
@@ -40,7 +39,6 @@ public class DataModelTest {
     private static final DynamicCell<DataModelStates> statesRef = DynamicCell.inheritableCell();
 
     /* --------------------------------- DATA MODEL SAMPLE ACTIVITIES ------------------------------------*/
-    @ActivityType(name="InitBinDataVolumes", states=DataModelStates.class)
     public static class InitBinDataVolumes implements Activity {
 
 
@@ -54,7 +52,6 @@ public class DataModelTest {
         }
     }
 
-    @ActivityType(name="TurnInstrumentAOn", states=DataModelStates.class)
     public static class TurnInstrumentAOn implements Activity {
 
         @Override
@@ -68,7 +65,6 @@ public class DataModelTest {
         }
     }
 
-    @ActivityType(name="DownlinkData", states=DataModelStates.class)
     public static class DownlinkData implements Activity {
 
         @Override

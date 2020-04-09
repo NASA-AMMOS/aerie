@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
@@ -8,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import java.util.List;
 import java.util.Map;
 
-@ActivityType(name="ParameterTest", states=BananaStates.class, generateMapper=true)
+@ActivityType(name="ParameterTest", generateMapper=true)
 public class ParameterTestActivity implements Activity {
   // Primitive parameters
   @Parameter public double primitiveDouble = 3.141;

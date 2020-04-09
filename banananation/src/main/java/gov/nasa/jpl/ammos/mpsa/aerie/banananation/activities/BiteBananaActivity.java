@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
@@ -18,7 +17,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.frui
  * @subsystem fruit
  * @contact John Doe
  */
-@ActivityType(name="BiteBanana", states=BananaStates.class, generateMapper=true)
+@ActivityType(name="BiteBanana", generateMapper=true)
 public final class BiteBananaActivity implements Activity {
   @Parameter
   public double biteSize = 1.0;
