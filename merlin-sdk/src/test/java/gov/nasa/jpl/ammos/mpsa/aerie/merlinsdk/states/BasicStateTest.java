@@ -14,9 +14,10 @@ public class BasicStateTest {
     @Test
     public void integerState() {
         final var state = new BasicState<>("State 1", 0);
+
         final var activity = new Activity<>() {
             @Override
-            public void modelEffects(final StateContainer _states) {
+            public void modelEffects() {
                 state.set(12);
                 assertThat(state.get()).isEqualTo(12);
             }
@@ -32,9 +33,10 @@ public class BasicStateTest {
     @Test
     public void stringState() {
         final var state = new BasicState<>("State 2", "");
+
         final var activity = new Activity<>() {
             @Override
-            public void modelEffects(final StateContainer _states) {
+            public void modelEffects() {
                 state.set("NADIR");
                 assertThat(state.get()).isEqualTo("NADIR");
             }

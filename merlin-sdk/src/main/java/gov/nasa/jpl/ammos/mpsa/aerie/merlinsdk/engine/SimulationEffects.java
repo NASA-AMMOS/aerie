@@ -22,9 +22,8 @@ public final class SimulationEffects {
    * Spawn a new activity as a child of the currently-running activity after a given span of time.
    */
   public static SimulationContext.SpawnedActivityHandle defer(final Duration duration, final Activity<?> activity) {
-    final Consumer<StateContainer> modelEffects = ((Activity<StateContainer>)activity)::modelEffects;
     return activeContext.get().defer(duration, (ctx) -> {
-      withEffects(ctx, () -> modelEffects.accept(ctx.getActiveStateContainer()));
+      withEffects(ctx, () -> activity.modelEffects());
     });
   }
 

@@ -13,7 +13,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 public class InitializeBinDataVolume implements Activity<StateContainer> {
     //this activity initializes the state history of each bin with the current sim time and total data rate
     @Override
-    public void modelEffects(@Deprecated(forRemoval=true) StateContainer _states){
+    public void modelEffects() {
         final var states = SampleMissionStates.getModel();
         for (final var bin : states.allBins) bin.initializeBinData();
     }

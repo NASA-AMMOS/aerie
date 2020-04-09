@@ -41,7 +41,7 @@ public final class PeelBananaActivity implements Activity<StateContainer> {
   }
 
   @Override
-  public void modelEffects(@Deprecated(forRemoval=true) StateContainer _states) {
+  public void modelEffects() {
     if (this.peelDirection.equals("fromStem")) {
       fruitState.set(fruitState.get() - MASHED_BANANA_AMOUNT);
     }

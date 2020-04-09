@@ -9,8 +9,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 @ActivityType(name="TurnInstrumentOff", states=SampleMissionStates.class, generateMapper=true)
 public class TurnInstrumentOff implements Activity<StateContainer> {
     @Override
-    public void modelEffects(@Deprecated(forRemoval=true) StateContainer states){
-        SampleMissionStates.getModel().instrumentData.turnOff();
-        SampleMissionStates.getModel().instrumentPower_W.set(0.0);
+    public void modelEffects() {
+        final var states = SampleMissionStates.getModel();
+        states.instrumentData.turnOff();
+        states.instrumentPower_W.set(0.0);
     }
 }

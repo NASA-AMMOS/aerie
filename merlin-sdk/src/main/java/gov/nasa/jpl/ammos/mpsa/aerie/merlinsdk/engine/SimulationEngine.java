@@ -47,18 +47,20 @@ public final class SimulationEngine {
         return t;
     });
 
-    private <T extends StateContainer> SimulationEngine(final Instant simulationStartTime, final T stateContainer) {
-        this.effectsProvider = new EffectsProvider(stateContainer);
+    private SimulationEngine(final Instant simulationStartTime, final StateContainer stateContainer) {
+        this.effectsProvider = new EffectsProvider();
         this.currentSimulationTime = simulationStartTime;
 
+        // TODO: don't initialize states in the simulation engine -- there should be no need to couple the simulation
+        //   engine to states.
         for (final var state : stateContainer.getStateList()) {
             state.initialize(simulationStartTime);
         }
     }
 
-    public static <T extends StateContainer> Instant simulate(
+    public static Instant simulate(
         final Instant simulationStartTime,
-        final T stateContainer,
+        final StateContainer stateContainer,
         final Runnable topLevel
     ) {
         final var engine = new SimulationEngine(simulationStartTime, stateContainer);
@@ -164,12 +166,6 @@ public final class SimulationEngine {
     }
 
     private final class EffectsProvider implements SimulationContext {
-        private final StateContainer stateContainer;
-
-        public EffectsProvider(final StateContainer stateContainer) {
-            this.stateContainer = stateContainer;
-        }
-
         @Override
         public SpawnedActivityHandle defer(final Duration duration, final Consumer<SimulationContext> childActivity) {
             final var childActivityJob = new JobContext();
@@ -206,11 +202,6 @@ public final class SimulationEngine {
         @Override
         public Instant now() {
             return SimulationEngine.this.currentSimulationTime;
-        }
-
-        @Override
-        public StateContainer getActiveStateContainer() {
-            return this.stateContainer;
         }
     }
 }

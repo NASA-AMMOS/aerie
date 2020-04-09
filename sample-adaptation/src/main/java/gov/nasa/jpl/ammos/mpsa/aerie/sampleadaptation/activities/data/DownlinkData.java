@@ -16,7 +16,6 @@ import java.util.List;
  * @subsystem Data
  * @contact mkumar
  */
-
 @ActivityType(name="DownlinkData", states=SampleMissionStates.class, generateMapper=true)
 public class DownlinkData implements Activity<StateContainer> {
 
@@ -38,7 +37,7 @@ public class DownlinkData implements Activity<StateContainer> {
     }
 
     @Override
-    public void modelEffects(@Deprecated(forRemoval=true) final StateContainer _states){
+    public void modelEffects() {
         final var states = SampleMissionStates.getModel();
         if (downlinkAll){
             states.dataBin.downlink();

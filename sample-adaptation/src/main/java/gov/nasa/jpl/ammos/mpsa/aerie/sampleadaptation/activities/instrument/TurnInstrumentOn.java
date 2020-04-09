@@ -9,7 +9,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 import java.util.ArrayList;
 import java.util.List;
 
-
 @ActivityType(name="TurnInstrumentOn", states=SampleMissionStates.class, generateMapper=true)
 public class TurnInstrumentOn implements Activity<StateContainer> {
     @Parameter
@@ -33,7 +32,7 @@ public class TurnInstrumentOn implements Activity<StateContainer> {
     }
 
     @Override
-    public void modelEffects(@Deprecated(forRemoval=true) StateContainer _states) {
+    public void modelEffects() {
         final var states = SampleMissionStates.getModel();
         states.instrumentData.turnOn(instrumentRate);
         states.instrumentPower_W.set(instrumentPower_W);

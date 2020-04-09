@@ -36,7 +36,7 @@ public final class BiteBananaActivity implements Activity<StateContainer> {
   }
 
   @Override
-  public void modelEffects(@Deprecated(forRemoval=true) StateContainer states) {
+  public void modelEffects() {
     fruitState.set(fruitState.get() - biteSize);
   }
 }

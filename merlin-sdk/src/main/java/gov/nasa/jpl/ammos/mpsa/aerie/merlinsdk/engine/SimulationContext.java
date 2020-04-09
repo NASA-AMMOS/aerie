@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -26,16 +25,6 @@ public interface SimulationContext {
      * Get the current simulation time.
      */
     Instant now();
-
-    /**
-     * Get the container of states registered for the active simulation.
-     *
-     * DEPRECATED: This exists only as an internal hack to allow Activity#modelEffects to receive a state container
-     * as an argument. We may architect things so that an activity has other means of looking up states, so the present
-     * solution is tentative at best.
-     */
-    @Deprecated(forRemoval = true)
-    StateContainer getActiveStateContainer();
 
     interface SpawnedActivityHandle {
         /**

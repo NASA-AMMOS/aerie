@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.InstrumentModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -18,7 +19,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.s
 
 public class DataModelTest {
 
-    public class DataModelStates implements StateContainer {
+    public static final class DataModelStates implements StateContainer {
         public final InstrumentModel instrument_a_data_rate = new InstrumentModel("instrument 1", 0.0);
         public final InstrumentModel instrument_b_data_rate = new InstrumentModel("instrument 2", 0.0);
         public final InstrumentModel instrument_c_data_rate = new InstrumentModel("instrument 3", 0.0);
@@ -36,6 +37,7 @@ public class DataModelTest {
         }
     }
 
+    private static final DynamicCell<DataModelStates> statesRef = DynamicCell.inheritableCell();
 
     /* --------------------------------- DATA MODEL SAMPLE ACTIVITIES ------------------------------------*/
     @ActivityType(name="InitBinDataVolumes", states=DataModelStates.class)
@@ -43,8 +45,9 @@ public class DataModelTest {
 
 
         @Override
-        public void modelEffects(DataModelStates states){
+        public void modelEffects() {
 
+            final var states = statesRef.get();
             states.bin_1.initializeBinData();
             states.bin_2.initializeBinData();
             states.bin_3.initializeBinData();
@@ -55,8 +58,9 @@ public class DataModelTest {
     public static class TurnInstrumentAOn implements Activity<DataModelStates> {
 
         @Override
-        public void modelEffects(DataModelStates states){
+        public void modelEffects() {
 
+            final var states = statesRef.get();
             delay(1, TimeUnit.HOURS);
 
             InstrumentModel some_a_instrument = states.instrument_a_data_rate;
@@ -68,8 +72,9 @@ public class DataModelTest {
     public static class DownlinkData implements Activity<DataModelStates>{
 
         @Override
-        public void modelEffects(DataModelStates states){
+        public void modelEffects(){
 
+            final var states = statesRef.get();
             delay(2, TimeUnit.HOURS);
 
             states.bin_1.downlink();
@@ -86,8 +91,10 @@ public class DataModelTest {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DataModelStates();
 
-        SimulationEngine.simulate(simStart, states, () -> {
-            spawn(new InitBinDataVolumes());
+        statesRef.setWithin(states, () -> {
+            SimulationEngine.simulate(simStart, states, () -> {
+                spawn(new InitBinDataVolumes());
+            });
         });
     }
 
@@ -96,9 +103,11 @@ public class DataModelTest {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DataModelStates();
 
-        SimulationEngine.simulate(simStart, states, () -> {
-            spawn(new InitBinDataVolumes());
-            spawn(new TurnInstrumentAOn());
+        statesRef.setWithin(states, () -> {
+            SimulationEngine.simulate(simStart, states, () -> {
+                spawn(new InitBinDataVolumes());
+                spawn(new TurnInstrumentAOn());
+            });
         });
     }
 
@@ -107,10 +116,12 @@ public class DataModelTest {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DataModelStates();
 
-        SimulationEngine.simulate(simStart, states, () -> {
-            spawn(new InitBinDataVolumes());
-            spawn(new TurnInstrumentAOn());
-            spawn(new DownlinkData());
+        statesRef.setWithin(states, () -> {
+            SimulationEngine.simulate(simStart, states, () -> {
+                spawn(new InitBinDataVolumes());
+                spawn(new TurnInstrumentAOn());
+                spawn(new DownlinkData());
+            });
         });
     }
 }
