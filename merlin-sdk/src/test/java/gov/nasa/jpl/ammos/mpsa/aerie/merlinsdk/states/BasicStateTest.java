@@ -26,7 +26,7 @@ public class BasicStateTest {
         final var startTime = SimulationInstant.ORIGIN;
         SimulationEngine.simulate(
             startTime,
-            () -> List.of(state),
+            List.of(state),
             () -> SimulationEffects.spawn(activity));
     }
 
@@ -45,7 +45,7 @@ public class BasicStateTest {
         final var startTime = SimulationInstant.ORIGIN;
         SimulationEngine.simulate(
             startTime,
-            () -> List.of(state),
+            List.of(state),
             () -> SimulationEffects.spawn(activity));
     }
 }

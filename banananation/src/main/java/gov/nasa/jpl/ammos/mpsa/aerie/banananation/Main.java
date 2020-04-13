@@ -6,8 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import spice.basic.CSPICE;

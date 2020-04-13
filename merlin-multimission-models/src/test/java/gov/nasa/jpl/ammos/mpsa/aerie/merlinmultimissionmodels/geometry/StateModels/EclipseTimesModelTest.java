@@ -129,51 +129,48 @@ public class EclipseTimesModelTest {
         eclipseModel.setObserver(Body.EARTH);
         eclipseModel.setStepSize(Duration.fromMinutes(3));
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(eclipseModel),
-            () -> {
-                List<Eclipse> eclipses = eclipseModel.get();
-                assertEquals("1 occultation window expected; '" + eclipses.size() + "' received.", 1, eclipses.size());
+        SimulationEngine.simulate(startTime, List.of(eclipseModel), () -> {
+            List<Eclipse> eclipses = eclipseModel.get();
+            assertEquals("1 occultation window expected; '" + eclipses.size() + "' received.", 1, eclipses.size());
 
-                Time expectedStart = Time.fromTimezoneString("2001-348T20:10:14.195952", "UTC");
-                Time expectedEnd = Time.fromTimezoneString("2001-348T21:35:50.317994", "UTC");
+            Time expectedStart = Time.fromTimezoneString("2001-348T20:10:14.195952", "UTC");
+            Time expectedEnd = Time.fromTimezoneString("2001-348T21:35:50.317994", "UTC");
 
-                Time actualStart = eclipses.get(0).getStart();
-                Time actualEnd = eclipses.get(0).getEnd();
+            Time actualStart = eclipses.get(0).getStart();
+            Time actualEnd = eclipses.get(0).getEnd();
 
-                // assert that the difference between each SPICE-predicted occultation and actual
-                // occultation is less than three minutes (our stepSize)
+            // assert that the difference between each SPICE-predicted occultation and actual
+            // occultation is less than three minutes (our stepSize)
 
-                Duration startDifference = expectedStart.absoluteDifference(actualStart);
-                String message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
-                    + "' should be less than 3 minutes.";
-                assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+            Duration startDifference = expectedStart.absoluteDifference(actualStart);
+            String message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
+                + "' should be less than 3 minutes.";
+            assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
 
-                Duration endDifference = expectedEnd.absoluteDifference(actualEnd);
-                message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
-                    + "' should be less than 3 minutes.";
-                assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+            Duration endDifference = expectedEnd.absoluteDifference(actualEnd);
+            message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
+                + "' should be less than 3 minutes.";
+            assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
 
-                // change Moon reference frame (should not impact correct time much)
-                eclipseModel.setFrontFrame(ReferenceFrame.MOON_PA);
-                eclipses = eclipseModel.get();
+            // change Moon reference frame (should not impact correct time much)
+            eclipseModel.setFrontFrame(ReferenceFrame.MOON_PA);
+            eclipses = eclipseModel.get();
 
-                actualStart = eclipses.get(0).getStart();
-                actualEnd = eclipses.get(0).getEnd();
+            actualStart = eclipses.get(0).getStart();
+            actualEnd = eclipses.get(0).getEnd();
 
-                // assert that the difference between each SPICE-predicted occultation and actual
-                // occultation is less than three minutes (our stepSize)
+            // assert that the difference between each SPICE-predicted occultation and actual
+            // occultation is less than three minutes (our stepSize)
 
-                startDifference = expectedStart.absoluteDifference(actualStart);
-                message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
-                    + "' should be less than 3 minutes.";
-                assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+            startDifference = expectedStart.absoluteDifference(actualStart);
+            message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
+                + "' should be less than 3 minutes.";
+            assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
 
-                endDifference = expectedEnd.absoluteDifference(actualEnd);
-                message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
-                    + "' should be less than 3 minutes.";
-                assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
-            });
+            endDifference = expectedEnd.absoluteDifference(actualEnd);
+            message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
+                + "' should be less than 3 minutes.";
+            assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+        });
     }
 }

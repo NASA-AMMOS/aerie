@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
-import java.util.List;
+import java.util.Collections;
 
 public class Runsim {
     public static void runSimulation(Config config) {
@@ -15,7 +15,7 @@ public class Runsim {
         final var model = new Model();
 
         SampleMissionStates.useModelsIn(model, () -> {
-            SimulationEngine.simulate(simStartTime, () -> List.of(), () -> {
+            SimulationEngine.simulate(simStartTime, Collections.emptyList(), () -> {
                 Plan.runPlan(config, simStartTime);
             });
         });

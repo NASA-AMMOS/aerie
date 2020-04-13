@@ -76,7 +76,7 @@ public final class Simulator {
 
     // Simulate the entire plan to completion.
     // Sample all states periodically while simulation is occurring.
-    SimulationEngine.simulate(SimulationInstant.ORIGIN, stateContainer, () -> {
+    SimulationEngine.simulate(SimulationInstant.ORIGIN, stateContainer,getStateList(), () -> {
       // Spawn all scheduled activities.
       for (final Pair<Duration, Activity<?>> entry : scheduledActivities) {
         defer(entry.getLeft(), entry.getRight());

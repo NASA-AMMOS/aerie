@@ -25,82 +25,67 @@ public class InstrumentPowerRandomAccessTest {
     public void getAtTimeStartsAtZeroPower() {
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(state),
-            () -> {
-                assertThat(state.get(now())).isCloseTo(0.0, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(startTime, List.of(state), () -> {
+            assertThat(state.get(now())).isCloseTo(0.0, withinPercentage(0.01));
+        });
     }
 
     @Test
     public void getAtTimeSeesContemporarySet() {
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(state),
-            () -> {
-                final double testValue = 300.0;
-                state.set(testValue);
-                assertThat(state.get(now())).isCloseTo(testValue, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(startTime, List.of(state), () -> {
+            final double testValue = 300.0;
+            state.set(testValue);
+            assertThat(state.get(now())).isCloseTo(testValue, withinPercentage(0.01));
+        });
     }
 
     @Test
     public void getAtTimeSeesPastSet() {
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(state),
-            () -> {
-                final double testValue_W = 300.0;
-                state.set(testValue_W);
+        SimulationEngine.simulate(startTime, List.of(state), () -> {
+            final double testValue_W = 300.0;
+            state.set(testValue_W);
 
-                delay(10, TimeUnit.SECONDS);
+            delay(10, TimeUnit.SECONDS);
 
-                assertThat(state.get(startTime)).isCloseTo(testValue_W, withinPercentage(0.01));
-            });
+            assertThat(state.get(startTime)).isCloseTo(testValue_W, withinPercentage(0.01));
+        });
     }
 
     @Test
     public void getAtTimeSeesPastSetDespiteNewSet() {
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(state),
-            () -> {
-                final double testValue_W = 300.0;
-                state.set(testValue_W);
+        SimulationEngine.simulate(startTime, List.of(state), () -> {
+            final double testValue_W = 300.0;
+            state.set(testValue_W);
 
-                final var time = now();
-                delay(10, TimeUnit.SECONDS);
+            final var time = now();
+            delay(10, TimeUnit.SECONDS);
 
-                state.set(888.0);
-                assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
-            });
+            state.set(888.0);
+            assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
+        });
     }
 
     @Test
     public void getAtTimeSeesIntermediatePastSet() {
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(state),
-            () -> {
-                final double testValue_W = 300.0;
-                state.set(testValue_W);
+        SimulationEngine.simulate(startTime, List.of(state), () -> {
+            final double testValue_W = 300.0;
+            state.set(testValue_W);
 
-                delay(10, TimeUnit.SECONDS);
-                final var time = now();
-                delay(10, TimeUnit.SECONDS);
+            delay(10, TimeUnit.SECONDS);
+            final var time = now();
+            delay(10, TimeUnit.SECONDS);
 
-                state.set(888.0);
-                assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
-            });
+            state.set(888.0);
+            assertThat(state.get(time)).isCloseTo(testValue_W, withinPercentage(0.01));
+        });
     }
 
     @Test
@@ -121,22 +106,19 @@ public class InstrumentPowerRandomAccessTest {
             startTime.plus(31, TimeUnit.SECONDS), 130.0
         );
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(state),
-            () -> {
-                //run all sets in test vector sequentially (thanks to TreeMap being sorted)
-                for (final var set : sets.entrySet()) {
-                    delay(now().durationTo(set.getKey()));
-                    state.set(set.getValue());
-                }
+        SimulationEngine.simulate(startTime, List.of(state), () -> {
+            //run all sets in test vector sequentially (thanks to TreeMap being sorted)
+            for (final var set : sets.entrySet()) {
+                delay(now().durationTo(set.getKey()));
+                state.set(set.getValue());
+            }
 
-                delay(now().durationTo(startTime.plus(1, TimeUnit.MINUTES)));
+            delay(now().durationTo(startTime.plus(1, TimeUnit.MINUTES)));
 
-                for (final var expected : expecteds.entrySet()) {
-                    assertThat(state.get(expected.getKey()))
-                        .isCloseTo(expected.getValue(), withinPercentage(0.01));
-                }
-            });
+            for (final var expected : expecteds.entrySet()) {
+                assertThat(state.get(expected.getKey()))
+                    .isCloseTo(expected.getValue(), withinPercentage(0.01));
+            }
+        });
     }
 }

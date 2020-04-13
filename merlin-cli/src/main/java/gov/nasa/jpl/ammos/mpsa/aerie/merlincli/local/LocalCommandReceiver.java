@@ -183,7 +183,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     final var simulationStartTime = SimulationInstant.ORIGIN;
     final StateContainer stateContainer = adaptation.createStateModels();
 
-    SimulationEngine.simulate(simulationStartTime, stateContainer, () -> {
+    SimulationEngine.simulate(simulationStartTime, stateContainer.getStateList(), () -> {
       for (final var scheduledActivity : schedule.scheduledActivities) {
         final Activity<? extends StateContainer> activity = activityMapper
             .deserializeActivity(scheduledActivity.activity)

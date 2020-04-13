@@ -100,7 +100,7 @@ public class SimulationEngineTests {
         final var states = new DiverseStates();
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 for (int i = 0; i < 1000; i++) {
                     ParentActivity act = new ParentActivity();
                     act.floatValue = 1.0;
@@ -140,7 +140,7 @@ public class SimulationEngineTests {
         final var states = new DiverseStates();
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 for (int i = 1; i <= 3; i++) {
                     TimeOrderingTestActivity act = new TimeOrderingTestActivity();
                     act.floatValue = i * 1.0;
@@ -180,7 +180,7 @@ public class SimulationEngineTests {
         final var states = new DiverseStates();
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 defer(1, TimeUnit.HOURS, new DelayTestActivity());
             });
         });
@@ -221,7 +221,7 @@ public class SimulationEngineTests {
         final var states = new DiverseStates();
 
         final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, states, () -> {
+            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
             });
         });
@@ -262,7 +262,7 @@ public class SimulationEngineTests {
         final var states = new DiverseStates();
 
         final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, states, () -> {
+            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 defer(1, TimeUnit.HOURS, new CallTestParentActivity());
             });
         });

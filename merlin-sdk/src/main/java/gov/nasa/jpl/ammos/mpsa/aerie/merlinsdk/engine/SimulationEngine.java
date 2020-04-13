@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.function.Consumer;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
@@ -47,23 +48,22 @@ public final class SimulationEngine {
         return t;
     });
 
-    private SimulationEngine(final Instant simulationStartTime, final StateContainer stateContainer) {
+    private SimulationEngine(final Instant simulationStartTime) {
         this.effectsProvider = new EffectsProvider();
         this.currentSimulationTime = simulationStartTime;
-
-        // TODO: don't initialize states in the simulation engine -- there should be no need to couple the simulation
-        //   engine to states.
-        for (final var state : stateContainer.getStateList()) {
-            state.initialize(simulationStartTime);
-        }
     }
 
     public static Instant simulate(
         final Instant simulationStartTime,
-        final StateContainer stateContainer,
+        final Collection<? extends State<?>> simulationStates,
         final Runnable topLevel
     ) {
-        final var engine = new SimulationEngine(simulationStartTime, stateContainer);
+        final var engine = new SimulationEngine(simulationStartTime);
+
+        // TODO: don't initialize states in the simulation engine -- there should be no need to couple the simulation
+        //   engine to states.
+        for (final var state : simulationStates) state.initialize(simulationStartTime);
+
         engine.run((ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
         return engine.currentSimulationTime;
     }

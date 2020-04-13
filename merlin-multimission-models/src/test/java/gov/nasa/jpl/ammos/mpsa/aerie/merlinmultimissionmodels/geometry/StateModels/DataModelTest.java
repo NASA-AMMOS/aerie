@@ -92,7 +92,7 @@ public class DataModelTest {
         final var states = new DataModelStates();
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 spawn(new InitBinDataVolumes());
             });
         });
@@ -104,7 +104,7 @@ public class DataModelTest {
         final var states = new DataModelStates();
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 spawn(new InitBinDataVolumes());
                 spawn(new TurnInstrumentAOn());
             });
@@ -117,7 +117,7 @@ public class DataModelTest {
         final var states = new DataModelStates();
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
                 spawn(new InitBinDataVolumes());
                 spawn(new TurnInstrumentAOn());
                 spawn(new DownlinkData());
