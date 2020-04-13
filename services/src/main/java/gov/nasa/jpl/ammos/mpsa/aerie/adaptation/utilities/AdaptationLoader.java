@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.ServiceLoader;
 
 public final class AdaptationLoader {
-    public static MerlinAdaptation<?> loadAdaptation(final Path adaptationPath) throws AdaptationLoadException {
+    public static MerlinAdaptation loadAdaptation(final Path adaptationPath) throws AdaptationLoadException {
         return loadAdaptationProvider(adaptationPath).get();
     }
 

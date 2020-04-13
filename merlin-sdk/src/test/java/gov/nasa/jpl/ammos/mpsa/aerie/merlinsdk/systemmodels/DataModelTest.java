@@ -7,8 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.EventLog;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
@@ -32,14 +30,10 @@ public class DataModelTest {
 
     DataSystemModel dataSystemModel;
 
-    public class DataStates implements StateContainer {
+    public static final class DataStates {
         SettableState<Double> dataRate;
         SettableState<Double> dataVolume;
         SettableState<String> dataProtocol;
-
-        public List<State<?>> getStateList() {
-            return List.of(dataRate, dataVolume, dataProtocol);
-        }
     }
 
     DataStates dataStates = new DataStates();

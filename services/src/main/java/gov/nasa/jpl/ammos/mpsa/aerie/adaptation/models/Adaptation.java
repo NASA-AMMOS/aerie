@@ -1,11 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class Adaptation {
-    private final MerlinAdaptation<?> adaptation;
+    private final MerlinAdaptation adaptation;
     private final ActivityMapper activityMapper;
 
-    public Adaptation(final MerlinAdaptation<?> adaptation) throws AdaptationContractException {
+    public Adaptation(final MerlinAdaptation adaptation) throws AdaptationContractException {
       this.adaptation = adaptation;
       this.activityMapper = this.adaptation.getActivityMapper();
 
@@ -25,11 +25,11 @@ public final class Adaptation {
       }
     }
 
-    public StateContainer getStateContainer() {
-        final var stateContainer = this.adaptation.createStateModels();
-        if (stateContainer == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".createStateModels() returned null");
+    public SimulationState newSimulationState() {
+        final var simState = this.adaptation.newSimulationState();
+        if (simState == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".newSimulationState() returned null");
 
-        return stateContainer;
+        return simState;
     }
 
     public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {

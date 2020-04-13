@@ -10,7 +10,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -181,21 +180,23 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     final var activityMapper = adaptation.getActivityMapper();
 
     final var simulationStartTime = SimulationInstant.ORIGIN;
-    final StateContainer stateContainer = adaptation.createStateModels();
+    final var simulationState = adaptation.newSimulationState();
 
-    SimulationEngine.simulate(simulationStartTime, stateContainer.getStateList(), () -> {
-      for (final var scheduledActivity : schedule.scheduledActivities) {
-        final Activity activity = activityMapper
-            .deserializeActivity(scheduledActivity.activity)
-            .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
+    simulationState.applyInScope(() -> {
+      SimulationEngine.simulate(simulationStartTime, simulationState.getStates().values(), () -> {
+        for (final var scheduledActivity : schedule.scheduledActivities) {
+          final Activity activity = activityMapper
+              .deserializeActivity(scheduledActivity.activity)
+              .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
 
-        deferTo(scheduledActivity.startTime, activity);
-      }
+          deferTo(scheduledActivity.startTime, activity);
+        }
+      });
     });
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();
-    for (final var state : stateContainer.getStateList()) {
-      samples.put(state.getName(), new TreeMap<>(state.getHistory()));
+    for (final var entry : simulationState.getStates().entrySet()) {
+      samples.put(entry.getKey(), new TreeMap<>(entry.getValue().getHistory()));
     }
 
     System.out.println(samples);

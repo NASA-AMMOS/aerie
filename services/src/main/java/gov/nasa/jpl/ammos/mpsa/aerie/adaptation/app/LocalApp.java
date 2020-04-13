@@ -197,7 +197,7 @@ public final class LocalApp implements App {
     private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
         try {
             final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-            final MerlinAdaptation<?> adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
+            final MerlinAdaptation adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
             return new Adaptation(adaptation);
         } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
             throw new NoSuchAdaptationException(adaptationId, ex);

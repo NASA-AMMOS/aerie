@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 
 /**
  * A system-level representation of a mission-specific adaptation.
@@ -25,7 +24,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
  *   }
  * </pre>
  */
-public interface MerlinAdaptation<States extends StateContainer> {
+public interface MerlinAdaptation {
   /**
    * Gets the system-level representation of the activity types understood by this adaptation.
    *
@@ -33,11 +32,5 @@ public interface MerlinAdaptation<States extends StateContainer> {
    */
   ActivityMapper getActivityMapper();
 
-  /**
-   * Create a freshly initialized set of states to be used during simulation.
-   *
-   * @return A fresh state container to be provided to each activity.
-   */
-  @Deprecated(forRemoval = true)
-  States createStateModels();
+  SimulationState newSimulationState();
 }

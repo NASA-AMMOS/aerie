@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
@@ -18,7 +17,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.s
 
 public class DataModelTest {
 
-    public static final class DataModelStates implements StateContainer {
+    public static final class DataModelStates {
         public final InstrumentModel instrument_a_data_rate = new InstrumentModel("instrument 1", 0.0);
         public final InstrumentModel instrument_b_data_rate = new InstrumentModel("instrument 2", 0.0);
         public final InstrumentModel instrument_c_data_rate = new InstrumentModel("instrument 3", 0.0);

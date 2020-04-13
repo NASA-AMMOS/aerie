@@ -61,21 +61,21 @@ public final class Simulator {
       final Collection<Pair<Duration, Activity>> scheduledActivities
   ) {
     // TODO: Initialize the requested state models from the adaptation.
-    final var stateContainer = this.adaptation.getStateContainer();
+    final var stateContainer = this.adaptation.newSimulationState();
     // TODO: Work with state models instead of individual states.
 
     // Initialize a set of tables into which to store state samples periodically.
     // TODO: Work with state models instead of individual states.
     final var timestamps = new ArrayList<Instant>();
 
-    final var states = stateContainer.getStateList();
+    final var states = stateContainer.getStates();
 
     final var timelines = new HashMap<String, List<SerializedParameter>>(states.size());
-    for (final var state : states) timelines.put(state.getName(), new ArrayList<>());
+    for (final var entry : states.entrySet()) timelines.put(entry.getKey(), new ArrayList<>());
 
     // Simulate the entire plan to completion.
     // Sample all states periodically while simulation is occurring.
-    SimulationEngine.simulate(SimulationInstant.ORIGIN, stateContainer,getStateList(), () -> {
+    SimulationEngine.simulate(SimulationInstant.ORIGIN, states.values(), () -> {
       // Spawn all scheduled activities.
       for (final Pair<Duration, Activity> entry : scheduledActivities) {
         defer(entry.getLeft(), entry.getRight());
@@ -86,16 +86,20 @@ public final class Simulator {
         final var endTime = now().plus(samplingDuration);
         spawn(() -> {
           timestamps.add(now());
-          for (final var state : states) {
-            timelines.get(state.getName()).add(serializeState(state));
+          for (final var entry : timelines.entrySet()) {
+            final var stateName = entry.getKey();
+            final var timeline = entry.getValue();
+            timeline.add(serializeState(states.get(stateName)));
           }
 
           while (now().isBefore(endTime)) {
             delay(Duration.min(samplingPeriod, now().durationTo(endTime)));
 
             timestamps.add(now());
-            for (final var state : states) {
-              timelines.get(state.getName()).add(serializeState(state));
+            for (final var entry : timelines.entrySet()) {
+              final var stateName = entry.getKey();
+              final var timeline = entry.getValue();
+              timeline.add(serializeState(states.get(stateName)));
             }
           }
         });
