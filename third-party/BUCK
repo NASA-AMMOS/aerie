@@ -257,6 +257,12 @@ prebuilt_jar(
     visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+    name = 'commons-collections4',
+    binary_jar = 'commons-collections4-4.4.jar',
+    visibility = ['PUBLIC']
+)
+
 java_library(
     name = 'jetty',
     exported_deps = [
