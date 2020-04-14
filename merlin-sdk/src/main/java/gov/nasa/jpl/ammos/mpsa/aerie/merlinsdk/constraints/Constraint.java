@@ -16,11 +16,17 @@ public interface Constraint {
         return or(this, other);
     }
 
+    default Constraint minus(final Constraint other) { return minus(this, other); }
+
     static Constraint and(final Constraint x, final Constraint y) {
         return () -> Operator.intersection(x.getWindows(), y.getWindows());
     }
 
     static Constraint or(final Constraint x, final Constraint y) {
         return () -> Operator.union(x.getWindows(), y.getWindows());
+    }
+
+    static Constraint minus(final Constraint x, final Constraint y) {
+        return () -> Operator.minus(x.getWindows(), y.getWindows());
     }
 }
