@@ -572,7 +572,7 @@ public class ParameterTestActivityTest {
                 )
         ));
 
-        return new SerializedActivity("ParameterTestActivity", parameters);
+        return new SerializedActivity("ParameterTest", parameters);
     }
 
     private ParameterTestActivity createParameterTestActivityInstance() {
