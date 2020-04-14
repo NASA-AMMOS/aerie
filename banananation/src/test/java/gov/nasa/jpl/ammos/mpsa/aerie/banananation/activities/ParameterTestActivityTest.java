@@ -81,6 +81,7 @@ public class ParameterTestActivityTest {
         assertEquals(deserializedActivity.charMap, testValues.charMap);
         assertEquals(deserializedActivity.booleanMap, testValues.booleanMap);
         assertEquals(deserializedActivity.stringMap, testValues.stringMap);
+        assertEquals(deserializedActivity.testEnum, testValues.testEnum);
         assertEquals(deserializedActivity.mappyBoi, testValues.mappyBoi);
         assertArrayEquals(deserializedActivity.intListArrayArray, testValues.intListArrayArray);
         // TODO; Check equality for obnoxious (this is quite complex)
@@ -149,6 +150,7 @@ public class ParameterTestActivityTest {
         assertEquals(sourceActivity.charMap, deserializedActivity.charMap);
         assertEquals(sourceActivity.booleanMap, deserializedActivity.booleanMap);
         assertEquals(sourceActivity.stringMap, deserializedActivity.stringMap);
+        assertEquals(sourceActivity.testEnum, deserializedActivity.testEnum);
         assertEquals(sourceActivity.mappyBoi, deserializedActivity.mappyBoi);
         assertArrayEquals(sourceActivity.intListArrayArray, deserializedActivity.intListArrayArray);
         // TODO; Check equality for obnoxious (this is quite complex)
@@ -356,6 +358,9 @@ public class ParameterTestActivityTest {
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(stringMapEntries[0].getValue()), SerializedParameter.of(stringMapEntries[1].getValue())))
                 )
         ));
+
+        // Enum Parameter
+        parameters.put("testEnum", SerializedParameter.of(testValues.testEnum.name()));
 
         // Complex Parameters
 
