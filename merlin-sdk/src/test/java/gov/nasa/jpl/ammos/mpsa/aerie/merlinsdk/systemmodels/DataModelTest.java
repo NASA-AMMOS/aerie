@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ActivityQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintJudgement;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ActivityQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
@@ -11,6 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -329,6 +330,202 @@ public class DataModelTest {
         assertEquals(dataActivityMinimumDuration.getWindows().size(), 1);
         assertEquals(dataActivityMinimumDuration.getWindows().get(0).start, time3);
         assertEquals(dataActivityMinimumDuration.getWindows().get(0).end, time3.plus(duration2));
+    }
+
+    @Test
+    public void allAInstanceBeforeBInstances(){
+        Instant time1 = SimulationInstant.ORIGIN;
+        Instant time2 = time1.plus(5, TimeUnit.SECONDS);
+        Instant time3 = time1.plus(30, TimeUnit.SECONDS);
+
+        Duration duration1 = Duration.of(10,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(3,TimeUnit.SECONDS);
+
+        String activityNameA = "SomeDataActivity A";
+        String activityNameB = "SomeDataActivity B";
+
+        //[5,15]
+        ActivityEvent<?> activityEvent1 = new ActivityEvent<>(activityNameA, time2, duration1);
+
+        //[20,55]
+        ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityNameA, time1.plus(20, TimeUnit.SECONDS), Duration.of(35, TimeUnit.SECONDS));
+
+        //[30,33]
+        ActivityEvent<?> activityEvent3 = new ActivityEvent<>(activityNameB, time3, duration2);
+
+        glue.registry().addActivityEvent(activityEvent1);
+        glue.registry().addActivityEvent(activityEvent2);
+        glue.registry().addActivityEvent(activityEvent3);
+
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+        Constraint whichABeforeB = () -> activityQuerier.allABeforeFirstB(activityNameA, activityNameB);
+        Constraint whenAOccurring = () -> activityQuerier.whenActivityExists(activityNameA);
+        Constraint checkABeforeB = whenAOccurring.minus(whichABeforeB);
+
+        assertEquals(whichABeforeB.getWindows().size(),1);
+        assertEquals(whichABeforeB.getWindows().get(0).start, time2);
+        assertEquals(whichABeforeB.getWindows().get(0).end, time2.plus(duration1));
+
+        assertEquals(checkABeforeB.getWindows().size(), 1);
+    }
+
+    @Test
+    public void activityQuerierAllAEqualsB(){
+        Instant time1 = SimulationInstant.ORIGIN;
+        Instant time2 = time1.plus(10, TimeUnit.SECONDS);
+        Instant time3 = time1.plus(20, TimeUnit.SECONDS);
+        Instant time4 = time1.plus(25, TimeUnit.SECONDS);
+        Instant time5 = time1.plus(40, TimeUnit.SECONDS);
+        Instant time6 = time1.plus(50, TimeUnit.SECONDS);
+        Instant time7 = time1.plus(51, TimeUnit.SECONDS);
+
+        Duration duration1 = Duration.of(5,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(2,TimeUnit.SECONDS);
+
+        String activityNameA = "SomeDataActivity A";
+        String activityNameB = "SomeDataActivity B";
+
+        ActivityEvent<?> activityEvent1A = new ActivityEvent<>(activityNameA, time1, duration1);
+        ActivityEvent<?> activityEvent2A = new ActivityEvent<>(activityNameA, time2, duration1);
+        ActivityEvent<?> activityEvent1B = new ActivityEvent<>(activityNameB, time1, duration1);
+        ActivityEvent<?> activityEvent2B = new ActivityEvent<>(activityNameB, time2, duration1);
+
+
+        glue.registry().addActivityEvent(activityEvent1A);
+        glue.registry().addActivityEvent(activityEvent2A);
+        glue.registry().addActivityEvent(activityEvent1B);
+        glue.registry().addActivityEvent(activityEvent2B);
+
+        /**************** test case 1 ************************/
+        //A: [0,5] [10,15]
+        //B: [0,5] [10,15]
+        //expect: [0,5], [10,15]
+
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+        List<Window> allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
+        assertEquals(allAEqualB.size(), 2);
+
+        List<Window> shouldContain = new ArrayList<>();
+        shouldContain.add(Window.between(time1, time1.plus(duration1)));
+        shouldContain.add(Window.between(time2, time2.plus(duration1)));
+
+        assertEquals(CollectionUtils.containsAll(allAEqualB, shouldContain), true);
+
+        /**************** test case 2 ************************/
+        //A: [0,5] [10,15], [20,22], [25,27]
+        //B: [0,5] [10,15], [25,27]
+        //expect: [0,5], [10,15], [25,27]
+
+        ActivityEvent<?> activityEvent3A = new ActivityEvent<>(activityNameA, time3, duration2);
+        ActivityEvent<?> activityEvent4A = new ActivityEvent<>(activityNameA, time4, duration2);
+        ActivityEvent<?> activityEvent3B = new ActivityEvent<>(activityNameB, time4, duration2);
+
+        glue.registry().addActivityEvent(activityEvent3A);
+        glue.registry().addActivityEvent(activityEvent4A);
+        glue.registry().addActivityEvent(activityEvent3B);
+
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
+
+        shouldContain.add(Window.between(time4, time4.plus(duration2)));
+
+        assertEquals(allAEqualB.size(), 3);
+        assertEquals(CollectionUtils.containsAll(allAEqualB, shouldContain), true);
+
+        List<Window> shouldNotContain = new ArrayList<>();
+        shouldNotContain.add(Window.between(time3, time3.plus(duration2)));
+
+        assertEquals(CollectionUtils.containsAll(allAEqualB, shouldNotContain), false);
+
+        /**************** test case 3 ************************/
+        //A: [0,5] [10,15], [20,22], [25,27], [40,45]
+        //B: [0,5] [10,15], [25,27], [40,42]
+        //expect: [0,5], [10,15], [25,27]
+
+        ActivityEvent<?> activityEvent5A = new ActivityEvent<>(activityNameA, time5, duration1);
+        ActivityEvent<?> activityEvent4B = new ActivityEvent<>(activityNameB, time5, duration2);
+
+        glue.registry().addActivityEvent(activityEvent5A);
+        glue.registry().addActivityEvent(activityEvent4B);
+
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
+
+        shouldNotContain = new ArrayList<>();
+        shouldNotContain.add(Window.between(time5, time5.plus(duration1)));
+        shouldNotContain.add(Window.between(time5, time5.plus(duration2)));
+
+        assertEquals(CollectionUtils.containsAll(allAEqualB, shouldContain), true);
+        assertEquals(CollectionUtils.containsAny(allAEqualB, shouldNotContain), false);
+
+        /**************** test case 3 ************************/
+        //A: [0,5] [10,15], [20,22], [25,27], [40,45], [50,52]
+        //B: [0,5] [10,15], [25,27], [40,42], [51,56]
+        //expect: [0,5], [10,15], [25,27]
+
+        ActivityEvent<?> activityEvent6A = new ActivityEvent<>(activityNameA, time6, duration1);
+        ActivityEvent<?> activityEvent5B = new ActivityEvent<>(activityNameB, time7, duration2);
+
+        glue.registry().addActivityEvent(activityEvent6A);
+        glue.registry().addActivityEvent(activityEvent5B);
+
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
+
+        shouldNotContain = new ArrayList<>();
+        shouldNotContain.add(Window.between(time6, time6.plus(duration1)));
+        shouldNotContain.add(Window.between(time7, time7.plus(duration2)));
+
+        assertEquals(CollectionUtils.containsAll(allAEqualB, shouldContain), true);
+        assertEquals(CollectionUtils.containsAny(allAEqualB, shouldNotContain), false);
+
+    }
+
+    @Test
+    public void allAInstancesEqualsBInstances(){
+        Instant time1 = SimulationInstant.ORIGIN;
+        Instant time2 = time1.plus(10, TimeUnit.SECONDS);
+        Instant time3 = time1.plus(20, TimeUnit.SECONDS);
+
+        Duration duration1 = Duration.of(5,TimeUnit.SECONDS);
+        Duration duration2 = Duration.of(2,TimeUnit.SECONDS);
+
+        String activityNameA = "SomeDataActivity A";
+        String activityNameB = "SomeDataActivity B";
+
+        ActivityEvent<?> activityEvent1A = new ActivityEvent<>(activityNameA, time1, duration1);
+        ActivityEvent<?> activityEvent2A = new ActivityEvent<>(activityNameA, time2, duration1);
+        ActivityEvent<?> activityEvent1B = new ActivityEvent<>(activityNameB, time1, duration1);
+        ActivityEvent<?> activityEvent2B = new ActivityEvent<>(activityNameB, time2, duration1);
+
+        glue.registry().addActivityEvent(activityEvent1A);
+        glue.registry().addActivityEvent(activityEvent2A);
+        glue.registry().addActivityEvent(activityEvent1B);
+        glue.registry().addActivityEvent(activityEvent2B);
+
+        ActivityQuerier activityQuerier = new ActivityQuerier();
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+        Constraint whichAAndBAreEqual = () -> activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
+        Constraint whenAOccurring = () -> activityQuerier.whenActivityExists(activityNameA);
+        Constraint whenBOccurring = () -> activityQuerier.whenActivityExists(activityNameB);
+
+        Constraint violatingInstancesOfAAndB = whenAOccurring.minus(whichAAndBAreEqual).or(whenBOccurring.minus(whichAAndBAreEqual));
+
+        assertEquals(whichAAndBAreEqual.getWindows().size(), 2);
+        assertEquals(violatingInstancesOfAAndB.getWindows().size(), 0);
+
+        ActivityEvent<?> activityEvent3A = new ActivityEvent<>(activityNameA, time3, duration2);
+        glue.registry().addActivityEvent(activityEvent3A);
+        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+        assertEquals(violatingInstancesOfAAndB.getWindows().size(), 1);
+        assertEquals(violatingInstancesOfAAndB.getWindows().get(0).start, time3);
+        assertEquals(violatingInstancesOfAAndB.getWindows().get(0).end, time3.plus(duration2));
     }
 
 }
