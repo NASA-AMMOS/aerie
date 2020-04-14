@@ -107,6 +107,8 @@ class TypeInfoMaker {
           return ParameterTypeReference.ofMap(
               getParameterTypeReference(declaration, ((DeclaredType)parameterType).getTypeArguments().get(0)),
               getParameterTypeReference(declaration, ((DeclaredType)parameterType).getTypeArguments().get(1)));
+        } else if (parameterType.getKind().getDeclaringClass().isEnum()) {
+          return ParameterTypeReference.ofEnum(parameterType);
         } else {
           throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), declaration);
         }
