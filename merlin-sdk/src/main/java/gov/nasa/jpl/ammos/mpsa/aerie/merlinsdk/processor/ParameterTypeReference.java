@@ -19,7 +19,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.NullableParameterMapp
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ShortParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.StringParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumParameterMapper;
 
+import javax.lang.model.type.TypeMirror;
 import java.util.List;
 import java.util.Map;
 
@@ -97,6 +99,31 @@ final class ArrayType implements ParameterTypeReference {
     return CodeBlock.builder()
         .add("new $T<>($L, $T.class)", ArrayParameterMapper.class, this.elementType.getMapper(), this.elementType.getRawTypeName())
         .build();
+  }
+}
+
+final class EnumType implements ParameterTypeReference {
+  private final TypeMirror enumType;
+
+  public EnumType(final TypeMirror enumType) {
+    this.enumType = enumType;
+  }
+
+  @Override
+  public TypeName getTypeName() {
+    return TypeName.get(this.enumType);
+  }
+
+  @Override
+  public TypeName getRawTypeName() {
+    return this.getTypeName();
+  }
+
+  @Override
+  public CodeBlock getMapper() {
+    return CodeBlock.builder()
+            .add("new $T<>($T.class)", EnumParameterMapper.class, this.enumType)
+            .build();
   }
 }
 
@@ -182,5 +209,9 @@ interface ParameterTypeReference {
 
   static ParameterTypeReference ofMap(final ParameterTypeReference keyType, final ParameterTypeReference elementType) {
     return new MapType(keyType, elementType);
+  }
+
+  static ParameterTypeReference ofEnum(final TypeMirror enumType) {
+    return new EnumType(enumType);
   }
 }

@@ -63,6 +63,10 @@ public class ParameterTestActivity implements Activity<BananaStates> {
   @Parameter public Map<Boolean, Boolean> booleanMap = null;
   @Parameter public Map<String, String> stringMap = null;
 
+  // Enum type
+  public enum Tenum { A, B, C }
+  @Parameter public Tenum testEnum = null;
+
   // Complex Parameters
   @Parameter
   public Map<Integer, List<String>> mappyBoi = null;
@@ -119,6 +123,7 @@ public class ParameterTestActivity implements Activity<BananaStates> {
     testActivity.charMap = Map.of('e', 'f', 'g', 'h');
     testActivity.booleanMap = Map.of(false, true, true, false);
     testActivity.stringMap = Map.of("69", "70", "71", "72");
+    testActivity.testEnum = Tenum.A;
     testActivity.mappyBoi = Map.of(
             100, List.of("abc", "xyz"),
             200, List.of("def", "uvw")
