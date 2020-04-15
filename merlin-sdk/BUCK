@@ -13,6 +13,7 @@ java_library(
         "//third-party:jackson-core",
         "//third-party:javapoet",
         "//third-party:JNISpice",
+        "//third-party:commons-collections4",
     ],
     visibility = ['PUBLIC']
 )
@@ -27,7 +28,7 @@ java_test(
         "//third-party:JNISpice",
         "//third-party:junit",
         "//third-party:hamcrest-all",
-        
+        "//third-party:commons-collections4",
         "//merlin-sdk:merlin-sdk"
     ]
 )

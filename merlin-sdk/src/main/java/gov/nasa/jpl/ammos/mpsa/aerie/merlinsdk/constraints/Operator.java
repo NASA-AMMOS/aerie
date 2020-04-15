@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -59,5 +60,10 @@ public final class Operator {
         }
 
         return union;
+    }
+
+    //returns elements in a that are not in b
+    public static List<Window> minus(final List<Window> a, final List<Window> b) {
+        return new ArrayList<>(CollectionUtils.subtract(a, b));
     }
 }
