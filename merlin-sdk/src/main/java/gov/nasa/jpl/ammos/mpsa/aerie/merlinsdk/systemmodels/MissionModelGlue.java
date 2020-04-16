@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.Event;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.EventLog;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
@@ -7,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-
 
 class Getter<T> {
     public final Class<T> klass;
@@ -220,11 +221,7 @@ public class MissionModelGlue {
             //this can be taken out of the for loop b/c there should only be one master system model for a set of models
             MasterSystemModel masterSystemModel = model.getMasterSystemModel();
 
-            for(Event<?> event : eventLog.getEventLog()){
-
-                if (event.eventType().equals(EventType.ACTIVITY)){
-                    continue;
-                }
+            for(Event<?> event : eventLog.getAllSettableEvents()){
 
                 //step the model up
                 Duration dt = event.time().durationFrom(masterSlice.time());

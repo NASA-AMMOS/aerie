@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events;
 
 import java.util.*;
 
@@ -57,5 +57,16 @@ public class EventLog {
         }
 
         return Collections.unmodifiableMap(activityMap);
+    }
+
+    public List<SettableEvent> getAllSettableEvents(){
+        ArrayList<SettableEvent> settableEvents = new ArrayList<>();
+
+        for (Event<?> event : this.eventLog){
+            if(event.eventType().equals(EventType.SETTABLE)){
+                settableEvents.add((SettableEvent) event);
+            }
+        }
+        return Collections.unmodifiableList(settableEvents);
     }
 }

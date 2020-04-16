@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.collections4.CollectionUtils;
