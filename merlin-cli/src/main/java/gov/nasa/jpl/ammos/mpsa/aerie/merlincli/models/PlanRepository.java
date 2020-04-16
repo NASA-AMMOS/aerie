@@ -11,9 +11,29 @@ public interface PlanRepository {
     void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws PlanNotFoundException, ActivityInstanceNotFoundException, InvalidJsonException, InvalidActivityInstanceException;
     void deleteActivityInstance(String planId, String activityId) throws PlanNotFoundException, ActivityInstanceNotFoundException;
 
-    class InvalidJsonException extends Exception {}
-    class InvalidPlanException extends Exception {}
-    class PlanNotFoundException extends Exception {}
-    class ActivityInstanceNotFoundException extends Exception {}
-    class InvalidActivityInstanceException extends Exception {}
+    class InvalidJsonException extends Exception {
+        public InvalidJsonException(String message) {
+            super(message);
+        }
+    }
+    class InvalidPlanException extends Exception {
+        public InvalidPlanException(String message) {
+            super(message);
+        }
+    }
+    class PlanNotFoundException extends Exception {
+        public PlanNotFoundException(String message) {
+            super(message);
+        }
+    }
+    class ActivityInstanceNotFoundException extends Exception {
+        public ActivityInstanceNotFoundException(String message) {
+            super(message);
+        }
+    }
+    class InvalidActivityInstanceException extends Exception {
+        public InvalidActivityInstanceException(String message) {
+            super(message);
+        }
+    }
 }

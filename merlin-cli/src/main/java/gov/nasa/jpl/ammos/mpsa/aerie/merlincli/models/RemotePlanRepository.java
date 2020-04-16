@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.HttpUtilities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
 import org.apache.http.*;
 import org.apache.http.client.methods.*;
@@ -40,12 +41,14 @@ public class RemotePlanRepository implements PlanRepository {
                 return response.getFirstHeader("location").getValue();
 
             case HttpStatus.SC_BAD_REQUEST:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidJsonException();
+                throw new InvalidJsonException(
+                        HttpUtilities.getErrorMessage(response, "Plan creation failed: Invalid JSON")
+                );
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidPlanException();
+                throw new InvalidPlanException(
+                        HttpUtilities.getErrorMessage(response, "Plan creation failed: Invalid Plan")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -70,15 +73,18 @@ public class RemotePlanRepository implements PlanRepository {
                 break;
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new PlanNotFoundException();
+                throw new PlanNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Plan not found")
+                );
 
             case HttpStatus.SC_BAD_REQUEST:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidJsonException();
+                throw new InvalidJsonException(
+                        HttpUtilities.getErrorMessage(response, "Invalid JSON"));
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidPlanException();
+                throw new InvalidPlanException(
+                        HttpUtilities.getErrorMessage(response, "Invalid plan update")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -102,7 +108,9 @@ public class RemotePlanRepository implements PlanRepository {
                 break;
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new PlanNotFoundException();
+                throw new PlanNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Plan not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -131,7 +139,9 @@ public class RemotePlanRepository implements PlanRepository {
                 }
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new PlanNotFoundException();
+                throw new PlanNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Plan not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -181,15 +191,19 @@ public class RemotePlanRepository implements PlanRepository {
                 break;
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new PlanNotFoundException();
+                throw new PlanNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Plan not found")
+                );
 
             case HttpStatus.SC_BAD_REQUEST:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidJsonException();
+                throw new InvalidJsonException(
+                        HttpUtilities.getErrorMessage(response, "Invalid JSON")
+                );
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidPlanException();
+                throw new InvalidPlanException(
+                        HttpUtilities.getErrorMessage(response, "Invalid activity instance")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -219,7 +233,9 @@ public class RemotePlanRepository implements PlanRepository {
             case HttpStatus.SC_NOT_FOUND:
                 // TODO: When the plan service is updated to distinguish between
                 //       PlanNotFound or ActivityInstanceNotFound errors, update this
-                throw new ActivityInstanceNotFoundException();
+                throw new ActivityInstanceNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Activity instance not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -246,15 +262,19 @@ public class RemotePlanRepository implements PlanRepository {
             case HttpStatus.SC_NOT_FOUND:
                 // TODO: When the plan service is updated to distinguish between
                 //       PlanNotFound or ActivityInstanceNotFound errors, update this
-                throw new ActivityInstanceNotFoundException();
+                throw new ActivityInstanceNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Activity instance or plan not found")
+                );
 
             case HttpStatus.SC_BAD_REQUEST:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidJsonException();
+                throw new InvalidJsonException(
+                        HttpUtilities.getErrorMessage(response, "Invalid JSON")
+                );
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidActivityInstanceException();
+                throw new InvalidActivityInstanceException(
+                        HttpUtilities.getErrorMessage(response, "Invalid activity instance")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -280,7 +300,9 @@ public class RemotePlanRepository implements PlanRepository {
             case HttpStatus.SC_NOT_FOUND:
                 // TODO: When the plan service is updated to distinguish between
                 //       PlanNotFound or ActivityInstanceNotFound errors, update this
-                throw new ActivityInstanceNotFoundException();
+                throw new ActivityInstanceNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Activity instance or plan not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
