@@ -1,0 +1,21 @@
+prebuilt_jar(
+     name = 'javax.json-bundle-1.1.4',
+     binary_jar = 'javax.json-bundle-1.1.4.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'javax.json.bind-api-jar-1.0',
+     binary_jar = 'javax.json.bind-api-jar-1.0.jar',
+     visibility = ['PUBLIC']
+)
+
+java_library(
+     name = 'services',
+     exported_deps = [
+          ":javax.json-bundle-1.1.4",
+          ":javax.json.bind-api-jar-1.0",
+     ],
+     visibility = ['PUBLIC'],
+)
+

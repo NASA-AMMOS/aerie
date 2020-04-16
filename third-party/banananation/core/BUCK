@@ -1,0 +1,14 @@
+prebuilt_jar(
+     name = 'commons-lang3-jar-3.9',
+     binary_jar = 'commons-lang3-jar-3.9.jar',
+     visibility = ['PUBLIC']
+)
+
+java_library(
+     name = 'banananation',
+     exported_deps = [
+          ":commons-lang3-jar-3.9",
+     ],
+     visibility = ['PUBLIC'],
+)
+
