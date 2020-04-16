@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.*;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
 import org.apache.http.*;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
@@ -9,8 +10,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities.prettify;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities.writeJson;
 
 public class RemotePlanRepository implements PlanRepository {
 
@@ -125,7 +124,7 @@ public class RemotePlanRepository implements PlanRepository {
         switch (response.getStatusLine().getStatusCode()) {
             case HttpStatus.SC_OK:
                 try {
-                    writeJson(response.getEntity().getContent(), Path.of(outName));
+                    JsonUtilities.writeJson(response.getEntity().getContent(), Path.of(outName));
                     return;
                 } catch (IOException e) {
                     throw new Error(e);
@@ -154,7 +153,7 @@ public class RemotePlanRepository implements PlanRepository {
         switch (response.getStatusLine().getStatusCode()) {
             case HttpStatus.SC_OK:
                 try {
-                    return prettify(new String(response.getEntity().getContent().readAllBytes()));
+                    return JsonUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
                 } catch (IOException e) {
                     throw new Error(e);
                 }
