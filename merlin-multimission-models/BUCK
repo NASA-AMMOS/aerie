@@ -1,14 +1,9 @@
 java_library(
     name = "merlin-multimission-models",
     srcs = glob(["src/main/java/**/*.java"]),
-    deps = [
-        "//third-party:commons-lang3",
-        "//third-party:commons-math3",
-        "//third-party:JNISpice",
-
-        # Modules
-        "//merlin-sdk:merlin-sdk"
-    ],
+    exported_deps=["//merlin-sdk:merlin-sdk",
+                   "//third-party:JNISpice",
+                   "//prebuilt-jar/merlin-multimission-models/core:merlin-multimission-models",],
     visibility = ['PUBLIC']
 )
 
@@ -17,17 +12,7 @@ java_test(
     name = "test",
     srcs = glob(["src/test/**/*.java"]),
     deps = [
-        # Third Party
-        "//third-party:assertj-core",
-        "//third-party:commons-io",
-        "//third-party:commons-lang3",
-        "//third-party:commons-math3",
-        "//third-party:hamcrest-all",
-        "//third-party:JNISpice",
-        "//third-party:junit",
-
-        # Aerie
+        "//prebuilt-jar/merlin-multimission-models/test:merlin-multimission-models",
         ":merlin-multimission-models",
-        "//merlin-sdk:merlin-sdk"
     ]
 )

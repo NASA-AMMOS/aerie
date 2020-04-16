@@ -4,20 +4,11 @@ java_library(
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
     extra_arguments = ["-Xlint:all"],
-    deps = [
-        "//third-party:commons-cli",
-        "//third-party:commons-lang3",
-        "//third-party:commons-logging",
-        "//third-party:gson",
-        "//third-party:javax.json",
-        "//third-party:httpclient",
-        "//third-party:httpcore",
-        "//third-party:httpmime",
-
-        # Modules
+    exported_deps=[        # Modules
         "//apgen-parser:lib",
         "//merlin-sdk:merlin-sdk",
-    ],
+        "//prebuilt-jar/merlin-cli/core:merlin-cli",
+        ],
 )
 
 java_binary(
@@ -34,14 +25,7 @@ java_library(
     extra_arguments = ["-Xlint:all"],
     deps = [
         ":lib",
-
-        "//third-party:assertj-core",
-        "//third-party:gson",
-        "//third-party:javax.json",
-        "//third-party:httpclient",
-        "//third-party:httpcore",
-        "//third-party:junit-jupiter",
-        "//merlin-sdk:merlin-sdk",
+        "//prebuilt-jar/merlin-cli/test:merlin-cli",
     ],
 )
 

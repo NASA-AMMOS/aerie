@@ -9,10 +9,7 @@ java_test(
     srcs = glob(["src/test/**/*.java"]),
     deps = [
         # Third Party
-        "//third-party:assertj-core",
-        "//third-party:hamcrest-all",
-        "//third-party:junit-jupiter",
-        "//third-party:junit",
+        "//prebuilt-jar/apgen-parser/test:apgen-parser",
 
         # Aerie
         ":lib"
