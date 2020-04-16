@@ -99,8 +99,8 @@ def main():
 def remove_jar_buck_files(path, buckFilename):
     print ("Deleting jar files from this path " + path)
 
-    filelist = glob.glob(path+"/*.jar")
-    for file in filelist:
+    file_list = glob.glob(path+"/*.jar")
+    for file in file_list:
         os.remove(file)
 
     if os.path.exists(path+"/"+buckFilename):
@@ -140,27 +140,30 @@ def generate_bucklib_file(path, buckFilename, libName):
     if not os.path.exists(path):
         print("Skip: Buck file geneartation in path "+path)
         return
-    filenames = os.listdir(path)
+
+    jar_files = [f for f in os.listdir(path) if f.endswith('.jar')]
+
+    if len(jar_files) == 0:
+        print("Skip: Path contain no jar file")
+        return
 
     fp = open(path+"/"+buckFilename, "w")
 
-    for filename in filenames:
-        if filename.endswith(".jar"):
-            name = filename[0:len(filename)-len(".jar")]
-            fp.write("prebuilt_jar(\n")
-            fp.write("     name = '"+name+"',\n")
-            fp.write("     binary_jar = '"+filename+"',\n")
-            fp.write("     visibility = ['PUBLIC']\n")
-            fp.write(")\n\n")
+    for file in jar_files:
+        name = file[0:len(file)-len(".jar")]
+        fp.write("prebuilt_jar(\n")
+        fp.write("     name = '"+name+"',\n")
+        fp.write("     binary_jar = '"+file+"',\n")
+        fp.write("     visibility = ['PUBLIC']\n")
+        fp.write(")\n\n")
 
     fp.write("java_library(\n")
     fp.write("     name = '"+libName+"',\n")
     fp.write("     exported_deps = [\n")
 
-    for filename in filenames:
-        if filename.endswith(".jar"):
-            name = filename[0:len(filename)-len(".jar")]
-            fp.write("          \":"+name+"\",\n")
+    for file in jar_files:
+        name = file[0:len(file)-len(".jar")]
+        fp.write("          \":"+name+"\",\n")
 
     fp.write("     ],\n")
     fp.write("     visibility = ['PUBLIC'],\n")
