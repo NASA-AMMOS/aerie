@@ -7,7 +7,7 @@ java_library(
     exported_deps=[        # Modules
         "//apgen-parser:lib",
         "//merlin-sdk:merlin-sdk",
-        "//prebuilt-jar/merlin-cli/core:merlin-cli",
+        "//third-party/merlin-cli/core:merlin-cli",
         ],
 )
 
@@ -25,7 +25,7 @@ java_library(
     extra_arguments = ["-Xlint:all"],
     deps = [
         ":lib",
-        "//prebuilt-jar/merlin-cli/test:merlin-cli",
+        "//third-party/merlin-cli/test:merlin-cli",
     ],
 )
 

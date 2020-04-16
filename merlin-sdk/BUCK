@@ -8,7 +8,7 @@ java_library(
         "--module-path", "third-party/"
         ],
     exported_deps = [
-        "//prebuilt-jar/merlin-sdk/core:merlin-sdk",
+        "//third-party/merlin-sdk/core:merlin-sdk",
     ],
     visibility = ['PUBLIC']
 )
@@ -20,6 +20,6 @@ java_test(
     resources_root = "src/test/resources/",
     deps = [
         "//third-party:JNISpice",
-        "//merlin-sdk:merlin-sdk"
+        ":merlin-sdk"
     ]
 )

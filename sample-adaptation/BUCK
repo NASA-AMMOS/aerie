@@ -4,7 +4,7 @@ java_library(
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
     exported_deps = [
-        "//prebuilt-jar/sample-adaptation/core:sample-adaptation",
+        "//third-party/sample-adaptation/core:sample-adaptation",
         "//third-party:JNISpice",
         # Modules
         "//merlin-multimission-models:merlin-multimission-models",
@@ -20,7 +20,7 @@ java_test(
     srcs = glob(["src/test/java/**/*.java"]),
     deps = [
         # Third Party
-       "//prebuilt-jar/sample-adaptation/test:sample-adaptation",
+       "//third-party/sample-adaptation/test:sample-adaptation",
         ":sample-adaptation"
     ]
 )
