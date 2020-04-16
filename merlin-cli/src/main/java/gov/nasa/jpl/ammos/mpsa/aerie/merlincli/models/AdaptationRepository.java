@@ -10,7 +10,19 @@ public interface AdaptationRepository {
     String getActivityTypes(String adaptationId) throws AdaptationNotFoundException;
     String getActivityType(String adaptationId, String activityType) throws AdaptationNotFoundException, ActivityTypeNotDefinedException;
 
-    class InvalidAdaptationException extends Exception {}
-    class AdaptationNotFoundException extends Exception {}
-    class ActivityTypeNotDefinedException extends Exception {}
+    class InvalidAdaptationException extends Exception {
+        public InvalidAdaptationException(String message) {
+            super(message);
+        }
+    }
+    class AdaptationNotFoundException extends Exception {
+        public AdaptationNotFoundException(String message) {
+            super(message);
+        }
+    }
+    class ActivityTypeNotDefinedException extends Exception {
+        public ActivityTypeNotDefinedException(String message) {
+            super(message);
+        }
+    }
 }

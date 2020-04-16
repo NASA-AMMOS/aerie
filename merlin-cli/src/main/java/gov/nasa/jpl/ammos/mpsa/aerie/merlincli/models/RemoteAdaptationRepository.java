@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.ApiContractViolationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.HttpUtilities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -11,7 +12,6 @@ import org.apache.http.client.methods.HttpPost;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 
 public class RemoteAdaptationRepository implements AdaptationRepository {
 
@@ -50,12 +50,15 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 return response.getFirstHeader("location").getValue();
 
             case HttpStatus.SC_BAD_REQUEST:
-                //TODO: Add information about what was wrong from the response
-                throw new InvalidAdaptationException();
+                // Because the JSON is built by the CLI, we don't know if the user is at fault
+                throw new InvalidAdaptationException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation creation failed due to unknown reason")
+                );
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidAdaptationException();
+                throw new InvalidAdaptationException(
+                        HttpUtilities.getErrorMessage(response, "Invalid Adaptation")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -79,7 +82,9 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 break;
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new AdaptationNotFoundException();
+                throw new AdaptationNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -107,7 +112,9 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 }
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new AdaptationNotFoundException();
+                throw new AdaptationNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -152,7 +159,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
         }
 
         switch (response.getStatusLine().getStatusCode()) {
-                case HttpStatus.SC_OK:
+            case HttpStatus.SC_OK:
                 try {
                     return JsonUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
                 } catch (IOException e) {
@@ -160,7 +167,9 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 }
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new AdaptationNotFoundException();
+                throw new AdaptationNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
@@ -190,7 +199,9 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
             case HttpStatus.SC_NOT_FOUND:
                 // TODO: When the adaptation service is updated to distinguish between
                 //       AdaptationNotFound or ActivityTypeNotFound errors, update this
-                throw new ActivityTypeNotDefinedException();
+                throw new ActivityTypeNotDefinedException(
+                        HttpUtilities.getErrorMessage(response, "Activity type or adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
