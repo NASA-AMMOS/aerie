@@ -158,6 +158,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
+        .add("kind", "invalid-entity")
         .add("message", "invalid json")
         .build();
   }
