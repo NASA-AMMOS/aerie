@@ -2,10 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
-public interface Event<T> {
-    //placeholder for now
+enum EventType {
+    SETTABLE, ACTIVITY;
+}
 
-    public String name();
-    public T value();
-    public Instant time();
+public interface Event<T> {
+    String name();
+    T value();
+    Instant time();
+    EventType eventType();
 }

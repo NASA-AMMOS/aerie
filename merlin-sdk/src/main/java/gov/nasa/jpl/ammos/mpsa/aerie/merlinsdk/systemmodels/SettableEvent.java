@@ -29,4 +29,9 @@ public class SettableEvent<T> implements Event<T> {
         return this.time;
     }
 
+    @Override
+    public EventType eventType(){
+        return EventType.SETTABLE;
+    }
+
 }

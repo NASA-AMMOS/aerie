@@ -47,4 +47,9 @@ public class ActivityEvent<Activity> implements Event<Activity> {
     public Duration duration(){
         return this.duration;
     }
+
+    @Override
+    public EventType eventType(){
+        return EventType.ACTIVITY;
+    }
 }
