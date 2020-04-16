@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.Properties;
 
 public class JsonUtilities {
 
@@ -136,5 +138,16 @@ public class JsonUtilities {
 
     public static Adaptation parseAdaptationJson(InputStream jsonStream) throws IOException {
         return parseAdaptationJson(new String(jsonStream.readAllBytes()));
+    }
+
+    public static String getErrorMessageFromFailureResponse(String responseBody) {
+        var bodyProperties = Optional.ofNullable(new Gson().fromJson(responseBody, Properties.class));
+        return bodyProperties
+                .map(p -> p.getProperty("message"))
+                .orElse("Reason for failure unknown");
+    }
+
+    public static String getErrorMessageFromFailureResponse(InputStream jsonStream) throws IOException {
+        return getErrorMessageFromFailureResponse(new String(jsonStream.readAllBytes()));
     }
 }
