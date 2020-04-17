@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
@@ -27,6 +27,11 @@ public class SettableEvent<T> implements Event<T> {
     @Override
     public Instant time(){
         return this.time;
+    }
+
+    @Override
+    public EventType eventType(){
+        return EventType.SETTABLE;
     }
 
 }

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
@@ -46,5 +46,10 @@ public class ActivityEvent<Activity> implements Event<Activity> {
 
     public Duration duration(){
         return this.duration;
+    }
+
+    @Override
+    public EventType eventType(){
+        return EventType.ACTIVITY;
     }
 }

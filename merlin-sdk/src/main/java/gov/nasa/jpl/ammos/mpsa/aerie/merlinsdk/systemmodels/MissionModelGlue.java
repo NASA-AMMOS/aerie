@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.systemmodels;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.Event;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.EventLog;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.tuple.Pair;
@@ -7,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-
 
 class Getter<T> {
     public final Class<T> klass;
@@ -173,10 +174,6 @@ public class MissionModelGlue {
 
         private Map<Pair<SystemModel, String>, Setter<?>> modelToSetter = new HashMap<>();
 
-        private List<Event> completeStateEventLog = new ArrayList<>();
-
-        private Map<String, List<ActivityEvent>> completeActivityEventMap = new HashMap<>();
-
         public Getter getGetter(SystemModel model,  String stateName){
             return modelToGetter.get(Pair.of(model, stateName));
         }
@@ -217,18 +214,15 @@ public class MissionModelGlue {
             return stateGetters;
         }
 
-        public void addStateEvent(Event<?> event){
-            completeStateEventLog.add(event);
-        }
-
-        public void applyStateEvents(SystemModel model, Slice aMasterSlice){
+        public void applyStateEvents(SystemModel model, Slice aMasterSlice, EventLog eventLog){
 
             MasterSystemModel.MasterSlice  masterSlice = (MasterSystemModel.MasterSlice) aMasterSlice;
 
-            //this can be taken out of the for loop b/c their should only be one master system model for a set of models
+            //this can be taken out of the for loop b/c there should only be one master system model for a set of models
             MasterSystemModel masterSystemModel = model.getMasterSystemModel();
 
-            for(Event<?> event : this.completeStateEventLog){
+            for(Event<?> event : eventLog.getAllSettableEvents()){
+
                 //step the model up
                 Duration dt = event.time().durationFrom(masterSlice.time());
                 masterSystemModel.step(masterSlice, dt);
@@ -240,20 +234,6 @@ public class MissionModelGlue {
                 Slice slice = masterSlice.getSlice(systemModelName);
                 setter.accept(slice, event.value());
             }
-        }
-
-        public void addActivityEvent(ActivityEvent<?> activityEvent){
-            completeActivityEventMap
-                    .computeIfAbsent(activityEvent.name(), x -> new ArrayList<>())
-                    .add(activityEvent);
-        }
-
-        public List<ActivityEvent>getActivityEvents(String name){
-            return Collections.unmodifiableList(completeActivityEventMap.get(name));
-        }
-
-        public Map<String, List<ActivityEvent>> getCompleteActivityEventMap(){
-            return Collections.unmodifiableMap(this.completeActivityEventMap);
         }
     }
 }

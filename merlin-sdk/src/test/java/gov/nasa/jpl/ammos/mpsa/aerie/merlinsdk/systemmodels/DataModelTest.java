@@ -5,6 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintJudgement;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Operator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.events.EventLog;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -20,13 +22,13 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class DataModelTest {
 
     /*----------------------------- SAMPLE ADAPTOR WORK -------------------------------*/
     MissionModelGlue glue = new MissionModelGlue();
     Instant simStartTime = SimulationInstant.ORIGIN;
+    EventLog eventLog = new EventLog();
 
     DataSystemModel dataSystemModel;
 
@@ -55,9 +57,9 @@ public class DataModelTest {
         dataSystemModel = new DataSystemModel(glue, simStartTime);
         glue.createMasterSystemModel(simStartTime, dataSystemModel);
 
-        dataStates.dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel);
-        dataStates.dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel);
-        dataStates.dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel);
+        dataStates.dataRate = new SettableState<>(GlobalPronouns.dataRate, dataSystemModel, eventLog);
+        dataStates.dataVolume = new SettableState<>(GlobalPronouns.dataVolume, dataSystemModel, eventLog);
+        dataStates.dataProtocol = new SettableState<>(GlobalPronouns.dataProtocol, dataSystemModel, eventLog);
     }
 
     @Test
@@ -84,16 +86,16 @@ public class DataModelTest {
         dataStates.dataRate.set(10.0, event2);
         dataStates.dataRate.set(15.0, event3);
 
-        assertTrue(dataStates.dataVolume.get()==210);
-        assertTrue(dataStates.dataVolume.get()==210);
+        assertEquals(dataStates.dataVolume.get(), Double.valueOf(210));
+        assertEquals(dataStates.dataVolume.get(), Double.valueOf(210));
 
         dataStates.dataRate.set(0.0, event4);
-        assertTrue(dataStates.dataVolume.get()==225);
-        assertTrue(dataStates.dataVolume.get()==225);
+        assertEquals(dataStates.dataVolume.get(), Double.valueOf(225));
+        assertEquals(dataStates.dataVolume.get(), Double.valueOf(225));
 
         dataStates.dataRate.set(10.0, event5);
-        assertTrue(dataStates.dataVolume.get()==225);
-        assertTrue(dataStates.dataVolume.get()==225);
+        assertEquals(dataStates.dataVolume.get(), Double.valueOf(225));
+        assertEquals(dataStates.dataVolume.get(), Double.valueOf(225));
     }
 
     @Test
@@ -239,22 +241,22 @@ public class DataModelTest {
         ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityName, time3, duration2);
 
         //this should be done elsewhere (sim engine?)
-        glue.registry().addActivityEvent(activityEvent1);
-        glue.registry().addActivityEvent(activityEvent2);
+        eventLog.addEvent(activityEvent1);
+        eventLog.addEvent(activityEvent2);
 
         ActivityQuerier activityQuerier = new ActivityQuerier();
-        activityQuerier.provideEvents(glue.registry().getActivityEvents(activityName));
+        activityQuerier.provideEvents(eventLog.getAllEventsForActivity(activityName));
 
-        assertTrue(glue.registry().getActivityEvents(activityName).size() == 2);
+        assertEquals(eventLog.getAllEventsForActivity(activityName).size(), 2);
 
         //[5,15] , [30,33]
-        //todo: add an assertTrue statement
+        //todo: add an assertEquals statement
         System.out.println("Activity occurs during these windows: " + activityQuerier.whenActivityExists());
 
         Constraint dataActivityOccuring = () -> activityQuerier.whenActivityExists();
 
         //[5,15] , [30,33]
-        //todo: add an assertTrue statement
+        //todo: add an assertEquals statement
         System.out.println("\nWe can see when the activity occurs using constraints" + dataActivityOccuring.getWindows());
 
         //During activity the data prtoocol must be spacewire
@@ -304,11 +306,11 @@ public class DataModelTest {
         //[30,33]
         ActivityEvent<?> activityEvent2 = new ActivityEvent<>(activityName, time3, duration2);
 
-        glue.registry().addActivityEvent(activityEvent1);
-        glue.registry().addActivityEvent(activityEvent2);
+        eventLog.addEvent(activityEvent1);
+        eventLog.addEvent(activityEvent2);
 
         ActivityQuerier activityQuerier = new ActivityQuerier();
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
 
         Duration requiredDuration = Duration.of(10,TimeUnit.SECONDS);
         Constraint dataActivityDuration = () -> activityQuerier.whenActivityDoesNotHaveDuration(activityName, requiredDuration);
@@ -353,12 +355,12 @@ public class DataModelTest {
         //[30,33]
         ActivityEvent<?> activityEvent3 = new ActivityEvent<>(activityNameB, time3, duration2);
 
-        glue.registry().addActivityEvent(activityEvent1);
-        glue.registry().addActivityEvent(activityEvent2);
-        glue.registry().addActivityEvent(activityEvent3);
+        eventLog.addEvent(activityEvent1);
+        eventLog.addEvent(activityEvent2);
+        eventLog.addEvent(activityEvent3);
 
         ActivityQuerier activityQuerier = new ActivityQuerier();
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
 
         Constraint whichABeforeB = () -> activityQuerier.allABeforeFirstB(activityNameA, activityNameB);
         Constraint whenAOccurring = () -> activityQuerier.whenActivityExists(activityNameA);
@@ -392,11 +394,10 @@ public class DataModelTest {
         ActivityEvent<?> activityEvent1B = new ActivityEvent<>(activityNameB, time1, duration1);
         ActivityEvent<?> activityEvent2B = new ActivityEvent<>(activityNameB, time2, duration1);
 
-
-        glue.registry().addActivityEvent(activityEvent1A);
-        glue.registry().addActivityEvent(activityEvent2A);
-        glue.registry().addActivityEvent(activityEvent1B);
-        glue.registry().addActivityEvent(activityEvent2B);
+        eventLog.addEvent(activityEvent1A);
+        eventLog.addEvent(activityEvent2A);
+        eventLog.addEvent(activityEvent1B);
+        eventLog.addEvent(activityEvent2B);
 
         /**************** test case 1 ************************/
         //A: [0,5] [10,15]
@@ -404,7 +405,7 @@ public class DataModelTest {
         //expect: [0,5], [10,15]
 
         ActivityQuerier activityQuerier = new ActivityQuerier();
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
 
         List<Window> allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
         assertEquals(allAEqualB.size(), 2);
@@ -424,11 +425,11 @@ public class DataModelTest {
         ActivityEvent<?> activityEvent4A = new ActivityEvent<>(activityNameA, time4, duration2);
         ActivityEvent<?> activityEvent3B = new ActivityEvent<>(activityNameB, time4, duration2);
 
-        glue.registry().addActivityEvent(activityEvent3A);
-        glue.registry().addActivityEvent(activityEvent4A);
-        glue.registry().addActivityEvent(activityEvent3B);
+        eventLog.addEvent(activityEvent3A);
+        eventLog.addEvent(activityEvent4A);
+        eventLog.addEvent(activityEvent3B);
 
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
         allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
 
         shouldContain.add(Window.between(time4, time4.plus(duration2)));
@@ -449,10 +450,10 @@ public class DataModelTest {
         ActivityEvent<?> activityEvent5A = new ActivityEvent<>(activityNameA, time5, duration1);
         ActivityEvent<?> activityEvent4B = new ActivityEvent<>(activityNameB, time5, duration2);
 
-        glue.registry().addActivityEvent(activityEvent5A);
-        glue.registry().addActivityEvent(activityEvent4B);
+        eventLog.addEvent(activityEvent5A);
+        eventLog.addEvent(activityEvent4B);
 
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
         allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
 
         shouldNotContain = new ArrayList<>();
@@ -470,10 +471,10 @@ public class DataModelTest {
         ActivityEvent<?> activityEvent6A = new ActivityEvent<>(activityNameA, time6, duration1);
         ActivityEvent<?> activityEvent5B = new ActivityEvent<>(activityNameB, time7, duration2);
 
-        glue.registry().addActivityEvent(activityEvent6A);
-        glue.registry().addActivityEvent(activityEvent5B);
+        eventLog.addEvent(activityEvent6A);
+        eventLog.addEvent(activityEvent5B);
 
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
         allAEqualB = activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
 
         shouldNotContain = new ArrayList<>();
@@ -502,13 +503,13 @@ public class DataModelTest {
         ActivityEvent<?> activityEvent1B = new ActivityEvent<>(activityNameB, time1, duration1);
         ActivityEvent<?> activityEvent2B = new ActivityEvent<>(activityNameB, time2, duration1);
 
-        glue.registry().addActivityEvent(activityEvent1A);
-        glue.registry().addActivityEvent(activityEvent2A);
-        glue.registry().addActivityEvent(activityEvent1B);
-        glue.registry().addActivityEvent(activityEvent2B);
+        eventLog.addEvent(activityEvent1A);
+        eventLog.addEvent(activityEvent2A);
+        eventLog.addEvent(activityEvent1B);
+        eventLog.addEvent(activityEvent2B);
 
         ActivityQuerier activityQuerier = new ActivityQuerier();
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
 
         Constraint whichAAndBAreEqual = () -> activityQuerier.allInstacesAAndBAreEqual(activityNameA, activityNameB);
         Constraint whenAOccurring = () -> activityQuerier.whenActivityExists(activityNameA);
@@ -520,8 +521,9 @@ public class DataModelTest {
         assertEquals(violatingInstancesOfAAndB.getWindows().size(), 0);
 
         ActivityEvent<?> activityEvent3A = new ActivityEvent<>(activityNameA, time3, duration2);
-        glue.registry().addActivityEvent(activityEvent3A);
-        activityQuerier.provideActivityEventMap(glue.registry().getCompleteActivityEventMap());
+
+        eventLog.addEvent(activityEvent3A);
+        activityQuerier.provideActivityEventMap(eventLog.getCompleteActivityMap());
 
         assertEquals(violatingInstancesOfAAndB.getWindows().size(), 1);
         assertEquals(violatingInstancesOfAAndB.getWindows().get(0).start, time3);
