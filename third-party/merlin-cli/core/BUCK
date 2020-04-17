@@ -5,6 +5,12 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
+     name = 'gson-jar-2.8.6',
+     binary_jar = 'gson-jar-2.8.6.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
      name = 'commons-lang3-jar-3.7',
      binary_jar = 'commons-lang3-jar-3.7.jar',
      visibility = ['PUBLIC']
@@ -13,12 +19,6 @@ prebuilt_jar(
 prebuilt_jar(
      name = 'javax.json-bundle-1.1',
      binary_jar = 'javax.json-bundle-1.1.jar',
-     visibility = ['PUBLIC']
-)
-
-prebuilt_jar(
-     name = 'gson-jar-2.8.2',
-     binary_jar = 'gson-jar-2.8.2.jar',
      visibility = ['PUBLIC']
 )
 
@@ -56,9 +56,9 @@ java_library(
      name = 'merlin-cli',
      exported_deps = [
           ":httpclient-jar-4.5.6",
+          ":gson-jar-2.8.6",
           ":commons-lang3-jar-3.7",
           ":javax.json-bundle-1.1",
-          ":gson-jar-2.8.2",
           ":httpmime-jar-4.5.3",
           ":commons-logging-jar-1.2",
           ":commons-codec-jar-1.10",

@@ -7,7 +7,7 @@
     <dependencies>
         <dependency org="org.apache.httpcomponents" name="httpclient" rev="4.5.6" conf="core->default"/>
         <dependency org="org.apache.httpcomponents" name="httpmime" rev="4.5.3" conf="core->default"/>
-        <dependency org="com.google.code.gson" name="gson" rev="2.8.2" conf="core->default"/>
+        <dependency org="com.google.code.gson" name="gson" rev="2.8.6" conf="core->default"/>
         <dependency org="org.glassfish" name="javax.json" rev="1.1" conf="core->default"/>
         <dependency org="commons-logging" name="commons-logging" rev="1.2" conf="core->default"/>
         <dependency org="org.apache.commons" name="commons-lang3" rev="3.7" conf="core->default"/>
