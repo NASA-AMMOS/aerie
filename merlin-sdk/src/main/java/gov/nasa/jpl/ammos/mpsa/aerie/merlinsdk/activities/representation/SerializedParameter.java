@@ -2,15 +2,10 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 
 /**
  * A serializable representation of an adaptation-specific activity parameter domain object.
