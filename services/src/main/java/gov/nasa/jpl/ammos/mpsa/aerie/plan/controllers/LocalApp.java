@@ -128,6 +128,7 @@ public final class LocalApp implements App {
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }
 
+  @Override
   public SimulationResults getSimulationResultsForPlan(String planId) throws NoSuchPlanException {
     final var plan = this.planRepository.getPlan(planId);
 
