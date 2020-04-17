@@ -79,9 +79,6 @@ public abstract class ParameterSchema {
     };
   }
 
-  @Deprecated(forRemoval = true)
-  public static ParameterSchema ofDouble() { return ofReal(); }
-
   /**
    * Creates a {@link ParameterSchema} representing an integral number parameter type.
    *
@@ -178,9 +175,6 @@ public abstract class ParameterSchema {
   public static final ParameterSchema BOOLEAN = ofBoolean();
   public static final ParameterSchema STRING = ofString();
 
-  @Deprecated(forRemoval = true)
-  public static final ParameterSchema DOUBLE = REAL;
-
   /**
    * Provides a default case on top of the base Visitor.
    *
@@ -255,11 +249,6 @@ public abstract class ParameterSchema {
         return Optional.of(Unit.UNIT);
       }
     });
-  }
-
-  @Deprecated(forRemoval = true)
-  public Optional<Unit> asDouble() {
-    return asReal();
   }
 
   /**
