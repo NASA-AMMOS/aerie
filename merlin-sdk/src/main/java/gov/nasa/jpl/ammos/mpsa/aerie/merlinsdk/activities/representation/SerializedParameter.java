@@ -80,16 +80,9 @@ public abstract class SerializedParameter {
    */
   private static SerializedParameter ofNull() {
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onNull();
-      }
-      public String toString() {
-        return "null";
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && ((SerializedParameter)other).isNull());
       }
     };
   }
@@ -102,16 +95,9 @@ public abstract class SerializedParameter {
    */
   public static SerializedParameter of(final double value) {
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onReal(value);
-      }
-      public String toString() {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asReal(), Optional.of(value)));
       }
     };
   }
@@ -124,16 +110,9 @@ public abstract class SerializedParameter {
    */
   public static SerializedParameter of(final long value) {
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onInt(value);
-      }
-      public String toString() {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asInt(), Optional.of(value)));
       }
     };
   }
@@ -146,16 +125,9 @@ public abstract class SerializedParameter {
    */
   public static SerializedParameter of(final boolean value) {
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onBoolean(value);
-      }
-      public String toString() {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asBoolean(), Optional.of(value)));
       }
     };
   }
@@ -169,16 +141,9 @@ public abstract class SerializedParameter {
   public static SerializedParameter of(final String value) {
     Objects.requireNonNull(value);
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onString(value);
-      }
-      public String toString() {
-        return value;
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asString(), Optional.of(value)));
       }
     };
   }
@@ -193,16 +158,9 @@ public abstract class SerializedParameter {
     for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onMap(value);
-      }
-      public String toString() {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asMap(), Optional.of(value)));
       }
     };
   }
@@ -217,16 +175,9 @@ public abstract class SerializedParameter {
     for (final var v : Objects.requireNonNull(list)) Objects.requireNonNull(v);
     final var value = List.copyOf(list);
     return new SerializedParameter() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onList(value);
-      }
-      public String toString() {
-        return String.valueOf(value);
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof SerializedParameter) && Objects.equals(((SerializedParameter)other).asList(), Optional.of(value)));
       }
     };
   }
@@ -408,6 +359,89 @@ public abstract class SerializedParameter {
       @Override
       public Optional<List<SerializedParameter>> onList(final List<SerializedParameter> value) {
         return Optional.of(value);
+      }
+    });
+  }
+
+  @Override
+  public String toString() {
+    return this.match(new Visitor<>() {
+      @Override
+      public String onNull() {
+        return "null";
+      }
+
+      @Override
+      public String onReal(final double value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onInt(final long value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onBoolean(final boolean value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onString(final String value) {
+        return value;
+      }
+
+      @Override
+      public String onMap(final Map<String, SerializedParameter> value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onList(final List<SerializedParameter> value) {
+        return String.valueOf(value);
+      }
+    });
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (!(o instanceof SerializedParameter)) return false;
+    final var other = (SerializedParameter) o;
+
+    return this.match(new Visitor<>() {
+      @Override
+      public Boolean onNull() {
+        return other.isNull();
+      }
+
+      @Override
+      public Boolean onReal(final double value) {
+        return other.asReal().map(x -> x == value).orElse(false);
+      }
+
+      @Override
+      public Boolean onInt(final long value) {
+        return other.asInt().map(x -> x == value).orElse(false);
+      }
+
+      @Override
+      public Boolean onBoolean(final boolean value) {
+        return other.asBoolean().map(x -> x == value).orElse(false);
+      }
+
+      @Override
+      public Boolean onString(final String value) {
+        return other.asString().map(x -> Objects.equals(x, value)).orElse(false);
+      }
+
+      @Override
+      public Boolean onMap(final Map<String, SerializedParameter> value) {
+        return other.asMap().map(x -> Objects.equals(x, value)).orElse(false);
+      }
+
+      @Override
+      public Boolean onList(final List<SerializedParameter> value) {
+        return other.asList().map(x -> Objects.equals(x, value)).orElse(false);
       }
     });
   }
