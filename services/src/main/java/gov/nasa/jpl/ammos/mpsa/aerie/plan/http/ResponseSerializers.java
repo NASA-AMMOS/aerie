@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
@@ -8,11 +9,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.CreatedEntity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -83,6 +88,31 @@ public final class ResponseSerializers {
   public static JsonValue serializeCreatedEntity(final CreatedEntity entity) {
     return Json.createObjectBuilder()
         .add("id", serializeString(entity.id))
+        .build();
+  }
+
+  public static JsonValue serializeTimestamp(final Instant instant) {
+    final var formattedTimestamp = DateTimeFormatter
+        .ofPattern("uuuu-DDD'T'HH:mm:ss[.n]")
+        .withZone(ZoneOffset.UTC)
+        .format(instant);
+
+    return Json.createValue(formattedTimestamp);
+  }
+
+  public static JsonValue serializeDuration(final Duration timestamp) {
+    return Json.createValue(timestamp.durationInMicroseconds);
+  }
+
+  public static JsonValue serializeSimulationResults(final SimulationResults results) {
+    if (results == null) return JsonValue.NULL;
+
+    return Json.createObjectBuilder()
+        .add("start", serializeTimestamp(results.startTime))
+        .add("times", serializeList(element -> serializeDuration(element), results.timestamps))
+        .add("resources", serializeMap(
+            elements -> serializeList(element -> serializeActivityParameter(element), elements),
+            results.timelines))
         .build();
   }
 
