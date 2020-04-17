@@ -84,6 +84,7 @@ public final class RemoteAdaptationService implements AdaptationService {
     }
   }
 
+  @Override
   public SimulationResults simulatePlan(final Plan plan) throws NoSuchAdaptationException {
     final var startTime = timestampToInstant(plan.startTimestamp);
 
