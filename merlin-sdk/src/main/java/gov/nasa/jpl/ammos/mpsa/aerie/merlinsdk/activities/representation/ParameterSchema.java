@@ -235,47 +235,56 @@ public abstract class ParameterSchema {
   public static final ParameterSchema DOUBLE = REAL;
 
   /**
-   * A helper base class implementing {@code Visitor<Optional<T>>} for any result type {@code T}.
+   * Provides a default case on top of the base Visitor.
    *
-   * This class allows you to write a Visitor that operates only on a subset of the possible
-   * kinds of value contained by a {@link ParameterSchema}. All others are sent to {@code Optional.empty()}
-   * by default. This default default behavior may be changed by overriding {@code onDefault}.
+   * This interface routes all cases to the `onDefault` implementation by default. Each case may be overridden
+   * independently to give distinct behavior.
    *
    * @param <T> The return type of the operation represented by this {@link Visitor}.
    */
-  public static abstract class DefaultVisitor<T> implements Visitor<Optional<T>> {
-    protected Optional<T> onDefault() {
+  public static abstract class DefaultVisitor<T> implements Visitor<T> {
+    protected abstract T onDefault();
+
+    @Override
+    public T onReal() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onInt() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onBoolean() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onString() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onList(final ParameterSchema value) {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onMap(final Map<String, ParameterSchema> value) {
+      return this.onDefault();
+    }
+  }
+
+  /**
+   * A helper base class implementing {@code Visitor<Optional<T>>} for any result type {@code T}.
+   *
+   * By default, all variants return {@code Optional.empty}.
+   */
+  public static class OptionalVisitor<T> extends DefaultVisitor<Optional<T>> {
+    @Override
+    public final Optional<T> onDefault() {
       return Optional.empty();
-    }
-
-    @Override
-    public Optional<T> onReal() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onInt() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onBoolean() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onString() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onList(final ParameterSchema value) {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onMap(final Map<String, ParameterSchema> value) {
-      return onDefault();
     }
 
     @Override
@@ -293,7 +302,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asReal() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onReal() {
         return Optional.of(Unit.UNIT);
@@ -313,7 +322,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asInt() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onInt() {
         return Optional.of(Unit.UNIT);
@@ -328,7 +337,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asBoolean() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onBoolean() {
         return Optional.of(Unit.UNIT);
@@ -343,7 +352,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asString() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onString() {
         return Optional.of(Unit.UNIT);
@@ -358,7 +367,7 @@ public abstract class ParameterSchema {
    *   object represents a list parameter type. Otherwise, returns an empty {@link Optional}.
    */
   public Optional<ParameterSchema> asList() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<ParameterSchema> onList(final ParameterSchema value) {
         return Optional.of(value);
@@ -373,7 +382,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Map<String, ParameterSchema>> asMap() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Map<String, ParameterSchema>> onMap(final Map<String, ParameterSchema> value) {
         return Optional.of(value);
@@ -388,9 +397,9 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}
    */
   public Optional<Class<? extends Enum<?>>> asEnum() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Class<? extends Enum<?>>> onEnum(Class<? extends Enum<?>> enumeration) {
+      public Optional<Class<? extends Enum<?>>> onEnum(final Class<? extends Enum<?>> enumeration) {
         return Optional.of(enumeration);
       }
     });
