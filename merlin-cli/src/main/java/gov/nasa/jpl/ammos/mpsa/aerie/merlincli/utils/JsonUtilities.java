@@ -25,8 +25,7 @@ public class JsonUtilities {
      */
     public static String prettify(String json) {
         Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-        JsonParser jp = new JsonParser();
-        JsonElement je = jp.parse(json);
+        JsonElement je = JsonParser.parseString(json);
         return gson.toJson(je);
     }
 
