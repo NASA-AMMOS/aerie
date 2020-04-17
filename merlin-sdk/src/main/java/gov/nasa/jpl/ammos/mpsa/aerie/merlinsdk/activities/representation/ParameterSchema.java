@@ -184,6 +184,7 @@ public abstract class ParameterSchema {
    * @return A new {@link ParameterSchema} representing a heterogeneous set of named {@link ParameterSchema}s.
    */
   public static ParameterSchema ofMap(final Map<String, ParameterSchema> map) {
+    for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
     return new ParameterSchema() {
       public <T> T match(final Visitor<T> visitor) {
@@ -206,6 +207,7 @@ public abstract class ParameterSchema {
    * @return A new {@link ParameterSchema} representing an {@link Enum} parameter type.
    */
   public static ParameterSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
+    Objects.requireNonNull(enumeration);
     return new ParameterSchema() {
       public <T> T match(Visitor<T> visitor) {
         return visitor.onEnum(enumeration);
