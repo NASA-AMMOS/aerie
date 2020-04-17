@@ -148,7 +148,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public void removeActivityInstanceById(String planId, String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+  public void removeActivityInstanceById(final String planId, final String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
@@ -157,7 +157,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
+  public void updateActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
@@ -168,7 +168,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
+  public void replaceActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
