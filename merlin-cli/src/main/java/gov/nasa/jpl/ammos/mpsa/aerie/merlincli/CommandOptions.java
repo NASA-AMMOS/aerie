@@ -83,7 +83,7 @@ public class CommandOptions {
         try {
             cmd = (new DefaultParser()).parse(options, args);
         } catch (ParseException e) {
-            System.err.println("Failed to parse command line properties: " + e.getMessage());
+            System.out.println("Failed to parse command line properties: " + e.getMessage());
             return false;
         }
 
@@ -120,7 +120,7 @@ public class CommandOptions {
                     try {
                         adaptation = Adaptation.fromTokens(tokens);
                     } catch (InvalidTokenException e) {
-                        System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+                        System.out.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
                         return false;
                     }
 
@@ -204,7 +204,7 @@ public class CommandOptions {
                     return false;
             }
         } catch (InvalidNumberOfArgsException e) {
-            System.err.println("Failed to parse command line properties: " + e);
+            System.out.println("Failed to parse command line properties: " + e);
             return false;
         }
     }

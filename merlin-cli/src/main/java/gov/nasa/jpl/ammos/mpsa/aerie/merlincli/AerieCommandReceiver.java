@@ -41,7 +41,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             planJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
         } catch (IOException e) {
-            System.err.println(e);
+            System.out.println(String.format("Plan creation failed: %s", e.getMessage()));
             return;
         }
 
@@ -49,7 +49,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             id = this.planRepository.createPlan(planJson);
         } catch (PlanRepository.InvalidPlanException | PlanRepository.InvalidJsonException e) {
-            System.err.println(e);
+            System.out.println(String.format("Plan creation failed: %s", e.getMessage()));
             return;
         }
 
@@ -62,7 +62,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             planUpdateJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
         } catch (IOException e) {
-            System.err.println(e);
+            System.out.println(String.format("Plan update failed: %s", e.getMessage()));
             return;
         }
 
@@ -75,7 +75,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             plan = PlanDetail.fromTokens(tokens);
         } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+            System.out.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return;
         }
 
@@ -87,7 +87,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             this.planRepository.updatePlan(planId, planUpdateJson);
         } catch (PlanRepository.InvalidPlanException | PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException e) {
-            System.err.println(e);
+            System.out.println(String.format("Plan update failed: %s", e.getMessage()));
             return;
         }
 
@@ -99,7 +99,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             this.planRepository.deletePlan(planId);
         } catch (PlanRepository.PlanNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("Plan delete failed: %s", e.getMessage()));
             return;
         }
 
@@ -109,14 +109,14 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     @Override
     public void downloadPlan(String planId, String outName) {
         if (Files.exists(Path.of(outName))) {
-            System.err.println(String.format("File %s already exists.", outName));
+            System.out.println(String.format("File %s already exists.", outName));
             return;
         }
 
         try {
             this.planRepository.downloadPlan(planId, outName);
         } catch (PlanRepository.PlanNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("Plan download failed: %s", e.getMessage()));
             return;
         }
 
@@ -129,14 +129,14 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             instanceListJson = new String(Files.readAllBytes(Paths.get(path)), "UTF-8");
         } catch (IOException e) {
-            System.err.println(e);
+            System.out.println(String.format("Add activity instance failed: %s", e.getMessage()));
             return;
         }
 
         try {
             this.planRepository.appendActivityInstances(planId, instanceListJson);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidPlanException e) {
-            System.err.println(e);
+            System.out.println(String.format("Add activity instance failed: %s", e.getMessage()));
             return;
         }
 
@@ -149,7 +149,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             activityInstanceJson = this.planRepository.getActivityInstance(planId, activityId);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("Display activity instance failed: %s", e.getMessage()));
             return;
         }
 
@@ -163,7 +163,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             activityInstance = ActivityInstance.fromTokens(tokens);
         } catch (InvalidTokenException e) {
-            System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+            System.out.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
             return;
         }
 
@@ -172,7 +172,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             this.planRepository.updateActivityInstance(planId, activityId, activityUpdateJson);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException | PlanRepository.InvalidJsonException | PlanRepository.InvalidActivityInstanceException e) {
-            System.err.println(e);
+            System.out.println(String.format("Update activity instance failed: %s", e.getMessage()));
             return;
         }
 
@@ -184,7 +184,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             this.planRepository.deleteActivityInstance(planId, activityId);
         } catch (PlanRepository.PlanNotFoundException | PlanRepository.ActivityInstanceNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("Delete activity instance failed: %s", e.getMessage()));
             return;
         }
 
@@ -202,7 +202,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     @Override
     public String createAdaptation(Path path, Adaptation adaptation) {
         if (!Files.exists(path)) {
-            System.err.println(String.format("File not found: %s", path));
+            System.out.println(String.format("File not found: %s", path));
             return null;
         }
 
@@ -210,7 +210,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             id = this.adaptationRepository.createAdaptation(adaptation, path.toFile());
         } catch (AdaptationRepository.InvalidAdaptationException e) {
-            System.err.println(e);
+            System.out.println(String.format("Create adaptation failed: %s", e.getMessage()));
             return null;
         }
 
@@ -223,7 +223,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             this.adaptationRepository.deleteAdaptation(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("Delete plan failed: %s", e.getMessage()));
             return;
         }
 
@@ -236,7 +236,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             adaptation = this.adaptationRepository.getAdaptation(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("Display adaptation failed: %s", e.getMessage()));
             return;
         }
 
@@ -258,7 +258,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             activityTypeListJson = this.adaptationRepository.getActivityTypes(adaptationId);
         } catch (AdaptationRepository.AdaptationNotFoundException e) {
-            System.err.println(e);
+            System.out.println(String.format("List activity types failed: %s", e.getMessage()));
             return;
         }
 
@@ -272,7 +272,7 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         try {
             activityTypeJson = this.adaptationRepository.getActivityType(adaptationId, activityType);
         } catch (AdaptationRepository.AdaptationNotFoundException | AdaptationRepository.ActivityTypeNotDefinedException e) {
-            System.err.println(e);
+            System.out.println(String.format("Display activity type failed: %s", e.getMessage()));
             return;
         }
 
@@ -289,10 +289,10 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
             gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation adaptation = AdaptationParser.parseDirectory(Path.of(dir));
             plan = ApfParser.parseFile(Path.of(input), adaptation);
         } catch (AdaptationParsingException | PlanParsingException e) {
-            System.err.println(e.getMessage());
+            System.out.println(String.format("Conversion of apf file failed: %s", e.getMessage()));
             return;
         } catch (DirectoryNotFoundException e) {
-            System.err.println(String.format("Adaptation directory not found: %s", e.getMessage()));
+            System.out.println(String.format("Conversion of apf file failed: adaptation directory %s not found", e.getMessage()));
             return;
         }
 
