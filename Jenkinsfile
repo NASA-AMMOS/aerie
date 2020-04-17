@@ -120,8 +120,28 @@ pipeline {
                 script {
                     def statusCode = sh returnStatus: true, script:
                     """
-                    # Tar up all build artifacts.
-                    find . -name "*.jar" ! -path "**/third-party/*" ! -path "**/.buckd/*"  ! -path "**/*test*/*" ! -name "*abi.jar" | tar -czf aerie-${ARTIFACT_TAG}.tar.gz -T -
+                    echo ${BUILD_NUMBER}
+
+                    # For adaptations
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations && \
+                    find . -name "merlin-multimission-models.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\; && \
+                    find . -name "sample-adaptation.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\; && \
+                    find . -name "banananation.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\;
+
+                    # For services
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services && \
+                    find . -name "plan-service.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/services/ \\; && \
+                    find . -name "adaptation-service.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/services/ \\;
+
+                    # For merlin-sdk
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk && \
+                    find . -name "merlin-sdk.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/ \\;
+
+                    # For merlin-cli
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli && \
+                    find . -name "merlin-cli.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/ \\;
+
+                    tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
                     """
 
                     if (statusCode > 0) {
@@ -231,6 +251,9 @@ pipeline {
 
             echo 'Logging out docker'
             sh 'docker logout || true'
+
+            echo 'Remove temp folder'
+            sh 'rm -rf /tmp/aerie-jenkins'
         }
 
         unstable {
