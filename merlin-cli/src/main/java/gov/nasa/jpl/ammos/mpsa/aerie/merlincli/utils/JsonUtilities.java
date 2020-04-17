@@ -139,14 +139,16 @@ public class JsonUtilities {
         return parseAdaptationJson(new String(jsonStream.readAllBytes()));
     }
 
-    public static String getErrorMessageFromFailureResponse(String responseBody) {
+    public static String getErrorMessageFromFailureResponse(String responseBody) throws ResponseWithoutErrorMessageException {
         var bodyProperties = Optional.ofNullable(new Gson().fromJson(responseBody, Properties.class));
         return bodyProperties
                 .map(p -> p.getProperty("message"))
-                .orElse("Reason for failure unknown");
+                .orElseThrow(ResponseWithoutErrorMessageException::new);
     }
 
-    public static String getErrorMessageFromFailureResponse(InputStream jsonStream) throws IOException {
+    public static String getErrorMessageFromFailureResponse(InputStream jsonStream) throws IOException, ResponseWithoutErrorMessageException {
         return getErrorMessageFromFailureResponse(new String(jsonStream.readAllBytes()));
     }
+
+    public static class ResponseWithoutErrorMessageException extends Exception {}
 }

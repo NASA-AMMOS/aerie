@@ -29,7 +29,7 @@ public class HttpUtilities {
     public static String getErrorMessage(HttpResponse response, String defaultMessage) {
         try {
             return JsonUtilities.getErrorMessageFromFailureResponse(response.getEntity().getContent());
-        } catch (IOException | NullPointerException e) {
+        } catch (IOException | JsonUtilities.ResponseWithoutErrorMessageException e) {
             return defaultMessage;
         }
     }
