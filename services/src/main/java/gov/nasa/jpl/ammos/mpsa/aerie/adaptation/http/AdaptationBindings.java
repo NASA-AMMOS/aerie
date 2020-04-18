@@ -192,7 +192,7 @@ public final class AdaptationBindings implements Plugin {
         } catch (final JsonParsingException ex) {
             // Request entity is not valid JSON.
             // TODO: report this failure with a better response body
-            ctx.status(400).result(Json.createObjectBuilder().build().toString());
+            ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-json").build().toString());
         } catch (final InvalidEntityException ex) {
             // Request entity does not have the expected shape.
             ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
@@ -202,7 +202,7 @@ public final class AdaptationBindings implements Plugin {
         } catch (final Adaptation.UnconstructableActivityInstanceException | Adaptation.NoSuchActivityTypeException e) {
             // The adaptation could not instantiate the provided activities.
             // TODO: report these failures with a better response body
-            ctx.status(400).result(Json.createObjectBuilder().build().toString());
+            ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-activities").build().toString());
         }
       }
 

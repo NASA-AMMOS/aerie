@@ -409,13 +409,13 @@ public final class RemotePlanRepository implements PlanRepository {
 
   private static <T> Stream<T> documentStream(final MongoIterable<T> documents) {
     // Eagerly construct a new iterator so we can close it after the stream is done.
-		final MongoCursor<T> cursor = documents.iterator();
-		// Wrap the fresh cursor in an Iterable so we can convert it to a Stream.
-		final Iterable<T> iterable = () -> cursor;
-		// Create a sequential stream that propagates closure to the cursor.
-		return StreamSupport
-			.stream(iterable.spliterator(), false)
-			.onClose(cursor::close);
+    final MongoCursor<T> cursor = documents.iterator();
+    // Wrap the fresh cursor in an Iterable so we can convert it to a Stream.
+    final Iterable<T> iterable = () -> cursor;
+    // Create a sequential stream that propagates closure to the cursor.
+    return StreamSupport
+    	.stream(iterable.spliterator(), false)
+    	.onClose(cursor::close);
   }
 
   private class MongoPlanTransaction implements PlanTransaction {

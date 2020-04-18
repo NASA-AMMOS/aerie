@@ -9,8 +9,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -148,7 +150,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public void removeActivityInstanceById(String planId, String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
+  public void removeActivityInstanceById(final String planId, final String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
@@ -157,7 +159,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
+  public void updateActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
@@ -168,7 +170,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
+  public void replaceActivityInstance(final String planId, final String activityInstanceId, final ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     } else if (!Objects.equals(activityInstanceId, EXISTENT_ACTIVITY_ID)) {
@@ -176,5 +178,14 @@ public final class StubApp implements App {
     } else if (Objects.equals(activityInstance, INVALID_ACTIVITY)) {
       throw new ValidationException(VALIDATION_ERRORS);
     }
+  }
+
+  @Override
+  public SimulationResults getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    return new SimulationResults(Instant.EPOCH, List.of(), Map.of());
   }
 }

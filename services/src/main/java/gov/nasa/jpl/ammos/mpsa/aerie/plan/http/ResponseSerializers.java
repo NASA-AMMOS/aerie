@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
@@ -8,30 +9,43 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.CreatedEntity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import javax.json.bind.JsonbException;
 import javax.json.stream.JsonParsingException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class ResponseSerializers {
+  public static <T> JsonValue serializeList(final Function<T, JsonValue> elementSerializer, final List<T> elements) {
+    if (elements == null) return JsonValue.NULL;
+
+    final var builder = Json.createArrayBuilder();
+    for (final var element : elements) builder.add(elementSerializer.apply(element));
+    return builder.build();
+  }
+
+  public static <T> JsonValue serializeMap(final Function<T, JsonValue> fieldSerializer, final Map<String, T> fields) {
+    if (fields == null) return JsonValue.NULL;
+
+    final var builder = Json.createObjectBuilder();
+    for (final var entry : fields.entrySet()) builder.add(entry.getKey(), fieldSerializer.apply(entry.getValue()));
+    return builder.build();
+  }
+
   public static JsonValue serializeString(final String value) {
     if (value == null) return JsonValue.NULL;
     return Json.createValue(value);
   }
 
   public static JsonValue serializeStringList(final List<String> elements) {
-    if (elements == null) return JsonValue.NULL;
-
-    final var builder = Json.createArrayBuilder();
-    for (final var element : elements) {
-      builder.add(element);
-    }
-
-    return builder.build();
+    return serializeList(x -> serializeString(x), elements);
   }
 
   public static JsonValue serializeActivityParameter(final SerializedParameter parameter) {
@@ -40,14 +54,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityParameterMap(final Map<String, SerializedParameter> fields) {
-    if (fields == null) return JsonValue.NULL;
-
-    final var builder = Json.createObjectBuilder();
-    for (final var field : fields.entrySet()) {
-      builder.add(field.getKey(), serializeActivityParameter(field.getValue()));
-    }
-
-    return builder.build();
+    return serializeMap(x -> serializeActivityParameter(x), fields);
   }
 
   public static JsonValue serializeActivityInstance(final ActivityInstance activityInstance) {
@@ -61,11 +68,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityInstanceMap(final Map<String, ActivityInstance> fields) {
-    final var builder = Json.createObjectBuilder();
-    for (final var field : fields.entrySet()) {
-      builder.add(field.getKey(), serializeActivityInstance(field.getValue()));
-    }
-    return builder.build();
+    return serializeMap(x -> serializeActivityInstance(x), fields);
   }
 
   public static JsonValue serializePlan(final Plan plan) {
@@ -79,16 +82,37 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializePlanMap(final Map<String, Plan> fields) {
-    final var builder = Json.createObjectBuilder();
-    for (final var field : fields.entrySet()) {
-      builder.add(field.getKey(), serializePlan(field.getValue()));
-    }
-    return builder.build();
+    return serializeMap(x -> serializePlan(x), fields);
   }
 
   public static JsonValue serializeCreatedEntity(final CreatedEntity entity) {
     return Json.createObjectBuilder()
         .add("id", serializeString(entity.id))
+        .build();
+  }
+
+  public static JsonValue serializeTimestamp(final Instant instant) {
+    final var formattedTimestamp = DateTimeFormatter
+        .ofPattern("uuuu-DDD'T'HH:mm:ss[.n]")
+        .withZone(ZoneOffset.UTC)
+        .format(instant);
+
+    return Json.createValue(formattedTimestamp);
+  }
+
+  public static JsonValue serializeDuration(final Duration timestamp) {
+    return Json.createValue(timestamp.durationInMicroseconds);
+  }
+
+  public static JsonValue serializeSimulationResults(final SimulationResults results) {
+    if (results == null) return JsonValue.NULL;
+
+    return Json.createObjectBuilder()
+        .add("start", serializeTimestamp(results.startTime))
+        .add("times", serializeList(element -> serializeDuration(element), results.timestamps))
+        .add("resources", serializeMap(
+            elements -> serializeList(element -> serializeActivityParameter(element), elements),
+            results.timelines))
         .build();
   }
 
@@ -107,24 +131,14 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeValidationMessage(final List<Breadcrumb> breadcrumbs, final String message) {
-    final var breadcrumbsJson = Json.createArrayBuilder();
-    for (final var breadcrumb : breadcrumbs) {
-      breadcrumbsJson.add(serializeBreadcrumb(breadcrumb));
-    }
-
     return Json.createObjectBuilder()
-        .add("breadcrumbs", breadcrumbsJson)
+        .add("breadcrumbs", serializeList(ResponseSerializers::serializeBreadcrumb, breadcrumbs))
         .add("message", message)
         .build();
   }
 
   public static JsonValue serializeValidationMessages(final List<Pair<List<Breadcrumb>, String>> messages) {
-    final var messageJson = Json.createArrayBuilder();
-    for (final var entry : messages) {
-      messageJson.add(serializeValidationMessage(entry.getKey(), entry.getValue()));
-    }
-
-    return messageJson.build();
+    return serializeList(x -> serializeValidationMessage(x.getKey(), x.getValue()), messages);
   }
 
   public static JsonValue serializeValidationException(final ValidationException ex) {
@@ -159,12 +173,6 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeJsonbException(final JsonbException ex) {
-    return Json.createObjectBuilder()
-        .add("message", "invalid json")
-        .build();
-  }
-
   static private class ParameterSerializationVisitor implements SerializedParameter.Visitor<JsonValue> {
     @Override
     public JsonValue onNull() {
@@ -193,20 +201,12 @@ public final class ResponseSerializers {
 
     @Override
     public JsonValue onMap(final Map<String, SerializedParameter> fields) {
-      final var builder = Json.createObjectBuilder();
-      for (final var field : fields.entrySet()) {
-        builder.add(field.getKey(), field.getValue().match(this));
-      }
-      return builder.build();
+      return serializeMap(x -> x.match(this), fields);
     }
 
     @Override
     public JsonValue onList(final List<SerializedParameter> elements) {
-      final var builder = Json.createArrayBuilder();
-      for (final var element : elements) {
-        builder.add(element.match(this));
-      }
-      return builder.build();
+      return serializeList(x -> x.match(this), elements);
     }
   }
 }
