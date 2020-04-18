@@ -9,10 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -22,8 +20,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
 public class SimulationEngineTests {
-
-    public class DiverseStates implements StateContainer {
+    public static final class DiverseStates {
         public final SettableState<Double> floatState = new BasicState<>("FLOAT_STATE", 0.0);
         public final SettableState<String> stringState = new BasicState<>("STRING_STATE", "A");
         public final SettableState<List<Double>> arrayState = new BasicState<>("ARRAY_STATE", List.of(1.0, 0.0, 0.0));
@@ -34,9 +31,9 @@ public class SimulationEngineTests {
         }
     }
 
-    /* ------------------------ SIMULATION BASELINE TEST ------------------------ */
-    @ActivityType(name="ParentActivity", states=DiverseStates.class)
-    public class ParentActivity implements Activity<DiverseStates> {
+    private final DynamicCell<DiverseStates> statesRef = DynamicCell.inheritableCell();
+
+    public class ParentActivity implements Activity {
 
         @Parameter
         public Double floatValue = 0.0;
@@ -54,7 +51,9 @@ public class SimulationEngineTests {
         public Duration durationValue = Duration.of(10, TimeUnit.SECONDS);
 
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
+            final var states = statesRef.get();
+
             ChildActivity child = new ChildActivity();
             child.booleanValue = this.booleanValue;
             child.durationValue = this.durationValue;
@@ -69,9 +68,8 @@ public class SimulationEngineTests {
 
         }
     }
-    
-    @ActivityType(name="ChildActivity", states=DiverseStates.class)
-    public class ChildActivity implements Activity<DiverseStates> {
+
+    public class ChildActivity implements Activity {
 
         @Parameter
         public Boolean booleanValue = true;
@@ -80,7 +78,9 @@ public class SimulationEngineTests {
         public Duration durationValue = Duration.of(10, TimeUnit.SECONDS);
 
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
+            final var states = statesRef.get();
+
             delay(durationValue);
             states.booleanState.set(booleanValue);
         }
@@ -94,29 +94,31 @@ public class SimulationEngineTests {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
-        SimulationEngine.simulate(simStart, states, () -> {
-            for (int i = 0; i < 1000; i++) {
-                ParentActivity act = new ParentActivity();
-                act.floatValue = 1.0;
-                act.stringValue = "B";
-                act.arrayValue = List.of(0.0, 1.0, 0.0);
-                act.booleanValue = false;
-                act.durationValue = Duration.of(10, TimeUnit.SECONDS);
+        statesRef.setWithin(states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+                for (int i = 0; i < 1000; i++) {
+                    ParentActivity act = new ParentActivity();
+                    act.floatValue = 1.0;
+                    act.stringValue = "B";
+                    act.arrayValue = List.of(0.0, 1.0, 0.0);
+                    act.booleanValue = false;
+                    act.durationValue = Duration.of(10, TimeUnit.SECONDS);
 
-                defer(i, TimeUnit.HOURS, act);
-            }
+                    defer(i, TimeUnit.HOURS, act);
+                }
+            });
         });
     }
 
-    /* --------------------------- TIME-ORDERING TEST --------------------------- */
-    @ActivityType(name="TimeOrderingTestActivity", states=DiverseStates.class)
-    public class TimeOrderingTestActivity implements Activity<DiverseStates> {
+    public class TimeOrderingTestActivity implements Activity {
 
         @Parameter
         Double floatValue = 0.0;
 
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
+            final var states = statesRef.get();
+
             states.floatState.set(floatValue);
         }
     }
@@ -130,13 +132,15 @@ public class SimulationEngineTests {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
-        SimulationEngine.simulate(simStart, states, () -> {
-            for (int i = 1; i <= 3; i++) {
-                TimeOrderingTestActivity act = new TimeOrderingTestActivity();
-                act.floatValue = i * 1.0;
+        statesRef.setWithin(states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+                for (int i = 1; i <= 3; i++) {
+                    TimeOrderingTestActivity act = new TimeOrderingTestActivity();
+                    act.floatValue = i * 1.0;
 
-                defer(i, TimeUnit.HOURS, act);
-            }
+                    defer(i, TimeUnit.HOURS, act);
+                }
+            });
         });
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
@@ -147,12 +151,11 @@ public class SimulationEngineTests {
     }
 
     /* ------------------------------- DELAY TEST ------------------------------- */
-
-    @ActivityType(name="DelayTestActivity", states=DiverseStates.class)
-    public class DelayTestActivity implements Activity<DiverseStates> {
-
+    public class DelayTestActivity implements Activity {
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
+            final var states = statesRef.get();
+
             states.floatState.set(1.0);
             delay(1, TimeUnit.HOURS);
             states.floatState.set(2.0);
@@ -167,8 +170,10 @@ public class SimulationEngineTests {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
-        SimulationEngine.simulate(simStart, states, () -> {
-            defer(1, TimeUnit.HOURS, new DelayTestActivity());
+        statesRef.setWithin(states, () -> {
+            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+                defer(1, TimeUnit.HOURS, new DelayTestActivity());
+            });
         });
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
@@ -179,19 +184,18 @@ public class SimulationEngineTests {
 
     /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
 
-    @ActivityType(name="SpawnTestParentActivity", states=DiverseStates.class)
-    public class SpawnTestParentActivity implements Activity<DiverseStates> {
+    public class SpawnTestParentActivity implements Activity {
 
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
             spawn(new SpawnTestChildActivity());
         }
     }
 
-    @ActivityType(name="SpawnTestChildActivity", states=DiverseStates.class)
-    public class SpawnTestChildActivity implements Activity<DiverseStates> {
+    public class SpawnTestChildActivity implements Activity {
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
+            final var states = statesRef.get();
             states.floatState.set(5.0);
         }
     }
@@ -205,8 +209,10 @@ public class SimulationEngineTests {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
-        final var endTime = SimulationEngine.simulate(simStart, states, () -> {
-            defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
+        final var endTime = statesRef.setWithin(states, () -> {
+            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+                defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
+            });
         });
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
@@ -216,20 +222,19 @@ public class SimulationEngineTests {
 
     /* --------------------------- CALL ACTIVITY TEST --------------------------- */
 
-    @ActivityType(name="CallTestParentActivity", states=DiverseStates.class)
-    public class CallTestParentActivity implements Activity<DiverseStates> {
-
+    public class CallTestParentActivity implements Activity {
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
+            final var states = statesRef.get();
+
             spawn(new CallTestChildActivity()).await();
             states.floatState.set(5.0);
         }
     }
 
-    @ActivityType(name="CallTestChildActivity", states=DiverseStates.class)
-    public class CallTestChildActivity implements Activity<DiverseStates> {
+    public class CallTestChildActivity implements Activity {
         @Override
-        public void modelEffects(DiverseStates states) {
+        public void modelEffects() {
             delay(2, TimeUnit.HOURS);
         }
     }
@@ -242,8 +247,10 @@ public class SimulationEngineTests {
         final var simStart = SimulationInstant.ORIGIN;
         final var states = new DiverseStates();
 
-        final var endTime = SimulationEngine.simulate(simStart, states, () -> {
-            defer(1, TimeUnit.HOURS, new CallTestParentActivity());
+        final var endTime = statesRef.setWithin(states, () -> {
+            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+                defer(1, TimeUnit.HOURS, new CallTestParentActivity());
+            });
         });
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();

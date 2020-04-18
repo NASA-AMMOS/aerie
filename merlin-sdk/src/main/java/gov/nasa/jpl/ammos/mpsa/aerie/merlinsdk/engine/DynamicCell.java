@@ -7,7 +7,23 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
  * and allow access only via static methods that fetch the current value of the cell.
  */
 public final class DynamicCell<T> {
-    private final ThreadLocal<T> dynamicSlot = ThreadLocal.withInitial(() -> null);
+    private final ThreadLocal<T> dynamicSlot;
+
+    private DynamicCell(final ThreadLocal<T> dynamicSlot) {
+        this.dynamicSlot = dynamicSlot;
+    }
+
+    public DynamicCell() {
+        this(ThreadLocal.withInitial(() -> null));
+    }
+
+    /**
+     * Constructs an inheritable cell. Threads spawned in the scope of such a cell obtain their default value
+     * from this cell at the point the thread is spawned.
+     */
+    public static <T> DynamicCell<T> inheritableCell() {
+        return new DynamicCell<>(InheritableThreadLocal.withInitial(() -> null));
+    }
 
     /**
      * Gets the current value of the dynamic cell.

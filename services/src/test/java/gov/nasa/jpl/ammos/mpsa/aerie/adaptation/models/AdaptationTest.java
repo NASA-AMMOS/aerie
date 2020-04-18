@@ -22,7 +22,7 @@ public final class AdaptationTest {
     @BeforeEach
     public void initialize() throws AdaptationRepository.NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
         final AdaptationJar adaptationJar = fixtures.adaptationRepository.getAdaptation(fixtures.EXISTENT_ADAPTATION_ID);
-        final MerlinAdaptation<?> rawAdaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
+        final MerlinAdaptation rawAdaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
 
         this.adaptation = new Adaptation(rawAdaptation);
     }
@@ -74,7 +74,7 @@ public final class AdaptationTest {
             Map.of("biteSize", SerializedParameter.of(1.0)));
 
         // WHEN
-        final Activity<?> activityInstance = adaptation.instantiateActivity(serializedActivity);
+        final Activity activityInstance = adaptation.instantiateActivity(serializedActivity);
 
         // THEN
         assertThat(activityInstance).isNotNull();

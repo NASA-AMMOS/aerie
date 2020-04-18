@@ -136,51 +136,48 @@ public class OccultationsTimesModelTest {
         earthMoonSunOccultationsModel.setObserver(Body.EARTH);
         earthMoonSunOccultationsModel.setStepSize(Duration.fromMinutes(3));
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(earthMoonSunOccultationsModel),
-            () -> {
-                List<Pair<Time, Time>> occTimes = earthMoonSunOccultationsModel.get();
-                assertEquals("1 occultation window expected; '" + occTimes.size() + "' received.", 1, occTimes.size());
+        SimulationEngine.simulate(startTime, List.of(earthMoonSunOccultationsModel), () -> {
+            List<Pair<Time, Time>> occTimes = earthMoonSunOccultationsModel.get();
+            assertEquals("1 occultation window expected; '" + occTimes.size() + "' received.", 1, occTimes.size());
 
-                Time expectedStart = Time.fromTimezoneString("2001-348T20:10:14.195952", "UTC");
-                Time expectedEnd = Time.fromTimezoneString("2001-348T21:35:50.317994", "UTC");
+            Time expectedStart = Time.fromTimezoneString("2001-348T20:10:14.195952", "UTC");
+            Time expectedEnd = Time.fromTimezoneString("2001-348T21:35:50.317994", "UTC");
 
-                Time actualStart = occTimes.get(0).getLeft();
-                Time actualEnd = occTimes.get(0).getRight();
+            Time actualStart = occTimes.get(0).getLeft();
+            Time actualEnd = occTimes.get(0).getRight();
 
-                // assert that the difference between each SPICE-predicted occultation and actual
-                // occultation is less than three minutes (our stepSize)
+            // assert that the difference between each SPICE-predicted occultation and actual
+            // occultation is less than three minutes (our stepSize)
 
-                Duration startDifference = expectedStart.absoluteDifference(actualStart);
-                String message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
-                        + "' should be less than 3 minutes.";
-                assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+            Duration startDifference = expectedStart.absoluteDifference(actualStart);
+            String message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
+                    + "' should be less than 3 minutes.";
+            assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
 
-                Duration endDifference = expectedEnd.absoluteDifference(actualEnd);
-                message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
-                        + "' should be less than 3 minutes.";
-                assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+            Duration endDifference = expectedEnd.absoluteDifference(actualEnd);
+            message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
+                    + "' should be less than 3 minutes.";
+            assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
 
-                // change Moon reference frame (should not impact correct time much)
-                earthMoonSunOccultationsModel.setFrontFrame(ReferenceFrame.MOON_PA);
-                occTimes = earthMoonSunOccultationsModel.get();
+            // change Moon reference frame (should not impact correct time much)
+            earthMoonSunOccultationsModel.setFrontFrame(ReferenceFrame.MOON_PA);
+            occTimes = earthMoonSunOccultationsModel.get();
 
-                actualStart = occTimes.get(0).getLeft();
-                actualEnd = occTimes.get(0).getRight();
+            actualStart = occTimes.get(0).getLeft();
+            actualEnd = occTimes.get(0).getRight();
 
-                // assert that the difference between each SPICE-predicted occultation and actual
-                // occultation is less than three minutes (our stepSize)
+            // assert that the difference between each SPICE-predicted occultation and actual
+            // occultation is less than three minutes (our stepSize)
 
-                startDifference = expectedStart.absoluteDifference(actualStart);
-                message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
-                        + "' should be less than 3 minutes.";
-                assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
+            startDifference = expectedStart.absoluteDifference(actualStart);
+            message = "Expected start '" + expectedStart.toString() + "' - Actual start '" + actualStart.toString()
+                    + "' should be less than 3 minutes.";
+            assertTrue(message, startDifference.lessThan(Duration.fromMinutes(3)));
 
-                endDifference = expectedEnd.absoluteDifference(actualEnd);
-                message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
-                        + "' should be less than 3 minutes.";
-                assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
-            });
+            endDifference = expectedEnd.absoluteDifference(actualEnd);
+            message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
+                    + "' should be less than 3 minutes.";
+            assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
+        });
     }
 }

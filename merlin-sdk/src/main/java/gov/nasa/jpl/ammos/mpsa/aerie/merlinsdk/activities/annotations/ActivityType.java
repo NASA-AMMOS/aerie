@@ -14,6 +14,5 @@ import java.lang.annotation.Target;
 public @interface ActivityType {
   /// The serialized name of this activity type.
   String name();
-  Class<?> states();
   boolean generateMapper() default false;
 }

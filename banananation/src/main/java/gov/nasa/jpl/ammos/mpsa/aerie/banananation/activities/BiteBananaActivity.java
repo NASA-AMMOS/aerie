@@ -4,8 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +16,8 @@ import java.util.List;
  * @subsystem fruit
  * @contact John Doe
  */
-@ActivityType(name="BiteBanana", states=BananaStates.class, generateMapper=true)
-public final class BiteBananaActivity implements Activity<BananaStates> {
+@ActivityType(name="BiteBanana", generateMapper=true)
+public final class BiteBananaActivity implements Activity {
   @Parameter
   public double biteSize = 1.0;
 
@@ -35,8 +33,9 @@ public final class BiteBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(BananaStates states) {
-    SettableState<Double> fruitState = states.fruitState;
-    fruitState.set(fruitState.get() - biteSize);
+  public void modelEffects() {
+    final var states = BananaStates.get();
+
+    states.fruitState.set(states.fruitState.get() - biteSize);
   }
 }

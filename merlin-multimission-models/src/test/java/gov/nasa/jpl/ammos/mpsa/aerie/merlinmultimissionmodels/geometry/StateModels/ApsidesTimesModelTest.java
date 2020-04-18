@@ -94,42 +94,39 @@ public class ApsidesTimesModelTest {
         earthSunApsidesModel.setObserver(Body.EARTH);
         earthSunApsidesModel.setApsisType(Apsis.APOAPSIS);
 
-        SimulationEngine.simulate(
-            startTime,
-            () -> List.of(earthSunApsidesModel),
-            () -> {
-                List<Time> aphelionTimes = earthSunApsidesModel.get();
-                assertEquals("1 aphelion time expected; '" + aphelionTimes.size() + "' received.", 1, aphelionTimes.size());
+        SimulationEngine.simulate(startTime, List.of(earthSunApsidesModel), () -> {
+            List<Time> aphelionTimes = earthSunApsidesModel.get();
+            assertEquals("1 aphelion time expected; '" + aphelionTimes.size() + "' received.", 1, aphelionTimes.size());
 
-                for (int i = 0; i < aphelionTimes.size(); i++) {
-                    Time expected = expectedAphelionTimes.get(i);
-                    Time actual = aphelionTimes.get(i);
-                    Duration difference = expected.absoluteDifference(actual);
+            for (int i = 0; i < aphelionTimes.size(); i++) {
+                Time expected = expectedAphelionTimes.get(i);
+                Time actual = aphelionTimes.get(i);
+                Duration difference = expected.absoluteDifference(actual);
 
-                    // assert that the difference between each SPICE-predicted perihelion and actual
-                    // perihelion is less than one minute (our stepSize)
-                    String message = "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
-                        + "' should be less than 1 minute.";
-                    assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
-                }
+                // assert that the difference between each SPICE-predicted perihelion and actual
+                // perihelion is less than one minute (our stepSize)
+                String message = "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
+                    + "' should be less than 1 minute.";
+                assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
+            }
 
-                // change end time and get the new aphelion times
-                Time end = Time.fromTimezoneString("2004-001T00:00:00.0", "UTC");
-                earthSunApsidesModel.setEnd(end);
-                aphelionTimes = earthSunApsidesModel.get();
-                assertEquals("2 aphelion times expected; '" + aphelionTimes.size() + "' received.", 2, aphelionTimes.size());
+            // change end time and get the new aphelion times
+            Time end = Time.fromTimezoneString("2004-001T00:00:00.0", "UTC");
+            earthSunApsidesModel.setEnd(end);
+            aphelionTimes = earthSunApsidesModel.get();
+            assertEquals("2 aphelion times expected; '" + aphelionTimes.size() + "' received.", 2, aphelionTimes.size());
 
-                for (int i = 0; i < aphelionTimes.size(); i++) {
-                    Time expected = expectedAphelionTimes.get(i);
-                    Time actual = aphelionTimes.get(i);
-                    Duration difference = expected.absoluteDifference(actual);
+            for (int i = 0; i < aphelionTimes.size(); i++) {
+                Time expected = expectedAphelionTimes.get(i);
+                Time actual = aphelionTimes.get(i);
+                Duration difference = expected.absoluteDifference(actual);
 
-                    // assert that the difference between each SPICE-predicted perihelion and actual
-                    // perihelion is less than one minute (our stepSize)
-                    String message = "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
-                        + "' should be less than 1 minute.";
-                    assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
-                }
-            });
+                // assert that the difference between each SPICE-predicted perihelion and actual
+                // perihelion is less than one minute (our stepSize)
+                String message = "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
+                    + "' should be less than 1 minute.";
+                assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
+            }
+        });
     }
 }

@@ -29,7 +29,7 @@ public class InstrumentPowerTest {
         //configure the instrument power model
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(simStart, () -> List.of(state), () -> {
+        SimulationEngine.simulate(simStart, List.of(state), () -> {
             assertThat(state.get()).isCloseTo(0.0, withinPercentage(0.01));
         });
     }
@@ -39,7 +39,7 @@ public class InstrumentPowerTest {
         //configure the instrument power model (it starts at zero)
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(simStart, () -> List.of(state), () -> {
+        SimulationEngine.simulate(simStart, List.of(state), () -> {
             state.set(330.0);
         });
     }
@@ -49,7 +49,7 @@ public class InstrumentPowerTest {
         //configure the instrument power model (it starts at zero)
         final var state = new InstrumentPower();
 
-        SimulationEngine.simulate(simStart, () -> List.of(state), () -> {
+        SimulationEngine.simulate(simStart, List.of(state), () -> {
             //set the power to some test value
             final double testValue = 330.0;
             state.set(testValue);

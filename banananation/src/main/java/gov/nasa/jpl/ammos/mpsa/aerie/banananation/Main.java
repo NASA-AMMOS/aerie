@@ -6,8 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
 import org.apache.commons.lang3.tuple.Pair;
 
 import spice.basic.CSPICE;
@@ -93,7 +91,7 @@ public final class Main {
     final List<Pair<Double, SerializedActivity>> newSchedule = new ArrayList<>();
     for (final Pair<Double, Activity> entry : activities) {
       final double time = entry.getLeft();
-      final Activity<? extends StateContainer> activity = entry.getRight();
+      final Activity activity = entry.getRight();
 
       final SerializedActivity serializedActivity = activityMapper
               .serializeActivity(activity)

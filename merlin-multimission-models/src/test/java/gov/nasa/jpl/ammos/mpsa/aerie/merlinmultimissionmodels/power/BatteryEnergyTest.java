@@ -64,12 +64,9 @@ public class BatteryEnergyTest {
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
 
-        SimulationEngine.simulate(
-            t2020,
-            () -> List.of(chargeState_J),
-            () -> {
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+            assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+        });
     }
 
 
@@ -80,13 +77,10 @@ public class BatteryEnergyTest {
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
 
-        SimulationEngine.simulate(
-            t2020,
-            () -> List.of(chargeState_J),
-            () -> {
-                delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+            delay(10, TimeUnit.SECONDS);
+            assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+        });
     }
 
 
@@ -97,14 +91,11 @@ public class BatteryEnergyTest {
 
         final var chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
 
-        SimulationEngine.simulate(
-            t2020,
-            () -> List.of(chargeState_J),
-            () -> {
-                delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+            delay(10, TimeUnit.SECONDS);
+            assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+            assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+        });
     }
 
     @Test
@@ -114,16 +105,13 @@ public class BatteryEnergyTest {
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
 
-        SimulationEngine.simulate(
-            t2020,
-            () -> List.of(chargeState_J),
-            () -> {
-                chargeState_J.get();
-                delay(10, TimeUnit.SECONDS);
-                chargeState_J.get();
-                delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected20_J, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+            chargeState_J.get();
+            delay(10, TimeUnit.SECONDS);
+            chargeState_J.get();
+            delay(10, TimeUnit.SECONDS);
+            assertThat(chargeState_J.get()).isCloseTo(expected20_J, withinPercentage(0.01));
+        });
     }
 
     @Test
@@ -133,12 +121,9 @@ public class BatteryEnergyTest {
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
 
-        SimulationEngine.simulate(
-            t2020,
-            () -> List.of(chargeState_J),
-            () -> {
-                delay(10, TimeUnit.SECONDS);
-                assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
-            });
+        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+            delay(10, TimeUnit.SECONDS);
+            assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
+        });
     }
 }
