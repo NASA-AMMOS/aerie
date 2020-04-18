@@ -5,6 +5,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.d
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 import static org.junit.Assert.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +27,14 @@ public class SimulationEngineTests {
         public final SettableState<List<Double>> arrayState = new BasicState<>("ARRAY_STATE", List.of(1.0, 0.0, 0.0));
         public final SettableState<Boolean> booleanState = new BasicState<>("BOOLEAN_STATE", true);
 
+        private final List<State<?>> stateList = List.of(floatState, stringState, arrayState, booleanState);
+
+        public DiverseStates(final Instant startTime) {
+            for (final var state : this.stateList) state.initialize(startTime);
+        }
+
         public List<State<?>> getStateList() {
-            return List.of(floatState, stringState, arrayState, booleanState);
+            return Collections.unmodifiableList(this.stateList);
         }
     }
 
@@ -92,10 +99,10 @@ public class SimulationEngineTests {
     @Test
     public void sequentialSimulationBaselineTest() {
         final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+        final var states = new DiverseStates(simStart);
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+            SimulationEngine.simulate(simStart, () -> {
                 for (int i = 0; i < 1000; i++) {
                     ParentActivity act = new ParentActivity();
                     act.floatValue = 1.0;
@@ -130,10 +137,10 @@ public class SimulationEngineTests {
     @Test
     public void timeOrderingTest() {
         final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+        final var states = new DiverseStates(simStart);
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+            SimulationEngine.simulate(simStart, () -> {
                 for (int i = 1; i <= 3; i++) {
                     TimeOrderingTestActivity act = new TimeOrderingTestActivity();
                     act.floatValue = i * 1.0;
@@ -168,10 +175,10 @@ public class SimulationEngineTests {
     @Test
     public void delayTest() {
         final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+        final var states = new DiverseStates(simStart);
 
         statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+            SimulationEngine.simulate(simStart, () -> {
                 defer(1, TimeUnit.HOURS, new DelayTestActivity());
             });
         });
@@ -207,10 +214,10 @@ public class SimulationEngineTests {
     @Test
     public void spawnActivityTimingTest() {
         final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+        final var states = new DiverseStates(simStart);
 
         final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+            return SimulationEngine.simulate(simStart, () -> {
                 defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
             });
         });
@@ -245,10 +252,10 @@ public class SimulationEngineTests {
     @Test
     public void callActivityTimingTest() {
         final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+        final var states = new DiverseStates(simStart);
 
         final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
+            return SimulationEngine.simulate(simStart, () -> {
                 defer(1, TimeUnit.HOURS, new CallTestParentActivity());
             });
         });

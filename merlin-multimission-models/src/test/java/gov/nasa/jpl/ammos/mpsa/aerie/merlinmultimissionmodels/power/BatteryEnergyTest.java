@@ -7,8 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
-import java.util.List;
-
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
@@ -63,8 +61,9 @@ public class BatteryEnergyTest {
         final double expected_J = 1110.0;
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        chargeState_J.initialize(t2020);
 
-        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+        SimulationEngine.simulate(t2020, () -> {
             assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
         });
     }
@@ -76,8 +75,9 @@ public class BatteryEnergyTest {
         final double expected_J = 500.0; //0J + 10s of 50W = 500J
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        chargeState_J.initialize(t2020);
 
-        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+        SimulationEngine.simulate(t2020, () -> {
             delay(10, TimeUnit.SECONDS);
             assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
         });
@@ -90,8 +90,9 @@ public class BatteryEnergyTest {
         final double expected_J = 500.0; //0J + 10s of 50W = 500J
 
         final var chargeState_J = new BatteryEnergy( initialCharge_J, mockState50_W, mockState10k_J );
+        chargeState_J.initialize(t2020);
 
-        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+        SimulationEngine.simulate(t2020, () -> {
             delay(10, TimeUnit.SECONDS);
             assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
             assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
@@ -104,8 +105,9 @@ public class BatteryEnergyTest {
         final double expected20_J = 1000.0; //0J + 10s of 50W + 10s of 50W = 1000J
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        chargeState_J.initialize(t2020);
 
-        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+        SimulationEngine.simulate(t2020, () -> {
             chargeState_J.get();
             delay(10, TimeUnit.SECONDS);
             chargeState_J.get();
@@ -120,8 +122,9 @@ public class BatteryEnergyTest {
         final double expected_J = 10000.0; //9900J + 10s of 50W = 10400J, clamp to 10kJ
 
         final var chargeState_J = new BatteryEnergy(initialCharge_J, mockState50_W, mockState10k_J);
+        chargeState_J.initialize(t2020);
 
-        SimulationEngine.simulate(t2020, List.of(chargeState_J), () -> {
+        SimulationEngine.simulate(t2020, () -> {
             delay(10, TimeUnit.SECONDS);
             assertThat(chargeState_J.get()).isCloseTo(expected_J, withinPercentage(0.01));
         });

@@ -87,6 +87,7 @@ public class ApsidesTimesModelTest {
 
         final var startTime = SimulationInstant.ORIGIN;
         final var earthSunApsidesModel = new ApsidesTimesModel();
+        earthSunApsidesModel.initialize(startTime);
         earthSunApsidesModel.setStart(Time.fromTimezoneString("2001-001T00:00:00.0", "UTC"));
         earthSunApsidesModel.setEnd(Time.fromTimezoneString("2003-001T00:00:00.0", "UTC"));
         earthSunApsidesModel.setFilter(1.5209e8);
@@ -94,7 +95,7 @@ public class ApsidesTimesModelTest {
         earthSunApsidesModel.setObserver(Body.EARTH);
         earthSunApsidesModel.setApsisType(Apsis.APOAPSIS);
 
-        SimulationEngine.simulate(startTime, List.of(earthSunApsidesModel), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             List<Time> aphelionTimes = earthSunApsidesModel.get();
             assertEquals("1 aphelion time expected; '" + aphelionTimes.size() + "' received.", 1, aphelionTimes.size());
 

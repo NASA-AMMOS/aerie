@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -24,8 +23,9 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeStartsAtZeroPower() {
         final var state = new InstrumentPower();
+        state.initialize(startTime);
 
-        SimulationEngine.simulate(startTime, List.of(state), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             assertThat(state.get(now())).isCloseTo(0.0, withinPercentage(0.01));
         });
     }
@@ -33,8 +33,9 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeSeesContemporarySet() {
         final var state = new InstrumentPower();
+        state.initialize(startTime);
 
-        SimulationEngine.simulate(startTime, List.of(state), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             final double testValue = 300.0;
             state.set(testValue);
             assertThat(state.get(now())).isCloseTo(testValue, withinPercentage(0.01));
@@ -44,8 +45,9 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeSeesPastSet() {
         final var state = new InstrumentPower();
+        state.initialize(startTime);
 
-        SimulationEngine.simulate(startTime, List.of(state), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             final double testValue_W = 300.0;
             state.set(testValue_W);
 
@@ -58,8 +60,9 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeSeesPastSetDespiteNewSet() {
         final var state = new InstrumentPower();
+        state.initialize(startTime);
 
-        SimulationEngine.simulate(startTime, List.of(state), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             final double testValue_W = 300.0;
             state.set(testValue_W);
 
@@ -74,8 +77,9 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeSeesIntermediatePastSet() {
         final var state = new InstrumentPower();
+        state.initialize(startTime);
 
-        SimulationEngine.simulate(startTime, List.of(state), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             final double testValue_W = 300.0;
             state.set(testValue_W);
 
@@ -91,6 +95,8 @@ public class InstrumentPowerRandomAccessTest {
     @Test
     public void getAtTimeSeesSeriesOfPastSets() {
         final var state = new InstrumentPower();
+        state.initialize(startTime);
+
         final var sets = new TreeMap<>(Map.of(
             startTime.plus(10, TimeUnit.SECONDS), 110.0,
             startTime.plus(20, TimeUnit.SECONDS), 120.0,
@@ -106,7 +112,7 @@ public class InstrumentPowerRandomAccessTest {
             startTime.plus(31, TimeUnit.SECONDS), 130.0
         );
 
-        SimulationEngine.simulate(startTime, List.of(state), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             //run all sets in test vector sequentially (thanks to TreeMap being sorted)
             for (final var set : sets.entrySet()) {
                 delay(now().durationTo(set.getKey()));

@@ -5,8 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.junit.Test;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
@@ -28,8 +26,9 @@ public class InstrumentPowerTest {
     public void getStartsAtZeroPower() {
         //configure the instrument power model
         final var state = new InstrumentPower();
+        state.initialize(simStart);
 
-        SimulationEngine.simulate(simStart, List.of(state), () -> {
+        SimulationEngine.simulate(simStart, () -> {
             assertThat(state.get()).isCloseTo(0.0, withinPercentage(0.01));
         });
     }
@@ -38,8 +37,9 @@ public class InstrumentPowerTest {
     public void setWorks() {
         //configure the instrument power model (it starts at zero)
         final var state = new InstrumentPower();
+        state.initialize(simStart);
 
-        SimulationEngine.simulate(simStart, List.of(state), () -> {
+        SimulationEngine.simulate(simStart, () -> {
             state.set(330.0);
         });
     }
@@ -48,8 +48,9 @@ public class InstrumentPowerTest {
     public void getWorksAfterSet() {
         //configure the instrument power model (it starts at zero)
         final var state = new InstrumentPower();
+        state.initialize(simStart);
 
-        SimulationEngine.simulate(simStart, List.of(state), () -> {
+        SimulationEngine.simulate(simStart, () -> {
             //set the power to some test value
             final double testValue = 330.0;
             state.set(testValue);

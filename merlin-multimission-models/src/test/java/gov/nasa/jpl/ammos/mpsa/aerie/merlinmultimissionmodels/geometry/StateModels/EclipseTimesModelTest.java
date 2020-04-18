@@ -120,6 +120,7 @@ public class EclipseTimesModelTest {
     public void testOccultationTimesModel() {
         final var startTime = SimulationInstant.ORIGIN;
         final var eclipseModel = new EclipseTimesModel();
+        eclipseModel.initialize(startTime);
         eclipseModel.setStart(Time.fromTimezoneString("2001-335T00:00:00.0", "UTC"));
         eclipseModel.setEnd(Time.fromTimezoneString("2002-001T00:00:00.0", "UTC"));
         eclipseModel.setFrontBody(Body.MOON);
@@ -129,7 +130,7 @@ public class EclipseTimesModelTest {
         eclipseModel.setObserver(Body.EARTH);
         eclipseModel.setStepSize(Duration.fromMinutes(3));
 
-        SimulationEngine.simulate(startTime, List.of(eclipseModel), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             List<Eclipse> eclipses = eclipseModel.get();
             assertEquals("1 occultation window expected; '" + eclipses.size() + "' received.", 1, eclipses.size());
 

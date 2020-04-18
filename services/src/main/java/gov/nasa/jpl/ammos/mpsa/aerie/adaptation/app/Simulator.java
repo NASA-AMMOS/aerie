@@ -60,8 +60,10 @@ public final class Simulator {
       final Duration samplingPeriod,
       final Collection<Pair<Duration, Activity>> scheduledActivities
   ) {
+    final var simStart = SimulationInstant.ORIGIN;
+
     // TODO: Initialize the requested state models from the adaptation.
-    final var stateContainer = this.adaptation.newSimulationState();
+    final var stateContainer = this.adaptation.newSimulationState(simStart);
     // TODO: Work with state models instead of individual states.
 
     // Initialize a set of tables into which to store state samples periodically.
@@ -75,7 +77,7 @@ public final class Simulator {
 
     // Simulate the entire plan to completion.
     // Sample all states periodically while simulation is occurring.
-    SimulationEngine.simulate(SimulationInstant.ORIGIN, states.values(), () -> {
+    SimulationEngine.simulate(simStart, () -> {
       // Spawn all scheduled activities.
       for (final Pair<Duration, Activity> entry : scheduledActivities) {
         defer(entry.getLeft(), entry.getRight());

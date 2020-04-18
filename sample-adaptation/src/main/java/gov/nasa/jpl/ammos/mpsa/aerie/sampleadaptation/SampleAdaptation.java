@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.CompositeActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.DownlinkData$$ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.InitializeBinDataVolume$$ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOff$$ActivityMapper;
@@ -32,8 +33,8 @@ public class SampleAdaptation implements MerlinAdaptation {
     }
 
     @Override
-    public SimulationState newSimulationState() {
-        final var model = new Model();
+    public SimulationState newSimulationState(final Instant startTime) {
+        final var model = new Model(startTime);
 
         return new SimulationState() {
             @Override

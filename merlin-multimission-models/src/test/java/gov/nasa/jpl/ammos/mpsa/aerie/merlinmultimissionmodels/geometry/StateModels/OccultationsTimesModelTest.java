@@ -123,6 +123,7 @@ public class OccultationsTimesModelTest {
     public void testOccultationTimesModel() {
         final var startTime = SimulationInstant.ORIGIN;
         final var earthMoonSunOccultationsModel = new OccultationTimesModel();
+        earthMoonSunOccultationsModel.initialize(startTime);
         earthMoonSunOccultationsModel.setStart(Time.fromTimezoneString("2001-335T00:00:00.0", "UTC"));
         earthMoonSunOccultationsModel.setEnd(Time.fromTimezoneString("2002-001T00:00:00.0", "UTC"));
         earthMoonSunOccultationsModel.setOccType(OccultationType.ANY);
@@ -136,7 +137,7 @@ public class OccultationsTimesModelTest {
         earthMoonSunOccultationsModel.setObserver(Body.EARTH);
         earthMoonSunOccultationsModel.setStepSize(Duration.fromMinutes(3));
 
-        SimulationEngine.simulate(startTime, List.of(earthMoonSunOccultationsModel), () -> {
+        SimulationEngine.simulate(startTime, () -> {
             List<Pair<Time, Time>> occTimes = earthMoonSunOccultationsModel.get();
             assertEquals("1 occultation window expected; '" + occTimes.size() + "' received.", 1, occTimes.size());
 

@@ -11,6 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.CompositeActivityMappe
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,8 @@ public class Banananation implements MerlinAdaptation {
   }
 
   @Override
-  public SimulationState newSimulationState() {
-    final var model = new BananaStates();
+  public SimulationState newSimulationState(final Instant simulationStartTime) {
+    final var model = new BananaStates(simulationStartTime);
 
     return new SimulationState() {
       @Override

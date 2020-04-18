@@ -12,10 +12,10 @@ public class Runsim {
         Geometry.loadSpiceAndKernels();
 
         final var simStartTime = SimulationInstant.ORIGIN;
-        final var model = new Model();
+        final var model = new Model(simStartTime);
 
         SampleMissionStates.useModelsIn(model, () -> {
-            SimulationEngine.simulate(simStartTime, Collections.emptyList(), () -> {
+            SimulationEngine.simulate(simStartTime, () -> {
                 Plan.runPlan(config, simStartTime);
             });
         });

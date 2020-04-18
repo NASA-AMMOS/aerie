@@ -1,19 +1,20 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import org.junit.Test;
 
-import java.util.List;
-
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BasicStateTest {
     @Test
     public void integerState() {
+        final var startTime = SimulationInstant.ORIGIN;
+
         final var state = new BasicState<>("State 1", 0);
+        state.initialize(startTime);
 
         final var activity = new Activity() {
             @Override
@@ -23,16 +24,15 @@ public class BasicStateTest {
             }
         };
 
-        final var startTime = SimulationInstant.ORIGIN;
-        SimulationEngine.simulate(
-            startTime,
-            List.of(state),
-            () -> SimulationEffects.spawn(activity));
+        SimulationEngine.simulate(startTime, () -> spawn(activity));
     }
 
     @Test
     public void stringState() {
+        final var startTime = SimulationInstant.ORIGIN;
+
         final var state = new BasicState<>("State 2", "");
+        state.initialize(startTime);
 
         final var activity = new Activity() {
             @Override
@@ -42,11 +42,7 @@ public class BasicStateTest {
             }
         };
 
-        final var startTime = SimulationInstant.ORIGIN;
-        SimulationEngine.simulate(
-            startTime,
-            List.of(state),
-            () -> SimulationEffects.spawn(activity));
+        SimulationEngine.simulate(startTime, () -> spawn(activity));
     }
 }
 
