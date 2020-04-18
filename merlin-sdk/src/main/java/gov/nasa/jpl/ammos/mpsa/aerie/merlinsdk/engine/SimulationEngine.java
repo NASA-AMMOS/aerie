@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -26,7 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public final class SimulationEngine {
     /// The simulation time of the currently-executing task.
-    private Instant currentSimulationTime;
+    private Instant currentSimulationTime = SimulationInstant.ORIGIN;
 
     /// The control information associated with the currently-executing task.
     private volatile JobContext activeJob = null;
@@ -35,55 +36,68 @@ public final class SimulationEngine {
     private PriorityQueue<Pair<Instant, JobContext>> eventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     /// The provider of control effects given to each task.
-    private final SimulationContext effectsProvider;
+    private final SimulationContext effectsProvider = new EffectsProvider();
 
     /// A pool of worker threads which track the current progress of paused tasks.
+    // TODO: Rename this to `defaultThreadPool`, and accept a configurable thread pool
+    //   at construction time.
     private final ExecutorService threadPool = Executors.newCachedThreadPool(r -> {
         // Daemonize all threads in this pool, so that they don't block the application on shutdown.
-        // TODO: Properly call `shutdown` on the pool instead, once the pool is provided at construction time.
         final var t = Executors.defaultThreadFactory().newThread(r);
         t.setDaemon(true);
         return t;
     });
 
-    private SimulationEngine(final Instant simulationStartTime) {
-        this.effectsProvider = new EffectsProvider();
-        this.currentSimulationTime = simulationStartTime;
-    }
 
     public static Instant simulate(final Instant simulationStartTime, final Runnable topLevel) {
-        final var engine = new SimulationEngine(simulationStartTime);
-        engine.run((ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
-        return engine.currentSimulationTime;
+        final var engine = new SimulationEngine();
+        engine.scheduleJobAfter(
+            simulationStartTime.durationFrom(engine.currentSimulationTime),
+            (ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
+        engine.runToCompletion();
+        return engine.getCurrentTime();
     }
 
-    /**
-     * Schedules the given task to run immediately, and pumps the event queue to depletion.
-     */
-    private void run(final Consumer<SimulationContext> topLevel) {
-        final var rootJob = new JobContext();
-        this.spawnInThread(rootJob, topLevel);
-        this.resumeAfter(Duration.ZERO, rootJob);
+    public Instant getCurrentTime() {
+        return this.currentSimulationTime;
+    }
 
-        // Run until we've handled all outstanding activity events.
-        while (!this.eventQueue.isEmpty()) {
-            final var event = this.eventQueue.remove();
-            final var eventTime = event.getLeft();
-            final var job = event.getRight();
+    public void scheduleJobAfter(final Duration duration, final Consumer<SimulationContext> job) {
+        final var context = new JobContext();
+        this.spawnInThread(context, job);
+        this.resumeAfter(duration, context);
+    }
 
-            this.currentSimulationTime = eventTime;
-            this.activeJob = job;
-            job.yieldControl();
-            job.takeControl();
-            this.activeJob = null;
+    public void scheduleJobAfter(final long quantity, final TimeUnit unit, final Consumer<SimulationContext> job) {
+        this.scheduleJobAfter(Duration.of(quantity, unit), job);
+    }
 
-            if (job.failure != null) {
-                throw new RuntimeException(job.failure);
-            }
+    public void step() {
+        if (this.eventQueue.isEmpty()) return;
+
+        final var event = this.eventQueue.remove();
+        final var eventTime = event.getLeft();
+        final var job = event.getRight();
+
+        this.currentSimulationTime = eventTime;
+        this.activeJob = job;
+        job.yieldControl();
+        job.takeControl();
+        this.activeJob = null;
+
+        if (job.failure != null) {
+            throw new RuntimeException(job.failure);
         }
-
-        this.threadPool.shutdown();
     }
+
+    public void runToCompletion() {
+        while (this.hasMoreJobs()) this.step();
+    }
+
+    public boolean hasMoreJobs() {
+        return !this.eventQueue.isEmpty();
+    }
+
 
     private void spawnInThread(final JobContext job, final Consumer<SimulationContext> scope) {
         this.threadPool.execute(() -> job.start(scope));
