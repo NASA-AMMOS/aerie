@@ -87,6 +87,10 @@ public final class SimulationEngine {
             job.yieldControl();
             job.takeControl();
             this.activeJob = null;
+
+            if (job.failure != null) {
+                throw new RuntimeException(job.failure);
+            }
         }
 
         this.threadPool.shutdown();
@@ -103,29 +107,35 @@ public final class SimulationEngine {
     private enum ActivityStatus { NotStarted, InProgress, Complete }
 
     private final class JobContext {
-        private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
         private final Object CONTROL_TOKEN = new Object();
+        private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
 
         private final List<JobContext> children = new ArrayList<>();
         private final Set<JobContext> listeners = new HashSet<>();
 
-        public ActivityStatus status = ActivityStatus.NotStarted;
+        // The most recent exception thrown by this activity, if any.
+        public volatile Throwable failure = null;
+        public volatile ActivityStatus status = ActivityStatus.NotStarted;
 
         public void start(final Consumer<SimulationContext> scope) {
             this.takeControl();
+            try {
+                this.status = ActivityStatus.InProgress;
+                scope.accept(SimulationEngine.this.effectsProvider);
+                this.waitForChildren();
+                this.status = ActivityStatus.Complete;
 
-            this.status = ActivityStatus.InProgress;
-            scope.accept(SimulationEngine.this.effectsProvider);
-            this.waitForChildren();
-            this.status = ActivityStatus.Complete;
-
-            // Notify any listeners that we've finished.
-            for (final var listener : this.listeners) {
-                this.listeners.remove(listener);
-                SimulationEngine.this.resumeAfter(Duration.ZERO, listener);
+                // Notify any listeners that we've finished.
+                for (final var listener : this.listeners) {
+                    this.listeners.remove(listener);
+                    SimulationEngine.this.resumeAfter(Duration.ZERO, listener);
+                }
+            } catch (final Throwable ex) {
+                this.failure = ex;
+                this.status = ActivityStatus.Complete;
+            } finally {
+                this.yieldControl();
             }
-
-            this.yieldControl();
         }
 
         public void waitForActivity(final JobContext jobToAwait) {
