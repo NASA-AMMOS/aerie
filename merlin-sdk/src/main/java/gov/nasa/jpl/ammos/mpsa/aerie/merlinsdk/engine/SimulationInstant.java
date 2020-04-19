@@ -53,6 +53,6 @@ public final class SimulationInstant implements Instant {
 
   @Override
   public String toString() {
-    return "" + Long.toUnsignedString(this.microsecondsFromStart) + "µs";
+    return "" + this.microsecondsFromStart + "µs";
   }
 }
