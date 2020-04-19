@@ -182,7 +182,7 @@ public final class LocalApp implements App {
             activityInstances.add(Pair.of(startDelta, adaptation.instantiateActivity(serializedInstance)));
         }
 
-        return simulator.run(message.samplingDuration, message.samplingPeriod, activityInstances);
+        return simulator.run(message.samplingDuration, message.samplingFrequency, activityInstances);
     }
 
     /**

@@ -56,7 +56,7 @@ public final class MerlinParsersTest {
         . add("adaptationId", "hello")
         . add("startTime", "1992-224T01:30:00")
         . add("samplingDuration", 5_000_000 /* microseconds */)
-        . add("samplingPeriod", 500_000 /* microseconds */)
+        . add("samplingFrequency", 500_000 /* microseconds */)
         . add("activities", Json
             . createArrayBuilder()
             . add(Json

@@ -12,20 +12,20 @@ public final class CreateSimulationMessage {
   public final String adaptationId;
   public final Instant startTime;
   public final Duration samplingDuration;
-  public final Duration samplingPeriod;
+  public final Duration samplingFrequency;
   public final List<Pair<Duration, SerializedActivity>> activityInstances;
 
   public CreateSimulationMessage(
       final String adaptationId,
       final Instant startTime,
       final Duration samplingDuration,
-      final Duration samplingPeriod,
+      final Duration samplingFrequency,
       final List<Pair<Duration, SerializedActivity>> activityInstances
   ) {
     this.adaptationId = adaptationId;
     this.startTime = startTime;
     this.samplingDuration = samplingDuration;
-    this.samplingPeriod = samplingPeriod;
+    this.samplingFrequency = samplingFrequency;
     this.activityInstances = activityInstances;
   }
 
@@ -35,7 +35,7 @@ public final class CreateSimulationMessage {
         "adaptationId = " + this.adaptationId + ", " +
         "startTime = " + this.startTime + ", " +
         "samplingDuration = " + this.samplingDuration + ", " +
-        "samplingPeriod = " + this.samplingPeriod + ", " +
+        "samplingPeriod = " + this.samplingFrequency + ", " +
         "activityInstances = " + this.activityInstances + " }";
   }
 
@@ -48,7 +48,7 @@ public final class CreateSimulationMessage {
         (  Objects.equals(this.adaptationId, other.adaptationId)
         && Objects.equals(this.startTime, other.startTime)
         && Objects.equals(this.samplingDuration, other.samplingDuration)
-        && Objects.equals(this.samplingPeriod, other.samplingPeriod)
+        && Objects.equals(this.samplingFrequency, other.samplingFrequency)
         && Objects.equals(this.activityInstances, other.activityInstances)
         );
   }
@@ -59,7 +59,7 @@ public final class CreateSimulationMessage {
         this.adaptationId,
         this.startTime,
         this.samplingDuration,
-        this.samplingPeriod,
+        this.samplingFrequency,
         this.activityInstances
     );
   }
