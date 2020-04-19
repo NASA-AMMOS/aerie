@@ -88,10 +88,10 @@ public final class Simulator {
 
     // Sample all states periodically while simulation is occurring.
     if (samplingDuration.isPositive() && samplingPeriod.isPositive()) {
-      simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
-        final var startTime = now();
-        final var endTime = now().plus(samplingDuration);
+      final var startTime = simEngine.getCurrentTime();
+      final var endTime = startTime.plus(samplingDuration);
 
+      simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
         final Runnable addSamples = () -> {
           timestamps.add(startTime.durationTo(now()));
           for (final var entry : timelines.entrySet()) {
@@ -101,13 +101,11 @@ public final class Simulator {
           }
         };
 
-        spawn(() -> {
+        addSamples.run();
+        while (now().isBefore(endTime)) {
+          delay(Duration.min(samplingPeriod, now().durationTo(endTime)));
           addSamples.run();
-          while (now().isBefore(endTime)) {
-            delay(Duration.min(samplingPeriod, now().durationTo(endTime)));
-            addSamples.run();
-          }
-        });
+        }
       }));
     }
 
