@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
@@ -193,8 +194,11 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       }
     };
 
-    simulationEngine.scheduleJobAfter(Duration.ZERO, withEffects(runSchedule));
-    simulationState.applyInScope(simulationEngine::runToCompletion);
+    final Function<Runnable, Runnable> taskDecorator = (task) ->
+        () -> simulationState.applyInScope(task);
+
+    simulationEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, runSchedule));
+    simulationEngine.runToCompletion();
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();
     for (final var entry : simulationState.getStates().entrySet()) {

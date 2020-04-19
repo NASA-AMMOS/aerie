@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.defer;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
@@ -74,8 +75,11 @@ public final class Simulator {
     final var timelines = new HashMap<String, List<SerializedParameter>>(states.size());
     for (final var entry : states.entrySet()) timelines.put(entry.getKey(), new ArrayList<>());
 
+    final Function<Runnable, Runnable> taskDecorator = (task) ->
+        () -> stateContainer.applyInScope(task);
+
     // Simulate the entire plan to completion.
-    simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+    simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> {
       // Spawn all scheduled activities.
       for (final Pair<Duration, Activity> entry : scheduledActivities) {
         defer(entry.getLeft(), entry.getRight());

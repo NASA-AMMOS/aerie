@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
@@ -94,34 +95,43 @@ public class DataModelTest {
     @Test
     public void bin_initialization() {
         final var simEngine = new SimulationEngine();
-        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> spawn(new InitBinDataVolumes())));
 
         final var states = new DataModelStates(simEngine.getCurrentTime());
-        statesRef.setWithin(states, simEngine::runToCompletion);
+        final Function<Runnable, Runnable> taskDecorator = (task) ->
+            () -> statesRef.setWithin(states, task::run);
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> spawn(new InitBinDataVolumes())));
+        simEngine.runToCompletion();
     }
 
     @Test
     public void turn_instrument_on(){
         final var simEngine = new SimulationEngine();
-        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        final Function<Runnable, Runnable> taskDecorator = (task) ->
+            () -> statesRef.setWithin(states, task::run);
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> {
             spawn(new InitBinDataVolumes());
             spawn(new TurnInstrumentAOn());
         }));
-
-        final var states = new DataModelStates(simEngine.getCurrentTime());
-        statesRef.setWithin(states, simEngine::runToCompletion);
+        simEngine.runToCompletion();
     }
 
     @Test
     public void downlink_data(){
         final var simEngine = new SimulationEngine();
-        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        final Function<Runnable, Runnable> taskDecorator = (task) ->
+            () -> statesRef.setWithin(states, task::run);
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> {
             spawn(new InitBinDataVolumes());
             spawn(new TurnInstrumentAOn());
             spawn(new DownlinkData());
         }));
-
-        final var states = new DataModelStates(simEngine.getCurrentTime());
-        statesRef.setWithin(states, simEngine::runToCompletion);
+        simEngine.runToCompletion();
     }
 }
