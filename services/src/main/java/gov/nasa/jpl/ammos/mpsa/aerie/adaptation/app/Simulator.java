@@ -110,6 +110,7 @@ public final class Simulator {
 
   private static <T> SerializedParameter serializeState(final State<T> state) {
     final T value = state.get();
+    @SuppressWarnings("unchecked")
     final ParameterMapper<T> mapper = registry.get((Class<T>) value.getClass());
     return mapper.serializeParameter(value);
   }
