@@ -1,48 +1,41 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.junit.Test;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BasicStateTest {
     @Test
     public void integerState() {
-        final var startTime = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
 
         final var state = new BasicState<>("State 1", 0);
-        state.initialize(startTime);
+        state.initialize(simEngine.getCurrentTime());
 
-        final var activity = new Activity() {
-            @Override
-            public void modelEffects() {
-                state.set(12);
-                assertThat(state.get()).isEqualTo(12);
-            }
-        };
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            state.set(12);
+            assertThat(state.get()).isEqualTo(12);
+        }));
 
-        SimulationEngine.simulate(startTime, () -> spawn(activity));
+        simEngine.runToCompletion();
     }
 
     @Test
     public void stringState() {
-        final var startTime = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
 
         final var state = new BasicState<>("State 2", "");
-        state.initialize(startTime);
+        state.initialize(simEngine.getCurrentTime());
 
-        final var activity = new Activity() {
-            @Override
-            public void modelEffects() {
-                state.set("NADIR");
-                assertThat(state.get()).isEqualTo("NADIR");
-            }
-        };
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            state.set("NADIR");
+            assertThat(state.get()).isEqualTo("NADIR");
+        }));
 
-        SimulationEngine.simulate(startTime, () -> spawn(activity));
+        simEngine.runToCompletion();
     }
 }
 

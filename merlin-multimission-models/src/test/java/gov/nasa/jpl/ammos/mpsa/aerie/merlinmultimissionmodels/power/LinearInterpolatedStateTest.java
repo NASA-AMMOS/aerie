@@ -1,13 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
@@ -36,66 +37,76 @@ public class LinearInterpolatedStateTest {
 
     @Test
     public void getAtLeftWorks() {
-        final var simStart = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
 
         final var state = new LinearInterpolatedState(t2020, 100, t2020_10s, 110);
-        state.initialize(simStart);
+        state.initialize(simEngine.getCurrentTime());
 
-        SimulationEngine.simulate(simStart, () -> {
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
             double result = state.get(now());
             assertThat(result).isCloseTo(100, withinPercentage(0.01));
-        });
+        }));
+
+        simEngine.runToCompletion();
     }
 
     @Test
     public void getAtRightWorks() {
-        final var simStart = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
 
         final var state = new LinearInterpolatedState(t2020, 100, t2020_10s, 110);
-        state.initialize(simStart);
+        state.initialize(simEngine.getCurrentTime());
 
-        SimulationEngine.simulate(simStart, () -> {
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
             double result = state.get(now().plus(10, TimeUnit.SECONDS));
             assertThat(result).isCloseTo(110, withinPercentage(0.01));
-        });
+        }));
+
+        simEngine.runToCompletion();
     }
 
     @Test
     public void getAtMiddleWorks() {
-        final var simStart = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
 
         final var state = new LinearInterpolatedState(t2020, 100, t2020_20s, 120);
-        state.initialize(simStart);
+        state.initialize(simEngine.getCurrentTime());
 
-        SimulationEngine.simulate(simStart, () -> {
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
             double result = state.get(now().plus(10, TimeUnit.SECONDS));
             assertThat(result).isCloseTo(110, withinPercentage(0.01));
-        });
+        }));
+
+        simEngine.runToCompletion();
     }
 
     @Test
     public void getPastLeftWorks() {
-        final var simStart = SimulationInstant.ORIGIN.plus(10, TimeUnit.SECONDS);
+        final var simEngine = new SimulationEngine();
 
         final var state = new LinearInterpolatedState(t2020_10s, 100, t2020_20s, 110);
-        state.initialize(simStart);
+        state.initialize(simEngine.getCurrentTime().plus(10, TimeUnit.SECONDS));
 
-        SimulationEngine.simulate(simStart, () -> {
-            double result = state.get(now().minus(10, TimeUnit.SECONDS));
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            double result = state.get(now());
             assertThat(result).isCloseTo(90, withinPercentage(0.01));
-        });
+        }));
+
+        simEngine.runToCompletion();
     }
 
     @Test
     public void getPastRightWorks() {
-        final var simStart = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
 
         final var state = new LinearInterpolatedState(t2020, 100, t2020_10s, 110);
-        state.initialize(simStart);
+        state.initialize(simEngine.getCurrentTime());
 
-        SimulationEngine.simulate(simStart, () -> {
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
             double result = state.get(now().plus(20, TimeUnit.SECONDS));
             assertThat(result).isCloseTo(120, withinPercentage(0.01));
-        });
+        }));
+
+        simEngine.runToCompletion();
     }
 }

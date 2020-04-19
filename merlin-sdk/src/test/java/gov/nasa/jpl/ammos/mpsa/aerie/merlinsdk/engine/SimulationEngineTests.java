@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.defer;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 import static org.junit.Assert.*;
 
 import java.util.Collections;
@@ -98,23 +99,22 @@ public class SimulationEngineTests {
      */
     @Test
     public void sequentialSimulationBaselineTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            for (int i = 0; i < 1000; i++) {
+                ParentActivity act = new ParentActivity();
+                act.floatValue = 1.0;
+                act.stringValue = "B";
+                act.arrayValue = List.of(0.0, 1.0, 0.0);
+                act.booleanValue = false;
+                act.durationValue = Duration.of(10, TimeUnit.SECONDS);
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, () -> {
-                for (int i = 0; i < 1000; i++) {
-                    ParentActivity act = new ParentActivity();
-                    act.floatValue = 1.0;
-                    act.stringValue = "B";
-                    act.arrayValue = List.of(0.0, 1.0, 0.0);
-                    act.booleanValue = false;
-                    act.durationValue = Duration.of(10, TimeUnit.SECONDS);
+                defer(i, TimeUnit.HOURS, act);
+            }
+        }));
 
-                    defer(i, TimeUnit.HOURS, act);
-                }
-            });
-        });
+        final var states = new DiverseStates(simEngine.getCurrentTime());
+        statesRef.setWithin(states, simEngine::runToCompletion);
     }
 
     public class TimeOrderingTestActivity implements Activity {
@@ -136,19 +136,19 @@ public class SimulationEngineTests {
      */
     @Test
     public void timeOrderingTest() {
-        final var simStart = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            for (int i = 1; i <= 3; i++) {
+                TimeOrderingTestActivity act = new TimeOrderingTestActivity();
+                act.floatValue = i * 1.0;
+
+                defer(i, TimeUnit.HOURS, act);
+            }
+        }));
+
+        final var simStart = simEngine.getCurrentTime();
         final var states = new DiverseStates(simStart);
-
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, () -> {
-                for (int i = 1; i <= 3; i++) {
-                    TimeOrderingTestActivity act = new TimeOrderingTestActivity();
-                    act.floatValue = i * 1.0;
-
-                    defer(i, TimeUnit.HOURS, act);
-                }
-            });
-        });
+        statesRef.setWithin(states, simEngine::runToCompletion);
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -174,14 +174,14 @@ public class SimulationEngineTests {
      */
     @Test
     public void delayTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            defer(1, TimeUnit.HOURS, new DelayTestActivity());
+        }));
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, () -> {
-                defer(1, TimeUnit.HOURS, new DelayTestActivity());
-            });
-        });
+        final var simStart = simEngine.getCurrentTime();
+        final var states = new DiverseStates(simStart);
+        statesRef.setWithin(states, simEngine::runToCompletion);
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -213,14 +213,15 @@ public class SimulationEngineTests {
      */
     @Test
     public void spawnActivityTimingTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
+        }));
 
-        final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, () -> {
-                defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
-            });
-        });
+        final var simStart = simEngine.getCurrentTime();
+        final var states = new DiverseStates(simStart);
+        statesRef.setWithin(states, simEngine::runToCompletion);
+        final var endTime = simEngine.getCurrentTime();
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
 
@@ -251,14 +252,15 @@ public class SimulationEngineTests {
      */
     @Test
     public void callActivityTimingTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            defer(1, TimeUnit.HOURS, new CallTestParentActivity());
+        }));
 
-        final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, () -> {
-                defer(1, TimeUnit.HOURS, new CallTestParentActivity());
-            });
-        });
+        final var simStart = simEngine.getCurrentTime();
+        final var states = new DiverseStates(simStart);
+        statesRef.setWithin(states, simEngine::runToCompletion);
+        final var endTime = simEngine.getCurrentTime();
 
         Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
         assertEquals((Double) 5.0, floatStateHistory.get(endTime));

@@ -5,8 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.I
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
@@ -16,6 +16,7 @@ import java.util.List;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 
 public class DataModelTest {
 
@@ -92,40 +93,35 @@ public class DataModelTest {
 
     @Test
     public void bin_initialization() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DataModelStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> spawn(new InitBinDataVolumes())));
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, () -> {
-                spawn(new InitBinDataVolumes());
-            });
-        });
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        statesRef.setWithin(states, simEngine::runToCompletion);
     }
 
     @Test
     public void turn_instrument_on(){
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DataModelStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+        }));
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, () -> {
-                spawn(new InitBinDataVolumes());
-                spawn(new TurnInstrumentAOn());
-            });
-        });
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        statesRef.setWithin(states, simEngine::runToCompletion);
     }
 
     @Test
     public void downlink_data(){
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DataModelStates(simStart);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+            spawn(new DownlinkData());
+        }));
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, () -> {
-                spawn(new InitBinDataVolumes());
-                spawn(new TurnInstrumentAOn());
-                spawn(new DownlinkData());
-            });
-        });
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        statesRef.setWithin(states, simEngine::runToCompletion);
     }
 }

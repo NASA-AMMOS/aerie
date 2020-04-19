@@ -11,12 +11,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.Turn
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 
 public class Plan {
-    public static void runPlan(Config config, Instant simStartTime) {
+    public static void runPlan(Config config) {
+        final var startTime = now();
+
         final Function<Time, Instant> timeToInstant = (Time time) ->
-            simStartTime.plus(time.minus(config.missionStartTime).getMicroseconds(), TimeUnit.MICROSECONDS);
+            startTime.plus(time.minus(config.missionStartTime).getMicroseconds(), TimeUnit.MICROSECONDS);
 
         // initialize data volume at mission start
         spawn(new InitializeBinDataVolume());

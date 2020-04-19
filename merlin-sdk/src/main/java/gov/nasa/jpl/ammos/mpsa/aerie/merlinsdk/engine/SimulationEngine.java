@@ -49,15 +49,6 @@ public final class SimulationEngine {
     });
 
 
-    public static Instant simulate(final Instant simulationStartTime, final Runnable topLevel) {
-        final var engine = new SimulationEngine();
-        engine.scheduleJobAfter(
-            simulationStartTime.durationFrom(engine.currentSimulationTime),
-            (ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
-        engine.runToCompletion();
-        return engine.getCurrentTime();
-    }
-
     public Instant getCurrentTime() {
         return this.currentSimulationTime;
     }

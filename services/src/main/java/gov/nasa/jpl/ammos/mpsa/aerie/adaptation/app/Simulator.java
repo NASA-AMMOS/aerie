@@ -4,12 +4,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.TypeRegistry;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ByteParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.CharacterParameterMapper;
@@ -31,6 +29,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.d
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 
 public final class Simulator {
   // TODO: The adaptation must specify mappers for each mission resource; we cannot reliably determine the appropriate
@@ -60,10 +59,10 @@ public final class Simulator {
       final Duration samplingPeriod,
       final Collection<Pair<Duration, Activity>> scheduledActivities
   ) {
-    final var simStart = SimulationInstant.ORIGIN;
+    final var simEngine = new SimulationEngine();
 
     // TODO: Initialize the requested state models from the adaptation.
-    final var stateContainer = this.adaptation.newSimulationState(simStart);
+    final var stateContainer = this.adaptation.newSimulationState(simEngine.getCurrentTime());
     // TODO: Work with state models instead of individual states.
 
     // Initialize a set of tables into which to store state samples periodically.
@@ -76,15 +75,16 @@ public final class Simulator {
     for (final var entry : states.entrySet()) timelines.put(entry.getKey(), new ArrayList<>());
 
     // Simulate the entire plan to completion.
-    // Sample all states periodically while simulation is occurring.
-    SimulationEngine.simulate(simStart, () -> {
+    simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
       // Spawn all scheduled activities.
       for (final Pair<Duration, Activity> entry : scheduledActivities) {
         defer(entry.getLeft(), entry.getRight());
       }
+    }));
 
-      // Spawn a sampler.
-      if (samplingDuration.isPositive() && samplingPeriod.isPositive()) {
+    // Sample all states periodically while simulation is occurring.
+    if (samplingDuration.isPositive() && samplingPeriod.isPositive()) {
+      simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
         final var startTime = now();
         final var endTime = now().plus(samplingDuration);
 
@@ -104,8 +104,10 @@ public final class Simulator {
             addSamples.run();
           }
         });
-      }
-    });
+      }));
+    }
+
+    simEngine.runToCompletion();
 
     return new SimulationResults(timestamps, timelines);
   }
