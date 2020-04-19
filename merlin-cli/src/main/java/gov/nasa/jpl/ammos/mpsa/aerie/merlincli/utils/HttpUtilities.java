@@ -27,8 +27,11 @@ public class HttpUtilities {
      * @return The appropriate error message to provide to a user after a failed command
      */
     public static String getErrorMessage(HttpResponse response, String defaultMessage) {
+        final var entity = response.getEntity();
+        if (entity == null) return defaultMessage;
+
         try {
-            return JsonUtilities.getErrorMessageFromFailureResponse(response.getEntity().getContent());
+            return JsonUtilities.getErrorMessageFromFailureResponse(entity.getContent());
         } catch (IOException | JsonUtilities.ResponseWithoutErrorMessageException e) {
             return defaultMessage;
         }
