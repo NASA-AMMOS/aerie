@@ -55,9 +55,4 @@ public final class SimulationInstant implements Instant {
   public String toString() {
     return "" + Long.toUnsignedString(this.microsecondsFromStart) + "µs";
   }
-
-  @Override
-  public Instant clone(){
-    return new SimulationInstant(this.microsecondsFromStart);
-  }
 }
