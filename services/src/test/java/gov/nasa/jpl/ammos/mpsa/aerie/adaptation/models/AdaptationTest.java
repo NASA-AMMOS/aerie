@@ -36,7 +36,7 @@ public final class AdaptationTest {
         final Map<String, ActivityType> typeList = adaptation.getActivityTypes();
 
         // THEN
-        assertThat(typeList).isEqualTo(expectedTypes);
+        assertThat(typeList).containsAllEntriesOf(expectedTypes);
     }
 
     @Test

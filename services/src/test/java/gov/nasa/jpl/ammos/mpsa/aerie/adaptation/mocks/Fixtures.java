@@ -37,25 +37,6 @@ public final class Fixtures {
             "peelDirection", ParameterSchema.STRING
         ), Map.of(
             "peelDirection", SerializedParameter.of("fromStem")
-        )),
-        "ParameterTest", new ActivityType("ParameterTest", Map.of(
-            "a", ParameterSchema.REAL,
-            "b", ParameterSchema.REAL,
-            "c", ParameterSchema.INT,
-            "d", ParameterSchema.INT,
-            "e", ParameterSchema.INT,
-            "f", ParameterSchema.INT,
-            "g", ParameterSchema.STRING,
-            "h", ParameterSchema.STRING
-        ), Map.of(
-            "a", SerializedParameter.of(3.141),
-            "b", SerializedParameter.of(1.618f),
-            "c", SerializedParameter.of(16),
-            "d", SerializedParameter.of(32),
-            "e", SerializedParameter.of(64),
-            "f", SerializedParameter.of(128),
-            "g", SerializedParameter.of("g"),
-            "h", SerializedParameter.of("h")
         ))
     );
 
