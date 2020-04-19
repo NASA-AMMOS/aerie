@@ -8,19 +8,19 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 import org.junit.jupiter.api.Test;
 
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.Java6Assertions.catchThrowable;
 
 public class ApfParserTests {
-
     // TODO: Create more plans and tests
 
     @Test
     public void testParseSimplePlan() throws AdaptationParsingException, PlanParsingException {
-        Path adaptationPath = Path.of("src/test/resources/simple/simple_adaptation.aaf");
-        Path planPath = Path.of("src/test/resources/simple/simple_plan.apf");
+        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/simple/simple_plan.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
         Plan plan = ApfParser.parseFile(planPath, adaptation);
 
@@ -50,8 +50,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanTooFewParameters() throws AdaptationParsingException {
-        Path adaptationPath = Path.of("src/test/resources/simple/simple_adaptation.aaf");
-        Path planPath = Path.of("src/test/resources/simple/too_few_parameters.apf");
+        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/simple/too_few_parameters.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
@@ -62,8 +62,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanTooManyParameters() throws AdaptationParsingException {
-        Path adaptationPath = Path.of("src/test/resources/simple/simple_adaptation.aaf");
-        Path planPath = Path.of("src/test/resources/simple/too_many_parameters.apf");
+        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/simple/too_many_parameters.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
@@ -74,8 +74,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanIncomplete() throws AdaptationParsingException {
-        Path adaptationPath = Path.of("src/test/resources/simple/simple_adaptation.aaf");
-        Path planPath = Path.of("src/test/resources/simple/incomplete.apf");
+        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/simple/incomplete.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
@@ -86,13 +86,21 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanUnexpectedActivityEnd() throws AdaptationParsingException {
-        Path adaptationPath = Path.of("src/test/resources/simple/simple_adaptation.aaf");
-        Path planPath = Path.of("src/test/resources/simple/unexpected_activity_end.apf");
+        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/simple/unexpected_activity_end.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
 
         assertThat(thrown).isInstanceOf(PlanParsingException.class);
         assertThat(thrown.getMessage()).contains("unexpected activity instance end");
+    }
+
+    private static Path resourcePath(final String path) {
+        try {
+            return Path.of(ApfParserTests.class.getResource(path).toURI());
+        } catch (final URISyntaxException e) {
+            throw new Error(e);
+        }
     }
 }

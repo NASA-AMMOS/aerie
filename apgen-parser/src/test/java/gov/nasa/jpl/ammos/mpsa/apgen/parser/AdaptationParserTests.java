@@ -7,17 +7,17 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Attribute;
 import org.junit.jupiter.api.Test;
 
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class AdaptationParserTests {
-
     // TODO: Write more complex adaptations and tests
 
     @Test
     public void testLoadSimpleAdaptation() throws AdaptationParsingException {
-        Path path = Path.of("src/test/resources/simple/simple_adaptation.aaf");
+        Path path = resourcePath("/simple/simple_adaptation.aaf");
         Adaptation adaptation = AdaptationParser.parseFile(path);
 
         assertThat(adaptation.hasActivityType("Banana")).isTrue();
@@ -75,5 +75,13 @@ public class AdaptationParserTests {
         ActivityTypeParameter avocadoExpiration = avocadoType.getParameter("expiration");
         assertThat(avocadoExpiration.getType()).isEqualTo("Time");
         assertThat(avocadoExpiration.getDefault()).isEqualTo("2019-365T23:59:59");
+    }
+
+    private static Path resourcePath(final String path) {
+        try {
+            return Path.of(ApfParserTests.class.getResource(path).toURI());
+        } catch (final URISyntaxException e) {
+            throw new Error(e);
+        }
     }
 }

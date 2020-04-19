@@ -5,12 +5,21 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Map;
 
 public final class Fixtures {
-    public static final Path resourcesRoot = Path.of("src/test/resources");
-    public static final Path banananation = resourcesRoot.resolve("gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar");
+    public static final URI bananationUri;
+    static {
+        try {
+            bananationUri = Fixtures.class.getResource("/gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar").toURI();
+        } catch (URISyntaxException e) {
+            throw new Error(e);
+        }
+    }
+
     public final MockAdaptationRepository adaptationRepository;
 
     public final String EXISTENT_ADAPTATION_ID;
@@ -58,7 +67,7 @@ public final class Fixtures {
         adaptationJar.version = "3";
         adaptationJar.mission = "Motherland";
         adaptationJar.owner = "Deris";
-        adaptationJar.path = banananation;
+        adaptationJar.path = Path.of(bananationUri);
 
         this.EXISTENT_ADAPTATION_ID = adaptationRepository.createAdaptation(adaptationJar);
     }
@@ -69,7 +78,7 @@ public final class Fixtures {
         adaptation.version = "1.0";
         adaptation.mission = "Merlin";
         adaptation.owner = "Arthur";
-        adaptation.path = banananation;
+        adaptation.path = Path.of(bananationUri);
         return adaptation;
     }
 }
