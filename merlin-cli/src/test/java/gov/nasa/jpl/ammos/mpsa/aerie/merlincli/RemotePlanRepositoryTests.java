@@ -547,4 +547,49 @@ public class RemotePlanRepositoryTests {
         // Verify PlanNotFoundException was thrown
         assertThat(thrown).isInstanceOf(ActivityInstanceNotFoundException.class);
     }
+
+    @Test
+    public void testRemoteSimulation() throws PlanNotFoundException, IOException {
+        String planId = "test-simulate-plan-id";
+        String json = "{\"name\": \"testremotesimulation\"}";
+        String outname = "test23n5w4otjwsdno323.json";
+
+        // Set the response for the handler
+        HttpResponse response = createBasicHttpResponse(HttpStatus.SC_OK);
+        response.setEntity(new StringEntity(json));
+        requestHandler.setNextResponse(response);
+
+        // Call repository method
+        repository.getSimulationResults(planId, 3600000000L, outname);
+
+        // Verify request contained expected information
+        HttpUriRequest request = requestHandler.getLastRequest();
+
+        String expectedURIPath = String.format("/plans/%s/results?sampling-period=3600000000", planId);
+        assertThat(request.getURI().toString()).endsWith(expectedURIPath);
+        assertThat(request.getMethod()).isEqualTo(HttpGet.METHOD_NAME);
+
+        // Verify plan was written to expected file
+        String downloadedContents = new String(Files.readAllBytes(Path.of(outname)));
+        assertThat(new JsonMatcher(downloadedContents).matches(json)).isTrue();
+
+        // Cleanup
+        Files.deleteIfExists(Path.of(outname));
+    }
+
+    @Test
+    public void testRemoteSimulationPlanNotFound() throws IOException {
+        String planId = "test-simulate-plan-id";
+        String outname = "test258474267492759y75353t3t.json";
+
+        // Set the response for the handler
+        HttpResponse response = createBasicHttpResponse(HttpStatus.SC_NOT_FOUND);
+        requestHandler.setNextResponse(response);
+
+        // Call repository method
+        Throwable thrown = catchThrowable(() -> repository.getSimulationResults(planId, 3600000000L, outname));
+
+        // Verify PlanNotFoundException was thrown
+        assertThat(thrown).isInstanceOf(PlanNotFoundException.class);
+    }
 }
