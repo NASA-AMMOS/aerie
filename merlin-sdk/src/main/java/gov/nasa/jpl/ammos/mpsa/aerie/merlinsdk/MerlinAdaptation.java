@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 /**
  * A system-level representation of a mission-specific adaptation.
@@ -32,5 +33,5 @@ public interface MerlinAdaptation {
    */
   ActivityMapper getActivityMapper();
 
-  SimulationState newSimulationState();
+  SimulationState newSimulationState(final Instant simulationStartTime);
 }

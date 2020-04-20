@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power.InstrumentPower;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.statemodels.data.BinModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.statemodels.data.InstrumentDataRateModel;
 
@@ -24,4 +25,10 @@ public final class Model {
     public final BinModel dataBin = new BinModel("DataBin", instrumentData);
 
     public final List<BinModel> allBins = List.of(dataBin);
+
+    public Model(final Instant startTime) {
+        this.instrumentPower_W.initialize(startTime);
+        this.instrumentData.initialize(startTime);
+        this.dataBin.initialize(startTime);
+    }
 }

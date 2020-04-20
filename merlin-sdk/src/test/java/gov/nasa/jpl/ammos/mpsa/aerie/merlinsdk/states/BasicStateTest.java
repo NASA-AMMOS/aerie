@@ -1,52 +1,41 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.junit.Test;
 
-import java.util.List;
-
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class BasicStateTest {
     @Test
     public void integerState() {
+        final var simEngine = new SimulationEngine();
+
         final var state = new BasicState<>("State 1", 0);
+        state.initialize(simEngine.getCurrentTime());
 
-        final var activity = new Activity() {
-            @Override
-            public void modelEffects() {
-                state.set(12);
-                assertThat(state.get()).isEqualTo(12);
-            }
-        };
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            state.set(12);
+            assertThat(state.get()).isEqualTo(12);
+        }));
 
-        final var startTime = SimulationInstant.ORIGIN;
-        SimulationEngine.simulate(
-            startTime,
-            List.of(state),
-            () -> SimulationEffects.spawn(activity));
+        simEngine.runToCompletion();
     }
 
     @Test
     public void stringState() {
+        final var simEngine = new SimulationEngine();
+
         final var state = new BasicState<>("State 2", "");
+        state.initialize(simEngine.getCurrentTime());
 
-        final var activity = new Activity() {
-            @Override
-            public void modelEffects() {
-                state.set("NADIR");
-                assertThat(state.get()).isEqualTo("NADIR");
-            }
-        };
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            state.set("NADIR");
+            assertThat(state.get()).isEqualTo("NADIR");
+        }));
 
-        final var startTime = SimulationInstant.ORIGIN;
-        SimulationEngine.simulate(
-            startTime,
-            List.of(state),
-            () -> SimulationEffects.spawn(activity));
+        simEngine.runToCompletion();
     }
 }
 

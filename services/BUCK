@@ -43,7 +43,9 @@ java_binary(
 
 java_test(
     name = "test_services",
-    srcs = glob(["src/**/*.java"]),
+    srcs = glob(["src/test/main/**/*.java"]),
+    resources = glob(["src/test/resources/**"]),
+    resources_root = 'src/test/resources',
     deps = [
         # Third Party
         "//third-party:assertj-core",

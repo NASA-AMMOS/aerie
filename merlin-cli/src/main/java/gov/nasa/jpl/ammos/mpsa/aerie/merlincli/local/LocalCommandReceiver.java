@@ -9,7 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -23,8 +23,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
   private final Map<String, Schedule> schedules = new HashMap<>();
@@ -179,20 +181,24 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     final var adaptation = loadAdaptationProvider(adaptationJar.jarPath).get();
     final var activityMapper = adaptation.getActivityMapper();
 
-    final var simulationStartTime = SimulationInstant.ORIGIN;
-    final var simulationState = adaptation.newSimulationState();
+    final var simulationEngine = new SimulationEngine();
+    final var simulationState = adaptation.newSimulationState(simulationEngine.getCurrentTime());
 
-    simulationState.applyInScope(() -> {
-      SimulationEngine.simulate(simulationStartTime, simulationState.getStates().values(), () -> {
-        for (final var scheduledActivity : schedule.scheduledActivities) {
-          final Activity activity = activityMapper
-              .deserializeActivity(scheduledActivity.activity)
-              .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
+    final Runnable runSchedule = () -> {
+      for (final var scheduledActivity : schedule.scheduledActivities) {
+        final Activity activity = activityMapper
+            .deserializeActivity(scheduledActivity.activity)
+            .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
 
-          deferTo(scheduledActivity.startTime, activity);
-        }
-      });
-    });
+        deferTo(scheduledActivity.startTime, activity);
+      }
+    };
+
+    final Function<Runnable, Runnable> taskDecorator = (task) ->
+        () -> simulationState.applyInScope(task);
+
+    simulationEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, runSchedule));
+    simulationEngine.runToCompletion();
 
     final var samples = new HashMap<String, TreeMap<Instant, Object>>();
     for (final var entry : simulationState.getStates().entrySet()) {

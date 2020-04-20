@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -12,9 +11,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.function.Consumer;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -28,7 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public final class SimulationEngine {
     /// The simulation time of the currently-executing task.
-    private Instant currentSimulationTime;
+    private Instant currentSimulationTime = SimulationInstant.ORIGIN;
 
     /// The control information associated with the currently-executing task.
     private volatile JobContext activeJob = null;
@@ -37,60 +36,59 @@ public final class SimulationEngine {
     private PriorityQueue<Pair<Instant, JobContext>> eventQueue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
 
     /// The provider of control effects given to each task.
-    private final SimulationContext effectsProvider;
+    private final SimulationContext effectsProvider = new EffectsProvider();
 
     /// A pool of worker threads which track the current progress of paused tasks.
+    // TODO: Rename this to `defaultThreadPool`, and accept a configurable thread pool
+    //   at construction time.
     private final ExecutorService threadPool = Executors.newCachedThreadPool(r -> {
         // Daemonize all threads in this pool, so that they don't block the application on shutdown.
-        // TODO: Properly call `shutdown` on the pool instead, once the pool is provided at construction time.
         final var t = Executors.defaultThreadFactory().newThread(r);
         t.setDaemon(true);
         return t;
     });
 
-    private SimulationEngine(final Instant simulationStartTime) {
-        this.effectsProvider = new EffectsProvider();
-        this.currentSimulationTime = simulationStartTime;
+
+    public Instant getCurrentTime() {
+        return this.currentSimulationTime;
     }
 
-    public static Instant simulate(
-        final Instant simulationStartTime,
-        final Collection<? extends State<?>> simulationStates,
-        final Runnable topLevel
-    ) {
-        final var engine = new SimulationEngine(simulationStartTime);
-
-        // TODO: don't initialize states in the simulation engine -- there should be no need to couple the simulation
-        //   engine to states.
-        for (final var state : simulationStates) state.initialize(simulationStartTime);
-
-        engine.run((ctx) -> SimulationEffects.withEffects(ctx, topLevel::run));
-        return engine.currentSimulationTime;
+    public void scheduleJobAfter(final Duration duration, final Consumer<SimulationContext> job) {
+        final var context = new JobContext();
+        this.spawnInThread(context, job);
+        this.resumeAfter(duration, context);
     }
 
-    /**
-     * Schedules the given task to run immediately, and pumps the event queue to depletion.
-     */
-    private void run(final Consumer<SimulationContext> topLevel) {
-        final var rootJob = new JobContext();
-        this.spawnInThread(rootJob, topLevel);
-        this.resumeAfter(Duration.ZERO, rootJob);
+    public void scheduleJobAfter(final long quantity, final TimeUnit unit, final Consumer<SimulationContext> job) {
+        this.scheduleJobAfter(Duration.of(quantity, unit), job);
+    }
 
-        // Run until we've handled all outstanding activity events.
-        while (!this.eventQueue.isEmpty()) {
-            final var event = this.eventQueue.remove();
-            final var eventTime = event.getLeft();
-            final var job = event.getRight();
+    public void step() {
+        if (this.eventQueue.isEmpty()) return;
 
-            this.currentSimulationTime = eventTime;
-            this.activeJob = job;
-            job.yieldControl();
-            job.takeControl();
-            this.activeJob = null;
+        final var event = this.eventQueue.remove();
+        final var eventTime = event.getLeft();
+        final var job = event.getRight();
+
+        this.currentSimulationTime = eventTime;
+        this.activeJob = job;
+        job.yieldControl();
+        job.takeControl();
+        this.activeJob = null;
+
+        if (job.failure != null) {
+            throw new RuntimeException(job.failure);
         }
-
-        this.threadPool.shutdown();
     }
+
+    public void runToCompletion() {
+        while (this.hasMoreJobs()) this.step();
+    }
+
+    public boolean hasMoreJobs() {
+        return !this.eventQueue.isEmpty();
+    }
+
 
     private void spawnInThread(final JobContext job, final Consumer<SimulationContext> scope) {
         this.threadPool.execute(() -> job.start(scope));
@@ -103,29 +101,35 @@ public final class SimulationEngine {
     private enum ActivityStatus { NotStarted, InProgress, Complete }
 
     private final class JobContext {
-        private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
         private final Object CONTROL_TOKEN = new Object();
+        private final SynchronousQueue<Object> channel = new SynchronousQueue<>();
 
         private final List<JobContext> children = new ArrayList<>();
         private final Set<JobContext> listeners = new HashSet<>();
 
-        public ActivityStatus status = ActivityStatus.NotStarted;
+        // The most recent exception thrown by this activity, if any.
+        public volatile Throwable failure = null;
+        public volatile ActivityStatus status = ActivityStatus.NotStarted;
 
         public void start(final Consumer<SimulationContext> scope) {
             this.takeControl();
+            try {
+                this.status = ActivityStatus.InProgress;
+                scope.accept(SimulationEngine.this.effectsProvider);
+                this.waitForChildren();
+                this.status = ActivityStatus.Complete;
 
-            this.status = ActivityStatus.InProgress;
-            scope.accept(SimulationEngine.this.effectsProvider);
-            this.waitForChildren();
-            this.status = ActivityStatus.Complete;
-
-            // Notify any listeners that we've finished.
-            for (final var listener : this.listeners) {
-                this.listeners.remove(listener);
-                SimulationEngine.this.resumeAfter(Duration.ZERO, listener);
+                // Notify any listeners that we've finished.
+                for (final var listener : this.listeners) {
+                    this.listeners.remove(listener);
+                    SimulationEngine.this.resumeAfter(Duration.ZERO, listener);
+                }
+            } catch (final Throwable ex) {
+                this.failure = ex;
+                this.status = ActivityStatus.Complete;
+            } finally {
+                this.yieldControl();
             }
-
-            this.yieldControl();
         }
 
         public void waitForActivity(final JobContext jobToAwait) {

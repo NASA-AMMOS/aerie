@@ -5,28 +5,38 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+
 public final class SimulationEffects {
   private SimulationEffects() {}
 
   private static final DynamicCell<SimulationContext> activeContext = new DynamicCell<>();
+  private static final DynamicCell<Function<Runnable, Runnable>> activeDecorator = new DynamicCell<>();
 
-  public static <Throws extends Throwable>
-  void withEffects(final SimulationContext ctx, final DynamicCell.BlockScope<Throws> scope) throws Throws {
-    activeContext.setWithin(ctx, scope);
+  public static Consumer<SimulationContext> withEffects(final Function<Runnable, Runnable> decorator, final Runnable scope) {
+    return (ctx) ->
+        activeContext.setWithin(ctx, () ->
+            activeDecorator.setWithin(decorator, () ->
+                decorator.apply(scope).run()));
+  }
+
+  public static Consumer<SimulationContext> withEffects(final Runnable scope) {
+    return withEffects(task -> task, scope);
   }
 
   /**
    * Spawn a new activity as a child of the currently-running activity after a given span of time.
    */
   public static SimulationContext.SpawnedActivityHandle defer(final Duration duration, final Activity activity) {
-    return activeContext.get().defer(duration, (ctx) -> withEffects(ctx, activity::modelEffects));
+    return activeContext.get().defer(duration, withEffects(activeDecorator.get(), activity::modelEffects));
   }
 
   /**
    * Spawn a parallel branch of the currently-running activity.
    */
   public static void spawn(final Runnable scope) {
-    activeContext.get().defer(Duration.ZERO, (ctx) -> withEffects(ctx, scope::run));
+    activeContext.get().defer(Duration.ZERO, withEffects(activeDecorator.get(), scope));
   }
 
   /**

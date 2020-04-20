@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateModels;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -9,7 +10,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -121,8 +122,10 @@ public class OccultationsTimesModelTest {
 
     @Test
     public void testOccultationTimesModel() {
-        final var startTime = SimulationInstant.ORIGIN;
+        final var simEngine = new SimulationEngine();
+
         final var earthMoonSunOccultationsModel = new OccultationTimesModel();
+        earthMoonSunOccultationsModel.initialize(simEngine.getCurrentTime());
         earthMoonSunOccultationsModel.setStart(Time.fromTimezoneString("2001-335T00:00:00.0", "UTC"));
         earthMoonSunOccultationsModel.setEnd(Time.fromTimezoneString("2002-001T00:00:00.0", "UTC"));
         earthMoonSunOccultationsModel.setOccType(OccultationType.ANY);
@@ -136,7 +139,7 @@ public class OccultationsTimesModelTest {
         earthMoonSunOccultationsModel.setObserver(Body.EARTH);
         earthMoonSunOccultationsModel.setStepSize(Duration.fromMinutes(3));
 
-        SimulationEngine.simulate(startTime, List.of(earthMoonSunOccultationsModel), () -> {
+        simEngine.scheduleJobAfter(0, TimeUnit.SECONDS, withEffects(() -> {
             List<Pair<Time, Time>> occTimes = earthMoonSunOccultationsModel.get();
             assertEquals("1 occultation window expected; '" + occTimes.size() + "' received.", 1, occTimes.size());
 
@@ -178,6 +181,8 @@ public class OccultationsTimesModelTest {
             message = "Expected end '" + expectedEnd.toString() + "' - Actual end '" + actualEnd.toString()
                     + "' should be less than 3 minutes.";
             assertTrue(message, endDifference.lessThan(Duration.fromMinutes(3)));
-        });
+        }));
+
+        simEngine.runToCompletion();
     }
 }

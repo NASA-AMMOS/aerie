@@ -1,259 +1,132 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.defer;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
-import static org.junit.Assert.*;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit.MICROSECONDS;
+import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import org.junit.Test;
 
-public class SimulationEngineTests {
-    public static final class DiverseStates {
-        public final SettableState<Double> floatState = new BasicState<>("FLOAT_STATE", 0.0);
-        public final SettableState<String> stringState = new BasicState<>("STRING_STATE", "A");
-        public final SettableState<List<Double>> arrayState = new BasicState<>("ARRAY_STATE", List.of(1.0, 0.0, 0.0));
-        public final SettableState<Boolean> booleanState = new BasicState<>("BOOLEAN_STATE", true);
-
-        public List<State<?>> getStateList() {
-            return List.of(floatState, stringState, arrayState, booleanState);
-        }
-    }
-
-    private final DynamicCell<DiverseStates> statesRef = DynamicCell.inheritableCell();
-
-    public class ParentActivity implements Activity {
-
-        @Parameter
-        public Double floatValue = 0.0;
-
-        @Parameter
-        public String stringValue = "A";
-
-        @Parameter
-        public List<Double> arrayValue = List.of(1.0, 0.0, 0.0);
-
-        @Parameter
-        public Boolean booleanValue = true;
-
-        @Parameter
-        public Duration durationValue = Duration.of(10, TimeUnit.SECONDS);
-
-        @Override
-        public void modelEffects() {
-            final var states = statesRef.get();
-
-            ChildActivity child = new ChildActivity();
-            child.booleanValue = this.booleanValue;
-            child.durationValue = this.durationValue;
-            spawn(child);
-
-            SettableState<Double> floatState = states.floatState;
-            Double currentFloatValue = floatState.get();
-            floatState.set(floatValue);
-            delay(5L, TimeUnit.SECONDS);
-            states.stringState.set(stringValue);
-            states.arrayState.set(arrayValue);
-
-        }
-    }
-
-    public class ChildActivity implements Activity {
-
-        @Parameter
-        public Boolean booleanValue = true;
-
-        @Parameter
-        public Duration durationValue = Duration.of(10, TimeUnit.SECONDS);
-
-        @Override
-        public void modelEffects() {
-            final var states = statesRef.get();
-
-            delay(durationValue);
-            states.booleanState.set(booleanValue);
-        }
-    }
-
-    /**
-     * Runs a baseline integration test with 1000 activity instances (that decompose into 1000 more)
-     */
+public final class SimulationEngineTests {
     @Test
-    public void sequentialSimulationBaselineTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+    public void testChildrenOrdering() {
+        final var simEngine = new SimulationEngine();
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                for (int i = 0; i < 1000; i++) {
-                    ParentActivity act = new ParentActivity();
-                    act.floatValue = 1.0;
-                    act.stringValue = "B";
-                    act.arrayValue = List.of(0.0, 1.0, 0.0);
-                    act.booleanValue = false;
-                    act.durationValue = Duration.of(10, TimeUnit.SECONDS);
+        final var expectedTrace = List.of(
+            "root-1 " + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "root-2 " + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "child[0]-1 " + simEngine.getCurrentTime().plus(1, MICROSECONDS),
+            "child[1]-1 " + simEngine.getCurrentTime().plus(2, MICROSECONDS),
+            "child[2]-1 " + simEngine.getCurrentTime().plus(3, MICROSECONDS)
+        );
 
-                    defer(i, TimeUnit.HOURS, act);
-                }
-            });
-        });
-    }
+        final var trace = new ArrayList<>();
+        simEngine.scheduleJobAfter(Duration.ZERO, (root) -> {
+            trace.add("root-1 " + root.now());
 
-    public class TimeOrderingTestActivity implements Activity {
+            root.defer(Duration.of(3, MICROSECONDS), (child) -> trace.add("child[2]-1 " + child.now()));
+            root.defer(Duration.of(1, MICROSECONDS), (child) -> trace.add("child[0]-1 " + child.now()));
+            root.defer(Duration.of(2, MICROSECONDS), (child) -> trace.add("child[1]-1 " + child.now()));
 
-        @Parameter
-        Double floatValue = 0.0;
-
-        @Override
-        public void modelEffects() {
-            final var states = statesRef.get();
-
-            states.floatState.set(floatValue);
-        }
-    }
-
-    /**
-     * Tests that activities are executed in order by event time and that state changes at those event times are
-     * accurate.
-     */
-    @Test
-    public void timeOrderingTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
-
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                for (int i = 1; i <= 3; i++) {
-                    TimeOrderingTestActivity act = new TimeOrderingTestActivity();
-                    act.floatValue = i * 1.0;
-
-                    defer(i, TimeUnit.HOURS, act);
-                }
-            });
+            trace.add("root-2 " + root.now());
         });
 
-        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
+        simEngine.runToCompletion();
 
-        assertEquals((Double) 1.0, floatStateHistory.get(simStart.plus(1, TimeUnit.HOURS)));
-        assertEquals((Double) 2.0, floatStateHistory.get(simStart.plus(2, TimeUnit.HOURS)));
-        assertEquals((Double) 3.0, floatStateHistory.get(simStart.plus(3, TimeUnit.HOURS)));
-    }
-
-    /* ------------------------------- DELAY TEST ------------------------------- */
-    public class DelayTestActivity implements Activity {
-        @Override
-        public void modelEffects() {
-            final var states = statesRef.get();
-
-            states.floatState.set(1.0);
-            delay(1, TimeUnit.HOURS);
-            states.floatState.set(2.0);
-        }
+        assertEquals(expectedTrace, trace);
     }
 
     /**
      * Tests the functionality of delays within effect models
      */
     @Test
-    public void delayTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+    public void testDelay() {
+        final var simEngine = new SimulationEngine();
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                defer(1, TimeUnit.HOURS, new DelayTestActivity());
-            });
+        final var expectedTrace = List.of(
+            "root-1 " + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "root-2 " + simEngine.getCurrentTime().plus(3, MICROSECONDS),
+            "root-3 " + simEngine.getCurrentTime().plus(5, MICROSECONDS)
+        );
+
+        final var trace = new ArrayList<>();
+        simEngine.scheduleJobAfter(Duration.ZERO, (root) -> {
+            trace.add("root-1 " + root.now());
+
+            root.delay(Duration.of(3, MICROSECONDS));
+            trace.add("root-2 " + root.now());
+
+            root.delay(Duration.of(2, MICROSECONDS));
+            trace.add("root-3 " + root.now());
         });
 
-        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
+        simEngine.runToCompletion();
 
-        assertEquals((Double) 1.0, floatStateHistory.get(simStart.plus(1, TimeUnit.HOURS)));
-        assertEquals((Double) 2.0, floatStateHistory.get(simStart.plus(2, TimeUnit.HOURS)));
+        assertEquals(expectedTrace, trace);
     }
 
-    /* --------------------------- SPAWN ACTIVITY TEST -------------------------- */
-
-    public class SpawnTestParentActivity implements Activity {
-
-        @Override
-        public void modelEffects() {
-            spawn(new SpawnTestChildActivity());
-        }
-    }
-
-    public class SpawnTestChildActivity implements Activity {
-        @Override
-        public void modelEffects() {
-            final var states = statesRef.get();
-            states.floatState.set(5.0);
-        }
-    }
-
-    /**
-     * Tests that child activities created with `spawnActivity()` are inserted into the queue and that their effect
-     * models are run at the proper simulation time.
-     */
     @Test
-    public void spawnActivityTimingTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+    public void testDeferredChild() {
+        final var simEngine = new SimulationEngine();
 
-        final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                defer(1, TimeUnit.HOURS, new SpawnTestParentActivity());
+        final var expectedTrace = List.of(
+            "root-1 "  + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "root-2 "  + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "child-1 " + simEngine.getCurrentTime().plus(3, MICROSECONDS),
+            "child-2 " + simEngine.getCurrentTime().plus(5, MICROSECONDS)
+        );
+
+        final var trace = new ArrayList<>();
+        simEngine.scheduleJobAfter(Duration.ZERO, (root) -> {
+            trace.add("root-1 " + root.now());
+
+            root.defer(Duration.of(3, MICROSECONDS), (child) -> {
+                trace.add("child-1 " + child.now());
+
+                child.delay(Duration.of(2, MICROSECONDS));
+                trace.add("child-2 " + child.now());
             });
+            trace.add("root-2 " + root.now());
         });
 
-        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
+        simEngine.runToCompletion();
 
-        assertEquals((Double) 5.0, floatStateHistory.get(endTime));
+        assertEquals(expectedTrace, trace);
     }
 
-    /* --------------------------- CALL ACTIVITY TEST --------------------------- */
-
-    public class CallTestParentActivity implements Activity {
-        @Override
-        public void modelEffects() {
-            final var states = statesRef.get();
-
-            spawn(new CallTestChildActivity()).await();
-            states.floatState.set(5.0);
-        }
-    }
-
-    public class CallTestChildActivity implements Activity {
-        @Override
-        public void modelEffects() {
-            delay(2, TimeUnit.HOURS);
-        }
-    }
-
-    /**
-     * Tests that child activities created with `callActivity()` block the parent until effect model completion.
-     */
     @Test
-    public void callActivityTimingTest() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DiverseStates();
+    public void testAwaitBlocksOnChild() {
+        final var simEngine = new SimulationEngine();
 
-        final var endTime = statesRef.setWithin(states, () -> {
-            return SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                defer(1, TimeUnit.HOURS, new CallTestParentActivity());
+        final var expectedTrace = List.of(
+            "root-1 "  + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "root-2 "  + simEngine.getCurrentTime().plus(0, MICROSECONDS),
+            "child-1 " + simEngine.getCurrentTime().plus(3, MICROSECONDS),
+            "child-2 " + simEngine.getCurrentTime().plus(5, MICROSECONDS),
+            "root-3 "  + simEngine.getCurrentTime().plus(5, MICROSECONDS)
+        );
+
+        final var trace = new ArrayList<>();
+        simEngine.scheduleJobAfter(Duration.ZERO, (root) -> {
+            trace.add("root-1 " + root.now());
+
+            final var childHandle = root.defer(Duration.of(3, MICROSECONDS), (child) -> {
+                trace.add("child-1 " + child.now());
+
+                child.delay(Duration.of(2, MICROSECONDS));
+                trace.add("child-2 " + child.now());
             });
+            trace.add("root-2 " + root.now());
+
+            childHandle.await();
+            trace.add("root-3 " + root.now());
         });
 
-        Map<Instant, Double> floatStateHistory = states.floatState.getHistory();
-        assertEquals((Double) 5.0, floatStateHistory.get(endTime));
+        simEngine.runToCompletion();
+
+        assertEquals(expectedTrace, trace);
     }
 }

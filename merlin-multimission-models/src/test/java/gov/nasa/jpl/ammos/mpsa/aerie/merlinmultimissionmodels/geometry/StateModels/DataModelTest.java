@@ -5,15 +5,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.data.StateModels.I
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 
 public class DataModelTest {
 
@@ -29,9 +33,16 @@ public class DataModelTest {
         public final BinModel bin_2 = new BinModel("Bin 2", instrument_c_data_rate, instrument_d_data_rate);
         public final BinModel bin_3 = new BinModel("Bin 3", instrument_e_data_rate, instrument_f_data_rate, instrument_g_data_rate);
 
+        private final List<State<?>> stateList = List.of(
+            instrument_a_data_rate, instrument_b_data_rate, instrument_c_data_rate, instrument_d_data_rate,
+            instrument_e_data_rate, instrument_f_data_rate, instrument_g_data_rate, bin_1, bin_2, bin_3);
+
+        public DataModelStates(final Instant startTime) {
+            for (final var state : this.stateList) state.initialize(startTime);
+        }
+
         public List<State<?>> getStateList() {
-            return List.of(instrument_a_data_rate, instrument_b_data_rate, instrument_c_data_rate, instrument_d_data_rate,
-                    instrument_e_data_rate, instrument_f_data_rate, instrument_g_data_rate, bin_1, bin_2, bin_3);
+            return Collections.unmodifiableList(this.stateList);
         }
     }
 
@@ -83,40 +94,44 @@ public class DataModelTest {
 
     @Test
     public void bin_initialization() {
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DataModelStates();
+        final var simEngine = new SimulationEngine();
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                spawn(new InitBinDataVolumes());
-            });
-        });
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        final Function<Runnable, Runnable> taskDecorator = (task) ->
+            () -> statesRef.setWithin(states, task::run);
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> spawn(new InitBinDataVolumes())));
+        simEngine.runToCompletion();
     }
 
     @Test
     public void turn_instrument_on(){
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DataModelStates();
+        final var simEngine = new SimulationEngine();
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                spawn(new InitBinDataVolumes());
-                spawn(new TurnInstrumentAOn());
-            });
-        });
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        final Function<Runnable, Runnable> taskDecorator = (task) ->
+            () -> statesRef.setWithin(states, task::run);
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+        }));
+        simEngine.runToCompletion();
     }
 
     @Test
     public void downlink_data(){
-        final var simStart = SimulationInstant.ORIGIN;
-        final var states = new DataModelStates();
+        final var simEngine = new SimulationEngine();
 
-        statesRef.setWithin(states, () -> {
-            SimulationEngine.simulate(simStart, states.getStateList(), () -> {
-                spawn(new InitBinDataVolumes());
-                spawn(new TurnInstrumentAOn());
-                spawn(new DownlinkData());
-            });
-        });
+        final var states = new DataModelStates(simEngine.getCurrentTime());
+        final Function<Runnable, Runnable> taskDecorator = (task) ->
+            () -> statesRef.setWithin(states, task::run);
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, () -> {
+            spawn(new InitBinDataVolumes());
+            spawn(new TurnInstrumentAOn());
+            spawn(new DownlinkData());
+        }));
+        simEngine.runToCompletion();
     }
 }

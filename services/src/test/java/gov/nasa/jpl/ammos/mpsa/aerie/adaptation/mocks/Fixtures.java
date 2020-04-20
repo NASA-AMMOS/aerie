@@ -5,12 +5,21 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Map;
 
 public final class Fixtures {
-    public static final Path resourcesRoot = Path.of("src/test/resources");
-    public static final Path banananation = resourcesRoot.resolve("gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar");
+    public static final URI bananationUri;
+    static {
+        try {
+            bananationUri = Fixtures.class.getResource("/gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar").toURI();
+        } catch (URISyntaxException e) {
+            throw new Error(e);
+        }
+    }
+
     public final MockAdaptationRepository adaptationRepository;
 
     public final String EXISTENT_ADAPTATION_ID;
@@ -28,25 +37,6 @@ public final class Fixtures {
             "peelDirection", ParameterSchema.STRING
         ), Map.of(
             "peelDirection", SerializedParameter.of("fromStem")
-        )),
-        "ParameterTest", new ActivityType("ParameterTest", Map.of(
-            "a", ParameterSchema.REAL,
-            "b", ParameterSchema.REAL,
-            "c", ParameterSchema.INT,
-            "d", ParameterSchema.INT,
-            "e", ParameterSchema.INT,
-            "f", ParameterSchema.INT,
-            "g", ParameterSchema.STRING,
-            "h", ParameterSchema.STRING
-        ), Map.of(
-            "a", SerializedParameter.of(3.141),
-            "b", SerializedParameter.of(1.618f),
-            "c", SerializedParameter.of(16),
-            "d", SerializedParameter.of(32),
-            "e", SerializedParameter.of(64),
-            "f", SerializedParameter.of(128),
-            "g", SerializedParameter.of("g"),
-            "h", SerializedParameter.of("h")
         ))
     );
 
@@ -54,22 +44,22 @@ public final class Fixtures {
         this.adaptationRepository = new MockAdaptationRepository();
 
         final AdaptationJar adaptationJar = new AdaptationJar();
-        adaptationJar.name = "adaptation1";
-        adaptationJar.version = "3";
+        adaptationJar.name = "Banananation";
+        adaptationJar.version = "0.0.1";
         adaptationJar.mission = "Motherland";
         adaptationJar.owner = "Deris";
-        adaptationJar.path = banananation;
+        adaptationJar.path = Path.of(bananationUri);
 
         this.EXISTENT_ADAPTATION_ID = adaptationRepository.createAdaptation(adaptationJar);
     }
 
-    public static AdaptationJar createValidAdaptationJar(final String name) {
+    public static AdaptationJar createValidAdaptationJar(final String mission) {
         final AdaptationJar adaptation = new AdaptationJar();
-        adaptation.name = name;
-        adaptation.version = "1.0";
-        adaptation.mission = "Merlin";
+        adaptation.name = "Banananation";
+        adaptation.version = "0.0.1";
+        adaptation.mission = mission;
         adaptation.owner = "Arthur";
-        adaptation.path = banananation;
+        adaptation.path = Path.of(bananationUri);
         return adaptation;
     }
 }
