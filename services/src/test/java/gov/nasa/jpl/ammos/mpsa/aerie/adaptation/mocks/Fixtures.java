@@ -44,8 +44,8 @@ public final class Fixtures {
         this.adaptationRepository = new MockAdaptationRepository();
 
         final AdaptationJar adaptationJar = new AdaptationJar();
-        adaptationJar.name = "adaptation1";
-        adaptationJar.version = "3";
+        adaptationJar.name = "Banananation";
+        adaptationJar.version = "0.0.1";
         adaptationJar.mission = "Motherland";
         adaptationJar.owner = "Deris";
         adaptationJar.path = Path.of(bananationUri);
@@ -53,11 +53,11 @@ public final class Fixtures {
         this.EXISTENT_ADAPTATION_ID = adaptationRepository.createAdaptation(adaptationJar);
     }
 
-    public static AdaptationJar createValidAdaptationJar(final String name) {
+    public static AdaptationJar createValidAdaptationJar(final String mission) {
         final AdaptationJar adaptation = new AdaptationJar();
-        adaptation.name = name;
-        adaptation.version = "1.0";
-        adaptation.mission = "Merlin";
+        adaptation.name = "Banananation";
+        adaptation.version = "0.0.1";
+        adaptation.mission = mission;
         adaptation.owner = "Arthur";
         adaptation.path = Path.of(bananationUri);
         return adaptation;

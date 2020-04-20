@@ -61,7 +61,7 @@ public final class LocalApp implements App {
         FileUtil.streamToFile(adaptation.jarSource, path.toString());
 
         try {
-            AdaptationLoader.loadAdaptationProvider(path);
+            AdaptationLoader.loadAdaptationProvider(path, adaptation.name, adaptation.version);
         } catch (final AdaptationLoader.AdaptationLoadException ex) {
             throw new AdaptationRejectedException(ex);
         }
@@ -197,7 +197,8 @@ public final class LocalApp implements App {
     private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
         try {
             final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-            final MerlinAdaptation adaptation = AdaptationLoader.loadAdaptation(adaptationJar.path);
+            final MerlinAdaptation adaptation =
+                AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
             return new Adaptation(adaptation);
         } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
             throw new NoSuchAdaptationException(adaptationId, ex);

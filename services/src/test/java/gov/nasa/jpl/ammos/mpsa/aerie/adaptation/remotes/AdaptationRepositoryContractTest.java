@@ -31,7 +31,7 @@ public abstract class AdaptationRepositoryContractTest {
         final AdaptationJar adaptation = this.adaptationRepository.getAdaptation(id);
 
         // THEN
-        assertThat(adaptation.name).isEqualTo(newAdaptation.name);
+        assertThat(adaptation.mission).isEqualTo(newAdaptation.mission);
     }
 
     @Test
