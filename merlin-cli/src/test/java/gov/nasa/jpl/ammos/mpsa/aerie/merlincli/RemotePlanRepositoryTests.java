@@ -360,7 +360,7 @@ public class RemotePlanRepositoryTests {
         // Verify request contained expected information
         HttpUriRequest request = requestHandler.getLastRequest();
 
-        String expectedURIPath = String.format("/plans/%s/activities/%s", planId, activityId);
+        String expectedURIPath = String.format("/plans/%s/activity_instances/%s", planId, activityId);
         assertThat(request.getURI().toString()).endsWith(expectedURIPath);
         assertThat(request.getMethod()).isEqualTo(HttpGet.METHOD_NAME);
     }
@@ -414,7 +414,7 @@ public class RemotePlanRepositoryTests {
         // Verify request contained expected information
         HttpUriRequest request = requestHandler.getLastRequest();
 
-        String expectedURIPath = String.format("/plans/%s/activities/%s", planId, activityId);
+        String expectedURIPath = String.format("/plans/%s/activity_instances/%s", planId, activityId);
         assertThat(request.getURI().toString()).endsWith(expectedURIPath);
         assertThat(request.getMethod()).isEqualTo(HttpPatch.METHOD_NAME);
         assertThat(new String(
@@ -510,7 +510,7 @@ public class RemotePlanRepositoryTests {
         // Verify request contained expected information
         HttpUriRequest request = requestHandler.getLastRequest();
 
-        String expectedURIPath = String.format("/plans/%s/activities/%s", planId, activityId);
+        String expectedURIPath = String.format("/plans/%s/activity_instances/%s", planId, activityId);
         assertThat(request.getURI().toString()).endsWith(expectedURIPath);
         assertThat(request.getMethod()).isEqualTo(HttpDelete.METHOD_NAME);
     }

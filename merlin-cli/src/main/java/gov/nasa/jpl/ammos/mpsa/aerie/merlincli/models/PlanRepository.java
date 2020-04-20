@@ -10,6 +10,7 @@ public interface PlanRepository {
     String getActivityInstance(String planId, String activityId) throws PlanNotFoundException, ActivityInstanceNotFoundException;
     void updateActivityInstance(String planId, String activityId, String activityInstanceJson) throws PlanNotFoundException, ActivityInstanceNotFoundException, InvalidJsonException, InvalidActivityInstanceException;
     void deleteActivityInstance(String planId, String activityId) throws PlanNotFoundException, ActivityInstanceNotFoundException;
+    void getSimulationResults(String planId, long samplingPeriod, String outName) throws PlanNotFoundException;
 
     class InvalidJsonException extends Exception {
         public InvalidJsonException(String message) {
