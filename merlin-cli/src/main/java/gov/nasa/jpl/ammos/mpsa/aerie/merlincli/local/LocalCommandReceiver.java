@@ -173,7 +173,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
   }
 
   @Override
-  public void performSimulation(String planId) {
+  public void performSimulation(String planId, long samplingPeriod, String outName) {
     if (!schedules.containsKey(planId)) throw new RuntimeException("No such plan `" + planId + "`");
 
     final var schedule = schedules.get(planId);
