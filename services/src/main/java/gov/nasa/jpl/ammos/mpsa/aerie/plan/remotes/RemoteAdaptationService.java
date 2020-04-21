@@ -91,13 +91,13 @@ public final class RemoteAdaptationService implements AdaptationService {
     final HttpResponse<String> response;
     try {
       final var samplingDuration = startTime.until(timestampToInstant(plan.endTimestamp), ChronoUnit.MICROS);
-      final var samplingFrequency = Duration.of(500, TimeUnit.MILLISECONDS).durationInMicroseconds;
+      final var samplingPeriod = Duration.of(500, TimeUnit.MILLISECONDS).durationInMicroseconds;
 
       final var requestBody = Json.createObjectBuilder()
           .add("adaptationId", plan.adaptationId)
           .add("startTime", plan.startTimestamp)
           .add("samplingDuration", samplingDuration)
-          .add("samplingFrequency", samplingFrequency)
+          .add("samplingPeriod", samplingPeriod)
           .add("activities", serializeScheduledActivities(plan))
           .build();
 
