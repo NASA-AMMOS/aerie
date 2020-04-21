@@ -19,6 +19,7 @@ java_test(
     resources = glob(["src/test/resources/**/*"]),
     resources_root = "src/test/resources/",
     deps = [
+        "//third-party/merlin-sdk/test:merlin-sdk",
         "//third-party:JNISpice",
         ":merlin-sdk"
     ]

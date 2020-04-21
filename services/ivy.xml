@@ -9,11 +9,11 @@
         <dependency org="io.javalin" name="javalin" rev="3.8.0" conf="core->default"/>
         <dependency org="org.mongodb" name="mongodb-driver-sync" rev="3.11.0" conf="core->default"/>
         <dependency org="org.slf4j" name="slf4j-simple" rev="1.7.26" conf="core->default"/>
-        <dependency org="org.junit.jupiter" name="junit-jupiter-engine" rev="5.4.2" conf="core->default"/>
-        <dependency org="org.assertj" name="assertj-core" rev="3.13.2" conf="core->default"/>
-        <dependency org="junit" name="junit" rev="4.12" conf="core->default"/>
         <dependency org="org.eclipse" name="yasson" rev="1.0.5" conf="core->default"/>
         <!--Test will include all dependencies from core, hence below is for test only dependencies-->
+        <dependency org="org.junit.jupiter" name="junit-jupiter-engine" rev="5.4.2" conf="test->default"/>
+        <dependency org="org.assertj" name="assertj-core" rev="3.13.2" conf="test->default"/>
+        <dependency org="junit" name="junit" rev="4.12" conf="test->default"/>
         <dependency org="javax.json.bind" name="javax.json.bind-api" rev="1.0" conf="test->default"/>
         <dependency org="org.glassfish" name="javax.json" rev="1.1.4" conf="test->default"/>
     </dependencies>
