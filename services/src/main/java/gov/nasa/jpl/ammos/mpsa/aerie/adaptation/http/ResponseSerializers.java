@@ -147,7 +147,7 @@ public final class ResponseSerializers {
         .add("adaptationId", message.adaptationId)
         .add("startTime", DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn").withZone(ZoneOffset.UTC).format(message.startTime))
         .add("samplingDuration", message.samplingDuration.durationInMicroseconds)
-        .add("samplingFrequency", message.samplingFrequency.durationInMicroseconds)
+        .add("samplingPeriod", message.samplingPeriod.durationInMicroseconds)
         .add("activities", serializeScheduledActivities(message.activityInstances))
         .build();
   }
