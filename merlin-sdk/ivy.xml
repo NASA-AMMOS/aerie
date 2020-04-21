@@ -11,7 +11,7 @@
         <dependency org="org.apache.commons" name="commons-lang3" rev="3.9" conf="core->default"/>
         <dependency org="org.apache.commons" name="commons-math3" rev="3.6.1" conf="core->default"/>
         <dependency org="com.squareup" name="javapoet" rev="1.11.1" conf="core->default"/>
-        <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.9.8" conf="core->default"/>
+        <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.10.0" conf="core->default"/>
         <!-- below is for test only dependencies-->
     </dependencies>
 </ivy-module>
