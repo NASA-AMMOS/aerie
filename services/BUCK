@@ -3,30 +3,12 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(["src/main/resources/**"]),
     resources_root = 'src/main/resources',
-    deps = [
-        "//third-party:assertj-core",
-        "//third-party:commons-lang3",
-        "//third-party:javalin",
-        "//third-party:javax.json",
-        "//third-party:javax.json.bind-api",
-        "//third-party:javax.servlet-api",
-        "//third-party:junit-jupiter-engine",
-        "//third-party:jetty",
-        "//third-party:kotlin-stdlib",
-        "//third-party:mongo-java-driver",
-        "//third-party:slf4j-simple",
-        "//third-party:slf4j-api",
-        "//third-party:websocket",
-        "//third-party:yasson",
-
-        # Modules
-        "//merlin-sdk:merlin-sdk"
-    ],
+    exported_deps = ["//third-party/services/core:services", "//merlin-sdk:merlin-sdk"],
     visibility = ['PUBLIC']
 )
 
 java_binary(
-    name = "adaptation-service", 
+    name = "adaptation-service",
     deps = [
         ':services',
     ],
@@ -34,7 +16,7 @@ java_binary(
 )
 
 java_binary(
-    name = "plan-service", 
+    name = "plan-service",
     deps = [
         ':services'
     ],
@@ -48,20 +30,9 @@ java_test(
     resources_root = 'src/test/resources',
     deps = [
         # Third Party
-        "//third-party:assertj-core",
-        "//third-party:commons-lang3",
-        "//third-party:hamcrest-all",
-        "//third-party:javalin",
-        "//third-party:javax.json.bind-api",
-        "//third-party:javax.json",
-        "//third-party:junit",
-        "//third-party:junit-jupiter",
-        "//third-party:mongo-java-driver",
-        "//third-party:slf4j-simple",
-        "//third-party:yasson",
-
+        "//third-party/services/test:services",
         # Aerie
-        "//merlin-sdk:merlin-sdk"
+        ":services"
     ],
     visibility = ['PUBLIC']
 )

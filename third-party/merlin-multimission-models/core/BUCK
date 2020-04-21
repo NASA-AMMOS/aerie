@@ -1,0 +1,21 @@
+prebuilt_jar(
+     name = 'commons-math3-jar-3.6.1',
+     binary_jar = 'commons-math3-jar-3.6.1.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'commons-lang3-jar-3.9',
+     binary_jar = 'commons-lang3-jar-3.9.jar',
+     visibility = ['PUBLIC']
+)
+
+java_library(
+     name = 'merlin-multimission-models',
+     exported_deps = [
+          ":commons-math3-jar-3.6.1",
+          ":commons-lang3-jar-3.9",
+     ],
+     visibility = ['PUBLIC'],
+)
+

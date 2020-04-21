@@ -4,7 +4,7 @@ java_library(
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
     exported_deps = [
-        "//third-party:commons-lang3",
+        "//third-party/banananation/core:banananation",
         "//third-party:JNISpice",
         "//merlin-sdk:merlin-sdk",
     ],
@@ -19,10 +19,7 @@ java_test(
     resources_root = "src/test/resources/",
     deps = [
         # Third Party
-        "//third-party:assertj-core",
-        "//third-party:hamcrest-all",
-        "//third-party:junit",
-
+        "//third-party/banananation/test:banananation",
         # Aerie
         ":banananation"
     ]

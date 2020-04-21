@@ -7,13 +7,8 @@ java_library(
         "--source-path", "merlin-sdk/src/",
         "--module-path", "third-party/"
         ],
-    deps = [
-        "//third-party:commons-lang3",
-        "//third-party:commons-math3",
-        "//third-party:jackson-core",
-        "//third-party:javapoet",
-        "//third-party:JNISpice",
-        "//third-party:commons-collections4",
+    exported_deps = [
+        "//third-party/merlin-sdk/core:merlin-sdk",
     ],
     visibility = ['PUBLIC']
 )
@@ -24,11 +19,8 @@ java_test(
     resources = glob(["src/test/resources/**/*"]),
     resources_root = "src/test/resources/",
     deps = [
-        "//third-party:assertj-core",
+        "//third-party/merlin-sdk/test:merlin-sdk",
         "//third-party:JNISpice",
-        "//third-party:junit",
-        "//third-party:hamcrest-all",
-        "//third-party:commons-collections4",
-        "//merlin-sdk:merlin-sdk"
+        ":merlin-sdk"
     ]
 )

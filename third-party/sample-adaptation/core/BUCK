@@ -1,0 +1,21 @@
+prebuilt_jar(
+     name = 'commons-io-jar-2.6',
+     binary_jar = 'commons-io-jar-2.6.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'commons-collections4-jar-4.4',
+     binary_jar = 'commons-collections4-jar-4.4.jar',
+     visibility = ['PUBLIC']
+)
+
+java_library(
+     name = 'sample-adaptation',
+     exported_deps = [
+          ":commons-io-jar-2.6",
+          ":commons-collections4-jar-4.4",
+     ],
+     visibility = ['PUBLIC'],
+)
+
