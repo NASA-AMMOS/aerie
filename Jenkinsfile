@@ -53,9 +53,7 @@ def imageNames = []
 pipeline {
 
     agent {
-        // NOTE: DEPLOY WILL ONLY WORK WITH Coronado SERVER SINCE AWS CLI VERSION 2 IS ONLY INSTALLED ON THAT SERVER.
-        // label 'coronado || Pismo || San-clemente || Sugarloaf'
-        label 'coronado'
+        label 'coronado || Pismo || San-clemente || Sugarloaf'
     }
 
     environment {
