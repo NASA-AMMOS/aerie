@@ -85,13 +85,12 @@ public final class RemoteAdaptationService implements AdaptationService {
   }
 
   @Override
-  public SimulationResults simulatePlan(final Plan plan) throws NoSuchAdaptationException {
+  public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
     final var startTime = timestampToInstant(plan.startTimestamp);
 
     final HttpResponse<String> response;
     try {
       final var samplingDuration = startTime.until(timestampToInstant(plan.endTimestamp), ChronoUnit.MICROS);
-      final var samplingPeriod = Duration.of(500, TimeUnit.MILLISECONDS).durationInMicroseconds;
 
       final var requestBody = Json.createObjectBuilder()
           .add("adaptationId", plan.adaptationId)

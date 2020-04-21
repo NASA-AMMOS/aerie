@@ -129,11 +129,13 @@ public final class LocalApp implements App {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(String planId) throws NoSuchPlanException {
+  public SimulationResults getSimulationResultsForPlan(final String planId, final long samplingPeriod) throws NoSuchPlanException {
+    if (samplingPeriod <= 0) throw new RuntimeException("INTERNAL ERROR: `samplingPeriod` must be positive, but was " + samplingPeriod);
+
     final var plan = this.planRepository.getPlan(planId);
 
     try {
-      return this.adaptationService.simulatePlan(plan);
+      return this.adaptationService.simulatePlan(plan, samplingPeriod);
     } catch (AdaptationService.NoSuchAdaptationException e) {
       throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
     }
