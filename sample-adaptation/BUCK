@@ -1,5 +1,5 @@
 java_library(
-    name = "sample-adaptation",
+    name = "lib",
     srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
@@ -15,12 +15,19 @@ java_library(
     visibility = ['PUBLIC']
 )
 
+java_binary(
+    name = "sample-adaptation",
+    deps = [
+        ":lib"
+    ]
+)
+
 java_test(
     name = "test_sample-adaptation",
     srcs = glob(["src/test/java/**/*.java"]),
     deps = [
         # Third Party
-       "//third-party/sample-adaptation/test:sample-adaptation",
-        ":sample-adaptation"
+        "//third-party/sample-adaptation/test:sample-adaptation",
+        ":lib"
     ]
 )
