@@ -68,7 +68,6 @@ pipeline {
         DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
         AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
-        JDK11_HOME = "/usr/lib/jvm/java-11-openjdk"
         LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
         WATCHMAN_HOME = "/opt/watchman"
         ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/ammos/mpsa/aerie"
