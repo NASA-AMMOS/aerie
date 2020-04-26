@@ -16,8 +16,10 @@ pipeline {
 						set +x
 
 						# setup env
-						export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
-						export MAVEN_HOME=/usr/local/share/maven
+						export JAVA_HOME=/usr/lib/jvm/java-1.8.0
+						export BUCK_HOME=/usr/local/bin
+						export BUCK_OUT="${WORKSPACE}/buck-out"
+						export WATCHMAN_HOME=/opt/watchman
 						export PATH=\$JAVA_HOME/bin:\$MAVEN_HOME/bin:/usr/local/bin:/usr/bin
 						export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib
 						export BRANCH_NAME="${GIT_BRANCH#origin/}"
@@ -35,7 +37,7 @@ pipeline {
 						env | sort
 
 						# run semmle script
-						$SEMMLE_DIR/queries/suites/security/run_semmle_java.sh "$SEMMLE_PROJ" "`pwd`" "mvn -B -f pom.xml -s settings.xml -Dmaven.test.skip=true install" "echo clean not needed"
+						$SEMMLE_DIR/queries/suites/security/run_semmle_java.sh "$SEMMLE_PROJ" "`pwd`" "buck build //..." "echo clean not needed"
 
 						# copy generated semmle files to current dir
 						cp cwe_output/*.csv ${SEMMLE_PROJ}-semmle-cwe_output-${SEQBASETAG}.csv
