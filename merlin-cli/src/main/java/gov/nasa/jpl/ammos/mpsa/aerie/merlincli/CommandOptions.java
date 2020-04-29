@@ -55,7 +55,10 @@ public class CommandOptions {
         planIdRequiredGroup.addOption(new Option("pull", "download-plan", true, "Download a plan into a file"));
         planIdRequiredGroup.addOption(new Option(null, "display-activity", true, "Display an activity from a plan"));
         planIdRequiredGroup.addOption(new Option(null, "delete-activity", true, "Delete an activity from a plan"));
-        planIdRequiredGroup.addOption(new Option("S", "simulate", false, "Simulate a plan"));
+
+        opt = new Option("S", "simulate", true, "Simulate a plan providing a samplingPeriod and file name for results");
+        opt.setArgs(2);
+        planIdRequiredGroup.addOption(opt);
 
         // Options that take more than one arg must be made separately
         opt = new Option(null, "update-plan", true, "Update the plan metadata");
@@ -165,7 +168,16 @@ public class CommandOptions {
                         commandReceiver.deleteActivityInstance(planId, activityId);
                         return true;
                     } else if (cmd.hasOption("simulate")) {
-                        commandReceiver.performSimulation(planId);
+                        String[] params = cmd.getOptionValues("simulate");
+                        long samplingPeriod;
+                        try {
+                            samplingPeriod = Long.parseLong(params[0]);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Error while parsing argument to --simulate. Sampling Period must be an integer.");
+                            return false;
+                        }
+                        String outName = params[1];
+                        commandReceiver.performSimulation(planId, samplingPeriod, outName);
                     } else {
                         return false;
                     }

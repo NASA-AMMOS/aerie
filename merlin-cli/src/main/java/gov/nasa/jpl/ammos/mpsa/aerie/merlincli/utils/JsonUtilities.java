@@ -35,7 +35,8 @@ public class JsonUtilities {
      * @param path - The path to which the output should be written (should not already exist)
      * @return boolean whether write was successful
      */
-    // TODO: Throw IOException instead of handling it here
+    // TODO: Throw Exceptions instead of printing error messages
+    //       Outputting errors is not the responsibility of this utility class
     public static boolean writeJson(String body, Path path) {
         try {
             String json = prettify(body);
