@@ -32,6 +32,7 @@ public class SampleAdaptation implements MerlinAdaptation {
     @Override
     public SimulationState newSimulationState(final Instant startTime) {
         final var model = new Model(startTime);
+        for (final var bin : model.allBins) bin.initialize(startTime);
 
         return new SimulationState() {
             @Override

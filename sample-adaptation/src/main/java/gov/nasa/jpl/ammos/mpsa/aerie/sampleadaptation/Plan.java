@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.DownlinkData;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.InitializeBinDataVolume;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOff;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn;
 
@@ -20,9 +19,6 @@ public class Plan {
 
         final Function<Time, Instant> timeToInstant = (Time time) ->
             startTime.plus(time.minus(config.missionStartTime).getMicroseconds(), TimeUnit.MICROSECONDS);
-
-        // initialize data volume at mission start
-        spawn(new InitializeBinDataVolume());
 
         for (Time periapseTime : Geometry.getPeriapsides(config)) {
             TurnInstrumentOn turnInstrumentOnActivity = new TurnInstrumentOn();
