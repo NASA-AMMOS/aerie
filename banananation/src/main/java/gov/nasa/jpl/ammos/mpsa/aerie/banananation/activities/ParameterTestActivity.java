@@ -41,6 +41,16 @@ public class ParameterTestActivity implements Activity {
   @Parameter public Boolean[] booleanArray = null;
   @Parameter public String[] stringArray = null;
 
+  // Primitive Array parameters
+  @Parameter public double[] primDoubleArray = null;
+  @Parameter public float[] primFloatArray = null;
+  @Parameter public byte[] primByteArray = null;
+  @Parameter public short[] primShortArray = null;
+  @Parameter public int[] primIntArray = null;
+  @Parameter public long[] primLongArray = null;
+  @Parameter public char[] primCharArray = null;
+  @Parameter public boolean[] primBooleanArray = null;
+
   // List parameters
   @Parameter public List<Double> doubleList = null;
   @Parameter public List<Float> floatList = null;
@@ -70,6 +80,9 @@ public class ParameterTestActivity implements Activity {
   // Complex Parameters
   @Parameter
   public Map<Integer, List<String>> mappyBoi = null;
+
+  @Parameter
+  public int[][] doublePrimIntArray = null;
 
   @Parameter
   public List<Integer>[][] intListArrayArray = null;
@@ -105,6 +118,14 @@ public class ParameterTestActivity implements Activity {
     testActivity.charArray = List.of('a', 'b').toArray(new Character[2]);
     testActivity.booleanArray = List.of(true, false).toArray(new Boolean[2]);
     testActivity.stringArray = List.of("17", "18").toArray(new String[2]);
+    testActivity.primDoubleArray = new double[] {102.0, 103.0};
+    testActivity.primFloatArray = new float[] {(float)104.0, (float)105.0};
+    testActivity.primByteArray = new byte[] {(byte)106, (byte)107};
+    testActivity.primShortArray = new short[] {(short)108, (short)109};
+    testActivity.primIntArray = new int[] {110, 111};
+    testActivity.primLongArray = new long[] {(long)112, (long)113};
+    testActivity.primCharArray = new char[] {'c', 'd'};
+    testActivity.primBooleanArray = new boolean[] {true, false};
     testActivity.doubleList = List.of(19.0, 20.0);
     testActivity.floatList = List.of(21.0f, 22.0f);
     testActivity.byteList = List.of((byte)23, (byte)24);
@@ -128,6 +149,10 @@ public class ParameterTestActivity implements Activity {
             100, List.of("abc", "xyz"),
             200, List.of("def", "uvw")
     );
+    testActivity.doublePrimIntArray = new int[][] {
+            new int[] {101, 102},
+            new int[] {103, 103}
+    };
     testActivity.intListArrayArray = new List[][] {
             new List[] {
                     List.of(200, 201),

@@ -63,6 +63,14 @@ public class ParameterTestActivityTest {
         assertArrayEquals(deserializedActivity.charArray, testValues.charArray);
         assertArrayEquals(deserializedActivity.booleanArray, testValues.booleanArray);
         assertArrayEquals(deserializedActivity.stringArray, testValues.stringArray);
+        assertArrayEquals(deserializedActivity.primDoubleArray, testValues.primDoubleArray, 0);
+        assertArrayEquals(deserializedActivity.primFloatArray, testValues.primFloatArray, 0);
+        assertArrayEquals(deserializedActivity.primByteArray, testValues.primByteArray);
+        assertArrayEquals(deserializedActivity.primShortArray, testValues.primShortArray);
+        assertArrayEquals(deserializedActivity.primIntArray, testValues.primIntArray);
+        assertArrayEquals(deserializedActivity.primLongArray, testValues.primLongArray);
+        assertArrayEquals(deserializedActivity.primCharArray, testValues.primCharArray);
+        assertArrayEquals(deserializedActivity.primBooleanArray, testValues.primBooleanArray);
         assertEquals(deserializedActivity.doubleList, testValues.doubleList);
         assertEquals(deserializedActivity.floatList, testValues.floatList);
         assertEquals(deserializedActivity.byteList, testValues.byteList);
@@ -83,6 +91,7 @@ public class ParameterTestActivityTest {
         assertEquals(deserializedActivity.stringMap, testValues.stringMap);
         assertEquals(deserializedActivity.testEnum, testValues.testEnum);
         assertEquals(deserializedActivity.mappyBoi, testValues.mappyBoi);
+        assertArrayEquals(deserializedActivity.doublePrimIntArray, testValues.doublePrimIntArray);
         assertArrayEquals(deserializedActivity.intListArrayArray, testValues.intListArrayArray);
         // TODO; Check equality for obnoxious (this is quite complex)
     }
@@ -132,6 +141,14 @@ public class ParameterTestActivityTest {
         assertArrayEquals(sourceActivity.charArray, deserializedActivity.charArray);
         assertArrayEquals(sourceActivity.booleanArray, deserializedActivity.booleanArray);
         assertArrayEquals(sourceActivity.stringArray, deserializedActivity.stringArray);
+        assertArrayEquals(sourceActivity.primDoubleArray, deserializedActivity.primDoubleArray, 0);
+        assertArrayEquals(sourceActivity.primFloatArray, deserializedActivity.primFloatArray, 0);
+        assertArrayEquals(sourceActivity.primByteArray, deserializedActivity.primByteArray);
+        assertArrayEquals(sourceActivity.primShortArray, deserializedActivity.primShortArray);
+        assertArrayEquals(sourceActivity.primIntArray, deserializedActivity.primIntArray);
+        assertArrayEquals(sourceActivity.primLongArray, deserializedActivity.primLongArray);
+        assertArrayEquals(sourceActivity.primCharArray, deserializedActivity.primCharArray);
+        assertArrayEquals(sourceActivity.primBooleanArray, deserializedActivity.primBooleanArray);
         assertEquals(sourceActivity.doubleList, deserializedActivity.doubleList);
         assertEquals(sourceActivity.floatList, deserializedActivity.floatList);
         assertEquals(sourceActivity.byteList, deserializedActivity.byteList);
@@ -152,6 +169,7 @@ public class ParameterTestActivityTest {
         assertEquals(sourceActivity.stringMap, deserializedActivity.stringMap);
         assertEquals(sourceActivity.testEnum, deserializedActivity.testEnum);
         assertEquals(sourceActivity.mappyBoi, deserializedActivity.mappyBoi);
+        assertArrayEquals(sourceActivity.doublePrimIntArray, deserializedActivity.doublePrimIntArray);
         assertArrayEquals(sourceActivity.intListArrayArray, deserializedActivity.intListArrayArray);
         // TODO; Check equality for obnoxious (this is quite complex)
     }
@@ -234,6 +252,56 @@ public class ParameterTestActivityTest {
                 List.of(
                         SerializedParameter.of(testValues.stringArray[0]),
                         SerializedParameter.of(testValues.stringArray[1])
+                )
+        ));
+
+        // Primitive array parameters
+        parameters.put("primDoubleArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primDoubleArray[0]),
+                        SerializedParameter.of(testValues.primDoubleArray[1])
+                )
+        ));
+        parameters.put("primFloatArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primFloatArray[0]),
+                        SerializedParameter.of(testValues.primFloatArray[1])
+                )
+        ));
+        parameters.put("primByteArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primByteArray[0]),
+                        SerializedParameter.of(testValues.primByteArray[1])
+                )
+        ));
+        parameters.put("primShortArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primShortArray[0]),
+                        SerializedParameter.of(testValues.primShortArray[1])
+                )
+        ));
+        parameters.put("primIntArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primIntArray[0]),
+                        SerializedParameter.of(testValues.primIntArray[1])
+                )
+        ));
+        parameters.put("primLongArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primLongArray[0]),
+                        SerializedParameter.of(testValues.primLongArray[1])
+                )
+        ));
+        parameters.put("primCharArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of("" + testValues.primCharArray[0]),
+                        SerializedParameter.of("" + testValues.primCharArray[1])
+                )
+        ));
+        parameters.put("primBooleanArray", SerializedParameter.of(
+                List.of(
+                        SerializedParameter.of(testValues.primBooleanArray[0]),
+                        SerializedParameter.of(testValues.primBooleanArray[1])
                 )
         ));
 
@@ -386,6 +454,19 @@ public class ParameterTestActivityTest {
                                 )
                         )
                 )
+        ));
+
+        parameters.put("doublePrimIntArray", SerializedParameter.of(
+           List.of(
+                   SerializedParameter.of(List.of(
+                           SerializedParameter.of(testValues.doublePrimIntArray[0][0]),
+                           SerializedParameter.of(testValues.doublePrimIntArray[0][1])
+                   )),
+                   SerializedParameter.of(List.of(
+                           SerializedParameter.of(testValues.doublePrimIntArray[1][0]),
+                           SerializedParameter.of(testValues.doublePrimIntArray[1][1])
+                   ))
+           )
         ));
 
         parameters.put("intListArrayArray", SerializedParameter.of(
