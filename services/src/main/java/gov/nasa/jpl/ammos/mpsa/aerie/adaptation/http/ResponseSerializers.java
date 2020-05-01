@@ -239,10 +239,10 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onMap(final Map<String, ParameterSchema> parameterSchemas) {
+    public JsonValue onStruct(final Map<String, ParameterSchema> parameterSchemas) {
       return Json
           .createObjectBuilder()
-          .add("type", "map")
+          .add("type", "struct")
           .add("items", serializeMap(x -> x.match(this), parameterSchemas))
           .build();
     }

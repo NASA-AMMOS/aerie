@@ -61,7 +61,7 @@ public abstract class ParameterSchema {
     T onBoolean();
     T onString();
     T onSequence(ParameterSchema value);
-    T onMap(Map<String, ParameterSchema> value);
+    T onStruct(Map<String, ParameterSchema> value);
     T onEnum(Class<? extends Enum<?>> enumeration);
   }
 
@@ -145,13 +145,13 @@ public abstract class ParameterSchema {
    * @param map Any set of named {@link ParameterSchema}s.
    * @return A new {@link ParameterSchema} representing a heterogeneous set of named {@link ParameterSchema}s.
    */
-  public static ParameterSchema ofMap(final Map<String, ParameterSchema> map) {
+  public static ParameterSchema ofStruct(final Map<String, ParameterSchema> map) {
     for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
     return new ParameterSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onMap(value);
+        return visitor.onStruct(value);
       }
     };
   }
@@ -212,7 +212,7 @@ public abstract class ParameterSchema {
     }
 
     @Override
-    public T onMap(final Map<String, ParameterSchema> value) {
+    public T onStruct(final Map<String, ParameterSchema> value) {
       return this.onDefault();
     }
   }
@@ -317,10 +317,10 @@ public abstract class ParameterSchema {
    * @return An {@link Optional} containing a map if this object represents a map parameter type.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Map<String, ParameterSchema>> asMap() {
+  public Optional<Map<String, ParameterSchema>> asStruct() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Map<String, ParameterSchema>> onMap(final Map<String, ParameterSchema> value) {
+      public Optional<Map<String, ParameterSchema>> onStruct(final Map<String, ParameterSchema> value) {
         return Optional.of(value);
       }
     });
@@ -370,7 +370,7 @@ public abstract class ParameterSchema {
       }
 
       @Override
-      public String onMap(final Map<String, ParameterSchema> value) {
+      public String onStruct(final Map<String, ParameterSchema> value) {
         return String.valueOf(value);
       }
 
@@ -413,8 +413,8 @@ public abstract class ParameterSchema {
       }
 
       @Override
-      public Boolean onMap(final Map<String, ParameterSchema> value) {
-        return other.asMap().map(x -> x.equals(value)).orElse(false);
+      public Boolean onStruct(final Map<String, ParameterSchema> value) {
+        return other.asStruct().map(x -> x.equals(value)).orElse(false);
       }
 
       @Override
