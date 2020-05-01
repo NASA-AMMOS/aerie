@@ -16,7 +16,7 @@ public final class ListParameterMapper<T> implements ParameterMapper<List<T>> {
 
   @Override
   public ParameterSchema getParameterSchema() {
-    return ParameterSchema.ofList(elementMapper.getParameterSchema());
+    return ParameterSchema.ofSequence(elementMapper.getParameterSchema());
   }
 
   @Override

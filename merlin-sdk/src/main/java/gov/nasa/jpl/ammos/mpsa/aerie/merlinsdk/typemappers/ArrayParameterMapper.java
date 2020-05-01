@@ -19,7 +19,7 @@ public class ArrayParameterMapper<T> implements ParameterMapper<T[]> {
 
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(elementMapper.getParameterSchema());
+        return ParameterSchema.ofSequence(elementMapper.getParameterSchema());
     }
 
     @Override

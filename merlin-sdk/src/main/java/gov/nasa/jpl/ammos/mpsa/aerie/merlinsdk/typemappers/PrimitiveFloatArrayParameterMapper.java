@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveFloatArrayParameterMapper implements ParameterMapper<float[]> {
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(ParameterSchema.REAL);
+        return ParameterSchema.ofSequence(ParameterSchema.REAL);
     }
 
     @Override

@@ -60,7 +60,7 @@ public abstract class ParameterSchema {
     T onInt();
     T onBoolean();
     T onString();
-    T onList(ParameterSchema value);
+    T onSequence(ParameterSchema value);
     T onMap(Map<String, ParameterSchema> value);
     T onEnum(Class<? extends Enum<?>> enumeration);
   }
@@ -128,12 +128,12 @@ public abstract class ParameterSchema {
    * @param value A {@link ParameterSchema}.
    * @return A new {@link ParameterSchema} representing a homogeneous list of elements.
    */
-  public static ParameterSchema ofList(final ParameterSchema value) {
+  public static ParameterSchema ofSequence(final ParameterSchema value) {
     Objects.requireNonNull(value);
     return new ParameterSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onList(value);
+        return visitor.onSequence(value);
       }
     };
   }
@@ -207,7 +207,7 @@ public abstract class ParameterSchema {
     }
 
     @Override
-    public T onList(final ParameterSchema value) {
+    public T onSequence(final ParameterSchema value) {
       return this.onDefault();
     }
 
@@ -302,10 +302,10 @@ public abstract class ParameterSchema {
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
    *   object represents a list parameter type. Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<ParameterSchema> asList() {
+  public Optional<ParameterSchema> asSequence() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<ParameterSchema> onList(final ParameterSchema value) {
+      public Optional<ParameterSchema> onSequence(final ParameterSchema value) {
         return Optional.of(value);
       }
     });
@@ -365,7 +365,7 @@ public abstract class ParameterSchema {
       }
 
       @Override
-      public String onList(final ParameterSchema value) {
+      public String onSequence(final ParameterSchema value) {
         return "[" + value + "]";
       }
 
@@ -408,8 +408,8 @@ public abstract class ParameterSchema {
       }
 
       @Override
-      public Boolean onList(final ParameterSchema value) {
-        return other.asList().map(x -> x.equals(value)).orElse(false);
+      public Boolean onSequence(final ParameterSchema value) {
+        return other.asSequence().map(x -> x.equals(value)).orElse(false);
       }
 
       @Override

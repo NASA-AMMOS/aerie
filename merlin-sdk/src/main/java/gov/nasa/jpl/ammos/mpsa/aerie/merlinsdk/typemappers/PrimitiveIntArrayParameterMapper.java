@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveIntArrayParameterMapper implements ParameterMapper<int[]> {
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(ParameterSchema.INT);
+        return ParameterSchema.ofSequence(ParameterSchema.INT);
     }
 
     @Override

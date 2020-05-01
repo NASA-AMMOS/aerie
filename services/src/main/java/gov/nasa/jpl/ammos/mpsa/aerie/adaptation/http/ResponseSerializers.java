@@ -230,10 +230,10 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onList(final ParameterSchema itemSchema) {
+    public JsonValue onSequence(final ParameterSchema itemSchema) {
       return Json
           .createObjectBuilder()
-          .add("type", "list")
+          .add("type", "sequence")
           .add("items", itemSchema.match(this))
           .build();
     }

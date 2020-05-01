@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveByteArrayParameterMapper implements ParameterMapper<byte[]> {
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(ParameterSchema.INT);
+        return ParameterSchema.ofSequence(ParameterSchema.INT);
     }
 
     @Override
