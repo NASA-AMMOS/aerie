@@ -113,8 +113,32 @@ class TypeInfoMaker {
           throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), declaration);
         }
       case ARRAY:
-        return ParameterTypeReference.ofArray(
-            getParameterTypeReference(declaration, ((ArrayType)parameterType).getComponentType()));
+        TypeMirror componentType = ((ArrayType)parameterType).getComponentType();
+        if (componentType.getKind().isPrimitive()) {
+          switch (componentType.getKind()) {
+            case DOUBLE:
+              return ParameterTypeReference.PRIM_DOUBLE_ARRAY;
+            case FLOAT:
+              return ParameterTypeReference.PRIM_FLOAT_ARRAY;
+            case BYTE:
+              return ParameterTypeReference.PRIM_BYTE_ARRAY;
+            case SHORT:
+              return ParameterTypeReference.PRIM_SHORT_ARRAY;
+            case INT:
+              return ParameterTypeReference.PRIM_INT_ARRAY;
+            case LONG:
+              return ParameterTypeReference.PRIM_LONG_ARRAY;
+            case CHAR:
+              return ParameterTypeReference.PRIM_CHAR_ARRAY;
+            case BOOLEAN:
+              return ParameterTypeReference.PRIM_BOOLEAN_ARRAY;
+            default:
+              throw new ParameterTypeException("Unknown primitive type: " + componentType.getKind(), declaration);
+          }
+        } else {
+          return ParameterTypeReference.ofArray(
+                  getParameterTypeReference(declaration, componentType));
+        }
       default:
         throw new ParameterTypeException("Unknown parameter type: " + parameterType.toString(), declaration);
     }
