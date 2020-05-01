@@ -60,8 +60,8 @@ public abstract class ParameterSchema {
     T onInt();
     T onBoolean();
     T onString();
-    T onList(ParameterSchema value);
-    T onMap(Map<String, ParameterSchema> value);
+    T onSequence(ParameterSchema value);
+    T onStruct(Map<String, ParameterSchema> value);
     T onEnum(Class<? extends Enum<?>> enumeration);
   }
 
@@ -70,42 +70,25 @@ public abstract class ParameterSchema {
    *
    * @return A new {@link ParameterSchema} representing a real number parameter type.
    */
-  public static ParameterSchema ofReal() {
+  private static ParameterSchema ofReal() {
     return new ParameterSchema() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onReal();
       }
-      public String toString() {
-        return "ParameterSchema.REAL";
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asReal().isPresent());
-      }
     };
   }
-
-  @Deprecated(forRemoval = true)
-  public static ParameterSchema ofDouble() { return ofReal(); }
 
   /**
    * Creates a {@link ParameterSchema} representing an integral number parameter type.
    *
    * @return A new {@link ParameterSchema} representing an integral number parameter type.
    */
-  public static ParameterSchema ofInt() {
+  private static ParameterSchema ofInt() {
     return new ParameterSchema() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onInt();
-      }
-      public String toString() {
-        return "ParameterSchema.INT";
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asInt().isPresent());
       }
     };
   }
@@ -115,18 +98,11 @@ public abstract class ParameterSchema {
    *
    * @return A new {@link ParameterSchema} representing a {@link boolean} parameter type.
    */
-  public static ParameterSchema ofBoolean() {
+  private static ParameterSchema ofBoolean() {
     return new ParameterSchema() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onBoolean();
-      }
-      public String toString() {
-        return "ParameterSchema.BOOLEAN";
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asBoolean().isPresent());
       }
     };
   }
@@ -136,18 +112,11 @@ public abstract class ParameterSchema {
    *
    * @return A new {@link ParameterSchema} representing a {@link String} parameter type.
    */
-  public static ParameterSchema ofString() {
+  private static ParameterSchema ofString() {
     return new ParameterSchema() {
+      @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onString();
-      }
-      public String toString() {
-        return "ParameterSchema.STRING";
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asString().isPresent());
       }
     };
   }
@@ -159,19 +128,12 @@ public abstract class ParameterSchema {
    * @param value A {@link ParameterSchema}.
    * @return A new {@link ParameterSchema} representing a homogeneous list of elements.
    */
-  public static ParameterSchema ofList(final ParameterSchema value) {
+  public static ParameterSchema ofSequence(final ParameterSchema value) {
     Objects.requireNonNull(value);
     return new ParameterSchema() {
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onList(value);
-      }
-      public String toString() {
-        return "[" + value + "]";
-      }
-
       @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asList().equals(Optional.of(value)));
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onSequence(value);
       }
     };
   }
@@ -183,19 +145,13 @@ public abstract class ParameterSchema {
    * @param map Any set of named {@link ParameterSchema}s.
    * @return A new {@link ParameterSchema} representing a heterogeneous set of named {@link ParameterSchema}s.
    */
-  public static ParameterSchema ofMap(final Map<String, ParameterSchema> map) {
+  public static ParameterSchema ofStruct(final Map<String, ParameterSchema> map) {
+    for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
     return new ParameterSchema() {
-      public <T> T match(final Visitor<T> visitor) {
-        return visitor.onMap(value);
-      }
-      public String toString() {
-        return String.valueOf(value);
-      }
-
       @Override
-      public boolean equals(final Object other) {
-        return ((other instanceof ParameterSchema) && ((ParameterSchema)other).asMap().equals(Optional.of(value)));
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onStruct(value);
       }
     };
   }
@@ -206,20 +162,10 @@ public abstract class ParameterSchema {
    * @return A new {@link ParameterSchema} representing an {@link Enum} parameter type.
    */
   public static ParameterSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
+    Objects.requireNonNull(enumeration);
     return new ParameterSchema() {
-      public <T> T match(Visitor<T> visitor) {
+      public <T> T match(final Visitor<T> visitor) {
         return visitor.onEnum(enumeration);
-      }
-      public String toString() {
-        return String.format("ParameterSchema.ENUM(%s)", enumeration.getName());
-      }
-
-      @Override
-      public boolean equals(final Object other) {
-        if (!(other instanceof ParameterSchema)) return false;
-        return ((ParameterSchema)other).asEnum()
-                .map(x -> Objects.equals(x, enumeration))
-                .orElse(false);
       }
     };
   }
@@ -229,51 +175,57 @@ public abstract class ParameterSchema {
   public static final ParameterSchema BOOLEAN = ofBoolean();
   public static final ParameterSchema STRING = ofString();
 
-  @Deprecated(forRemoval = true)
-  public static final ParameterSchema DOUBLE = REAL;
+  /**
+   * Provides a default case on top of the base Visitor.
+   *
+   * This interface routes all cases to the `onDefault` implementation by default. Each case may be overridden
+   * independently to give distinct behavior.
+   *
+   * @param <T> The return type of the operation represented by this {@link Visitor}.
+   */
+  public static abstract class DefaultVisitor<T> implements Visitor<T> {
+    protected abstract T onDefault();
+
+    @Override
+    public T onReal() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onInt() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onBoolean() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onString() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onSequence(final ParameterSchema value) {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onStruct(final Map<String, ParameterSchema> value) {
+      return this.onDefault();
+    }
+  }
 
   /**
    * A helper base class implementing {@code Visitor<Optional<T>>} for any result type {@code T}.
    *
-   * This class allows you to write a Visitor that operates only on a subset of the possible
-   * kinds of value contained by a {@link ParameterSchema}. All others are sent to {@code Optional.empty()}
-   * by default. This default default behavior may be changed by overriding {@code onDefault}.
-   *
-   * @param <T> The return type of the operation represented by this {@link Visitor}.
+   * By default, all variants return {@code Optional.empty}.
    */
-  public static abstract class DefaultVisitor<T> implements Visitor<Optional<T>> {
-    protected Optional<T> onDefault() {
+  public static class OptionalVisitor<T> extends DefaultVisitor<Optional<T>> {
+    @Override
+    public final Optional<T> onDefault() {
       return Optional.empty();
-    }
-
-    @Override
-    public Optional<T> onReal() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onInt() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onBoolean() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onString() {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onList(final ParameterSchema value) {
-      return onDefault();
-    }
-
-    @Override
-    public Optional<T> onMap(final Map<String, ParameterSchema> value) {
-      return onDefault();
     }
 
     @Override
@@ -291,17 +243,12 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asReal() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onReal() {
         return Optional.of(Unit.UNIT);
       }
     });
-  }
-
-  @Deprecated(forRemoval = true)
-  public Optional<Unit> asDouble() {
-    return asReal();
   }
 
   /**
@@ -311,7 +258,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asInt() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onInt() {
         return Optional.of(Unit.UNIT);
@@ -326,7 +273,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asBoolean() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onBoolean() {
         return Optional.of(Unit.UNIT);
@@ -341,7 +288,7 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asString() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
       public Optional<Unit> onString() {
         return Optional.of(Unit.UNIT);
@@ -355,10 +302,10 @@ public abstract class ParameterSchema {
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
    *   object represents a list parameter type. Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<ParameterSchema> asList() {
-    return this.match(new DefaultVisitor<>() {
+  public Optional<ParameterSchema> asSequence() {
+    return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<ParameterSchema> onList(final ParameterSchema value) {
+      public Optional<ParameterSchema> onSequence(final ParameterSchema value) {
         return Optional.of(value);
       }
     });
@@ -370,10 +317,10 @@ public abstract class ParameterSchema {
    * @return An {@link Optional} containing a map if this object represents a map parameter type.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Map<String, ParameterSchema>> asMap() {
-    return this.match(new DefaultVisitor<>() {
+  public Optional<Map<String, ParameterSchema>> asStruct() {
+    return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Map<String, ParameterSchema>> onMap(final Map<String, ParameterSchema> value) {
+      public Optional<Map<String, ParameterSchema>> onStruct(final Map<String, ParameterSchema> value) {
         return Optional.of(value);
       }
     });
@@ -386,10 +333,93 @@ public abstract class ParameterSchema {
    *   Otherwise, returns an empty {@link Optional}
    */
   public Optional<Class<? extends Enum<?>>> asEnum() {
-    return this.match(new DefaultVisitor<>() {
+    return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Class<? extends Enum<?>>> onEnum(Class<? extends Enum<?>> enumeration) {
+      public Optional<Class<? extends Enum<?>>> onEnum(final Class<? extends Enum<?>> enumeration) {
         return Optional.of(enumeration);
+      }
+    });
+  }
+
+  @Override
+  public String toString() {
+    return this.match(new Visitor<>() {
+      @Override
+      public String onReal() {
+        return "ParameterSchema.REAL";
+      }
+
+      @Override
+      public String onInt() {
+        return "ParameterSchema.INT";
+      }
+
+      @Override
+      public String onBoolean() {
+        return "ParameterSchema.BOOLEAN";
+      }
+
+      @Override
+      public String onString() {
+        return "ParameterSchema.STRING";
+      }
+
+      @Override
+      public String onSequence(final ParameterSchema value) {
+        return "[" + value + "]";
+      }
+
+      @Override
+      public String onStruct(final Map<String, ParameterSchema> value) {
+        return String.valueOf(value);
+      }
+
+      @Override
+      public String onEnum(Class<? extends Enum<?>> enumeration) {
+        return "ParameterSchema.ENUM(" + enumeration.getName() + ")";
+      }
+    });
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (!(o instanceof ParameterSchema)) return false;
+    final var other = (ParameterSchema) o;
+
+    return this.match(new Visitor<>() {
+      @Override
+      public Boolean onReal() {
+        return other.asReal().isPresent();
+      }
+
+      @Override
+      public Boolean onInt() {
+        return other.asInt().isPresent();
+      }
+
+      @Override
+      public Boolean onBoolean() {
+        return other.asBoolean().isPresent();
+      }
+
+      @Override
+      public Boolean onString() {
+        return other.asString().isPresent();
+      }
+
+      @Override
+      public Boolean onSequence(final ParameterSchema value) {
+        return other.asSequence().map(x -> x.equals(value)).orElse(false);
+      }
+
+      @Override
+      public Boolean onStruct(final Map<String, ParameterSchema> value) {
+        return other.asStruct().map(x -> x.equals(value)).orElse(false);
+      }
+
+      @Override
+      public Boolean onEnum(Class<? extends Enum<?>> enumeration) {
+        return other.asEnum().map(x -> x.equals(enumeration)).orElse(false);
       }
     });
   }

@@ -19,9 +19,9 @@ public final class MapParameterMapper<K, V> implements ParameterMapper<Map<K, V>
 
   @Override
   public ParameterSchema getParameterSchema() {
-    return ParameterSchema.ofMap(Map.of(
-        "keys", ParameterSchema.ofList(keyMapper.getParameterSchema()),
-        "values", ParameterSchema.ofList(elementMapper.getParameterSchema())));
+    return ParameterSchema.ofStruct(Map.of(
+        "keys", ParameterSchema.ofSequence(keyMapper.getParameterSchema()),
+        "values", ParameterSchema.ofSequence(elementMapper.getParameterSchema())));
   }
 
   @Override

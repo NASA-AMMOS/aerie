@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveBooleanArrayParameterMapper implements ParameterMapper<boolean[]> {
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(ParameterSchema.BOOLEAN);
+        return ParameterSchema.ofSequence(ParameterSchema.BOOLEAN);
     }
 
     @Override

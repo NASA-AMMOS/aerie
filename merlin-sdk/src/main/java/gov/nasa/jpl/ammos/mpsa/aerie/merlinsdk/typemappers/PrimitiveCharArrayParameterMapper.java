@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveCharArrayParameterMapper implements ParameterMapper<char[]> {
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(ParameterSchema.STRING);
+        return ParameterSchema.ofSequence(ParameterSchema.STRING);
     }
 
     @Override

@@ -230,19 +230,19 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onList(final ParameterSchema itemSchema) {
+    public JsonValue onSequence(final ParameterSchema itemSchema) {
       return Json
           .createObjectBuilder()
-          .add("type", "list")
+          .add("type", "sequence")
           .add("items", itemSchema.match(this))
           .build();
     }
 
     @Override
-    public JsonValue onMap(final Map<String, ParameterSchema> parameterSchemas) {
+    public JsonValue onStruct(final Map<String, ParameterSchema> parameterSchemas) {
       return Json
           .createObjectBuilder()
-          .add("type", "map")
+          .add("type", "struct")
           .add("items", serializeMap(x -> x.match(this), parameterSchemas))
           .build();
     }
