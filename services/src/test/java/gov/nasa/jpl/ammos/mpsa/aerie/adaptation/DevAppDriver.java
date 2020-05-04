@@ -19,6 +19,7 @@ public final class DevAppDriver {
 
         // Configure an HTTP server.
         final Javalin javalin = Javalin.create(config -> config
+            .enableDevLogging()
             .enableCorsForAllOrigins()
             .registerPlugin(new AdaptationBindings(app))
             .registerPlugin(new LocalAppExceptionBindings())
