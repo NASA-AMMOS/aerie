@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 import javax.json.JsonObject;
 
 public final class AppConfiguration {
@@ -10,20 +11,24 @@ public final class AppConfiguration {
     public final String MONGO_DATABASE;
     public final String MONGO_ADAPTATION_COLLECTION;
 
-    public AppConfiguration(final int httpPort, final URI mongoUri, final String mongoDatabase, final String mongoAdaptationCollection) {
-        this.HTTP_PORT = httpPort;
-        this.MONGO_URI = Objects.requireNonNull(mongoUri);
-        this.MONGO_DATABASE = Objects.requireNonNull(mongoDatabase);
-        this.MONGO_ADAPTATION_COLLECTION = Objects.requireNonNull(mongoAdaptationCollection);
+    public AppConfiguration(final Builder builder) {
+        this.HTTP_PORT = Objects.requireNonNull(builder.httpPort.orElse(null));
+        this.MONGO_URI = Objects.requireNonNull(builder.mongoUri.orElse(null));
+        this.MONGO_DATABASE = Objects.requireNonNull(builder.mongoDatabase.orElse(null));
+        this.MONGO_ADAPTATION_COLLECTION = Objects.requireNonNull(builder.mongoAdaptationCollection.orElse(null));
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static AppConfiguration parseProperties(final JsonObject config) {
-        final int httpPort = config.getInt("HTTP_PORT");
-        final URI mongoUri = URI.create(config.getString("MONGO_URI"));
-        final String mongoDatabase = config.getString("MONGO_DATABASE");
-        final String mongoAdaptationCollection = config.getString("MONGO_ADAPTATION_COLLECTION");
-
-        return new AppConfiguration(httpPort, mongoUri, mongoDatabase, mongoAdaptationCollection);
+        return builder()
+            .setHttpPort(config.getInt("HTTP_PORT"))
+            .setMongoUri(URI.create(config.getString("MONGO_URI")))
+            .setMongoDatabase(config.getString("MONGO_DATABASE"))
+            .setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"))
+            .build();
     }
 
     // SAFETY: When equals is overridden, so too must hashCode
@@ -51,5 +56,35 @@ public final class AppConfiguration {
                 "  MONGO_DATABASE = " + this.MONGO_DATABASE + ",\n" +
                 "  MONGO_ADAPTATION_COLLECTION = " + this.MONGO_ADAPTATION_COLLECTION + ",\n" +
                 "}";
+    }
+
+    public static final class Builder {
+        private Optional<Integer> httpPort;
+        private Optional<URI> mongoUri;
+        private Optional<String> mongoDatabase;
+        private Optional<String> mongoAdaptationCollection;
+
+        private Builder() {}
+
+        public Builder setHttpPort(int httpPort) {
+            this.httpPort = Optional.of(httpPort);
+            return this;
+        }
+        public Builder setMongoUri(URI mongoUri) {
+            this.mongoUri = Optional.of(mongoUri);
+            return this;
+        }
+        public Builder setMongoDatabase(String mongoDatabase) {
+            this.mongoDatabase = Optional.of(mongoDatabase);
+            return this;
+        }
+        public Builder setMongoAdaptationCollection(String mongoAdaptationCollection) {
+            this.mongoAdaptationCollection = Optional.of(mongoAdaptationCollection);
+            return this;
+        }
+
+        public AppConfiguration build() {
+            return new AppConfiguration(this);
+        }
     }
 }
