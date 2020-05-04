@@ -12,6 +12,7 @@ public final class AppConfiguration {
     public final String MONGO_DATABASE;
     public final String MONGO_PLAN_COLLECTION;
     public final String MONGO_ACTIVITY_COLLECTION;
+    public final boolean enableJavalinLogging;
 
     private AppConfiguration(final Builder builder) {
         this.HTTP_PORT = Objects.requireNonNull(builder.httpPort.orElse(null));
@@ -20,6 +21,7 @@ public final class AppConfiguration {
         this.MONGO_DATABASE = Objects.requireNonNull(builder.mongoDatabase.orElse(null));
         this.MONGO_PLAN_COLLECTION = Objects.requireNonNull(builder.mongoPlanCollection.orElse(null));
         this.MONGO_ACTIVITY_COLLECTION = Objects.requireNonNull(builder.mongoActivityCollection.orElse(null));
+        this.enableJavalinLogging = builder.enableJavalinLogging.orElse(false);
     }
 
     public static Builder builder() {
@@ -34,28 +36,35 @@ public final class AppConfiguration {
             .setMongoDatabase(config.getString("MONGO_DATABASE"))
             .setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"))
             .setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"))
+            .setJavalinLogging(config.getBoolean("enable-javalin-debugging"))
             .build();
     }
 
     // SAFETY: When equals is overridden, so too must hashCode
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (!(o instanceof AppConfiguration)) return false;
         final var other = (AppConfiguration)o;
 
-        AppConfiguration other = (AppConfiguration)o;
-
-        return this.HTTP_PORT == other.HTTP_PORT
+        return (   (this.HTTP_PORT == other.HTTP_PORT)
                 && Objects.equals(this.ADAPTATION_URI, other.ADAPTATION_URI)
                 && Objects.equals(this.MONGO_URI, other.MONGO_URI)
                 && Objects.equals(this.MONGO_DATABASE, other.MONGO_DATABASE)
                 && Objects.equals(this.MONGO_PLAN_COLLECTION, other.MONGO_PLAN_COLLECTION)
-                && Objects.equals(this.MONGO_ACTIVITY_COLLECTION, other.MONGO_ACTIVITY_COLLECTION);
+                && Objects.equals(this.MONGO_ACTIVITY_COLLECTION, other.MONGO_ACTIVITY_COLLECTION)
+                && (this.enableJavalinLogging == other.enableJavalinLogging) );
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.HTTP_PORT, this.ADAPTATION_URI, this.MONGO_URI, this.MONGO_DATABASE, this.MONGO_PLAN_COLLECTION, this.MONGO_ACTIVITY_COLLECTION);
+        return Objects.hash(
+            this.HTTP_PORT,
+            this.ADAPTATION_URI,
+            this.MONGO_URI,
+            this.MONGO_DATABASE,
+            this.MONGO_PLAN_COLLECTION,
+            this.MONGO_ACTIVITY_COLLECTION,
+            this.enableJavalinLogging);
     }
 
     @Override
@@ -67,6 +76,7 @@ public final class AppConfiguration {
                 "  MONGO_DATABASE = " + this.MONGO_DATABASE + ",\n" +
                 "  MONGO_PLAN_COLLECTION = " + this.MONGO_PLAN_COLLECTION + ",\n" +
                 "  MONGO_ACTIVITY_COLLECTION = " + this.MONGO_ACTIVITY_COLLECTION + ",\n" +
+                "  enableJavalinLogging = " + this.enableJavalinLogging + ",\n" +
                 "}";
     }
 
@@ -77,6 +87,7 @@ public final class AppConfiguration {
         private Optional<String> mongoDatabase;
         private Optional<String> mongoPlanCollection;
         private Optional<String> mongoActivityCollection;
+        private Optional<Boolean> enableJavalinLogging;
 
         private Builder() {}
 
@@ -102,6 +113,10 @@ public final class AppConfiguration {
         }
         public Builder setMongoActivityCollection(String mongoActivityCollection) {
             this.mongoActivityCollection = Optional.of(mongoActivityCollection);
+            return this;
+        }
+        public Builder setJavalinLogging(boolean enableJavalinLogging) {
+            this.enableJavalinLogging = Optional.of(enableJavalinLogging);
             return this;
         }
 
