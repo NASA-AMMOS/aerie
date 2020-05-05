@@ -4,4 +4,4 @@
 | - | - | - |
 | adaptation | API for managing adaptations | 27182 |
 | plan | API for managing plans | 27183 |
-| rabiitmq | API for managing plans | 15672 |
+| rabittmq | API for managing plans | 15672 |
