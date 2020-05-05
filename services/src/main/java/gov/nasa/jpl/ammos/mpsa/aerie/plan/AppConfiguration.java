@@ -36,7 +36,7 @@ public final class AppConfiguration {
             .setMongoDatabase(config.getString("MONGO_DATABASE"))
             .setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"))
             .setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"))
-            .setJavalinLogging(config.getBoolean("enable-javalin-debugging"))
+            .setJavalinLogging(config.getBoolean("enable-javalin-logging", false))
             .build();
     }
 
