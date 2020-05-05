@@ -30,7 +30,7 @@ public final class AppConfiguration {
             .setMongoUri(URI.create(config.getString("MONGO_URI")))
             .setMongoDatabase(config.getString("MONGO_DATABASE"))
             .setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"))
-            .setJavalinLogging(config.getBoolean("enable-javalin-debugging"))
+            .setJavalinLogging(config.getBoolean("enable-javalin-logging", false))
             .build();
     }
 
