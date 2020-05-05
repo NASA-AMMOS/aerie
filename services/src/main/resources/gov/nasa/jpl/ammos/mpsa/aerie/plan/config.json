@@ -4,5 +4,6 @@
   "MONGO_URI": "mongodb://plan_mongo:27018",
   "MONGO_DATABASE": "plan-service",
   "MONGO_PLAN_COLLECTION": "plans",
-  "MONGO_ACTIVITY_COLLECTION": "activities"
+  "MONGO_ACTIVITY_COLLECTION": "activities",
+  "enable-javalin-logging": "false"
 }
