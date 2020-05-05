@@ -1,8 +1,8 @@
 
 # Introduction
-The Aerie project uses Docker Compose to configure and run the entire project. Docker Compose utilizes YAML configuration files which are located in the root of the project. The YAML files include everything that is required deploy Aerie using Docker Compose and to run Aerie with the Docker Engine. 
+The Aerie project uses Docker Compose to configure and run the entire project. Docker Compose utilizes YAML configuration files which are located in the root of the project. The YAML files include everything that is required to deploy Aerie using Docker Compose and to run Aerie with the Docker Engine. 
 
-Unless otherwise configured, Docker Compose will fetch pre-built Docker containers for each of the serverices which make up the Aerie deployment.  Once fetched, Docker Compose will orchestrate the containers (network) and then start them.
+Unless otherwise configured, Docker Compose will fetch pre-built Docker containers for each of the services which make up the Aerie deployment.  Once fetched, Docker Compose will orchestrate the containers (network) and then start them.
 
 
 # Developer Deployment
