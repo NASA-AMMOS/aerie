@@ -113,7 +113,7 @@ pipeline {
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
-                echo 'Publishing JARs to Artifactory...'
+                echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
                 script {
                     def statusCode = sh returnStatus: true, script:
                     """
@@ -147,6 +147,17 @@ pipeline {
                 }
 
                 script {
+                    def statusCode = sh returnStatus: true, script:
+                    """
+                    tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
+                    """
+
+                    if (statusCode > 0) {
+                        error "Failure in Archive stage."
+                    }
+                }
+
+                script {
                     try {
                         def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
                         def uploadSpec =
@@ -155,6 +166,11 @@ pipeline {
                             "files": [
                                 {
                                     "pattern": "aerie-${ARTIFACT_TAG}.tar.gz",
+                                    "target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
+                                    "recursive":false
+                                }
+                                {
+                                	"pattern": "aerie-docker-compose.tar.gz",
                                     "target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
                                     "recursive":false
                                 }
