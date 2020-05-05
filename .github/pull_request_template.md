@@ -1,12 +1,18 @@
-<!-- The block below will not be rendered, it's an HTML comment block
+* **Tickets addressed:** <!-- Provide links, i.e. [AERIE-0000](https://jira.jpl.nasa.gov/browse/AERIE-0000) -->
+* **Review:** By commit <!-- Choose from: "by commit", "by file" -->
+* **Merge strategy:** Merge (no squash)  <!-- Choose from: "merge (no squash)", "squash and merge" -->
 
-Before submitting this PR, please make sure: 
+## Summary
 
-- [ ] The title of this PR has the Jira Ticket Number
-   1. `[AERIE-123] Add on hover interaction`
-- [ ] Your branch passes all unit tests locally
-- [ ] Your branch passes all e2e tests locally
-- [ ] You have added the corresponding tests for your change
-- [ ] You've assigned the relevant labels
-- [ ] You've assigned the relevant people for review
--->
+## Future work
+*
+
+## Test impact
+* Tests *added*:
+  *
+* Tests *updated*:
+  *
+* Tests *re-baselined*:
+  *
+* Tests *removed*:
+  *

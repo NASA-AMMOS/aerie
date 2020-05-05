@@ -1,12 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 
-import java.util.LinkedList;
 import java.util.List;
 
 public class DemoPowerModel {
@@ -30,7 +25,7 @@ public class DemoPowerModel {
     /**
      * container type of all states used in the demonstration, pre-wired appropriately
      */
-    public class States implements StateContainer {
+    public class States {
 
         /**
          * calculated state that tracks the spacecraft distance from the sun
@@ -129,31 +124,10 @@ public class DemoPowerModel {
         public final BatteryPercentCharge batterStateOfChargeState_pct = new BatteryPercentCharge(
                 batteryEnergyState_J, batteryCapacityState_J);
         //now hear the word of the Lord
-
-        @Override public List<State<?>> getStateList() {
-            return List.of( solarDistanceState_m, batteryCapacityState_J, solarPowerState_W,
-                    instrumentAPowerState_W, instrumentBPowerState_W,
-                    batteryEnergyState_J, batterStateOfChargeState_pct );
-        }
-
-        /**
-         * allows quickly resetting engines for all states
-         *
-         * @param engine the new engine to set for all states
-         */
-        public void setEngine(SimulationEngine engine) {
-            getStateList().forEach(s->s.setEngine(engine));
-        }
-
     }//States
 
     /**
      * initialized and wired-together states for the demo
      */
     public States states = new States();
-
-    /**
-     * initialized list of activities for demo
-     */
-    List<Activity<States>> activities = new LinkedList<>();
 }

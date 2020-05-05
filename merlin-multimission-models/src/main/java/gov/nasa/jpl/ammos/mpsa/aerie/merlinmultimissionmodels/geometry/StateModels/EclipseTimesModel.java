@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateMod
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.classes.Eclipse;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.LazyEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 
@@ -98,9 +97,5 @@ public class EclipseTimesModel implements State<List<Eclipse>>{
     @Override
     public Map getHistory() {
         return null;
-    }
-
-    @Override
-    public void setEngine(SimulationEngine engine) {
     }
 }

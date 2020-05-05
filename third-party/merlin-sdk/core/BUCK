@@ -1,0 +1,42 @@
+prebuilt_jar(
+     name = 'jackson-core-bundle-2.9.8',
+     binary_jar = 'jackson-core-bundle-2.9.8.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'javapoet-jar-1.11.1',
+     binary_jar = 'javapoet-jar-1.11.1.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'commons-collections4-jar-4.4',
+     binary_jar = 'commons-collections4-jar-4.4.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'commons-math3-jar-3.6.1',
+     binary_jar = 'commons-math3-jar-3.6.1.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'commons-lang3-jar-3.9',
+     binary_jar = 'commons-lang3-jar-3.9.jar',
+     visibility = ['PUBLIC']
+)
+
+java_library(
+     name = 'merlin-sdk',
+     exported_deps = [
+          ":jackson-core-bundle-2.9.8",
+          ":javapoet-jar-1.11.1",
+          ":commons-collections4-jar-4.4",
+          ":commons-math3-jar-3.6.1",
+          ":commons-lang3-jar-3.9",
+     ],
+     visibility = ['PUBLIC'],
+)
+

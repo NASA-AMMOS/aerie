@@ -1,51 +1,35 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+
+import java.util.function.Consumer;
 
 public interface SimulationContext {
+    /**
+     * Spawn a new activity as a child of the currently-running activity after a given span of time.
+     */
+    SpawnedActivityHandle defer(Duration duration, Consumer<SimulationContext> childActivity);
 
     /**
-     * spawns a child activity and blocks until its completion
+     * Delay the currently-running activity for the given duration.
      */
-    public Activity<?> callActivity(Activity<?> childActivity);
+    void delay(Duration duration);
 
     /**
-     * spawns a child activity in the background
+     * Delay the currently-running activity until all of its existing children have completed.
      */
-    public Activity<?> spawnActivity(Activity<?> childActivity);
+    void waitForAllChildren();
 
     /**
-     * delays the simulation for some specified amount of time
+     * Get the current simulation time.
      */
-    public void delay(Duration duration);
+    Instant now();
 
-    /**
-     * blocks until the specified child activity is complete
-     */
-    public void waitForChild(Activity<?> childActivity);
-
-    /**
-     * blocks until all of an activity's children are complete
-     */
-    public void waitForAllChildren();
-
-    /**
-     * delays the effect model until the specified point in time
-     */
-    public void delayUntil(Instant time);
-
-    /**
-     * Returns the engine's current simulation time
-     * 
-     * @return current simulation time
-     */
-    public Instant now();
-
-
-    default void delay(long quantity, TimeUnit units) {
-        this.delay(Duration.fromQuantity(quantity, units));
+    interface SpawnedActivityHandle {
+        /**
+         * Delay the currently-running activity until the activity described by this handle has completed.
+         */
+        void await();
     }
 }

@@ -1,12 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.DownlinkData;
@@ -14,52 +10,33 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.Initialize
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOff;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn;
 
-public class Plan {
-    
-    public static List<ActivityJob<?>> createPlan( Config config, Instant simStartTime ) {
-        final Function<Time, Instant> timeToInstant = (Time time) ->
-            simStartTime.plus(time.minus(config.missionStartTime).getMicroseconds(), TimeUnit.MICROSECONDS);
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.now;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.spawn;
 
-        List<ActivityJob<?>> activityList = new ArrayList<>();
+public class Plan {
+    public static void runPlan(Config config) {
+        final var startTime = now();
+
+        final Function<Time, Instant> timeToInstant = (Time time) ->
+            startTime.plus(time.minus(config.missionStartTime).getMicroseconds(), TimeUnit.MICROSECONDS);
 
         // initialize data volume at mission start
-        InitializeBinDataVolume initBinsActivity = new InitializeBinDataVolume();
-        activityList.add(new ActivityJob<>(initBinsActivity, simStartTime));
+        spawn(new InitializeBinDataVolume());
 
-        Duration oneHour = Duration.fromHours(1);
-
-        Geometry.loadSpiceAndKernels();
-        List<Time> periapsidesTimes = Geometry.getPeriapsides(config);
-        
-        for (Time periapseTime : periapsidesTimes) {
+        for (Time periapseTime : Geometry.getPeriapsides(config)) {
             TurnInstrumentOn turnInstrumentOnActivity = new TurnInstrumentOn();
             TurnInstrumentOff turnInstrumentOffActivity = new TurnInstrumentOff();
 
-            activityList.add(new ActivityJob<>(
-                turnInstrumentOnActivity,
-                timeToInstant.apply(periapseTime).minus(1, TimeUnit.HOURS)
-            ));
-
-            activityList.add(new ActivityJob<>(
-                turnInstrumentOffActivity,
-                timeToInstant.apply(periapseTime).plus(1, TimeUnit.HOURS)
-            ));
+            deferTo(timeToInstant.apply(periapseTime).minus(1, TimeUnit.HOURS), turnInstrumentOnActivity);
+            deferTo(timeToInstant.apply(periapseTime).plus(1, TimeUnit.HOURS), turnInstrumentOffActivity);
         }
 
-        List<Time> apoapsidesTimes = Geometry.getApoapsides(config);
-        
-        for (Time apoapseTime : apoapsidesTimes) {
+        for (Time apoapseTime : Geometry.getApoapsides(config)) {
             DownlinkData downlinkActivity = new DownlinkData();
-            {
-                downlinkActivity.downlinkAll = true;
-            }
-            activityList.add(new ActivityJob<>(
-                downlinkActivity,
-                timeToInstant.apply(apoapseTime).minus(1, TimeUnit.HOURS)
-            ));
+            downlinkActivity.downlinkAll = true;
+
+            deferTo(timeToInstant.apply(apoapseTime).minus(1, TimeUnit.HOURS), downlinkActivity);
         }
-
-        return activityList;
     }
-
 }

@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.StateMod
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.*;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrappers.Occultations;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.LazyEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
@@ -130,9 +129,5 @@ public class OccultationTimesModel implements State<List<Pair<Time, Time>>> {
     @Override
     public Map getHistory() {
         return null;
-    }
-
-    @Override
-    public void setEngine(SimulationEngine engine) {
     }
 }

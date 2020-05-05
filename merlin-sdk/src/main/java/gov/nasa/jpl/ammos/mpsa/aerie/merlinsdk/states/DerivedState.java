@@ -10,14 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 public abstract class DerivedState<T> implements State<T> {
-    
-    protected SimulationEngine engine;
     protected Map<Instant, T> stateHistory = new LinkedHashMap<>();
-
-    @Override
-    public T get() {
-        throw new NotImplementedException("This derived state must provide its own `get()` method");
-    }
 
     @Override
     public Map<Instant, T> getHistory() {
@@ -28,9 +21,5 @@ public abstract class DerivedState<T> implements State<T> {
     public String getName() {
         // TODO: get the annotation name rather than using reflection here
         return this.getClass().getName();
-    }
-
-    public void setEngine(SimulationEngine engine) {
-        this.engine = engine;
     }
 }

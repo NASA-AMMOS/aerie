@@ -62,6 +62,7 @@ public abstract class ParameterSchema {
     T onString();
     T onList(ParameterSchema value);
     T onMap(Map<String, ParameterSchema> value);
+    T onEnum(Class<? extends Enum<?>> enumeration);
   }
 
   /**
@@ -199,6 +200,30 @@ public abstract class ParameterSchema {
     };
   }
 
+  /**
+   * Creates a {@link ParameterSchema} representing an {@link Enum} parameter type.
+   *
+   * @return A new {@link ParameterSchema} representing an {@link Enum} parameter type.
+   */
+  public static ParameterSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
+    return new ParameterSchema() {
+      public <T> T match(Visitor<T> visitor) {
+        return visitor.onEnum(enumeration);
+      }
+      public String toString() {
+        return String.format("ParameterSchema.ENUM(%s)", enumeration.getName());
+      }
+
+      @Override
+      public boolean equals(final Object other) {
+        if (!(other instanceof ParameterSchema)) return false;
+        return ((ParameterSchema)other).asEnum()
+                .map(x -> Objects.equals(x, enumeration))
+                .orElse(false);
+      }
+    };
+  }
+
   public static final ParameterSchema REAL = ofReal();
   public static final ParameterSchema INT = ofInt();
   public static final ParameterSchema BOOLEAN = ofBoolean();
@@ -248,6 +273,11 @@ public abstract class ParameterSchema {
 
     @Override
     public Optional<T> onMap(final Map<String, ParameterSchema> value) {
+      return onDefault();
+    }
+
+    @Override
+    public Optional<T> onEnum(Class<? extends Enum<?>> enumeration) {
       return onDefault();
     }
   }
@@ -345,6 +375,21 @@ public abstract class ParameterSchema {
       @Override
       public Optional<Map<String, ParameterSchema>> onMap(final Map<String, ParameterSchema> value) {
         return Optional.of(value);
+      }
+    });
+  }
+
+  /**
+   * Asserts that this object represents an enum parameter type.
+   *
+   * @return An {@link Optional} containing an enum if this object represents an Enum parameter type.
+   *   Otherwise, returns an empty {@link Optional}
+   */
+  public Optional<Class<? extends Enum<?>>> asEnum() {
+    return this.match(new DefaultVisitor<>() {
+      @Override
+      public Optional<Class<? extends Enum<?>>> onEnum(Class<? extends Enum<?>> enumeration) {
+        return Optional.of(enumeration);
       }
     });
   }

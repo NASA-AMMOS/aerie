@@ -1,31 +1,20 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import java.util.List;
-import java.util.Map;
-
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ActivityJob;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.classes.CustomEnums.InstrumentMode;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 
 public class Runsim {
     public static void runSimulation(Config config) {
-        final Instant simStartTime = SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS);
+        Geometry.loadSpiceAndKernels();
 
-        List<ActivityJob<?>> plan = Plan.createPlan(config, simStartTime);
-        SampleMissionStates sampleMissionStates = new SampleMissionStates(config);
+        final var simEngine = new SimulationEngine();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> Plan.runPlan(config)));
 
-        SimulationEngine engine = new SimulationEngine(simStartTime, plan, sampleMissionStates);
-        engine.simulate();
-
-        // note that this currently doesn't have the initial value since that isn't stored in the history
-        Map<Instant, InstrumentMode> modeHistory = sampleMissionStates.instrumentMode.getHistory();
-        
-        for (Map.Entry<Instant, InstrumentMode> entry : modeHistory.entrySet()) {
-            System.out.println("Time: " + entry.getKey() + " | Mode: " + entry.getValue());
-        }
+        final var model = new Model(simEngine.getCurrentTime());
+        SampleMissionStates.useModelsIn(model, simEngine::runToCompletion);
     }
 }

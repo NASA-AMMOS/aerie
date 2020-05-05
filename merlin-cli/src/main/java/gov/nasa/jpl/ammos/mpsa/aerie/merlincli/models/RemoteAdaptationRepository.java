@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.ApiContractViolationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.HttpUtilities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.JsonUtilities;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -24,12 +25,12 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
 
     @Override
     public String createAdaptation(Adaptation adaptation, File adaptationJar) throws InvalidAdaptationException {
-        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-                .addBinaryBody("file", adaptationJar)
-                .addTextBody("name", adaptation.getName())
-                .addTextBody("version", adaptation.getVersion())
-                .addTextBody("mission", adaptation.getMission())
-                .addTextBody("owner", adaptation.getOwner());
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create();
+        entityBuilder.addBinaryBody("file", adaptationJar);
+        if (adaptation.getName() != null) entityBuilder.addTextBody("name", adaptation.getName());
+        if (adaptation.getVersion() != null) entityBuilder.addTextBody("version", adaptation.getVersion());
+        if (adaptation.getMission() != null) entityBuilder.addTextBody("mission", adaptation.getMission());
+        if (adaptation.getOwner() != null) entityBuilder.addTextBody("owner", adaptation.getOwner());
 
         HttpResponse response;
         try {
@@ -49,17 +50,20 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 return response.getFirstHeader("location").getValue();
 
             case HttpStatus.SC_BAD_REQUEST:
-                // This should not have happened; this method was responsible for serializing the adaptation.
-                throw new Error("Adaptation service rejected the request body when posting an adaptation");
+                // Because the JSON is built by the CLI, we don't know if the user is at fault
+                throw new InvalidAdaptationException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation creation failed due to unknown reason")
+                );
 
             case HttpStatus.SC_UNPROCESSABLE_ENTITY:
-                // TODO: Add information about what was wrong from the response
-                throw new InvalidAdaptationException();
+                throw new InvalidAdaptationException(
+                        HttpUtilities.getErrorMessage(response, "Invalid Adaptation")
+                );
 
             default:
                 // TODO: Make this a more specific Error
                 // Should never happen because we don't have any other status codes from the service
-                throw new Error("Unexpected status code returned from plan service");
+                throw new Error("Unexpected status code returned from adaptation service");
         }
     }
 
@@ -78,12 +82,14 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 break;
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new AdaptationNotFoundException();
+                throw new AdaptationNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
                 // Should never happen because we don't have any other status codes from the service
-                throw new Error("Unexpected status code returned from plan service");
+                throw new Error("Unexpected status code returned from adaptation service");
         }
     }
 
@@ -106,12 +112,14 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 }
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new AdaptationNotFoundException();
+                throw new AdaptationNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
                 // Should never happen because we don't have any other status codes from the service
-                throw new Error("Unexpected status code returned from plan service");
+                throw new Error("Unexpected status code returned from adaptation service");
         }
     }
 
@@ -136,7 +144,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
             default:
                 // TODO: Make this a more specific Error
                 // Should never happen because we don't have any other status codes from the service
-                throw new Error("Unexpected status code returned from plan service");
+                throw new Error("Unexpected status code returned from adaptation service");
         }
     }
 
@@ -151,7 +159,7 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
         }
 
         switch (response.getStatusLine().getStatusCode()) {
-                case HttpStatus.SC_OK:
+            case HttpStatus.SC_OK:
                 try {
                     return JsonUtilities.prettify(new String(response.getEntity().getContent().readAllBytes()));
                 } catch (IOException e) {
@@ -159,12 +167,14 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
                 }
 
             case HttpStatus.SC_NOT_FOUND:
-                throw new AdaptationNotFoundException();
+                throw new AdaptationNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
                 // Should never happen because we don't have any other status codes from the service
-                throw new Error("Unexpected status code returned from plan service");
+                throw new Error("Unexpected status code returned from adaptation service");
         }
     }
 
@@ -189,12 +199,14 @@ public class RemoteAdaptationRepository implements AdaptationRepository {
             case HttpStatus.SC_NOT_FOUND:
                 // TODO: When the adaptation service is updated to distinguish between
                 //       AdaptationNotFound or ActivityTypeNotFound errors, update this
-                throw new ActivityTypeNotDefinedException();
+                throw new ActivityTypeNotDefinedException(
+                        HttpUtilities.getErrorMessage(response, "Activity type or adaptation not found")
+                );
 
             default:
                 // TODO: Make this a more specific Error
                 // Should never happen because we don't have any other status codes from the service
-                throw new Error("Unexpected status code returned from plan service");
+                throw new Error("Unexpected status code returned from adaptation service");
         }
     }
 }

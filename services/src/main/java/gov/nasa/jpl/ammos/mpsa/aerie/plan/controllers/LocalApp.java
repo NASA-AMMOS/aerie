@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository.PlanTransaction;
@@ -125,6 +126,19 @@ public final class LocalApp implements App {
     withValidator(validator -> validator.validateActivity(adaptationId, activityInstance));
 
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
+  }
+
+  @Override
+  public SimulationResults getSimulationResultsForPlan(final String planId, final long samplingPeriod) throws NoSuchPlanException {
+    if (samplingPeriod <= 0) throw new RuntimeException("INTERNAL ERROR: `samplingPeriod` must be positive, but was " + samplingPeriod);
+
+    final var plan = this.planRepository.getPlan(planId);
+
+    try {
+      return this.adaptationService.simulatePlan(plan, samplingPeriod);
+    } catch (AdaptationService.NoSuchAdaptationException e) {
+      throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
+    }
   }
 
   private <T extends Throwable> void withValidator(final ValidationScope<T> block) throws ValidationException, T {

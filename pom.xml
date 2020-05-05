@@ -13,7 +13,6 @@
         <module>banananation</module>
         <module>merlin-cli</module>
         <module>merlin-sdk</module>
-        <module>schemas</module>
         <module>services</module>
         <module>merlin-multimission-models</module>
         <module>sample-adaptation</module>

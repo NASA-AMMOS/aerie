@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.ValidationException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -23,4 +24,6 @@ public interface App {
   void removeActivityInstanceById(String planId, String activityInstanceId) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
   void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException;
+
+  SimulationResults getSimulationResultsForPlan(String planId, long samplingPeriod) throws NoSuchPlanException;
 }

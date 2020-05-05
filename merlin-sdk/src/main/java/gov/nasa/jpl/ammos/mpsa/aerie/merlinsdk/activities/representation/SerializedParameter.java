@@ -190,6 +190,7 @@ public abstract class SerializedParameter {
    * @return A new {@link SerializedParameter} containing a set of named {@link SerializedParameter}s.
    */
   public static SerializedParameter of(final Map<String, SerializedParameter> map) {
+    for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {
@@ -213,6 +214,7 @@ public abstract class SerializedParameter {
    * @return A new SerializedParameter containing a list of {@link SerializedParameter}s.
    */
   public static SerializedParameter of(final List<SerializedParameter> list) {
+    for (final var v : Objects.requireNonNull(list)) Objects.requireNonNull(v);
     final var value = List.copyOf(list);
     return new SerializedParameter() {
       public <T> T match(final Visitor<T> visitor) {

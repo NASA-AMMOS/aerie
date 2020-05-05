@@ -9,8 +9,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -21,28 +21,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.B
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrappers.ApsidesTest;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.StateContainer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
 
-
 @Ignore
 public class ApsidesTimesModelTest {
-    
-    public class MockStateContainer implements StateContainer {
-        public List<State<?>> getStateList() {
-            return List.of();
-        }
-    }
-    
-    public SimulationEngine mockEngine = new SimulationEngine(
-        SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS),
-        List.of(),
-        new MockStateContainer());
-
     @BeforeClass
     public static void loadSpiceAndKernels() {
         SpiceLoader.loadSpice();
@@ -94,56 +78,66 @@ public class ApsidesTimesModelTest {
 
     @Test
     public void testApsidesTimesModel() {
+        final var simulationEngine = new SimulationEngine();
+
         // Perihelion Data: http://www.astropixels.com/ephemeris/perap2001.html
         // NOTE: only the first of these is expected in the first `get()`; both are
         // expected after the second `get()`
-        List<Time> expectedAphelionTimes = List.of(Time.fromTimezoneString("2002-187T03:47:00.0", "UTC"),
-                Time.fromTimezoneString("2003-185T05:40:00.0", "UTC"));
+        final var expectedAphelionTimes = List.of(
+            Time.fromTimezoneString("2002-187T03:47:00.0", "UTC"),
+            Time.fromTimezoneString("2003-185T05:40:00.0", "UTC"));
 
-        Time start = Time.fromTimezoneString("2001-001T00:00:00.0", "UTC");
-        Time end = Time.fromTimezoneString("2003-001T00:00:00.0", "UTC");
-
-        ApsidesTimesModel earthSunApsidesModel = new ApsidesTimesModel();
-        earthSunApsidesModel.setEngine(mockEngine);
-        earthSunApsidesModel.setStart(start);
-        earthSunApsidesModel.setEnd(end);
+        final var earthSunApsidesModel = new ApsidesTimesModel();
+        earthSunApsidesModel.initialize(simulationEngine.getCurrentTime());
+        earthSunApsidesModel.setStart(Time.fromTimezoneString("2001-001T00:00:00.0", "UTC"));
         earthSunApsidesModel.setFilter(1.5209e8);
         earthSunApsidesModel.setTarget(Body.SUN);
         earthSunApsidesModel.setObserver(Body.EARTH);
         earthSunApsidesModel.setApsisType(Apsis.APOAPSIS);
 
-        List<Time> aphelionTimes = earthSunApsidesModel.get();
-        assertEquals("1 aphelion time expected; '" + aphelionTimes.size() + "' received.", 1, aphelionTimes.size());
+        // test that the difference between each SPICE-predicted perihelion
+        // and actual perihelion is less than one minute (our stepSize)
 
-        for (int i = 0; i < aphelionTimes.size(); i++) {
-            Time expected = expectedAphelionTimes.get(i);
-            Time actual = aphelionTimes.get(i);
-            Duration difference = expected.absoluteDifference(actual);
+        simulationEngine.scheduleJobAfter(Duration.ZERO, SimulationEffects.withEffects(() -> {
+            earthSunApsidesModel.setEnd(Time.fromTimezoneString("2003-001T00:00:00.0", "UTC"));
 
-            // assert that the difference between each SPICE-predicted perihelion and actual
-            // perihelion is less than one minute (our stepSize)
-            String message = "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
-                    + "' should be less than 1 minute.";
-            assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
-        }
+            final List<Time> aphelionTimes = earthSunApsidesModel.get();
+            assertEquals("1 aphelion time expected; '" + aphelionTimes.size() + "' received.", 1, aphelionTimes.size());
 
-        // change end time and get the new aphelion times
-        end = Time.fromTimezoneString("2004-001T00:00:00.0", "UTC");
-        earthSunApsidesModel.setEnd(end);
-        aphelionTimes = earthSunApsidesModel.get();
-        assertEquals("2 aphelion times expected; '" + aphelionTimes.size() + "' received.", 2, aphelionTimes.size());
+            for (int i = 0; i < aphelionTimes.size(); i++) {
+                final Time expected = expectedAphelionTimes.get(i);
+                final Time actual = aphelionTimes.get(i);
+                final var difference = expected.absoluteDifference(actual);
 
-        for (int i = 0; i < aphelionTimes.size(); i++) {
-            Time expected = expectedAphelionTimes.get(i);
-            Time actual = aphelionTimes.get(i);
-            Duration difference = expected.absoluteDifference(actual);
+                // assert that the difference between each SPICE-predicted perihelion and actual
+                // perihelion is less than one minute (our stepSize)
+                assertTrue(
+                    "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
+                        + "' should be less than 1 minute.",
+                    difference
+                        .lessThan(gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration.fromMinutes(1)));
+            }
+        }));
 
-            // assert that the difference between each SPICE-predicted perihelion and actual
-            // perihelion is less than one minute (our stepSize)
-            String message = "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
-                    + "' should be less than 1 minute.";
-            assertTrue(message, difference.lessThan(Duration.fromMinutes(1)));
-        }
+        simulationEngine.scheduleJobAfter(Duration.ZERO, SimulationEffects.withEffects(() -> {
+            earthSunApsidesModel.setEnd(Time.fromTimezoneString("2004-001T00:00:00.0", "UTC"));
 
+            final List<Time> aphelionTimes = earthSunApsidesModel.get();
+            assertEquals("2 aphelion times expected; '" + aphelionTimes.size() + "' received.", 2, aphelionTimes.size());
+
+            for (int i = 0; i < aphelionTimes.size(); i++) {
+                final Time expected = expectedAphelionTimes.get(i);
+                final Time actual = aphelionTimes.get(i);
+                final var difference = expected.absoluteDifference(actual);
+
+                assertTrue(
+                    "Expected '" + expected.toString() + "' - Actual '" + actual.toString()
+                        + "' should be less than 1 minute.",
+                    difference
+                        .lessThan(gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration.fromMinutes(1)));
+            }
+        }));
+
+        simulationEngine.runToCompletion();
     }
 }

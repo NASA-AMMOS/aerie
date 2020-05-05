@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +18,8 @@ import java.util.List;
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType(name="PeelBanana", states=BananaStates.class)
-public final class PeelBananaActivity implements Activity<BananaStates> {
+@ActivityType(name="PeelBanana")
+public final class PeelBananaActivity implements Activity {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
   @Parameter
@@ -38,8 +37,10 @@ public final class PeelBananaActivity implements Activity<BananaStates> {
   }
 
   @Override
-  public void modelEffects(SimulationContext ctx, BananaStates states) {
-    if (peelDirection.equals("fromStem")) {
+  public void modelEffects() {
+    final var states = BananaStates.get();
+
+    if (this.peelDirection.equals("fromStem")) {
       states.fruitState.set(states.fruitState.get() - MASHED_BANANA_AMOUNT);
     }
 

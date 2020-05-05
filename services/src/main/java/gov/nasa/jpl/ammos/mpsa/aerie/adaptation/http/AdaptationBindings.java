@@ -1,9 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import io.javalin.Javalin;
@@ -12,15 +15,19 @@ import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 
 import javax.json.Json;
-import javax.json.JsonValue;
+import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsers.serializedParameterP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.head;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 
@@ -53,6 +60,7 @@ public final class AdaptationBindings implements Plugin {
                 get(this::getAdaptations);
                 post(this::postAdaptation);
                 path(":adaptationId", () -> {
+                    head(this::doesAdaptationExist);
                     get(this::getAdaptation);
                     delete(this::deleteAdaptation);
                     path("activities", () -> {
@@ -65,6 +73,12 @@ public final class AdaptationBindings implements Plugin {
                         });
                     });
                 });
+            });
+
+            path("simulations", () -> {
+                before(ctx -> ctx.contentType("application/json"));
+
+                post(this::runSimulation);
             });
         });
     }
@@ -88,6 +102,18 @@ public final class AdaptationBindings implements Plugin {
             ctx.status(400).result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString());
         } catch (final ValidationException ex) {
             ctx.status(400).result(ResponseSerializers.serializeValidationException(ex).toString());
+        }
+    }
+
+    private void doesAdaptationExist(final Context ctx) {
+        try {
+            final String adaptationId = ctx.pathParam("adaptationId");
+
+            this.app.getAdaptationById(adaptationId);
+
+            ctx.status(200);
+        } catch (final App.NoSuchAdaptationException ex) {
+            ctx.status(404);
         }
     }
 
@@ -143,8 +169,7 @@ public final class AdaptationBindings implements Plugin {
             final String adaptationId = ctx.pathParam("adaptationId");
             final String activityTypeId = ctx.pathParam("activityTypeId");
 
-            final JsonValue requestJson = Json.createReader(new StringReader(ctx.body())).readValue();
-            final Map<String, SerializedParameter> activityParameters = RequestDeserializers.deserializeActivityParameterMap(requestJson);
+            final Map<String, SerializedParameter> activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
             final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
             final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);
@@ -156,6 +181,30 @@ public final class AdaptationBindings implements Plugin {
             ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
         }
     }
+
+    private void runSimulation(final Context ctx) {
+        try {
+            final CreateSimulationMessage message = parseJson(ctx.body(), createSimulationMessageP);
+
+            final var results = this.app.runSimulation(message);
+
+            ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
+        } catch (final JsonParsingException ex) {
+            // Request entity is not valid JSON.
+            // TODO: report this failure with a better response body
+            ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-json").build().toString());
+        } catch (final InvalidEntityException ex) {
+            // Request entity does not have the expected shape.
+            ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+        } catch (final App.NoSuchAdaptationException ex) {
+            // The requested adaptation does not exist.
+            ctx.status(404);
+        } catch (final Adaptation.UnconstructableActivityInstanceException | Adaptation.NoSuchActivityTypeException e) {
+            // The adaptation could not instantiate the provided activities.
+            // TODO: report these failures with a better response body
+            ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-activities").build().toString());
+        }
+      }
 
     private NewAdaptation readNewAdaptation(final Context ctx) throws ValidationException {
         final List<String> validationErrors = new ArrayList<>();
@@ -223,5 +272,10 @@ public final class AdaptationBindings implements Plugin {
             .setOwner(ctx.formParam("owner"))
             .setJarSource(uploadedFile.getContent())
             .build();
+    }
+
+    private <T> T parseJson(final String subject, final JsonParser<T> parser) throws InvalidEntityException {
+        final var requestJson = Json.createReader(new StringReader(subject)).readValue();
+        return parser.parse(requestJson).getSuccessOrThrow(() -> new InvalidEntityException());
     }
 }

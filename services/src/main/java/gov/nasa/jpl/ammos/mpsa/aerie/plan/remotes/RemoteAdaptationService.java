@@ -2,10 +2,17 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.RequestDeserializers;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
@@ -14,7 +21,13 @@ import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +42,7 @@ public final class RemoteAdaptationService implements AdaptationService {
   public boolean isMissionModelDefined(final String adaptationId) {
     final HttpResponse<String> response;
     try {
-      response = this.client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
+      response = this.client.sendRequest("HEAD", "/adaptations/" + adaptationId);
     } catch (final IOException | InterruptedException ex) {
       throw new AdaptationAccessException(ex);
     }
@@ -69,6 +82,112 @@ public final class RemoteAdaptationService implements AdaptationService {
       default:
         throw new AdaptationAccessException("unexpected status code `" + response.statusCode() + "`: " + response.body());
     }
+  }
+
+  @Override
+  public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
+    final var startTime = timestampToInstant(plan.startTimestamp);
+
+    final HttpResponse<String> response;
+    try {
+      final var samplingDuration = startTime.until(timestampToInstant(plan.endTimestamp), ChronoUnit.MICROS);
+
+      final var requestBody = Json.createObjectBuilder()
+          .add("adaptationId", plan.adaptationId)
+          .add("startTime", plan.startTimestamp)
+          .add("samplingDuration", samplingDuration)
+          .add("samplingPeriod", samplingPeriod)
+          .add("activities", serializeScheduledActivities(plan))
+          .build();
+
+      response = this.client.sendRequest("POST", "/simulations", requestBody);
+    } catch (final IOException | InterruptedException ex) {
+      throw new AdaptationAccessException(ex);
+    }
+
+    switch (response.statusCode()) {
+      case 200: {
+        final var responseJson = Json.createReader(new StringReader(response.body())).readValue();
+        return deserializeSimulationResults(startTime, responseJson);
+      }
+
+      case 404:
+        throw new NoSuchAdaptationException();
+
+      case 400: {
+        final var responseJson = Json.createReader(new StringReader(response.body())).readObject();
+        switch (responseJson.getString("kind")) {
+          case "invalid-json":
+            throw new RuntimeException("Internal error -- illegal JSON rejected by remote adaptation service");
+          case "invalid-entity":
+            throw new RuntimeException("API mismatch -- remote adaptation service rejected generated JSON");
+          case "invalid-activities":
+            throw new RuntimeException("Adaptation mismatch -- remote adaptation service rejected activity instances");
+          default:
+            throw new RuntimeException("Unknown error kind returned by remote adaptation service: " + responseJson.getString("kind") + ".\n\tresponse entity: " + responseJson);
+        }
+      }
+
+      default:
+        throw new AdaptationAccessException("unexpected status code `" + response.statusCode() + "`: " + response.body());
+    }
+  }
+
+  private static SimulationResults deserializeSimulationResults(final Instant startTime, final JsonValue json) {
+    if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
+    final var jsonObject = (JsonObject) json;
+
+    final var timestamps = deserializeTimestamps(jsonObject.get("times"));
+    final var timelines = deserializeTimelines(jsonObject.get("resources"));
+
+    return new SimulationResults(startTime, timestamps, timelines);
+  }
+
+  private static List<Duration> deserializeTimestamps(final JsonValue json) {
+    if (!(json instanceof JsonArray)) throw new InvalidServiceResponseException();
+    final var jsonArray = (JsonArray) json;
+
+    final var timestamps = new ArrayList<Duration>(jsonArray.size());
+    for (final var item : jsonArray) {
+      final var timestamp = Duration.of(((JsonNumber) item).longValue(), TimeUnit.MICROSECONDS);
+      timestamps.add(timestamp);
+    }
+
+    return timestamps;
+  }
+
+  private static Map<String, List<SerializedParameter>> deserializeTimelines(final JsonValue json) {
+    if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
+    final var jsonObject = (JsonObject) json;
+
+    final var timelines = new HashMap<String, List<SerializedParameter>>(jsonObject.size());
+    for (final var entry : jsonObject.entrySet()) {
+      timelines.put(entry.getKey(), deserializeTimeline(entry.getValue()));
+    }
+
+    return timelines;
+  }
+
+  private static List<SerializedParameter> deserializeTimeline(final JsonValue json) {
+    if (!(json instanceof JsonArray)) throw new InvalidServiceResponseException();
+    final var jsonArray = (JsonArray) json;
+
+    final var timeline = new ArrayList<SerializedParameter>(jsonArray.size());
+    for (final var item : jsonArray) {
+      try {
+        timeline.add(RequestDeserializers.deserializeActivityParameter(item));
+      } catch (final InvalidEntityException ex) {
+        throw new InvalidServiceResponseException();
+      }
+    }
+
+    return timeline;
+  }
+
+  private static Instant timestampToInstant(final String timestamp) {
+    // TODO: handle parse errors
+    final var format = DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss[.n]");
+    return LocalDateTime.parse(timestamp, format).atZone(ZoneOffset.UTC).toInstant();
   }
 
   private static List<String> deserializeActivityValidation(final JsonValue json) {
@@ -155,6 +274,21 @@ public final class RemoteAdaptationService implements AdaptationService {
       parameters.add(serializeActivityParameter(parameter));
     }
     return parameters.build();
+  }
+
+  private JsonValue serializeScheduledActivities(final Plan plan) {
+    final var startTime = timestampToInstant(plan.startTimestamp);
+
+    final var scheduledActivities = Json.createArrayBuilder();
+    for (final var activity : plan.activityInstances.values()) {
+      scheduledActivities.add(Json.createObjectBuilder()
+              .add("defer", startTime.until(timestampToInstant(activity.startTimestamp), ChronoUnit.MICROS))
+              .add("type", activity.type)
+              .add("parameters", serializeActivityParameterMap(activity.parameters))
+              .build());
+    }
+
+    return scheduledActivities.build();
   }
 
   public static class InvalidServiceResponseException extends RuntimeException {

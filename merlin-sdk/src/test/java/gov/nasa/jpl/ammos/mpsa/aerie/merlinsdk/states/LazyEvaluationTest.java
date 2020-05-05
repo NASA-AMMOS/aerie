@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import org.junit.After;
@@ -14,8 +13,6 @@ import java.util.Map;
 public class LazyEvaluationTest {
 
     public class ExampleState implements State<Double> {
-
-        SimulationEngine mockEngine = new SimulationEngine();
         double value;
 
         public ExampleState(double value){
@@ -41,11 +38,6 @@ public class LazyEvaluationTest {
         public void set(Double value) {
             this.value = value;
             evaluator.invalidate();
-        }
-
-        //merely implemented to satisfy interface
-        @Override
-        public void setEngine(SimulationEngine engine) {
         }
 
         //merely implemented to satisfy interface

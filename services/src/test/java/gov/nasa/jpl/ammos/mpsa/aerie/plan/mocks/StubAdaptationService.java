@@ -1,8 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,5 +35,12 @@ public final class StubAdaptationService implements AdaptationService {
     } else {
       return List.of();
     }
+  }
+
+  @Override
+  public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
+    if (!Objects.equals(plan.adaptationId, EXISTENT_ADAPTATION_ID)) throw new NoSuchAdaptationException();
+
+    return new SimulationResults(Instant.EPOCH, List.of(), Map.of());
   }
 }

@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.power;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.mocks.MockTimeEmptySimulationEngine;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.junit.Test;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
@@ -13,53 +12,61 @@ import static org.assertj.core.api.Assertions.withinPercentage;
  * exercises the basic (non-random access) functionality of the instrument power state
  */
 public class InstrumentPowerTest {
-
     @Test
     public void defaultCtorWorks() {
         //configure the instrument power model
-        SettableState<Double> instPower_W = new InstrumentPower();
+        new InstrumentPower();
 
         //no exception!
     }
 
     @Test
     public void getStartsAtZeroPower() {
+        final var simEngine = new SimulationEngine();
+
         //configure the instrument power model
-        SettableState<Double> instPower_W = new InstrumentPower();
+        final var state = new InstrumentPower();
+        state.initialize(simEngine.getCurrentTime());
 
-        //get the initial, unperturbed value of the state
-        final double resultValue_W = instPower_W.get();
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            assertThat(state.get()).isCloseTo(0.0, withinPercentage(0.01));
+        }));
 
-        //ensure the initial value is off (ie 0.0)
-        assertThat( resultValue_W ).isCloseTo( 0.0, withinPercentage( 0.01 ) );
+        simEngine.runToCompletion();
     }
 
     @Test
     public void setWorks() {
-        //configure the instrument power model (it starts at zero)
-        SettableState<Double> instPower_W = new InstrumentPower();
-        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS) ) );
+        final var simEngine = new SimulationEngine();
 
-        //set the power to some test value
-        final double testValue_W = 330.0;
-        instPower_W.set( testValue_W );
+        //configure the instrument power model (it starts at zero)
+        final var state = new InstrumentPower();
+        state.initialize(simEngine.getCurrentTime());
+
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            state.set(330.0);
+        }));
+
+        simEngine.runToCompletion();
     }
 
     @Test
     public void getWorksAfterSet() {
+        final var simEngine = new SimulationEngine();
+
         //configure the instrument power model (it starts at zero)
-        SettableState<Double> instPower_W = new InstrumentPower();
-        instPower_W.setEngine( new MockTimeEmptySimulationEngine( SimulationInstant.fromQuantity(0, TimeUnit.MICROSECONDS) ) );
+        final var state = new InstrumentPower();
+        state.initialize(simEngine.getCurrentTime());
 
-        //set the power to some test value
-        final double testValue_W = 330.0;
-        instPower_W.set( testValue_W );
+        simEngine.scheduleJobAfter(Duration.ZERO, withEffects(() -> {
+            //set the power to some test value
+            final double testValue = 330.0;
+            state.set(testValue);
 
-        //then fetch the changed value
-        final double resultValue_W = instPower_W.get();
+            //ensure the same value is returned
+            assertThat(state.get()).isCloseTo(testValue, withinPercentage(0.01));
+        }));
 
-        //ensure the same value is returned
-        assertThat( resultValue_W ).isCloseTo( testValue_W, withinPercentage( 0.01 ) );
+        simEngine.runToCompletion();
     }
-
 }

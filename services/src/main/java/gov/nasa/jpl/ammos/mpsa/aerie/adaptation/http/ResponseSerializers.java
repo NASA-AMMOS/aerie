@@ -1,22 +1,45 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class ResponseSerializers {
+  public static <T> JsonValue serializeList(final Function<T, JsonValue> elementSerializer, final List<T> elements) {
+    if (elements == null) return JsonValue.NULL;
+
+    final var builder = Json.createArrayBuilder();
+    for (final var element : elements) builder.add(elementSerializer.apply(element));
+    return builder.build();
+  }
+
+  public static <T> JsonValue serializeMap(final Function<T, JsonValue> fieldSerializer, final Map<String, T> fields) {
+    if (fields == null) return JsonValue.NULL;
+
+    final var builder = Json.createObjectBuilder();
+    for (final var entry : fields.entrySet()) builder.add(entry.getKey(), fieldSerializer.apply(entry.getValue()));
+    return builder.build();
+  }
+
   public static JsonValue serializeParameterSchema(final ParameterSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
@@ -24,14 +47,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeParameterSchemas(final Map<String, ParameterSchema> schemas) {
-    if (schemas == null) return JsonValue.NULL;
-
-    final JsonObjectBuilder builder = Json.createObjectBuilder();
-    for (final var entry : schemas.entrySet()) {
-      builder.add(entry.getKey(), serializeParameterSchema(entry.getValue()));
-    }
-
-    return builder.build();
+    return serializeMap(ResponseSerializers::serializeParameterSchema, schemas);
   }
 
   public static JsonValue serializeActivityParameter(final SerializedParameter parameter) {
@@ -41,14 +57,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityParameters(final Map<String, SerializedParameter> parameters) {
-    if (parameters == null) return JsonValue.NULL;
-
-    final JsonObjectBuilder builder = Json.createObjectBuilder();
-    for (final var entry : parameters.entrySet()) {
-      builder.add(entry.getKey(), serializeActivityParameter(entry.getValue()));
-    }
-
-    return builder.build();
+    return serializeMap(ResponseSerializers::serializeActivityParameter, parameters);
   }
 
   public static JsonValue serializeActivityType(final ActivityType activityType) {
@@ -60,14 +69,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityTypes(final Map<String, ActivityType> activityTypes) {
-    if (activityTypes == null) return JsonValue.NULL;
-
-    final JsonObjectBuilder builder = Json.createObjectBuilder();
-    for (final var entry : activityTypes.entrySet()) {
-      builder.add(entry.getKey(), serializeActivityType(entry.getValue()));
-    }
-
-    return builder.build();
+    return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
   }
 
   public static JsonValue serializeAdaptation(final AdaptationJar adaptationJar) {
@@ -81,13 +83,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeAdaptations(final Map<String, AdaptationJar> activityTypes) {
-    if (activityTypes == null) return JsonValue.NULL;
-
-    final JsonObjectBuilder builder = Json.createObjectBuilder();
-    for (final var entry : activityTypes.entrySet()) {
-      builder.add(entry.getKey(), serializeAdaptation(entry.getValue()));
-    }
-    return builder.build();
+    return serializeMap(ResponseSerializers::serializeAdaptation, activityTypes);
   }
 
   public static JsonValue serializeFailureList(final List<String> failures) {
@@ -109,9 +105,57 @@ public final class ResponseSerializers {
         .build();
   }
 
+  public static JsonValue serializeParameter(final SerializedParameter parameter) {
+    return parameter.match(new ParameterSerializer());
+  }
+
+  public static JsonValue serializeTimeline(final List<SerializedParameter> elements) {
+    return serializeList(ResponseSerializers::serializeParameter, elements);
+  }
+
+  public static JsonValue serializeTimestamp(final Duration timestamp) {
+    return Json.createValue(timestamp.durationInMicroseconds);
+  }
+
+  public static JsonValue serializeTimestamps(final List<Duration> elements) {
+    return serializeList(ResponseSerializers::serializeTimestamp, elements);
+  }
+
+  public static JsonValue serializeSimulationResults(final SimulationResults results) {
+    if (results == null) return JsonValue.NULL;
+
+    final var builder = Json.createObjectBuilder();
+    builder.add("times", serializeTimestamps(results.timestamps));
+    builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
+    return builder.build();
+  }
+
+  public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
+    return Json.createObjectBuilder()
+        .add("defer", scheduledActivity.getLeft().durationInMicroseconds)
+        .add("type", scheduledActivity.getRight().getTypeName())
+        .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
+        .build();
+  }
+
+  public static JsonValue serializeScheduledActivities(final List<Pair<Duration, SerializedActivity>> activities) {
+    return serializeList(ResponseSerializers::serializeScheduledActivity, activities);
+  }
+
+  public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
+    return Json.createObjectBuilder()
+        .add("adaptationId", message.adaptationId)
+        .add("startTime", DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn").withZone(ZoneOffset.UTC).format(message.startTime))
+        .add("samplingDuration", message.samplingDuration.durationInMicroseconds)
+        .add("samplingPeriod", message.samplingPeriod.durationInMicroseconds)
+        .add("activities", serializeScheduledActivities(message.activityInstances))
+        .build();
+  }
+
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
+        .add("kind", "invalid-entity")
         .add("message", "invalid json")
         .build();
   }
@@ -196,16 +240,24 @@ public final class ResponseSerializers {
 
     @Override
     public JsonValue onMap(final Map<String, ParameterSchema> parameterSchemas) {
-      final JsonObjectBuilder builder = Json.createObjectBuilder();
-      for (final var entry : parameterSchemas.entrySet()) {
-        builder.add(entry.getKey(), entry.getValue().match(this));
-      }
-
       return Json
           .createObjectBuilder()
           .add("type", "map")
-          .add("items", builder)
+          .add("items", serializeMap(x -> x.match(this), parameterSchemas))
           .build();
+    }
+
+    @Override
+    public JsonValue onEnum(Class<? extends Enum<?>> enumeration) {
+      var enumValues = Arrays.asList(enumeration.getEnumConstants());
+      return Json
+              .createObjectBuilder()
+              .add("type", "enumerated")
+              .add("items", serializeList(v -> Json.createObjectBuilder()
+                      .add("key", v.name())
+                      .add("label", v.toString())
+                      .build(), enumValues))
+              .build();
     }
   }
 
@@ -237,20 +289,12 @@ public final class ResponseSerializers {
 
     @Override
     public JsonValue onList(final List<SerializedParameter> elements) {
-      final JsonArrayBuilder builder = Json.createArrayBuilder();
-      for (final var element : elements) {
-        builder.add(element.match(this));
-      }
-      return builder.build();
+      return serializeList(x -> x.match(this), elements);
     }
 
     @Override
     public JsonValue onMap(final Map<String, SerializedParameter> fields) {
-      final JsonObjectBuilder builder = Json.createObjectBuilder();
-      for (final var entry : fields.entrySet()) {
-        builder.add(entry.getKey(), entry.getValue().match(this));
-      }
-      return builder.build();
+      return serializeMap(x -> x.match(this), fields);
     }
   }
 }

@@ -13,6 +13,8 @@ import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.Properties;
 
 public class JsonUtilities {
 
@@ -23,8 +25,7 @@ public class JsonUtilities {
      */
     public static String prettify(String json) {
         Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-        JsonParser jp = new JsonParser();
-        JsonElement je = jp.parse(json);
+        JsonElement je = JsonParser.parseString(json);
         return gson.toJson(je);
     }
 
@@ -137,4 +138,17 @@ public class JsonUtilities {
     public static Adaptation parseAdaptationJson(InputStream jsonStream) throws IOException {
         return parseAdaptationJson(new String(jsonStream.readAllBytes()));
     }
+
+    public static String getErrorMessageFromFailureResponse(String responseBody) throws ResponseWithoutErrorMessageException {
+        var bodyProperties = Optional.ofNullable(new Gson().fromJson(responseBody, Properties.class));
+        return bodyProperties
+                .map(p -> p.getProperty("message"))
+                .orElseThrow(ResponseWithoutErrorMessageException::new);
+    }
+
+    public static String getErrorMessageFromFailureResponse(InputStream jsonStream) throws IOException, ResponseWithoutErrorMessageException {
+        return getErrorMessageFromFailureResponse(new String(jsonStream.readAllBytes()));
+    }
+
+    public static class ResponseWithoutErrorMessageException extends Exception {}
 }

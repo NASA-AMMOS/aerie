@@ -31,7 +31,7 @@ public class CommandOptions {
         // Add options to view list of adaptations and create adaptations
         requiredGroup.addOption(new Option("adaptations", "list-adaptations", false, "View a list of available adaptations"));
         Option opt = new Option("A", "create-adaptation", true, "Add a new adaptation, passing the name of an Adaptation JAR");
-        opt.setArgs(Option.UNLIMITED_VALUES);
+        opt.setArgs(5);
         requiredGroup.addOption(opt);
 
         // Add options to view list of plans and create plans
@@ -83,7 +83,7 @@ public class CommandOptions {
         try {
             cmd = (new DefaultParser()).parse(options, args);
         } catch (ParseException e) {
-            System.err.println("Failed to parse command line properties: " + e.getMessage());
+            System.out.println("Failed to parse command line properties: " + e.getMessage());
             return false;
         }
 
@@ -112,9 +112,6 @@ public class CommandOptions {
 
                 case "A": {
                     String[] params = cmd.getOptionValues("A");
-                    if (params.length < 3) {
-                        throw new InvalidNumberOfArgsException("Option 'A' requires at least three arguments");
-                    }
 
                     String path = params[0];
                     String[] tokens = Arrays.copyOfRange(params, 1, params.length);
@@ -123,7 +120,7 @@ public class CommandOptions {
                     try {
                         adaptation = Adaptation.fromTokens(tokens);
                     } catch (InvalidTokenException e) {
-                        System.err.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
+                        System.out.println(String.format("Error while parsing token: %s\n%s", e.getToken(), e.getMessage()));
                         return false;
                     }
 
@@ -207,7 +204,7 @@ public class CommandOptions {
                     return false;
             }
         } catch (InvalidNumberOfArgsException e) {
-            System.err.println("Failed to parse command line properties: " + e);
+            System.out.println("Failed to parse command line properties: " + e);
             return false;
         }
     }

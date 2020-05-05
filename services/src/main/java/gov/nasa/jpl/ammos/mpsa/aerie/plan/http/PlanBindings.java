@@ -19,6 +19,7 @@ import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static io.javalin.apibuilder.ApiBuilder.before;
@@ -59,6 +60,9 @@ public final class PlanBindings implements Plugin {
               delete(this::deleteActivityInstance);
             });
           });
+          path("results", () -> {
+            get(this::getSimulationResults);
+          });
         });
       });
     });
@@ -67,6 +71,45 @@ public final class PlanBindings implements Plugin {
     javalin.exception(JsonParsingException.class, (ex, ctx) -> ctx
         .status(400)
         .result(ResponseSerializers.serializeJsonParsingException(ex).toString()));
+  }
+
+  private void getSimulationResults(final Context ctx) {
+    try {
+      final String planId = ctx.pathParam("planId");
+
+      final String periodStr = ctx.queryParam("sampling-period");
+      if (periodStr == null) {
+        ctx
+            .status(400)
+            .result(Json
+                .createObjectBuilder()
+                .add("message", "Missing required query parameter sampling-period")
+                .build()
+                .toString());
+        return;
+      }
+
+      final long samplingPeriod;
+      try {
+        samplingPeriod = Long.parseLong(periodStr, 10);
+        if (samplingPeriod <= 0) throw new NumberFormatException();
+      } catch (final NumberFormatException ex) {
+        ctx
+            .status(400)
+            .result(Json
+                .createObjectBuilder()
+                .add("message", "Query parameter sampling-period must be a positive integer")
+                .build()
+                .toString());
+        return;
+      }
+
+      final var results = this.app.getSimulationResultsForPlan(planId, samplingPeriod);
+
+      ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    }
   }
 
   private void getPlans(final Context ctx) {

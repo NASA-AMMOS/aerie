@@ -1,33 +1,26 @@
 java_library(
     name = "sample-adaptation",
     srcs = glob(["src/main/java/**/*.java"]),
-    deps = [
-        "//third-party:commons-io",
+    resources = glob(["src/main/resources/**/*"]),
+    resources_root = "src/main/resources/",
+    exported_deps = [
+        "//third-party/sample-adaptation/core:sample-adaptation",
         "//third-party:JNISpice",
-
         # Modules
         "//merlin-multimission-models:merlin-multimission-models",
         "//merlin-sdk:merlin-sdk"
     ],
+    annotation_processors = ["gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor.ActivityProcessor"],
+    annotation_processor_deps = ["//merlin-sdk:merlin-sdk"],
     visibility = ['PUBLIC']
 )
 
 java_test(
     name = "test_sample-adaptation",
-    srcs = glob(["src/**/*.java"]),
+    srcs = glob(["src/test/java/**/*.java"]),
     deps = [
         # Third Party
-        "//third-party:assertj-core",
-        "//third-party:commons-io",
-        "//third-party:commons-lang3",
-        "//third-party:commons-math3",
-        "//third-party:hamcrest-all",
-        "//third-party:hamcrest-all",
-        "//third-party:JNISpice",
-        "//third-party:junit",
-
-        # Aerie
-        "//merlin-multimission-models:merlin-multimission-models",
-        "//merlin-sdk:merlin-sdk"
+       "//third-party/sample-adaptation/test:sample-adaptation",
+        ":sample-adaptation"
     ]
 )
