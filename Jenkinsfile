@@ -168,7 +168,7 @@ pipeline {
                                     "pattern": "aerie-${ARTIFACT_TAG}.tar.gz",
                                     "target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
                                     "recursive":false
-                                }
+                                },
                                 {
                                     "pattern": "aerie-docker-compose.tar.gz",
                                     "target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
