@@ -20,7 +20,7 @@ def getDockerImageName(folder){
 }
 
 def getAWSTag(tag){
-    if (tag ==~ /release.*/) {
+    if (tag ==~ /release-.*/) {
         return "release"
     }
     if (tag ==~ /develop/) {
@@ -35,7 +35,7 @@ def getAWSTag(tag){
 def getArtifactoryUrl() {
     echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
 
-    if (GIT_BRANCH ==~ /release.*/){
+    if (GIT_BRANCH ==~ /release-.*/){
         echo "Publishing to 16002-STAGE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16002"
     }
@@ -108,7 +108,7 @@ pipeline {
 
         stage ('Archive') {
             when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
@@ -189,7 +189,7 @@ pipeline {
 
         stage ('Docker') {
             when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
             steps {
                 script {
@@ -210,7 +210,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release.*)/ }
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
             steps {
                 echo 'Deployment stage started...'
