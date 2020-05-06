@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.squareup.javapoet.JavaFile;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
@@ -205,7 +206,7 @@ public final class ActivityProcessor extends AbstractProcessor {
         final FileObject resourceFile = this.processingEnv.getFiler().createResource(
                 StandardLocation.CLASS_OUTPUT,
                 "",
-                "META-INF/merlin/activityMappers.json"
+                ActivityMapperLoader.PATH_TO_MAPPERS_IN_JAR
         );
         final var writer = resourceFile.openWriter();
         final var generator = jsonFactory.createGenerator(writer);
