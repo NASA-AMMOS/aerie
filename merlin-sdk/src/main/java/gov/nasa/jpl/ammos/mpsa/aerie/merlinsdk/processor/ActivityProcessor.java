@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 @SupportedAnnotationTypes({
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType",
@@ -39,8 +41,8 @@ public final class ActivityProcessor extends AbstractProcessor {
   private final JsonFactory jsonFactory = new JsonFactory();
 
   // The set of the names of all activity types seen so far.
-  private final Set<ActivityTypeInfo> activityTypesFound = new HashSet<>();
-  private final Set<TypeMirror> activityTypesWithMappers = new HashSet<>();
+  private final Map<TypeMirror, ActivityTypeInfo> activityTypesFound = new HashMap<>();
+  private final Map<TypeMirror, TypeMirror> activityTypesWithMappers = new HashMap<>();
 
   @Override
   public void init(final ProcessingEnvironment processingEnv) {
@@ -123,7 +125,7 @@ public final class ActivityProcessor extends AbstractProcessor {
       }
 
       // If this activity type's name collides with another's, report that and bail.
-      if (this.activityTypesFound.contains(activityTypeInfo.name)) {
+      if (this.activityTypesFound.containsValue(activityTypeInfo.name)) {
         this.processingEnv.getMessager().printMessage(
                 Diagnostic.Kind.ERROR,
                 "Multiple activity types found with name `" + activityTypeInfo.name + "`",
@@ -131,7 +133,7 @@ public final class ActivityProcessor extends AbstractProcessor {
         continue;
       }
       else {
-        this.activityTypesFound.add(activityTypeInfo);
+        this.activityTypesFound.put(element.asType(), activityTypeInfo);
       }
 
       // Synthesize a class for serializing and de-serializing this activity type.
@@ -176,10 +178,10 @@ public final class ActivityProcessor extends AbstractProcessor {
         if (annotationMirror.getAnnotationType().equals(activitiesMappedType)) {
           List<TypeMirror> newActivitiesWithMappers = getActivitiesMappedBy(annotationMirror);
           for (TypeMirror mappedActivity : newActivitiesWithMappers) {
-            if (activityTypesWithMappers.contains(mappedActivity)) {
+            if (activityTypesWithMappers.containsKey(mappedActivity)) {
               processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "More than one activity mapper found for activity type " + mappedActivity.toString(), element);
             } else {
-              activityTypesWithMappers.add(mappedActivity);
+              activityTypesWithMappers.put(mappedActivity, element.asType());
             }
           }
         }
@@ -191,11 +193,34 @@ public final class ActivityProcessor extends AbstractProcessor {
       //       This may include primitives like double / Double.
 
       // Check that every activity type has one and only one associated mapper
-      for (ActivityTypeInfo activityTypeInfo : activityTypesFound) {
+      for (ActivityTypeInfo activityTypeInfo : activityTypesFound.values()) {
         TypeMirror className = activityTypeInfo.javaType;
-        if (!activityTypesWithMappers.contains(activityTypeInfo.javaType)) {
+        if (!activityTypesWithMappers.containsKey(activityTypeInfo.javaType)) {
           processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, "No mapper specified for activity type " + className, activityTypeInfo.javaType.asElement());
         }
+      }
+
+      // Save activity type mappers in a META-INF collection.
+      try {
+        final FileObject resourceFile = this.processingEnv.getFiler().createResource(
+                StandardLocation.CLASS_OUTPUT,
+                "",
+                "META-INF/merlin/activityMappers.json"
+        );
+        final var writer = resourceFile.openWriter();
+        final var generator = jsonFactory.createGenerator(writer);
+        generator.writeStartObject();
+        for (final var entry : activityTypesWithMappers.entrySet()) {
+          generator.writeStringField(activityTypesFound.get(entry.getKey()).name, entry.getValue().toString());
+        }
+        generator.writeEndObject();
+        generator.close();
+      }
+      catch (final IOException e) {
+        this.processingEnv.getMessager().printMessage(
+                Diagnostic.Kind.ERROR,
+                "Unable to write activity type mapper data."
+        );
       }
     }
     return true;
