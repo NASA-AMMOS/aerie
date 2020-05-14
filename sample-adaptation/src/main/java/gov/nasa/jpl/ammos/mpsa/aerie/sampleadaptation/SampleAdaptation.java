@@ -3,14 +3,10 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.CompositeActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.DownlinkData$$ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data.InitializeBinDataVolume$$ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOff$$ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.TurnInstrumentOn$$ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
@@ -20,16 +16,17 @@ import java.util.stream.Collectors;
 
 @Adaptation(name="sample-adaptation", version="0.1")
 public class SampleAdaptation implements MerlinAdaptation {
-    private final ActivityMapper activityMapper = new CompositeActivityMapper(Map.of(
-            "DownlinkData", new DownlinkData$$ActivityMapper(),
-            "InitializeBinDataVolume", new InitializeBinDataVolume$$ActivityMapper(),
-            "TurnInstrumentOn", new TurnInstrumentOn$$ActivityMapper(),
-            "TurnInstrumentOff", new TurnInstrumentOff$$ActivityMapper()
-    ));
 
     @Override
     public ActivityMapper getActivityMapper() {
-        return activityMapper;
+        try {
+            return ActivityMapperLoader.loadActivityMapper(SampleAdaptation.class);
+        } catch (ActivityMapperLoader.ActivityMapperLoadException e) {
+            // TODO: We should add an exception to merlin-sdk that adaptations can
+            //       throw to signify that loading the activity mapper failed
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override
