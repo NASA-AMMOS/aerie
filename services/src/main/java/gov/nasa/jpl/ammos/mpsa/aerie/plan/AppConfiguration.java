@@ -81,13 +81,13 @@ public final class AppConfiguration {
     }
 
     public static final class Builder {
-        private Optional<Integer> httpPort;
-        private Optional<URI> adaptationServiceUri;
-        private Optional<URI> mongoUri;
-        private Optional<String> mongoDatabase;
-        private Optional<String> mongoPlanCollection;
-        private Optional<String> mongoActivityCollection;
-        private Optional<Boolean> enableJavalinLogging;
+        private Optional<Integer> httpPort = Optional.empty();
+        private Optional<URI> adaptationServiceUri = Optional.empty();
+        private Optional<URI> mongoUri = Optional.empty();
+        private Optional<String> mongoDatabase = Optional.empty();
+        private Optional<String> mongoPlanCollection = Optional.empty();
+        private Optional<String> mongoActivityCollection = Optional.empty();
+        private Optional<Boolean> enableJavalinLogging = Optional.empty();
 
         private Builder() {}
 
