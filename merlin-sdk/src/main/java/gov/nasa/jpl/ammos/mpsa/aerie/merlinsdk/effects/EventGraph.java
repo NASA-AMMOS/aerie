@@ -212,4 +212,9 @@ public abstract class EventGraph<Event> {
       }
     };
   }
+
+  @Override
+  public String toString() {
+    return TreeLogger.displayTree(this);
+  }
 }
