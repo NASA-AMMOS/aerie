@@ -1,4 +1,10 @@
 prebuilt_jar(
+     name = 'jackson-databind-bundle-2.9.8',
+     binary_jar = 'jackson-databind-bundle-2.9.8.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
      name = 'jackson-core-bundle-2.9.8',
      binary_jar = 'jackson-core-bundle-2.9.8.jar',
      visibility = ['PUBLIC']
@@ -7,6 +13,12 @@ prebuilt_jar(
 prebuilt_jar(
      name = 'javapoet-jar-1.11.1',
      binary_jar = 'javapoet-jar-1.11.1.jar',
+     visibility = ['PUBLIC']
+)
+
+prebuilt_jar(
+     name = 'jackson-annotations-bundle-2.9.0',
+     binary_jar = 'jackson-annotations-bundle-2.9.0.jar',
      visibility = ['PUBLIC']
 )
 
@@ -31,8 +43,10 @@ prebuilt_jar(
 java_library(
      name = 'merlin-sdk',
      exported_deps = [
+          ":jackson-databind-bundle-2.9.8",
           ":jackson-core-bundle-2.9.8",
           ":javapoet-jar-1.11.1",
+          ":jackson-annotations-bundle-2.9.0",
           ":commons-collections4-jar-4.4",
           ":commons-math3-jar-3.6.1",
           ":commons-lang3-jar-3.9",
