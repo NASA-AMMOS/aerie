@@ -421,37 +421,43 @@ public final class RemotePlanRepository implements PlanRepository {
   private class MongoPlanTransaction implements PlanTransaction {
     private final ObjectId planId;
     private Bson patch = combine();
+    private boolean notEmpty;
 
     public MongoPlanTransaction(final ObjectId planId) {
       this.planId = planId;
+      this.notEmpty = false;
     }
 
     @Override
     public void commit() {
-      RemotePlanRepository.this.planCollection.updateOne(planById(this.planId), this.patch);
+      if (this.notEmpty) RemotePlanRepository.this.planCollection.updateOne(planById(this.planId), this.patch);
     }
 
     @Override
     public PlanTransaction setName(final String name) {
       this.patch = combine(this.patch, set("name", name));
+      this.notEmpty = true;
       return this;
     }
 
     @Override
     public PlanTransaction setStartTimestamp(final String timestamp) {
       this.patch = combine(this.patch, set("startTimestamp", timestamp));
+      this.notEmpty = true;
       return this;
     }
 
     @Override
     public PlanTransaction setEndTimestamp(final String timestamp) {
       this.patch = combine(this.patch, set("endTimestamp", timestamp));
+      this.notEmpty = true;
       return this;
     }
 
     @Override
     public PlanTransaction setAdaptationId(final String adaptationId) {
       this.patch = combine(this.patch, set("adaptationId", adaptationId));
+      this.notEmpty = true;
       return this;
     }
   }
