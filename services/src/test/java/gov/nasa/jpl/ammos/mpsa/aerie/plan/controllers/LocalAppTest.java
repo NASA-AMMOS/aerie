@@ -254,7 +254,7 @@ public final class LocalAppTest {
     // THEN
 
     // Plan metadata should be unchanged
-    Plan patchedPlan = fixture.planRepository.getPlan(planId);
+    Plan patchedPlan = fixtures.planRepository.getPlan(planId);
     assertThat(patchedPlan.name).isEqualTo(newPlan.name);
     assertThat(patchedPlan.adaptationId).isEqualTo(newPlan.adaptationId);
     assertThat(patchedPlan.startTimestamp).isEqualTo(newPlan.startTimestamp);
