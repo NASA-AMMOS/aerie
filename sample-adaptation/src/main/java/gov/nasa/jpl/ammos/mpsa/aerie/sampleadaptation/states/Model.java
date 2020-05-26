@@ -22,6 +22,8 @@ public final class Model {
      */
     public final InstrumentPower instrumentPower_W = new InstrumentPower();
     public final InstrumentDataRateModel instrumentData = new InstrumentDataRateModel("Instrument", 0.0);
+    public final InstrumentPower cameraPower = new InstrumentPower();
+    public final InstrumentDataRateModel cameraData = new InstrumentDataRateModel("Camera", 0.0);
     public final BinModel dataBin = new BinModel("DataBin", instrumentData);
 
     public final List<BinModel> allBins = List.of(dataBin);
