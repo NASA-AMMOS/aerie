@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import javax.json.Json;
 import javax.json.JsonValue;

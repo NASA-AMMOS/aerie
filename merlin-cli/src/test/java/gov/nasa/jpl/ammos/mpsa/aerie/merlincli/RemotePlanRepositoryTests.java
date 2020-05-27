@@ -8,8 +8,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanRepository.*;
 
@@ -365,7 +365,7 @@ public class RemotePlanRepositoryTests {
         assertThat(request.getMethod()).isEqualTo(HttpGet.METHOD_NAME);
     }
 
-    @Disabled("No way to distinguish PlanNotFound from ActivityInstanceNotFound yet")
+    @Ignore("No way to distinguish PlanNotFound from ActivityInstanceNotFound yet")
     @Test
     public void testGetActivityInstancePlanNotFound() throws IOException {
         String planId = "test-get-activity-instance";
@@ -426,7 +426,7 @@ public class RemotePlanRepositoryTests {
         ).isEqualTo(json);
     }
 
-    @Disabled("No way to distinguish PlanNotFound from ActivityInstanceNotFound yet")
+    @Ignore("No way to distinguish PlanNotFound from ActivityInstanceNotFound yet")
     @Test
     public void testUpdateActivityInstancePlanNotFound()  {
         String planId = "test-update-activity-instance";
@@ -515,7 +515,7 @@ public class RemotePlanRepositoryTests {
         assertThat(request.getMethod()).isEqualTo(HttpDelete.METHOD_NAME);
     }
 
-    @Disabled("No way to distinguish PlanNotFound from ActivityInstanceNotFound yet")
+    @Ignore("No way to distinguish PlanNotFound from ActivityInstanceNotFound yet")
     @Test
     public void testDeleteActivityInstancePlanNotFound() {
         String planId = "test-delete-plan-id";
