@@ -1,9 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.Tag;
 
 import java.net.URI;
 
+@Ignore
 @Tag("integration")
 public final class RemoteAdaptationRepositoryTest extends AdaptationRepositoryContractTest {
     private static final URI MONGO_URI = URI.create("mongodb://localhost:27019");

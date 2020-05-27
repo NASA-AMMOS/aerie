@@ -4,6 +4,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import org.bson.types.ObjectId;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -12,6 +13,7 @@ import java.net.URI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+@Ignore
 @Tag("integration")
 public final class RemotePlanRepositoryTest extends PlanRepositoryContractTest {
   private static final URI MONGO_URI = URI.create("mongodb://localhost:27017");

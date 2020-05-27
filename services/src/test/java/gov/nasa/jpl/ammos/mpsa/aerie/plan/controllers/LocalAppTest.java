@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;

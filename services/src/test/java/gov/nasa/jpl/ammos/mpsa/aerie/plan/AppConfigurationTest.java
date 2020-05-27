@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import javax.json.Json;
 import javax.json.JsonObject;
