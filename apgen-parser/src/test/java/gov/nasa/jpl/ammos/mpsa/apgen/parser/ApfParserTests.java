@@ -6,7 +6,8 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstanceParameter;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.Java6Assertions.catchThrowable;
 
+@Ignore
 public class ApfParserTests {
     // TODO: Create more plans and tests
 
