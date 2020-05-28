@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects;
 
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -52,47 +51,59 @@ public final class TreeLogger {
    */
   public static <Event> String displayTree(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
-        .map(stringifier)
-        .map(x -> Pair.of(EffectOperator.ATOM, x))
-        .evaluate(new LogEffectTrait())
-        .getRight();
+        .evaluate(new LogEffectProjection<>(stringifier))
+        .map(f -> f.apply(Parent.Unrestricted))
+        .orElse("");
   }
 
-  private enum EffectOperator { EMPTY, SEQ, PAR, ATOM }
+  private enum Parent { Unrestricted, Par, Seq }
 
   // An effect algebra for computing string representations of transactions.
-  private static final class LogEffectTrait implements EffectTrait<Pair<EffectOperator, String>> {
-    @Override
-    public Pair<EffectOperator, String> empty() {
-      return Pair.of(EffectOperator.EMPTY, "");
+  private static final class LogEffectProjection<Event>
+      implements Projection<Event, Optional<Function<Parent, String>>>
+  {
+    private final Function<Event, String> stringifier;
+
+    public LogEffectProjection(final Function<Event, String> stringifier) {
+      this.stringifier = stringifier;
     }
 
     @Override
-    public Pair<EffectOperator, String> sequentially(
-        final Pair<EffectOperator, String> prefix,
-        final Pair<EffectOperator, String> suffix
-    ) {
-      if (prefix.getLeft() == EffectOperator.EMPTY) return suffix;
-      if (suffix.getLeft() == EffectOperator.EMPTY) return prefix;
-
-      return Pair.of(EffectOperator.SEQ,
-          ((prefix.getLeft() == EffectOperator.PAR) ? ("(" + prefix.getRight() + ")") : prefix.getRight())
-          + "; "
-          + ((suffix.getLeft() == EffectOperator.PAR) ? ("(" + suffix.getRight() + ")") : suffix.getRight()));
+    public Optional<Function<Parent, String>> atom(final Event atom) {
+      return Optional.of(_ctx -> this.stringifier.apply(atom));
     }
 
     @Override
-    public Pair<EffectOperator, String> concurrently(
-        final Pair<EffectOperator, String> left,
-        final Pair<EffectOperator, String> right
-    ) {
-      if (left.getLeft() == EffectOperator.EMPTY) return right;
-      if (right.getLeft() == EffectOperator.EMPTY) return left;
+    public Optional<Function<Parent, String>> empty() {
+      return Optional.empty();
+    }
 
-      return Pair.of(EffectOperator.PAR,
-          ((left.getLeft() == EffectOperator.SEQ) ? ("(" + left.getRight() + ")") : left.getRight())
-          + " | "
-          + ((right.getLeft() == EffectOperator.SEQ) ? ("(" + right.getRight() + ")") : right.getRight()));
+    @Override
+    public Optional<Function<Parent, String>> sequentially(
+        final Optional<Function<Parent, String>> prefix,
+        final Optional<Function<Parent, String>> suffix
+    ) {
+      if (prefix.isEmpty()) return suffix;
+      if (suffix.isEmpty()) return prefix;
+
+      return Optional.of(ctx -> {
+        final var expr = prefix.get().apply(Parent.Seq) + "; " + suffix.get().apply(Parent.Seq);
+        return (ctx == Parent.Par) ? ("(" + expr + ")") : expr;
+      });
+    }
+
+    @Override
+    public Optional<Function<Parent, String>> concurrently(
+        final Optional<Function<Parent, String>> left,
+        final Optional<Function<Parent, String>> right
+    ) {
+      if (left.isEmpty()) return right;
+      if (right.isEmpty()) return left;
+
+      return Optional.of(ctx -> {
+        final var expr = left.get().apply(Parent.Par) + " | " + right.get().apply(Parent.Par);
+        return (ctx == Parent.Seq) ? ("(" + expr + ")") : expr;
+      });
     }
   }
 }
