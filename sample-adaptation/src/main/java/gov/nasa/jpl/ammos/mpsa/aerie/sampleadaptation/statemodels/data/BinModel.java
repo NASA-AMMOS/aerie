@@ -49,10 +49,10 @@ public class BinModel implements State<Double> {
     // let me know if you have any ideas on how I can better do this.
     private Map<Instant, Double> stateHistory = new LinkedHashMap<>();
 
-    public void initializeBinData(){
-        Instant t = SimulationEffects.now();
-        stateHistory.put(t, this.currentDataRate);
-        lastUpdatedTime = t;
+    @Override
+    public void initialize(Instant startTime){
+        stateHistory.put(startTime, this.currentDataRate);
+        lastUpdatedTime = startTime;
     }
 
 
