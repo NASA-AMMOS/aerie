@@ -6,26 +6,27 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * A module for representing {@link EventGraph}s in a textual form.
+ * A module for representing {@link EffectExpression}s in a textual form.
  *
  * <ul>
- *   <li>The empty graph is rendered as the empty string.</li>
- *   <li>A sequence of graphs is rendered as <code>(x; y)</code>.</li>
- *   <li>A concurrence of graphs is rendered as <code>(x | y)</code>.</li>
+ *   <li>The empty expression is rendered as the empty string.</li>
+ *   <li>A sequence of expressions is rendered as <code>(x; y)</code>.</li>
+ *   <li>A concurrence of expressions is rendered as <code>(x | y)</code>.</li>
  * </ul>
  *
  * <p>
- * Because sequential and concurrent composition are associative (see {@link EffectTrait}), unnecessary parentheses are
- * elided.
+ * Because sequential and concurrent composition are associative (see {@link EffectTrait}), unnecessary parentheses
+ * are elided.
  * </p>
  *
  * <p>
- * Because the empty effect is the identity for both kinds of composition, the empty graph is never rendered. For
- * instance, <code>sequentially(empty(), atom("x"))</code> will be rendered as <code>x</code>, as that graph is
- * observationally equivalent to <code>atom("x")</code>.
+ * Because the empty effect is the identity for both kinds of composition, the empty expression is never rendered.
+ * For instance, <code>sequentially(empty(), atom("x"))</code> will be rendered as <code>x</code>, as that graph
+ * is observationally equivalent to <code>atom("x")</code>.
  * </p>
  *
  * @see EventGraph
+ * @see EffectExpression
  * @see EffectTrait
  */
 public final class TreeLogger {
@@ -37,7 +38,7 @@ public final class TreeLogger {
    * @param expression The event graph to render as a string.
    * @return A textual representation of the graph.
    */
-  public static String displayTree(final EventGraph<?> expression) {
+  public static String displayTree(final EffectExpression<?> expression) {
     return displayTree(expression, Objects::toString);
   }
 
@@ -49,7 +50,7 @@ public final class TreeLogger {
    * @param <Event> The type of event contained by the event graph.
    * @return A textual representation of the graph.
    */
-  public static <Event> String displayTree(final EventGraph<Event> expression, final Function<Event, String> stringifier) {
+  public static <Event> String displayTree(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
         .map(stringifier)
         .map(x -> Pair.of(EffectOperator.ATOM, x))
