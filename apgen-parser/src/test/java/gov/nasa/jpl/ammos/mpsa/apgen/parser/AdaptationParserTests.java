@@ -5,7 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityTypeParameter;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Attribute;
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class AdaptationParserTests {
     // TODO: Write more complex adaptations and tests
 
+    @Ignore
     @Test
     public void testLoadSimpleAdaptation() throws AdaptationParsingException {
         Path path = resourcePath("/simple/simple_adaptation.aaf");
