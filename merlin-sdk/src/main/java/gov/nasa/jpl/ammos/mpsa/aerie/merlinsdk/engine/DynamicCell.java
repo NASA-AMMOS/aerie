@@ -13,8 +13,8 @@ public final class DynamicCell<T> {
         this.dynamicSlot = dynamicSlot;
     }
 
-    public DynamicCell() {
-        this(ThreadLocal.withInitial(() -> null));
+    public static <T> DynamicCell<T> create() {
+        return new DynamicCell<>(ThreadLocal.withInitial(() -> null));
     }
 
     /**
