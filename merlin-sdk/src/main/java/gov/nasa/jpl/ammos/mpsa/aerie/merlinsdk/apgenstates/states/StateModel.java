@@ -26,8 +26,8 @@ public class StateModel {
     public void step(final Duration duration) {
     }
 
-    public void addState(State state){
-        this.states.put(state.name(), state);
+    public void addState(String name, double initialValue){
+        this.states.put(name, new State(name, initialValue));
     }
 
     public State getState(final String name) {
