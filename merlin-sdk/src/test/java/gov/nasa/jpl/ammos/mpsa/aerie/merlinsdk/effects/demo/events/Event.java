@@ -13,17 +13,17 @@ public abstract class Event {
     return new Event() {
       @Override
       public <Result> Result visit(final EventHandler<Result> visitor) {
-        return visitor.dataAdded(binName, amount);
+        return visitor.addDataRate(binName, amount);
       }
     };
   }
 
-  public static Event clearBin(final String binName) {
+  public static Event clearDataRate(final String binName) {
     Objects.requireNonNull(binName);
     return new Event() {
       @Override
       public <Result> Result visit(final EventHandler<Result> visitor) {
-        return visitor.binCleared(binName);
+        return visitor.clearDataRate(binName);
       }
     };
   }
@@ -52,15 +52,15 @@ public abstract class Event {
   public final String toString() {
     return this.visit(new EventHandler<>() {
       @Override
-      public String dataAdded(final String binName, final double amount) {
-        return String.format("dataAdded(\"%s\", %s)",
+      public String addDataRate(final String binName, final double amount) {
+        return String.format("addDataRate(\"%s\", %s)",
             binName.replace("\\", "\\\\").replace("\"", "\\\""),
             amount);
       }
 
       @Override
-      public String binCleared(final String binName) {
-        return String.format("binCleared(\"%s\")",
+      public String clearDataRate(final String binName) {
+        return String.format("clearDataRate(\"%s\")",
             binName.replace("\\", "\\\\").replace("\"", "\\\""));
       }
 

@@ -98,7 +98,7 @@ public final class Main {
             atom(Event.addDataRate("bin A", 10)),
             atom(Event.addDataRate("bin B", 15)),
             concurrently(
-                atom(Event.clearBin("bin A")),
+                atom(Event.clearDataRate("bin A")),
                 atom(Event.addDataRate("bin B", -5))));
     System.out.println(graph);
 
