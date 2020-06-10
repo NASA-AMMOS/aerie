@@ -1,37 +1,53 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectExpression;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
+public final class ReactionContext<T> {
+  private final Querier<T> querier;
+  private final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor;
+  private Time<T, Event> currentTime;
 
-/**
- * A specialization of {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.ReactionContext}
- * to an adaptation's own set of projections.
- *
- * <p>
- * This unfortunate class exists because we need to put a <code>ReactionContext</code> in a {@link DynamicCell},
- * and the third type parameter usually also depends on the first type parameter. Java doesn't have higher-kinded types,
- * nor halfway-decent syntax existential types, so we're forced to use a subclass as a type alias to ensure that the
- * relationship between the type parameters is not lost when existentializing within a {@link DynamicCell}.
- * </p>
- *
- * @param <T> The abstract type of the simulation that owns this context.
- */
-public final class ReactionContext<T>
-    extends gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.ReactionContext<T, Event, Querier<T>>
-{
   public static final DynamicCell<ReactionContext<?>> activeContext = DynamicCell.create();
 
   public ReactionContext(
-      final Querier<T> model,
+      final Querier<T> querier,
       final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor,
       final Time<T, Event> time
   ) {
-    super(model, reactor, time);
+    this.querier = querier;
+    this.reactor = reactor;
+    this.currentTime = time;
+  }
+
+  public final <Result> Result as(final BiFunction<Querier<T>, Time<T, Event>, Result> interpreter) {
+    return interpreter.apply(this.querier, this.currentTime);
+  }
+
+  public final Time<T, Event> getCurrentTime() {
+    return this.currentTime;
+  }
+
+  public final ReactionContext<T> react(final Event event) {
+    this.currentTime = this.reactor.atom(event).apply(this.currentTime);
+    return this;
+  }
+
+  public final ReactionContext<T> react(final EffectExpression<Event> graph) {
+    this.currentTime = graph.evaluate(this.reactor).apply(this.currentTime);
+    return this;
+  }
+
+  public final ReactionContext<T> delay(final Duration duration) {
+    this.currentTime = this.currentTime.wait(duration);
+    return this;
   }
 }
