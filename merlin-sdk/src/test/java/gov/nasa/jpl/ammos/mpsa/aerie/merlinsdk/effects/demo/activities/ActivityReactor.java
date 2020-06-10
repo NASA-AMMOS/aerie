@@ -1,42 +1,41 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ReactingProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.DefaultEventHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
-import java.util.function.Function;
+import java.util.Map;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.TreeLogger.displayTree;
+public final class ActivityReactor<T> implements DefaultEventHandler<Time.Operator<T, Event>> {
+  private static final Map<String, Activity> activityMap = Map.of(
+      "a", new ActivityA(),
+      "b", new ActivityB()
+  );
 
-public final class ActivityReactor
-    extends ReactingProjection<Event>
-    implements DefaultEventHandler<Function<EventGraph<Event>, EventGraph<Event>>>
-{
-  @Override
-  protected final EventGraph<Event> react(final EventGraph<Event> context, final Event event) {
-    return event.visit(this).apply(context);
+  private final Querier<T> querier;
+  private final Projection<Event, Time.Operator<T, Event>> reactor;
+
+  public ActivityReactor(final Querier<T> querier, final Projection<Event, Time.Operator<T, Event>> reactor) {
+    this.querier = querier;
+    this.reactor = reactor;
   }
 
   @Override
-  public final Function<EventGraph<Event>, EventGraph<Event>> run(final String activityType) {
-    switch (activityType) {
-      case "a":
-        return past -> EventGraph.sequentially(
-            EventGraph.atom(Event.log("Hello, from Activity A!")),
-            EventGraph.atom(Event.log(displayTree(past))));
-      case "b":
-        return past -> EventGraph.sequentially(
-            EventGraph.atom(Event.log("Before B")),
-            EventGraph.atom(Event.run("a")),
-            EventGraph.atom(Event.log("After B")));
-      default:
-        return this.unhandled();
-    }
+  public Time.Operator<T, Event> run(final String activityType) {
+    final var activity = activityMap.getOrDefault(activityType, new Activity() {});
+    return time -> {
+      final var context = new ReactionContext<>(this.querier, this.reactor, time);
+      ReactionContext.activeContext.setWithin(context, activity::modelEffects);
+      return context.getCurrentTime();
+    };
   }
 
   @Override
-  public final Function<EventGraph<Event>, EventGraph<Event>> unhandled() {
-    return past -> EventGraph.empty();
+  public Time.Operator<T, Event> unhandled() {
+    return ctx -> ctx;
   }
 }

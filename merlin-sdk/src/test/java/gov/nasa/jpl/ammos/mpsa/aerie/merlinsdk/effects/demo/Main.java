@@ -10,10 +10,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraParameters;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
@@ -66,7 +68,20 @@ public final class Main {
     System.out.println();
   }
 
+  public static <T> ReactionContext<T> createSimulator(final SimulationTimeline<T, Event> timeline) {
+    final var projections = new Querier<>(timeline);
+    final var reactor = new MasterReactor<T, Event>();
+
+    final var activityReactor = new ActivityReactor<>(projections, reactor);
+    reactor.addReactor(event -> event.visit(activityReactor));
+
+    return new ReactionContext<>(projections, reactor, timeline.origin());
+  }
+
   public static void stepSimulationExample() {
+    final var database = SimulationTimeline.<Event>create();
+    final var simulator = createSimulator(database);
+
     final var next =
         concurrently(
             atom(Event.run("c")),
@@ -76,11 +91,10 @@ public final class Main {
                 atom(Event.run("a"))));
     System.out.println(next);
 
-    final var effects = next
-        .evaluate(new ActivityReactor())
-        .step(empty())
-        .getLeft();
-    System.out.println(effects);
+    simulator.react(next);
+    for (final var point : simulator.getCurrentTime().evaluate(new EventGraphProjection<>())) {
+      System.out.printf("%8.8s: %s\n", point.getKey(), point.getValue());
+    }
 
     System.out.println();
   }
