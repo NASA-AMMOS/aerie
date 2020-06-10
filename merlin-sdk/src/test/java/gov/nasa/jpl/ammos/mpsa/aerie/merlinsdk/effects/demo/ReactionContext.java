@@ -8,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -52,7 +53,9 @@ public final class ReactionContext<T> {
   }
 
   public final ReactionContext<T> call(final String activity) {
-    this.react(Event.run(activity));
+    final var id = UUID.randomUUID().toString();
+    this.react(Event.instantiateActivity(id, activity))
+        .react(Event.resumeActivity(id));
     return this;
   }
 }

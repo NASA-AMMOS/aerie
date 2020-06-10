@@ -38,12 +38,23 @@ public abstract class Event {
     };
   }
 
-  public static Event run(final String activityName) {
+  public static Event instantiateActivity(final String activityId, final String activityName) {
+    Objects.requireNonNull(activityId);
     Objects.requireNonNull(activityName);
     return new Event() {
       @Override
       public <Result> Result visit(final EventHandler<Result> visitor) {
-        return visitor.run(activityName);
+        return visitor.instantiateActivity(activityId, activityName);
+      }
+    };
+  }
+
+  public static Event resumeActivity(final String activityId) {
+    Objects.requireNonNull(activityId);
+    return new Event() {
+      @Override
+      public <Result> Result visit(final EventHandler<Result> visitor) {
+        return visitor.resumeActivity(activityId);
       }
     };
   }
@@ -71,9 +82,16 @@ public abstract class Event {
       }
 
       @Override
-      public String run(String activityType) {
-        return String.format("run(\"%s\")",
+      public String instantiateActivity(final String activityId, final String activityType) {
+        return String.format("instantiateActivity(\"%s\", \"%s\")",
+            activityId.replace("\\", "\\\\").replace("\"", "\\\""),
             activityType.replace("\\", "\\\\").replace("\"", "\\\""));
+      }
+
+      @Override
+      public String resumeActivity(final String activityId) {
+        return String.format("resumeActivity(\"%s\")",
+            activityId.replace("\\", "\\\\").replace("\"", "\\\""));
       }
     });
   }

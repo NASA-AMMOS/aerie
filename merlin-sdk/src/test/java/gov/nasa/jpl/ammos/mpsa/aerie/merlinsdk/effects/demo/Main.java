@@ -21,6 +21,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.concurrently;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.empty;
@@ -78,13 +79,21 @@ public final class Main {
       reactor.addReactor(event -> event.visit(activityReactor));
     }
 
+    final var id1 = UUID.randomUUID().toString();
+    final var id2 = UUID.randomUUID().toString();
+    final var id3 = UUID.randomUUID().toString();
+
     final var next =
-        concurrently(
-            atom(Event.run("c")),
-            atom(Event.run("b")),
-            sequentially(
-                atom(Event.log("z")),
-                atom(Event.run("a"))));
+        sequentially(
+            atom(Event.instantiateActivity(id1, "c")),
+            atom(Event.instantiateActivity(id2, "b")),
+            atom(Event.instantiateActivity(id3, "a")),
+            concurrently(
+                sequentially(atom(Event.resumeActivity(id1))),
+                sequentially(atom(Event.resumeActivity(id2))),
+                sequentially(
+                    atom(Event.log("z")),
+                    atom(Event.resumeActivity(id3)))));
     System.out.println(next);
 
     final var startTime = database.origin();
