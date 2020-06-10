@@ -11,8 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraParameters;
 import org.apache.commons.lang3.tuple.Pair;
@@ -87,11 +86,6 @@ public final class Main {
   }
 
   public static void dataModelExample() {
-    // Set up data model
-    final var model = new DataModel();
-    model.getDataBin("bin A").addRate(1.0);
-    model.getDataBin("bin B").setVolume(5.0);
-
     // Prepare events
     final var graph =
         sequentially(
@@ -120,16 +114,16 @@ public final class Main {
     }
 
     // Apply the graph to the model.
-    final var projection = new DataModelProjection();
-    System.out.println(model);
+    final var evaluator = new DataEffectEvaluator();
+    final var applicator = new DataModelApplicator();
 
-    model.step(Duration.of(5, TimeUnit.SECONDS));
+    final var model = applicator.initial();
     System.out.println(model);
-
-    graph.evaluate(projection).apply(model);
+    applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
     System.out.println(model);
-
-    model.step(Duration.of(5, TimeUnit.SECONDS));
+    applicator.apply(model, graph.evaluate(evaluator));
+    System.out.println(model);
+    applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
     System.out.println(model);
 
     System.out.println();

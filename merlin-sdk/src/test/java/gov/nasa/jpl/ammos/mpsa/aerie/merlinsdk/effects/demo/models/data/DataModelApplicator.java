@@ -1,24 +1,34 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.MutatingProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
 
-public final class DataModelProjection
-    extends MutatingProjection<DataModel, Map<String, SettableEffect<Double, Double>>>
+public final class DataModelApplicator
+    implements Applicator<Map<String, SettableEffect<Double, Double>>, DataModel>
 {
-  public DataModelProjection() {
-    super(new DataEffectEvaluator());
+  @Override
+  public DataModel initial() {
+    final var initial = new DataModel();
+    initial.getDataBin("bin A").addRate(1.0);
+    initial.getDataBin("bin B").setVolume(5.0);
+    return initial;
   }
 
   @Override
-  protected final DataModel fork(final DataModel model) {
+  public DataModel duplicate(final DataModel model) {
     return new DataModel(model);
   }
 
   @Override
-  protected final void apply(final DataModel model, final Map<String, SettableEffect<Double, Double>> effect) {
+  public void step(final DataModel dataModel, final Duration duration) {
+    dataModel.step(duration);
+  }
+
+  @Override
+  public void apply(final DataModel model, final Map<String, SettableEffect<Double, Double>> effect) {
     for (final var entry : effect.entrySet()) {
       final var name = entry.getKey();
       final var change = entry.getValue();
@@ -33,13 +43,13 @@ public final class DataModelProjection
 
         @Override
         public void add(final Double delta) {
-          bin.addVolume(delta);
+          bin.addRate(delta);
         }
 
         @Override
         public void conflict() {
           System.err.printf("Conflict! on bin `%s`\n", name);
-          bin.setVolume(0.0);
+          bin.setRate(0.0);
         }
       });
     }
