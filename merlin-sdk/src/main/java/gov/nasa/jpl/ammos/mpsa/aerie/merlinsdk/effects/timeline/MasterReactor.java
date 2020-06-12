@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * A {@link Projection} from events to {@link Time.Operator}s.
+ * A {@link Projection} from events to operators over {@link Time} points.
  *
  * <p>
  * A <i>reactor</i> is an entity which responds to an event at a point in time by producing more events.
@@ -20,17 +20,40 @@ import java.util.function.Function;
  * @param <Event> The type of events that may occur over the timeline.
  */
 public final class MasterReactor<T, Event>
-    extends Time.OperatorTrait<T, Event>
-    implements Projection<Event, Time.Operator<T, Event>>
+    implements Projection<Event, Function<Time<T, Event>, Time<T, Event>>>
 {
-  private final List<Function<Event, Time.Operator<T, Event>>> reactors = new ArrayList<>();
+  private final List<Function<Event, Function<Time<T, Event>, Time<T, Event>>>> reactors = new ArrayList<>();
 
-  public void addReactor(final Function<Event, Time.Operator<T, Event>> reactor) {
+  public void addReactor(final Function<Event, Function<Time<T, Event>, Time<T, Event>>> reactor) {
     this.reactors.add(reactor);
   }
 
   @Override
-  public Time.Operator<T, Event> atom(final Event event) {
+  public Function<Time<T, Event>, Time<T, Event>> empty() {
+    return time -> time;
+  }
+
+  @Override
+  public Function<Time<T, Event>, Time<T, Event>> sequentially(
+      final Function<Time<T, Event>, Time<T, Event>> prefix,
+      final Function<Time<T, Event>, Time<T, Event>> suffix
+  ) {
+    return time -> suffix.apply(prefix.apply(time));
+  }
+
+  @Override
+  public Function<Time<T, Event>, Time<T, Event>> concurrently(
+      final Function<Time<T, Event>, Time<T, Event>> left,
+      final Function<Time<T, Event>, Time<T, Event>> right
+  ) {
+    return time -> {
+      final var fork = time.fork();
+      return left.apply(fork).join(right.apply(fork));
+    };
+  }
+
+  @Override
+  public Function<Time<T, Event>, Time<T, Event>> atom(final Event event) {
     return time -> {
       // Re-emit the given event, or else it will disappear into the ether.
       time = time.emit(event);

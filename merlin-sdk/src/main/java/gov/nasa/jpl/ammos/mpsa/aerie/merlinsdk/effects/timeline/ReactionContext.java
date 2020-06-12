@@ -5,15 +5,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public abstract class ReactionContext<T, Event, Model> {
   private final Model model;
-  private final Projection<Event, Time.Operator<T, Event>> reactor;
+  private final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor;
   private Time<T, Event> currentTime;
 
   public ReactionContext(
       final Model model,
-      final Projection<Event, Time.Operator<T, Event>> reactor,
+      final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor,
       final Time<T, Event> currentTime
   ) {
     this.model = model;

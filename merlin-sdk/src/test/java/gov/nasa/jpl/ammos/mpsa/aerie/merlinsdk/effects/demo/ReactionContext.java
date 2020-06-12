@@ -6,6 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 
+import java.util.function.Function;
+
+
 /**
  * A specialization of {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.ReactionContext}
  * to an adaptation's own set of projections.
@@ -26,7 +29,7 @@ public final class ReactionContext<T>
 
   public ReactionContext(
       final Querier<T> model,
-      final Projection<Event, Time.Operator<T, Event>> reactor,
+      final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor,
       final Time<T, Event> time
   ) {
     super(model, reactor, time);
