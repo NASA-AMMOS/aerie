@@ -7,12 +7,14 @@ public class APGenStateFactory {
 
     private EventGraph<Event> eventGraph;
     private final StateModel stateModel;
-    private final StateModelProjection stateModelProjection;
+    private final StateEffectEvaluator stateModelProjection;
+    private final StateModelApplicator stateModelApplicator;
 
     public APGenStateFactory(){
+        stateModelProjection = new StateEffectEvaluator();
+        stateModelApplicator = new StateModelApplicator();
         eventGraph = EventGraph.empty();
-        stateModel = new StateModel();
-        stateModelProjection = new StateModelProjection();
+        stateModel = stateModelApplicator.initial();
     }
 
     public ConsumableState createConsumableState(String name, double value){
@@ -25,37 +27,23 @@ public class APGenStateFactory {
         return new SettableState(name, value, this);
     }
 
-    public void setGraph(EventGraph<Event> eventGraph){
-        this.eventGraph = eventGraph;
-    }
-
-    public StateModel model(){
-        return this.stateModel;
-    }
-
-    private void addState(String name, double initialValue){ this.model().addState(name, initialValue);}
+    private void addState(String name, double initialValue){ this.stateModel.addState(name, initialValue);}
 
     public EventGraph<Event> graph(){
         return this.eventGraph;
     }
 
-    public StateModelProjection projection(){
-        return this.stateModelProjection;
-    }
-
     public void add(String name, double delta){
-        EventGraph<Event> newSegment = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.add(name, delta)));
-        this.setGraph(newSegment);
+        this.eventGraph = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.add(name, delta)));
     }
 
     public void set(String name, double value){
-        EventGraph<Event> newSegment = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.set(name, value)));
-        this.setGraph(newSegment);
+        this.eventGraph = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.set(name, value)));
     }
 
     public double get(String name){
-        var forkedStateModel = this.projection().fork(this.model());
-        this.graph().evaluate(this.projection()).apply(forkedStateModel);
+        var forkedStateModel = this.stateModelApplicator.duplicate(this.stateModel);
+        this.stateModelApplicator.apply(forkedStateModel, this.eventGraph.evaluate(this.stateModelProjection));
 
         return forkedStateModel.getState(name).get();
     }
