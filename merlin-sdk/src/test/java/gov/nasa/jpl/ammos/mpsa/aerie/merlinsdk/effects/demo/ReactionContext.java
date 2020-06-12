@@ -50,4 +50,9 @@ public final class ReactionContext<T> {
     this.currentTime = this.currentTime.wait(duration);
     return this;
   }
+
+  public final ReactionContext<T> call(final String activity) {
+    this.react(Event.run(activity));
+    return this;
+  }
 }

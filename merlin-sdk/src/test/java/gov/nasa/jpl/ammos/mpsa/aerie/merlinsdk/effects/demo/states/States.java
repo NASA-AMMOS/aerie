@@ -1,8 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
-
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.ReactionContext.activeContext;
 
 public final class States {
@@ -17,6 +15,6 @@ public final class States {
       new LogResource(event -> activeContext.get().react(event));
 
   public static void call(final String activity) {
-    activeContext.get().react(Event.run(activity));
+    activeContext.get().call(activity);
   }
 }
