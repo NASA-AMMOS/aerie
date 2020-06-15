@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-import java.util.UUID;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -16,17 +16,19 @@ public final class ReactionContext<T> {
   private final Querier<T> querier;
   private final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor;
   private Time<T, Event> currentTime;
+  private List<Time<T, Event>> nextTimes;
 
   public static final DynamicCell<ReactionContext<?>> activeContext = DynamicCell.create();
 
   public ReactionContext(
       final Querier<T> querier,
       final Projection<Event, Function<Time<T, Event>, Time<T, Event>>> reactor,
-      final Time<T, Event> time
+      final List<Time<T, Event>> times
   ) {
     this.querier = querier;
     this.reactor = reactor;
-    this.currentTime = time;
+    this.currentTime = times.get(0);
+    this.nextTimes = times.subList(1, times.size());
   }
 
   public final <Result> Result as(final BiFunction<Querier<T>, Time<T, Event>, Result> interpreter) {
@@ -48,14 +50,38 @@ public final class ReactionContext<T> {
   }
 
   public final ReactionContext<T> delay(final Duration duration) {
-    this.currentTime = this.currentTime.wait(duration);
-    return this;
+    if (nextTimes.size() == 0) {
+      throw new Defer(duration);
+    } else {
+      this.currentTime = this.nextTimes.get(0);
+      this.nextTimes = this.nextTimes.subList(1, this.nextTimes.size());
+      return this;
+    }
   }
 
   public final ReactionContext<T> call(final String activity) {
-    final var id = UUID.randomUUID().toString();
-    this.react(Event.instantiateActivity(id, activity))
-        .react(Event.resumeActivity(id));
-    return this;
+    if (nextTimes.size() == 0) {
+      throw new Call(activity);
+    } else {
+      this.currentTime = this.nextTimes.get(0);
+      this.nextTimes = this.nextTimes.subList(1, this.nextTimes.size());
+      return this;
+    }
+  }
+
+  public static final class Defer extends RuntimeException {
+    public final Duration duration;
+
+    private Defer(final Duration duration) {
+      this.duration = duration;
+    }
+  }
+
+  public static final class Call extends RuntimeException {
+    public final String activityType;
+
+    private Call(final String activityType) {
+      this.activityType = activityType;
+    }
   }
 }

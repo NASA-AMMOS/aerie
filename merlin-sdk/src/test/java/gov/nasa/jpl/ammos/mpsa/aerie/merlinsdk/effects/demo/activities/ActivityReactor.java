@@ -8,7 +8,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 public final class ActivityReactor<T>
@@ -54,9 +56,24 @@ public final class ActivityReactor<T>
     return time -> {
       final var activity = activityMap.getOrDefault(activityType, new Activity() {});
 
-      final var context = new ReactionContext<>(this.querier, this.reactor, time);
-      ReactionContext.activeContext.setWithin(context, activity::modelEffects);
-      return context.getCurrentTime();
+      // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
+      final var context = new ReactionContext<>(this.querier, this.reactor, List.of(time));
+      try {
+        ReactionContext.activeContext.setWithin(context, activity::modelEffects);
+        time = context.getCurrentTime();
+      } catch (final ReactionContext.Defer request) {
+        time = context.getCurrentTime();
+        // TODO: schedule a resumption at a future time
+      } catch (final ReactionContext.Call request) {
+        time = context.getCurrentTime();
+
+        final var id = UUID.randomUUID().toString();
+        time = this.reactor.atom(Event.instantiateActivity(id, request.activityType)).apply(time);
+        time = this.reactor.atom(Event.resumeActivity(id)).apply(time);
+        // TODO: schedule a resumption at a future time
+      }
+
+      return time;
     };
   }
 
