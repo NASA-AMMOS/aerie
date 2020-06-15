@@ -35,18 +35,16 @@ public final class MasterReactor<T, Event>
       // Re-emit the given event, or else it will disappear into the ether.
       time = time.emit(event);
 
-      if (this.reactors.size() == 0) return time;
-
       // Build a stack of unmerged branches.
-      final var stack = new ArrayDeque<Time<T, Event>>(this.reactors.size() - 1);
-      for (final var reactor : this.reactors.subList(0, this.reactors.size() - 1)) {
+      final var stack = new ArrayDeque<Time<T, Event>>(this.reactors.size());
+      for (final var reactor : this.reactors.subList(0, this.reactors.size())) {
         time = time.fork();
         stack.push(reactor.apply(event).apply(time));
       }
 
       // Merge the build stack of branches down into a single joined time point.
-      time = this.reactors.get(this.reactors.size() - 1).apply(event).apply(time);
       while (!stack.isEmpty()) time = stack.pop().join(time);
+
       return time;
     };
   }
