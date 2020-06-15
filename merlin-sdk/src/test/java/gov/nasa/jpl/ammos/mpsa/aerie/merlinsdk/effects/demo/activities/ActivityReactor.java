@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 
+import org.pcollections.HashTreePMap;
+
 public final class ActivityReactor<T>
     implements DefaultEventHandler<Function<Time<T, Event>, Time<T, Event>>>
 {
@@ -46,31 +48,29 @@ public final class ActivityReactor<T>
 
   @Override
   public Function<Time<T, Event>, Time<T, Event>> resumeActivity(final String activityId) {
-    // TODO: The graph (instantiate("xyz", "a") | resume("xyz")) will behave non-deterministically
-    //   depending on which branch is taken first. `resume` should only be able to see names defined
-    //   by previous `instantiate` events.
-    //   Investigate augmenting the event graph structure with existentialized identifiers, so that we can model
-    //   this situation as e.g. (∃x. instantiate(x, "a"); resume(x)). Scope is automatically enforced by the quantifier.
-    final var activityType = this.activityInstances.get(activityId);
-
     return time -> {
+      final var activityType = this.activityInstances.get(activityId);
       final var activity = activityMap.getOrDefault(activityType, new Activity() {});
+
+      var scheduled = HashTreePMap.<String, ScheduleItem>empty();
 
       // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
       final var context = new ReactionContext<>(this.querier, this.reactor, List.of(time));
       try {
         ReactionContext.activeContext.setWithin(context, activity::modelEffects);
         time = context.getCurrentTime();
-      } catch (final ReactionContext.Defer request) {
-        time = context.getCurrentTime();
-        // TODO: schedule a resumption at a future time
-      } catch (final ReactionContext.Call request) {
-        time = context.getCurrentTime();
 
-        final var id = UUID.randomUUID().toString();
-        time = this.reactor.atom(Event.instantiateActivity(id, request.activityType)).apply(time);
-        time = this.reactor.atom(Event.resumeActivity(id)).apply(time);
-        // TODO: schedule a resumption at a future time
+        scheduled = scheduled.plus(activityId, new ScheduleItem.Complete());
+      } catch (final ReactionContext.Defer request) {
+        scheduled = scheduled.plus(activityId, new ScheduleItem.Defer(request.duration));
+        time = context.getCurrentTime();
+      } catch (final ReactionContext.Call request) {
+        final var childId = UUID.randomUUID().toString();
+        scheduled = scheduled.plus(activityId, new ScheduleItem.OnCompletion(childId));
+
+        time = context.getCurrentTime();
+        time = this.reactor.atom(Event.instantiateActivity(childId, request.activityType)).apply(time);
+        time = this.reactor.atom(Event.resumeActivity(childId)).apply(time);
       }
 
       return time;
