@@ -1,6 +1,7 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
