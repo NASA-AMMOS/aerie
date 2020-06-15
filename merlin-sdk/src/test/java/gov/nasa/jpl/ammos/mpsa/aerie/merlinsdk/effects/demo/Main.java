@@ -70,19 +70,13 @@ public final class Main {
     System.out.println();
   }
 
-  public static <T> ReactionContext<T> createSimulator(final SimulationTimeline<T, Event> timeline) {
-    final var projections = new Querier<>(timeline);
+  private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
+    final var projections = new Querier<>(database);
     final var reactor = new MasterReactor<T, Event>();
-
-    final var activityReactor = new ActivityReactor<>(projections, reactor);
-    reactor.addReactor(event -> event.visit(activityReactor));
-
-    return new ReactionContext<>(projections, reactor, timeline.origin());
-  }
-
-  public static void stepSimulationExample() {
-    final var database = SimulationTimeline.<Event>create();
-    final var simulator = createSimulator(database);
+    {
+      final var activityReactor = new ActivityReactor<>(projections, reactor);
+      reactor.addReactor(event -> event.visit(activityReactor));
+    }
 
     final var next =
         concurrently(
@@ -93,12 +87,17 @@ public final class Main {
                 atom(Event.run("a"))));
     System.out.println(next);
 
-    simulator.react(next);
-    for (final var point : simulator.getCurrentTime().evaluate(new EventGraphProjection<>())) {
+    final var startTime = database.origin();
+    final var endTime = next.evaluate(reactor).apply(startTime);
+    for (final var point : endTime.evaluate(new EventGraphProjection<>())) {
       System.out.printf("%8.8s: %s\n", point.getKey(), point.getValue());
     }
 
     System.out.println();
+  }
+
+  public static void stepSimulationExample() {
+    stepSimulationExampleHelper(SimulationTimeline.create());
   }
 
   public static void dataModelExample() {
