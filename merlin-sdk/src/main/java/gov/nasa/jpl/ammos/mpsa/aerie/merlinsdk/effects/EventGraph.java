@@ -30,22 +30,24 @@ import java.util.function.Function;
  * @see Projection
  * @see EffectTrait
  */
-public abstract class EventGraph<Event> {
+public abstract class EventGraph<Event> implements EffectExpression<Event> {
   private EventGraph() {}
 
-  /**
-   * Produce a result by recursively visiting each series-parallel component of a graph.
-   *
-   * <p>
-   * The parameters of this method taken together are equivalent to an instance of {@link Projection}.
-   * </p>
-   *
-   * @param trait A visitor to be applied at each non-leaf component of the event graph.
-   * @param substitution A visitor to be applied at each atomic event in the event graph.
-   * @param <Effect> The result type produced by the visitor.
-   * @return The result of the visitor at the root component of the graph.
-   */
-  public abstract <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution);
+  public abstract boolean isEmpty();
+
+  // The behavior of the empty graph is independent of the parameterized Event type,
+  // so we cache a single instance and re-use it for all Event types.
+  private static final EventGraph<?> EMPTY = new EventGraph<>() {
+    @Override
+    public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Object, Effect> substitution) {
+      return trait.empty();
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return true;
+    }
+  };
 
   /**
    * Create an empty event graph.
@@ -53,13 +55,9 @@ public abstract class EventGraph<Event> {
    * @param <Event> The type of event that might be contained by this event graph.
    * @return An empty event graph.
    */
+  @SuppressWarnings("unchecked")
   public static <Event> EventGraph<Event> empty() {
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-        return trait.empty();
-      }
-    };
+    return (EventGraph<Event>) EventGraph.EMPTY;
   }
 
   /**
@@ -77,6 +75,67 @@ public abstract class EventGraph<Event> {
       public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
         return substitution.apply(atom);
       }
+
+      @Override
+      public boolean isEmpty() {
+        return false;
+      }
+    };
+  }
+
+  /**
+   * Create an event graph by combining multiple event graphs of the same type in sequence.
+   *
+   * @param prefix The first event graph to apply.
+   * @param suffix The second event graph to apply.
+   * @param <Event> The type of atomic event contained by these graphs.
+   * @return An event graph consisting of a sequence of subgraphs.
+   */
+  public static <Event> EventGraph<Event> sequentially(final EventGraph<Event> prefix, final EventGraph<Event> suffix) {
+    Objects.requireNonNull(prefix);
+    Objects.requireNonNull(suffix);
+
+    if (prefix.isEmpty()) return suffix;
+    if (suffix.isEmpty()) return prefix;
+
+    return new EventGraph<>() {
+      @Override
+      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
+        return trait.sequentially(prefix.evaluate(trait, substitution), suffix.evaluate(trait, substitution));
+      }
+
+      @Override
+      public boolean isEmpty() {
+        return false;
+      }
+    };
+  }
+
+  /**
+   * Create an event graph by combining multiple event graphs of the same type in parallel.
+   *
+   * @param left An event graph to apply concurrently.
+   * @param right An event graph to apply concurrently.
+   * @param <Event> The type of atomic event contained by these graphs.
+   * @return An event graph consisting of a set of concurrent subgraphs.
+   */
+  public static <Event> EventGraph<Event> concurrently(final EventGraph<Event> left, final EventGraph<Event> right) {
+    Objects.requireNonNull(left);
+    Objects.requireNonNull(right);
+
+    if (left.isEmpty()) return right;
+    if (right.isEmpty()) return left;
+
+    return new EventGraph<>() {
+      @Override
+      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
+        return trait.concurrently(left.evaluate(trait, substitution), right.evaluate(trait, substitution));
+      }
+
+      @Override
+      public boolean isEmpty() {
+        return false;
+      }
     };
   }
 
@@ -89,16 +148,9 @@ public abstract class EventGraph<Event> {
    */
   @SafeVarargs
   public static <Event> EventGraph<Event> sequentially(final EventGraph<Event>... segments) {
-    for (final var segment : segments) Objects.requireNonNull(segment);
-
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-        var acc = trait.empty();
-        for (final var segment : segments) acc = trait.sequentially(acc, segment.evaluate(trait, substitution));
-        return acc;
-      }
-    };
+    var acc = EventGraph.<Event>empty();
+    for (final var segment : segments) acc = sequentially(acc, segment);
+    return acc;
   }
 
   /**
@@ -110,107 +162,9 @@ public abstract class EventGraph<Event> {
    */
   @SafeVarargs
   public static <Event> EventGraph<Event> concurrently(final EventGraph<Event>... branches) {
-    for (final var branch : branches) Objects.requireNonNull(branch);
-
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-        var acc = trait.empty();
-        for (final var branch : branches) acc = trait.concurrently(acc, branch.evaluate(trait, substitution));
-        return acc;
-      }
-    };
-  }
-
-  /**
-   * Produce a result by recursively visiting each series-parallel component of a graph.
-   *
-   * @param projection A visitor to be applied at each component of the event graph.
-   * @param <Effect> The result type produced by the visitor.
-   * @return The result of the visitor at the root component of the graph.
-   */
-  public final <Effect> Effect evaluate(final Projection<Event, Effect> projection) {
-    return this.evaluate(projection, projection::atom);
-  }
-
-  /**
-   * Produce a result by combining atomic events into a single result of the same type.
-   *
-   * @param trait A visitor to be applied at each non-leaf component of the event graph.
-   * @return The result of the visitor at the root component of the graph.
-   */
-  public final Event evaluate(final EffectTrait<Event> trait) {
-    return this.evaluate(trait, x -> x);
-  }
-
-  /**
-   * Transform atomic events without altering the graph structure.
-   *
-   * <p>
-   * This is a functorial "map" operation.
-   * </p>
-   *
-   * @param transformation A transformation to be applied to each atomic event in the event graph.
-   * @param <TargetType> The result type of the given substitution.
-   * @return An event graph with the same structure as the input, but potentially different atomic events.
-   */
-  public final <TargetType> EventGraph<TargetType> map(final Function<Event, TargetType> transformation) {
-    Objects.requireNonNull(transformation);
-
-    // Although it would be _correct_ to return a whole new EventGraph with the events substituted, this is neither
-    // necessary nor particularly efficient. Any two objects can be considered equivalent so long as every observation
-    // that can be made of both of them is indistinguishable. (This concept is called "bisimulation".)
-    //
-    // Since the only way to "observe" an EventGraph is to evaluate it, we can simply return an object that evaluates in
-    // the same way that a fully-reconstructed EventGraph would. This is easy to do: have the evaluate method perform
-    // the given transformation before applying the substitution provided at evaluation time. No intermediate EventGraphs
-    // need to be constructed.
-    //
-    // This is called the "Yoneda" transformation in the functional programming literature. We basically get it for free
-    // when using visitors / object algebras in Java. See Edward Kmett's blog series on the topic
-    // at http://comonad.com/reader/2011/free-monads-for-less/.
-    final var that = this;
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<TargetType, Effect> substitution) {
-        return that.evaluate(trait, transformation.andThen(substitution));
-      }
-    };
-  }
-
-  /**
-   * Replace atomic events with subgraphs.
-   *
-   * <p>
-   * This is a monadic "bind" operation, with identity the {@link #atom} constructor.
-   * </p>
-   *
-   * @param transformation A transformation from events to subgraphs, to be applied to each atomic event in the event
-   *                       graph.
-   * @param <TargetType> The type of event contained by the produced subgraphs.
-   * @return An event graph where the original atomic events have been replaced by subgraphs (containing other atomic
-   *         events).
-   */
-  public final <TargetType> EventGraph<TargetType> substitute(final Function<Event, EventGraph<TargetType>> transformation) {
-    Objects.requireNonNull(transformation);
-
-    // As with `map`, we don't need to return a fully-reconstructed EventGraph. We can instead return an object that
-    // evaluates in the same way that a fully-reconstructed EventGraph would, but with a more efficient representation.
-    //
-    // In this case, it is sufficient to return a single new object that, when visiting a leaf of the original event
-    // graph, applies the provided substitution and then evaluates the resulting subtree, before then propagating that
-    // result back up the original graph.
-    //
-    // This is called the "codensity" transformation in the functional programming literature. We basically get it for
-    // free when using visitors / object algebras in Java. See Edward Kmett's blog series on the topic
-    // at http://comonad.com/reader/2011/free-monads-for-less/.
-    final var that = this;
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<TargetType, Effect> substitution) {
-        return that.evaluate(trait, v -> transformation.apply(v).evaluate(trait, substitution));
-      }
-    };
+    var acc = EventGraph.<Event>empty();
+    for (final var branch : branches) acc = concurrently(acc, branch);
+    return acc;
   }
 
   @Override

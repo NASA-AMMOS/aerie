@@ -1,20 +1,22 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
+import java.util.function.Supplier;
+
 /**
  * A dynamically-scoped cell.
  *
  * For best effect, store an instance of this field in a `private static final` class variable,
  * and allow access only via static methods that fetch the current value of the cell.
  */
-public final class DynamicCell<T> {
+public final class DynamicCell<T> implements Supplier<T> {
     private final ThreadLocal<T> dynamicSlot;
 
     private DynamicCell(final ThreadLocal<T> dynamicSlot) {
         this.dynamicSlot = dynamicSlot;
     }
 
-    public DynamicCell() {
-        this(ThreadLocal.withInitial(() -> null));
+    public static <T> DynamicCell<T> create() {
+        return new DynamicCell<>(ThreadLocal.withInitial(() -> null));
     }
 
     /**
@@ -30,6 +32,7 @@ public final class DynamicCell<T> {
      *
      * Throws an exception if nobody up-stack is currently serving this cell.
      */
+    @Override
     public T get() throws EmptyDynamicCellException {
         final var value = dynamicSlot.get();
         if (value == null) throw new EmptyDynamicCellException();

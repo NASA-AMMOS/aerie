@@ -1,20 +1,22 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ScanningProjection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.MasterReactor;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraParameters;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ScanningProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
@@ -24,6 +26,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.concurr
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.empty;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.atom;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.sequentially;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.TreeLogger.displayTree;
 
 public final class Main {
   private static <Var, Context>
@@ -49,25 +52,38 @@ public final class Main {
     final var copied = graph.evaluate(new EventGraphProjection<>());
     final var migrated = graph
         .substitute(ev ->
-            (Objects.equals(ev, "a"))  /* Drop 'a' atoms. */
+            (Objects.equals(ev, "a")) /* Drop 'a' atoms. */
               ? empty()
               : (Objects.equals(ev, "b")) /* Wrap 'b' atoms between two 'z' atoms. */
                 ? sequentially(atom("z"), atom("b'"), atom("z"))
                 : atom(ev));
 
     System.out.println(graph);
-    System.out.println(
-        scanOver(graph, new EventGraphProjection<>())
-            .map(p -> String.format("<{%s}, %s>", p.getLeft(), p.getRight())));
-    System.out.println(
-        scanOver(graph, Projection.from(new SumEffectTrait(), x -> (double) x.length()))
-            .map(p -> String.format("<%s, %s>", p.getLeft(), p.getRight())));
+    System.out.println(displayTree(
+        scanOver(graph, new EventGraphProjection<>()),
+        p -> String.format("<{%s}, %s>", p.getLeft(), p.getRight())));
+    System.out.println(displayTree(
+        scanOver(graph, Projection.from(new SumEffectTrait(), x -> (double) x.length())),
+        p -> String.format("<%s, %s>", p.getLeft(), p.getRight())));
     System.out.println(copied);
     System.out.println(migrated);
     System.out.println();
   }
 
+  public static <T> ReactionContext<T> createSimulator(final SimulationTimeline<T, Event> timeline) {
+    final var projections = new Querier<>(timeline);
+    final var reactor = new MasterReactor<T, Event>();
+
+    final var activityReactor = new ActivityReactor<>(projections, reactor);
+    reactor.addReactor(event -> event.visit(activityReactor));
+
+    return new ReactionContext<>(projections, reactor, timeline.origin());
+  }
+
   public static void stepSimulationExample() {
+    final var database = SimulationTimeline.<Event>create();
+    final var simulator = createSimulator(database);
+
     final var next =
         concurrently(
             atom(Event.run("c")),
@@ -77,28 +93,22 @@ public final class Main {
                 atom(Event.run("a"))));
     System.out.println(next);
 
-    final var effects = next
-        .evaluate(new ActivityReactor())
-        .step(empty())
-        .getLeft();
-    System.out.println(effects);
+    simulator.react(next);
+    for (final var point : simulator.getCurrentTime().evaluate(new EventGraphProjection<>())) {
+      System.out.printf("%8.8s: %s\n", point.getKey(), point.getValue());
+    }
 
     System.out.println();
   }
 
   public static void dataModelExample() {
-    // Set up data model
-    final var model = new DataModel();
-    model.getDataBin("bin A").addRate(1.0);
-    model.getDataBin("bin B").setVolume(5.0);
-
     // Prepare events
     final var graph =
         sequentially(
             atom(Event.addDataRate("bin A", 10)),
             atom(Event.addDataRate("bin B", 15)),
             concurrently(
-                atom(Event.clearBin("bin A")),
+                atom(Event.clearDataRate("bin A")),
                 atom(Event.addDataRate("bin B", -5))));
     System.out.println(graph);
 
@@ -120,16 +130,16 @@ public final class Main {
     }
 
     // Apply the graph to the model.
-    final var projection = new DataModelProjection();
-    System.out.println(model);
+    final var evaluator = new DataEffectEvaluator();
+    final var applicator = new DataModelApplicator();
 
-    model.step(Duration.of(5, TimeUnit.SECONDS));
+    final var model = applicator.initial();
     System.out.println(model);
-
-    graph.evaluate(projection).apply(model);
+    applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
     System.out.println(model);
-
-    model.step(Duration.of(5, TimeUnit.SECONDS));
+    applicator.apply(model, graph.evaluate(evaluator));
+    System.out.println(model);
+    applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
     System.out.println(model);
 
     System.out.println();

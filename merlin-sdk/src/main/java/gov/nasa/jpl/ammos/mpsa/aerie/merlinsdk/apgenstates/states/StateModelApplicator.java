@@ -1,25 +1,24 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.MutatingProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.traits.SettableEffect;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Applicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
 
-public final class StateModelProjection
-        extends MutatingProjection<StateModel, Map<String, SettableEffect<Double, Double>>>
-{
-    public StateModelProjection() {
-        super(new StateEffectEvaluator());
+public final class StateModelApplicator implements Applicator<Map<String, SettableEffect<Double, Double>>, StateModel> {
+    @Override
+    public StateModel initial() {
+        return new StateModel();
     }
 
     @Override
-    protected final StateModel fork(final StateModel model) {
+    public final StateModel duplicate(final StateModel model) {
         return new StateModel(model);
     }
 
     @Override
-    protected final void apply(final StateModel model, final Map<String, SettableEffect<Double, Double>> effect) {
-
+    public final void apply(final StateModel model, final Map<String, SettableEffect<Double, Double>> effect) {
         for (final var entry : effect.entrySet()) {
             final var name = entry.getKey();
             final var change = entry.getValue();
@@ -45,5 +44,10 @@ public final class StateModelProjection
                 }
             });
         }
+    }
+
+    @Override
+    public void step(final StateModel stateModel, final Duration duration) {
+
     }
 }
