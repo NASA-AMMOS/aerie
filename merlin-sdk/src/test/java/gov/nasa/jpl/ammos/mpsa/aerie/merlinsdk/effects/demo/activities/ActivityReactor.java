@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.DefaultEventHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;

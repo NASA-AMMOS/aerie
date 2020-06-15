@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.ReactionContext.activeContext;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ReactionContext.activeContext;
 
 public final class States {
   private static final DataBinsResource bins =

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectExpression;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
