@@ -2,9 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import org.apache.commons.lang3.tuple.Pair;
+import org.pcollections.HashTreePMap;
+import org.pcollections.PMap;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 
@@ -21,55 +25,69 @@ import java.util.function.Function;
  * @param <Event> The type of events that may occur over the timeline.
  */
 public final class MasterReactor<T, Event>
-    implements Projection<Event, Function<Time<T, Event>, Time<T, Event>>>
+    implements Projection<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>>
 {
-  private final List<Function<Event, Function<Time<T, Event>, Time<T, Event>>>> reactors = new ArrayList<>();
+  private final List<Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>>> reactors = new ArrayList<>();
 
-  public void addReactor(final Function<Event, Function<Time<T, Event>, Time<T, Event>>> reactor) {
+  public void addReactor(final Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>> reactor) {
     this.reactors.add(reactor);
   }
 
   @Override
-  public Function<Time<T, Event>, Time<T, Event>> empty() {
-    return time -> time;
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> empty() {
+    return time -> Pair.of(time, HashTreePMap.empty());
   }
 
   @Override
-  public Function<Time<T, Event>, Time<T, Event>> sequentially(
-      final Function<Time<T, Event>, Time<T, Event>> prefix,
-      final Function<Time<T, Event>, Time<T, Event>> suffix
-  ) {
-    return time -> suffix.apply(prefix.apply(time));
-  }
-
-  @Override
-  public Function<Time<T, Event>, Time<T, Event>> concurrently(
-      final Function<Time<T, Event>, Time<T, Event>> left,
-      final Function<Time<T, Event>, Time<T, Event>> right
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> sequentially(
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> prefix,
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> suffix
   ) {
     return time -> {
-      final var fork = time.fork();
-      return left.apply(fork).join(right.apply(fork));
+      final var result1 = prefix.apply(time);
+      final var result2 = suffix.apply(result1.getLeft());
+      return Pair.of(
+          result2.getLeft(),
+          result1.getRight().plusAll(result2.getRight()));
     };
   }
 
   @Override
-  public Function<Time<T, Event>, Time<T, Event>> atom(final Event event) {
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> concurrently(
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> left,
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> right
+  ) {
+    return time -> {
+      final var fork = time.fork();
+      final var result1 = left.apply(fork);
+      final var result2 = right.apply(fork);
+      return Pair.of(
+          result1.getLeft().join(result2.getLeft()),
+          result1.getRight().plusAll(result2.getRight()));
+    };
+  }
+
+  @Override
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> atom(final Event event) {
     return time -> {
       // Re-emit the given event, or else it will disappear into the ether.
       time = time.emit(event);
 
       // Build a stack of unmerged branches.
       final var stack = new ArrayDeque<Time<T, Event>>(this.reactors.size());
+      final var scheduled = new HashMap<String, ScheduleItem>();
       for (final var reactor : this.reactors.subList(0, this.reactors.size())) {
         time = time.fork();
-        stack.push(reactor.apply(event).apply(time));
+        final var result = reactor.apply(event).apply(time);
+
+        stack.push(result.getLeft());
+        scheduled.putAll(result.getRight());
       }
 
-      // Merge the build stack of branches down into a single joined time point.
+      // Merge the built stack of branches down into a single joined time point.
       while (!stack.isEmpty()) time = stack.pop().join(time);
 
-      return time;
+      return Pair.of(time, HashTreePMap.from(scheduled));
     };
   }
 }

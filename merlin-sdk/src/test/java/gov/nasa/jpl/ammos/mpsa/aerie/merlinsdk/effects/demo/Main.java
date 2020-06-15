@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.MasterReactor;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ScheduleItem;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
@@ -21,6 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.PriorityQueue;
 import java.util.UUID;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.concurrently;
@@ -97,10 +99,12 @@ public final class Main {
     System.out.println(next);
 
     final var startTime = database.origin();
-    final var endTime = next.evaluate(reactor).apply(startTime);
+    final var result = next.evaluate(reactor).apply(startTime);
+    final var endTime = result.getLeft();
     for (final var point : endTime.evaluate(new EventGraphProjection<>())) {
       System.out.printf("%8.8s: %s\n", point.getKey(), point.getValue());
     }
+    System.out.println(result.getRight());
 
     System.out.println();
   }
