@@ -15,11 +15,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffe
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ScanningProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -89,17 +92,15 @@ public final class Main {
 
     final var schedule = new PriorityQueue<Pair<Duration, EventGraph<SchedulingEvent<T>>>>(Comparator.comparing(Pair::getKey));
     final var completed = new HashSet<String>();
-    final var conditioned = new HashMap<String, Set<String>>();
+    final var conditioned = new HashMap<String, Set<Pair<String, PVector<Time<T, Event>>>>>();
     schedule.add(Pair.of(Duration.ZERO, sequentially(
         atom(new SchedulingEvent.InstantiateActivity<>(id1, "c")),
         atom(new SchedulingEvent.InstantiateActivity<>(id2, "b")),
         atom(new SchedulingEvent.InstantiateActivity<>(id3, "a")),
         concurrently(
-            sequentially(atom(new SchedulingEvent.ResumeActivity<>(id1))),
-            sequentially(atom(new SchedulingEvent.ResumeActivity<>(id2))),
-            sequentially(atom(new SchedulingEvent.ResumeActivity<>(id3)))))));
-    System.out.println(schedule);
-    System.out.println();
+            sequentially(atom(new SchedulingEvent.ResumeActivity<>(id1, TreePVector.empty()))),
+            sequentially(atom(new SchedulingEvent.ResumeActivity<>(id2, TreePVector.empty()))),
+            sequentially(atom(new SchedulingEvent.ResumeActivity<>(id3, TreePVector.empty())))))));
 
     var now = database.origin();
     var currentTime = Duration.ZERO;
@@ -144,13 +145,16 @@ public final class Main {
         final var activityId = entry.getKey();
         final var rule = entry.getValue();
         if (rule instanceof ScheduleItem.Defer) {
-          schedule.add(Pair.of(((ScheduleItem.Defer) rule).duration.plus(currentTime), EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId))));
+          final var duration = ((ScheduleItem.Defer<T, Event>) rule).duration;
+          final var milestones = ((ScheduleItem.Defer<T, Event>) rule).milestones;
+          schedule.add(Pair.of(duration.plus(currentTime), EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, milestones))));
         } else if (rule instanceof ScheduleItem.OnCompletion) {
-          final var waitId = ((ScheduleItem.OnCompletion) rule).waitOn;
+          final var waitId = ((ScheduleItem.OnCompletion<T, Event>) rule).waitOn;
+          final var milestones = ((ScheduleItem.OnCompletion<T, Event>) rule).milestones;
           if (completed.contains(waitId)) {
-            schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId))));
+            schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, milestones))));
           } else {
-            conditioned.computeIfAbsent(((ScheduleItem.OnCompletion) rule).waitOn, k -> new HashSet<>()).add(activityId);
+            conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(Pair.of(activityId, milestones));
           }
         } else if (rule instanceof ScheduleItem.Complete) {
           completed.add(activityId);
@@ -158,8 +162,10 @@ public final class Main {
           final var conditionedActivities = conditioned.remove(entry.getKey());
           if (conditionedActivities == null) continue;
 
-          for (final var conditionedId : conditionedActivities) {
-            schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(conditionedId))));
+          for (final var conditionedTask : conditionedActivities) {
+            final var conditionedId = conditionedTask.getKey();
+            final var milestones = conditionedTask.getValue();
+            schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(conditionedId, milestones))));
           }
         }
       }

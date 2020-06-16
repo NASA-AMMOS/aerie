@@ -25,23 +25,23 @@ import java.util.function.Function;
  * @param <Event> The type of events that may occur over the timeline.
  */
 public final class MasterReactor<T, Event>
-    implements Projection<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>>
+    implements Projection<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>>
 {
-  private final List<Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>>> reactors = new ArrayList<>();
+  private final List<Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>>> reactors = new ArrayList<>();
 
-  public void addReactor(final Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>> reactor) {
+  public void addReactor(final Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>> reactor) {
     this.reactors.add(reactor);
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> empty() {
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> empty() {
     return time -> Pair.of(time, HashTreePMap.empty());
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> sequentially(
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> prefix,
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> suffix
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> sequentially(
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> prefix,
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> suffix
   ) {
     return time -> {
       final var result1 = prefix.apply(time);
@@ -53,9 +53,9 @@ public final class MasterReactor<T, Event>
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> concurrently(
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> left,
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> right
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> concurrently(
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> left,
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> right
   ) {
     return time -> {
       final var fork = time.fork();
@@ -68,14 +68,14 @@ public final class MasterReactor<T, Event>
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> atom(final Event event) {
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> atom(final Event event) {
     return time -> {
       // Re-emit the given event, or else it will disappear into the ether.
       time = time.emit(event);
 
       // Build a stack of unmerged branches.
       final var stack = new ArrayDeque<Time<T, Event>>(this.reactors.size());
-      final var scheduled = new HashMap<String, ScheduleItem>();
+      final var scheduled = new HashMap<String, ScheduleItem<T, Event>>();
       for (final var reactor : this.reactors.subList(0, this.reactors.size())) {
         time = time.fork();
         final var result = reactor.apply(event).apply(time);

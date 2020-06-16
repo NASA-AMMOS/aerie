@@ -1,15 +1,19 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.pcollections.PVector;
 
-public abstract class ScheduleItem {
+public abstract class ScheduleItem<T, Event> {
   private ScheduleItem() {}
 
-  public static final class Defer extends ScheduleItem {
+  public static final class Defer<T, Event> extends ScheduleItem<T, Event> {
     public final Duration duration;
+    public final PVector<Time<T, Event>> milestones;
 
-    public Defer(final Duration duration) {
+    public Defer(final Duration duration, final PVector<Time<T, Event>> milestones) {
       this.duration = duration;
+      this.milestones = milestones;
     }
 
     @Override
@@ -18,11 +22,13 @@ public abstract class ScheduleItem {
     }
   }
 
-  public static final class OnCompletion extends ScheduleItem {
+  public static final class OnCompletion<T, Event> extends ScheduleItem<T, Event> {
     public final String waitOn;
+    public final PVector<Time<T, Event>> milestones;
 
-    public OnCompletion(final String waitOn) {
+    public OnCompletion(final String waitOn, final PVector<Time<T, Event>> milestones) {
       this.waitOn = waitOn;
+      this.milestones = milestones;
     }
 
     @Override
@@ -31,7 +37,7 @@ public abstract class ScheduleItem {
     }
   }
 
-  public static final class Complete extends ScheduleItem {
+  public static final class Complete<T, Event> extends ScheduleItem<T, Event> {
     @Override
     public String toString() {
       return "Complete";
