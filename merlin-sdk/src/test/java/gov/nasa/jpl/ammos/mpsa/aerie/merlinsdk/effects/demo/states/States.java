@@ -18,7 +18,17 @@ public final class States {
       new LogResource(event -> activeContext.get().react(event));
 
   public static void call(final String activity) {
-    activeContext.get().call(activity);
+    spawn(activity).await();
+  }
+
+  public static SpawnHandle spawn(final String activity) {
+    final var childId = activeContext.get().spawn(activity);
+    return () -> activeContext.get().waitForActivity(childId);
+  }
+
+  @FunctionalInterface
+  public interface SpawnHandle {
+    void await();
   }
 
   public static void delay(final long quantity, final TimeUnit unit) {

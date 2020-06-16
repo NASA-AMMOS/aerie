@@ -9,13 +9,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.pcollections.ConsPStack;
 import org.pcollections.HashTreePMap;
+import org.pcollections.PStack;
 import org.pcollections.PVector;
-import org.pcollections.TreePVector;
 
 public final class ActivityReactor<T>
     implements Projection<SchedulingEvent<T>, Task<T, Event>>
@@ -31,44 +31,69 @@ public final class ActivityReactor<T>
     this.querier = querier;
   }
 
-  public Task<T, Event> resumeActivity(final String activityId, final String activityType, final PVector<Time<T, Event>> milestones) {
+  private final class Frame {
+    public Time<T, Event> tip;
+    public PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> branches;
+
+    public Frame(final Time<T, Event> tip, final PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> branches) {
+      this.tip = tip;
+      this.branches = branches;
+    }
+  }
+
+  public Task<T, Event> resumeActivity(final String activityId, final String activityType, final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs) {
     Objects.requireNonNull(activityId);
     Objects.requireNonNull(activityType);
     return time -> {
-      var tasks = new ArrayDeque<Triple<String, String, PVector<Time<T, Event>>>>();
-      var branches = new ArrayDeque<Time<T, Event>>();
-
-      time = time.fork();
-      branches.push(time);
-      tasks.add(Triple.of(activityId, activityType, milestones.plus(time)));
-
+      var frames = new ArrayDeque<Frame>();
       var scheduled = HashTreePMap.<String, ScheduleItem<T, Event>>empty();
-      while (!tasks.isEmpty()) {
-        final var x = tasks.pop();
-        final var activity = activityMap.getOrDefault(x.getMiddle(), new Activity() {});
 
-        // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
-        final var context = new ReactionContext<>(this.querier, tasks, x.getRight());
-        try {
-          ReactionContext.activeContext.setWithin(context, activity::modelEffects);
-
-          branches.push(context.getCurrentTime());
-          scheduled = scheduled.plus(x.getLeft(), new ScheduleItem.Complete<>());
-        } catch (final ReactionContext.Defer request) {
-          branches.push(context.getCurrentTime());
-          scheduled = scheduled.plus(x.getLeft(), new ScheduleItem.Defer<>(request.duration, x.getMiddle(), x.getRight()));
-        } catch (final ReactionContext.Call request) {
-          final var childId = UUID.randomUUID().toString();
-
-          scheduled = scheduled.plus(x.getLeft(), new ScheduleItem.OnCompletion<>(childId, x.getMiddle(), x.getRight()));
-          tasks.push(Triple.of(childId, request.activityType, TreePVector.singleton(context.getCurrentTime())));
-        }
+      {
+        var eh = time.fork();
+        frames.add(new Frame(eh, ConsPStack.singleton(Triple.of(activityId, activityType, breadcrumbs.plus(new ActivityBreadcrumb.Advance<>(eh))))));
       }
 
-      time = branches.pop();
-      while (!branches.isEmpty()) time = branches.pop().join(time);
+      while (true) {
+        {
+          final var frame = frames.peek();
+          final var task = frame.branches.get(0);
+          frame.branches = frame.branches.minus(0);
 
-      return Pair.of(time, scheduled);
+          final var taskId = task.getLeft();
+          final var taskType = task.getMiddle();
+          final var taskBreadcrumbs = task.getRight();
+
+          final var context = new ReactionContext<>(this.querier, taskBreadcrumbs);
+
+          // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
+          ScheduleItem<T, Event> continuation;
+          try {
+            final var activity = activityMap.getOrDefault(taskType, new Activity() {});
+            ReactionContext.activeContext.setWithin(context, activity::modelEffects);
+
+            frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+            continuation = new ScheduleItem.Complete<>();
+          } catch (final ReactionContext.Defer request) {
+            frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+            continuation = new ScheduleItem.Defer<>(request.duration, taskType, context.getBreadcrumbs());
+          } catch (final ReactionContext.Await request) {
+            frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+            continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
+          }
+
+          scheduled = scheduled.plus(taskId, continuation);
+        }
+
+        while (frames.peek().branches.isEmpty()) {
+          final var frame = frames.pop();
+          if (!frames.isEmpty()) {
+            final var parent = frames.peek();
+            parent.tip = parent.tip.join(frame.tip);
+          } else {
+            return Pair.of(frame.tip, scheduled);
+          }
+        }
+      }
     };
   }
 

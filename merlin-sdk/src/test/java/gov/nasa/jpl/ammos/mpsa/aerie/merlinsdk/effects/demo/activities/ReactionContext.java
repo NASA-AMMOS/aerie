@@ -8,29 +8,32 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Triple;
+import org.pcollections.ConsPStack;
+import org.pcollections.PStack;
 import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
-import java.util.Deque;
-import java.util.List;
+import java.util.UUID;
 import java.util.function.BiFunction;
 
 public final class ReactionContext<T> {
   private final Querier<T> querier;
-  private final Deque<Triple<String, String, PVector<Time<T, Event>>>> tasks;
+  private PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> spawns = ConsPStack.empty();
+  private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
+  private int nextBreadcrumbIndex;
+
   private Time<T, Event> currentTime;
-  private List<Time<T, Event>> nextTimes;
 
   public static final DynamicCell<ReactionContext<?>> activeContext = DynamicCell.create();
 
   public ReactionContext(
       final Querier<T> querier,
-      final Deque<Triple<String, String, PVector<Time<T, Event>>>> tasks,
-      final List<Time<T, Event>> times
+      final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs
   ) {
     this.querier = querier;
-    this.tasks = tasks;
-    this.currentTime = times.get(0);
-    this.nextTimes = times.subList(1, times.size());
+    this.currentTime = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(0)).next;
+    this.breadcrumbs = breadcrumbs;
+    this.nextBreadcrumbIndex = 1;
   }
 
   public final <Result> Result as(final BiFunction<Querier<T>, Time<T, Event>, Result> interpreter) {
@@ -39,6 +42,14 @@ public final class ReactionContext<T> {
 
   public final Time<T, Event> getCurrentTime() {
     return this.currentTime;
+  }
+
+  public final PVector<ActivityBreadcrumb<T, Event>> getBreadcrumbs() {
+    return this.breadcrumbs;
+  }
+
+  public final PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> getSpawns() {
+    return this.spawns;
   }
 
   public final ReactionContext<T> react(final Event event) {
@@ -54,23 +65,53 @@ public final class ReactionContext<T> {
   }
 
   public final ReactionContext<T> delay(final Duration duration) {
-    if (nextTimes.size() == 0) {
+    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
       throw new Defer(duration);
     } else {
-      this.currentTime = this.nextTimes.get(0);
-      this.nextTimes = this.nextTimes.subList(1, this.nextTimes.size());
+      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
+        throw new RuntimeException("Unexpected breadcrumb on delay(): " + breadcrumb.getClass().getName());
+      }
+
+      this.currentTime = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumb).next;
       return this;
     }
   }
 
-  public final ReactionContext<T> call(final String activity) {
-    if (nextTimes.size() == 0) {
-      throw new Call(activity);
+  public final ReactionContext<T> waitForActivity(final String activityId) {
+    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+      throw new Await(activityId);
     } else {
-      this.currentTime = this.nextTimes.get(0);
-      this.nextTimes = this.nextTimes.subList(1, this.nextTimes.size());
+      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
+        throw new RuntimeException("Unexpected breadcrumb on waitForActivity(): " + breadcrumb.getClass().getName());
+      }
+
+      this.currentTime = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumb).next;
       return this;
     }
+  }
+
+  public final String spawn(final String activity) {
+    final String childId;
+    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+      this.currentTime = this.currentTime.fork();
+
+      childId = UUID.randomUUID().toString();
+      this.spawns = this.spawns.plus(Triple.of(childId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(this.currentTime))));
+
+      this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
+      this.nextBreadcrumbIndex += 1;
+    } else {
+      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
+        throw new RuntimeException("Unexpected breadcrumb; expected spawn, got " + breadcrumb.getClass().getName());
+      }
+
+      childId = ((ActivityBreadcrumb.Spawn<T, Event>) breadcrumb).activityId;
+    }
+
+    return childId;
   }
 
   public static final class Defer extends RuntimeException {
@@ -81,11 +122,11 @@ public final class ReactionContext<T> {
     }
   }
 
-  public static final class Call extends RuntimeException {
-    public final String activityType;
+  public static final class Await extends RuntimeException {
+    public final String activityId;
 
-    private Call(final String activityType) {
-      this.activityType = activityType;
+    private Await(final String activityId) {
+      this.activityId = activityId;
     }
   }
 }

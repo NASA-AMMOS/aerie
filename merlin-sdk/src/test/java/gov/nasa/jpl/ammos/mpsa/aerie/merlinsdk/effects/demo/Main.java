@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityBreadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ScheduleItem;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.SchedulingEvent;
@@ -87,7 +88,7 @@ public final class Main {
 
     final var schedule = new PriorityQueue<Pair<Duration, EventGraph<SchedulingEvent<T>>>>(Comparator.comparing(Pair::getKey));
     final var completed = new HashSet<String>();
-    final var conditioned = new HashMap<String, Set<Triple<String, String, PVector<Time<T, Event>>>>>();
+    final var conditioned = new HashMap<String, Set<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>>>();
     schedule.add(Pair.of(Duration.ZERO,
         concurrently(
             sequentially(atom(new SchedulingEvent.ResumeActivity<>(UUID.randomUUID().toString(), "c", TreePVector.empty()))),
