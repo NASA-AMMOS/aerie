@@ -9,10 +9,12 @@ public abstract class ScheduleItem<T, Event> {
 
   public static final class Defer<T, Event> extends ScheduleItem<T, Event> {
     public final Duration duration;
+    public final String activityType;
     public final PVector<Time<T, Event>> milestones;
 
-    public Defer(final Duration duration, final PVector<Time<T, Event>> milestones) {
+    public Defer(final Duration duration, final String activityType, final PVector<Time<T, Event>> milestones) {
       this.duration = duration;
+      this.activityType = activityType;
       this.milestones = milestones;
     }
 
@@ -24,10 +26,12 @@ public abstract class ScheduleItem<T, Event> {
 
   public static final class OnCompletion<T, Event> extends ScheduleItem<T, Event> {
     public final String waitOn;
+    public final String activityType;
     public final PVector<Time<T, Event>> milestones;
 
-    public OnCompletion(final String waitOn, final PVector<Time<T, Event>> milestones) {
+    public OnCompletion(final String waitOn, final String activityType, final PVector<Time<T, Event>> milestones) {
       this.waitOn = waitOn;
+      this.activityType = activityType;
       this.milestones = milestones;
     }
 

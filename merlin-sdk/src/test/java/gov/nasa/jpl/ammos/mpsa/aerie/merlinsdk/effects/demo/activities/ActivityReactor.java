@@ -1,14 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,25 +24,15 @@ public final class ActivityReactor<T>
   );
 
   private final Querier<T> querier;
-  private final Map<String, String> activityInstances = new HashMap<>();
 
   public ActivityReactor(final Querier<T> querier) {
     this.querier = querier;
   }
 
-  public Task<T, Event> instantiateActivity(final String activityId, final String activityType) {
-    if (this.activityInstances.containsKey(activityId)) {
-      throw new RuntimeException("Activity ID already in use");
-    }
-
-    this.activityInstances.put(activityId, activityType);
-
-    return time -> Pair.of(time, HashTreePMap.empty());
-  }
-
-  public Task<T, Event> resumeActivity(final String activityId, final PVector<Time<T, Event>> milestones) {
+  public Task<T, Event> resumeActivity(final String activityId, final String activityType, final PVector<Time<T, Event>> milestones) {
+    Objects.requireNonNull(activityId);
+    Objects.requireNonNull(activityType);
     return time -> {
-      final var activityType = this.activityInstances.get(activityId);
       final var activity = activityMap.getOrDefault(activityType, new Activity() {});
 
       var scheduled = HashTreePMap.<String, ScheduleItem<T, Event>>empty();
@@ -58,17 +47,14 @@ public final class ActivityReactor<T>
       } catch (final ReactionContext.Defer request) {
         time = context.getCurrentTime();
 
-        scheduled = scheduled.plus(activityId, new ScheduleItem.Defer<>(request.duration, milestones.plus(time)));
+        scheduled = scheduled.plus(activityId, new ScheduleItem.Defer<>(request.duration, activityType, milestones.plus(time)));
       } catch (final ReactionContext.Call request) {
         time = context.getCurrentTime();
 
         final var childId = UUID.randomUUID().toString();
-        scheduled = scheduled.plus(activityId, new ScheduleItem.OnCompletion<>(childId, milestones.plus(time)));
+        scheduled = scheduled.plus(activityId, new ScheduleItem.OnCompletion<>(childId, activityType, milestones.plus(time)));
 
-        final var callGraph = EventGraph.sequentially(
-            EventGraph.atom(new SchedulingEvent.InstantiateActivity<T>(childId, request.activityType)),
-            EventGraph.atom(new SchedulingEvent.ResumeActivity<T>(childId, TreePVector.empty())));
-        final var result = callGraph.evaluate(this).apply(time);
+        final var result = this.resumeActivity(childId, request.activityType, TreePVector.empty()).apply(time);
         scheduled = scheduled.plusAll(result.getRight());
         time = result.getLeft();
       }
@@ -79,12 +65,9 @@ public final class ActivityReactor<T>
 
   @Override
   public Task<T, Event> atom(final SchedulingEvent<T> event) {
-    if (event instanceof SchedulingEvent.InstantiateActivity) {
-      final var instantiate = (SchedulingEvent.InstantiateActivity<T>) event;
-      return this.instantiateActivity(instantiate.activityId, instantiate.activityType);
-    } else if (event instanceof SchedulingEvent.ResumeActivity) {
+    if (event instanceof SchedulingEvent.ResumeActivity) {
       final var resume = (SchedulingEvent.ResumeActivity<T>) event;
-      return this.resumeActivity(resume.activityId, resume.milestones);
+      return this.resumeActivity(resume.activityId, resume.activityType, resume.milestones);
     } else {
       throw new Error("Unexpected subclass of SchedulingEvent: " + event.getClass().getName());
     }
