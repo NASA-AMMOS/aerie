@@ -8,6 +8,8 @@ import java.util.Objects;
 
 public class StateModel {
     private final Map<String, State> states;
+    private final Map<String, Map<Duration, Double>> changes = new HashMap<>();
+    private Duration elapsedTime = Duration.ZERO;
 
     public StateModel() {
         this.states = new HashMap<>();
@@ -28,6 +30,15 @@ public class StateModel {
 
     public void addState(String name, double initialValue){
         this.states.put(name, new State(name, initialValue));
+
+        //Assumption: all states are initialized at the very start of the simulation
+        final Map<Duration, Double> stateChanges = new HashMap<>();
+        stateChanges.put(elapsedTime, initialValue);
+        this.changes.put(name, stateChanges);
+    }
+
+    public void logChangedValue(String name, double newValue){
+        this.changes.get(name).put(this.elapsedTime, newValue);
     }
 
     public State getState(final String name) {
