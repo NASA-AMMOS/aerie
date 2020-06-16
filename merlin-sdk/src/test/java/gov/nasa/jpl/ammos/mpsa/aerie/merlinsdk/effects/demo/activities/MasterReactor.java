@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.HashTreePMap;
-import org.pcollections.PMap;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -25,24 +24,21 @@ import java.util.function.Function;
  * @param <Event> The type of events that may occur over the timeline.
  */
 public final class MasterReactor<T, Event>
-    implements Projection<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>>
+    implements Projection<Event, Task<T, Event>>
 {
-  private final List<Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>>> reactors = new ArrayList<>();
+  private final List<Function<Event, Task<T, Event>>> reactors = new ArrayList<>();
 
-  public void addReactor(final Function<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>> reactor) {
+  public void addReactor(final Function<Event, Task<T, Event>> reactor) {
     this.reactors.add(reactor);
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> empty() {
+  public Task<T, Event> empty() {
     return time -> Pair.of(time, HashTreePMap.empty());
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> sequentially(
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> prefix,
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> suffix
-  ) {
+  public Task<T, Event> sequentially(final Task<T, Event> prefix, final Task<T, Event> suffix) {
     return time -> {
       final var result1 = prefix.apply(time);
       final var result2 = suffix.apply(result1.getLeft());
@@ -53,10 +49,7 @@ public final class MasterReactor<T, Event>
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> concurrently(
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> left,
-      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> right
-  ) {
+  public Task<T, Event> concurrently(final Task<T, Event> left, final Task<T, Event> right) {
     return time -> {
       final var fork = time.fork();
       final var result1 = left.apply(fork);
@@ -68,7 +61,7 @@ public final class MasterReactor<T, Event>
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>> atom(final Event event) {
+  public Task<T, Event> atom(final Event event) {
     return time -> {
       // Re-emit the given event, or else it will disappear into the ether.
       time = time.emit(event);

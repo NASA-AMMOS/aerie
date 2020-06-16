@@ -8,19 +8,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.tuple.Pair;
-import org.pcollections.PMap;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public final class ReactionContext<T> {
   private final Querier<T> querier;
-  private final Projection<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>> reactor;
+  private final Projection<Event, Task<T, Event>> reactor;
   private Time<T, Event> currentTime;
   private List<Time<T, Event>> nextTimes;
   private final Map<String, ScheduleItem<T, Event>> scheduled = new HashMap<>();
@@ -29,7 +26,7 @@ public final class ReactionContext<T> {
 
   public ReactionContext(
       final Querier<T> querier,
-      final Projection<Event, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Event>>>>> reactor,
+      final Projection<Event, Task<T, Event>> reactor,
       final List<Time<T, Event>> times
   ) {
     this.querier = querier;
