@@ -1,10 +1,16 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.QueryUtilityMethods;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class StateModel {
     private final Map<String, State> states;
@@ -26,6 +32,7 @@ public class StateModel {
     }
 
     public void step(final Duration duration) {
+        this.elapsedTime = this.elapsedTime.plus(duration);
     }
 
     public void addState(String name, double initialValue){
@@ -45,8 +52,14 @@ public class StateModel {
         return this.states.get(name);
     }
 
+    public List<Window> stateThreshold(String name, Predicate<Double> lambda){
+        var loggedValues = this.changes.get(name).entrySet();
+        return QueryUtilityMethods.stateThreshold(loggedValues, SimulationInstant.ORIGIN.plus(this.elapsedTime), lambda);
+    }
+
     @Override
     public String toString() {
         return this.states.toString();
     }
+
 }
