@@ -1,6 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ReactionContext.activeContext;
 
 public final class States {
@@ -16,5 +19,9 @@ public final class States {
 
   public static void call(final String activity) {
     activeContext.get().call(activity);
+  }
+
+  public static void delay(final long quantity, final TimeUnit unit) {
+    activeContext.get().delay(Duration.of(quantity, unit));
   }
 }
