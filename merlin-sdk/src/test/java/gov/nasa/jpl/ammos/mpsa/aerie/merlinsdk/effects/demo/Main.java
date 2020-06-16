@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.MasterReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ScheduleItem;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.SchedulingEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
@@ -83,8 +82,7 @@ public final class Main {
 
   private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
     final var projections = new Querier<>(database);
-    final var reactor = new MasterReactor<T, Event>();
-    final var activityReactor = new ActivityReactor<>(projections, reactor);
+    final var reactor = new ActivityReactor<>(projections);
 
     final var id1 = UUID.randomUUID().toString();
     final var id2 = UUID.randomUUID().toString();
@@ -136,7 +134,7 @@ public final class Main {
       currentTime = currentTime.plus(delta);
 
       // React to the events scheduled at this time.
-      final var result = events.evaluate(activityReactor).apply(now);
+      final var result = events.evaluate(reactor).apply(now);
       now = result.getLeft();
       final var newJobs = result.getRight();
 

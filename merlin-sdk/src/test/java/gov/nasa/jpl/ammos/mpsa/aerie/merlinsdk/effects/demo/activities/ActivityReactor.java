@@ -25,12 +25,10 @@ public final class ActivityReactor<T>
   );
 
   private final Querier<T> querier;
-  private final Projection<Event, Task<T, Event>> reactor;
   private final Map<String, String> activityInstances = new HashMap<>();
 
-  public ActivityReactor(final Querier<T> querier, final Projection<Event, Task<T, Event>> reactor) {
+  public ActivityReactor(final Querier<T> querier) {
     this.querier = querier;
-    this.reactor = reactor;
   }
 
   public Task<T, Event> instantiateActivity(final String activityId, final String activityType) {
@@ -51,20 +49,17 @@ public final class ActivityReactor<T>
       var scheduled = HashTreePMap.<String, ScheduleItem<T, Event>>empty();
 
       // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
-      final var context = new ReactionContext<>(this.querier, this.reactor, milestones.plus(time));
+      final var context = new ReactionContext<>(this.querier, milestones.plus(time));
       try {
         ReactionContext.activeContext.setWithin(context, activity::modelEffects);
-        scheduled = scheduled.plusAll(context.getScheduled());
         time = context.getCurrentTime();
 
         scheduled = scheduled.plus(activityId, new ScheduleItem.Complete<>());
       } catch (final ReactionContext.Defer request) {
-        scheduled = scheduled.plusAll(context.getScheduled());
         time = context.getCurrentTime();
 
         scheduled = scheduled.plus(activityId, new ScheduleItem.Defer<>(request.duration, milestones.plus(time)));
       } catch (final ReactionContext.Call request) {
-        scheduled = scheduled.plusAll(context.getScheduled());
         time = context.getCurrentTime();
 
         final var childId = UUID.randomUUID().toString();

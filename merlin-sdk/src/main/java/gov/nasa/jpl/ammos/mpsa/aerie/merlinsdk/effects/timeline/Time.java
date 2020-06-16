@@ -134,4 +134,45 @@ public final class Time<Scope, Event> {
 
     return new Time<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.durationInMicroseconds));
   }
+
+  /**
+   * A function that steps time forward.
+   *
+   * <p>
+   * An <code>Operator</code> is a function that takes a time point, performs operations on it (e.g. {@code Time#emit},
+   * {@code Time#wait}), and returns a time point capturing its effects.
+   * </p>
+   *
+   * @param <Scope> The abstract type of the timeline owning the input and output time points.
+   * @param <Event> The type of events that may occur over the timeline.
+   */
+  public interface Operator<Scope, Event> {
+    Time<Scope, Event> step(Time<Scope, Event> time);
+  }
+
+  /**
+   * An {@link EffectTrait} on {@link Operator}s.
+   *
+   * @param <Scope> The abstract type of the timeline owning the times to be operated over.
+   * @param <Event> The type of events that may occur over the timeline.
+   */
+  public static final class OperatorTrait<Scope, Event> implements EffectTrait<Operator<Scope, Event>> {
+    @Override
+    public Operator<Scope, Event> empty() {
+      return time -> time;
+    }
+
+    @Override
+    public Operator<Scope, Event> sequentially(final Operator<Scope, Event> prefix, final Operator<Scope, Event> suffix) {
+      return time -> suffix.step(prefix.step(time));
+    }
+
+    @Override
+    public Operator<Scope, Event> concurrently(final Operator<Scope, Event> left, final Operator<Scope, Event> right) {
+      return time -> {
+        final var fork = time.fork();
+        return left.step(fork).join(right.step(fork));
+      };
+    }
+  }
 }
