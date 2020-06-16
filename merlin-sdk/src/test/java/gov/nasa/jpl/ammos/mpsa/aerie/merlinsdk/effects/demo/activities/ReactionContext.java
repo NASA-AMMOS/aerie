@@ -7,12 +7,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.apache.commons.lang3.tuple.Triple;
+import org.pcollections.PVector;
 
+import java.util.Deque;
 import java.util.List;
 import java.util.function.BiFunction;
 
 public final class ReactionContext<T> {
   private final Querier<T> querier;
+  private final Deque<Triple<String, String, PVector<Time<T, Event>>>> tasks;
   private Time<T, Event> currentTime;
   private List<Time<T, Event>> nextTimes;
 
@@ -20,9 +24,11 @@ public final class ReactionContext<T> {
 
   public ReactionContext(
       final Querier<T> querier,
+      final Deque<Triple<String, String, PVector<Time<T, Event>>>> tasks,
       final List<Time<T, Event>> times
   ) {
     this.querier = querier;
+    this.tasks = tasks;
     this.currentTime = times.get(0);
     this.nextTimes = times.subList(1, times.size());
   }
