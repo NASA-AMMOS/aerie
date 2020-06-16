@@ -4,6 +4,4 @@ public interface EventHandler<Result> {
   Result addDataRate(String binName, double amount);
   Result clearDataRate(String binName);
   Result log(String message);
-  Result instantiateActivity(String activityId, String activityType);
-  Result resumeActivity(String activityId);
 }

@@ -18,14 +18,4 @@ public interface DefaultEventHandler<Result> extends EventHandler<Result> {
   default Result log(final String message) {
     return this.unhandled();
   }
-
-  @Override
-  default Result instantiateActivity(final String activityId, final String activityType) {
-    return this.unhandled();
-  }
-
-  @Override
-  default Result resumeActivity(final String activityId) {
-    return this.unhandled();
-  }
 }

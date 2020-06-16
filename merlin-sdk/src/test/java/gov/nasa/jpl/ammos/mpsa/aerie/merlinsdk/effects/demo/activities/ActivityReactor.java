@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.DefaultEventHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
@@ -19,7 +18,7 @@ import org.pcollections.HashTreePMap;
 import org.pcollections.PMap;
 
 public final class ActivityReactor<T>
-    implements DefaultEventHandler<Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>>
+    implements Projection<SchedulingEvent<T>, Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>>>
 {
   private static final Map<String, Activity> activityMap = Map.of(
       "a", new ActivityA(),
@@ -38,7 +37,6 @@ public final class ActivityReactor<T>
     this.reactor = reactor;
   }
 
-  @Override
   public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> instantiateActivity(final String activityId, final String activityType) {
     if (this.activityInstances.containsKey(activityId)) {
       throw new RuntimeException("Activity ID already in use");
@@ -49,7 +47,6 @@ public final class ActivityReactor<T>
     return time -> Pair.of(time, HashTreePMap.empty());
   }
 
-  @Override
   public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> resumeActivity(final String activityId) {
     return time -> {
       final var activityType = this.activityInstances.get(activityId);
@@ -78,9 +75,9 @@ public final class ActivityReactor<T>
         scheduled = scheduled.plus(activityId, new ScheduleItem.OnCompletion(childId));
 
         final var callGraph = EventGraph.sequentially(
-            EventGraph.atom(Event.instantiateActivity(childId, request.activityType)),
-            EventGraph.atom(Event.resumeActivity(childId)));
-        final var result = callGraph.evaluate(this.reactor).apply(time);
+            EventGraph.atom(new SchedulingEvent.InstantiateActivity<T>(childId, request.activityType)),
+            EventGraph.atom(new SchedulingEvent.ResumeActivity<T>(childId)));
+        final var result = callGraph.evaluate(this).apply(time);
         scheduled = scheduled.plusAll(result.getRight());
         time = result.getLeft();
       }
@@ -90,7 +87,49 @@ public final class ActivityReactor<T>
   }
 
   @Override
-  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> unhandled() {
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> atom(final SchedulingEvent<T> event) {
+    if (event instanceof SchedulingEvent.InstantiateActivity) {
+      final var instantiate = (SchedulingEvent.InstantiateActivity<T>) event;
+      return this.instantiateActivity(instantiate.activityId, instantiate.activityType);
+    } else if (event instanceof SchedulingEvent.ResumeActivity) {
+      final var resume = (SchedulingEvent.ResumeActivity<T>) event;
+      return this.resumeActivity(resume.activityId);
+    } else {
+      throw new Error("Unexpected subclass of SchedulingEvent: " + event.getClass().getName());
+    }
+  }
+
+  @Override
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> empty() {
     return ctx -> Pair.of(ctx, HashTreePMap.empty());
+  }
+
+  @Override
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> sequentially(
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> prefix,
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> suffix
+  ) {
+    return time -> {
+      final var result1 = prefix.apply(time);
+      final var result2 = suffix.apply(result1.getLeft());
+      return Pair.of(
+          result2.getLeft(),
+          result1.getRight().plusAll(result2.getRight()));
+    };
+  }
+
+  @Override
+  public Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> concurrently(
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> left,
+      final Function<Time<T, Event>, Pair<Time<T, Event>, PMap<String, ScheduleItem>>> right
+  ) {
+    return time -> {
+      final var fork = time.fork();
+      final var result1 = left.apply(fork);
+      final var result2 = right.apply(fork);
+      return Pair.of(
+          result1.getLeft().join(result2.getLeft()),
+          result1.getRight().plusAll(result2.getRight()));
+    };
   }
 }
