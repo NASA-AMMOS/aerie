@@ -3,10 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ActivityBreadcrumb;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ActivityReactor;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ScheduleItem;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.SchedulingEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingSimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityA;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityB;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
@@ -24,18 +22,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-import org.pcollections.PVector;
-import org.pcollections.TreePVector;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.PriorityQueue;
-import java.util.Set;
-import java.util.UUID;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.concurrently;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.empty;
@@ -86,108 +75,26 @@ public final class Main {
   }
 
   private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
+    final var projections = new Querier<>(database);
     final var activities = Map.of(
       "a", new ActivityA(),
       "b", new ActivityB());
 
-    final var projections = new Querier<>(database);
-    final var reactor = new ActivityReactor<T, String, Event>((ctx, activityType) -> {
-      final var activity = activities.getOrDefault(activityType, new Activity() {});
-      States.activeContext.setWithin(Pair.of(ctx, projections.at(ctx::now)), activity::modelEffects);
-    });
+    final var simulator = new ReplayingSimulationEngine<>(
+        database.origin(),
+        (ReactionContext<T, String, Event> ctx, String activityType) -> {
+          final var activity = activities.getOrDefault(activityType, new Activity() {});
+          States.activeContext.setWithin(Pair.of(ctx, projections.at(ctx::now)), activity::modelEffects);
+        });
 
-    final var schedule = new PriorityQueue<Pair<Duration, EventGraph<SchedulingEvent<T, String, Event>>>>(Comparator.comparing(Pair::getKey));
-    final var completed = new HashSet<String>();
-    final var conditioned = new HashMap<String, Set<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>>>();
-    schedule.add(Pair.of(Duration.ZERO,
-        concurrently(
-            sequentially(atom(new SchedulingEvent.ResumeActivity<>(UUID.randomUUID().toString(), "c", TreePVector.empty()))),
-            sequentially(atom(new SchedulingEvent.ResumeActivity<>(UUID.randomUUID().toString(), "b", TreePVector.empty()))),
-            sequentially(atom(new SchedulingEvent.ResumeActivity<>(UUID.randomUUID().toString(), "a", TreePVector.empty()))))));
+    simulator.enqueue(Duration.ZERO, "c");
+    simulator.enqueue(Duration.ZERO, "b");
+    simulator.enqueue(Duration.ZERO, "a");
 
-    var now = database.origin();
-    var currentTime = Duration.ZERO;
-
-    {
-      var durationFromStart = Duration.ZERO;
-      for (final var point : now.evaluate(new EventGraphProjection<>())) {
-        durationFromStart = durationFromStart.plus(point.getKey());
-        System.out.printf("%10s: %s\n", durationFromStart, point.getValue());
-      }
-      for (final var point : schedule) {
-        System.out.printf("%10s: %s\n", point.getKey(), point.getValue());
-      }
-      System.out.println();
-    }
-
-    while (!schedule.isEmpty()) {
-      // Get the current time, and any events occurring at this time.
-      final Duration delta;
-      EventGraph<SchedulingEvent<T, String, Event>> events;
-      {
-        final var job = schedule.poll();
-        events = job.getRight();
-
-        delta = job.getKey().minus(currentTime);
-        while (!schedule.isEmpty() && schedule.peek().getKey().equals(job.getKey())) {
-          events = EventGraph.concurrently(events, schedule.poll().getValue());
-        }
-      }
-
-      // Step up to the new time.
-      now = now.wait(delta);
-      currentTime = currentTime.plus(delta);
-
-      // React to the events scheduled at this time.
-      final var result = events.evaluate(reactor).apply(now);
-      now = result.getLeft();
-      final var newJobs = result.getRight();
-
-      // Accumulate the freshly scheduled items into our scheduling timeline.
-      for (final var entry : newJobs.entrySet()) {
-        final var activityId = entry.getKey();
-        final var rule = entry.getValue();
-        if (rule instanceof ScheduleItem.Defer) {
-          final var duration = ((ScheduleItem.Defer<T, String, Event>) rule).duration;
-          final var activityType = ((ScheduleItem.Defer<T, String, Event>) rule).activityType;
-          final var milestones = ((ScheduleItem.Defer<T, String, Event>) rule).milestones;
-          schedule.add(Pair.of(duration.plus(currentTime), EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, activityType, milestones))));
-        } else if (rule instanceof ScheduleItem.OnCompletion) {
-          final var waitId = ((ScheduleItem.OnCompletion<T, String, Event>) rule).waitOn;
-          final var activityType = ((ScheduleItem.OnCompletion<T, String, Event>) rule).activityType;
-          final var milestones = ((ScheduleItem.OnCompletion<T, String, Event>) rule).milestones;
-          if (completed.contains(waitId)) {
-            schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, activityType, milestones))));
-          } else {
-            conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(Triple.of(activityId, activityType, milestones));
-          }
-        } else if (rule instanceof ScheduleItem.Complete) {
-          completed.add(activityId);
-
-          final var conditionedActivities = conditioned.remove(entry.getKey());
-          if (conditionedActivities == null) continue;
-
-          for (final var conditionedTask : conditionedActivities) {
-            final var conditionedId = conditionedTask.getLeft();
-            final var activityType = conditionedTask.getMiddle();
-            final var milestones = conditionedTask.getRight();
-            schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(conditionedId, activityType, milestones))));
-          }
-        }
-      }
-
-      // Display some debugging information.
-      {
-        var durationFromStart = Duration.ZERO;
-        for (final var point : now.evaluate(new EventGraphProjection<>())) {
-          durationFromStart = durationFromStart.plus(point.getKey());
-          System.out.printf("%10s: %s\n", durationFromStart, point.getValue());
-        }
-        for (final var point : schedule) {
-          System.out.printf("%10s: %s\n", point.getKey(), point.getValue());
-        }
-        System.out.println();
-      }
+    System.out.println(simulator.getDebugTrace());
+    while (simulator.hasMoreJobs()) {
+      simulator.step();
+      System.out.println(simulator.getDebugTrace());
     }
   }
 
