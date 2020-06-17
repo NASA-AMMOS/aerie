@@ -10,12 +10,12 @@ public final class States {
   private static final DataBinsResource bins =
       new DataBinsResource(
           () -> activeContext.get().as(Querier::getDataModel),
-          event -> activeContext.get().react(event));
+          event -> activeContext.get().emit(event));
 
   public static final DataBinResource binA = bins.bin("bin A");
 
   public static final CumulableResource<String> log =
-      new LogResource(event -> activeContext.get().react(event));
+      new LogResource(event -> activeContext.get().emit(event));
 
   public static void call(final String activity) {
     spawn(activity).await();
