@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.APGenStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.ConsumableState;
@@ -126,8 +126,16 @@ public class Demo {
         var andConstraint = socConstraint.and(dataConstraint);
         var orConstraint = socConstraint.or(dataConstraint);
 
+        var socConstraintWrap = socState.whenGreaterThan(22);
+        var dataConstraintWrap = dataRateState.whenGreaterThan(10);
+
         System.out.println(socConstraint.getWindows());
         System.out.println(dataConstraint.getWindows());
+
+        System.out.println(socConstraintWrap.getWindows());
+        System.out.println(dataConstraintWrap.getWindows());
+
+
         System.out.println(andConstraint.getWindows());
         System.out.println(orConstraint.getWindows());
 

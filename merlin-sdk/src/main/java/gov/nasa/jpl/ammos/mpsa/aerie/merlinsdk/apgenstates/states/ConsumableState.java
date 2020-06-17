@@ -28,4 +28,23 @@ public class ConsumableState {
         return () -> windows;
     }
 
+    public Constraint whenGreaterThan(double y){
+        return this.when((x) -> (x > y));
+    }
+
+    public Constraint whenLessThan(double y){
+        return this.when((x) -> (x < y));
+    }
+
+    public Constraint whenLessThanOrEqualTo(double y){
+        return this.when((x) -> (x <= y));
+    }
+
+    public Constraint whenGreaterThanOrEqualTo(double y){
+        return this.when((x) -> (x >= y));
+    }
+
+    public Constraint whenEqualTo(double y, double epsilon){
+        return this.when((x) -> (Math.abs(x - y) < epsilon));
+    }
 }
