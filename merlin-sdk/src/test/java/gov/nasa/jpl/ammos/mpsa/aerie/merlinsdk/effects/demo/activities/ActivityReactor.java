@@ -63,20 +63,20 @@ public final class ActivityReactor<T>
           final var taskType = task.getMiddle();
           final var taskBreadcrumbs = task.getRight();
 
-          final var context = new ReactionContext<>(this.querier, taskBreadcrumbs);
+          final var context = new ReactionContextImpl<>(this.querier, taskBreadcrumbs);
 
           // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
           ScheduleItem<T, Event> continuation;
           try {
             final var activity = activityMap.getOrDefault(taskType, new Activity() {});
-            ReactionContext.activeContext.setWithin(context, activity::modelEffects);
+            ReactionContextImpl.activeContext.setWithin(context, activity::modelEffects);
 
             frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
             continuation = new ScheduleItem.Complete<>();
-          } catch (final ReactionContext.Defer request) {
+          } catch (final ReactionContextImpl.Defer request) {
             frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
             continuation = new ScheduleItem.Defer<>(request.duration, taskType, context.getBreadcrumbs());
-          } catch (final ReactionContext.Await request) {
+          } catch (final ReactionContextImpl.Await request) {
             frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
             continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
           }

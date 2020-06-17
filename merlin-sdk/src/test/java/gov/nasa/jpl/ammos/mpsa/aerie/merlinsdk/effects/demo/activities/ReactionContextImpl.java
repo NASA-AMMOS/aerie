@@ -15,7 +15,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public final class ReactionContext<T> implements IReactionContext<Event> {
+public final class ReactionContextImpl<T> implements IReactionContext<Event> {
   public static final DynamicCell<IReactionContext<Event>> activeContext = DynamicCell.create();
 
   private final Querier<T> querier;
@@ -26,7 +26,7 @@ public final class ReactionContext<T> implements IReactionContext<Event> {
   private Time<T, Event> currentTime;
   private final Set<String> children = new HashSet<>();
 
-  public ReactionContext(
+  public ReactionContextImpl(
       final Querier<T> querier,
       final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs
   ) {
