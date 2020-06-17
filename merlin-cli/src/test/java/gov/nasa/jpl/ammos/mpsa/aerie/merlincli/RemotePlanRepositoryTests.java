@@ -283,7 +283,7 @@ public class RemotePlanRepositoryTests {
         // Verify request contained expected information
         HttpUriRequest request = requestHandler.getLastRequest();
 
-        String expectedURIPath = String.format("/plans/%s", planId);
+        String expectedURIPath = String.format("/plans/%s/activity_instances", planId);
         assertThat(request.getURI().toString()).endsWith(expectedURIPath);
         assertThat(request.getMethod()).isEqualTo(HttpPost.METHOD_NAME);
         assertThat(new String(
