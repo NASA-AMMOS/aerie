@@ -15,8 +15,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public final class ReactionContextImpl<T> implements IReactionContext<Event> {
-  public static final DynamicCell<IReactionContext<Event>> activeContext = DynamicCell.create();
+public final class ReactionContextImpl<T> implements ReactionContext<Event> {
+  public static final DynamicCell<ReactionContext<Event>> activeContext = DynamicCell.create();
 
   private final Querier<T> querier;
   private PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> spawns = ConsPStack.empty();

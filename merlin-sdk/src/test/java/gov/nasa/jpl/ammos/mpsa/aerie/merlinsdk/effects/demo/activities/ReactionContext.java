@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
-public interface IReactionContext<Event> {
+public interface ReactionContext<Event> {
   void emit(Event event);
   void delay(Duration duration);
   String spawn(String activity);
