@@ -26,6 +26,10 @@ public final class States {
     return () -> activeContext.get().waitForActivity(childId);
   }
 
+  public static void waitForChildren() {
+    activeContext.get().waitForChildren();
+  }
+
   @FunctionalInterface
   public interface SpawnHandle {
     void await();

@@ -13,6 +13,8 @@ import org.pcollections.PStack;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
@@ -23,6 +25,7 @@ public final class ReactionContext<T> {
   private int nextBreadcrumbIndex;
 
   private Time<T, Event> currentTime;
+  private final Set<String> children = new HashSet<>();
 
   public static final DynamicCell<ReactionContext<?>> activeContext = DynamicCell.create();
 
@@ -92,6 +95,11 @@ public final class ReactionContext<T> {
     }
   }
 
+  public final ReactionContext<T> waitForChildren() {
+    for (final var child : this.children) this.waitForActivity(child);
+    return this;
+  }
+
   public final String spawn(final String activity) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
@@ -111,6 +119,7 @@ public final class ReactionContext<T> {
       childId = ((ActivityBreadcrumb.Spawn<T, Event>) breadcrumb).activityId;
     }
 
+    this.children.add(childId);
     return childId;
   }
 
