@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;

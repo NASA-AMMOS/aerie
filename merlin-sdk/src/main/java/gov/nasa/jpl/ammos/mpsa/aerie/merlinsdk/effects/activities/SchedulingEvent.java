@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import org.pcollections.PVector;
 
