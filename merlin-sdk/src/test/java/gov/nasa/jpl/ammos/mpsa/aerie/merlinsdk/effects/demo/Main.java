@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityA;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityB;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityBreadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ScheduleItem;
@@ -12,10 +15,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.Lotka
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraParameters;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states.States;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ScanningProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -83,10 +86,17 @@ public final class Main {
   }
 
   private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
-    final var projections = new Querier<>(database);
-    final var reactor = new ActivityReactor<>(projections);
+    final var activities = Map.of(
+      "a", new ActivityA(),
+      "b", new ActivityB());
 
-    final var schedule = new PriorityQueue<Pair<Duration, EventGraph<SchedulingEvent<T>>>>(Comparator.comparing(Pair::getKey));
+    final var projections = new Querier<>(database);
+    final var reactor = new ActivityReactor<T, String, Event>((ctx, activityType) -> {
+      final var activity = activities.getOrDefault(activityType, new Activity() {});
+      States.activeContext.setWithin(Pair.of(ctx, projections.at(ctx::now)), activity::modelEffects);
+    });
+
+    final var schedule = new PriorityQueue<Pair<Duration, EventGraph<SchedulingEvent<T, String, Event>>>>(Comparator.comparing(Pair::getKey));
     final var completed = new HashSet<String>();
     final var conditioned = new HashMap<String, Set<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>>>();
     schedule.add(Pair.of(Duration.ZERO,
@@ -113,7 +123,7 @@ public final class Main {
     while (!schedule.isEmpty()) {
       // Get the current time, and any events occurring at this time.
       final Duration delta;
-      EventGraph<SchedulingEvent<T>> events;
+      EventGraph<SchedulingEvent<T, String, Event>> events;
       {
         final var job = schedule.poll();
         events = job.getRight();
@@ -138,14 +148,14 @@ public final class Main {
         final var activityId = entry.getKey();
         final var rule = entry.getValue();
         if (rule instanceof ScheduleItem.Defer) {
-          final var duration = ((ScheduleItem.Defer<T, Event>) rule).duration;
-          final var activityType = ((ScheduleItem.Defer<T, Event>) rule).activityType;
-          final var milestones = ((ScheduleItem.Defer<T, Event>) rule).milestones;
+          final var duration = ((ScheduleItem.Defer<T, String, Event>) rule).duration;
+          final var activityType = ((ScheduleItem.Defer<T, String, Event>) rule).activityType;
+          final var milestones = ((ScheduleItem.Defer<T, String, Event>) rule).milestones;
           schedule.add(Pair.of(duration.plus(currentTime), EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, activityType, milestones))));
         } else if (rule instanceof ScheduleItem.OnCompletion) {
-          final var waitId = ((ScheduleItem.OnCompletion<T, Event>) rule).waitOn;
-          final var activityType = ((ScheduleItem.OnCompletion<T, Event>) rule).activityType;
-          final var milestones = ((ScheduleItem.OnCompletion<T, Event>) rule).milestones;
+          final var waitId = ((ScheduleItem.OnCompletion<T, String, Event>) rule).waitOn;
+          final var activityType = ((ScheduleItem.OnCompletion<T, String, Event>) rule).activityType;
+          final var milestones = ((ScheduleItem.OnCompletion<T, String, Event>) rule).milestones;
           if (completed.contains(waitId)) {
             schedule.add(Pair.of(currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, activityType, milestones))));
           } else {

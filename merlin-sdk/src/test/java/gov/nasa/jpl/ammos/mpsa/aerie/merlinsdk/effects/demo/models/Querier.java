@@ -8,6 +8,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
+import java.util.function.Supplier;
+
 public final class Querier<T> {
   private final Query<T, Event, DataModel> dataQuery;
 
@@ -15,7 +17,21 @@ public final class Querier<T> {
     this.dataQuery = timeline.register(new DataEffectEvaluator(), new DataModelApplicator());
   }
 
-  public DataModel getDataModel(final Time<T, Event> time) {
-    return this.dataQuery.getAt(time);
+  public InnerQuerier<?> at(final Supplier<Time<T, Event>> currentTime) {
+    return new InnerQuerier<>(this, currentTime);
+  }
+
+  public static final class InnerQuerier<T> {
+    private final Querier<T> querier;
+    private final Supplier<Time<T, Event>> currentTime;
+
+    private InnerQuerier(final Querier<T> querier, final Supplier<Time<T, Event>> currentTime) {
+      this.querier = querier;
+      this.currentTime = currentTime;
+    }
+
+    public DataModel getDataModel() {
+      return this.querier.dataQuery.getAt(currentTime.get());
+    }
   }
 }

@@ -1,120 +1,109 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states.States;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
 import java.util.ArrayDeque;
-import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.pcollections.ConsPStack;
 import org.pcollections.HashTreePMap;
+import org.pcollections.PMap;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
 
-public final class ActivityReactor<T>
-    implements Projection<SchedulingEvent<T>, Task<T, Event>>
-{
-  private static final Map<String, Activity> activityMap = Map.of(
-      "a", new ActivityA(),
-      "b", new ActivityB()
-  );
+public final class ActivityReactor<T, Activity, Event> implements Projection<SchedulingEvent<T, Activity, Event>, Task<T, Activity, Event>> {
+  private final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor;
 
-  private final Querier<T> querier;
-
-  public ActivityReactor(final Querier<T> querier) {
-    this.querier = querier;
+  public ActivityReactor(final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor) {
+    this.executor = executor;
   }
 
   private final class Frame {
     public Time<T, Event> tip;
-    public PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> branches;
+    public PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> branches;
 
-    public Frame(final Time<T, Event> tip, final PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> branches) {
+    public Frame(final Time<T, Event> tip, final PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> branches) {
       this.tip = tip;
       this.branches = branches;
     }
   }
 
-  public Task<T, Event> resumeActivity(final String activityId, final String activityType, final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs) {
-    Objects.requireNonNull(activityId);
-    Objects.requireNonNull(activityType);
-    return time -> {
-      var frames = new ArrayDeque<Frame>();
-      var scheduled = HashTreePMap.<String, ScheduleItem<T, Event>>empty();
+  private Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Activity, Event>>> runActivity(final Frame initialFrame) {
+    var frames = new ArrayDeque<Frame>();
+    var scheduled = HashTreePMap.<String, ScheduleItem<T, Activity, Event>>empty();
 
+    frames.add(initialFrame);
+    while (true) {
       {
-        var eh = time.fork();
-        frames.add(new Frame(eh, ConsPStack.singleton(Triple.of(activityId, activityType, breadcrumbs.plus(new ActivityBreadcrumb.Advance<>(eh))))));
-      }
+        final var frame = frames.peek();
+        final var task = frame.branches.get(0);
+        frame.branches = frame.branches.minus(0);
 
-      while (true) {
-        {
-          final var frame = frames.peek();
-          final var task = frame.branches.get(0);
-          frame.branches = frame.branches.minus(0);
+        final var taskId = task.getLeft();
+        final var taskType = task.getMiddle();
+        final var taskBreadcrumbs = task.getRight();
 
-          final var taskId = task.getLeft();
-          final var taskType = task.getMiddle();
-          final var taskBreadcrumbs = task.getRight();
+        final var context = new ReactionContextImpl<T, Activity, Event>(taskBreadcrumbs);
 
-          final var context = new ReactionContextImpl<>(this.querier, taskBreadcrumbs);
+        // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
+        ScheduleItem<T, Activity, Event> continuation;
+        try {
+          this.executor.accept(context, taskType);
 
-          // TODO: avoid using exceptions for control flow by wrapping activities in a Thread
-          ScheduleItem<T, Event> continuation;
-          try {
-            final var activity = activityMap.getOrDefault(taskType, new Activity() {});
-            States.activeContext.setWithin(context, activity::modelEffects);
-
-            frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
-            continuation = new ScheduleItem.Complete<>();
-          } catch (final ReactionContextImpl.Defer request) {
-            frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
-            continuation = new ScheduleItem.Defer<>(request.duration, taskType, context.getBreadcrumbs());
-          } catch (final ReactionContextImpl.Await request) {
-            frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
-            continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
-          }
-
-          scheduled = scheduled.plus(taskId, continuation);
+          frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+          continuation = new ScheduleItem.Complete<>();
+        } catch (final ReactionContextImpl.Defer request) {
+          frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+          continuation = new ScheduleItem.Defer<>(request.duration, taskType, context.getBreadcrumbs());
+        } catch (final ReactionContextImpl.Await request) {
+          frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+          continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
         }
 
-        while (frames.peek().branches.isEmpty()) {
-          final var frame = frames.pop();
-          if (!frames.isEmpty()) {
-            final var parent = frames.peek();
-            parent.tip = parent.tip.join(frame.tip);
-          } else {
-            return Pair.of(frame.tip, scheduled);
-          }
+        scheduled = scheduled.plus(taskId, continuation);
+      }
+
+      while (frames.peek().branches.isEmpty()) {
+        final var frame = frames.pop();
+        if (!frames.isEmpty()) {
+          final var parent = frames.peek();
+          parent.tip = parent.tip.join(frame.tip);
+        } else {
+          return Pair.of(frame.tip, scheduled);
         }
       }
-    };
+    }
   }
 
   @Override
-  public Task<T, Event> atom(final SchedulingEvent<T> event) {
+  public Task<T, Activity, Event> atom(final SchedulingEvent<T, Activity, Event> event) {
     if (event instanceof SchedulingEvent.ResumeActivity) {
-      final var resume = (SchedulingEvent.ResumeActivity<T>) event;
-      return this.resumeActivity(resume.activityId, resume.activityType, resume.milestones);
+      final var resume = (SchedulingEvent.ResumeActivity<T, Activity, Event>) event;
+      Objects.requireNonNull(resume.activityId);
+      Objects.requireNonNull(resume.activityType);
+
+      return time -> {
+        time = time.fork();
+        final var task = Triple.of(resume.activityId, resume.activityType, resume.milestones.plus(new ActivityBreadcrumb.Advance<>(time)));
+        final var frame = new Frame(time, ConsPStack.singleton(task));
+        return this.runActivity(frame);
+      };
     } else {
       throw new Error("Unexpected subclass of SchedulingEvent: " + event.getClass().getName());
     }
   }
 
   @Override
-  public Task<T, Event> empty() {
+  public Task<T, Activity, Event> empty() {
     return ctx -> Pair.of(ctx, HashTreePMap.empty());
   }
 
   @Override
-  public Task<T, Event> sequentially(final Task<T, Event> prefix, final Task<T, Event> suffix) {
+  public Task<T, Activity, Event> sequentially(final Task<T, Activity, Event> prefix, final Task<T, Activity, Event> suffix) {
     return time -> {
       final var result1 = prefix.apply(time);
       final var result2 = suffix.apply(result1.getLeft());
@@ -125,7 +114,7 @@ public final class ActivityReactor<T>
   }
 
   @Override
-  public Task<T, Event> concurrently(final Task<T, Event> left, final Task<T, Event> right) {
+  public Task<T, Activity, Event> concurrently(final Task<T, Activity, Event> left, final Task<T, Activity, Event> right) {
     return time -> {
       final var fork = time.fork();
       final var result1 = left.apply(fork);
