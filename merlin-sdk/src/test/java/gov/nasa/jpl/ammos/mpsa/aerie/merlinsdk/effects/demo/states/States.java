@@ -1,12 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ReactionContextImpl.activeContext;
-
 public final class States {
+  public static final DynamicCell<ReactionContext<Event>> activeContext = DynamicCell.create();
+
   private static final DataBinsResource bins =
       new DataBinsResource(
           () -> activeContext.get().as(Querier::getDataModel),

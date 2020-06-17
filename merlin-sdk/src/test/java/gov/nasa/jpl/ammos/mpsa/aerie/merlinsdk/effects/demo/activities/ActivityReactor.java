@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states.States;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 
 import java.util.ArrayDeque;
@@ -69,7 +70,7 @@ public final class ActivityReactor<T>
           ScheduleItem<T, Event> continuation;
           try {
             final var activity = activityMap.getOrDefault(taskType, new Activity() {});
-            ReactionContextImpl.activeContext.setWithin(context, activity::modelEffects);
+            States.activeContext.setWithin(context, activity::modelEffects);
 
             frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
             continuation = new ScheduleItem.Complete<>();

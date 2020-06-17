@@ -1,9 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Triple;
 import org.pcollections.ConsPStack;
@@ -15,9 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public final class ReactionContextImpl<T> implements ReactionContext<Event> {
-  public static final DynamicCell<ReactionContext<Event>> activeContext = DynamicCell.create();
-
+public final class ReactionContextImpl<T, Event> implements ReactionContext<Event> {
   private final Querier<T> querier;
   private PStack<Triple<String, String, PVector<ActivityBreadcrumb<T, Event>>>> spawns = ConsPStack.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
