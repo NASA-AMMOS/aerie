@@ -9,6 +9,7 @@ public interface ReactionContext<T, Activity, Event> {
   void emit(Event event);
   void delay(Duration duration);
   String spawn(Activity activity);
+  String spawnAfter(Duration delay, Activity activity);
   void waitForActivity(String activityId);
   void waitForChildren();
 }

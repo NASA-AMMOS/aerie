@@ -4,6 +4,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Triple;
 import org.pcollections.ConsPStack;
+import org.pcollections.HashTreePMap;
+import org.pcollections.PMap;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
@@ -14,6 +16,7 @@ import java.util.UUID;
 
 public final class ReactionContextImpl<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
   private PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> spawns = ConsPStack.empty();
+  private PMap<String, ScheduleItem<T, Activity, Event>> deferred = HashTreePMap.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
@@ -36,6 +39,10 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
 
   public final PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> getSpawns() {
     return this.spawns;
+  }
+
+  public final PMap<String, ScheduleItem<T, Activity, Event>> getDeferred() {
+    return this.deferred;
   }
 
   @Override
@@ -87,6 +94,28 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
 
       childId = UUID.randomUUID().toString();
       this.spawns = this.spawns.plus(Triple.of(childId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(this.currentTime))));
+
+      this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
+      this.nextBreadcrumbIndex += 1;
+    } else {
+      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
+        throw new RuntimeException("Unexpected breadcrumb; expected spawn, got " + breadcrumb.getClass().getName());
+      }
+
+      childId = ((ActivityBreadcrumb.Spawn<T, Event>) breadcrumb).activityId;
+    }
+
+    this.children.add(childId);
+    return childId;
+  }
+
+  @Override
+  public String spawnAfter(final Duration delay, final Activity activity) {
+    final String childId;
+    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+      childId = UUID.randomUUID().toString();
+      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, activity, TreePVector.empty()));
 
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;

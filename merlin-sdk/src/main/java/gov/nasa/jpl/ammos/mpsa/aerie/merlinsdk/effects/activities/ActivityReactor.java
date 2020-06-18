@@ -64,7 +64,7 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Sch
           continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
         }
 
-        scheduled = scheduled.plus(taskId, continuation);
+        scheduled = scheduled.plusAll(context.getDeferred()).plus(taskId, continuation);
       }
 
       while (frames.peek().branches.isEmpty()) {

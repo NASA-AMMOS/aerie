@@ -35,6 +35,12 @@ public final class States {
     return () -> activeContext.get().getLeft().waitForActivity(childId);
   }
 
+  public static SpawnHandle spawnAfter(final Duration delay, final Activity activity) {
+    final var context = activeContext.get();
+    final var childId = context.getLeft().spawnAfter(delay, context.getMiddle().serializeActivity(activity).get());
+    return () -> activeContext.get().getLeft().waitForActivity(childId);
+  }
+
   public static void waitForChildren() {
     activeContext.get().getLeft().waitForChildren();
   }
