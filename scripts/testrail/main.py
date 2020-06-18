@@ -162,6 +162,12 @@ with open(result_file) as xml_file:
     project_id = get_project(suite_id)
 
     tests = xml_to_tests(results)
+    section_set = {test["section"] for test in tests}
+    sections_dictionary = create_sections_dictionary(project_id, suite_id)
+    for section in section_set:
+        # ensure that there is no race case for creation of a section
+        get_section_id(sections_dictionary, section, project_id, suite_id)
+
     cases_dictionary = create_cases_dictionary(project_id, suite_id)
 
     run_id = client.send_post(
