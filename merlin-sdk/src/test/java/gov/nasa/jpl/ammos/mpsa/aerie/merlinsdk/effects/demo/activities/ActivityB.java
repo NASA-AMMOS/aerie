@@ -9,7 +9,7 @@ public final class ActivityB implements Activity {
   @Override
   public void modelEffects() {
     log.add("Before B");
-    call("a");
+    call(new ActivityA());
     log.add("After B");
   }
 }

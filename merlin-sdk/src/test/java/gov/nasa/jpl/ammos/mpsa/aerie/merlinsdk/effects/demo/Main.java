@@ -1,12 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingSimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityA;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityB;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.MyActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
@@ -22,6 +24,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Map;
 import java.util.Objects;
@@ -76,20 +79,19 @@ public final class Main {
 
   private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
     final var projections = new Querier<>(database);
-    final var activities = Map.of(
-      "a", new ActivityA(),
-      "b", new ActivityB());
+    final var mapper = new MyActivityMapper();
 
     final var simulator = new ReplayingSimulationEngine<>(
         database.origin(),
-        (ReactionContext<T, String, Event> ctx, String activityType) -> {
-          final var activity = activities.getOrDefault(activityType, new Activity() {});
-          States.activeContext.setWithin(Pair.of(ctx, projections.at(ctx::now)), activity::modelEffects);
+        (ReactionContext<T, SerializedActivity, Event> ctx, SerializedActivity serializedActivity) -> {
+          mapper.deserializeActivity(serializedActivity).ifPresent(activity -> {
+            States.activeContext.setWithin(Triple.of(ctx, mapper, projections.at(ctx::now)), activity::modelEffects);
+          });
         });
 
-    simulator.enqueue(Duration.ZERO, "c");
-    simulator.enqueue(Duration.ZERO, "b");
-    simulator.enqueue(Duration.ZERO, "a");
+    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new ActivityA()).get());
+    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new ActivityB()).get());
+    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new Activity() {}).get());
 
     System.out.println(simulator.getDebugTrace());
     while (simulator.hasMoreJobs()) {
