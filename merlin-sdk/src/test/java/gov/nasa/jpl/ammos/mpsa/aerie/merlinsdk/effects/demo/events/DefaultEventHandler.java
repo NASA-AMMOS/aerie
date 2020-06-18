@@ -5,12 +5,12 @@ public interface DefaultEventHandler<Result> extends EventHandler<Result> {
   Result unhandled();
 
   @Override
-  default Result dataAdded(final String binName, final double amount) {
+  default Result addDataRate(final String binName, final double amount) {
     return this.unhandled();
   }
 
   @Override
-  default Result binCleared(final String binName) {
+  default Result clearDataRate(final String binName) {
     return this.unhandled();
   }
 

@@ -11,8 +11,8 @@ import java.util.function.Function;
 public final class SimulationEffects {
   private SimulationEffects() {}
 
-  private static final DynamicCell<SimulationContext> activeContext = new DynamicCell<>();
-  private static final DynamicCell<Function<Runnable, Runnable>> activeDecorator = new DynamicCell<>();
+  private static final DynamicCell<SimulationContext> activeContext = DynamicCell.create();
+  private static final DynamicCell<Function<Runnable, Runnable>> activeDecorator = DynamicCell.create();
 
   public static Consumer<SimulationContext> withEffects(final Function<Runnable, Runnable> decorator, final Runnable scope) {
     return (ctx) ->

@@ -29,6 +29,10 @@ public final class DataBin {
     this.volume += delta;
   }
 
+  public void setRate(final double rate) {
+    this.rate = rate;
+  }
+
   public void setVolume(final double volume) {
     this.volume = volume;
   }

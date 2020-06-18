@@ -18,12 +18,12 @@ public final class DataEffectEvaluator extends EventProjection<Map<String, Setta
   }
 
   @Override
-  public final Map<String, SettableEffect<Double, Double>> dataAdded(final String binName, final double amount) {
+  public final Map<String, SettableEffect<Double, Double>> addDataRate(final String binName, final double amount) {
     return Map.of(binName, SettableEffect.add(amount));
   }
 
   @Override
-  public final Map<String, SettableEffect<Double, Double>> binCleared(final String binName) {
+  public final Map<String, SettableEffect<Double, Double>> clearDataRate(final String binName) {
     return Map.of(binName, SettableEffect.setTo(0.0));
   }
 }

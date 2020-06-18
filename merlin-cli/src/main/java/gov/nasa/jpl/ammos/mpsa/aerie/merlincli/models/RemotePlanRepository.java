@@ -180,7 +180,7 @@ public class RemotePlanRepository implements PlanRepository {
     public void appendActivityInstances(String planId, String instanceListJson) throws PlanNotFoundException, InvalidJsonException, InvalidPlanException {
         HttpResponse response;
         try {
-            HttpPost request = new HttpPost(String.format("%s/%s", baseURL, planId));
+            HttpPost request = new HttpPost(String.format("%s/%s/activity_instances", baseURL, planId));
             addJsonToRequest(request, instanceListJson);
             response = this.httpClient.execute(request);
         } catch (IOException e) {
