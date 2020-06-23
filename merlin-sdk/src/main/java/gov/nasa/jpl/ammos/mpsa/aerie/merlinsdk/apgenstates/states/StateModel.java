@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class StateModel {
@@ -36,7 +35,7 @@ public class StateModel {
     }
 
     public void addState(String name, double initialValue){
-        this.states.put(name, new State(name, initialValue));
+        this.states.put(name, new State(name, initialValue, this));
 
         //Assumption: all states are initialized at the very start of the simulation
         final Map<Duration, Double> stateChanges = new HashMap<>();
