@@ -1,15 +1,21 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.MasterReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityReactor;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingSimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityA;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityB;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.MyActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraParameters;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states.States;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ScanningProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -18,6 +24,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Map;
 import java.util.Objects;
@@ -70,35 +77,31 @@ public final class Main {
     System.out.println();
   }
 
-  public static <T> ReactionContext<T> createSimulator(final SimulationTimeline<T, Event> timeline) {
-    final var projections = new Querier<>(timeline);
-    final var reactor = new MasterReactor<T, Event>();
+  private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
+    final var projections = new Querier<>(database);
+    final var mapper = new MyActivityMapper();
 
-    final var activityReactor = new ActivityReactor<>(projections, reactor);
-    reactor.addReactor(event -> event.visit(activityReactor));
+    final var simulator = new ReplayingSimulationEngine<>(
+        database.origin(),
+        (ReactionContext<T, SerializedActivity, Event> ctx, SerializedActivity serializedActivity) -> {
+          mapper.deserializeActivity(serializedActivity).ifPresent(activity -> {
+            States.activeContext.setWithin(Triple.of(ctx, mapper, projections.at(ctx::now)), activity::modelEffects);
+          });
+        });
 
-    return new ReactionContext<>(projections, reactor, timeline.origin());
+    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new ActivityA()).get());
+    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new ActivityB()).get());
+    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new Activity() {}).get());
+
+    System.out.println(simulator.getDebugTrace());
+    while (simulator.hasMoreJobs()) {
+      simulator.step();
+      System.out.println(simulator.getDebugTrace());
+    }
   }
 
   public static void stepSimulationExample() {
-    final var database = SimulationTimeline.<Event>create();
-    final var simulator = createSimulator(database);
-
-    final var next =
-        concurrently(
-            atom(Event.run("c")),
-            atom(Event.run("b")),
-            sequentially(
-                atom(Event.log("z")),
-                atom(Event.run("a"))));
-    System.out.println(next);
-
-    simulator.react(next);
-    for (final var point : simulator.getCurrentTime().evaluate(new EventGraphProjection<>())) {
-      System.out.printf("%8.8s: %s\n", point.getKey(), point.getValue());
-    }
-
-    System.out.println();
+    stepSimulationExampleHelper(SimulationTimeline.create());
   }
 
   public static void dataModelExample() {

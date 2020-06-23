@@ -38,16 +38,6 @@ public abstract class Event {
     };
   }
 
-  public static Event run(final String activityName) {
-    Objects.requireNonNull(activityName);
-    return new Event() {
-      @Override
-      public <Result> Result visit(final EventHandler<Result> visitor) {
-        return visitor.run(activityName);
-      }
-    };
-  }
-
   @Override
   public final String toString() {
     return this.visit(new EventHandler<>() {
@@ -68,12 +58,6 @@ public abstract class Event {
       public String log(final String message) {
         return String.format("log(\"%s\")",
             message.replace("\\", "\\\\").replace("\"", "\\\""));
-      }
-
-      @Override
-      public String run(String activityType) {
-        return String.format("run(\"%s\")",
-            activityType.replace("\\", "\\\\").replace("\"", "\\\""));
       }
     });
   }
