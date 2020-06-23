@@ -95,19 +95,27 @@ public class Demo {
         //Equivalent to events produced by Activities during a simulation
         //Print statements for demonstration purposes
         socState.add(5);
+        socState.get();
         dataRateState.set(55.5);
+        dataRateState.get();
 
         factory.step(Duration.of(100, TimeUnit.MICROSECONDS));
         socState.add(40);
+        socState.get();
         dataRateState.set(5.5);
+        dataRateState.get();
 
         factory.step(Duration.of(100, TimeUnit.MICROSECONDS));
         socState.add(-40);
+        socState.get();
         dataRateState.set(55.5);
+        dataRateState.get();
 
         factory.step(Duration.of(100, TimeUnit.MICROSECONDS));
         socState.add(80);
+        socState.get();
         dataRateState.set(5.5);
+        dataRateState.get();
 
         factory.step(Duration.of(100, TimeUnit.MICROSECONDS));
 

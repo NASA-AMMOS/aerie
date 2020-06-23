@@ -40,16 +40,10 @@ public class APGenStateFactory {
 
     public void add(String name, double delta){
         this.eventGraph = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.add(name, delta)));
-
-        double result = this.get(name);
-        this.stateModel.logChangedValue(name, result);
     }
 
     public void set(String name, double value){
         this.eventGraph = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.set(name, value)));
-
-        double result = this.get(name);
-        this.stateModel.logChangedValue(name, result);
     }
 
     public List<Window> stateThreshold(String name, Predicate<Double> lambda){
