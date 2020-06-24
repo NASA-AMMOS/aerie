@@ -1,7 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+
+import java.util.Set;
 
 /**
  * A system-level representation of a mission-specific adaptation.
@@ -25,7 +31,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
  *   }
  * </pre>
  */
-public interface MerlinAdaptation {
+public interface MerlinAdaptation<Event> {
   /**
    * Gets the system-level representation of the activity types understood by this adaptation.
    *
@@ -33,5 +39,12 @@ public interface MerlinAdaptation {
    */
   ActivityMapper getActivityMapper();
 
-  SimulationState newSimulationState(final Instant simulationStartTime);
+  <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
+
+  interface Querier<T, Event> {
+    void runActivity(ReactionContext<T, Activity, Event> ctx, Activity activity);
+
+    Set<String> states();
+    SerializedParameter getSerializedStateAt(String name, Time<T, Event> time);
+  }
 }

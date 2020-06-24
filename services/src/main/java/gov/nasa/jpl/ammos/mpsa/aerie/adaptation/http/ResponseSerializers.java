@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
