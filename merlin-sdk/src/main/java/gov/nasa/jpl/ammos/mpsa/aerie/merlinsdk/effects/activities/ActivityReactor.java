@@ -15,7 +15,7 @@ import org.pcollections.PMap;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
 
-public final class ActivityReactor<T, Activity, Event> implements Projection<SchedulingEvent<T, Activity, Event>, Task<T, Activity, Event>> {
+public final class ActivityReactor<T, Activity, Event> implements Projection<ResumeActivityEvent<T, Activity, Event>, Task<T, Activity, Event>> {
   private final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor;
 
   public ActivityReactor(final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor) {
@@ -80,21 +80,16 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Sch
   }
 
   @Override
-  public Task<T, Activity, Event> atom(final SchedulingEvent<T, Activity, Event> event) {
-    if (event instanceof SchedulingEvent.ResumeActivity) {
-      final var resume = (SchedulingEvent.ResumeActivity<T, Activity, Event>) event;
-      Objects.requireNonNull(resume.activityId);
-      Objects.requireNonNull(resume.activityType);
+  public Task<T, Activity, Event> atom(final ResumeActivityEvent<T, Activity, Event> event) {
+    Objects.requireNonNull(event.activityId);
+    Objects.requireNonNull(event.activityType);
 
-      return time -> {
-        time = time.fork();
-        final var task = Triple.of(resume.activityId, resume.activityType, resume.milestones.plus(new ActivityBreadcrumb.Advance<>(time)));
-        final var frame = new Frame(time, ConsPStack.singleton(task));
-        return this.runActivity(frame);
-      };
-    } else {
-      throw new Error("Unexpected subclass of SchedulingEvent: " + event.getClass().getName());
-    }
+    return time -> {
+      time = time.fork();
+      final var task = Triple.of(event.activityId, event.activityType, event.milestones.plus(new ActivityBreadcrumb.Advance<>(time)));
+      final var frame = new Frame(time, ConsPStack.singleton(task));
+      return this.runActivity(frame);
+    };
   }
 
   @Override
