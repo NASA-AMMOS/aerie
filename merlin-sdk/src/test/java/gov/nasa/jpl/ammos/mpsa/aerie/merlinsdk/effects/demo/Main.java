@@ -1,21 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingSimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityA;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.ActivityB;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities.MyActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.ecology.LotkaVolterraParameters;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states.States;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.ScanningProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -24,7 +20,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Map;
 import java.util.Objects;
@@ -79,19 +74,11 @@ public final class Main {
 
   private static <T> void stepSimulationExampleHelper(final SimulationTimeline<T, Event> database) {
     final var projections = new Querier<>(database);
-    final var mapper = new MyActivityMapper();
+    final var simulator = new ReplayingSimulationEngine<>(database.origin(), projections::runActivity);
 
-    final var simulator = new ReplayingSimulationEngine<>(
-        database.origin(),
-        (ReactionContext<T, SerializedActivity, Event> ctx, SerializedActivity serializedActivity) -> {
-          mapper.deserializeActivity(serializedActivity).ifPresent(activity -> {
-            States.activeContext.setWithin(Triple.of(ctx, mapper, projections.at(ctx::now)), activity::modelEffects);
-          });
-        });
-
-    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new ActivityA()).get());
-    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new ActivityB()).get());
-    simulator.enqueue(Duration.ZERO, mapper.serializeActivity(new Activity() {}).get());
+    simulator.enqueue(Duration.ZERO, new ActivityA());
+    simulator.enqueue(Duration.ZERO, new ActivityB());
+    simulator.enqueue(Duration.ZERO, new Activity() {});
 
     System.out.println(simulator.getDebugTrace());
     while (simulator.hasMoreJobs()) {
