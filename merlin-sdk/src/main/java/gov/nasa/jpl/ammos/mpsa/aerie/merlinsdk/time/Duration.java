@@ -34,6 +34,14 @@ public final class Duration implements Comparable<Duration> {
     return new Duration(Math.subtractExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }
 
+  public static long divide(final Duration left, final Duration right) {
+    return left.durationInMicroseconds / right.durationInMicroseconds;
+  }
+
+  public static Duration remainder(final Duration left, final Duration right) {
+    return new Duration(left.durationInMicroseconds % right.durationInMicroseconds);
+  }
+
   public static Duration min(final Duration x, final Duration y) {
     return Collections.min(List.of(x, y));
   }
@@ -56,6 +64,22 @@ public final class Duration implements Comparable<Duration> {
 
   public Duration minus(final long quantity, final TimeUnit units) throws ArithmeticException {
     return Duration.subtract(this, Duration.of(quantity, units));
+  }
+
+  public long dividedBy(final Duration other) {
+    return Duration.divide(this, other);
+  }
+
+  public long dividedBy(final long quantity, final TimeUnit units) {
+    return Duration.divide(this, Duration.of(quantity, units));
+  }
+
+  public Duration remainderOf(final Duration other) {
+    return Duration.remainder(this, other);
+  }
+
+  public Duration remainderOf(final long quantity, final TimeUnit units) {
+    return Duration.remainder(this, Duration.of(quantity, units));
   }
 
   public boolean shorterThan(final Duration other) {
