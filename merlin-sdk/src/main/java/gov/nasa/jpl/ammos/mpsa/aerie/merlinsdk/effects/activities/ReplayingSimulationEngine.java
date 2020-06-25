@@ -1,12 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
-import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 
 import java.util.Comparator;
@@ -18,17 +15,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.atom;
-
 public final class ReplayingSimulationEngine<T, Activity, Event> {
-  private final PriorityQueue<Pair<Duration, EventGraph<SchedulingEvent<T, Activity, Event>>>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getKey));
+  private final PriorityQueue<Pair<Duration, Task<T, Activity, Event>>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getKey));
   private final Set<String> completed = new HashSet<>();
-  private final Map<String, Set<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>>> conditioned = new HashMap<>();
+  private final Map<String, Set<Task<T, Activity, Event>>> conditioned = new HashMap<>();
 
   private final ActivityReactor<T, Activity, Event> reactor;
 
   private Time<T, Event> now;
-  private Duration currentTime = Duration.ZERO;
+  private Duration elapsedTime = Duration.ZERO;
 
   public ReplayingSimulationEngine(
       final Time<T, Event> startTime,
@@ -39,31 +34,48 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
-    this.queue.add(Pair.of(timeFromStart, atom(new SchedulingEvent.ResumeActivity<>(UUID.randomUUID().toString(), activity, TreePVector.empty()))));
+    this.queue.add(Pair.of(timeFromStart, this.reactor.atom(new ResumeActivityEvent<>(UUID.randomUUID().toString(), activity, TreePVector.empty()))));
+  }
+
+  public void runFor(final long quantity, final TimeUnit units) {
+    this.runFor(Duration.of(quantity, units));
+  }
+
+  public void runFor(final Duration duration) {
+    final var endTime = this.elapsedTime.plus(duration);
+    while (!endTime.shorterThan(this.elapsedTime)) {
+      // If there are no jobs remaining, or the next job is after the end time, simply step up to the end time.
+      if (this.queue.isEmpty() || endTime.shorterThan(this.queue.peek().getKey())) {
+        this.now = this.now.wait(endTime.minus(this.elapsedTime));
+        this.elapsedTime = endTime;
+        break;
+      }
+
+      // Step up to, and perform, the next job.
+      this.step();
+    }
   }
 
   public void step() {
     if (this.queue.isEmpty()) return;
+    final var nextJobTime = this.queue.peek().getKey();
 
-    // Get the current time, and any events occurring at this time.
-    final Duration delta;
-    EventGraph<SchedulingEvent<T, Activity, Event>> events;
-    {
-      final var job = this.queue.poll();
-      events = job.getRight();
-
-      delta = job.getKey().minus(this.currentTime);
-      while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(job.getKey())) {
-        events = EventGraph.concurrently(events, queue.poll().getValue());
-      }
+    // Collect all of the tasks associated with the next time point.
+    var tasks = this.queue.poll().getValue();
+    while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
+      tasks = this.reactor.concurrently(tasks, this.queue.poll().getValue());
     }
 
-    // Step up to the new time.
-    this.now = this.now.wait(delta);
-    this.currentTime = this.currentTime.plus(delta);
+    // Step up to the next job time, and perform the job.
+    this.now = this.now.wait(nextJobTime.minus(this.elapsedTime));
+    this.elapsedTime = nextJobTime;
 
+    this.react(tasks);
+  }
+
+  private void react(final Task<T, Activity, Event> task) {
     // React to the events scheduled at this time.
-    final var result = events.evaluate(this.reactor).apply(this.now);
+    final var result = task.apply(this.now);
     this.now = result.getLeft();
     final var newJobs = result.getRight();
 
@@ -71,19 +83,23 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
     for (final var entry : newJobs.entrySet()) {
       final var activityId = entry.getKey();
       final var rule = entry.getValue();
+
       if (rule instanceof ScheduleItem.Defer) {
         final var duration = ((ScheduleItem.Defer<T, Activity, Event>) rule).duration;
         final var activityType = ((ScheduleItem.Defer<T, Activity, Event>) rule).activityType;
         final var milestones = ((ScheduleItem.Defer<T, Activity, Event>) rule).milestones;
-        this.queue.add(Pair.of(duration.plus(this.currentTime), EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, activityType, milestones))));
+
+        this.queue.add(Pair.of(this.elapsedTime.plus(duration), this.reactor.atom(new ResumeActivityEvent<>(activityId, activityType, milestones))));
       } else if (rule instanceof ScheduleItem.OnCompletion) {
         final var waitId = ((ScheduleItem.OnCompletion<T, Activity, Event>) rule).waitOn;
         final var activityType = ((ScheduleItem.OnCompletion<T, Activity, Event>) rule).activityType;
         final var milestones = ((ScheduleItem.OnCompletion<T, Activity, Event>) rule).milestones;
+
+        final var resumption = this.reactor.atom(new ResumeActivityEvent<>(activityId, activityType, milestones));
         if (this.completed.contains(waitId)) {
-          this.queue.add(Pair.of(this.currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(activityId, activityType, milestones))));
+          this.queue.add(Pair.of(this.elapsedTime, resumption));
         } else {
-          this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(Triple.of(activityId, activityType, milestones));
+          this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(resumption);
         }
       } else if (rule instanceof ScheduleItem.Complete) {
         this.completed.add(activityId);
@@ -92,10 +108,7 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
         if (conditionedActivities == null) continue;
 
         for (final var conditionedTask : conditionedActivities) {
-          final var conditionedId = conditionedTask.getLeft();
-          final var activityType = conditionedTask.getMiddle();
-          final var milestones = conditionedTask.getRight();
-          this.queue.add(Pair.of(this.currentTime, EventGraph.atom(new SchedulingEvent.ResumeActivity<>(conditionedId, activityType, milestones))));
+          this.queue.add(Pair.of(this.elapsedTime, conditionedTask));
         }
       }
     }
@@ -110,17 +123,13 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
   }
 
   public Duration getElapsedTime() {
-    return this.currentTime;
+    return this.elapsedTime;
   }
 
   public String getDebugTrace() {
     final var builder = new StringBuilder();
 
-    var durationFromStart = Duration.ZERO;
-    for (final var point : this.now.evaluate(new EventGraphProjection<>())) {
-      durationFromStart = durationFromStart.plus(point.getKey());
-      builder.append(String.format("%10s: %s\n", durationFromStart, point.getValue()));
-    }
+    builder.append(this.now.getDebugTrace());
     for (final var point : this.queue) {
       builder.append(String.format("%10s: %s\n", point.getKey(), point.getValue()));
     }

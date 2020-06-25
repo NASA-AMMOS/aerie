@@ -1,21 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.APGenStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.ConsumableState;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.ctx;
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.query;
 
 public final class BananaStates {
-    public final SettableState<Double> fruitState = new BasicState<>("fruit", 4.0);
-    public final SettableState<Double> peelState = new BasicState<>("peel", 4.0);
+  public static final APGenStateFactory factory = new APGenStateFactory(query, (ev) -> ctx.emit(BananaEvent.apgen(ev)));
 
-    public BananaStates(final Instant startTime) {
-        this.fruitState.initialize(startTime);
-        this.peelState.initialize(startTime);
-    }
-
-    public static final DynamicCell<BananaStates> modelRef = DynamicCell.inheritableCell();
-    public static BananaStates get() {
-        return modelRef.get();
-    }
+  public static final ConsumableState fruit = factory.createConsumableState("fruit", 4.0);
+  public static final ConsumableState peel = factory.createConsumableState("peel", 4.0);
 }

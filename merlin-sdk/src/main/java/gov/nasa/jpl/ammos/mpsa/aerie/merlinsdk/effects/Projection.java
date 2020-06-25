@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -50,5 +51,9 @@ public interface Projection<Event, Effect> extends EffectTrait<Effect> {
         return interpretation.apply(atom);
       }
     };
+  }
+
+  default <X> Projection<X, Effect> filterContramap(final Function<X, Optional<Event>> f) {
+    return from(this, (x) -> f.apply(x).map(this::atom).orElseGet(this::empty));
   }
 }

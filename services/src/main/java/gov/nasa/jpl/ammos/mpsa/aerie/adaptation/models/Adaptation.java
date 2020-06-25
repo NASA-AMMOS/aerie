@@ -1,23 +1,33 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingSimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class Adaptation {
-    private final MerlinAdaptation adaptation;
+public final class Adaptation<Event> {
+    private final MerlinAdaptation<Event> adaptation;
     private final ActivityMapper activityMapper;
 
-    public Adaptation(final MerlinAdaptation adaptation) throws AdaptationContractException {
+    public Adaptation(final MerlinAdaptation<Event> adaptation) throws AdaptationContractException {
       this.adaptation = adaptation;
       this.activityMapper = this.adaptation.getActivityMapper();
 
@@ -26,11 +36,12 @@ public final class Adaptation {
       }
     }
 
-    public SimulationState newSimulationState(final Instant startTime) {
-        final var simState = this.adaptation.newSimulationState(startTime);
-        if (simState == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".newSimulationState() returned null");
-
-        return simState;
+    public SimulationResults simulate(
+        final Collection<Pair<Duration, SerializedActivity>> schedule,
+        final Duration simulationDuration,
+        final Duration samplingPeriod
+    ) {
+        return SimpleSimulator.simulate(this.adaptation, schedule, simulationDuration, samplingPeriod);
     }
 
     public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {

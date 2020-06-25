@@ -1,64 +1,34 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.Event;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.ApgenEvent;
 
-import java.util.List;
-import java.util.function.Predicate;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class APGenStateFactory {
+  private final Map<String, Double> registeredStates = new HashMap<>();
+  private final Function<String, StateQuery<Double>> model;
+  private final Consumer<ApgenEvent> emitter;
 
-    private EventGraph<Event> eventGraph;
-    private final StateModel stateModel;
-    private final StateEffectEvaluator stateModelProjection;
-    private final StateModelApplicator stateModelApplicator;
+  public APGenStateFactory(final Function<String, StateQuery<Double>> model, final Consumer<ApgenEvent> emitter) {
+    this.model = model;
+    this.emitter = emitter;
+  }
 
-    public APGenStateFactory(){
-        stateModelProjection = new StateEffectEvaluator();
-        stateModelApplicator = new StateModelApplicator();
-        eventGraph = EventGraph.empty();
-        stateModel = stateModelApplicator.initial();
-    }
+  public ConsumableState createConsumableState(String name, double initialValue) {
+    this.registeredStates.put(name, initialValue);
+    return new ConsumableState(name, this.model, this.emitter);
+  }
 
-    public ConsumableState createConsumableState(String name, double value){
-        addState(name, value);
-        return new ConsumableState(name, value, this);
-    }
+  public SettableState createSettableState(String name, double initialValue) {
+    this.registeredStates.put(name, initialValue);
+    return new SettableState(name, this.model, this.emitter);
+  }
 
-    public SettableState createSettableState(String name, double value){
-        addState(name, value);
-        return new SettableState(name, value, this);
-    }
-
-    private void addState(String name, double initialValue){ this.stateModel.addState(name, initialValue);}
-
-    public EventGraph<Event> graph(){
-        return this.eventGraph;
-    }
-
-    public void add(String name, double delta){
-        this.eventGraph = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.add(name, delta)));
-    }
-
-    public void set(String name, double value){
-        this.eventGraph = EventGraph.sequentially(this.graph(), EventGraph.atom(Event.set(name, value)));
-    }
-
-    public List<Window> stateThreshold(String name, Predicate<Double> lambda){
-        return this.stateModel.stateThreshold(name, lambda);
-    }
-
-    public double get(String name){
-        var forkedStateModel = this.stateModelApplicator.duplicate(this.stateModel);
-        this.stateModelApplicator.apply(forkedStateModel, this.eventGraph.evaluate(this.stateModelProjection));
-
-        return forkedStateModel.getState(name).get();
-    }
-
-    public void step(Duration duration){
-        this.stateModel.step(duration);
-    }
+  public Map<String, Double> getRegisteredStates() {
+    return Collections.unmodifiableMap(this.registeredStates);
+  }
 }
-

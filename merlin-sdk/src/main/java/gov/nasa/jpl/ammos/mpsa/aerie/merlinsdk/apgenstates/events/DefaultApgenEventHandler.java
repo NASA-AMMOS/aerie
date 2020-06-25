@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events;
 
-public interface DefaultEventHandler<Result> extends EventHandler<Result> {
+public interface DefaultApgenEventHandler<Result> extends ApgenEventHandler<Result> {
     Result unhandled();
 
     @Override

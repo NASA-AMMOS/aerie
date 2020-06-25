@@ -7,11 +7,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -23,10 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.*;
-import java.util.function.Function;
-
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.deferTo;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.withEffects;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
   private final Map<String, Schedule> schedules = new HashMap<>();
@@ -177,35 +175,17 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     if (!schedules.containsKey(planId)) throw new RuntimeException("No such plan `" + planId + "`");
 
     final var schedule = schedules.get(planId);
+
     final var adaptationJar = adaptations.get(schedule.adaptationId);
-    final var adaptation = loadAdaptationProvider(adaptationJar.jarPath).get();
-    final var activityMapper = adaptation.getActivityMapper();
+    final var adaptation = (MerlinAdaptation<?>) loadAdaptationProvider(adaptationJar.jarPath).get();
 
-    final var simulationEngine = new SimulationEngine();
-    final var simulationState = adaptation.newSimulationState(simulationEngine.getCurrentTime());
-
-    final Runnable runSchedule = () -> {
-      for (final var scheduledActivity : schedule.scheduledActivities) {
-        final Activity activity = activityMapper
-            .deserializeActivity(scheduledActivity.activity)
-            .orElseThrow(() -> new RuntimeException("Unable to instantiate activity"));
-
-        deferTo(scheduledActivity.startTime, activity);
-      }
-    };
-
-    final Function<Runnable, Runnable> taskDecorator = (task) ->
-        () -> simulationState.applyInScope(task);
-
-    simulationEngine.scheduleJobAfter(Duration.ZERO, withEffects(taskDecorator, runSchedule));
-    simulationEngine.runToCompletion();
-
-    final var samples = new HashMap<String, TreeMap<Instant, Object>>();
-    for (final var entry : simulationState.getStates().entrySet()) {
-      samples.put(entry.getKey(), new TreeMap<>(entry.getValue().getHistory()));
+    final var scheduledActivities = new ArrayList<Pair<Duration, SerializedActivity>>(schedule.scheduledActivities.size());
+    for (final var activity : schedule.scheduledActivities) {
+      scheduledActivities.add(Pair.of(activity.startTime.durationFrom(SimulationInstant.ORIGIN), activity.activity));
     }
 
-    System.out.println(samples);
+    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, Duration.of(samplingPeriod, TimeUnit.MICROSECONDS));
+    System.out.println(results.timelines);
   }
 
   @SuppressWarnings("rawtypes")

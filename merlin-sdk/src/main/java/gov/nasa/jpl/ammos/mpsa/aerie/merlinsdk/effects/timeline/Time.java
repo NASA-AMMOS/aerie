@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections.EventGraphProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -126,12 +127,24 @@ public final class Time<Scope, Event> {
   public Time<Scope, Event> wait(final Duration duration) {
     if (this.lastBranchBase != null) {
       throw new RuntimeException("Cannot wait on an unmerged branch");
-    } else if (duration.compareTo(Duration.ZERO) < 0) {
+    } else if (duration.isNegative()) {
       throw new RuntimeException("Cannot wait for a negative amount of time");
-    } else if (duration.compareTo(Duration.ZERO) == 0) {
+    } else if (duration.isZero()) {
       return this;
     }
 
     return new Time<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.durationInMicroseconds));
+  }
+
+  public String getDebugTrace() {
+    final var builder = new StringBuilder();
+
+    var durationFromStart = Duration.ZERO;
+    for (final var point : this.evaluate(new EventGraphProjection<>())) {
+      durationFromStart = durationFromStart.plus(point.getKey());
+      builder.append(String.format("%10s: %s\n", durationFromStart, point.getValue()));
+    }
+
+    return builder.toString();
   }
 }

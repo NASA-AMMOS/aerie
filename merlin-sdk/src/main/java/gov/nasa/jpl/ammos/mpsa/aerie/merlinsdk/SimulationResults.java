@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;

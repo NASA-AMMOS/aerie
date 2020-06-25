@@ -28,7 +28,7 @@ public final class Operator {
                 intersection.add(Window.greatestLowerBound(x, y));
             }
 
-            if (x.end.isBefore(y.end)) {
+            if (x.end.shorterThan(y.end)) {
                 i += 1;
             } else {
                 j += 1;
