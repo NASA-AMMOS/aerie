@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.TreePVector;
 
@@ -34,6 +35,25 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
     this.queue.add(Pair.of(timeFromStart, this.reactor.atom(new ResumeActivityEvent<>(UUID.randomUUID().toString(), activity, TreePVector.empty()))));
+  }
+
+  public void runFor(final long quantity, final TimeUnit units) {
+    this.runFor(Duration.of(quantity, units));
+  }
+
+  public void runFor(final Duration duration) {
+    final var endTime = this.elapsedTime.plus(duration);
+    while (!endTime.shorterThan(this.elapsedTime)) {
+      // If there are no jobs remaining, or the next job is after the end time, simply step up to the end time.
+      if (this.queue.isEmpty() || endTime.shorterThan(this.queue.peek().getKey())) {
+        this.now = this.now.wait(endTime.minus(this.elapsedTime));
+        this.elapsedTime = endTime;
+        break;
+      }
+
+      // Step up to, and perform, the next job.
+      this.step();
+    }
   }
 
   public void step() {
