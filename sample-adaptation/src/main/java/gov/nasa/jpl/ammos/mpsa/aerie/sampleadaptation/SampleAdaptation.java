@@ -2,9 +2,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.Model;
@@ -12,11 +17,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Adaptation(name="sample-adaptation", version="0.1")
-public class SampleAdaptation implements MerlinAdaptation {
-
+public class SampleAdaptation implements MerlinAdaptation<Object> {
     @Override
     public ActivityMapper getActivityMapper() {
         try {
@@ -30,21 +35,21 @@ public class SampleAdaptation implements MerlinAdaptation {
     }
 
     @Override
-    public SimulationState newSimulationState(final Instant startTime) {
-        final var model = new Model(startTime);
-        for (final var bin : model.allBins) bin.initialize(startTime);
-
-        return new SimulationState() {
+    public <T> Querier<T, Object> makeQuerier(final SimulationTimeline<T, Object> database) {
+        return new Querier<>() {
             @Override
-            public void applyInScope(final Runnable scope) {
-                SampleMissionStates.useModelsIn(model, scope);
+            public void runActivity(final ReactionContext<T, Activity, Object> ctx, final Activity activity) {
+                // TODO: run this activity with `ctx` made available to any states that depend on it
             }
 
             @Override
-            public Map<String, State<?>> getStates() {
-                final var states = List.of(model.instrumentPower_W, model.instrumentData, model.dataBin);
+            public Set<String> states() {
+                return Set.of();
+            }
 
-                return states.stream().collect(Collectors.toMap(x -> x.getName(), x -> x));
+            @Override
+            public SerializedParameter getSerializedStateAt(final String name, final Time<T, Object> time) {
+                throw new Error("I have no states, why are you calling me?");
             }
         };
     }
