@@ -19,6 +19,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,8 +83,15 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   }
 
   @Override
-  public List<ConstraintViolation> getConstraintViolationsAt(History<T, BananaEvent> history) {
-    return List.of();
+  public List<ConstraintViolation> getConstraintViolationsAt(final History<T, BananaEvent> history) {
+    final List<ConstraintViolation> violations = new ArrayList<>();
+
+    for (final var violableConstraint : BananaStates.violableConstraints) {
+      final var violationWindows = BananaQuerier.activeContext.setWithin(Pair.of(ctx, new InnerQuerier(() -> history)), violableConstraint::getWindows);
+      violations.add(new ConstraintViolation(violationWindows, violableConstraint));
+    }
+
+    return violations;
   }
 
   public final class InnerQuerier {
