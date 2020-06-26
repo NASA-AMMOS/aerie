@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;

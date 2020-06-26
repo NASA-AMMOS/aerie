@@ -1,6 +1,6 @@
 java_library(
     name = "lib",
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = [],
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
     exported_deps = [
@@ -24,7 +24,7 @@ java_binary(
 
 java_test(
     name = "test_sample-adaptation",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = [],
     deps = [
         # Third Party
         "//third-party/sample-adaptation/test:sample-adaptation",
