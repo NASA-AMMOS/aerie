@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.Register
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
@@ -78,6 +79,11 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   public List<Window> whenStateUptoMatches(final String name, final History<T, BananaEvent> history, final Predicate<Double> condition) {
     return this.registers.get(name).getAt(history).when(condition);
+  }
+
+  @Override
+  public List<ConstraintViolation> getConstraintViolationsAt(History<T, BananaEvent> history) {
+    return List.of();
   }
 
   public final class InnerQuerier {

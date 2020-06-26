@@ -1,17 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
 
+import java.util.List;
 import java.util.Set;
 
 @Adaptation(name="sample-adaptation", version="0.1")
@@ -44,6 +44,11 @@ public class SampleAdaptation implements MerlinAdaptation<Object> {
             @Override
             public SerializedParameter getSerializedStateAt(final String name, final History<T, Object> history) {
                 throw new Error("I have no states, why are you calling me?");
+            }
+
+            @Override
+            public List<ConstraintViolation> getConstraintViolationsAt(final History<T, Object> history) {
+                return List.of();
             }
         };
     }
