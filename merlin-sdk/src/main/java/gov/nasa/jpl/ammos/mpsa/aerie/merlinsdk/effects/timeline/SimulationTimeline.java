@@ -48,6 +48,9 @@ public final class SimulationTimeline<T, Event> {
   private final List<EventPoint<Event>> times = new ArrayList<>();
   private int nextTime = 0;
 
+  // SAFETY: -1 is not a legal index for a time point.
+  /*package-local*/ static final int START_INDEX = -1;
+
   // Use a wildcard as an existential quantifier. The caller cannot know what concrete type this is instantiated over,
   // so two separate SimulationTimeline instances cannot interfere with each other.
   public static <Event> SimulationTimeline<?, Event> create() {
@@ -55,8 +58,7 @@ public final class SimulationTimeline<T, Event> {
   }
 
   public Time<T, Event> origin() {
-    // SAFETY: -1 is not a legal index for a time point.
-    return new Time<>(this, null, -1);
+    return new Time<>(this, null, START_INDEX);
   }
 
   public <Model, Effect> Query<T, Event, Model> register(
@@ -91,14 +93,14 @@ public final class SimulationTimeline<T, Event> {
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
       final EffectTrait<Effect> trait,
       final Function<Event, Effect> substitution,
+      final int startTime,
       final int endTime
   ) {
     // NOTE: In principle, we can determine the maximum size of the path stack.
     // Whenever two time points are joined, increment a counter on the resulting time point.
     // This counter can then be used to allocate a stack of just the right size.
     final var pathStack = new ArrayDeque<ActivePath<Effect>>();
-    // SAFETY: -1 is not a legal index for a time point.
-    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(-1, trait.empty());
+    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, trait.empty());
     var pointIndex = endTime;
 
     // NOTE: In principle, we can bound this loop by determining the maximum number

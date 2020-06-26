@@ -2,6 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline.START_INDEX;
+
 /**
  * A cached query onto a {@link SimulationTimeline}.
  *
@@ -55,7 +57,7 @@ public final class Query<Scope, Event, Model> {
     public Model getAt(final Time<Scope, Event> time) {
       final var model = this.applicator.initial();
 
-      final var effects = this.database.evaluate(this.projection, this.projection::atom, time.getIndex());
+      final var effects = this.database.evaluate(this.projection, this.projection::atom, START_INDEX, time.getIndex());
       for (final var effect : effects) {
         this.applicator.step(model, effect.getKey());
         this.applicator.apply(model, effect.getValue());
