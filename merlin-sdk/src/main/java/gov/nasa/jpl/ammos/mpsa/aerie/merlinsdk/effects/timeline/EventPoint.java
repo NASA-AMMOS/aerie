@@ -9,6 +9,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline;
 abstract class EventPoint<Event> {
   private EventPoint() {}
 
+  abstract int getPrevious();
+
   /**
    * A time point advancing from a prior time point by a discontinuous event.
    *
@@ -22,6 +24,11 @@ abstract class EventPoint<Event> {
     public Advancing(final int previous, final Event event) {
       this.previous = previous;
       this.event = event;
+    }
+
+    @Override
+    int getPrevious() {
+      return this.previous;
     }
   }
 
@@ -38,6 +45,11 @@ abstract class EventPoint<Event> {
     public Waiting(final int previous, final long microseconds) {
       this.previous = previous;
       this.microseconds = microseconds;
+    }
+
+    @Override
+    int getPrevious() {
+      return this.previous;
     }
   }
 
@@ -56,6 +68,11 @@ abstract class EventPoint<Event> {
       this.base = base;
       this.left = left;
       this.right = right;
+    }
+
+    @Override
+    int getPrevious() {
+      return this.base;
     }
   }
 }
