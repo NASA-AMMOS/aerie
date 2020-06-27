@@ -90,6 +90,11 @@ public final class SimulationTimeline<T, Event> {
   }
 
   /* package-local */
+  EventPoint<Event> get(final int index) {
+    return this.times.get(index);
+  }
+
+  /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
       final EffectTrait<Effect> trait,
       final Function<Event, Effect> substitution,
