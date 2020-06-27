@@ -103,5 +103,16 @@ public final class Query<Scope, Event, Model> {
 
       return model;
     }
+
+    /**
+     * Clear the model cache.
+     *
+     * <p>
+     * Calling this may make `getAt` take longer, but it should not affect correctness.
+     * </p>
+     */
+    public void clearCache() {
+      this.cache.clear();
+    }
   }
 }
