@@ -71,6 +71,11 @@ public final class Time<Scope, Event> {
     return this.index;
   }
 
+  /* package-local */
+  Time<Scope, Event> getLastBranchBase() {
+    return this.lastBranchBase;
+  }
+
   /**
    * Append a new event to the timeline.
    *
