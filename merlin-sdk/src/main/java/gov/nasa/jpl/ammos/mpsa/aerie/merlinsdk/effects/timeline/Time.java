@@ -9,6 +9,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Collection;
 import java.util.function.Function;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline.START_INDEX;
+
 /**
  * A point in time in a {@link SimulationTimeline}.
  *
@@ -69,6 +71,11 @@ public final class Time<Scope, Event> {
     return this.index;
   }
 
+  /* package-local */
+  Time<Scope, Event> getLastBranchBase() {
+    return this.lastBranchBase;
+  }
+
   /**
    * Append a new event to the timeline.
    *
@@ -111,11 +118,11 @@ public final class Time<Scope, Event> {
   }
 
   public <Effect> Collection<Pair<Duration, Effect>> evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-    return this.database.evaluate(trait, substitution, this.index);
+    return this.database.evaluate(trait, substitution, START_INDEX, this.index);
   }
 
   public <Effect> Collection<Pair<Duration, Effect>> evaluate(final Projection<Event, Effect> projection) {
-    return this.database.evaluate(projection, projection::atom, this.index);
+    return this.database.evaluate(projection, projection::atom, START_INDEX, this.index);
   }
 
   /**
