@@ -9,7 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataMode
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -29,7 +29,7 @@ public final class Querier<T> {
     this.dataQuery = timeline.register(new DataEffectEvaluator(), new DataModelApplicator());
   }
 
-  public InnerQuerier<?> at(final Supplier<Time<T, Event>> currentTime) {
+  public InnerQuerier<?> at(final Supplier<History<T, Event>> currentTime) {
     return new InnerQuerier<>(this, currentTime);
   }
 
@@ -39,9 +39,9 @@ public final class Querier<T> {
 
   public static final class InnerQuerier<T> {
     private final Querier<T> querier;
-    private final Supplier<Time<T, Event>> currentTime;
+    private final Supplier<History<T, Event>> currentTime;
 
-    private InnerQuerier(final Querier<T> querier, final Supplier<Time<T, Event>> currentTime) {
+    private InnerQuerier(final Querier<T> querier, final Supplier<History<T, Event>> currentTime) {
       this.querier = querier;
       this.currentTime = currentTime;
     }

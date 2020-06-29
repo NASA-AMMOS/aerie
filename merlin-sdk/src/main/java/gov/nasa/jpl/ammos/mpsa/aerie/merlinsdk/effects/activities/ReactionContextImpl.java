@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Triple;
 import org.pcollections.ConsPStack;
@@ -20,17 +20,17 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
-  private Time<T, Event> currentTime;
+  private History<T, Event> currentHistory;
   private final Set<String> children = new HashSet<>();
 
   public ReactionContextImpl(final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs) {
-    this.currentTime = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(0)).next;
+    this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(0)).next;
     this.breadcrumbs = breadcrumbs;
     this.nextBreadcrumbIndex = 1;
   }
 
-  public final Time<T, Event> getCurrentTime() {
-    return this.currentTime;
+  public final History<T, Event> getCurrentHistory() {
+    return this.currentHistory;
   }
 
   public final PVector<ActivityBreadcrumb<T, Event>> getBreadcrumbs() {
@@ -46,13 +46,13 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
   }
 
   @Override
-  public Time<T, Event> now() {
-    return this.currentTime;
+  public History<T, Event> now() {
+    return this.currentHistory;
   }
 
   @Override
   public final void emit(final Event event) {
-    this.currentTime = this.currentTime.emit(event);
+    this.currentHistory = this.currentHistory.emit(event);
   }
 
   public final void delay(final Duration duration) {
@@ -64,7 +64,7 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
         throw new RuntimeException("Unexpected breadcrumb on delay(): " + breadcrumb.getClass().getName());
       }
 
-      this.currentTime = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumb).next;
+      this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumb).next;
     }
   }
 
@@ -78,7 +78,7 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
         throw new RuntimeException("Unexpected breadcrumb on waitForActivity(): " + breadcrumb.getClass().getName());
       }
 
-      this.currentTime = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumb).next;
+      this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumb).next;
     }
   }
 
@@ -90,10 +90,10 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
   public final String spawn(final Activity activity) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
-      this.currentTime = this.currentTime.fork();
+      this.currentHistory = this.currentHistory.fork();
 
       childId = UUID.randomUUID().toString();
-      this.spawns = this.spawns.plus(Triple.of(childId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(this.currentTime))));
+      this.spawns = this.spawns.plus(Triple.of(childId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(this.currentHistory))));
 
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;

@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 
 public abstract class ActivityBreadcrumb<T, Event> {
   private ActivityBreadcrumb() {}
 
   public static final class Advance<T, Event> extends ActivityBreadcrumb<T, Event> {
-    public final Time<T, Event> next;
-    public Advance(final Time<T, Event> next) {
+    public final History<T, Event> next;
+    public Advance(final History<T, Event> next) {
       this.next = next;
     }
   }

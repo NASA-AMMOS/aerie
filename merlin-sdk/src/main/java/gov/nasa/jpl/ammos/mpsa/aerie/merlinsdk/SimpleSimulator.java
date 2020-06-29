@@ -33,9 +33,8 @@ public final class SimpleSimulator {
       final Duration simulationDuration,
       final Duration samplingPeriod
   ) {
-    final var initialTime = database.origin();
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new ReplayingSimulationEngine<>(initialTime, querier::runActivity);
+    final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -57,7 +56,7 @@ public final class SimpleSimulator {
       {
         timestamps.add(simulator.getElapsedTime());
         for (final var stateName : timelines.keySet()) {
-          timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentTime()));
+          timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
         }
       }
 
@@ -67,7 +66,7 @@ public final class SimpleSimulator {
 
         timestamps.add(simulator.getElapsedTime());
         for (final var stateName : timelines.keySet()) {
-          timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentTime()));
+          timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
         }
       }
 
@@ -76,12 +75,12 @@ public final class SimpleSimulator {
 
         timestamps.add(simulator.getElapsedTime());
         for (final var stateName : timelines.keySet()) {
-          timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentTime()));
+          timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
         }
       }
     }
 
-    final var endTime = simulator.getCurrentTime();
+    final var endTime = simulator.getCurrentHistory();
     // TODO: check constraints against `endTime`
 
     return new SimulationResults(timestamps, timelines);
@@ -103,9 +102,8 @@ public final class SimpleSimulator {
       final Collection<Pair<Duration, SerializedActivity>> schedule,
       final Duration samplingPeriod
   ) {
-    final var initialTime = database.origin();
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new ReplayingSimulationEngine<>(initialTime, querier::runActivity);
+    final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -126,7 +124,7 @@ public final class SimpleSimulator {
     {
       timestamps.add(simulator.getElapsedTime());
       for (final var stateName : timelines.keySet()) {
-        timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentTime()));
+        timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
       }
     }
     while (simulator.hasMoreJobs()) {
@@ -134,11 +132,11 @@ public final class SimpleSimulator {
 
       timestamps.add(simulator.getElapsedTime());
       for (final var stateName : timelines.keySet()) {
-        timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentTime()));
+        timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
       }
     }
 
-    final var endTime = simulator.getCurrentTime();
+    final var endTime = simulator.getCurrentHistory();
     // TODO: check constraints against `endTime`
 
     return new SimulationResults(timestamps, timelines);

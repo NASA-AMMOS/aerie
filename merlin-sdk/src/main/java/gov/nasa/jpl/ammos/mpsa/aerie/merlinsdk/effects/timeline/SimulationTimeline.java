@@ -20,7 +20,7 @@ import java.util.function.Function;
  * <p>
  * <code>SimulationTimeline</code> is an efficient implementation of {@link EffectExpression} that supports multiple
  * simultaneous unterminated timelines. The equivalent of an {@link EventGraph} for <code>SimulationTimeline</code>s
- * is a {@link Time}, which may be extended with events and evaluated against {@link Projection}s.
+ * is a {@link History}, which may be extended with events and evaluated against {@link Projection}s.
  * </p>
  *
  * <p>
@@ -38,7 +38,7 @@ import java.util.function.Function;
  * @param <T> A phantom type parameter that distinguishes individual timeline instances.
  * @param <Event> The type of events that may occur over the timeline.
  * @see <a href="https://en.wikipedia.org/wiki/Persistent_data_structure">Wikipedia: Persistent data structure</a>
- * @see Time
+ * @see History
  * @see Query
  * @see EventGraph
  */
@@ -57,8 +57,8 @@ public final class SimulationTimeline<T, Event> {
     return new SimulationTimeline<>();
   }
 
-  public Time<T, Event> origin() {
-    return new Time<>(this, null, START_INDEX);
+  public History<T, Event> origin() {
+    return new History<>(this, null, START_INDEX);
   }
 
   public <Model, Effect> Query<T, Event, Model> register(

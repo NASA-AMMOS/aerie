@@ -9,16 +9,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Seriali
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.State;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Adaptation(name="sample-adaptation", version="0.1")
 public class SampleAdaptation implements MerlinAdaptation<Object> {
@@ -48,7 +42,7 @@ public class SampleAdaptation implements MerlinAdaptation<Object> {
             }
 
             @Override
-            public SerializedParameter getSerializedStateAt(final String name, final Time<T, Object> time) {
+            public SerializedParameter getSerializedStateAt(final String name, final History<T, Object> history) {
                 throw new Error("I have no states, why are you calling me?");
             }
         };

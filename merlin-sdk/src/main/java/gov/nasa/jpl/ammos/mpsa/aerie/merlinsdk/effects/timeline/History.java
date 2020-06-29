@@ -12,12 +12,12 @@ import java.util.function.Function;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline.START_INDEX;
 
 /**
- * A point in time in a {@link SimulationTimeline}.
+ * A view on prior events in a {@link SimulationTimeline}.
  *
  * <p>
- * A <code>Time</code> represents a point in time in a <code>SimulationTimeline</code>, tracking all of the events
- * that have occurred before that point in time. Use a {@link Query} to interpret these events over time
- * as knowledge in some domain.
+ * A <code>History</code> represents a point in time in a <code>SimulationTimeline</code>, tracking all of the events
+ * that have occurred before that point in time. Use a {@link Query} to interpret these events over time as knowledge
+ * in some domain.
  * </p>
  *
  * <p>
@@ -27,7 +27,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Simulatio
  * </p>
  *
  * <p>
- * Times may also be {@link #fork}ed, allowing timelines diverging from the same point in time
+ * Histories may also be {@link #fork}ed, allowing timelines diverging from the same point in time
  * to be re{@link #join}ed. The resulting join point is a point in time that observes the events on both branches.
  * </p>
  *
@@ -36,7 +36,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Simulatio
  * @see SimulationTimeline
  * @see Query
  */
-public final class Time<Scope, Event> {
+public final class History<Scope, Event> {
   /**
    * The database governing this time point.
    */
@@ -52,10 +52,10 @@ public final class Time<Scope, Event> {
    *
    * Only points in time sharing this scope point may be joined together.
    */
-  private final Time<Scope, Event> lastBranchBase;
+  private final History<Scope, Event> lastBranchBase;
 
   /* package-local */
-  Time(final SimulationTimeline<Scope, Event> database, final Time<Scope, Event> lastBranchBase, final int index) {
+  History(final SimulationTimeline<Scope, Event> database, final History<Scope, Event> lastBranchBase, final int index) {
     this.database = database;
     this.lastBranchBase = lastBranchBase;
     this.index = index;
@@ -72,7 +72,7 @@ public final class Time<Scope, Event> {
   }
 
   /* package-local */
-  Time<Scope, Event> getLastBranchBase() {
+  History<Scope, Event> getLastBranchBase() {
     return this.lastBranchBase;
   }
 
@@ -82,8 +82,8 @@ public final class Time<Scope, Event> {
    * @param event The event to perform after the current time point.
    * @return The time point when the event occurs.
    */
-  public Time<Scope, Event> emit(final Event event) {
-    return new Time<>(this.database, this.lastBranchBase, database.advancing(this.index, event));
+  public History<Scope, Event> emit(final Event event) {
+    return new History<>(this.database, this.lastBranchBase, database.advancing(this.index, event));
   }
 
   /**
@@ -91,8 +91,8 @@ public final class Time<Scope, Event> {
    *
    * @return The base time point from which two branches may be drawn.
    */
-  public Time<Scope, Event> fork() {
-    return new Time<>(this.database, this, this.index);
+  public History<Scope, Event> fork() {
+    return new History<>(this.database, this, this.index);
   }
 
   /**
@@ -105,16 +105,16 @@ public final class Time<Scope, Event> {
    * @param other The sibling branch of time to join with this branch.
    * @return A time point observing both branches in its past.
    */
-  public Time<Scope, Event> join(final Time<Scope, Event> other) {
+  public History<Scope, Event> join(final History<Scope, Event> other) {
     if (this.lastBranchBase == null || this.lastBranchBase != other.lastBranchBase) {
       throw new RuntimeException("Cannot join branches that did not fork from the same point");
     } else if (this.index == this.lastBranchBase.index) {
-      return new Time<>(other.database, other.lastBranchBase.lastBranchBase, other.index);
+      return new History<>(other.database, other.lastBranchBase.lastBranchBase, other.index);
     } else if (other.index == other.lastBranchBase.index) {
-      return new Time<>(this.database, this.lastBranchBase.lastBranchBase, this.index);
+      return new History<>(this.database, this.lastBranchBase.lastBranchBase, this.index);
     }
 
-    return new Time<>(this.database, this.lastBranchBase.lastBranchBase, this.database.joining(this.lastBranchBase.index, this.index, other.index));
+    return new History<>(this.database, this.lastBranchBase.lastBranchBase, this.database.joining(this.lastBranchBase.index, this.index, other.index));
   }
 
   public <Effect> Collection<Pair<Duration, Effect>> evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
@@ -131,7 +131,7 @@ public final class Time<Scope, Event> {
    * @param duration The amount of time to wait.
    * @return A time point observing this time point followed by a span of time.
    */
-  public Time<Scope, Event> wait(final Duration duration) {
+  public History<Scope, Event> wait(final Duration duration) {
     if (this.lastBranchBase != null) {
       throw new RuntimeException("Cannot wait on an unmerged branch");
     } else if (duration.isNegative()) {
@@ -140,7 +140,7 @@ public final class Time<Scope, Event> {
       return this;
     }
 
-    return new Time<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.durationInMicroseconds));
+    return new History<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.durationInMicroseconds));
   }
 
   public String getDebugTrace() {
