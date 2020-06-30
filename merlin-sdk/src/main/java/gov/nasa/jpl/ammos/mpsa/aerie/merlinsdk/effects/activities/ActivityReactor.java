@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 
 import java.util.ArrayDeque;
 import java.util.Objects;
@@ -23,16 +23,16 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Res
   }
 
   private final class Frame {
-    public Time<T, Event> tip;
+    public History<T, Event> tip;
     public PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> branches;
 
-    public Frame(final Time<T, Event> tip, final PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> branches) {
+    public Frame(final History<T, Event> tip, final PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> branches) {
       this.tip = tip;
       this.branches = branches;
     }
   }
 
-  private Pair<Time<T, Event>, PMap<String, ScheduleItem<T, Activity, Event>>> runActivity(final Frame initialFrame) {
+  private Pair<History<T, Event>, PMap<String, ScheduleItem<T, Activity, Event>>> runActivity(final Frame initialFrame) {
     var frames = new ArrayDeque<Frame>();
     var scheduled = HashTreePMap.<String, ScheduleItem<T, Activity, Event>>empty();
 
@@ -54,13 +54,13 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Res
         try {
           this.executor.accept(context, taskType);
 
-          frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+          frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Complete<>();
         } catch (final ReactionContextImpl.Defer request) {
-          frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+          frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Defer<>(request.duration, taskType, context.getBreadcrumbs());
         } catch (final ReactionContextImpl.Await request) {
-          frames.push(new Frame(context.getCurrentTime(), context.getSpawns()));
+          frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
         }
 

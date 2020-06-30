@@ -11,9 +11,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.RegisterState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
@@ -67,32 +67,32 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
     return this.registers.keySet();
   }
 
-  public double getStateAt(final String name, final Time<T, BananaEvent> time) {
-    return this.registers.get(name).getAt(time).get();
+  public double getStateAt(final String name, final History<T, BananaEvent> history) {
+    return this.registers.get(name).getAt(history).get();
   }
 
   @Override
-  public SerializedParameter getSerializedStateAt(final String name, final Time<T, BananaEvent> time) {
-    return SerializedParameter.of(this.getStateAt(name, time));
+  public SerializedParameter getSerializedStateAt(final String name, final History<T, BananaEvent> history) {
+    return SerializedParameter.of(this.getStateAt(name, history));
   }
 
-  public List<Window> whenStateUptoMatches(final String name, final Time<T, BananaEvent> time, final Predicate<Double> condition) {
-    return this.registers.get(name).getAt(time).when(condition);
+  public List<Window> whenStateUptoMatches(final String name, final History<T, BananaEvent> history, final Predicate<Double> condition) {
+    return this.registers.get(name).getAt(history).when(condition);
   }
 
   public final class InnerQuerier {
-    private final Supplier<Time<T, BananaEvent>> currentTime;
+    private final Supplier<History<T, BananaEvent>> currentHistory;
 
-    private InnerQuerier(final Supplier<Time<T, BananaEvent>> currentTime) {
-      this.currentTime = currentTime;
+    private InnerQuerier(final Supplier<History<T, BananaEvent>> currentHistory) {
+      this.currentHistory = currentHistory;
     }
 
     public double get(final String name) {
-      return BananaQuerier.this.getStateAt(name, this.currentTime.get());
+      return BananaQuerier.this.getStateAt(name, this.currentHistory.get());
     }
 
     public List<Window> when(final String name, final Predicate<Double> condition) {
-      return BananaQuerier.this.whenStateUptoMatches(name, this.currentTime.get(), condition);
+      return BananaQuerier.this.whenStateUptoMatches(name, this.currentHistory.get(), condition);
     }
   }
 }

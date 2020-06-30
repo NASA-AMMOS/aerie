@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
@@ -22,15 +22,15 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
 
   private final ActivityReactor<T, Activity, Event> reactor;
 
-  private Time<T, Event> now;
+  private History<T, Event> currentHistory;
   private Duration elapsedTime = Duration.ZERO;
 
   public ReplayingSimulationEngine(
-      final Time<T, Event> startTime,
+      final History<T, Event> initialHistory,
       final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor
   ) {
     this.reactor = new ActivityReactor<>(executor);
-    this.now = startTime;
+    this.currentHistory = initialHistory;
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
@@ -46,7 +46,7 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
     while (!endTime.shorterThan(this.elapsedTime)) {
       // If there are no jobs remaining, or the next job is after the end time, simply step up to the end time.
       if (this.queue.isEmpty() || endTime.shorterThan(this.queue.peek().getKey())) {
-        this.now = this.now.wait(endTime.minus(this.elapsedTime));
+        this.currentHistory = this.currentHistory.wait(endTime.minus(this.elapsedTime));
         this.elapsedTime = endTime;
         break;
       }
@@ -67,7 +67,7 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
     }
 
     // Step up to the next job time, and perform the job.
-    this.now = this.now.wait(nextJobTime.minus(this.elapsedTime));
+    this.currentHistory = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
     this.elapsedTime = nextJobTime;
 
     this.react(tasks);
@@ -75,8 +75,8 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
 
   private void react(final Task<T, Activity, Event> task) {
     // React to the events scheduled at this time.
-    final var result = task.apply(this.now);
-    this.now = result.getLeft();
+    final var result = task.apply(this.currentHistory);
+    this.currentHistory = result.getLeft();
     final var newJobs = result.getRight();
 
     // Accumulate the freshly scheduled items into our scheduling timeline.
@@ -118,8 +118,8 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
     return !this.queue.isEmpty();
   }
 
-  public Time<T, Event> getCurrentTime() {
-    return this.now;
+  public History<T, Event> getCurrentHistory() {
+    return this.currentHistory;
   }
 
   public Duration getElapsedTime() {
@@ -129,7 +129,7 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
   public String getDebugTrace() {
     final var builder = new StringBuilder();
 
-    builder.append(this.now.getDebugTrace());
+    builder.append(this.currentHistory.getDebugTrace());
     for (final var point : this.queue) {
       builder.append(String.format("%10s: %s\n", point.getKey(), point.getValue()));
     }

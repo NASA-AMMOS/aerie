@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Time;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.function.Supplier;
@@ -13,7 +13,7 @@ public final class DynamicReactionContext<T, Activity, Event> implements Reactio
   }
 
   @Override
-  public Time<T, Event> now() {
+  public History<T, Event> now() {
     return this.activeContext.get().now();
   }
 

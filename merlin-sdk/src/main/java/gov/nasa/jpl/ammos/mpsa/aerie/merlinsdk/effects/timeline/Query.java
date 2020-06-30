@@ -11,7 +11,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Simulatio
  * A cached query onto a {@link SimulationTimeline}.
  *
  * <p>
- * While {@link Time} objects may be evaluated directly, they have no capacity for caching results and reusing them
+ * While {@link History} objects may be evaluated directly, they have no capacity for caching results and reusing them
  * for evaluations at later time points. Queries, on the other hand, may be registered with a {@link SimulationTimeline},
  * allowing both effects and the entities they act on to be cached for reuse.
  * </p>
@@ -35,11 +35,11 @@ public final class Query<Scope, Event, Model> {
   /**
    * Get the value associated with this query at the given point in time.
    *
-   * @param time The time to perform the query at.
+   * @param history The time to perform the query at.
    * @return The value associated with this query at the given time.
    */
-  public Model getAt(final Time<Scope, Event> time) {
-    return this.query.getAt(time);
+  public Model getAt(final History<Scope, Event> history) {
+    return this.query.getAt(history);
   }
 
   private static final class InnerQuery<Scope, Event, Model, Effect> {
@@ -59,17 +59,17 @@ public final class Query<Scope, Event, Model> {
       this.applicator = applicator;
     }
 
-    public Model getAt(final Time<Scope, Event> time) {
+    public Model getAt(final History<Scope, Event> history) {
       // If we already have a model cached for this time point, we can just bail now.
-      if (time.getIndex() == START_INDEX) {
+      if (history.getIndex() == START_INDEX) {
         return this.applicator.initial();
-      } else if (this.cache.containsKey(time.getIndex())) {
-        return this.cache.get(time.getIndex());
+      } else if (this.cache.containsKey(history.getIndex())) {
+        return this.cache.get(history.getIndex());
       }
 
       // Look for a cached model anytime back to our most recent branch point, if any.
-      final var baseIndex = (time.getLastBranchBase() != null) ? time.getLastBranchBase().getIndex() : START_INDEX;
-      var previousIndex = time.getIndex();
+      final var baseIndex = (history.getLastBranchBase() != null) ? history.getLastBranchBase().getIndex() : START_INDEX;
+      var previousIndex = history.getIndex();
       while (previousIndex != baseIndex && !this.cache.containsKey(previousIndex)) {
         previousIndex = this.database.get(previousIndex).getPrevious();
       }
@@ -77,8 +77,8 @@ public final class Query<Scope, Event, Model> {
       final Model model;
       if (previousIndex == baseIndex) {
         // We didn't find anything. We'll have to query our previous segment for its model.
-        if (time.getLastBranchBase() != null) {
-          model = this.applicator.duplicate(this.getAt(time.getLastBranchBase()));
+        if (history.getLastBranchBase() != null) {
+          model = this.applicator.duplicate(this.getAt(history.getLastBranchBase()));
         } else {
           // Well, we don't have a previous segment. Start with the initial model.
           model = this.applicator.initial();
@@ -90,7 +90,7 @@ public final class Query<Scope, Event, Model> {
       }
 
       // Compute the effects that have occurred since our last update on this branch.
-      final var effects = this.database.evaluate(this.projection, this.projection::atom, previousIndex, time.getIndex());
+      final var effects = this.database.evaluate(this.projection, this.projection::atom, previousIndex, history.getIndex());
 
       // Step this model up to the current point in time.
       for (final var effect : effects) {
@@ -99,7 +99,7 @@ public final class Query<Scope, Event, Model> {
       }
 
       // Cache this model for future queries.
-      this.cache.put(time.getIndex(), model);
+      this.cache.put(history.getIndex(), model);
 
       return model;
     }
