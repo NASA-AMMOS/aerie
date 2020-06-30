@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.Register
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
@@ -18,6 +19,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +80,18 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   public List<Window> whenStateUptoMatches(final String name, final History<T, BananaEvent> history, final Predicate<Double> condition) {
     return this.registers.get(name).getAt(history).when(condition);
+  }
+
+  @Override
+  public List<ConstraintViolation> getConstraintViolationsAt(final History<T, BananaEvent> history) {
+    final List<ConstraintViolation> violations = new ArrayList<>();
+
+    for (final var violableConstraint : BananaStates.violableConstraints) {
+      final var violationWindows = BananaQuerier.activeContext.setWithin(Pair.of(ctx, new InnerQuerier(() -> history)), violableConstraint::getWindows);
+      violations.add(new ConstraintViolation(violationWindows, violableConstraint));
+    }
+
+    return violations;
   }
 
   public final class InnerQuerier {

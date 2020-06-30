@@ -11,7 +11,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationReposito
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -24,7 +26,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public final class ResponseSerializers {
-  public static <T> JsonValue serializeList(final Function<T, JsonValue> elementSerializer, final List<T> elements) {
+  public static <T> JsonValue serializeIterable(final Function<T, JsonValue> elementSerializer, final Iterable<T> elements) {
     if (elements == null) return JsonValue.NULL;
 
     final var builder = Json.createArrayBuilder();
@@ -110,7 +112,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeTimeline(final List<SerializedParameter> elements) {
-    return serializeList(ResponseSerializers::serializeParameter, elements);
+    return serializeIterable(ResponseSerializers::serializeParameter, elements);
   }
 
   public static JsonValue serializeTimestamp(final Duration timestamp) {
@@ -118,7 +120,42 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeTimestamps(final List<Duration> elements) {
-    return serializeList(ResponseSerializers::serializeTimestamp, elements);
+    return serializeIterable(ResponseSerializers::serializeTimestamp, elements);
+  }
+
+  public static JsonValue serializeConstraintViolation(final ConstraintViolation violation) {
+    return Json.createObjectBuilder()
+            .add("associations", serializeConstraintViolationAssociations(violation))
+            .add("constraint", serializeConstraintViolationMetadata(violation))
+            .add("windows", serializeWindows(violation.violationWindows))
+            .build();
+  }
+
+  public static JsonValue serializeConstraintViolationAssociations(ConstraintViolation violation) {
+    return Json.createObjectBuilder()
+            .add("activityInstanceIds", serializeIterable(Json::createValue, violation.associatedActivityIds))
+            .add("stateIds", serializeIterable(Json::createValue, violation.associatedStateIds))
+            .build();
+  }
+
+  public static JsonValue serializeConstraintViolationMetadata(ConstraintViolation violation) {
+    return Json.createObjectBuilder()
+            .add("id", violation.id)
+            .add("name", violation.name)
+            .add("message", violation.message)
+            .add("category", violation.category)
+            .build();
+  }
+
+  public static JsonValue serializeWindows(List<Window> windows) {
+    return serializeIterable(ResponseSerializers::serializeWindow, windows);
+  }
+
+  public static JsonValue serializeWindow(final Window window) {
+    return Json.createObjectBuilder()
+            .add("start", window.start.durationInMicroseconds)
+            .add("end", window.end.durationInMicroseconds)
+            .build();
   }
 
   public static JsonValue serializeSimulationResults(final SimulationResults results) {
@@ -127,6 +164,7 @@ public final class ResponseSerializers {
     final var builder = Json.createObjectBuilder();
     builder.add("times", serializeTimestamps(results.timestamps));
     builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
+    builder.add("constraints", serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations));
     return builder.build();
   }
 
@@ -139,7 +177,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeScheduledActivities(final List<Pair<Duration, SerializedActivity>> activities) {
-    return serializeList(ResponseSerializers::serializeScheduledActivity, activities);
+    return serializeIterable(ResponseSerializers::serializeScheduledActivity, activities);
   }
 
   public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
@@ -253,7 +291,7 @@ public final class ResponseSerializers {
       return Json
               .createObjectBuilder()
               .add("type", "enumerated")
-              .add("items", serializeList(v -> Json.createObjectBuilder()
+              .add("items", serializeIterable(v -> Json.createObjectBuilder()
                       .add("key", v.name())
                       .add("label", v.toString())
                       .build(), enumValues))
@@ -289,7 +327,7 @@ public final class ResponseSerializers {
 
     @Override
     public JsonValue onList(final List<SerializedParameter> elements) {
-      return serializeList(x -> x.match(this), elements);
+      return serializeIterable(x -> x.match(this), elements);
     }
 
     @Override

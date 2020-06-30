@@ -48,7 +48,7 @@ public final class StubApp implements App {
     public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
     public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of("Unconstructable activity instance");
 
-    public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(List.of(), Map.of());
+    public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(List.of(), Map.of(), List.of());
 
     static {
         VALID_NEW_ADAPTATION = new HashMap<>();

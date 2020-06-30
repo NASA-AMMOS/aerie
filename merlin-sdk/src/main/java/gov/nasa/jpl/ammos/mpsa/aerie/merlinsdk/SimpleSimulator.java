@@ -81,9 +81,9 @@ public final class SimpleSimulator {
     }
 
     final var endTime = simulator.getCurrentHistory();
-    // TODO: check constraints against `endTime`
+    final var constraintResults = querier.getConstraintViolationsAt(endTime);
 
-    return new SimulationResults(timestamps, timelines);
+    return new SimulationResults(timestamps, timelines, constraintResults);
   }
 
   public static <Event> SimulationResults simulateToCompletion(
@@ -137,8 +137,8 @@ public final class SimpleSimulator {
     }
 
     final var endTime = simulator.getCurrentHistory();
-    // TODO: check constraints against `endTime`
+    final var constraintResults = querier.getConstraintViolationsAt(endTime);
 
-    return new SimulationResults(timestamps, timelines);
+    return new SimulationResults(timestamps, timelines, constraintResults);
   }
 }

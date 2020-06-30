@@ -3,10 +3,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -46,5 +48,6 @@ public interface MerlinAdaptation<Event> {
 
     Set<String> states();
     SerializedParameter getSerializedStateAt(String name, History<T, Event> history);
+    List<ConstraintViolation> getConstraintViolationsAt(History<T, Event> history);
   }
 }

@@ -27,7 +27,7 @@ public final class ConsumableState {
   }
 
   public Constraint when(final Predicate<Double> condition) {
-    return () -> this.model.apply(this.name).when(condition);
+    return Constraint.createStateConstraint(this.name, () -> this.model.apply(this.name).when(condition));
   }
 
   public Constraint whenGreaterThan(final double y) {
