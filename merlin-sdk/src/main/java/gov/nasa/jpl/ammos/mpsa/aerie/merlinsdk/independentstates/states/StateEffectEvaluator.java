@@ -1,13 +1,13 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.ApgenEventProjection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.traits.SettableEffect;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.traits.SettableEffectTrait;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.traits.SumEffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEventProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.traits.SettableEffect;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.traits.SettableEffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.traits.SumEffectTrait;
 
 import java.util.Objects;
 
-public final class StateEffectEvaluator extends ApgenEventProjection<SettableEffect<Double, Double>> {
+public final class StateEffectEvaluator extends IndependentStateEventProjection<SettableEffect<Double, Double>> {
     private final String stateName;
 
     public StateEffectEvaluator(final String stateName) {

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.events;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.ApgenEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -11,25 +11,25 @@ public abstract class BananaEvent {
 
   public abstract <Result> Result visit(BananaEventHandler<Result> visitor);
 
-  public static BananaEvent apgen(final ApgenEvent event) {
+  public static BananaEvent independent(final IndependentStateEvent event) {
     Objects.requireNonNull(event);
     return new BananaEvent() {
       @Override
       public <Result> Result visit(final BananaEventHandler<Result> visitor) {
-        return visitor.apgen(event);
+        return visitor.independent(event);
       }
     };
   }
 
-  public final Optional<ApgenEvent> asApgen() {
+  public final Optional<IndependentStateEvent> asIndependent() {
     return this.visit(new DefaultBananaEventHandler<>() {
       @Override
-      public Optional<ApgenEvent> unhandled() {
+      public Optional<IndependentStateEvent> unhandled() {
         return Optional.empty();
       }
 
       @Override
-      public Optional<ApgenEvent> apgen(final ApgenEvent event) {
+      public Optional<IndependentStateEvent> independent(final IndependentStateEvent event) {
         return Optional.of(event);
       }
     });
@@ -39,8 +39,8 @@ public abstract class BananaEvent {
   public final String toString() {
     return this.visit(new BananaEventHandler<>() {
       @Override
-      public String apgen(final ApgenEvent event) {
-        return String.format("apgen.%s", event);
+      public String independent(final IndependentStateEvent event) {
+        return String.format("independent.%s", event);
       }
     });
   }

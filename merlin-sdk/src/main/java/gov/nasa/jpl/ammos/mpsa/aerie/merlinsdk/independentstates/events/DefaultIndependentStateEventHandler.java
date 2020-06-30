@@ -1,6 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events;
 
-public interface DefaultApgenEventHandler<Result> extends ApgenEventHandler<Result> {
+public interface DefaultIndependentStateEventHandler<Result> extends IndependentStateEventHandler<Result> {
     Result unhandled();
 
     @Override

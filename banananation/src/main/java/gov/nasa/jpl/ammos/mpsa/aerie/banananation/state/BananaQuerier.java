@@ -4,11 +4,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.APGenStateFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.RegisterStateApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.StateEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.RegisterState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterStateApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
@@ -44,13 +44,13 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   private final Map<String, Query<T, BananaEvent, RegisterState>> registers = new HashMap<>();
 
-  public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline, final APGenStateFactory factory) {
+  public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline, final IndependentStateFactory factory) {
     for (final var entry : factory.getRegisteredStates().entrySet()) {
       final var name = entry.getKey();
       final var initialValue = entry.getValue();
 
       final var query = timeline.register(
-          new StateEffectEvaluator(name).filterContramap(BananaEvent::asApgen),
+          new StateEffectEvaluator(name).filterContramap(BananaEvent::asIndependent),
           new RegisterStateApplicator(initialValue));
 
       this.registers.put(name, query);

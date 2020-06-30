@@ -1,28 +1,28 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events;
 
 import java.util.Objects;
 
 // This can be mechanically derived from `EventHandler`.
-public abstract class ApgenEvent {
-    private ApgenEvent() {}
+public abstract class IndependentStateEvent {
+    private IndependentStateEvent() {}
 
-    public abstract <Result> Result visit(ApgenEventHandler<Result> visitor);
+    public abstract <Result> Result visit(IndependentStateEventHandler<Result> visitor);
 
-    public static ApgenEvent add(final String stateName, final double amount) {
+    public static IndependentStateEvent add(final String stateName, final double amount) {
         Objects.requireNonNull(stateName);
-        return new ApgenEvent() {
+        return new IndependentStateEvent() {
             @Override
-            public <Result> Result visit(final ApgenEventHandler<Result> visitor) {
+            public <Result> Result visit(final IndependentStateEventHandler<Result> visitor) {
                 return visitor.add(stateName, amount);
             }
         };
     }
 
-    public static ApgenEvent set(final String stateName, final double value) {
+    public static IndependentStateEvent set(final String stateName, final double value) {
         Objects.requireNonNull(stateName);
-        return new ApgenEvent() {
+        return new IndependentStateEvent() {
             @Override
-            public <Result> Result visit(final ApgenEventHandler<Result> visitor) {
+            public <Result> Result visit(final IndependentStateEventHandler<Result> visitor) {
                 return visitor.set(stateName, value);
             }
         };
@@ -30,7 +30,7 @@ public abstract class ApgenEvent {
 
     @Override
     public final String toString() {
-        return this.visit(new ApgenEventHandler<>() {
+        return this.visit(new IndependentStateEventHandler<>() {
             @Override
             public String add(final String stateName, final double amount) {
                 return String.format("add(\"%s\", %s)",
