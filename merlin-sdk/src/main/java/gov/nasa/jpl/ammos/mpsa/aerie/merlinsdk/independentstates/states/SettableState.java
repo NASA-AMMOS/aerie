@@ -1,29 +1,29 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.ApgenEvent;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public final class ConsumableState {
+public final class SettableState {
   private final String name;
   private final Function<String, StateQuery<Double>> model;
-  private final Consumer<ApgenEvent> emitter;
+  private final Consumer<IndependentStateEvent> emitter;
 
-  public ConsumableState(final String name, final Function<String, StateQuery<Double>> model, final Consumer<ApgenEvent> emitter) {
+  public SettableState(final String name, final Function<String, StateQuery<Double>> model, final Consumer<IndependentStateEvent> emitter) {
     this.name = name;
     this.model = model;
     this.emitter = emitter;
   }
 
-  public void add(final double delta) {
-    this.emitter.accept(ApgenEvent.add(this.name, delta));
-  }
-
   public double get() {
     return this.model.apply(this.name).get();
+  }
+
+  public void set(double value) {
+    this.emitter.accept(IndependentStateEvent.set(this.name, value));
   }
 
   public Constraint when(final Predicate<Double> condition) {

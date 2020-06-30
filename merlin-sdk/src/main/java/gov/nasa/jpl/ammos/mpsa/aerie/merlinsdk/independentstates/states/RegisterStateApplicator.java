@@ -1,6 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.traits.SettableEffect;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.traits;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.traits;
 
 import java.util.Objects;
 

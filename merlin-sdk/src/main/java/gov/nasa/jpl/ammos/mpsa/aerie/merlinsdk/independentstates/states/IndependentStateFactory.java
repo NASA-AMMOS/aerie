@@ -1,6 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.apgenstates.events.ApgenEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,12 +8,12 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class APGenStateFactory {
+public class IndependentStateFactory {
   private final Map<String, Double> registeredStates = new HashMap<>();
   private final Function<String, StateQuery<Double>> model;
-  private final Consumer<ApgenEvent> emitter;
+  private final Consumer<IndependentStateEvent> emitter;
 
-  public APGenStateFactory(final Function<String, StateQuery<Double>> model, final Consumer<ApgenEvent> emitter) {
+  public IndependentStateFactory(final Function<String, StateQuery<Double>> model, final Consumer<IndependentStateEvent> emitter) {
     this.model = model;
     this.emitter = emitter;
   }
