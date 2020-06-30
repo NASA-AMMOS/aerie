@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.AdaptationService;
 
+import javax.json.JsonValue;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,6 @@ public final class StubAdaptationService implements AdaptationService {
   public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
     if (!Objects.equals(plan.adaptationId, EXISTENT_ADAPTATION_ID)) throw new NoSuchAdaptationException();
 
-    return new SimulationResults(Instant.EPOCH, List.of(), Map.of());
+    return new SimulationResults(Instant.EPOCH, List.of(), Map.of(), JsonValue.EMPTY_JSON_ARRAY);
   }
 }
