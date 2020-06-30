@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.HashSet;
 import java.util.List;

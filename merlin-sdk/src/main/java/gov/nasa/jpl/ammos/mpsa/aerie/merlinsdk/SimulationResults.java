@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
 import java.util.List;
 import java.util.Map;
