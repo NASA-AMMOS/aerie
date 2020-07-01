@@ -1,20 +1,25 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.camera;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.delay;
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.cameraDataBits;
 
+@ActivityType(name="CaptureImage", generateMapper=true)
 public class CaptureImage implements Activity {
 
     @Parameter
     public int imageQuality = 95;
+
+    // Explicitly include no-arg constructor for Merlin activity mapper
+    public CaptureImage() {}
 
     public CaptureImage(int imageQuality) {
         this.imageQuality = imageQuality;
@@ -32,15 +37,10 @@ public class CaptureImage implements Activity {
 
     @Override
     public void modelEffects() {
-        var states = SampleMissionStates.getModel();
-        double imageSizeMbits = 1 + imageQuality*0.02;
+        double imageSizeBits = (1 + imageQuality*0.02)*1000000;
         double imageDuration = imageQuality < 100 ? 2 + imageQuality * 0.1 : 30;
-        double dataGenerationRate = imageSizeMbits / imageDuration;
+        cameraDataBits.add(imageSizeBits);
 
-        states.cameraData.turnOn(dataGenerationRate);
-
-        delay(Duration.of((long)imageDuration, TimeUnit.SECONDS));
-
-        states.cameraData.turnOff();
+        ctx.delay(Duration.of((long)imageDuration, TimeUnit.SECONDS));
     }
 }
