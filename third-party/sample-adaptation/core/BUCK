@@ -10,11 +10,18 @@ prebuilt_jar(
      visibility = ['PUBLIC']
 )
 
+prebuilt_jar(
+     name = 'commons-lang3-jar-3.9',
+     binary_jar = 'commons-lang3-jar-3.9.jar',
+     visibility = ['PUBLIC']
+)
+
 java_library(
      name = 'sample-adaptation',
      exported_deps = [
           ":commons-io-jar-2.6",
           ":commons-collections4-jar-4.4",
+          ":commons-lang3-jar-3.9",
      ],
      visibility = ['PUBLIC'],
 )
