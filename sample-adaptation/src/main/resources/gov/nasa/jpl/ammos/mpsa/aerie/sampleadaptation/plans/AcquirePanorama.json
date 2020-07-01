@@ -6,14 +6,14 @@
   "activityInstances": [
     {
       "type": "PreheatCamera",
-      "startTimestamp": "2020-150T11:45:00",
+      "startTimestamp": "2025-150T11:45:00",
       "parameters": {
-        "heatDuration": "00:15:00"
+        "heatDurationInSeconds": 900
       }
     },
     {
-      "type": "AcquirePanorama",
-      "startTimestamp": "2020-150T12:00:00",
+      "type": "CapturePanorama",
+      "startTimestamp": "2025-150T12:00:00",
       "parameters": {
         "nFramesHorizontal": 4,
         "nFramesVertical": 2,
