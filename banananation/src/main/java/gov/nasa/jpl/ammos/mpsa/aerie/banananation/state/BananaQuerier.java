@@ -88,7 +88,9 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
     for (final var violableConstraint : BananaStates.violableConstraints) {
       final var violationWindows = BananaQuerier.activeContext.setWithin(Pair.of(ctx, new InnerQuerier(() -> history)), violableConstraint::getWindows);
-      violations.add(new ConstraintViolation(violationWindows, violableConstraint));
+      if (!violationWindows.isEmpty()) {
+        violations.add(new ConstraintViolation(violationWindows, violableConstraint));
+      }
     }
 
     return violations;
