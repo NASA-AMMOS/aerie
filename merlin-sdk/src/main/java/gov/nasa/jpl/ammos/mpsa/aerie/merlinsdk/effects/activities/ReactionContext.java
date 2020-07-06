@@ -14,4 +14,7 @@ public interface ReactionContext<T, Activity, Event> {
   String spawnAfter(Duration delay, Activity activity);
   void waitForActivity(String activityId);
   void waitForChildren();
+  default void call(final Activity activity) {
+    waitForActivity(spawn(activity));
+  }
 }
