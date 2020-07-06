@@ -1,33 +1,42 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public final class ConsumableState {
   private final String name;
-  private final Function<String, StateQuery<Double>> model;
-  private final Consumer<IndependentStateEvent> emitter;
+  private final Supplier<Double> getter;
+  private final Function<Predicate<Double>, List<Window>> checker;
+  private final Consumer<Double> emitter;
 
-  public ConsumableState(final String name, final Function<String, StateQuery<Double>> model, final Consumer<IndependentStateEvent> emitter) {
+  public ConsumableState(
+      final String name,
+      final Supplier<Double> getter,
+      final Function<Predicate<Double>, List<Window>> checker,
+      final Consumer<Double> emitter
+  ) {
     this.name = name;
-    this.model = model;
+    this.getter = getter;
+    this.checker = checker;
     this.emitter = emitter;
   }
 
   public void add(final double delta) {
-    this.emitter.accept(IndependentStateEvent.add(this.name, delta));
+    this.emitter.accept(delta);
   }
 
   public double get() {
-    return this.model.apply(this.name).get();
+    return this.getter.get();
   }
 
   public Constraint when(final Predicate<Double> condition) {
-    return Constraint.createStateConstraint(this.name, () -> this.model.apply(this.name).when(condition));
+    return Constraint.createStateConstraint(this.name, () -> this.checker.apply(condition));
   }
 
   public Constraint whenGreaterThan(final double y) {

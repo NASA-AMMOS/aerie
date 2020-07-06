@@ -1,52 +1,46 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
-public final class SettableState {
+public final class SettableState<T> {
   private final String name;
-  private final Function<String, StateQuery<Double>> model;
-  private final Consumer<IndependentStateEvent> emitter;
+  private final Supplier<T> getter;
+  private final Function<Predicate<T>, List<Window>> checker;
+  private final Consumer<T> emitter;
 
-  public SettableState(final String name, final Function<String, StateQuery<Double>> model, final Consumer<IndependentStateEvent> emitter) {
+  public SettableState(
+      final String name,
+      final Supplier<T> getter,
+      final Function<Predicate<T>, List<Window>> checker,
+      final Consumer<T> emitter
+  ) {
     this.name = name;
-    this.model = model;
+    this.getter = getter;
+    this.checker = checker;
     this.emitter = emitter;
   }
 
-  public double get() {
-    return this.model.apply(this.name).get();
+  public T get() {
+    return this.getter.get();
   }
 
-  public void set(double value) {
-    this.emitter.accept(IndependentStateEvent.set(this.name, value));
+  public void set(T value) {
+    this.emitter.accept(value);
   }
 
-  public Constraint when(final Predicate<Double> condition) {
-    return Constraint.createStateConstraint(this.name, () -> this.model.apply(this.name).when(condition));
+  public Constraint when(final Predicate<T> condition) {
+    return Constraint.createStateConstraint(this.name, () -> this.checker.apply(condition));
   }
 
-  public Constraint whenGreaterThan(final double y) {
-    return this.when((x) -> (x > y));
-  }
-
-  public Constraint whenLessThan(final double y) {
-    return this.when((x) -> (x < y));
-  }
-
-  public Constraint whenLessThanOrEqualTo(final double y) {
-    return this.when((x) -> (x <= y));
-  }
-
-  public Constraint whenGreaterThanOrEqualTo(final double y) {
-    return this.when((x) -> (x >= y));
-  }
-
-  public Constraint whenEqualWithin(final double y, final double tolerance) {
-    return this.when((x) -> (Math.abs(x - y) < tolerance));
+  public Constraint whenEqualTo(final T probe) {
+    return this.when((x) -> Objects.equals(x, probe));
   }
 }

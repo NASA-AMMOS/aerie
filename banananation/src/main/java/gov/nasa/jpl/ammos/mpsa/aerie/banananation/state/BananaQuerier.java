@@ -30,14 +30,14 @@ import java.util.function.Supplier;
 
 public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, BananaEvent> {
   private static final DynamicCell<Pair<ReactionContext<?, Activity, BananaEvent>, BananaQuerier<?>.InnerQuerier>> activeContext = DynamicCell.create();
-  public static final Function<String, StateQuery<Double>> query = (name) -> new StateQuery<>() {
+  public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new StateQuery<>() {
     @Override
-    public Double get() {
+    public SerializedParameter get() {
       return activeContext.get().getRight().get(name);
     }
 
     @Override
-    public List<Window> when(final Predicate<Double> condition) {
+    public List<Window> when(final Predicate<SerializedParameter> condition) {
       return activeContext.get().getRight().when(name, condition);
     }
   };
@@ -47,7 +47,7 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   private final Map<String, Query<T, BananaEvent, RegisterState>> registers = new HashMap<>();
 
   public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline) {
-    for (final var entry : BananaStates.factory.getRegisteredStates().entrySet()) {
+    for (final var entry : BananaStates.factory.getConsumableStates().entrySet()) {
       final var name = entry.getKey();
       final var initialValue = entry.getValue();
 
@@ -103,11 +103,11 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
       this.currentHistory = currentHistory;
     }
 
-    public double get(final String name) {
-      return BananaQuerier.this.getStateAt(name, this.currentHistory.get());
+    public SerializedParameter get(final String name) {
+      return BananaQuerier.this.getSerializedStateAt(name, this.currentHistory.get());
     }
 
-    public List<Window> when(final String name, final Predicate<Double> condition) {
+    public List<Window> when(final String name, final Predicate<SerializedParameter> condition) {
       return BananaQuerier.this.whenStateUptoMatches(name, this.currentHistory.get(), condition);
     }
   }
