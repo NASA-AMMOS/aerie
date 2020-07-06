@@ -25,6 +25,6 @@ public class Banananation implements MerlinAdaptation<BananaEvent> {
 
   @Override
   public <T> Querier<T, BananaEvent> makeQuerier(final SimulationTimeline<T, BananaEvent> database) {
-    return new BananaQuerier<>(database, BananaStates.factory);
+    return new BananaQuerier<>(database);
   }
 }

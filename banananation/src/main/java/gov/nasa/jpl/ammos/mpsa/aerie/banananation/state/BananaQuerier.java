@@ -46,8 +46,8 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   private final Map<String, Query<T, BananaEvent, RegisterState>> registers = new HashMap<>();
 
-  public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline, final IndependentStateFactory factory) {
-    for (final var entry : factory.getRegisteredStates().entrySet()) {
+  public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline) {
+    for (final var entry : BananaStates.factory.getRegisteredStates().entrySet()) {
       final var name = entry.getKey();
       final var initialValue = entry.getValue();
 
