@@ -122,6 +122,6 @@ public final class Duration implements Comparable<Duration> {
 
   @Override
   public int compareTo(final Duration other) {
-    return Long.compareUnsigned(this.durationInMicroseconds, other.durationInMicroseconds);
+    return Long.compare(this.durationInMicroseconds, other.durationInMicroseconds);
   }
 }
