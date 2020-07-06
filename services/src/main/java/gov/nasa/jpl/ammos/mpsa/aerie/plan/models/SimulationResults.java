@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.models;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import javax.json.JsonValue;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -12,11 +13,13 @@ public final class SimulationResults {
   public final Instant startTime;
   public final List<Duration> timestamps;
   public final Map<String, List<SerializedParameter>> timelines;
+  public final JsonValue constraints;
 
-  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedParameter>> timelines) {
+  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedParameter>> timelines, JsonValue constraints) {
     this.startTime = startTime;
     this.timestamps = timestamps;
     this.timelines = timelines;
+    this.constraints = constraints;
   }
 
   @Override
@@ -25,7 +28,8 @@ public final class SimulationResults {
         " {" +
         " startTime=" + startTime + "," +
         " timestamps=" + timestamps + "," +
-        " timelines=" + timelines +
+        " timelines=" + timelines + "," +
+        " constraints=" + constraints +
         " }";
   }
 
@@ -37,11 +41,13 @@ public final class SimulationResults {
     return
         (  Objects.equals(this.startTime, other.startTime)
         && Objects.equals(this.timestamps, other.timestamps)
+        && Objects.equals(this.timelines, other.timelines)
+        && Objects.equals(this.constraints, other.constraints)
         );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.startTime, this.timestamps, this.timelines);
+    return Objects.hash(this.startTime, this.timestamps, this.timelines, this.constraints);
   }
 }

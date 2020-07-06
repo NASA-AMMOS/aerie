@@ -139,8 +139,9 @@ public final class RemoteAdaptationService implements AdaptationService {
 
     final var timestamps = deserializeTimestamps(jsonObject.get("times"));
     final var timelines = deserializeTimelines(jsonObject.get("resources"));
+    final var constraints = jsonObject.get("constraints");
 
-    return new SimulationResults(startTime, timestamps, timelines);
+    return new SimulationResults(startTime, timestamps, timelines, constraints);
   }
 
   private static List<Duration> deserializeTimestamps(final JsonValue json) {
