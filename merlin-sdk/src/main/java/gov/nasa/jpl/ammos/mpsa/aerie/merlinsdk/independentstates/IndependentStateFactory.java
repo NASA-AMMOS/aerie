@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 public final class IndependentStateFactory {
   private final Map<String, SerializedParameter> settableStates = new HashMap<>();
-  private final Map<String, Double> cumulableStates = new HashMap<>();
+  private final Map<String, Double> consumableStates = new HashMap<>();
 
   private final Function<String, StateQuery<SerializedParameter>> model;
   private final Consumer<IndependentStateEvent> emitter;
@@ -40,10 +40,10 @@ public final class IndependentStateFactory {
         value -> this.emitter.accept(IndependentStateEvent.set(name, mapper.serializeParameter(value))));
   }
 
-  public ConsumableState cumulable(final String name, final double initialValue) {
+  public ConsumableState consumable(final String name, final double initialValue) {
     final var mapper = new DoubleParameterMapper();
 
-    this.cumulableStates.put(name, initialValue);
+    this.consumableStates.put(name, initialValue);
 
     return new ConsumableState(
         name,
@@ -79,7 +79,7 @@ public final class IndependentStateFactory {
     return Collections.unmodifiableMap(this.settableStates);
   }
 
-  public Map<String, Double> getCumulableStates() {
-    return Collections.unmodifiableMap(this.cumulableStates);
+  public Map<String, Double> getConsumableStates() {
+    return Collections.unmodifiableMap(this.consumableStates);
   }
 }

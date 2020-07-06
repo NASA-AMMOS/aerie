@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.IndependentStateFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.ConsumableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.ConsumableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
 
 import java.util.List;
 

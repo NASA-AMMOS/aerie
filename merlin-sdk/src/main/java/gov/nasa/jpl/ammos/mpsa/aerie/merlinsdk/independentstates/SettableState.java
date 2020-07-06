@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
