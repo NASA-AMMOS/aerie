@@ -5,7 +5,7 @@ import java.util.List;
 
 public final class Duration implements Comparable<Duration> {
   // Range of -2^63 to 2^63 - 1.
-  public final long durationInMicroseconds;
+  private final long durationInMicroseconds;
 
   private Duration(final long durationInMicroseconds) {
     this.durationInMicroseconds = durationInMicroseconds;

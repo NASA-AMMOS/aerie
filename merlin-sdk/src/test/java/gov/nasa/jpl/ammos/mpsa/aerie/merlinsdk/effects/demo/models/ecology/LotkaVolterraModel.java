@@ -14,7 +14,7 @@ public final class LotkaVolterraModel {
   }
 
   public void step(final Duration duration) {
-    final var dt = duration.durationInMicroseconds / 1000000.0;
+    final var dt = duration.dividedBy(Duration.MICROSECOND) / 1000000.0;
 
     final var predatorDensityRate =
         ( (parameters.predatorGrowthRate * predatorDensity * preyDensity)
