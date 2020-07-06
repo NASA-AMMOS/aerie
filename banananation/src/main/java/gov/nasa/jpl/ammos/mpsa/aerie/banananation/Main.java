@@ -22,5 +22,6 @@ public final class Main {
 
     System.out.println(results.timestamps);
     System.out.println(results.timelines);
+    System.out.println(results.constraintViolations);
   }
 }
