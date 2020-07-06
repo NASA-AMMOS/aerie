@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.SettableState;
 
 import java.util.List;
 
@@ -15,6 +16,9 @@ public final class BananaStates {
 
   public static final DoubleState fruit = factory.cumulative("fruit", 4.0);
   public static final DoubleState peel = factory.cumulative("peel", 4.0);
+
+  public enum Flag { A, B }
+  public static final SettableState<Flag> flag = factory.enumerated("flag", Flag.A);
 
   public static final List<ViolableConstraint> violableConstraints = List.of(
       new ViolableConstraint(fruit.when(x -> x < 2))
