@@ -1,13 +1,12 @@
 java_library(
     name = "lib",
-    srcs = [],
+    srcs = glob(["src/main/java/**/*.java"]),
     resources = glob(["src/main/resources/**/*"]),
     resources_root = "src/main/resources/",
     exported_deps = [
         "//third-party/sample-adaptation/core:sample-adaptation",
         "//third-party:JNISpice",
         # Modules
-        "//merlin-multimission-models:merlin-multimission-models",
         "//merlin-sdk:merlin-sdk"
     ],
     annotation_processors = ["gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor.ActivityProcessor"],
