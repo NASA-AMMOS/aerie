@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
@@ -7,22 +7,23 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 
-public final class RegisterState {
-    public final TreeMap<Duration, Double> changes = new TreeMap<>();
+public final class RegisterState<T> {
+    public final TreeMap<Duration, T> changes = new TreeMap<>();
     public final TreeMap<Duration, Boolean> conflicted = new TreeMap<>();
     private Duration elapsedTime;
 
-    public RegisterState(final RegisterState other) {
+    public RegisterState(final RegisterState<T> other) {
         this.elapsedTime = other.elapsedTime;
         this.changes.putAll(other.changes);
         this.conflicted.putAll(other.conflicted);
     }
 
-    public RegisterState(final double value) {
+    public RegisterState(final T value) {
         this.elapsedTime = Duration.ZERO;
 
         this.changes.put(this.elapsedTime, value);
@@ -33,7 +34,7 @@ public final class RegisterState {
         this.elapsedTime = this.elapsedTime.plus(duration);
     }
 
-    public void set(final double value) {
+    public void set(final T value) {
         this.changes.put(this.elapsedTime, value);
         if (this.conflicted.lastEntry().getValue()) {
             this.conflicted.put(this.elapsedTime, false);
@@ -44,7 +45,7 @@ public final class RegisterState {
         this.conflicted.put(this.elapsedTime, true);
     }
 
-    public double get() {
+    public T get() {
         if (this.isConflicted()) System.err.println("Warning: getting conflicted state");;
         return this.changes.lastEntry().getValue();
     }
@@ -53,7 +54,7 @@ public final class RegisterState {
         return this.conflicted.lastEntry().getValue();
     }
 
-    public List<Window> when(final Predicate<Double> condition) {
+    public List<Window> when(final Predicate<T> condition) {
         return matching(this.changes, this.elapsedTime, condition);
     }
 
@@ -63,10 +64,10 @@ public final class RegisterState {
 
     @Override
     public String toString() {
-        return Double.toString(this.get());
+        return Objects.toString(this.get());
     }
 
-    private static <T> Optional<T> skipUntil(Iterator<T> iter, Predicate<? super T> predicate) {
+    private static <T> Optional<T> skipUntil(final Iterator<T> iter, final Predicate<? super T> predicate) {
         while (iter.hasNext()) {
             final var entry = iter.next();
             if (predicate.test(entry)) return Optional.of(entry);

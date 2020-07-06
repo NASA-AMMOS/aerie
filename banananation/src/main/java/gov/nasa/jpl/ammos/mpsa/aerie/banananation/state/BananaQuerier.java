@@ -4,11 +4,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.IndependentStateFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterStateApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableStateApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.RegisterState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
@@ -21,7 +21,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,18 +47,33 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   public static final ReactionContext<?, Activity, BananaEvent> ctx = new DynamicReactionContext<>(() -> activeContext.get().getLeft());
 
 
-  private final Map<String, Query<T, BananaEvent, RegisterState>> registers = new HashMap<>();
+  private final Set<String> stateNames = new HashSet<>();
+  private final Map<String, Query<T, BananaEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
+  private final Map<String, Query<T, BananaEvent, RegisterState<Double>>> cumulables = new HashMap<>();
 
   public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline) {
+    for (final var entry : BananaStates.factory.getSettableStates().entrySet()) {
+      final var name = entry.getKey();
+      final var initialValue = entry.getValue();
+
+      if (this.stateNames.contains(name)) throw new RuntimeException("State \"" + name + "\" already defined");
+      this.stateNames.add(name);
+
+      this.settables.put(name, timeline.register(
+        new SettableEffectEvaluator(name).filterContramap(BananaEvent::asIndependent),
+        new SettableStateApplicator(initialValue)));
+    }
+
     for (final var entry : BananaStates.factory.getConsumableStates().entrySet()) {
       final var name = entry.getKey();
       final var initialValue = entry.getValue();
 
-      final var query = timeline.register(
-          new StateEffectEvaluator(name).filterContramap(BananaEvent::asIndependent),
-          new RegisterStateApplicator(initialValue));
+      if (this.stateNames.contains(name)) throw new RuntimeException("State \"" + name + "\" already defined");
+      this.stateNames.add(name);
 
-      this.registers.put(name, query);
+      this.cumulables.put(name, timeline.register(
+        new CumulableEffectEvaluator(name).filterContramap(BananaEvent::asIndependent),
+        new CumulableStateApplicator(initialValue)));
     }
   }
 
@@ -67,20 +84,20 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   @Override
   public Set<String> states() {
-    return this.registers.keySet();
-  }
-
-  public double getStateAt(final String name, final History<T, BananaEvent> history) {
-    return this.registers.get(name).getAt(history).get();
+    return Collections.unmodifiableSet(this.stateNames);
   }
 
   @Override
   public SerializedParameter getSerializedStateAt(final String name, final History<T, BananaEvent> history) {
-    return SerializedParameter.of(this.getStateAt(name, history));
+    if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history).get();
+    else if (this.cumulables.containsKey(name)) return SerializedParameter.of(this.cumulables.get(name).getAt(history).get());
+    else throw new RuntimeException("State \"" + name + "\" is not defined");
   }
 
-  public List<Window> whenStateUptoMatches(final String name, final History<T, BananaEvent> history, final Predicate<Double> condition) {
-    return this.registers.get(name).getAt(history).when(condition);
+  public List<Window> whenStateUptoMatches(final String name, final History<T, BananaEvent> history, final Predicate<SerializedParameter> condition) {
+    if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history).when(condition);
+    else if (this.cumulables.containsKey(name)) return this.cumulables.get(name).getAt(history).when(x -> condition.test(SerializedParameter.of(x)));
+    else throw new RuntimeException("State \"" + name + "\" is not defined");
   }
 
   @Override
