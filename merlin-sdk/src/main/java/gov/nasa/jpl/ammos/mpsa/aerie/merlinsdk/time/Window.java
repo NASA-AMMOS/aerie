@@ -21,18 +21,39 @@ public final class Window {
     return new Window(start, end);
   }
 
+  public static Window between(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
+    return between(Duration.of(startQuantity, startUnits), Duration.of(endQuantity, endUnits));
+  }
+
+  public static Window window(final Duration start, final Duration end) {
+    return between(start, end);
+  }
+
+  public static Window window(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
+    return between(startQuantity, startUnits, endQuantity, endUnits);
+  }
+
   public static Window at(final Duration point) {
     return new Window(point, point);
   }
 
-  public static final Window EMPTY = new Window(Duration.ZERO, Duration.of(-1, TimeUnit.MICROSECONDS));
+  public static Window at(final long quantity, final TimeUnit units) {
+    return at(Duration.of(quantity, units));
+  }
+
+  public static final Window EMPTY = new Window(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
+  public static final Window FOREVER = new Window(Duration.MIN_VALUE, Duration.MAX_VALUE);
 
   public boolean isEmpty() {
     return this.end.shorterThan(this.start);
   }
 
   public boolean overlaps(final Window other) {
-    return !this.isEmpty() && !other.isEmpty() && !this.end.shorterThan(other.start) && !other.end.shorterThan(this.start);
+    return !other.isEmpty() && !this.isEmpty() && !this.end.shorterThan(other.start) && !other.end.shorterThan(this.start);
+  }
+
+  public boolean contains(final Window other) {
+    return other.isEmpty() || (!this.isEmpty() && !this.end.shorterThan(other.end) && !other.start.shorterThan(this.start));
   }
 
   /**
