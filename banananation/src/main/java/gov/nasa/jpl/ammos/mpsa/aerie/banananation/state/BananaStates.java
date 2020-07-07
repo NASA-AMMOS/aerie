@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.ConsumableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
 
 import java.util.List;
@@ -13,8 +13,8 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.que
 public final class BananaStates {
   public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(BananaEvent.independent(ev)));
 
-  public static final ConsumableState fruit = factory.consumable("fruit", 4.0);
-  public static final ConsumableState peel = factory.consumable("peel", 4.0);
+  public static final DoubleState fruit = factory.consumable("fruit", 4.0);
+  public static final DoubleState peel = factory.consumable("peel", 4.0);
 
   public static final List<ViolableConstraint> violableConstraints = List.of(
       new ViolableConstraint(fruit.when(x -> x < 2))

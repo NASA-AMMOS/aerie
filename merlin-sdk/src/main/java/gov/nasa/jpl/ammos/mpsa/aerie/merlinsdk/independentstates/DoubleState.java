@@ -9,13 +9,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public final class ConsumableState {
+public final class DoubleState implements MetricState<Double, Double> {
   private final String name;
   private final Supplier<Double> getter;
   private final Function<Predicate<Double>, List<Window>> checker;
   private final Consumer<Double> emitter;
 
-  public ConsumableState(
+  public DoubleState(
       final String name,
       final Supplier<Double> getter,
       final Function<Predicate<Double>, List<Window>> checker,
@@ -27,35 +27,43 @@ public final class ConsumableState {
     this.emitter = emitter;
   }
 
-  public void add(final double delta) {
-    this.emitter.accept(delta);
-  }
-
-  public double get() {
+  @Override
+  public Double get() {
     return this.getter.get();
   }
 
+  @Override
+  public void add(final Double delta) {
+    this.emitter.accept(delta);
+  }
+
+  @Override
   public Constraint when(final Predicate<Double> condition) {
     return Constraint.createStateConstraint(this.name, () -> this.checker.apply(condition));
   }
 
-  public Constraint whenGreaterThan(final double y) {
+  @Override
+  public Constraint whenGreaterThan(final Double y) {
     return this.when((x) -> (x > y));
   }
 
-  public Constraint whenLessThan(final double y) {
+  @Override
+  public Constraint whenLessThan(final Double y) {
     return this.when((x) -> (x < y));
   }
 
-  public Constraint whenLessThanOrEqualTo(final double y) {
+  @Override
+  public Constraint whenLessThanOrEqualTo(final Double y) {
     return this.when((x) -> (x <= y));
   }
 
-  public Constraint whenGreaterThanOrEqualTo(final double y) {
+  @Override
+  public Constraint whenGreaterThanOrEqualTo(final Double y) {
     return this.when((x) -> (x >= y));
   }
 
-  public Constraint whenEqualWithin(final double y, final double tolerance) {
+  @Override
+  public Constraint whenEqualWithin(final Double y, final Double tolerance) {
     return this.when((x) -> (Math.abs(x - y) < tolerance));
   }
 }

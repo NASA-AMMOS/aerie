@@ -40,12 +40,12 @@ public final class IndependentStateFactory {
         value -> this.emitter.accept(IndependentStateEvent.set(name, mapper.serializeParameter(value))));
   }
 
-  public ConsumableState consumable(final String name, final double initialValue) {
+  public DoubleState consumable(final String name, final double initialValue) {
     final var mapper = new DoubleParameterMapper();
 
     this.consumableStates.put(name, initialValue);
 
-    return new ConsumableState(
+    return new DoubleState(
         name,
         () -> mapper.deserializeParameter(this.model.apply(name).get()).getSuccessOrThrow(),
         pred -> this.model.apply(name).when(x -> pred.test(mapper.deserializeParameter(x).getSuccessOrThrow())),
