@@ -178,12 +178,12 @@ public final class LocalApp implements App {
      *         it contains may not abide by the expected contract at load time.
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
      */
-    private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
+    private Adaptation<?> loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
         try {
             final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-            final MerlinAdaptation adaptation =
+            final MerlinAdaptation<?> adaptation =
                 AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
-            return new Adaptation(adaptation);
+            return new Adaptation<>(adaptation);
         } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
             throw new NoSuchAdaptationException(adaptationId, ex);
         } catch (final AdaptationLoader.AdaptationLoadException ex) {
