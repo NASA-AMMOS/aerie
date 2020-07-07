@@ -64,7 +64,7 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
         new SettableStateApplicator(initialValue)));
     }
 
-    for (final var entry : BananaStates.factory.getConsumableStates().entrySet()) {
+    for (final var entry : BananaStates.factory.getCumulableStates().entrySet()) {
       final var name = entry.getKey();
       final var initialValue = entry.getValue();
 
