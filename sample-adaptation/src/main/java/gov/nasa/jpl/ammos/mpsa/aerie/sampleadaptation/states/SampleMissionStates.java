@@ -25,5 +25,27 @@ public final class SampleMissionStates {
     public static final ConsumableState totalDownlinkedDataBits = factory.createConsumableState("totalDownlinkedData", 0.0);
 
     // Placeholder for when violable constraints are added
-    public static final List<ViolableConstraint> violableConstraints = List.of();
+    public static final List<ViolableConstraint> violableConstraints = List.of(
+            new ViolableConstraint(batteryCapacity.whenLessThan(Config.startBatteryCapacity_J * 0.3))
+                    .withId("minSOC")
+                    .withName("Min Battery SoC")
+                    .withMessage("Battery Capacity severely low")
+                    .withCategory("severe"),
+            new ViolableConstraint(batteryCapacity.whenLessThan(Config.startBatteryCapacity_J * 0.5)
+                    .and(batteryCapacity.whenGreaterThanOrEqualTo(Config.startBatteryCapacity_J * 0.3)))
+                    .withId("lowSOC")
+                    .withName("Low Battery SoC")
+                    .withMessage("Battery Capacity moderately low")
+                    .withCategory("moderate"),
+            new ViolableConstraint(instrumentDataBits.whenGreaterThan(3e+6))
+                    .withId("maxAllocatedInstrumentData")
+                    .withName("Max Instrument Data")
+                    .withMessage("Exceeded max instrument data space available")
+                    .withCategory("warning"),
+            new ViolableConstraint(cameraDataBits.whenGreaterThan(1.5e+7))
+                    .withId("maxAllocatedCameraData")
+                    .withName("Max Camera Data")
+                    .withMessage("Exceeded max camera data space available")
+                    .withCategory("warning")
+    );
 }
