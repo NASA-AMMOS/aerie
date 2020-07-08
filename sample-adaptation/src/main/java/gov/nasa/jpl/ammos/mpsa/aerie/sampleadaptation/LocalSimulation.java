@@ -28,7 +28,7 @@ public class LocalSimulation {
                                         "imageQuality", SerializedParameter.of(90)))),
                 Pair.of(Duration.of(25200, TimeUnit.SECONDS), new SerializedActivity("DownlinkData",
                         Map.of("downlinkAll", SerializedParameter.of(true),
-                                "totalAmount", SerializedParameter.of(0))))
+                                "totalBits", SerializedParameter.of(0))))
         );
         final var adaptation = new SampleAdaptation();
         final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Duration.of(100, TimeUnit.MILLISECONDS));
