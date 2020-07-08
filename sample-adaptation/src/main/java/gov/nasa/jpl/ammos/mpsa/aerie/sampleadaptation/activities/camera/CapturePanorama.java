@@ -1,13 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.camera;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEffects.call;
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
 
+@ActivityType(name="CapturePanorama", generateMapper=true)
 public class CapturePanorama implements Activity {
 
     @Parameter
@@ -42,7 +44,7 @@ public class CapturePanorama implements Activity {
     public void modelEffects() {
         for (int verticalIndex = 0; verticalIndex < nFramesVertical; verticalIndex++) {
             for(int horizontalIndex = 0; horizontalIndex < nFramesHorizontal; horizontalIndex++) {
-                call(new CaptureImage(imageQuality));
+                ctx.call(new CaptureImage(imageQuality));
             }
         }
     }

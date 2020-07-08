@@ -1,301 +1,130 @@
 {
-  "adaptationId": "5df16e65a920f467637bac3a",
-  "endTimestamp": "2018-240T02:58:00",
-  "startTimestamp": "2016-240T02:58:00",
+  "adaptationId": "5f0389622426f039e6c841e3",
+  "startTimestamp": "2016-240T02:45:00",
+  "endTimestamp": "2016-243T12:00:00",
   "name": "sample-adaptation",
   "activityInstances": [
     {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2016-240T12:53:48.435057",
+      "type": "RunInstrument",
+      "startTimestamp": "2016-240T03:00:00.000000",
       "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
+          "durationInSeconds": 300.0,
+          "dataMode": "LOW"
       }
     },
     {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2016-240T14:53:48.435057",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2016-293T17:32:24.393347",
+      "type": "RunInstrument",
+      "startTimestamp": "2016-240T03:10:00.000000",
       "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
+        "durationInSeconds": 600.0,
+        "dataMode": "MED"
       }
     },
     {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2016-293T19:32:24.393347",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2016-346T16:20:25.268154",
+      "type": "PreheatCamera",
+      "startTimestamp": "2016-240T03:12:00.000000",
       "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
+        "heatDurationInSeconds": 1800
       }
     },
     {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2016-346T18:20:25.268154",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-033T12:12:48.753597",
+      "type": "CapturePanorama",
+      "startTimestamp": "2016-240T03:27:00.000000",
       "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-033T14:12:48.753597",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-086T08:07:18.864901",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-086T10:07:18.864901",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-139T05:16:46.182531",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-139T07:16:46.182531",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-192T01:11:25.240565",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-192T03:11:25.240565",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-244T21:06:16.273410",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-244T23:06:16.273410",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-297T17:00:52.845625",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-297T19:00:52.845625",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2017-350T17:16:14.762306",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2017-350T19:16:14.762306",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2018-038T13:11:15.588336",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2018-038T15:11:15.588336",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2018-091T09:06:10.280245",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2018-091T11:06:10.280245",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2018-144T05:00:54.931774",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2018-144T07:00:54.931774",
-      "parameters": {}
-    },
-    {
-      "type": "TurnInstrumentOn",
-      "startTimestamp": "2018-197T04:38:51.746603",
-      "parameters": {
-          "instrumentRate": 10.0,
-          "instrumentPower_W": 100.0
-      }
-    },
-    {
-      "type": "TurnInstrumentOff",
-      "startTimestamp": "2018-197T06:38:51.746603",
-      "parameters": {}
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2016-236T20:55:53.724861",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
+        "nFramesHorizontal": 4,
+        "nFramesVertical": 2,
+        "imageQuality": 90
       }
     },
     {
       "type": "DownlinkData",
-      "startTimestamp":"2016-280T18:23:13.944592",
+      "startTimestamp": "2016-240T10:00:00.000000",
       "parameters": {
         "downlinkAll": true,
-        "downlinkAmount": 0.0
+        "totalBits": 0
+      }
+    },
+    {
+      "type": "CapturePanorama",
+      "startTimestamp": "2016-240T14:30:00.000000",
+      "parameters": {
+        "nFramesHorizontal": 2,
+        "nFramesVertical": 2,
+        "imageQuality": 80
+      }
+    },
+    {
+      "type": "RunInstrument",
+      "startTimestamp": "2016-240T18:00:00.000000",
+      "parameters": {
+        "durationInSeconds": 1800.0,
+        "dataMode": "LOW"
+      }
+    },
+    {
+      "type": "PreheatCamera",
+      "startTimestamp": "2016-240T20:00:00.000000",
+      "parameters": {
+        "heatDurationInSeconds": 2700
+      }
+    },
+    {
+      "type": "CapturePanorama",
+      "startTimestamp": "2016-240T20:15:00.000000",
+      "parameters": {
+        "nFramesHorizontal": 4,
+        "nFramesVertical": 4,
+        "imageQuality": 100
+      }
+    },
+    {
+      "type": "RunInstrument",
+      "startTimestamp": "2016-240T22:00:00.000000",
+      "parameters": {
+        "durationInSeconds": 1200.0,
+        "dataMode": "MED"
       }
     },
     {
       "type": "DownlinkData",
-      "startTimestamp":"2016-328T06:57:41.777905",
+      "startTimestamp": "2016-241T04:00:00.000000",
       "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
+        "downlinkAll": false,
+        "totalBits": 6000000
+      }
+    },
+    {
+      "type": "CapturePanorama",
+      "startTimestamp": "2016-241T14:30:00.000000",
+      "parameters": {
+        "nFramesHorizontal": 2,
+        "nFramesVertical": 2,
+        "imageQuality": 80
       }
     },
     {
       "type": "DownlinkData",
-      "startTimestamp":"2017-012T03:21:28.845730",
+      "startTimestamp": "2016-242T04:00:00.000000",
       "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
+        "downlinkAll": false,
+        "totalBits": 10000000
+      }
+    },
+    {
+      "type": "CapturePanorama",
+      "startTimestamp": "2016-242T14:30:00.000000",
+      "parameters": {
+        "nFramesHorizontal": 2,
+        "nFramesVertical": 2,
+        "imageQuality": 80
       }
     },
     {
       "type": "DownlinkData",
-      "startTimestamp":"2017-063T04:08:04.971077",
+      "startTimestamp": "2016-243T04:00:00.000000",
       "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2017-114T21:11:10.416407",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2017-166T22:31:26.749466",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2017-219T04:32:03.812855",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2017-271T13:47:05.912666",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2017-324T03:19:24.682979",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2018-011T18:24:04.955446",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2018-064T08:21:10.503459",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2018-116T23:02:14.838985",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
-      }
-    },
-    {
-      "type": "DownlinkData",
-      "startTimestamp":"2018-169T15:56:30.597462",
-      "parameters": {
-        "downlinkAll": true,
-        "downlinkAmount": 0.0
+        "downlinkAll": false,
+        "totalBits": 8500000
       }
     }
   ]
