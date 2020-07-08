@@ -18,7 +18,7 @@ public final class SampleMissionStates {
     public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(SampleEvent.independent(ev)));
 
     // TODO: Currently batteryCapacity is used, but never recharged
-    public static final ConsumableState batteryCapcity = factory.createConsumableState("batteryCapacity", Config.initialBatteryCapacity);
+    public static final ConsumableState batteryCapacity = factory.createConsumableState("batteryCapacity", Config.initialBatteryCapacity);
     // TODO: Make the following data states Integers when possible
     public static final ConsumableState instrumentDataBits = factory.createConsumableState("instrumentData", 0.0);
     public static final ConsumableState cameraDataBits = factory.createConsumableState("cameraData", 0.0);
