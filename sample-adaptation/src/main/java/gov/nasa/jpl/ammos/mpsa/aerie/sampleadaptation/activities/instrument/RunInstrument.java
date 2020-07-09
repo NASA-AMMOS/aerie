@@ -37,8 +37,8 @@ public class RunInstrument implements Activity {
     @Override
     public List<String> validateParameters() {
         final List<String> failures = new ArrayList<>();
-        if (durationInSeconds <= 0.0) {
-            failures.add("duration must be greater than 0");
+        if (durationInSeconds < 0) {
+            failures.add("`durationInSeconds` must be non-negative");
         }
         return failures;
     }
