@@ -153,7 +153,8 @@ public class ParameterTestActivity implements Activity {
             new int[] {101, 102},
             new int[] {103, 103}
     };
-    testActivity.intListArrayArray = new List[][] {
+    @SuppressWarnings("unchecked")
+    final List<Integer>[][] intListArrayArray = new List[][] {
             new List[] {
                     List.of(200, 201),
                     List.of(202, 203),
@@ -163,7 +164,9 @@ public class ParameterTestActivity implements Activity {
                     List.of(206, 207)
             }
     };
-    testActivity.obnoxious = List.of(
+    testActivity.intListArrayArray = intListArrayArray;
+    @SuppressWarnings("unchecked")
+    final List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious = List.of(
             Map.of(
                     new String[][] {
                             new String[] {"300", "301"},
@@ -221,6 +224,7 @@ public class ParameterTestActivity implements Activity {
                     )
             )
     );
+    testActivity.obnoxious = obnoxious;
 
     return testActivity;
   }

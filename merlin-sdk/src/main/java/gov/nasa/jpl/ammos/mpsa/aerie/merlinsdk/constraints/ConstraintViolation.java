@@ -23,4 +23,17 @@ public final class ConstraintViolation {
         this.associatedActivityIds = Set.copyOf(violableConstraint.getActivityIds());
         this.associatedStateIds = Set.copyOf(violableConstraint.getStateIds());
     }
+
+    @Override
+    public String toString() {
+        return "ConstraintViolation { " +
+            "id='" + this.id + "'" +
+            ", name='" + this.name + "'" +
+            ", message='" + this.message + "'" +
+            ", category='" + this.category + "'" +
+            ", associatedActivityIds=" + this.associatedActivityIds +
+            ", associatedStateIds=" + this.associatedStateIds +
+            ", violationWindows=" + this.violationWindows +
+            " }";
+    }
 }

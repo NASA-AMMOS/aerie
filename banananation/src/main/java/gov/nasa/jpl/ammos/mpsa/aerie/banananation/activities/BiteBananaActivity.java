@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.Flag;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
@@ -7,6 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.flag;
 import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.fruit;
 
 /**
@@ -35,6 +37,7 @@ public final class BiteBananaActivity implements Activity {
 
   @Override
   public void modelEffects() {
+    flag.set(Flag.B);
     fruit.add(-biteSize);
   }
 }

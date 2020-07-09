@@ -10,11 +10,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.IndependentStateFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.RegisterStateApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.RegisterState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
@@ -35,15 +35,15 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     // Define a function to take a state name and provide questions that can be asked
     // based on current context
-    public static final Function<String, StateQuery<Double>> query = (name) -> new StateQuery<>() {
+    public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new StateQuery<>() {
         @Override
-        public Double get() {
-            return stateContext.get().getStateValue(name);
+        public SerializedParameter get() {
+            return SerializedParameter.of(stateContext.get().getStateValue(name));
         }
 
         @Override
-        public List<Window> when(final Predicate<Double> condition) {
-            return stateContext.get().when(name, condition);
+        public List<Window> when(final Predicate<SerializedParameter> condition) {
+            return stateContext.get().when(name, x -> condition.test(SerializedParameter.of(x)));
         }
     };
 
@@ -53,17 +53,17 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
-    private final Map<String, Query<T, SampleEvent, RegisterState>> registers = new HashMap<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> registers = new HashMap<>();
 
     public SampleQuerier(final SimulationTimeline<T, SampleEvent> timeline, final IndependentStateFactory stateFactory) {
         // Register a Query object for each state
-        for (final var entry : stateFactory.getRegisteredStates().entrySet()) {
+        for (final var entry : stateFactory.getCumulableStates().entrySet()) {
             final var name = entry.getKey();
             final var initialValue = entry.getValue();
 
             final var query = timeline.register(
-                    new StateEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
-                    new RegisterStateApplicator(initialValue));
+                    new CumulableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
+                    new CumulableStateApplicator(initialValue));
 
             this.registers.put(name, query);
         }

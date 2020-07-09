@@ -2,73 +2,61 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.traits;
 
 import java.util.Objects;
 
-public abstract class SettableEffect<Accumulator, Effect> {
+public abstract class SettableEffect<T> {
     private SettableEffect() {}
 
-    public abstract <Result> Result visit(Visitor<Accumulator, Effect, Result> visitor);
+    public abstract <Result> Result visit(Visitor<T, Result> visitor);
 
-    public interface Visitor<Accumulator, Effect, Result> {
+    public interface Visitor<T, Result> {
+        Result empty();
+        Result setTo(T base);
         Result conflict();
-        Result setTo(Accumulator base);
-        Result add(Effect delta);
     }
 
-    public interface VoidVisitor<Accumulator, Effect> {
-        void conflict();
-        void setTo(Accumulator base);
-        void add(Effect delta);
-    }
-
-    public static <Accumulator, Effect> SettableEffect<Accumulator, Effect> conflict() {
+    public static <T> SettableEffect<T> empty() {
         return new SettableEffect<>() {
             @Override
-            public <Result> Result visit(final Visitor<Accumulator, Effect, Result> visitor) {
-                return visitor.conflict();
+            public <Result> Result visit(final Visitor<T, Result> visitor) {
+                return visitor.empty();
             }
         };
     }
 
-    public static <Accumulator, Effect> SettableEffect<Accumulator, Effect> setTo(final Accumulator base) {
+    public static <T> SettableEffect<T> setTo(final T base) {
         Objects.requireNonNull(base);
 
         return new SettableEffect<>() {
             @Override
-            public <Result> Result visit(final Visitor<Accumulator, Effect, Result> visitor) {
+            public <Result> Result visit(final Visitor<T, Result> visitor) {
                 return visitor.setTo(base);
             }
         };
     }
 
-    public static <Accumulator, Effect> SettableEffect<Accumulator, Effect> add(final Effect delta) {
-        Objects.requireNonNull(delta);
-
+    public static <T> SettableEffect<T> conflict() {
         return new SettableEffect<>() {
             @Override
-            public <Result> Result visit(final Visitor<Accumulator, Effect, Result> visitor) {
-                return visitor.add(delta);
+            public <Result> Result visit(final Visitor<T, Result> visitor) {
+                return visitor.conflict();
             }
         };
     }
 
-    // Convenience method
-    public final void visit(final VoidVisitor<Accumulator, Effect> visitor) {
-        this.visit(new Visitor<>() {
+    public final boolean isEmpty() {
+        return this.visit(new Visitor<>() {
             @Override
-            public Object conflict() {
-                visitor.conflict();
-                return null;
+            public Boolean empty() {
+                return true;
             }
 
             @Override
-            public Object setTo(final Accumulator base) {
-                visitor.setTo(base);
-                return null;
+            public Boolean setTo(final T base) {
+                return false;
             }
 
             @Override
-            public Object add(final Effect delta) {
-                visitor.add(delta);
-                return null;
+            public Boolean conflict() {
+                return false;
             }
         });
     }
@@ -77,18 +65,18 @@ public abstract class SettableEffect<Accumulator, Effect> {
     public final String toString() {
         return this.visit(new Visitor<>() {
             @Override
-            public String conflict() {
-                return "conflict()";
+            public String empty() {
+                return "empty()";
             }
 
             @Override
-            public String setTo(final Accumulator base) {
+            public String setTo(final T base) {
                 return "setTo(" + base + ")";
             }
 
             @Override
-            public String add(final Effect delta) {
-                return "add(" + delta + ")";
+            public String conflict() {
+                return "conflict()";
             }
         });
     }

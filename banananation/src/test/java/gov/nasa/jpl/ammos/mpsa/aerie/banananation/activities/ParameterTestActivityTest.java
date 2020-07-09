@@ -5,15 +5,17 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Seriali
 
 import org.junit.Test;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class ParameterTestActivityTest {
-
-    private ParameterTestActivity$$ActivityMapper mapper;
+    private final ParameterTestActivity$$ActivityMapper mapper;
 
     public ParameterTestActivityTest() {
         mapper = new ParameterTestActivity$$ActivityMapper();
@@ -363,63 +365,63 @@ public class ParameterTestActivityTest {
 
 
         // Map Parameters
-        Map.Entry<Double, Double>[] doubleMapEntries = testValues.doubleMap.entrySet().toArray(new Map.Entry[testValues.doubleMap.size()]);
+        final var doubleMapEntries = entryArray(testValues.doubleMap);
         parameters.put("doubleMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(doubleMapEntries[0].getKey()), SerializedParameter.of(doubleMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(doubleMapEntries[0].getValue()), SerializedParameter.of(doubleMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Float, Float>[] floatMapEntries = testValues.floatMap.entrySet().toArray(new Map.Entry[testValues.floatMap.size()]);
+        final var floatMapEntries = entryArray(testValues.floatMap);
         parameters.put("floatMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(floatMapEntries[0].getKey()), SerializedParameter.of(floatMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(floatMapEntries[0].getValue()), SerializedParameter.of(floatMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Byte, Byte>[] byteMapEntries = testValues.byteMap.entrySet().toArray(new Map.Entry[testValues.byteMap.size()]);
+        final var byteMapEntries = entryArray(testValues.byteMap);
         parameters.put("byteMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(byteMapEntries[0].getKey()), SerializedParameter.of(byteMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(byteMapEntries[0].getValue()), SerializedParameter.of(byteMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Short, Short>[] shortMapEntries = testValues.shortMap.entrySet().toArray(new Map.Entry[testValues.shortMap.size()]);
+        final var shortMapEntries = entryArray(testValues.shortMap);
         parameters.put("shortMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(shortMapEntries[0].getKey()), SerializedParameter.of(shortMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(shortMapEntries[0].getValue()), SerializedParameter.of(shortMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Integer, Integer>[] intMapEntries = testValues.intMap.entrySet().toArray(new Map.Entry[testValues.intMap.size()]);
+        final var intMapEntries = entryArray(testValues.intMap);
         parameters.put("intMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(intMapEntries[0].getKey()), SerializedParameter.of(intMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(intMapEntries[0].getValue()), SerializedParameter.of(intMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Long, Long>[] longMapEntries = testValues.longMap.entrySet().toArray(new Map.Entry[testValues.longMap.size()]);
+        final var longMapEntries = entryArray(testValues.longMap);
         parameters.put("longMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(longMapEntries[0].getKey()), SerializedParameter.of(longMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of(longMapEntries[0].getValue()), SerializedParameter.of(longMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Character, Character>[] charMapEntries = testValues.charMap.entrySet().toArray(new Map.Entry[testValues.charMap.size()]);
+        final var charMapEntries = entryArray(testValues.charMap);
         parameters.put("charMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of("" + charMapEntries[0].getKey()), SerializedParameter.of("" + charMapEntries[1].getKey()))),
                         "values", SerializedParameter.of(List.of(SerializedParameter.of("" + charMapEntries[0].getValue()), SerializedParameter.of("" + charMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<Boolean, Boolean>[] booleanMapEntries = testValues.booleanMap.entrySet().toArray(new Map.Entry[testValues.booleanMap.size()]);
+        final var booleanMapEntries = entryArray(testValues.booleanMap);
         parameters.put("booleanMap", SerializedParameter.of(
                 Map.of(
-                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(false), SerializedParameter.of(true))),
-                        "values", SerializedParameter.of(List.of(SerializedParameter.of(true), SerializedParameter.of(false)))
+                        "keys", SerializedParameter.of(List.of(SerializedParameter.of(booleanMapEntries[0].getKey()), SerializedParameter.of(booleanMapEntries[1].getKey()))),
+                        "values", SerializedParameter.of(List.of(SerializedParameter.of(booleanMapEntries[0].getValue()), SerializedParameter.of(booleanMapEntries[1].getValue())))
                 )
         ));
-        Map.Entry<String, String>[] stringMapEntries = testValues.stringMap.entrySet().toArray(new Map.Entry[testValues.stringMap.size()]);
+        final var stringMapEntries = entryArray(testValues.stringMap);
         parameters.put("stringMap", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(List.of(SerializedParameter.of(stringMapEntries[0].getKey()), SerializedParameter.of(stringMapEntries[1].getKey()))),
@@ -432,7 +434,7 @@ public class ParameterTestActivityTest {
 
         // Complex Parameters
 
-        Map.Entry<Integer, List<String>>[] mappyBoiEntries = testValues.mappyBoi.entrySet().toArray(new Map.Entry[testValues.mappyBoi.size()]);
+        final var mappyBoiEntries = entryArray(testValues.mappyBoi);
         parameters.put("mappyBoi", SerializedParameter.of(
                 Map.of(
                         "keys", SerializedParameter.of(
@@ -663,5 +665,10 @@ public class ParameterTestActivityTest {
 
     private ParameterTestActivity createParameterTestActivityInstance() {
         return ParameterTestActivity.createTestActivity();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <K, V> Map.Entry<K, V>[] entryArray(final Map<K, V> map) {
+      return map.entrySet().toArray(new Map.Entry[0]);
     }
 }

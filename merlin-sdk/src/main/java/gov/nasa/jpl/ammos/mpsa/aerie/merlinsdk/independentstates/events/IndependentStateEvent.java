@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+
 import java.util.Objects;
 
 // This can be mechanically derived from `EventHandler`.
@@ -18,7 +20,7 @@ public abstract class IndependentStateEvent {
         };
     }
 
-    public static IndependentStateEvent set(final String stateName, final double value) {
+    public static IndependentStateEvent set(final String stateName, final SerializedParameter value) {
         Objects.requireNonNull(stateName);
         return new IndependentStateEvent() {
             @Override
@@ -39,7 +41,7 @@ public abstract class IndependentStateEvent {
             }
 
             @Override
-            public String set(final String stateName, final double value) {
+            public String set(final String stateName, final SerializedParameter value) {
                 return String.format("set(\"%s\", %s)",
                         stateName.replace("\\", "\\\\").replace("\"", "\\\""),
                         value);

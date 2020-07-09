@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.ConsumableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public class Config {
     public static final long downlinkRate = (long)2000.0; // bits per second
 
     // Ordering prioritizes which data gets downlinked first
-    public static final List<ConsumableState> downlinkPriority = List.of(
+    public static final List<DoubleState> downlinkPriority = List.of(
             SampleMissionStates.instrumentDataBits,
             SampleMissionStates.cameraDataBits
     );
