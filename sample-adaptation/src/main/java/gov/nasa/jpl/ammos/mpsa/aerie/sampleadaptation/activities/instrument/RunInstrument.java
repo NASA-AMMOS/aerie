@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
-import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.batteryCapcity;
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.batteryCapacity;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.instrumentDataBits;
 
 @ActivityType(name="RunInstrument", generateMapper=true)
@@ -50,7 +50,7 @@ public class RunInstrument implements Activity {
         final double dataGenerated = dataMode.bitsPerSecond * durationInSeconds;
         final double powerConsumed = Config.instrumentPower * durationInSeconds;
         instrumentDataBits.add(dataGenerated);
-        batteryCapcity.add(-powerConsumed);
+        batteryCapacity.add(-powerConsumed);
 
         ctx.spawnAfter(Duration.of(durationInSeconds, TimeUnit.SECONDS), new TurnInstrumentOff());
     }

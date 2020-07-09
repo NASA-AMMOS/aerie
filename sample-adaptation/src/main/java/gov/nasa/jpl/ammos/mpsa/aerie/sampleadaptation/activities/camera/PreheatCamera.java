@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
-import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.batteryCapcity;
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.batteryCapacity;
 
 @ActivityType(name="PreheatCamera", generateMapper=true)
 public class PreheatCamera implements Activity {
@@ -19,7 +19,7 @@ public class PreheatCamera implements Activity {
     @Override
     public void modelEffects() {
         double totalEnergyUsed = heatDurationInSeconds * Config.cameraHeaterPower;
-        batteryCapcity.add(-totalEnergyUsed);
+        batteryCapacity.add(-totalEnergyUsed);
         ctx.delay(Duration.of(heatDurationInSeconds, TimeUnit.SECONDS));
     }
 }
