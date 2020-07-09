@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.states.ConsumableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
@@ -54,8 +54,7 @@ public class DownlinkData implements Activity {
      */
     private void downlinkAll() {
         for (final var channel : Config.downlinkPriority) {
-            // TODO: Remove cast when data channel states become integers
-            int downlinkVolume = (int)channel.get();
+            final var downlinkVolume = channel.get();
             downlinkChannelVolume(channel, downlinkVolume);
         }
     }
@@ -68,8 +67,8 @@ public class DownlinkData implements Activity {
     private void downlinkBits(int totalBits) {
         int remainingBits = totalBits;
         for (final var channel : Config.downlinkPriority) {
-            // TODO: Remove cast when data channel states become integers
-            int downlinkVolume = Math.min((int)channel.get(), remainingBits);
+            // TODO: Remove coercion when data channel states become integers
+            int downlinkVolume = Math.min(channel.get().intValue(), remainingBits);
             downlinkChannelVolume(channel, downlinkVolume);
 
             remainingBits -= downlinkVolume;
@@ -77,12 +76,13 @@ public class DownlinkData implements Activity {
         }
     }
 
-    private void downlinkChannelVolume(ConsumableState channel, int downlinkVolume) {
+    // TODO: Change from `double` to `int` when data channel states become integers
+    private void downlinkChannelVolume(DoubleState channel, double downlinkVolume) {
         channel.add(-downlinkVolume);
         totalDownlinkedDataBits.add(+downlinkVolume);
 
         // Wait for downlink duration
-        long downlinkDuration = downlinkVolume / Config.downlinkRate;
+        long downlinkDuration = ((long) downlinkVolume) / Config.downlinkRate;
         ctx.delay(Duration.of(downlinkDuration, TimeUnit.SECONDS));
     }
 }
