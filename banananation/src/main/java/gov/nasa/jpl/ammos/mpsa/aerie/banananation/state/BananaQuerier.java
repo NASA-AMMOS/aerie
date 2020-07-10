@@ -18,7 +18,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,19 +31,21 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, BananaEvent> {
-  private static final DynamicCell<Pair<ReactionContext<?, Activity, BananaEvent>, BananaQuerier<?>.InnerQuerier>> activeContext = DynamicCell.create();
+  private static final DynamicCell<ReactionContext<?, Activity, BananaEvent>> reactionContext = DynamicCell.create();
+  public static final ReactionContext<?, Activity, BananaEvent> ctx = new DynamicReactionContext<>(reactionContext::get);
+
+  private static final DynamicCell<BananaQuerier<?>.InnerQuerier> queryContext = DynamicCell.create();
   public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new StateQuery<>() {
     @Override
     public SerializedParameter get() {
-      return activeContext.get().getRight().get(name);
+      return queryContext.get().get(name);
     }
 
     @Override
     public List<Window> when(final Predicate<SerializedParameter> condition) {
-      return activeContext.get().getRight().when(name, condition);
+      return queryContext.get().when(name, condition);
     }
   };
-  public static final ReactionContext<?, Activity, BananaEvent> ctx = new DynamicReactionContext<>(() -> activeContext.get().getLeft());
 
 
   private final Set<String> stateNames = new HashSet<>();
@@ -79,7 +80,9 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   @Override
   public void runActivity(final ReactionContext<T, Activity, BananaEvent> ctx, final Activity activity) {
-    BananaQuerier.activeContext.setWithin(Pair.of(ctx, new InnerQuerier(ctx::now)), activity::modelEffects);
+    BananaQuerier.reactionContext.setWithin(ctx, () ->
+        BananaQuerier.queryContext.setWithin(new InnerQuerier(ctx::now), () ->
+            activity.modelEffects()));
   }
 
   @Override
@@ -102,10 +105,11 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   @Override
   public List<ConstraintViolation> getConstraintViolationsAt(final History<T, BananaEvent> history) {
-    final List<ConstraintViolation> violations = new ArrayList<>();
+    final var violations = new ArrayList<ConstraintViolation>();
 
+    final var innerQuerier = new InnerQuerier(() -> history);
     for (final var violableConstraint : BananaStates.violableConstraints) {
-      final var violationWindows = BananaQuerier.activeContext.setWithin(Pair.of(ctx, new InnerQuerier(() -> history)), violableConstraint::getWindows);
+      final var violationWindows = BananaQuerier.queryContext.setWithin(innerQuerier, violableConstraint::getWindows);
       if (!violationWindows.isEmpty()) {
         violations.add(new ConstraintViolation(violationWindows, violableConstraint));
       }

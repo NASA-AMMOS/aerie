@@ -11,17 +11,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class Querier<T> {
-  private static final DynamicCell<Pair<ReactionContext<?, Activity, Event>, InnerQuerier<?>>> activeContext = DynamicCell.create();
-  public static final Function<String, Double> getVolumeOf = (name) -> activeContext.get().getRight().getVolume(name);
-  public static final Function<String, Double> getRateOf = (name) -> activeContext.get().getRight().getRate(name);
-  public static final ReactionContext<?, Activity, Event> ctx = new DynamicReactionContext<>(() -> activeContext.get().getLeft());
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
 
+public final class Querier<T> {
+  private static final DynamicCell<ReactionContext<?, Activity, Event>> reactionContext = DynamicCell.create();
+  private static final DynamicCell<InnerQuerier<?>> queryContext = DynamicCell.create();
+
+  public static final ReactionContext<?, Activity, Event> ctx = new DynamicReactionContext<>(reactionContext::get);
+  public static final Function<String, Double> getVolumeOf = (name) -> queryContext.get().getVolume(name);
+  public static final Function<String, Double> getRateOf = (name) -> queryContext.get().getRate(name);
 
   private final Query<T, Event, DataModel> dataQuery;
 
@@ -29,12 +31,10 @@ public final class Querier<T> {
     this.dataQuery = timeline.register(new DataEffectEvaluator(), new DataModelApplicator());
   }
 
-  public InnerQuerier<?> at(final Supplier<History<T, Event>> currentTime) {
-    return new InnerQuerier<>(this, currentTime);
-  }
-
   public void runActivity(final ReactionContext<T, Activity, Event> ctx, final Activity activity) {
-    Querier.activeContext.setWithin(Pair.of(ctx, this.at(ctx::now)), activity::modelEffects);
+    setDynamic(queryContext, new InnerQuerier<>(this, ctx::now), () ->
+        setDynamic(reactionContext, ctx, () ->
+            activity.modelEffects()));
   }
 
   public static final class InnerQuerier<T> {
