@@ -36,12 +36,28 @@ def getArtifactoryUrl() {
     echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
 
     if (GIT_BRANCH ==~ /release-.*/){
+        echo "Publishing to 16003-RELEASE-LOCAL"
+        return "cae-artifactory.jpl.nasa.gov:16003"
+    } 
+    else if (GIT_BRANCH ==~ /staging/) {
         echo "Publishing to 16002-STAGE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16002"
     }
     else {
         echo "Publishing to 16001-DEVELOP-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16001"
+    }
+}
+
+def getPublishPath() {
+    if (GIT_BRANCH ==~ /release-.*/) {
+        return "general/gov/nasa/jpl/aerie/"
+    } 
+    else if (GIT_BRANCH ==~ /staging/) {
+        return "general-stage/gov/nasa/jpl/aerie/"
+    } 
+    else {
+        return "general-develop/gov/nasa/jpl/aerie/"
     }
 }
 
@@ -70,7 +86,7 @@ pipeline {
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
         LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
         WATCHMAN_HOME = "/opt/watchman"
-        ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/ammos/mpsa/aerie"
+        ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
         AWS_ECR_PATH = "${AWS_ECR}/aerie"
         DOCKERFILE_PATH = "scripts/dockerfiles"
     }
@@ -161,22 +177,22 @@ pipeline {
                     try {
                         def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
                         def uploadSpec =
-                        '''
+                        """
                         {
                             "files": [
                                 {
                                     "pattern": "aerie-${ARTIFACT_TAG}.tar.gz",
-                                    "target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
+                                    "target": "${getPublishPath()}",
                                     "recursive":false
                                 },
                                 {
                                     "pattern": "aerie-docker-compose.tar.gz",
-                                    "target": "general-develop/gov/nasa/jpl/ammos/mpsa/aerie/",
+                                    "target": "${getPublishPath()}",
                                     "recursive":false
                                 }
                             ]
                         }
-                        '''
+                        """
                         def buildInfo = server.upload spec: uploadSpec
                         server.publishBuildInfo buildInfo
                     } catch (Exception e) {
