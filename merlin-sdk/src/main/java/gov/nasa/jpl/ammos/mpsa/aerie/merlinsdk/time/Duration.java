@@ -138,7 +138,8 @@ public final class Duration implements Comparable<Duration> {
 
   @Override
   public String toString() {
-    return "" + this.durationInMicroseconds + "µs";
+    final var sign = (this.isNegative()) ? "-" : "+";
+    return sign + this.durationInMicroseconds + "µs";
   }
 
   @Override
