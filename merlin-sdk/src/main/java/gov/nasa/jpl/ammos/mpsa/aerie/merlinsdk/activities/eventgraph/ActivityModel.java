@@ -8,8 +8,7 @@ import java.util.*;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.UtilityMethods.collapseOverlapping;
 
-public final class ActivityModel {
-
+public final class ActivityModel implements ActivityModelQuerier {
     private Map<String, List<Duration>> activityInstanceMap = new HashMap<>();
     private Map<String, List<String>> activityTypeMap = new HashMap<>();
 
@@ -67,10 +66,12 @@ public final class ActivityModel {
         activityInstanceMap.get(activityID).add(this.elapsedTime);
     }
 
+    @Override
     public List<String> getActivitiesOfType(final String activityType) {
         return List.copyOf(this.activityTypeMap.getOrDefault(activityType, Collections.emptyList()));
     }
 
+    @Override
     public Window getCurrentInstanceWindow(String activityID) {
         final var times = this.activityInstanceMap.get(activityID);
 
@@ -79,6 +80,7 @@ public final class ActivityModel {
             (times.size() == 1) ? this.elapsedTime : times.get(1));
     }
 
+    @Override
     public List<Window> getTypeWindows(String activityType) {
         List<Window> windows = new ArrayList<>();
         var activityIds = this.activityTypeMap.get(activityType);
