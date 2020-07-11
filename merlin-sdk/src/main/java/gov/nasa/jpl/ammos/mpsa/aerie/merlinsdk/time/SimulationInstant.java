@@ -1,8 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
-
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
 
 public final class SimulationInstant {
   // Range of -2^63 to 2^63 - 1.
