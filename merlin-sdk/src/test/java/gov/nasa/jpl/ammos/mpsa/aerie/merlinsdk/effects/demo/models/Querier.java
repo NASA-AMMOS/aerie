@@ -1,6 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
@@ -24,11 +29,18 @@ public final class Querier<T> {
 
   public static final ReactionContext<?, Activity, Event> ctx = new DynamicReactionContext<>(reactionContext::get);
   public static final DataModelQuerier dataQuerier = new DynamicDataModelQuerier(() -> queryContext.get().getDataQuerier());
+  public static final ActivityModelQuerier activityQuerier = new DynamicActivityModelQuerier(() -> queryContext.get().getActivityQuerier());
 
   private final Query<T, Event, DataModel> dataQuery;
+  private final Query<T, Event, ActivityModel> activityQuery;
 
   public Querier(final SimulationTimeline<T, Event> timeline) {
-    this.dataQuery = timeline.register(new DataEffectEvaluator(), new DataModelApplicator());
+    this.dataQuery = timeline.register(
+        new DataEffectEvaluator(),
+        new DataModelApplicator());
+    this.activityQuery = timeline.register(
+        new ActivityEffectEvaluator().filterContramap(Event::asActivity),
+        new ActivityModelApplicator());
   }
 
   public void runActivity(final ReactionContext<T, Activity, Event> ctx, final String activityId, final Activity activity) {
@@ -48,6 +60,10 @@ public final class Querier<T> {
 
     public DataModelQuerier getDataQuerier() {
       return this.querier.dataQuery.getAt(this.currentTime.get());
+    }
+
+    public ActivityModelQuerier getActivityQuerier() {
+      return this.querier.activityQuery.getAt(this.currentTime.get());
     }
   }
 }
