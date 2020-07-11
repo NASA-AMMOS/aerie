@@ -2,14 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.local;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -25,16 +23,10 @@ public final class ScheduledActivity {
   }
 
   public ScheduledActivity(final ActivityInstance instance) throws ParseException {
-    final Map<String, SerializedParameter> serializedParameters = new HashMap<>();
-    final Map<String, SerializedParameter> instanceParameters = instance.getParameters();
-    for (Map.Entry<String, SerializedParameter> entry : instanceParameters.entrySet()) {
-      serializedParameters.put(entry.getKey(), entry.getValue());
-    }
-
-    final long millis = timestampFormat.parse(instance.getStartTimestamp()).getTime();
+    final var millis = timestampFormat.parse(instance.getStartTimestamp()).getTime();
 
     this.startTime = SimulationInstant.ORIGIN.plus(Duration.of(millis, TimeUnit.MILLISECONDS));
-    this.activity = new SerializedActivity(instance.getActivityType(), serializedParameters);
+    this.activity = new SerializedActivity(instance.getActivityType(), Map.copyOf(instance.getParameters()));
   }
 
   @Override
