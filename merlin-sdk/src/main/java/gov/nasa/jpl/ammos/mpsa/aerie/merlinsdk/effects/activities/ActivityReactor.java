@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 
 import java.util.ArrayDeque;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
@@ -16,9 +15,9 @@ import org.pcollections.PStack;
 import org.pcollections.PVector;
 
 public final class ActivityReactor<T, Activity, Event> implements Projection<ResumeActivityEvent<T, Activity, Event>, Task<T, Activity, Event>> {
-  private final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor;
+  private final ActivityExecutor<T, Activity, Event> executor;
 
-  public ActivityReactor(final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor) {
+  public ActivityReactor(final ActivityExecutor<T, Activity, Event> executor) {
     this.executor = executor;
   }
 
@@ -52,7 +51,7 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Res
         // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
         ScheduleItem<T, Activity, Event> continuation;
         try {
-          this.executor.accept(context, taskType);
+          this.executor.execute(context, taskId, taskType);
 
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Complete<>();

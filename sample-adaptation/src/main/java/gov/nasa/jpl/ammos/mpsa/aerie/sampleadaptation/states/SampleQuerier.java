@@ -70,7 +70,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     }
 
     @Override
-    public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final Activity activity) {
+    public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final String activityId, final Activity activity) {
         // Set the activity within the current context to provide the ability build on the current history
         reactionContext.setWithin(ctx, () ->
                 stateContext.setWithin(new StateQuerier(ctx::now), () ->

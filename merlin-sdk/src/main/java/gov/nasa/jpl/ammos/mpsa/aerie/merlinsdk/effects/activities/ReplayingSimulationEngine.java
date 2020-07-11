@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 public final class ReplayingSimulationEngine<T, Activity, Event> {
   private final PriorityQueue<Pair<Duration, ResumeActivityEvent<T, Activity, Event>>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getKey));
@@ -27,7 +26,7 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
 
   public ReplayingSimulationEngine(
       final History<T, Event> initialHistory,
-      final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor
+      final ActivityExecutor<T, Activity, Event> executor
   ) {
     this.reactor = new ActivityReactor<>(executor);
     this.currentHistory = initialHistory;

@@ -31,7 +31,7 @@ public final class Querier<T> {
     this.dataQuery = timeline.register(new DataEffectEvaluator(), new DataModelApplicator());
   }
 
-  public void runActivity(final ReactionContext<T, Activity, Event> ctx, final Activity activity) {
+  public void runActivity(final ReactionContext<T, Activity, Event> ctx, final String activityId, final Activity activity) {
     setDynamic(queryContext, new InnerQuerier<>(this, ctx::now), () ->
         setDynamic(reactionContext, ctx, () ->
             activity.modelEffects()));

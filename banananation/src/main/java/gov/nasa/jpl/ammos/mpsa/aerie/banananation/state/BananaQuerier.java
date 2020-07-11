@@ -70,7 +70,7 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   }
 
   @Override
-  public void runActivity(final ReactionContext<T, Activity, BananaEvent> ctx, final Activity activity) {
+  public void runActivity(final ReactionContext<T, Activity, BananaEvent> ctx, final String activityId, final Activity activity) {
     BananaQuerier.reactionContext.setWithin(ctx, () ->
         BananaQuerier.queryContext.setWithin(new InnerQuerier(ctx::now), () ->
             activity.modelEffects()));
