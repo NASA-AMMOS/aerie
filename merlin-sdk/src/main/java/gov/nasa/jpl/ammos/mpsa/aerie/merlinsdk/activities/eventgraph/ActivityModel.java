@@ -67,23 +67,20 @@ public final class ActivityModel {
         activityInstanceMap.get(activityID).add(this.elapsedTime);
     }
 
-    public List<Window> getInstanceWindow(String activityID) {
-        List<Window> window = new ArrayList<>();
-        var times = this.activityInstanceMap.get(activityID);
-        Duration startTime = times.get(0);
-        Duration endTime = (times.size() == 1 ? this.elapsedTime : times.get(1));
+    public Window getCurrentInstanceWindow(String activityID) {
+        final var times = this.activityInstanceMap.get(activityID);
 
-        window.add(Window.between(startTime, endTime));
-        return window;
+        return Window.between(
+            times.get(0),
+            (times.size() == 1) ? this.elapsedTime : times.get(1));
     }
 
     public List<Window> getTypeWindows(String activityType) {
         List<Window> windows = new ArrayList<>();
         var activityIds = this.activityTypeMap.get(activityType);
 
-        for (var x : activityIds) {
-            var window = getInstanceWindow(x).get(0);
-            windows.add(window);
+        for (var activityId : activityIds) {
+            windows.add(getCurrentInstanceWindow(activityId));
         }
 
         if (windows.size() == 1) {
