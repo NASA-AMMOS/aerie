@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.events;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
 
 import java.util.Objects;
@@ -21,6 +22,16 @@ public abstract class BananaEvent {
     };
   }
 
+  public static BananaEvent activity(final ActivityEvent event) {
+    Objects.requireNonNull(event);
+    return new BananaEvent() {
+      @Override
+      public <Result> Result visit(final BananaEventHandler<Result> visitor) {
+        return visitor.activity(event);
+      }
+    };
+  }
+
   public final Optional<IndependentStateEvent> asIndependent() {
     return this.visit(new DefaultBananaEventHandler<>() {
       @Override
@@ -35,12 +46,31 @@ public abstract class BananaEvent {
     });
   }
 
+  public final Optional<ActivityEvent> asActivity() {
+    return this.visit(new DefaultBananaEventHandler<>() {
+      @Override
+      public Optional<ActivityEvent> unhandled() {
+        return Optional.empty();
+      }
+
+      @Override
+      public Optional<ActivityEvent> activity(final ActivityEvent event) {
+        return Optional.of(event);
+      }
+    });
+  }
+
   @Override
   public final String toString() {
     return this.visit(new BananaEventHandler<>() {
       @Override
       public String independent(final IndependentStateEvent event) {
         return String.format("independent.%s", event);
+      }
+
+      @Override
+      public String activity(final ActivityEvent event) {
+        return String.format("activity.%s", event);
       }
     });
   }

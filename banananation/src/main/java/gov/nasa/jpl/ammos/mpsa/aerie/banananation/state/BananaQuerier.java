@@ -3,6 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
@@ -38,12 +40,15 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   public static final ReactionContext<?, Activity, BananaEvent> ctx = new DynamicReactionContext<>(reactionContext::get);
   public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new DynamicStateQuery<>(() -> queryContext.get().getRegisterQuery(name));
 
+  private final ActivityMapper activityMapper;
 
   private final Set<String> stateNames = new HashSet<>();
   private final Map<String, Query<T, BananaEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
   private final Map<String, Query<T, BananaEvent, RegisterState<Double>>> cumulables = new HashMap<>();
 
-  public BananaQuerier(final SimulationTimeline<T, BananaEvent> timeline) {
+  public BananaQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, BananaEvent> timeline) {
+    this.activityMapper = activityMapper;
+
     for (final var entry : BananaStates.factory.getSettableStates().entrySet()) {
       final var name = entry.getKey();
       final var initialValue = entry.getValue();
@@ -72,8 +77,12 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   @Override
   public void runActivity(final ReactionContext<T, Activity, BananaEvent> ctx, final String activityId, final Activity activity) {
     setDynamic(queryContext, new InnerQuerier(ctx::now), () ->
-        setDynamic(reactionContext, ctx, () ->
-            activity.modelEffects()));
+        setDynamic(reactionContext, ctx, () -> {
+          ctx.emit(BananaEvent.activity(ActivityEvent.startActivity(activityId, this.activityMapper.serializeActivity(activity).get())));
+          activity.modelEffects();
+          ctx.waitForChildren();
+          ctx.emit(BananaEvent.activity(ActivityEvent.endActivity(activityId)));
+        }));
   }
 
   @Override
