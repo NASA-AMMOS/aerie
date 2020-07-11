@@ -29,8 +29,6 @@ public final class Duration implements Comparable<Duration> {
       case SECONDS:      return new Duration(quantity * 1000000L);
       case MINUTES:      return new Duration(quantity * 1000000L * 60L);
       case HOURS:        return new Duration(quantity * 1000000L * 60L * 60L);
-      case DAYS:         return new Duration(quantity * 1000000L * 60L * 60L * 24L);
-      case WEEKS:        return new Duration(quantity * 1000000L * 60L * 60L * 24L * 7L);
       default: throw new Error("Unknown TimeUnit value: " + units);
     }
   }
