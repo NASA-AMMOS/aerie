@@ -39,6 +39,11 @@ public final class Duration implements Comparable<Duration> {
     return of(quantity, units);
   }
 
+  public static Duration negate(final Duration duration) {
+    // amusingly, -MIN_VALUE = MIN_VALUE in 2's complement -- `multiplyExact` will correctly fail out in that case.
+    return new Duration(Math.multiplyExact(-1, duration.durationInMicroseconds));
+  }
+
   public static Duration add(final Duration left, final Duration right) throws ArithmeticException {
     return new Duration(Math.addExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }
