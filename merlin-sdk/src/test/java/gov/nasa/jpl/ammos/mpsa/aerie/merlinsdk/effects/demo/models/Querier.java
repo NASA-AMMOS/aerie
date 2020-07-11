@@ -2,10 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
@@ -19,6 +21,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeli
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 
+import java.util.Collections;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
@@ -45,8 +48,12 @@ public final class Querier<T> {
 
   public void runActivity(final ReactionContext<T, Activity, Event> ctx, final String activityId, final Activity activity) {
     setDynamic(queryContext, new InnerQuerier<>(this, ctx::now), () ->
-        setDynamic(reactionContext, ctx, () ->
-            activity.modelEffects()));
+        setDynamic(reactionContext, ctx, () -> {
+          ctx.emit(Event.activity(ActivityEvent.startActivity(activityId, new SerializedActivity(activity.getClass().getName(), Collections.emptyMap()))));
+          activity.modelEffects();
+          ctx.waitForChildren();
+          ctx.emit(Event.activity(ActivityEvent.endActivity(activityId)));
+        }));
   }
 
   public static final class InnerQuerier<T> {
