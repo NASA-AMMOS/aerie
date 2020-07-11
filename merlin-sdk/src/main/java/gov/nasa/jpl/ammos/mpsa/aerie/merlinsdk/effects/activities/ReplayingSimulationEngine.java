@@ -33,7 +33,11 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
-    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(UUID.randomUUID().toString(), activity, TreePVector.empty())));
+    this.enqueue(timeFromStart, UUID.randomUUID().toString(), activity);
+  }
+
+  public void enqueue(final Duration timeFromStart, final String activityId, final Activity activity) {
+    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(activityId, activity, TreePVector.empty())));
   }
 
   public void runFor(final long quantity, final TimeUnit units) {
