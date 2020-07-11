@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier.ctx;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier.getRateOf;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier.getVolumeOf;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.Querier.dataQuerier;
 
 public final class States {
-  private static final DataBinsResource bins = new DataBinsResource(getVolumeOf, getRateOf, event -> ctx.emit(event));
+  private static final DataBinsResource bins = new DataBinsResource(dataQuerier, ctx::emit);
 
   public static final DataBinResource binA = bins.bin("bin A");
 

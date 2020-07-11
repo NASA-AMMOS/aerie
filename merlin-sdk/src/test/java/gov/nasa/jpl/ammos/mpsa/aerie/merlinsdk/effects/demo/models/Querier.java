@@ -7,12 +7,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DynamicDataModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
@@ -22,8 +23,7 @@ public final class Querier<T> {
   private static final DynamicCell<InnerQuerier<?>> queryContext = DynamicCell.create();
 
   public static final ReactionContext<?, Activity, Event> ctx = new DynamicReactionContext<>(reactionContext::get);
-  public static final Function<String, Double> getVolumeOf = (name) -> queryContext.get().getVolume(name);
-  public static final Function<String, Double> getRateOf = (name) -> queryContext.get().getRate(name);
+  public static final DataModelQuerier dataQuerier = new DynamicDataModelQuerier(() -> queryContext.get().getDataQuerier());
 
   private final Query<T, Event, DataModel> dataQuery;
 
@@ -46,12 +46,8 @@ public final class Querier<T> {
       this.currentTime = currentTime;
     }
 
-    public double getVolume(final String binName) {
-      return this.querier.dataQuery.getAt(this.currentTime.get()).getDataBin(binName).getVolume();
-    }
-
-    public double getRate(final String binName) {
-      return this.querier.dataQuery.getAt(this.currentTime.get()).getDataBin(binName).getRate();
+    public DataModelQuerier getDataQuerier() {
+      return this.querier.dataQuery.getAt(this.currentTime.get());
     }
   }
 }
