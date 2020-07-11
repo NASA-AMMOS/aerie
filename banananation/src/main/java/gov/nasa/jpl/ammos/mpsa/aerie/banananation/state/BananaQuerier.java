@@ -71,8 +71,8 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   @Override
   public void runActivity(final ReactionContext<T, Activity, BananaEvent> ctx, final String activityId, final Activity activity) {
-    BananaQuerier.reactionContext.setWithin(ctx, () ->
-        BananaQuerier.queryContext.setWithin(new InnerQuerier(ctx::now), () ->
+    setDynamic(queryContext, new InnerQuerier(ctx::now), () ->
+        setDynamic(reactionContext, ctx, () ->
             activity.modelEffects()));
   }
 
@@ -94,17 +94,18 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   @Override
   public List<ConstraintViolation> getConstraintViolationsAt(final History<T, BananaEvent> history) {
-    final var violations = new ArrayList<ConstraintViolation>();
+    return setDynamic(queryContext, new InnerQuerier(() -> history), () -> {
+      final var violations = new ArrayList<ConstraintViolation>();
 
-    final var innerQuerier = new InnerQuerier(() -> history);
-    for (final var violableConstraint : BananaStates.violableConstraints) {
-      final var violationWindows = BananaQuerier.queryContext.setWithin(innerQuerier, violableConstraint::getWindows);
-      if (!violationWindows.isEmpty()) {
+      for (final var violableConstraint : BananaStates.violableConstraints) {
+        final var violationWindows = violableConstraint.getWindows();
+        if (violationWindows.isEmpty()) continue;
+
         violations.add(new ConstraintViolation(violationWindows, violableConstraint));
       }
-    }
 
-    return violations;
+      return violations;
+    });
   }
 
   private final class InnerQuerier {
