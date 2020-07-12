@@ -4,7 +4,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
@@ -39,15 +44,21 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
   public static final ReactionContext<?, Activity, BananaEvent> ctx = new DynamicReactionContext<>(reactionContext::get);
   public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new DynamicStateQuery<>(() -> queryContext.get().getRegisterQuery(name));
+  public static final ActivityModelQuerier activityQuery = new DynamicActivityModelQuerier(() -> queryContext.get().getActivityQuery());
 
   private final ActivityMapper activityMapper;
 
   private final Set<String> stateNames = new HashSet<>();
   private final Map<String, Query<T, BananaEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
   private final Map<String, Query<T, BananaEvent, RegisterState<Double>>> cumulables = new HashMap<>();
+  private final Query<T, BananaEvent, ActivityModel> activityModel;
 
   public BananaQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, BananaEvent> timeline) {
     this.activityMapper = activityMapper;
+
+    this.activityModel = timeline.register(
+        new ActivityEffectEvaluator().filterContramap(BananaEvent::asActivity),
+        new ActivityModelApplicator());
 
     for (final var entry : BananaStates.factory.getSettableStates().entrySet()) {
       final var name = entry.getKey();
@@ -126,6 +137,10 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
 
     public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
       return BananaQuerier.this.getRegisterQueryAt(name, this.currentHistory.get());
+    }
+
+    public ActivityModelQuerier getActivityQuery() {
+      return BananaQuerier.this.activityModel.getAt(this.currentHistory.get());
     }
   }
 }
