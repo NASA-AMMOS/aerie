@@ -67,6 +67,10 @@ public final class ActivityModel {
         activityInstanceMap.get(activityID).add(this.elapsedTime);
     }
 
+    public List<String> getActivitiesOfType(final String activityType) {
+        return List.copyOf(this.activityTypeMap.getOrDefault(activityType, Collections.emptyList()));
+    }
+
     public Window getCurrentInstanceWindow(String activityID) {
         final var times = this.activityInstanceMap.get(activityID);
 
