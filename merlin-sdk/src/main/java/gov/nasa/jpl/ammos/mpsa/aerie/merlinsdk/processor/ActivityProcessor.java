@@ -231,7 +231,9 @@ public final class ActivityProcessor extends AbstractProcessor {
     List<TypeMirror> activityTypesWithMappers = new ArrayList<>();
     for (var entry : annotationMirror.getElementValues().entrySet()) {
       if ("value".equals(entry.getKey().getSimpleName().toString())) {
-        List<? extends AnnotationValue> mappedClasses = (List<? extends AnnotationValue>)entry.getValue().getValue();
+        // SAFETY: The type of the `value` method of the `ActivitiesMapped` annotation is `List<_>`.
+        @SuppressWarnings("unchecked")
+        final var mappedClasses = (List<? extends AnnotationValue>) entry.getValue().getValue();
         for (var mappedClass : mappedClasses) {
           TypeMirror mappedClassMirror = (TypeMirror)mappedClass.getValue();
           activityTypesWithMappers.add(mappedClassMirror);
