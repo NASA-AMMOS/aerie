@@ -12,8 +12,8 @@ import org.junit.Test;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.Java6Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 @Ignore
 public class ApfParserTests {
