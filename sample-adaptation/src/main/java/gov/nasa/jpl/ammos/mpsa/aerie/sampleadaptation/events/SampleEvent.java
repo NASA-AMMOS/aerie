@@ -33,4 +33,14 @@ public abstract class SampleEvent {
             }
         });
     }
+
+    @Override
+    public final String toString() {
+        return this.visit(new SampleEventHandler<>() {
+            @Override
+            public String independent(final IndependentStateEvent event) {
+                return String.format("independent.%s", event);
+            }
+        });
+    }
 }
