@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
@@ -28,24 +29,13 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
-
     // Create two DynamicCells to provide ReactionContext and StateContext to modeling code
     private final static DynamicCell<ReactionContext<?, Activity, SampleEvent>> reactionContext = DynamicCell.create();
     private final static DynamicCell<SampleQuerier<?>.StateQuerier> stateContext = DynamicCell.create();
 
-    // Define a function to take a state name and provide questions that can be asked
-    // based on current context
-    public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new StateQuery<>() {
-        @Override
-        public SerializedParameter get() {
-            return SerializedParameter.of(stateContext.get().getStateValue(name));
-        }
-
-        @Override
-        public List<Window> when(final Predicate<SerializedParameter> condition) {
-            return stateContext.get().when(name, x -> condition.test(SerializedParameter.of(x)));
-        }
-    };
+    // Define a function to take a state name and provide questions that can be asked based on current context
+    public static final Function<String, StateQuery<SerializedParameter>> query = (name) ->
+        new DynamicStateQuery<>(() -> stateContext.get().getRegisterQuery(name));
 
     // Provide direct access to methods on the context stored in the dynamic cell.
     // e.g. instead of `reactionContext.get().spawn(act)`, just use `ctx.spawn(act)`.
@@ -82,20 +72,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         return registers.keySet();
     }
 
-    // Determine a state value from a History
-    public Double getStateValue(final String name, final History<T, SampleEvent> history) {
-        return this.registers.get(name).getAt(history).get();
-    }
-
-    // Determine the windows when a state meets a condition throughout a History
-    public List<Window> whenStateMeetsCondition(final String name, final Predicate<Double> condition, final History<T, SampleEvent> history) {
-        // Use the registered Query object for convenience
-        return this.registers.get(name).getAt(history).when(condition);
-    }
-
     @Override
     public SerializedParameter getSerializedStateAt(final String name, final History<T, SampleEvent> history) {
-        return SerializedParameter.of(this.getStateValue(name, history));
+        return this.getRegisterQueryAt(name, history).get();
     }
 
     @Override
@@ -114,6 +93,10 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         return violations;
     }
 
+    public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
+        return StateQuery.from(this.registers.get(name).getAt(history), SerializedParameter::of);
+    }
+
     // An inner class to maintain a supplier for current history to pass to the SampleQuerier
     public final class StateQuerier {
         // Provides the most up-to-date event history at the time of each request
@@ -123,14 +106,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
             this.historySupplier = historySupplier;
         }
 
-        // Get the value of the named state at the current point in time.
-        public Double getStateValue(final String name) {
-            return SampleQuerier.this.getStateValue(name, historySupplier.get());
-        }
-
-        // Determine when a state meets a condition between simulation start and the current point in time.
-        public List<Window> when(final String name, final Predicate<Double> condition) {
-            return SampleQuerier.this.whenStateMeetsCondition(name, condition, historySupplier.get());
+        // Get a queryable object representing the named state.
+        public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
+            return SampleQuerier.this.getRegisterQueryAt(name, this.historySupplier.get());
         }
     }
 }
