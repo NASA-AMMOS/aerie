@@ -16,7 +16,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.RegisterState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
 import java.util.ArrayList;
@@ -25,8 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
 
 public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
     // Create two DynamicCells to provide ReactionContext and StateContext to modeling code
@@ -79,18 +79,19 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     @Override
     public List<ConstraintViolation> getConstraintViolationsAt(final History<T, SampleEvent> history) {
-        final List<ConstraintViolation> violations = new ArrayList<>();
+        return setDynamic(stateContext, new StateQuerier(() -> history), () -> {
+            final var violations = new ArrayList<ConstraintViolation>();
 
-        final var stateQuerier = new StateQuerier(() -> history);
-        for (final var violableConstraint : SampleMissionStates.violableConstraints) {
-            // Set the constraint's getWindows method within the context of the history and evaluate it
-            final var violationWindows = stateContext.setWithin(stateQuerier, violableConstraint::getWindows);
-            if (!violationWindows.isEmpty()) {
+            for (final var violableConstraint : SampleMissionStates.violableConstraints) {
+                // Set the constraint's getWindows method within the context of the history and evaluate it
+                final var violationWindows = violableConstraint.getWindows();
+                if (violationWindows.isEmpty()) continue;
+
                 violations.add(new ConstraintViolation(violationWindows, violableConstraint));
             }
-        }
 
-        return violations;
+            return violations;
+        });
     }
 
     public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
