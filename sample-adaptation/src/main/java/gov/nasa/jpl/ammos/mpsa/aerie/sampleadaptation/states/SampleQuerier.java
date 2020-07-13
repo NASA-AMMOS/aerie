@@ -22,10 +22,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.RegisterState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableStateApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,7 +56,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
-    private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> registers = new HashMap<>();
+    private final Set<String> stateNames = new HashSet<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> cumulables = new HashMap<>();
 
     // Model the durations of (and relationships between) activities.
     private final ActivityMapper activityMapper;
@@ -66,16 +71,34 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
             new ActivityEffectEvaluator().filterContramap(SampleEvent::asActivity),
             new ActivityModelApplicator());
 
-        // Register a Query object for each state
+        // Register a Query object for each settable state
+        for (final var entry : SampleMissionStates.factory.getSettableStates().entrySet()) {
+            final var name = entry.getKey();
+            final var initialValue = entry.getValue();
+
+            if (this.stateNames.contains(name)) throw new RuntimeException("State \"" + name + "\" already defined");
+            this.stateNames.add(name);
+
+            final var query = timeline.register(
+                new SettableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
+                new SettableStateApplicator(initialValue));
+
+            this.settables.put(name, query);
+        }
+
+        // Register a Query object for each cumulable state
         for (final var entry : SampleMissionStates.factory.getCumulableStates().entrySet()) {
             final var name = entry.getKey();
             final var initialValue = entry.getValue();
 
-            final var query = timeline.register(
-                    new CumulableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
-                    new CumulableStateApplicator(initialValue));
+            if (this.stateNames.contains(name)) throw new RuntimeException("State \"" + name + "\" already defined");
+            this.stateNames.add(name);
 
-            this.registers.put(name, query);
+            final var query = timeline.register(
+                new CumulableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
+                new CumulableStateApplicator(initialValue));
+
+            this.cumulables.put(name, query);
         }
     }
 
@@ -100,7 +123,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     @Override
     public Set<String> states() {
-        return registers.keySet();
+        return this.cumulables.keySet();
     }
 
     @Override
@@ -126,7 +149,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     }
 
     public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
-        return StateQuery.from(this.registers.get(name).getAt(history), SerializedParameter::of);
+        if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history);
+        else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedParameter::of);
+        else throw new RuntimeException("State \"" + name + "\" is not defined");
     }
 
     // An inner class to maintain a supplier for current history to pass to the SampleQuerier
