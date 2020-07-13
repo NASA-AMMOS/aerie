@@ -2,10 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.squareup.javapoet.JavaFile;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -23,7 +25,6 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -34,7 +35,8 @@ import java.util.HashMap;
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter",
-    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped"
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped",
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.MerlinAdaptation",
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public final class ActivityProcessor extends AbstractProcessor {
@@ -97,8 +99,60 @@ public final class ActivityProcessor extends AbstractProcessor {
     }
   }
 
+  private void registerAdaptations(final RoundEnvironment roundEnv) {
+    final var typeUtils = this.processingEnv.getTypeUtils();
+    final var elementUtils = this.processingEnv.getElementUtils();
+    final var adaptationType = elementUtils
+        .getTypeElement(MerlinAdaptation.class.getCanonicalName())
+        .asType();
+
+    // Register any adaptations so that `ServiceLoader` can find them.
+    // TODO: Write the adaptation and its name/version to a separate JSON file.
+    //   This will allow us to avoid `ServiceLoader` altogether.
+    for (final var element : roundEnv.getElementsAnnotatedWith(Adaptation.class)) {
+      final var isAnAdaptation = typeUtils.isAssignable(
+          typeUtils.erasure(element.asType()),
+          typeUtils.erasure(adaptationType));
+
+      if (!isAnAdaptation) {
+        this.processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            String.format(
+                "@%s cannot be applied to a type that is not a subclass of %s",
+                Adaptation.class.getSimpleName(),
+                MerlinAdaptation.class.getSimpleName()),
+            element);
+        continue;
+      }
+
+      try {
+        final var resourceFile = this.processingEnv.getFiler().createResource(
+            StandardLocation.CLASS_OUTPUT,
+            "",
+            String.format("META-INF/services/%s", MerlinAdaptation.class.getCanonicalName()),
+            element);
+
+        try (final var writer = resourceFile.openWriter()) {
+          writer.write(((TypeElement) element).getQualifiedName().toString());
+          writer.write('\n');
+        }
+      } catch (final IOException e) {
+        this.processingEnv.getMessager().printMessage(
+            Diagnostic.Kind.ERROR,
+            String.format(
+                "Unable to register %s as implementor of %s.",
+                element.getSimpleName(),
+                MerlinAdaptation.class.getCanonicalName()),
+            element);
+      }
+    }
+  }
+
   @Override
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+    // Register any adaptations so that `ServiceLoader` can find them.
+    registerAdaptations(roundEnv);
+
     // Collect any parameter types produced in the previous round.
     for (final Element element : roundEnv.getElementsAnnotatedWith(ParameterType.class)) {
       // Extract information about this parameter type.
