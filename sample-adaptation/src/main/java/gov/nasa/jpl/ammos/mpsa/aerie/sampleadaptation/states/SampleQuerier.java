@@ -2,6 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
@@ -36,6 +41,10 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     public static final Function<String, StateQuery<SerializedParameter>> query = (name) ->
         new DynamicStateQuery<>(() -> stateContext.get().getRegisterQuery(name));
 
+    // Provide access to activity information based on the current context.
+    public static final ActivityModelQuerier activityQuerier =
+        new DynamicActivityModelQuerier(() -> stateContext.get().getActivityQuery());
+
     // Provide direct access to methods on the context stored in the dynamic cell.
     // e.g. instead of `reactionContext.get().spawn(act)`, just use `ctx.spawn(act)`.
     public static final ReactionContext<?, Activity, SampleEvent> ctx = new DynamicReactionContext<>(() -> reactionContext.get());
@@ -44,7 +53,14 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     // This allows queries on states to be tracked and cached for convenience
     private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> registers = new HashMap<>();
 
+    // Model the durations of (and relationships between) activities.
+    private final Query<T, SampleEvent, ActivityModel> activityModel;
+
     public SampleQuerier(final SimulationTimeline<T, SampleEvent> timeline) {
+        this.activityModel = timeline.register(
+            new ActivityEffectEvaluator().filterContramap(SampleEvent::asActivity),
+            new ActivityModelApplicator());
+
         // Register a Query object for each state
         for (final var entry : SampleMissionStates.factory.getCumulableStates().entrySet()) {
             final var name = entry.getKey();
@@ -109,6 +125,11 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         // Get a queryable object representing the named state.
         public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
             return SampleQuerier.this.getRegisterQueryAt(name, this.historySupplier.get());
+        }
+
+        // Get a queryable object representing simulated activities.
+        public ActivityModelQuerier getActivityQuery() {
+            return SampleQuerier.this.activityModel.getAt(this.historySupplier.get());
         }
     }
 }
