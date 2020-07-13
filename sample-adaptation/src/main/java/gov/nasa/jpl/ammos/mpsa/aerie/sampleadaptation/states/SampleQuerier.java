@@ -11,7 +11,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
@@ -45,9 +44,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     // This allows queries on states to be tracked and cached for convenience
     private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> registers = new HashMap<>();
 
-    public SampleQuerier(final SimulationTimeline<T, SampleEvent> timeline, final IndependentStateFactory stateFactory) {
+    public SampleQuerier(final SimulationTimeline<T, SampleEvent> timeline) {
         // Register a Query object for each state
-        for (final var entry : stateFactory.getCumulableStates().entrySet()) {
+        for (final var entry : SampleMissionStates.factory.getCumulableStates().entrySet()) {
             final var name = entry.getKey();
             final var initialValue = entry.getValue();
 
