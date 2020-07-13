@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
@@ -227,19 +228,21 @@ public final class ActivityProcessor extends AbstractProcessor {
     return true;
   }
 
-  private List<TypeMirror> getActivitiesMappedBy(AnnotationMirror annotationMirror) {
-    List<TypeMirror> activityTypesWithMappers = new ArrayList<>();
-    for (var entry : annotationMirror.getElementValues().entrySet()) {
-      if ("value".equals(entry.getKey().getSimpleName().toString())) {
-        // SAFETY: The type of the `value` method of the `ActivitiesMapped` annotation is `List<_>`.
-        @SuppressWarnings("unchecked")
-        final var mappedClasses = (List<? extends AnnotationValue>) entry.getValue().getValue();
-        for (var mappedClass : mappedClasses) {
-          TypeMirror mappedClassMirror = (TypeMirror)mappedClass.getValue();
-          activityTypesWithMappers.add(mappedClassMirror);
-        }
+  private List<TypeMirror> getActivitiesMappedBy(final AnnotationMirror activitiesMappedMirror) {
+    final var activityTypesWithMappers = new ArrayList<TypeMirror>();
+
+    for (final var entry : activitiesMappedMirror.getElementValues().entrySet()) {
+      if (!Objects.equals("value", entry.getKey().getSimpleName().toString())) continue;
+
+      // SAFETY: The type of the `value` method of the `ActivitiesMapped` annotation is `List<_>`.
+      @SuppressWarnings("unchecked")
+      final var mappedClasses = (List<? extends AnnotationValue>) entry.getValue().getValue();
+
+      for (final var mappedClass : mappedClasses) {
+        activityTypesWithMappers.add((TypeMirror) mappedClass.getValue());
       }
     }
+
     return activityTypesWithMappers;
   }
 }
