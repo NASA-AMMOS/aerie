@@ -21,6 +21,6 @@ public class SampleAdaptation implements MerlinAdaptation<SampleEvent> {
 
     @Override
     public <T> Querier<T, SampleEvent> makeQuerier(final SimulationTimeline<T, SampleEvent> database) {
-        return new SampleQuerier<>(database);
+        return new SampleQuerier<>(this.getActivityMapper(), database);
     }
 }

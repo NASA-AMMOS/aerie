@@ -2,7 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
@@ -54,9 +56,12 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> registers = new HashMap<>();
 
     // Model the durations of (and relationships between) activities.
+    private final ActivityMapper activityMapper;
     private final Query<T, SampleEvent, ActivityModel> activityModel;
 
-    public SampleQuerier(final SimulationTimeline<T, SampleEvent> timeline) {
+    public SampleQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, SampleEvent> timeline) {
+        this.activityMapper = activityMapper;
+
         this.activityModel = timeline.register(
             new ActivityEffectEvaluator().filterContramap(SampleEvent::asActivity),
             new ActivityModelApplicator());
@@ -76,10 +81,21 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     @Override
     public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final String activityId, final Activity activity) {
-        // Set the activity within the current context to provide the ability build on the current history
-        reactionContext.setWithin(ctx, () ->
-                stateContext.setWithin(new StateQuerier(ctx::now), () ->
-                        activity.modelEffects()));
+        // Run the activity in the context of the given reaction context as well as the established state queries.
+        // The activity can affect the simulation by emitting events against the reaction context,
+        // and can query states to change its behavior based on simulation state.
+        stateContext.setWithin(new StateQuerier(ctx::now), () ->
+            reactionContext.setWithin(ctx, () -> {
+                // Signal the beginning of the activity.
+                ctx.emit(SampleEvent.activity(ActivityEvent.startActivity(activityId, this.activityMapper.serializeActivity(activity).get())));
+
+                // Run the entirety of the activity.
+                activity.modelEffects();
+
+                // Signal the end of the activity, but only after all of its children have also completed.
+                ctx.waitForChildren();
+                ctx.emit(SampleEvent.activity(ActivityEvent.endActivity(activityId)));
+            }));
     }
 
     @Override
