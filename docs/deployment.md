@@ -1,4 +1,3 @@
-
 # Introduction
 The Aerie project uses Docker Compose to configure and run the entire project. Docker Compose utilizes YAML configuration files which are located in the root of the project. The YAML files include everything that is required to deploy Aerie using Docker Compose and to run Aerie with the Docker Engine. 
 
@@ -32,7 +31,7 @@ cd aerie
 3. Log into the [Artifactory](https://cae-artifactory.jpl.nasa.gov) Docker repository:
 
 ```bash
-docker login cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie
+docker login cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie
 ```
 
 4. Use [Docker Compose](https://docs.docker.com/compose/reference/) to start the [services](./services.md):
@@ -56,7 +55,7 @@ The `docker-compose` files are parameterized with the [.env](../.env) file in th
 
 | Environment Variable | Description |
 | -------------------- | ----------- |
-| DOCKER_TAG| A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie version you are deploying. It has the form: `[BRANCH_NAME]`. For example: `develop`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The complete list of images for each Aerie service can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local/gov/nasa/jpl/ammos/mpsa/aerie). Note each service has a tag of a single version. For example the `adaptation` and `plan` services both have a tag of `develop`. |
+| DOCKER_TAG| A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie version you are deploying. It has the form: `[BRANCH_NAME]`. For example: `develop`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The complete list of images for each Aerie service can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local/gov/nasa/jpl/aerie). Note each service has a tag of a single version. For example the `adaptation` and `plan` services both have a tag of `develop`. |
 | DOCKER_URL | The URL of a Docker repository. Defaults to Artifactories [docker-develop-local](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local) repository. |
 
 
@@ -81,11 +80,11 @@ cd [YOUR_DOCKER_TARGET_DIRECTORY]
 docker info
 ```
 
-2. Download the example [Aerie Docker Compose config files](https://cae-artifactory.jpl.nasa.gov:443/artifactory/general-develop/gov/nasa/jpl/ammos/mpsa/aerie) to the chosen docker target directory (on can also author a custom file).
+2. Download the example [Aerie Docker Compose config files](https://cae-artifactory.jpl.nasa.gov:16003/artifactory/webapp/#/artifacts/browse/tree/General/general/gov/nasa/jpl/aerie) to the chosen docker target directory (one can also author a custom file).
 
 3. Log into the [Artifactory](https://cae-artifactory.jpl.nasa.gov) Docker repository:
 ```bash
-docker login cae-artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/ammos/mpsa/aerie
+docker login cae-artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie
 ```
 
 5. Use [Docker Compose](https://docs.docker.com/compose/reference/) to start the [services](./services.md):
@@ -106,9 +105,10 @@ The `docker-compose` file are parameterized with the [.env](../.env) file.
 
 | Environment Variable | Description |
 | -------------------- | ----------- |
-| DOCKER_TAG | A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie version you are deploying. It has the form: `[BRANCH_NAME]`. For example this is a real tag: `develop` or `staging`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The complete list of images for each Aerie service can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local/gov/nasa/jpl/ammos/mpsa/aerie). Note each service has a tag of a single version. For example the `adaptation` and `plan` services all have a tag of `develop`. |
-| UI_DOCKER_TAG  | A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie UI version you are deploying. It has the form: `[BRANCH_NAME]`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The available images can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local/gov/nasa/jpl/ammos/mpsa/aerie-ui). |
-| AERIE_DOCKER_URL ,<br/> AERIE_UI_DOCKER_URL ,<br/> AERIE_APOLLO_DOCKER_URL| A URL of a Docker repository. Defaults to CAE's Artifactory [docker-develop-local](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-develop-local) repository. |
+| DOCKER_TAG | A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie version you are deploying. It has the form: `[BRANCH_NAME]`. For example this is a real tag: `release-0.3.0`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The complete list of images for each Aerie service can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-release-local/gov/nasa/jpl/aerie). Note each service has a tag of a single version. For example the `adaptation` and `plan` services all have a tag of `release-0.3.0`. |
+| UI_DOCKER_TAG  | A [Docker Tag](https://docs.docker.com/engine/reference/commandline/tag/) of the Aerie UI version you are deploying. It has the form: `[BRANCH_NAME]`. For a list of Docker image tags, first [log into Artifactory](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/login). The available images can be found [here](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-release-local/gov/nasa/jpl/aerie/aerie-ui). |
+| AERIE_DOCKER_URL ,<br/> AERIE_UI_DOCKER_URL ,<br/> AERIE_APOLLO_DOCKER_URL| A URL of a Docker repository. Defaults to CAE's Artifactory [docker-release-local](https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-release-local/gov/nasa/jpl/aerie) repository. |
+
 
 
 

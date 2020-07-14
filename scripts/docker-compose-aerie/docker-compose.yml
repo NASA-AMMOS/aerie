@@ -29,11 +29,11 @@ services:
       - "5672:5672"
     volumes: ["rabbitmq_data:/data/rabbitmq"]
   aerie_ui:
-    image: "${AERIE_UI_DOCKER_URL}:${UI_DOCKER_TAG}"
+    image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     ports: ["8080:80"]
   aerie_apollo:
     command: ["npm", "run", "start:docker"]
-    image: "${AERIE_APOLLO_DOCKER_URL}:${DOCKER_TAG}"
+    image: "${AERIE_DOCKER_URL}/aerie-apollo:${DOCKER_TAG}"
     ports: ["27184:27184"]
 
 volumes:
