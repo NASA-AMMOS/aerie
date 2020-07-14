@@ -47,8 +47,8 @@ public class Demo {
 
         applicator.apply(model, concurrentGraph.evaluate(evaluator));
 
-        assertEquals(model.getInstanceWindow(cID).get(0), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
-        assertEquals(model.getInstanceWindow(aID).get(0), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(cID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
     }
 
     @Test(expected = RuntimeException.class)
@@ -118,8 +118,8 @@ public class Demo {
 
         applicator.apply(model, seqGraph.evaluate(evaluator));
 
-        assertEquals(model.getInstanceWindow(aID).get(0), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
-        assertEquals(model.getInstanceWindow(bID).get(0), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(bID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
     }
 
     @Test
@@ -205,15 +205,15 @@ public class Demo {
         applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
         applicator.apply(model, graph1.evaluate(evaluator));
 
-        assertEquals(model.getInstanceWindow(cID).get(0), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
-        assertEquals(model.getInstanceWindow(aID).get(0), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
-        assertEquals(model.getInstanceWindow(bID).get(0), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(cID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(bID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
 
         applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
 
-        assertEquals(model.getInstanceWindow(cID).get(0), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
-        assertEquals(model.getInstanceWindow(aID).get(0), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
-        assertEquals(model.getInstanceWindow(bID).get(0), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(cID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(bID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
 
         final var graph2 =
                 EventGraph.sequentially(

@@ -53,11 +53,31 @@ public interface Constraint {
     }
 
     static Constraint combine(final Constraint x, final Constraint y, final BiFunction<List<Window>, List<Window>, List<Window>> windowCombinator) {
-        final var activityIds = x.getActivityIds();
-        activityIds.addAll(y.getActivityIds());
-        final var stateIds = x.getStateIds();
-        stateIds.addAll(y.getStateIds());
-        return create(activityIds, stateIds, () -> windowCombinator.apply(x.getWindows(), y.getWindows()));
+        // Because the affected activityIds and stateIds may be dependent on the computed windows,
+        // we must defer their computation until specifically requested.
+        Objects.requireNonNull(x);
+        Objects.requireNonNull(y);
+        Objects.requireNonNull(windowCombinator);
+        return new Constraint() {
+            @Override
+            public Set<String> getActivityIds() {
+                final var activityIds = x.getActivityIds();
+                activityIds.addAll(y.getActivityIds());
+                return activityIds;
+            }
+
+            @Override
+            public Set<String> getStateIds() {
+                final var stateIds = x.getStateIds();
+                stateIds.addAll(y.getStateIds());
+                return stateIds;
+            }
+
+            @Override
+            public List<Window> getWindows() {
+                return windowCombinator.apply(x.getWindows(), y.getWindows());
+            }
+        };
     }
 
     static Constraint create(Supplier<List<Window>> windowSupplier) {

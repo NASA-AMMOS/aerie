@@ -1,6 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
+
 import java.util.Objects;
+import java.util.Optional;
 
 // This can be mechanically derived from `EventHandler`.
 public abstract class Event {
@@ -38,6 +41,30 @@ public abstract class Event {
     };
   }
 
+  public static Event activity(final ActivityEvent event) {
+    Objects.requireNonNull(event);
+    return new Event() {
+      @Override
+      public <Result> Result visit(final EventHandler<Result> visitor) {
+        return visitor.activity(event);
+      }
+    };
+  }
+
+  public Optional<ActivityEvent> asActivity() {
+    return this.visit(new DefaultEventHandler<>() {
+      @Override
+      public Optional<ActivityEvent> activity(final ActivityEvent event) {
+        return Optional.of(event);
+      }
+
+      @Override
+      public Optional<ActivityEvent> unhandled() {
+        return Optional.empty();
+      }
+    });
+  }
+
   @Override
   public final String toString() {
     return this.visit(new EventHandler<>() {
@@ -58,6 +85,11 @@ public abstract class Event {
       public String log(final String message) {
         return String.format("log(\"%s\")",
             message.replace("\\", "\\\\").replace("\"", "\\\""));
+      }
+
+      @Override
+      public String activity(final ActivityEvent event) {
+        return String.format("activity.%s", event);
       }
     });
   }

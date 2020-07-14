@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 
@@ -12,7 +13,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 
-public final class RegisterState<T> {
+public final class RegisterState<T> implements StateQuery<T> {
     public final TreeMap<Duration, T> changes = new TreeMap<>();
     public final TreeMap<Duration, Boolean> conflicted = new TreeMap<>();
     private Duration elapsedTime;
@@ -45,6 +46,7 @@ public final class RegisterState<T> {
         this.conflicted.put(this.elapsedTime, true);
     }
 
+    @Override
     public T get() {
         if (this.isConflicted()) System.err.println("Warning: getting conflicted state");;
         return this.changes.lastEntry().getValue();
@@ -54,6 +56,7 @@ public final class RegisterState<T> {
         return this.conflicted.lastEntry().getValue();
     }
 
+    @Override
     public List<Window> when(final Predicate<T> condition) {
         return matching(this.changes, this.elapsedTime, condition);
     }

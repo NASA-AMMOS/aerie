@@ -33,10 +33,12 @@ public final class IndependentStateFactory {
   public <T> SettableState<T> settable(final String name, final T initialValue, final ParameterMapper<T> mapper) {
     this.settableStates.put(name, mapper.serializeParameter(initialValue));
 
+    final var query = this.model.apply(name);
+
     return new SettableState<>(
         name,
-        () -> mapper.deserializeParameter(this.model.apply(name).get()).getSuccessOrThrow(),
-        pred -> this.model.apply(name).when(x -> pred.test(mapper.deserializeParameter(x).getSuccessOrThrow())),
+        () -> mapper.deserializeParameter(query.get()).getSuccessOrThrow(),
+        pred -> query.when(x -> pred.test(mapper.deserializeParameter(x).getSuccessOrThrow())),
         value -> this.emitter.accept(IndependentStateEvent.set(name, mapper.serializeParameter(value))));
   }
 
@@ -45,10 +47,12 @@ public final class IndependentStateFactory {
 
     this.cumulableStates.put(name, initialValue);
 
+    final var query = this.model.apply(name);
+
     return new DoubleState(
         name,
-        () -> mapper.deserializeParameter(this.model.apply(name).get()).getSuccessOrThrow(),
-        pred -> this.model.apply(name).when(x -> pred.test(mapper.deserializeParameter(x).getSuccessOrThrow())),
+        () -> mapper.deserializeParameter(query.get()).getSuccessOrThrow(),
+        pred -> query.when(x -> pred.test(mapper.deserializeParameter(x).getSuccessOrThrow())),
         value -> this.emitter.accept(IndependentStateEvent.add(name, value)));
   }
 

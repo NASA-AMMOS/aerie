@@ -12,8 +12,8 @@ public final class DataModelApplicator
   @Override
   public DataModel initial() {
     final var initial = new DataModel();
-    initial.getDataBin("bin A").addRate(1.0);
-    initial.getDataBin("bin B").setVolume(5.0);
+    initial.getBin("bin A").addRate(1.0);
+    initial.getBin("bin B").setVolume(5.0);
     return initial;
   }
 
@@ -33,7 +33,7 @@ public final class DataModelApplicator
       final var name = entry.getKey();
       final var change = entry.getValue();
 
-      final var bin = model.getDataBin(name);
+      final var bin = model.getBin(name);
 
       change.visit(new SettableEffect.VoidVisitor<>() {
         @Override

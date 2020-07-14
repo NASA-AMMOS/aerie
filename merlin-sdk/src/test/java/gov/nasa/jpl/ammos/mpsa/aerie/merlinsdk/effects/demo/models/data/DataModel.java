@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public final class DataModel {
+public final class DataModel implements DataModelQuerier {
   private final Map<String, DataBin> bins;
 
   public DataModel() {
@@ -29,7 +29,8 @@ public final class DataModel {
     // TODO: check bins for overflow and move their overflow volume around.
   }
 
-  public DataBin getDataBin(final String name) {
+  @Override
+  public DataBin getBin(final String name) {
     return this.bins.computeIfAbsent(name, k -> new DataBin());
   }
 

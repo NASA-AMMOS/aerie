@@ -1,40 +1,59 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DynamicDataModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.function.Function;
+import java.util.Collections;
 import java.util.function.Supplier;
 
-public final class Querier<T> {
-  private static final DynamicCell<Pair<ReactionContext<?, Activity, Event>, InnerQuerier<?>>> activeContext = DynamicCell.create();
-  public static final Function<String, Double> getVolumeOf = (name) -> activeContext.get().getRight().getVolume(name);
-  public static final Function<String, Double> getRateOf = (name) -> activeContext.get().getRight().getRate(name);
-  public static final ReactionContext<?, Activity, Event> ctx = new DynamicReactionContext<>(() -> activeContext.get().getLeft());
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
 
+public final class Querier<T> {
+  private static final DynamicCell<ReactionContext<?, Activity, Event>> reactionContext = DynamicCell.create();
+  private static final DynamicCell<InnerQuerier<?>> queryContext = DynamicCell.create();
+
+  public static final ReactionContext<?, Activity, Event> ctx = new DynamicReactionContext<>(reactionContext::get);
+  public static final DataModelQuerier dataQuerier = new DynamicDataModelQuerier(() -> queryContext.get().getDataQuerier());
+  public static final ActivityModelQuerier activityQuerier = new DynamicActivityModelQuerier(() -> queryContext.get().getActivityQuerier());
 
   private final Query<T, Event, DataModel> dataQuery;
+  private final Query<T, Event, ActivityModel> activityQuery;
 
   public Querier(final SimulationTimeline<T, Event> timeline) {
-    this.dataQuery = timeline.register(new DataEffectEvaluator(), new DataModelApplicator());
+    this.dataQuery = timeline.register(
+        new DataEffectEvaluator(),
+        new DataModelApplicator());
+    this.activityQuery = timeline.register(
+        new ActivityEffectEvaluator().filterContramap(Event::asActivity),
+        new ActivityModelApplicator());
   }
 
-  public InnerQuerier<?> at(final Supplier<History<T, Event>> currentTime) {
-    return new InnerQuerier<>(this, currentTime);
-  }
-
-  public void runActivity(final ReactionContext<T, Activity, Event> ctx, final Activity activity) {
-    Querier.activeContext.setWithin(Pair.of(ctx, this.at(ctx::now)), activity::modelEffects);
+  public void runActivity(final ReactionContext<T, Activity, Event> ctx, final String activityId, final Activity activity) {
+    setDynamic(queryContext, new InnerQuerier<>(this, ctx::now), () ->
+        setDynamic(reactionContext, ctx, () -> {
+          ctx.emit(Event.activity(ActivityEvent.startActivity(activityId, new SerializedActivity(activity.getClass().getName(), Collections.emptyMap()))));
+          activity.modelEffects();
+          ctx.waitForChildren();
+          ctx.emit(Event.activity(ActivityEvent.endActivity(activityId)));
+        }));
   }
 
   public static final class InnerQuerier<T> {
@@ -46,12 +65,12 @@ public final class Querier<T> {
       this.currentTime = currentTime;
     }
 
-    public double getVolume(final String binName) {
-      return this.querier.dataQuery.getAt(this.currentTime.get()).getDataBin(binName).getVolume();
+    public DataModelQuerier getDataQuerier() {
+      return this.querier.dataQuery.getAt(this.currentTime.get());
     }
 
-    public double getRate(final String binName) {
-      return this.querier.dataQuery.getAt(this.currentTime.get()).getDataBin(binName).getRate();
+    public ActivityModelQuerier getActivityQuerier() {
+      return this.querier.activityQuery.getAt(this.currentTime.get());
     }
   }
 }

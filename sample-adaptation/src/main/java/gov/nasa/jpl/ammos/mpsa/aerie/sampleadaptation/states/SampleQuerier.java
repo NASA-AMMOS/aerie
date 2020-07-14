@@ -2,6 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
@@ -10,42 +17,38 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.RegisterState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableStateApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
 
+public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
     // Create two DynamicCells to provide ReactionContext and StateContext to modeling code
     private final static DynamicCell<ReactionContext<?, Activity, SampleEvent>> reactionContext = DynamicCell.create();
     private final static DynamicCell<SampleQuerier<?>.StateQuerier> stateContext = DynamicCell.create();
 
-    // Define a function to take a state name and provide questions that can be asked
-    // based on current context
-    public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new StateQuery<>() {
-        @Override
-        public SerializedParameter get() {
-            return SerializedParameter.of(stateContext.get().getStateValue(name));
-        }
+    // Define a function to take a state name and provide questions that can be asked based on current context
+    public static final Function<String, StateQuery<SerializedParameter>> query = (name) ->
+        new DynamicStateQuery<>(() -> stateContext.get().getRegisterQuery(name));
 
-        @Override
-        public List<Window> when(final Predicate<SerializedParameter> condition) {
-            return stateContext.get().when(name, x -> condition.test(SerializedParameter.of(x)));
-        }
-    };
+    // Provide access to activity information based on the current context.
+    public static final ActivityModelQuerier activityQuerier =
+        new DynamicActivityModelQuerier(() -> stateContext.get().getActivityQuery());
 
     // Provide direct access to methods on the context stored in the dynamic cell.
     // e.g. instead of `reactionContext.get().spawn(act)`, just use `ctx.spawn(act)`.
@@ -53,65 +56,102 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
-    private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> registers = new HashMap<>();
+    private final Set<String> stateNames = new HashSet<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> cumulables = new HashMap<>();
 
-    public SampleQuerier(final SimulationTimeline<T, SampleEvent> timeline, final IndependentStateFactory stateFactory) {
-        // Register a Query object for each state
-        for (final var entry : stateFactory.getCumulableStates().entrySet()) {
+    // Model the durations of (and relationships between) activities.
+    private final ActivityMapper activityMapper;
+    private final Query<T, SampleEvent, ActivityModel> activityModel;
+
+    public SampleQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, SampleEvent> timeline) {
+        this.activityMapper = activityMapper;
+
+        this.activityModel = timeline.register(
+            new ActivityEffectEvaluator().filterContramap(SampleEvent::asActivity),
+            new ActivityModelApplicator());
+
+        // Register a Query object for each settable state
+        for (final var entry : SampleMissionStates.factory.getSettableStates().entrySet()) {
             final var name = entry.getKey();
             final var initialValue = entry.getValue();
 
-            final var query = timeline.register(
-                    new CumulableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
-                    new CumulableStateApplicator(initialValue));
+            if (this.stateNames.contains(name)) throw new RuntimeException("State \"" + name + "\" already defined");
+            this.stateNames.add(name);
 
-            this.registers.put(name, query);
+            final var query = timeline.register(
+                new SettableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
+                new SettableStateApplicator(initialValue));
+
+            this.settables.put(name, query);
+        }
+
+        // Register a Query object for each cumulable state
+        for (final var entry : SampleMissionStates.factory.getCumulableStates().entrySet()) {
+            final var name = entry.getKey();
+            final var initialValue = entry.getValue();
+
+            if (this.stateNames.contains(name)) throw new RuntimeException("State \"" + name + "\" already defined");
+            this.stateNames.add(name);
+
+            final var query = timeline.register(
+                new CumulableEffectEvaluator(name).filterContramap(SampleEvent::asIndependent),
+                new CumulableStateApplicator(initialValue));
+
+            this.cumulables.put(name, query);
         }
     }
 
     @Override
-    public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final Activity activity) {
-        // Set the activity within the current context to provide the ability build on the current history
-        reactionContext.setWithin(ctx, () ->
-                stateContext.setWithin(new StateQuerier(ctx::now), () ->
-                        activity.modelEffects()));
+    public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final String activityId, final Activity activity) {
+        // Run the activity in the context of the given reaction context as well as the established state queries.
+        // The activity can affect the simulation by emitting events against the reaction context,
+        // and can query states to change its behavior based on simulation state.
+        stateContext.setWithin(new StateQuerier(ctx::now), () ->
+            reactionContext.setWithin(ctx, () -> {
+                // Signal the beginning of the activity.
+                ctx.emit(SampleEvent.activity(ActivityEvent.startActivity(activityId, this.activityMapper.serializeActivity(activity).get())));
+
+                // Run the entirety of the activity.
+                activity.modelEffects();
+
+                // Signal the end of the activity, but only after all of its children have also completed.
+                ctx.waitForChildren();
+                ctx.emit(SampleEvent.activity(ActivityEvent.endActivity(activityId)));
+            }));
     }
 
     @Override
     public Set<String> states() {
-        return registers.keySet();
-    }
-
-    // Determine a state value from a History
-    public Double getStateValue(final String name, final History<T, SampleEvent> history) {
-        return this.registers.get(name).getAt(history).get();
-    }
-
-    // Determine the windows when a state meets a condition throughout a History
-    public List<Window> whenStateMeetsCondition(final String name, final Predicate<Double> condition, final History<T, SampleEvent> history) {
-        // Use the registered Query object for convenience
-        return this.registers.get(name).getAt(history).when(condition);
+        return this.cumulables.keySet();
     }
 
     @Override
     public SerializedParameter getSerializedStateAt(final String name, final History<T, SampleEvent> history) {
-        return SerializedParameter.of(this.getStateValue(name, history));
+        return this.getRegisterQueryAt(name, history).get();
     }
 
     @Override
     public List<ConstraintViolation> getConstraintViolationsAt(final History<T, SampleEvent> history) {
-        final List<ConstraintViolation> violations = new ArrayList<>();
+        return setDynamic(stateContext, new StateQuerier(() -> history), () -> {
+            final var violations = new ArrayList<ConstraintViolation>();
 
-        final var stateQuerier = new StateQuerier(() -> history);
-        for (final var violableConstraint : SampleMissionStates.violableConstraints) {
-            // Set the constraint's getWindows method within the context of the history and evaluate it
-            final var violationWindows = stateContext.setWithin(stateQuerier, violableConstraint::getWindows);
-            if (!violationWindows.isEmpty()) {
+            for (final var violableConstraint : SampleMissionStates.violableConstraints) {
+                // Set the constraint's getWindows method within the context of the history and evaluate it
+                final var violationWindows = violableConstraint.getWindows();
+                if (violationWindows.isEmpty()) continue;
+
                 violations.add(new ConstraintViolation(violationWindows, violableConstraint));
             }
-        }
 
-        return violations;
+            return violations;
+        });
+    }
+
+    public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
+        if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history);
+        else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedParameter::of);
+        else throw new RuntimeException("State \"" + name + "\" is not defined");
     }
 
     // An inner class to maintain a supplier for current history to pass to the SampleQuerier
@@ -123,14 +163,14 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
             this.historySupplier = historySupplier;
         }
 
-        // Get the value of the named state at the current point in time.
-        public Double getStateValue(final String name) {
-            return SampleQuerier.this.getStateValue(name, historySupplier.get());
+        // Get a queryable object representing the named state.
+        public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
+            return SampleQuerier.this.getRegisterQueryAt(name, this.historySupplier.get());
         }
 
-        // Determine when a state meets a condition between simulation start and the current point in time.
-        public List<Window> when(final String name, final Predicate<Double> condition) {
-            return SampleQuerier.this.whenStateMeetsCondition(name, condition, historySupplier.get());
+        // Get a queryable object representing simulated activities.
+        public ActivityModelQuerier getActivityQuery() {
+            return SampleQuerier.this.activityModel.getAt(this.historySupplier.get());
         }
     }
 }

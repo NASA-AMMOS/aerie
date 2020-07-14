@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 
 public final class ReplayingSimulationEngine<T, Activity, Event> {
   private final PriorityQueue<Pair<Duration, ResumeActivityEvent<T, Activity, Event>>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getKey));
@@ -27,14 +26,21 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
 
   public ReplayingSimulationEngine(
       final History<T, Event> initialHistory,
-      final BiConsumer<ReactionContext<T, Activity, Event>, Activity> executor
+      final ActivityExecutor<T, Activity, Event> executor
   ) {
     this.reactor = new ActivityReactor<>(executor);
     this.currentHistory = initialHistory;
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
-    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(UUID.randomUUID().toString(), activity, TreePVector.empty())));
+    // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
+    //   Figure out a better way to identify activity instances.
+    //   Make sure we handle the cases in ReactionContextImpl, too.
+    this.enqueue(timeFromStart, UUID.randomUUID().toString(), activity);
+  }
+
+  public void enqueue(final Duration timeFromStart, final String activityId, final Activity activity) {
+    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(activityId, activity, TreePVector.empty())));
   }
 
   public void runFor(final long quantity, final TimeUnit units) {

@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-public final class DataBin {
+public final class DataBin implements DataBinQuerier {
   private double rate;
   private double volume;
 
@@ -37,10 +37,12 @@ public final class DataBin {
     this.volume = volume;
   }
 
+  @Override
   public double getRate() {
     return this.rate;
   }
 
+  @Override
   public double getVolume() {
     return this.volume;
   }

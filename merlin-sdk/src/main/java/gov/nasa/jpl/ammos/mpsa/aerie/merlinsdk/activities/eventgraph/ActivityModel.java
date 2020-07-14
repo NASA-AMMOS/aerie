@@ -8,8 +8,7 @@ import java.util.*;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.UtilityMethods.collapseOverlapping;
 
-public final class ActivityModel {
-
+public final class ActivityModel implements ActivityModelQuerier {
     private Map<String, List<Duration>> activityInstanceMap = new HashMap<>();
     private Map<String, List<String>> activityTypeMap = new HashMap<>();
 
@@ -67,23 +66,27 @@ public final class ActivityModel {
         activityInstanceMap.get(activityID).add(this.elapsedTime);
     }
 
-    public List<Window> getInstanceWindow(String activityID) {
-        List<Window> window = new ArrayList<>();
-        var times = this.activityInstanceMap.get(activityID);
-        Duration startTime = times.get(0);
-        Duration endTime = (times.size() == 1 ? this.elapsedTime : times.get(1));
-
-        window.add(Window.between(startTime, endTime));
-        return window;
+    @Override
+    public List<String> getActivitiesOfType(final String activityType) {
+        return List.copyOf(this.activityTypeMap.getOrDefault(activityType, Collections.emptyList()));
     }
 
+    @Override
+    public Window getCurrentInstanceWindow(String activityID) {
+        final var times = this.activityInstanceMap.get(activityID);
+
+        return Window.between(
+            times.get(0),
+            (times.size() == 1) ? this.elapsedTime : times.get(1));
+    }
+
+    @Override
     public List<Window> getTypeWindows(String activityType) {
         List<Window> windows = new ArrayList<>();
         var activityIds = this.activityTypeMap.get(activityType);
 
-        for (var x : activityIds) {
-            var window = getInstanceWindow(x).get(0);
-            windows.add(window);
+        for (var activityId : activityIds) {
+            windows.add(getCurrentInstanceWindow(activityId));
         }
 
         if (windows.size() == 1) {

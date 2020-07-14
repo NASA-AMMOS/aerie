@@ -44,7 +44,7 @@ public interface MerlinAdaptation<Event> {
   <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
 
   interface Querier<T, Event> {
-    void runActivity(ReactionContext<T, Activity, Event> ctx, Activity activity);
+    void runActivity(ReactionContext<T, Activity, Event> ctx, String activityId, Activity activity);
 
     Set<String> states();
     SerializedParameter getSerializedStateAt(String name, History<T, Event> history);

@@ -1,29 +1,22 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.events.Event;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataBin;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DataBinQuerier;
 
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public final class DataBinResource {
-  private final Function<String, Double> getVolumeOf;
-  private final Function<String, Double> getRateOf;
-  private final Consumer<Event> emitter;
-  private final String binName;
+  private final DataBinQuerier querier;
+  private final Consumer<Double> emitter;
 
-  public DataBinResource(final String binName, final Function<String, Double> getVolumeOf, final Function<String, Double> getRateOf, final Consumer<Event> emitter) {
-    this.getVolumeOf = getVolumeOf;
-    this.getRateOf = getRateOf;
+  public DataBinResource(final DataBinQuerier querier, final Consumer<Double> emitter) {
+    this.querier = querier;
     this.emitter = emitter;
-    this.binName = binName;
   }
 
   public final GettableResource<Double> volume = new GettableResource<>() {
     @Override
     public Double get() {
-      return getVolumeOf.apply(binName);
+      return querier.getVolume();
     }
 
     @Override
@@ -35,12 +28,12 @@ public final class DataBinResource {
   public final SettableCumulableResource<Double, Double> rate = new SettableCumulableResource<>() {
     @Override
     public void add(final Double delta) {
-      emitter.accept(Event.addDataRate(binName, delta));
+      emitter.accept(delta);
     }
 
     @Override
     public Double get() {
-      return getRateOf.apply(binName);
+      return querier.getRate();
     }
 
     @Override

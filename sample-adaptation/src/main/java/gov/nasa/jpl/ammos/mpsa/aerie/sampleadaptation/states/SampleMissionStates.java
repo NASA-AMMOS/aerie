@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityTypeStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
@@ -8,10 +10,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.activityQuerier;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.query;
 
 public final class SampleMissionStates {
+    private static final ActivityTypeStateFactory activities = new ActivityTypeStateFactory(activityQuerier);
 
     // Create IndependentStateFactory to create states from
     // Second parameter tells the factory that events should be emitted as independent events, defined in our SampleEvent
@@ -30,6 +34,15 @@ public final class SampleMissionStates {
                     .withName("Min Battery SoC")
                     .withMessage("Battery Capacity severely low")
                     .withCategory("severe"),
+            new ViolableConstraint(activities
+                                       .ofType("RunInstrument")
+                                       .exists(act -> Constraint.and(
+                                           act.whenActive(),
+                                           batteryCapacity.whenLessThan(Config.startBatteryCapacity_J * 0.3))))
+                .withId("minSOCinUse")
+                .withName("Min Battery SoC In Use")
+                .withMessage("Battery Capacity severely low and being further depleted")
+                .withCategory("severe"),
             new ViolableConstraint(batteryCapacity.whenLessThan(Config.startBatteryCapacity_J * 0.5)
                     .and(batteryCapacity.whenGreaterThanOrEqualTo(Config.startBatteryCapacity_J * 0.3)))
                     .withId("lowSOC")

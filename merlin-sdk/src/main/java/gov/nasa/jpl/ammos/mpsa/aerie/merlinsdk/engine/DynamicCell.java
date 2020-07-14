@@ -28,6 +28,22 @@ public final class DynamicCell<T> implements Supplier<T> {
     }
 
     /**
+     * Provide a value for a dynamic cell for queries within the provided scope.
+     */
+    public static <T, Throws extends Throwable>
+    void setDynamic(final DynamicCell<T> cell, final T value, final BlockScope<Throws> scope) throws Throws {
+        cell.setWithin(value, scope);
+    }
+
+    /**
+     * Provide a value for a dynamic cell for queries within the provided scope.
+     */
+    public static <T, Result, Throws extends Throwable>
+    Result setDynamic(final DynamicCell<T> cell, final T value, final ExpressionScope<Result, Throws> scope) throws Throws {
+        return cell.setWithin(value, scope);
+    }
+
+    /**
      * Gets the current value of the dynamic cell.
      *
      * Throws an exception if nobody up-stack is currently serving this cell.
@@ -54,6 +70,9 @@ public final class DynamicCell<T> implements Supplier<T> {
         }
     }
 
+    /**
+     * Provide a value for a dynamic cell for queries within the provided scope.
+     */
     public <Throws extends Throwable>
     void setWithin(final T value, final BlockScope<Throws> scope) throws Throws {
         this.setWithin(value, () -> { scope.run(); return null; });
