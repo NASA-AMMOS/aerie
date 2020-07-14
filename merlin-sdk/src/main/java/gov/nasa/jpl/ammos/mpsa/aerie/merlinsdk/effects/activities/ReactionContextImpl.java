@@ -92,6 +92,9 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
       this.currentHistory = this.currentHistory.fork();
 
+      // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
+      //   Figure out a better way to identify activity instances.
+      //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
       childId = UUID.randomUUID().toString();
       this.spawns = this.spawns.plus(Triple.of(childId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(this.currentHistory))));
 
@@ -114,6 +117,9 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
   public String spawnAfter(final Duration delay, final Activity activity) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+      // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
+      //   Figure out a better way to identify activity instances.
+      //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
       childId = UUID.randomUUID().toString();
       this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, activity, TreePVector.empty()));
 

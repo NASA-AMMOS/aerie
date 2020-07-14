@@ -33,6 +33,9 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
+    // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
+    //   Figure out a better way to identify activity instances.
+    //   Make sure we handle the cases in ReactionContextImpl, too.
     this.enqueue(timeFromStart, UUID.randomUUID().toString(), activity);
   }
 
