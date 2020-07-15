@@ -8,7 +8,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
