@@ -29,14 +29,17 @@ public final class Duration implements Comparable<Duration> {
       case SECONDS:      return new Duration(quantity * 1000000L);
       case MINUTES:      return new Duration(quantity * 1000000L * 60L);
       case HOURS:        return new Duration(quantity * 1000000L * 60L * 60L);
-      case DAYS:         return new Duration(quantity * 1000000L * 60L * 60L * 24L);
-      case WEEKS:        return new Duration(quantity * 1000000L * 60L * 60L * 24L * 7L);
       default: throw new Error("Unknown TimeUnit value: " + units);
     }
   }
 
   public static Duration duration(final long quantity, final TimeUnit units) {
     return of(quantity, units);
+  }
+
+  public static Duration negate(final Duration duration) {
+    // amusingly, -MIN_VALUE = MIN_VALUE in 2's complement -- `multiplyExact` will correctly fail out in that case.
+    return new Duration(Math.multiplyExact(-1, duration.durationInMicroseconds));
   }
 
   public static Duration add(final Duration left, final Duration right) throws ArithmeticException {
@@ -138,11 +141,34 @@ public final class Duration implements Comparable<Duration> {
 
   @Override
   public String toString() {
-    return "" + this.durationInMicroseconds + "µs";
+    final var sign = (this.isNegative()) ? "-" : "+";
+    return sign + this.durationInMicroseconds + "µs";
   }
 
   @Override
   public int compareTo(final Duration other) {
     return Long.compare(this.durationInMicroseconds, other.durationInMicroseconds);
+  }
+
+  public static final class Trait implements Instant<Duration> {
+    @Override
+    public Duration origin() {
+      return Duration.ZERO;
+    }
+
+    @Override
+    public Duration plus(final Duration time, final Duration duration) {
+      return Duration.add(time, duration);
+    }
+
+    @Override
+    public Duration minus(final Duration time, final Duration duration) {
+      return Duration.subtract(time, duration);
+    }
+
+    @Override
+    public int compare(final Duration left, final Duration right) {
+      return left.compareTo(right);
+    }
   }
 }

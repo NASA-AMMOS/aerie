@@ -1,10 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-
-public final class SimulationInstant implements Instant {
+public final class SimulationInstant {
   // Range of -2^63 to 2^63 - 1.
   // This comes out to almost 600,000 years, at microsecond resolution.
   // Merlin was not designed for time scales longer than this.
@@ -16,26 +12,20 @@ public final class SimulationInstant implements Instant {
 
   public static final SimulationInstant ORIGIN = new SimulationInstant(0);
 
-  @Override
   public SimulationInstant plus(final Duration duration) {
     return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.dividedBy(Duration.MICROSECOND)));
   }
 
-  @Override
   public SimulationInstant minus(final Duration duration) {
     return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.dividedBy(Duration.MICROSECOND)));
   }
 
-  @Override
-  public Duration durationFrom(final Instant other) {
-    return Duration.of(
-        Math.subtractExact(this.microsecondsFromStart, ((SimulationInstant)other).microsecondsFromStart),
-        TimeUnit.MICROSECONDS);
+  public Duration durationFrom(final SimulationInstant other) {
+    return Duration.of(Math.subtractExact(this.microsecondsFromStart, other.microsecondsFromStart), TimeUnit.MICROSECONDS);
   }
 
-  @Override
-  public int compareTo(final Instant other) {
-    return Long.compare(this.microsecondsFromStart, ((SimulationInstant)other).microsecondsFromStart);
+  public int compareTo(final SimulationInstant other) {
+    return Long.compare(this.microsecondsFromStart, other.microsecondsFromStart);
   }
 
   @Override
@@ -54,5 +44,32 @@ public final class SimulationInstant implements Instant {
   @Override
   public String toString() {
     return "" + this.microsecondsFromStart + "µs";
+  }
+
+  public static final class Trait implements Instant<SimulationInstant> {
+    @Override
+    public SimulationInstant origin() {
+      return SimulationInstant.ORIGIN;
+    }
+
+    @Override
+    public SimulationInstant plus(final SimulationInstant time, final Duration duration) {
+      return time.plus(duration);
+    }
+
+    @Override
+    public SimulationInstant minus(final SimulationInstant time, final Duration duration) {
+      return time.minus(duration);
+    }
+
+    @Override
+    public Duration minus(final SimulationInstant end, final SimulationInstant start) {
+      return end.durationFrom(start);
+    }
+
+    @Override
+    public int compare(final SimulationInstant left, final SimulationInstant right) {
+      return left.compareTo(right);
+    }
   }
 }
