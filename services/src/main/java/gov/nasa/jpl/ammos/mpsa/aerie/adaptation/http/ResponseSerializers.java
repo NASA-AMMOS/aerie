@@ -116,7 +116,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeTimestamp(final Duration timestamp) {
-    return Json.createValue(timestamp.durationInMicroseconds);
+    return Json.createValue(timestamp.dividedBy(Duration.MICROSECOND));
   }
 
   public static JsonValue serializeTimestamps(final List<Duration> elements) {
@@ -153,8 +153,8 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeWindow(final Window window) {
     return Json.createObjectBuilder()
-            .add("start", window.start.durationInMicroseconds)
-            .add("end", window.end.durationInMicroseconds)
+            .add("start", window.start.dividedBy(Duration.MICROSECOND))
+            .add("end", window.end.dividedBy(Duration.MICROSECOND))
             .build();
   }
 
@@ -170,7 +170,7 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
     return Json.createObjectBuilder()
-        .add("defer", scheduledActivity.getLeft().durationInMicroseconds)
+        .add("defer", scheduledActivity.getLeft().dividedBy(Duration.MICROSECOND))
         .add("type", scheduledActivity.getRight().getTypeName())
         .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
         .build();
@@ -184,8 +184,8 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
         .add("adaptationId", message.adaptationId)
         .add("startTime", DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn").withZone(ZoneOffset.UTC).format(message.startTime))
-        .add("samplingDuration", message.samplingDuration.durationInMicroseconds)
-        .add("samplingPeriod", message.samplingPeriod.durationInMicroseconds)
+        .add("samplingDuration", message.samplingDuration.dividedBy(Duration.MICROSECOND))
+        .add("samplingPeriod", message.samplingPeriod.dividedBy(Duration.MICROSECOND))
         .add("activities", serializeScheduledActivities(message.activityInstances))
         .build();
   }

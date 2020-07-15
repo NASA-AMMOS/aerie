@@ -18,12 +18,12 @@ public final class SimulationInstant implements Instant {
 
   @Override
   public SimulationInstant plus(final Duration duration) {
-    return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.durationInMicroseconds));
+    return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.dividedBy(Duration.MICROSECOND)));
   }
 
   @Override
   public SimulationInstant minus(final Duration duration) {
-    return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.durationInMicroseconds));
+    return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.dividedBy(Duration.MICROSECOND)));
   }
 
   @Override
