@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,11 +17,22 @@ public final class SimpleSimulator {
   private SimpleSimulator() {}
 
   public static <Event> SimulationResults simulate(
+          final MerlinAdaptation<Event> adaptation,
+          final Map<String, Pair<Duration, SerializedActivity>> schedule,
+          final Duration simulationDuration,
+          final Duration samplingPeriod
+  ) {
+    return simulate(adaptation, SimulationTimeline.create(), schedule, simulationDuration, samplingPeriod);
+  }
+
+  public static <Event> SimulationResults simulate(
       final MerlinAdaptation<Event> adaptation,
-      final Collection<Pair<Duration, SerializedActivity>> schedule,
+      final List<Pair<Duration, SerializedActivity>> instanceList,
       final Duration simulationDuration,
       final Duration samplingPeriod
   ) {
+    final Map<String, Pair<Duration, SerializedActivity>> schedule = new HashMap<>();
+    for (int i=0; i<instanceList.size(); i++) schedule.put(Integer.toString(i), instanceList.get(i));
     return simulate(adaptation, SimulationTimeline.create(), schedule, simulationDuration, samplingPeriod);
   }
 
@@ -29,7 +41,7 @@ public final class SimpleSimulator {
   private static <T, Event> SimulationResults simulate(
       final MerlinAdaptation<Event> adaptation,
       final SimulationTimeline<T, Event> database,
-      final Collection<Pair<Duration, SerializedActivity>> schedule,
+      final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration simulationDuration,
       final Duration samplingPeriod
   ) {
@@ -38,11 +50,12 @@ public final class SimpleSimulator {
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
-    for (final var entry : schedule) {
-      final var startDelta = entry.getLeft();
-      final var serializedInstance = entry.getRight();
+    for (final var entry : schedule.entrySet()) {
+      final var activityId = entry.getKey();
+      final var startDelta = entry.getValue().getLeft();
+      final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, mapper.deserializeActivity(serializedInstance).get());
+      simulator.enqueue(startDelta, activityId, mapper.deserializeActivity(serializedInstance).get());
     }
 
     final var timestamps = new ArrayList<Duration>();
@@ -88,9 +101,19 @@ public final class SimpleSimulator {
 
   public static <Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation<Event> adaptation,
-      final Collection<Pair<Duration, SerializedActivity>> schedule,
+      final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration samplingPeriod
   ) {
+    return simulateToCompletion(adaptation, SimulationTimeline.create(), schedule, samplingPeriod);
+  }
+
+  public static <Event> SimulationResults simulateToCompletion(
+          final MerlinAdaptation<Event> adaptation,
+          final List<Pair<Duration, SerializedActivity>> instanceList,
+          final Duration samplingPeriod
+  ) {
+    final Map<String, Pair<Duration, SerializedActivity>> schedule = new HashMap<>();
+    for (int i=0; i<instanceList.size(); i++) schedule.put(Integer.toString(i), instanceList.get(i));
     return simulateToCompletion(adaptation, SimulationTimeline.create(), schedule, samplingPeriod);
   }
 
@@ -99,7 +122,7 @@ public final class SimpleSimulator {
   private static <T, Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation<Event> adaptation,
       final SimulationTimeline<T, Event> database,
-      final Collection<Pair<Duration, SerializedActivity>> schedule,
+      final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration samplingPeriod
   ) {
     final var querier = adaptation.makeQuerier(database);
@@ -107,11 +130,12 @@ public final class SimpleSimulator {
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
-    for (final var entry : schedule) {
-      final var startDelta = entry.getLeft();
-      final var serializedInstance = entry.getRight();
+    for (final var entry : schedule.entrySet()) {
+      final var activityId = entry.getKey();
+      final var startDelta = entry.getValue().getLeft();
+      final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, mapper.deserializeActivity(serializedInstance).get());
+      simulator.enqueue(startDelta, activityId, mapper.deserializeActivity(serializedInstance).get());
     }
 
     final var timestamps = new ArrayList<Duration>();

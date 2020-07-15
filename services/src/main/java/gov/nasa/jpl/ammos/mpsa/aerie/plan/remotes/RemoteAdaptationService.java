@@ -280,9 +280,11 @@ public final class RemoteAdaptationService implements AdaptationService {
   private JsonValue serializeScheduledActivities(final Plan plan) {
     final var startTime = timestampToInstant(plan.startTimestamp);
 
-    final var scheduledActivities = Json.createArrayBuilder();
-    for (final var activity : plan.activityInstances.values()) {
-      scheduledActivities.add(Json.createObjectBuilder()
+    final var scheduledActivities = Json.createObjectBuilder();
+    for (final var entry : plan.activityInstances.entrySet()) {
+      final var id = entry.getKey();
+      final var activity = entry.getValue();
+      scheduledActivities.add(id, Json.createObjectBuilder()
               .add("defer", startTime.until(timestampToInstant(activity.startTimestamp), ChronoUnit.MICROS))
               .add("type", activity.type)
               .add("parameters", serializeActivityParameterMap(activity.parameters))

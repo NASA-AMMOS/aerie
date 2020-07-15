@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public final class CreateSimulationMessage {
@@ -13,14 +13,14 @@ public final class CreateSimulationMessage {
   public final Instant startTime;
   public final Duration samplingDuration;
   public final Duration samplingPeriod;
-  public final List<Pair<Duration, SerializedActivity>> activityInstances;
+  public final Map<String, Pair<Duration, SerializedActivity>> activityInstances;
 
   public CreateSimulationMessage(
       final String adaptationId,
       final Instant startTime,
       final Duration samplingDuration,
       final Duration samplingPeriod,
-      final List<Pair<Duration, SerializedActivity>> activityInstances
+      final Map<String, Pair<Duration, SerializedActivity>> activityInstances
   ) {
     this.adaptationId = adaptationId;
     this.startTime = startTime;

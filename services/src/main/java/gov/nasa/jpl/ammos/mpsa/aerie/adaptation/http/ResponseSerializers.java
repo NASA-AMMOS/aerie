@@ -176,8 +176,8 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeScheduledActivities(final List<Pair<Duration, SerializedActivity>> activities) {
-    return serializeIterable(ResponseSerializers::serializeScheduledActivity, activities);
+  public static JsonValue serializeScheduledActivities(final Map<String, Pair<Duration, SerializedActivity>> activities) {
+    return serializeMap(ResponseSerializers::serializeScheduledActivity, activities);
   }
 
   public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {

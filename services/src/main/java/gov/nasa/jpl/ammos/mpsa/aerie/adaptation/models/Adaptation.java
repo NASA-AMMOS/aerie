@@ -36,7 +36,7 @@ public final class Adaptation<Event> {
     }
 
     public SimulationResults simulate(
-        final Collection<Pair<Duration, SerializedActivity>> schedule,
+        final Map<String, Pair<Duration, SerializedActivity>> schedule,
         final Duration simulationDuration,
         final Duration samplingPeriod
     ) {
