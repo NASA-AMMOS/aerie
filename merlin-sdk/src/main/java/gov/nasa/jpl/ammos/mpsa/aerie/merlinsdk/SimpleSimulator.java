@@ -17,11 +17,12 @@ public final class SimpleSimulator {
   private SimpleSimulator() {}
 
   public static <Event> SimulationResults simulate(
-          final MerlinAdaptation<Event> adaptation,
-          final Map<String, Pair<Duration, SerializedActivity>> schedule,
-          final Duration simulationDuration,
-          final Duration samplingPeriod
-  ) {
+      final MerlinAdaptation<Event> adaptation,
+      final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Duration simulationDuration,
+      final Duration samplingPeriod
+  )
+  {
     return simulate(adaptation, SimulationTimeline.create(), schedule, simulationDuration, samplingPeriod);
   }
 
@@ -56,7 +57,8 @@ public final class SimpleSimulator {
       final List<Pair<Duration, SerializedActivity>> instanceList,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  ) {
+  )
+  {
     return simulate(adaptation, SimulationTimeline.create(), instanceList, simulationDuration, samplingPeriod);
   }
 
@@ -90,7 +92,8 @@ public final class SimpleSimulator {
       final ReplayingSimulationEngine<T, Activity, Event> simulator,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  ) {
+  )
+  {
     final var timestamps = new ArrayList<Duration>();
     final var timelines = new HashMap<String, List<SerializedParameter>>();
     for (final var stateName : querier.states()) {
@@ -136,7 +139,8 @@ public final class SimpleSimulator {
       final MerlinAdaptation<Event> adaptation,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration samplingPeriod
-  ) {
+  )
+  {
     return simulateToCompletion(adaptation, SimulationTimeline.create(), schedule, samplingPeriod);
   }
 
@@ -147,7 +151,8 @@ public final class SimpleSimulator {
       final SimulationTimeline<T, Event> database,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration samplingPeriod
-  ) {
+  )
+  {
     final var querier = adaptation.makeQuerier(database);
     final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
 
@@ -165,10 +170,11 @@ public final class SimpleSimulator {
   }
 
   public static <Event> SimulationResults simulateToCompletion(
-          final MerlinAdaptation<Event> adaptation,
-          final List<Pair<Duration, SerializedActivity>> instanceList,
-          final Duration samplingPeriod
-  ) {
+      final MerlinAdaptation<Event> adaptation,
+      final List<Pair<Duration, SerializedActivity>> instanceList,
+      final Duration samplingPeriod
+  )
+  {
     return simulateToCompletion(adaptation, SimulationTimeline.create(), instanceList, samplingPeriod);
   }
 
@@ -179,7 +185,8 @@ public final class SimpleSimulator {
       final SimulationTimeline<T, Event> database,
       final List<Pair<Duration, SerializedActivity>> instanceList,
       final Duration samplingPeriod
-  ) {
+  )
+  {
     final var querier = adaptation.makeQuerier(database);
     final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
 
@@ -201,7 +208,8 @@ public final class SimpleSimulator {
       final MerlinAdaptation.Querier<T, Event> querier,
       final ReplayingSimulationEngine<T, Activity, Event> simulator,
       final Duration samplingPeriod
-  ) {
+  )
+  {
 
     final var timestamps = new ArrayList<Duration>();
     final var timelines = new HashMap<String, List<SerializedParameter>>();
