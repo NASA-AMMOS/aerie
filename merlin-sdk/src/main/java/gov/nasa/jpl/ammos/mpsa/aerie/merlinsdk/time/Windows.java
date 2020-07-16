@@ -55,6 +55,12 @@ public final class Windows implements Iterable<Window> {
     this.addAll(other.windows);
   }
 
+  public static Windows union(final Windows left, final Windows right) {
+    final var result = new Windows(left);
+    result.addAll(right);
+    return result;
+  }
+
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
   private void addAll(final List<Window> other) {
     int index = 0;
@@ -94,6 +100,12 @@ public final class Windows implements Iterable<Window> {
 
   public void subtractAll(final Windows other) {
     this.subtractAll(other.windows);
+  }
+
+  public static Windows minus(final Windows left, final Windows right) {
+    final var result = new Windows(left);
+    result.subtractAll(right);
+    return result;
   }
 
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
@@ -143,6 +155,12 @@ public final class Windows implements Iterable<Window> {
 
   public void intersectWith(final Windows other) {
     this.intersectWith(other.windows);
+  }
+
+  public static Windows intersection(final Windows left, final Windows right) {
+    final var result = new Windows(left);
+    result.intersectWith(right);
+    return result;
   }
 
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
