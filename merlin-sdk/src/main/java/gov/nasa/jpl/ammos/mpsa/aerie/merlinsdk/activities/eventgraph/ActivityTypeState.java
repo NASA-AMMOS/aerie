@@ -1,15 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.UtilityMethods.collapseOverlapping;
 
 public final class ActivityTypeState {
   private final String activityType;
@@ -47,8 +43,8 @@ public final class ActivityTypeState {
       }
 
       @Override
-      public List<Window> getWindows() {
-        final var windows = new ArrayList<Window>();
+      public Windows getWindows() {
+        final var windows = new Windows();
 
         for (var activityId : querier.getActivitiesOfType(activityType)) {
           final var constraint = predicate.apply(new ActivityInstanceState(activityId, querier));
@@ -58,7 +54,7 @@ public final class ActivityTypeState {
           windows.addAll(matchWindows);
         }
 
-        return collapseOverlapping(windows);
+        return windows;
       }
     };
   }

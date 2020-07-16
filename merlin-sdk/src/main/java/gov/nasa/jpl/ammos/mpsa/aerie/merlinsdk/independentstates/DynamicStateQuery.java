@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -19,7 +18,7 @@ public final class DynamicStateQuery<ResourceType> implements StateQuery<Resourc
   }
 
   @Override
-  public List<Window> when(final Predicate<ResourceType> condition) {
+  public Windows when(final Predicate<ResourceType> condition) {
     return this.querier.get().when(condition);
   }
 }

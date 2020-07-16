@@ -1,9 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -13,13 +12,13 @@ import java.util.function.Supplier;
 public final class SettableState<T> {
   private final String name;
   private final Supplier<T> getter;
-  private final Function<Predicate<T>, List<Window>> checker;
+  private final Function<Predicate<T>, Windows> checker;
   private final Consumer<T> emitter;
 
   public SettableState(
       final String name,
       final Supplier<T> getter,
-      final Function<Predicate<T>, List<Window>> checker,
+      final Function<Predicate<T>, Windows> checker,
       final Consumer<T> emitter
   ) {
     this.name = name;

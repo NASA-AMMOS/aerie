@@ -3,10 +3,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
 import java.util.*;
-
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.UtilityMethods.collapseOverlapping;
 
 public final class ActivityModel implements ActivityModelQuerier {
     private Map<String, List<Duration>> activityInstanceMap = new HashMap<>();
@@ -81,18 +80,13 @@ public final class ActivityModel implements ActivityModelQuerier {
     }
 
     @Override
-    public List<Window> getTypeWindows(String activityType) {
-        List<Window> windows = new ArrayList<>();
-        var activityIds = this.activityTypeMap.get(activityType);
+    public Windows getTypeWindows(String activityType) {
+        final var windows = new Windows();
 
-        for (var activityId : activityIds) {
-            windows.add(getCurrentInstanceWindow(activityId));
+        for (var activityId : this.activityTypeMap.get(activityType)) {
+            windows.add(this.getCurrentInstanceWindow(activityId));
         }
 
-        if (windows.size() == 1) {
-            return windows;
-        }
-
-        return collapseOverlapping(windows);
+        return windows;
     }
 }

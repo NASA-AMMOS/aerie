@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
-
-import java.util.List;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
 public final class ActivityInstanceState {
   private final String activityId;
@@ -14,6 +13,6 @@ public final class ActivityInstanceState {
   }
 
   public Constraint whenActive() {
-    return Constraint.createActivityConstraint(activityId, () -> List.of(querier.getCurrentInstanceWindow(activityId)));
+    return Constraint.createActivityConstraint(activityId, () -> new Windows(querier.getCurrentInstanceWindow(activityId)));
   }
 }

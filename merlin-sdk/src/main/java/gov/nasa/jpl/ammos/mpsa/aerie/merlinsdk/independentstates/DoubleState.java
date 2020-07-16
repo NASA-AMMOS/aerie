@@ -1,9 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -12,13 +11,13 @@ import java.util.function.Supplier;
 public final class DoubleState implements MetricState<Double, Double> {
   private final String name;
   private final Supplier<Double> getter;
-  private final Function<Predicate<Double>, List<Window>> checker;
+  private final Function<Predicate<Double>, Windows> checker;
   private final Consumer<Double> emitter;
 
   public DoubleState(
       final String name,
       final Supplier<Double> getter,
-      final Function<Predicate<Double>, List<Window>> checker,
+      final Function<Predicate<Double>, Windows> checker,
       final Consumer<Double> emitter
   ) {
     this.name = name;

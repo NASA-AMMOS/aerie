@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.UtilityMethods;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
@@ -9,21 +8,21 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityMod
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Map;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph.*;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window.window;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class Demo {
 
-    @Test()
+    @Test
     public void activitySameStartEndConcurrent(){
         final var mapper = new MyActivityMapper();
         Activity a = new ActivityA();
@@ -47,8 +46,8 @@ public class Demo {
 
         applicator.apply(model, concurrentGraph.evaluate(evaluator));
 
-        assertEquals(model.getCurrentInstanceWindow(cID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
-        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(cID), window(0, TimeUnit.SECONDS, 0, TimeUnit.SECONDS));
+        assertEquals(model.getCurrentInstanceWindow(aID), window(0, TimeUnit.SECONDS, 0, TimeUnit.SECONDS));
     }
 
     @Test(expected = RuntimeException.class)
@@ -118,8 +117,8 @@ public class Demo {
 
         applicator.apply(model, seqGraph.evaluate(evaluator));
 
-        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
-        assertEquals(model.getCurrentInstanceWindow(bID), (Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(0, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(aID), window(0, TimeUnit.SECONDS, 0, TimeUnit.SECONDS));
+        assertEquals(model.getCurrentInstanceWindow(bID), window(0, TimeUnit.SECONDS, 0, TimeUnit.SECONDS));
     }
 
     @Test
@@ -130,6 +129,8 @@ public class Demo {
         String a2ID = "A2";
         String a3ID = "A3";
         String a4ID = "A4";
+
+        String aType = mapper.serializeActivity(a).get().getTypeName();
 
         final var startA1Graph = atom(ActivityEvent.startActivity(a1ID, mapper.serializeActivity(a).get()));
         final var startA2Graph = atom(ActivityEvent.startActivity(a2ID, mapper.serializeActivity(a).get()));
@@ -146,33 +147,32 @@ public class Demo {
         final ActivityModel model = applicator.initial();
 
         applicator.apply(model, startA1Graph.evaluate(evaluator));
-        applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+        applicator.step(model, duration(5, TimeUnit.SECONDS));
         applicator.apply(model, endA1Graph.evaluate(evaluator));
 
-        var aWindows = model.getTypeWindows(mapper.serializeActivity(a).get().getTypeName());
-        assertEquals(aWindows.get(0), Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS)));
+        assertEquals(model.getTypeWindows(aType), new Windows(window(0, TimeUnit.SECONDS, 5, TimeUnit.SECONDS)));
 
         applicator.apply(model, startA2Graph.evaluate(evaluator));
-        applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+        applicator.step(model, duration(5, TimeUnit.SECONDS));
         applicator.apply(model, endA2Graph.evaluate(evaluator));
-        aWindows = model.getTypeWindows(mapper.serializeActivity(a).get().getTypeName());
-        assertEquals(aWindows.get(0), Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS)));
 
-        applicator.step(model, Duration.of(1, TimeUnit.SECONDS));
+        assertEquals(model.getTypeWindows(aType), new Windows(window(0, TimeUnit.SECONDS, 10, TimeUnit.SECONDS)));
+
+        applicator.step(model, duration(1, TimeUnit.SECONDS));
 
         applicator.apply(model, startA3Graph.evaluate(evaluator));
         applicator.apply(model, startA4Graph.evaluate(evaluator));
-        applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+        applicator.step(model, duration(5, TimeUnit.SECONDS));
         applicator.apply(model, endA3Graph.evaluate(evaluator));
-        aWindows = model.getTypeWindows(mapper.serializeActivity(a).get().getTypeName());
-        assertTrue(aWindows.contains(Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
-        assertTrue(aWindows.contains(Window.between(Duration.of(11, TimeUnit.SECONDS),Duration.of(16, TimeUnit.SECONDS))));
 
-        applicator.step(model, Duration.of(11, TimeUnit.SECONDS));
+        assertTrue(model.getTypeWindows(aType).includes(0, TimeUnit.SECONDS, 10, TimeUnit.SECONDS));
+        assertTrue(model.getTypeWindows(aType).includes(11, TimeUnit.SECONDS, 16, TimeUnit.SECONDS));
+
+        applicator.step(model, duration(11, TimeUnit.SECONDS));
         applicator.apply(model, endA4Graph.evaluate(evaluator));
-        aWindows = model.getTypeWindows(mapper.serializeActivity(a).get().getTypeName());
-        assertTrue(aWindows.contains(Window.between(Duration.of(0, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
-        assertTrue(aWindows.contains(Window.between(Duration.of(11, TimeUnit.SECONDS),Duration.of(27, TimeUnit.SECONDS))));
+
+        assertTrue(model.getTypeWindows(aType).includes(0, TimeUnit.SECONDS, 10, TimeUnit.SECONDS));
+        assertTrue(model.getTypeWindows(aType).includes(11, TimeUnit.SECONDS, 27, TimeUnit.SECONDS));
     }
 
     @Test
@@ -183,6 +183,9 @@ public class Demo {
         Activity anotherA = new ActivityA();
         Activity anotherB = new ActivityB();
         Activity c = new Activity() {};
+
+        String aType = mapper.serializeActivity(a).get().getTypeName();
+        String bType = mapper.serializeActivity(b).get().getTypeName();
 
         String aID = "A1";
         String bID = "B1";
@@ -202,18 +205,18 @@ public class Demo {
         final ActivityModel model = applicator.initial();
 
 
-        applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+        applicator.step(model, duration(5, TimeUnit.SECONDS));
         applicator.apply(model, graph1.evaluate(evaluator));
 
-        assertEquals(model.getCurrentInstanceWindow(cID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
-        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
-        assertEquals(model.getCurrentInstanceWindow(bID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(5, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(cID), window(5, TimeUnit.SECONDS, 5, TimeUnit.SECONDS));
+        assertEquals(model.getCurrentInstanceWindow(aID), window(5, TimeUnit.SECONDS, 5, TimeUnit.SECONDS));
+        assertEquals(model.getCurrentInstanceWindow(bID), window(5, TimeUnit.SECONDS, 5, TimeUnit.SECONDS));
 
-        applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+        applicator.step(model, duration(5, TimeUnit.SECONDS));
 
-        assertEquals(model.getCurrentInstanceWindow(cID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
-        assertEquals(model.getCurrentInstanceWindow(aID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
-        assertEquals(model.getCurrentInstanceWindow(bID), (Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS))));
+        assertEquals(model.getCurrentInstanceWindow(cID), window(5, TimeUnit.SECONDS, 10, TimeUnit.SECONDS));
+        assertEquals(model.getCurrentInstanceWindow(aID), window(5, TimeUnit.SECONDS, 10, TimeUnit.SECONDS));
+        assertEquals(model.getCurrentInstanceWindow(bID), window(5, TimeUnit.SECONDS, 10, TimeUnit.SECONDS));
 
         final var graph2 =
                 EventGraph.sequentially(
@@ -222,10 +225,8 @@ public class Demo {
 
         applicator.apply(model, graph2.evaluate(evaluator));
 
-        var aWindows = model.getTypeWindows(mapper.serializeActivity(a).get().getTypeName());
-        var bWindows = model.getTypeWindows(mapper.serializeActivity(b).get().getTypeName());
-        assertEquals(aWindows.get(0), Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS)));
-        assertEquals(bWindows.get(0), Window.between(Duration.of(5, TimeUnit.SECONDS),Duration.of(10, TimeUnit.SECONDS)));
+        assertEquals(model.getTypeWindows(aType), new Windows(window(5, TimeUnit.SECONDS, 10, TimeUnit.SECONDS)));
+        assertEquals(model.getTypeWindows(bType), new Windows(window(5, TimeUnit.SECONDS, 10, TimeUnit.SECONDS)));
     }
 
     @Test
@@ -234,79 +235,48 @@ public class Demo {
 
         model.activityStart("x1", new SerializedActivity("x", Map.of()));
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityEnd("x1");
         model.activityStart("x2", new SerializedActivity("x", Map.of("a", SerializedParameter.of(10.0))));
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityEnd("x2");
         model.activityStart("x3", new SerializedActivity("x", Map.of()));
         model.activityEnd("x3");
 
-        final var windows = model.getTypeWindows("x");
-
-        assertEquals(windows.get(0), Window.between(Duration.of(0, TimeUnit.MICROSECONDS),Duration.of(2, TimeUnit.MICROSECONDS)));
+        assertEquals(model.getTypeWindows("x"), new Windows(window(0, TimeUnit.MICROSECONDS, 2, TimeUnit.MICROSECONDS)));
     }
 
     @Test
     public void typeWindowsTest() {
         final var model = new ActivityModel();
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityStart("x1", new SerializedActivity("x", Map.of()));
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityStart("x2", new SerializedActivity("x", Map.of()));
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityEnd("x1");
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityStart("x3", new SerializedActivity("x", Map.of()));
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityEnd("x2");
 
-        model.step(Duration.of(1, TimeUnit.MICROSECONDS));
+        model.step(duration(1, TimeUnit.MICROSECONDS));
 
         model.activityEnd("x3");
 
-        final var windows = model.getTypeWindows("x");
-        assertEquals(windows.get(0), Window.between(Duration.of(1, TimeUnit.MICROSECONDS),Duration.of(6, TimeUnit.MICROSECONDS)));
-    }
-
-    @Test
-    public void collapseOverlappingWindowsTest() {
-        var x = new ArrayList<Window>();
-
-        x.add(Window.between(Duration.of(10, TimeUnit.MICROSECONDS), Duration.of(13, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(4, TimeUnit.MICROSECONDS), Duration.of(16, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(15, TimeUnit.MICROSECONDS), Duration.of(20, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(2, TimeUnit.MICROSECONDS), Duration.of(4, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(1, TimeUnit.MICROSECONDS), Duration.of(3, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(11, TimeUnit.MICROSECONDS), Duration.of(13, TimeUnit.MICROSECONDS)));
-
-        var res = UtilityMethods.collapseOverlapping(x);
-        assertEquals(res.get(0), Window.between(Duration.of(1, TimeUnit.MICROSECONDS),Duration.of(20, TimeUnit.MICROSECONDS)));
-        assertEquals(res.size(), 1);
-    }
-
-    @Test
-    public void collapseOverlappingWindowsTest2(){
-        var x = new ArrayList<Window>();
-
-        x.add(Window.between(Duration.of(2, TimeUnit.MICROSECONDS), Duration.of(5, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(1, TimeUnit.MICROSECONDS), Duration.of(3, TimeUnit.MICROSECONDS)));
-        x.add(Window.between(Duration.of(4, TimeUnit.MICROSECONDS), Duration.of(6, TimeUnit.MICROSECONDS)));
-
-        var res = UtilityMethods.collapseOverlapping(x);
-        assertEquals(res.size(), 1);
+        assertEquals(model.getTypeWindows("x"), new Windows(window(1, TimeUnit.MICROSECONDS, 6, TimeUnit.MICROSECONDS)));
     }
 }
