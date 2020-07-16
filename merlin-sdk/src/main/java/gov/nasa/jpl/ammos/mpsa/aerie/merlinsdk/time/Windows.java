@@ -18,6 +18,10 @@ public final class Windows implements Iterable<Window> {
     for (final var window : windows) this.add(window);
   }
 
+  public Windows(final Window... windows) {
+    for (final var window : windows) this.add(window);
+  }
+
   public void add(final Window window) {
     if (window.isEmpty()) return;
 
