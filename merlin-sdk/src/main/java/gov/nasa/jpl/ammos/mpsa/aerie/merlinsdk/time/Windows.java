@@ -137,6 +137,10 @@ public final class Windows implements Iterable<Window> {
     this.intersectWith(Window.between(startQuantity, startUnits, endQuantity, endUnits));
   }
 
+  public void intersectWith(final Windows other) {
+    this.intersectWith(other.windows);
+  }
+
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
   private void intersectWith(final List<Window> other) {
     int index = 0;
