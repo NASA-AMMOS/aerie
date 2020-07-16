@@ -300,6 +300,31 @@ public class WindowsTest {
   }
 
   @Test
+  public void includesAll() {
+    final var x = new Windows();
+    x.add(-10, MICROSECONDS, 10, MICROSECONDS);
+    x.addPoint(15, MICROSECONDS);
+    x.addPoint(20, MICROSECONDS);
+
+    final var y = new Windows();
+    y.add(-10, MICROSECONDS,  -5, MICROSECONDS);
+    y.add(3, MICROSECONDS,  6, MICROSECONDS);
+    y.addPoint(20, MICROSECONDS);
+
+    assertTrue(x.includes(y));
+  }
+
+  @Test
+  public void includesSelf() {
+    final var x = new Windows();
+    x.add(-10, MICROSECONDS, 10, MICROSECONDS);
+    x.addPoint(15, MICROSECONDS);
+    x.addPoint(20, MICROSECONDS);
+
+    assertTrue(x.includes(x));
+  }
+
+  @Test
   public void asEmptyList() {
     final var windows = new Windows();
 

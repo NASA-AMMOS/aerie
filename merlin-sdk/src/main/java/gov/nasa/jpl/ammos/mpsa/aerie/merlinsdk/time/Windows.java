@@ -182,12 +182,30 @@ public final class Windows implements Iterable<Window> {
 
   public boolean includes(final Window probe) {
     if (probe.isEmpty()) return true;
+    return this.includes(List.of(probe));
+  }
 
-    for (final var window : this) {
-      if (window.contains(probe)) return true;
+  public boolean includes(final Windows other) {
+    return this.includes(other.windows);
+  }
+
+  // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
+  private boolean includes(final List<Window> other) {
+    int index = 0;
+
+    for (final var window : other) {
+      // Skip any windows that fully precede this one.
+      while (index < this.windows.size() && this.windows.get(index).end.shorterThan(window.start)) {
+        index += 1;
+      }
+
+      // If windows.get(index) doesn't contain `window`, then nothing does.
+      if (index >= this.windows.size() || !this.windows.get(index).contains(window)) {
+        return false;
+      }
     }
 
-    return false;
+    return true;
   }
 
   @Override
