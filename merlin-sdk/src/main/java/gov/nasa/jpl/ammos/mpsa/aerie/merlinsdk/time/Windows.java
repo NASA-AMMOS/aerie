@@ -176,6 +176,10 @@ public final class Windows implements Iterable<Window> {
 
   // TODO: implement symmetric difference `negateUnder()`
 
+  public boolean isEmpty() {
+    return new Windows().includes(this);
+  }
+
   public boolean includes(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
     return this.includes(Window.between(startQuantity, startUnits, endQuantity, endUnits));
   }
