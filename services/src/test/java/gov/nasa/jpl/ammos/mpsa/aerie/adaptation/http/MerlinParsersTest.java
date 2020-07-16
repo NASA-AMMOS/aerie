@@ -83,8 +83,8 @@ public final class MerlinParsersTest {
         . add("samplingDuration", 5_000_000 /* microseconds */)
         . add("samplingPeriod", 500_000 /* microseconds */)
         . add("activities", Json
-            . createArrayBuilder()
-            . add(Json
+            . createObjectBuilder()
+            . add("0", Json
                 . createObjectBuilder()
                 . add("type", "BiteBanana")
                 . add("defer", 10_000_000 /* microseconds */)
@@ -106,8 +106,8 @@ public final class MerlinParsersTest {
         Instant.parse("1992-08-11T01:30:00Z"),
         Duration.of(5, TimeUnit.SECONDS),
         Duration.of(500, TimeUnit.MILLISECONDS),
-        List.of(
-            Pair.of(
+        Map.of(
+            "0", Pair.of(
                 Duration.of(10, TimeUnit.SECONDS),
                 new SerializedActivity("BiteBanana", Map.of(
                     "biteSize", SerializedParameter.of(10.0),
