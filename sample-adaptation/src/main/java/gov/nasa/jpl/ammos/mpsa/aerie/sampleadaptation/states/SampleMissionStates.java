@@ -60,4 +60,12 @@ public final class SampleMissionStates {
                     .withMessage("Exceeded max camera data space available")
                     .withCategory("warning")
     );
+    static {
+        final var constraintNames = new java.util.HashSet<String>();
+        for (final var violableConstraint : violableConstraints) {
+            if (!constraintNames.add(violableConstraint.name)) {
+                throw new Error("More than one violable constraint with name \"" + violableConstraint.name + "\". Each name must be unique.");
+            }
+        }
+    }
 }

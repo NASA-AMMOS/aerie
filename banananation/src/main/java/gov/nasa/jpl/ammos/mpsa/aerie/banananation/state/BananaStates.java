@@ -51,4 +51,12 @@ public final class BananaStates {
           .withMessage("Too many peels is gross. Clean some up")
           .withCategory("severe")
   );
+  static {
+    final var constraintNames = new java.util.HashSet<String>();
+    for (final var violableConstraint : violableConstraints) {
+      if (!constraintNames.add(violableConstraint.name)) {
+        throw new Error("More than one violable constraint with name \"" + violableConstraint.name + "\". Each name must be unique.");
+      }
+    }
+  }
 }
