@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -49,7 +48,7 @@ public final class ViolableConstraint implements Constraint {
     }
 
     @Override
-    public List<Window> getWindows() {
+    public Windows getWindows() {
         return this.constraint.getWindows();
     }
 }

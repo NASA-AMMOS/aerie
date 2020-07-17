@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
+import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.RunInstrument;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
 import java.util.List;
@@ -35,7 +36,7 @@ public final class SampleMissionStates {
                     .withMessage("Battery Capacity severely low")
                     .withCategory("severe"),
             new ViolableConstraint(activities
-                                       .ofType("RunInstrument")
+                                       .ofType(RunInstrument.class)
                                        .exists(act -> Constraint.and(
                                            act.whenActive(),
                                            batteryCapacity.whenLessThan(Config.startBatteryCapacity_J * 0.3))))

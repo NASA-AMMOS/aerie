@@ -2,11 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -57,11 +55,11 @@ public final class RegisterState<T> implements StateQuery<T> {
     }
 
     @Override
-    public List<Window> when(final Predicate<T> condition) {
+    public Windows when(final Predicate<T> condition) {
         return matching(this.changes, this.elapsedTime, condition);
     }
 
-    public List<Window> whenConflicted() {
+    public Windows whenConflicted() {
         return matching(this.conflicted, this.elapsedTime, x -> x);
     }
 
@@ -78,10 +76,10 @@ public final class RegisterState<T> implements StateQuery<T> {
         return Optional.empty();
     }
 
-    public static <T> List<Window> matching(final Map<Duration, T> changePoints, final Duration endTime, final Predicate<? super T> predicate) {
+    public static <T> Windows matching(final Map<Duration, T> changePoints, final Duration endTime, final Predicate<? super T> predicate) {
         final Predicate<Map.Entry<Duration, T>> matchesValue = entry -> predicate.test(entry.getValue());
 
-        final var windows = new ArrayList<Window>();
+        final var windows = new Windows();
         final var iter = changePoints.entrySet().iterator();
         while (iter.hasNext()) {
             // Find the first value matching the predicate.
@@ -90,7 +88,7 @@ public final class RegisterState<T> implements StateQuery<T> {
             final var end = skipUntil(iter, matchesValue.negate()).map(Map.Entry::getKey);
 
             // Add the window between these two points.
-            start.ifPresent(duration -> windows.add(Window.between(duration, end.orElse(endTime))));
+            start.ifPresent(duration -> windows.add(duration, end.orElse(endTime)));
         }
 
         return windows;

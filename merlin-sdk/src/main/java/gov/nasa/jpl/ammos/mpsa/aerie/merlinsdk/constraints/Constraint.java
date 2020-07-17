@@ -1,18 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 public interface Constraint {
     Set<String> getActivityIds();
     Set<String> getStateIds();
-    List<Window> getWindows();
+    Windows getWindows();
 
     default Constraint and(final Constraint other) {
         return and(this, other);
@@ -25,34 +24,34 @@ public interface Constraint {
     default Constraint minus(final Constraint other) { return minus(this, other); }
 
     static Constraint and(final Constraint x, final Constraint y) {
-        return combine(x, y, Operator::intersection);
+        return combine(x, y, Windows::intersectWith);
     }
 
     static Constraint or(final Constraint x, final Constraint y) {
-        return combine(x, y, Operator::union);
+        return combine(x, y, Windows::addAll);
     }
 
     static Constraint minus(final Constraint x, final Constraint y) {
-        return combine(x, y, Operator::minus);
+        return combine(x, y, Windows::subtractAll);
     }
 
-    static Constraint createStateConstraint(final String stateId, final Supplier<List<Window>> windowSupplier) {
+    static Constraint createStateConstraint(final String stateId, final Supplier<Windows> windowSupplier) {
         return create(Set.of(), Set.of(stateId), windowSupplier);
     }
 
-    static Constraint createStateConstraint(final Set<String> stateIds, final Supplier<List<Window>> windowSupplier) {
+    static Constraint createStateConstraint(final Set<String> stateIds, final Supplier<Windows> windowSupplier) {
         return create(Set.of(), stateIds, windowSupplier);
     }
 
-    static Constraint createActivityConstraint(final String activityId, final Supplier<List<Window>> windowSupplier) {
+    static Constraint createActivityConstraint(final String activityId, final Supplier<Windows> windowSupplier) {
         return create(Set.of(activityId), Set.of(), windowSupplier);
     }
 
-    static Constraint createActivityConstraint(final Set<String> activityIds, final Supplier<List<Window>> windowSupplier) {
+    static Constraint createActivityConstraint(final Set<String> activityIds, final Supplier<Windows> windowSupplier) {
         return create(activityIds, Set.of(), windowSupplier);
     }
 
-    static Constraint combine(final Constraint x, final Constraint y, final BiFunction<List<Window>, List<Window>, List<Window>> windowCombinator) {
+    static Constraint combine(final Constraint x, final Constraint y, final BiConsumer<Windows, Windows> windowCombinator) {
         // Because the affected activityIds and stateIds may be dependent on the computed windows,
         // we must defer their computation until specifically requested.
         Objects.requireNonNull(x);
@@ -74,17 +73,19 @@ public interface Constraint {
             }
 
             @Override
-            public List<Window> getWindows() {
-                return windowCombinator.apply(x.getWindows(), y.getWindows());
+            public Windows getWindows() {
+                final var windows = x.getWindows();
+                windowCombinator.accept(windows, y.getWindows());
+                return windows;
             }
         };
     }
 
-    static Constraint create(Supplier<List<Window>> windowSupplier) {
+    static Constraint create(Supplier<Windows> windowSupplier) {
         return create(Set.of(), Set.of(), windowSupplier);
     }
 
-    static Constraint create(final Set<String> activityIds, final Set<String> stateIds, final Supplier<List<Window>> windowSupplier) {
+    static Constraint create(final Set<String> activityIds, final Set<String> stateIds, final Supplier<Windows> windowSupplier) {
         Objects.requireNonNull(activityIds).forEach(Objects::requireNonNull);
         Objects.requireNonNull(stateIds).forEach(Objects::requireNonNull);
         Objects.requireNonNull(windowSupplier);
@@ -101,7 +102,7 @@ public interface Constraint {
             }
 
             @Override
-            public List<Window> getWindows() {
+            public Windows getWindows() {
                 return windowSupplier.get();
             }
         };

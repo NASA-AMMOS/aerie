@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -23,7 +24,7 @@ public final class DynamicActivityModelQuerier implements ActivityModelQuerier {
     }
 
     @Override
-    public List<Window> getTypeWindows(final String activityType) {
+    public Windows getTypeWindows(final String activityType) {
         return this.querier.get().getTypeWindows(activityType);
     }
 }

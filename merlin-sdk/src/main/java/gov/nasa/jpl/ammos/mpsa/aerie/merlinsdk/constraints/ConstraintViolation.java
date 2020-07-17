@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
-import java.util.List;
 import java.util.Set;
 
 public final class ConstraintViolation {
@@ -12,10 +11,10 @@ public final class ConstraintViolation {
     public final String category;
     public final Set<String> associatedActivityIds;
     public final Set<String> associatedStateIds;
-    public final List<Window> violationWindows;
+    public final Windows violationWindows;
 
-    public ConstraintViolation(List<Window> violationWindows, ViolableConstraint violableConstraint) {
-        this.violationWindows = List.copyOf(violationWindows);
+    public ConstraintViolation(Windows violationWindows, ViolableConstraint violableConstraint) {
+        this.violationWindows = new Windows(violationWindows);
         this.id = violableConstraint.id;
         this.name = violableConstraint.name;
         this.message = violableConstraint.message;

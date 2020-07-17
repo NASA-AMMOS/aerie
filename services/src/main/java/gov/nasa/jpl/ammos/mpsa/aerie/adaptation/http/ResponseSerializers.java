@@ -14,6 +14,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Seriali
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -147,7 +148,7 @@ public final class ResponseSerializers {
             .build();
   }
 
-  public static JsonValue serializeWindows(List<Window> windows) {
+  public static JsonValue serializeWindows(Windows windows) {
     return serializeIterable(ResponseSerializers::serializeWindow, windows);
   }
 

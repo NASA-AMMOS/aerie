@@ -18,6 +18,10 @@ public final class Windows implements Iterable<Window> {
     for (final var window : windows) this.add(window);
   }
 
+  public Windows(final Window... windows) {
+    for (final var window : windows) this.add(window);
+  }
+
   public void add(final Window window) {
     if (window.isEmpty()) return;
 
@@ -49,6 +53,12 @@ public final class Windows implements Iterable<Window> {
 
   public void addAll(final Windows other) {
     this.addAll(other.windows);
+  }
+
+  public static Windows union(final Windows left, final Windows right) {
+    final var result = new Windows(left);
+    result.addAll(right);
+    return result;
   }
 
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
@@ -90,6 +100,12 @@ public final class Windows implements Iterable<Window> {
 
   public void subtractAll(final Windows other) {
     this.subtractAll(other.windows);
+  }
+
+  public static Windows minus(final Windows left, final Windows right) {
+    final var result = new Windows(left);
+    result.subtractAll(right);
+    return result;
   }
 
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
@@ -137,6 +153,16 @@ public final class Windows implements Iterable<Window> {
     this.intersectWith(Window.between(startQuantity, startUnits, endQuantity, endUnits));
   }
 
+  public void intersectWith(final Windows other) {
+    this.intersectWith(other.windows);
+  }
+
+  public static Windows intersection(final Windows left, final Windows right) {
+    final var result = new Windows(left);
+    result.intersectWith(right);
+    return result;
+  }
+
   // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
   private void intersectWith(final List<Window> other) {
     int index = 0;
@@ -172,6 +198,10 @@ public final class Windows implements Iterable<Window> {
 
   // TODO: implement symmetric difference `negateUnder()`
 
+  public boolean isEmpty() {
+    return new Windows().includes(this);
+  }
+
   public boolean includes(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
     return this.includes(Window.between(startQuantity, startUnits, endQuantity, endUnits));
   }
@@ -182,12 +212,30 @@ public final class Windows implements Iterable<Window> {
 
   public boolean includes(final Window probe) {
     if (probe.isEmpty()) return true;
+    return this.includes(List.of(probe));
+  }
 
-    for (final var window : this) {
-      if (window.contains(probe)) return true;
+  public boolean includes(final Windows other) {
+    return this.includes(other.windows);
+  }
+
+  // PRECONDITION: `other` is a list of non-overlapping windows ordered by start time.
+  private boolean includes(final List<Window> other) {
+    int index = 0;
+
+    for (final var window : other) {
+      // Skip any windows that fully precede this one.
+      while (index < this.windows.size() && this.windows.get(index).end.shorterThan(window.start)) {
+        index += 1;
+      }
+
+      // If windows.get(index) doesn't contain `window`, then nothing does.
+      if (index >= this.windows.size() || !this.windows.get(index).contains(window)) {
+        return false;
+      }
     }
 
-    return false;
+    return true;
   }
 
   @Override
