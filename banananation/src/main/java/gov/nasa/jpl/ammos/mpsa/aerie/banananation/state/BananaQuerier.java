@@ -24,7 +24,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactio
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,7 +36,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setDynamic;
 
 public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, BananaEvent> {
   private static final DynamicCell<ReactionContext<?, Activity, BananaEvent>> reactionContext = DynamicCell.create();

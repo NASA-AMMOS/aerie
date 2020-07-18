@@ -16,7 +16,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContex
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
@@ -35,7 +35,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setDynamic;
 
 public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
     // Create two DynamicCells to provide ReactionContext and StateContext to modeling code

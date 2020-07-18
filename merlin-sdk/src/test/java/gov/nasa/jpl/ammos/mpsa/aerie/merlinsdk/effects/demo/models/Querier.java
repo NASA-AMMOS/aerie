@@ -19,12 +19,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.demo.models.data.DynamicD
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 import java.util.Collections;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setDynamic;
 
 public final class Querier<T> {
   private static final DynamicCell<ReactionContext<?, Activity, Event>> reactionContext = DynamicCell.create();
