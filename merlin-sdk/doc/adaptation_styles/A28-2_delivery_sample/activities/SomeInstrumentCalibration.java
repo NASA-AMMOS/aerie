@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.classes.Vector3D;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.gnc.classes.Attitude;
 
@@ -17,7 +16,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
 /**
  * Performs a someInstrument calibration
- * 
+ *
  * The instrument calibration activity requires that the spacecraft perform a scan provided a specified
  * scanStartAttitude and scanFinalAttitude with the instrument in a specified operational mode. To achieve this,
  * the instrument warmup and slew to scanStart occur in parallel. Once the slew to scanStart is complete, the
@@ -44,7 +43,7 @@ public class SomeInstrumentCalibrationActivity implements Activity {
     /* ------------------------------- PARAMETERS ------------------------------- */
 
     @Parameter
-    Duration instrumentWarmupDuration = Duration.fromQuantity(2, TimeUnit.HOURS);
+    Duration instrumentWarmupDuration = Duration.of(2, Duration.HOURS);
 
     @Parameter
     Attitude scanStartAttitude = new Attitude();
@@ -67,8 +66,8 @@ public class SomeInstrumentCalibrationActivity implements Activity {
             results.add(ActivityValidation.failure("The scan rate '" + scanRate + "' must be non-negative."));
         }
 
-        if (instrumentWarmupDuration.shorterThan(Duration.fromQuantity(1, TimeUnit.HOURS))
-                || instrumentWarmupDuration.longerThan(Duration.fromQuantity(3, TimeUnit.HOURS))) {
+        if (instrumentWarmupDuration.shorterThan(Duration.of(1, Duration.HOURS))
+                || instrumentWarmupDuration.longerThan(Duration.of(3, Duration.HOURS))) {
             results.add(ActivityValidation.failure("The instrument warmup duration '" + instrumentWarmupDuration
                     + "' is not within the range [1, 3] hours."));
         }

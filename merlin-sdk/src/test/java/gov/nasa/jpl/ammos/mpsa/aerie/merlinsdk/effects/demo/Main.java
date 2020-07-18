@@ -18,7 +18,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeli
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.SumEffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
@@ -125,11 +124,11 @@ public final class Main {
 
     final var model = applicator.initial();
     System.out.println(model);
-    applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+    applicator.step(model, Duration.of(5, Duration.SECONDS));
     System.out.println(model);
     applicator.apply(model, graph.evaluate(evaluator));
     System.out.println(model);
-    applicator.step(model, Duration.of(5, TimeUnit.SECONDS));
+    applicator.step(model, Duration.of(5, Duration.SECONDS));
     System.out.println(model);
 
     System.out.println();
@@ -142,7 +141,7 @@ public final class Main {
 
     System.out.printf("%10.7f\t%10.7f\n", model.getPredatorDensity(), model.getPreyDensity());
     for (var i = 0; i < 500; i += 1) {
-      model.step(Duration.of(100, TimeUnit.MILLISECONDS));
+      model.step(Duration.of(100, Duration.MILLISECONDS));
       System.out.printf("%10.7f\t%10.7f\n", model.getPredatorDensity(), model.getPreyDensity());
     }
     System.out.println();

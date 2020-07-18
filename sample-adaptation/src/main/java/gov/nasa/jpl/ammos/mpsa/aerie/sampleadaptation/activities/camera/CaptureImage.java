@@ -3,12 +3,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.camera;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.cameraDataBits;
 
@@ -41,6 +41,6 @@ public class CaptureImage implements Activity {
         double imageDuration = imageQuality < 100 ? 2 + imageQuality * 0.1 : 30;
         cameraDataBits.add(imageSizeBits);
 
-        ctx.delay(Duration.of((long)imageDuration, TimeUnit.SECONDS));
+        ctx.delay(duration((long)imageDuration, SECONDS));
     }
 }

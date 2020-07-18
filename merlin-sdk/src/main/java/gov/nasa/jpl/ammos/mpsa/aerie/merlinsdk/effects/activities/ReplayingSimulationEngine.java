@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.TreePVector;
 
@@ -43,8 +42,8 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
     this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(activityId, activity, TreePVector.empty())));
   }
 
-  public void runFor(final long quantity, final TimeUnit units) {
-    this.runFor(Duration.of(quantity, units));
+  public void runFor(final long quantity, final Duration unit) {
+    this.runFor(Duration.of(quantity, unit));
   }
 
   public void runFor(final Duration duration) {

@@ -3,6 +3,78 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A signed measure of the temporal distance between two instants.
+ *
+ * <p>
+ * Durations are constructed by measuring a quantity of the provided units, such as {@link #SECOND} and {@link #HOUR}.
+ * This can be done in multiple ways:
+ * </p>
+ *
+ * <ul>
+ * <li>
+ *   Use the static factory method {@link Duration#of}, e.g. {@code Duration.of(5, SECONDS}
+ *
+ * <li>
+ *   Use the static function {@link #duration}, e.g. {@code duration(5, SECONDS)}
+ *
+ * <li>
+ *   Multiply an existing duration by a quantity, e.g. {@code SECOND.times(5)}
+ * </ul>
+ *
+ * <p>
+ * Note that derived units such as DAY, WEEK, MONTH, and YEAR are <em>not</em> included, because their values
+ * depend on properties of the particular calendrical system in use. For example:
+ * </p>
+ *
+ * <ul>
+ * <li>
+ *   The notion of "day" depends on the astronomical system against which time is measured.
+ *   For example, the synodic (solar) day and the sidereal day are distinguished by which celestial body is held fixed
+ *   in the sky by the passage of a day. (Synodic time fixes the body being orbited around; sidereal time
+ *   fixes the far field of stars.)
+ *
+ * <li>
+ *   The notion of "year" has precisely the same problem, with a similar synodic/sidereal distinction.
+ *
+ * <li>
+ *   <p>
+ *   The notion of "month" is worse, in that it depends on the presence of a *tertiary* body whose sygyzies with the
+ *   other two bodies delimit integer quantities of the unit. (A syzygy is a collinear configuration of the bodies.)
+ *   The lunar calendar (traditionally used in China) is based on a combination of lunar and solar
+ *   synodic quantities. ("Month" derives from "moon".)
+ *   </p>
+ *
+ *   <p>
+ *   The month of the Gregorian calendar is approximately a lunar synodic month, except that the definition was
+ *   intentionally de-regularized (including intercalary days) in deference to the Earth's solar year.
+ *   (Other calendars even invoke days *outside of any month*, which Wikipedia claims are called "epagomenal days".)
+ *   In retrospect, it is unsurprising that ISO 8601 ordinal dates drop the month altogether,
+ *   since "month" is a (complicated) derived notion in the Gregorian calendar.
+ *   </p>
+ *
+ * <li>
+ *   The notion of "week" seemingly has no basis in the symmetries of celestial bodies, and is instead a derived unit.
+ *   Unfortunately, not only is it fundamentally based on the notion of "day", different calendars assign a different
+ *   number of days to the span of a week.
+ * </ul>
+ *
+ * <p>
+ * If you are working within the Gregorian calendar, the standard `java.time` package has you covered.
+ * </p>
+ *
+ * <p>
+ * If you are working with spacecraft, you may need to separate concepts such as "Earth day" and "Martian day", which
+ * are synodic periods measured against the Sun but from different bodies. Worse, you likely need to convert between
+ * such reference systems frequently, with a great deal of latitude in the choice of bodies being referenced.
+ * The gold standard is the well-known SPICE toolkit, coupled with a good set of ephemerides and clock kernels.
+ * </p>
+ *
+ * <p>
+ * If you're just looking for a rough estimate, you can define 24-hour days and 7-day weeks and 30-day months
+ * within your own domain in terms of the precise units we give here.
+ * </p>
+ */
 public final class Duration implements Comparable<Duration> {
   // Range of -2^63 to 2^63 - 1.
   private final long durationInMicroseconds;
@@ -16,25 +88,24 @@ public final class Duration implements Comparable<Duration> {
   public static final Duration MIN_VALUE = new Duration(Long.MIN_VALUE);
   public static final Duration MAX_VALUE = new Duration(Long.MAX_VALUE);
 
-  public static final Duration MICROSECOND = duration(1, TimeUnit.MICROSECONDS);
-  public static final Duration MILLISECONDS = duration(1, TimeUnit.MILLISECONDS);
-  public static final Duration SECOND = duration(1, TimeUnit.SECONDS);
-  public static final Duration MINUTE = duration(1, TimeUnit.MINUTES);
-  public static final Duration HOUR = duration(1, TimeUnit.HOURS);
+  public static final Duration MICROSECOND = new Duration(1);
+  public static final Duration MILLISECOND = MICROSECOND.times(1000);
+  public static final Duration SECOND = MILLISECOND.times(1000);
+  public static final Duration MINUTE = SECOND.times(60);
+  public static final Duration HOUR = MINUTE.times(60);
 
-  public static Duration of(final long quantity, final TimeUnit units) {
-    switch (units) {
-      case MICROSECONDS: return new Duration(quantity);
-      case MILLISECONDS: return new Duration(quantity * 1000L);
-      case SECONDS:      return new Duration(quantity * 1000000L);
-      case MINUTES:      return new Duration(quantity * 1000000L * 60L);
-      case HOURS:        return new Duration(quantity * 1000000L * 60L * 60L);
-      default: throw new Error("Unknown TimeUnit value: " + units);
-    }
+  public static final Duration MICROSECONDS = MICROSECOND;
+  public static final Duration MILLISECONDS = MILLISECOND;
+  public static final Duration SECONDS = SECOND;
+  public static final Duration MINUTES = MINUTE;
+  public static final Duration HOURS = HOUR;
+
+  public static Duration of(final long quantity, final Duration unit) {
+    return unit.times(quantity);
   }
 
-  public static Duration duration(final long quantity, final TimeUnit units) {
-    return of(quantity, units);
+  public static Duration duration(final long quantity, final Duration unit) {
+    return unit.times(quantity);
   }
 
   public static Duration negate(final Duration duration) {
@@ -74,36 +145,36 @@ public final class Duration implements Comparable<Duration> {
     return Duration.add(this, other);
   }
 
-  public Duration plus(final long quantity, final TimeUnit units) throws ArithmeticException {
-    return Duration.add(this, duration(quantity, units));
+  public Duration plus(final long quantity, final Duration unit) throws ArithmeticException {
+    return Duration.add(this, duration(quantity, unit));
   }
 
   public Duration minus(final Duration other) throws ArithmeticException {
     return Duration.subtract(this, other);
   }
 
-  public Duration minus(final long quantity, final TimeUnit units) throws ArithmeticException {
-    return Duration.subtract(this, duration(quantity, units));
+  public Duration minus(final long quantity, final Duration unit) throws ArithmeticException {
+    return Duration.subtract(this, duration(quantity, unit));
   }
 
   public Duration times(final long scalar) throws ArithmeticException {
     return Duration.multiply(scalar, this);
   }
 
-  public long dividedBy(final Duration other) {
-    return Duration.divide(this, other);
+  public long dividedBy(final Duration unit) {
+    return Duration.divide(this, unit);
   }
 
-  public long dividedBy(final long quantity, final TimeUnit units) {
-    return Duration.divide(this, duration(quantity, units));
+  public long dividedBy(final long quantity, final Duration unit) {
+    return Duration.divide(this, duration(quantity, unit));
   }
 
-  public Duration remainderOf(final Duration other) {
-    return Duration.remainder(this, other);
+  public Duration remainderOf(final Duration unit) {
+    return Duration.remainder(this, unit);
   }
 
-  public Duration remainderOf(final long quantity, final TimeUnit units) {
-    return Duration.remainder(this, duration(quantity, units));
+  public Duration remainderOf(final long quantity, final Duration unit) {
+    return Duration.remainder(this, duration(quantity, unit));
   }
 
   public boolean shorterThan(final Duration other) {

@@ -7,7 +7,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.classes.Vector3D;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.gnc.classes.Attitude;
 
@@ -18,7 +17,7 @@ import gov.nasa.jpl.europa.clipper.merlin.states.ClipperStates;
 
 /**
  * Performs a trajectory correction maneuver (TCM)
- * 
+ *
  * This maneuver primarily consists of a series of three TCM stages: prep, burn, and cleanup. The effect model also
  * handles GNC control authority switches to thrusters for the maneuver and to finalGNCControlMode if applicable. Upon
  * completion of the maneuver, it will also perform UVS and SUDA decontamination activities if specified by the
@@ -63,7 +62,7 @@ public class TCMActivity implements Activity {
     Boolean preFireHeatersRequired = false;
 
     @Parameter
-    Duration burnDuration = Duration.fromQuantity(1, TimeUnit.MINUTES);
+    Duration burnDuration = Duration.of(1, Duration.MINUTES);
 
     @Parameter
     Vector3D burnDirection = new Vector3D(1.0, 0.0, 0.0);

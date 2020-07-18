@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.SimulationInstant;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -25,7 +24,7 @@ public final class ScheduledActivity {
   public ScheduledActivity(final ActivityInstance instance) throws ParseException {
     final var millis = timestampFormat.parse(instance.getStartTimestamp()).getTime();
 
-    this.startTime = SimulationInstant.ORIGIN.plus(Duration.of(millis, TimeUnit.MILLISECONDS));
+    this.startTime = SimulationInstant.ORIGIN.plus(Duration.of(millis, Duration.MILLISECONDS));
     this.activity = new SerializedActivity(instance.getActivityType(), Map.copyOf(instance.getParameters()));
   }
 

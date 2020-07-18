@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.RequestDeserializers;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
@@ -150,7 +149,7 @@ public final class RemoteAdaptationService implements AdaptationService {
 
     final var timestamps = new ArrayList<Duration>(jsonArray.size());
     for (final var item : jsonArray) {
-      final var timestamp = Duration.of(((JsonNumber) item).longValue(), TimeUnit.MICROSECONDS);
+      final var timestamp = Duration.of(((JsonNumber) item).longValue(), Duration.MICROSECONDS);
       timestamps.add(timestamp);
     }
 

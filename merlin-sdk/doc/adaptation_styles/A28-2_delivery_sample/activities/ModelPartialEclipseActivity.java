@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityTy
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.simulation.annotations.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
 
 import gov.nasa.jpl.ammos.mpsa.merlin.multimissionmodels.geometry.classes.GeometryEnums.Body;
@@ -45,7 +44,7 @@ public class ModelPartialEclipseActivity implements Activity {
     Body occultingBody = Body.EUROPA;
 
     @Parameter
-    Duration eclipseDuration = Duration.fromQuantity(10, TimeUnit.MINUTES);
+    Duration eclipseDuration = Duration.of(10, Duration.MINUTES);
 
     /* --------------------- EFFECT MODELING & DECOMPOSITION -------------------- */
 
@@ -57,7 +56,7 @@ public class ModelPartialEclipseActivity implements Activity {
         Instant eclipseEnd = ctx.now().plus(eclipseDuration);
 
         int segments = 10;
-        Duration stepTime = Duration.fromQuantity(eclipseDuration.durationInMicroseconds / segments, TimeUnit.MICROSECONDS);
+        Duration stepTime = Duration.of(eclipseDuration.durationInMicroseconds / segments, Duration.MICROSECONDS);
 
         for (int i = 0; i < segments; i++) {
 

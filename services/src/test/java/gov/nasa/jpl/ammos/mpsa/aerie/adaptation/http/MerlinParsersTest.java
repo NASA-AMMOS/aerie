@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
@@ -104,11 +103,11 @@ public final class MerlinParsersTest {
     final var expected = new CreateSimulationMessage(
         "hello",
         Instant.parse("1992-08-11T01:30:00Z"),
-        Duration.of(5, TimeUnit.SECONDS),
-        Duration.of(500, TimeUnit.MILLISECONDS),
+        Duration.of(5, Duration.SECONDS),
+        Duration.of(500, Duration.MILLISECONDS),
         Map.of(
             "0", Pair.of(
-                Duration.of(10, TimeUnit.SECONDS),
+                Duration.of(10, Duration.SECONDS),
                 new SerializedActivity("BiteBanana", Map.of(
                     "biteSize", SerializedParameter.of(10.0),
                     "complex", SerializedParameter.of(Map.of(

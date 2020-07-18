@@ -43,12 +43,12 @@ public final class Windows implements Iterable<Window> {
     this.add(Window.between(start, end));
   }
 
-  public void add(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
-    this.add(Window.between(startQuantity, startUnits, endQuantity, endUnits));
+  public void add(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
+    this.add(Window.between(startQuantity, startUnit, endQuantity, endUnit));
   }
 
-  public void addPoint(final long quantity, final TimeUnit units) {
-    this.add(Window.at(quantity, units));
+  public void addPoint(final long quantity, final Duration unit) {
+    this.add(Window.at(quantity, unit));
   }
 
   public void addAll(final Windows other) {
@@ -90,12 +90,12 @@ public final class Windows implements Iterable<Window> {
     this.subtract(Window.between(start, end));
   }
 
-  public void subtract(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
-    this.subtract(Window.between(startQuantity, startUnits, endQuantity, endUnits));
+  public void subtract(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
+    this.subtract(Window.between(startQuantity, startUnit, endQuantity, endUnit));
   }
 
-  public void subtractPoint(final long quantity, final TimeUnit units) {
-    this.subtract(Window.at(quantity, units));
+  public void subtractPoint(final long quantity, final Duration unit) {
+    this.subtract(Window.at(quantity, unit));
   }
 
   public void subtractAll(final Windows other) {
@@ -149,8 +149,8 @@ public final class Windows implements Iterable<Window> {
     this.intersectWith(Window.between(start, end));
   }
 
-  public void intersectWith(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
-    this.intersectWith(Window.between(startQuantity, startUnits, endQuantity, endUnits));
+  public void intersectWith(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
+    this.intersectWith(Window.between(startQuantity, startUnit, endQuantity, endUnit));
   }
 
   public void intersectWith(final Windows other) {
@@ -202,12 +202,12 @@ public final class Windows implements Iterable<Window> {
     return new Windows().includes(this);
   }
 
-  public boolean includes(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
-    return this.includes(Window.between(startQuantity, startUnits, endQuantity, endUnits));
+  public boolean includes(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
+    return this.includes(Window.between(startQuantity, startUnit, endQuantity, endUnit));
   }
 
-  public boolean includesPoint(final long quantity, final TimeUnit units) {
-    return this.includes(Window.at(quantity, units));
+  public boolean includesPoint(final long quantity, final Duration unit) {
+    return this.includes(Window.at(quantity, unit));
   }
 
   public boolean includes(final Window probe) {
