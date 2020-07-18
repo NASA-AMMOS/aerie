@@ -1,11 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityTypeStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityTypeStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.SettableState;
 
 import java.util.List;
 

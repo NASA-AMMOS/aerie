@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.events;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.events.IndependentStateEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.IndependentStateEvent;
 
 // This can be mechanically derived from `EventHandler`.
 public interface DefaultBananaEventHandler<Result> extends BananaEventHandler<Result> {
