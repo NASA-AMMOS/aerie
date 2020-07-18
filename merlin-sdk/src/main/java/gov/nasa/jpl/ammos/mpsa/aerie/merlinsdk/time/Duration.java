@@ -141,7 +141,28 @@ public final class Duration implements Comparable<Duration> {
 
   @Override
   public String toString() {
-    return String.format("%+d", this.durationInMicroseconds);
+    var rest = this;
+
+    final var sign = (this.isNegative()) ? "-" : "+";
+
+    final long hours;
+    if (this.isNegative()) {
+      hours = -rest.dividedBy(HOUR);
+      rest = negate(rest.remainderOf(HOUR));
+    } else {
+      hours = rest.dividedBy(HOUR);
+      rest = rest.remainderOf(HOUR);
+    }
+
+    final var minutes = rest.dividedBy(MINUTE);
+    rest = rest.remainderOf(MINUTE);
+
+    final var seconds = rest.dividedBy(SECOND);
+    rest = rest.remainderOf(SECOND);
+
+    final var microseconds = rest.dividedBy(MICROSECOND);
+
+    return String.format("%s%02d:%02d:%02d.%06d", sign, hours, minutes, seconds, microseconds);
   }
 
   @Override
