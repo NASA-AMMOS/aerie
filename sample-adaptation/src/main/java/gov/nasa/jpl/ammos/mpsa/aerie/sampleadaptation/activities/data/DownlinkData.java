@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 

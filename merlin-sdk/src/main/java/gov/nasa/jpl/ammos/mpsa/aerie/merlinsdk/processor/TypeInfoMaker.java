@@ -4,8 +4,8 @@ import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 import com.sun.source.doctree.UnknownBlockTagTree;
 import com.sun.source.util.DocTrees;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Messager;

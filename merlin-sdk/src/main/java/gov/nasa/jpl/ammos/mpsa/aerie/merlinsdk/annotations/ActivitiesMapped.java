@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 

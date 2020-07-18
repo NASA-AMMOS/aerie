@@ -16,6 +16,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
 
 import javax.annotation.processing.Generated;
@@ -211,7 +212,7 @@ class MapperMaker {
             .addMember("value", "$S", this.getClass().getCanonicalName())
             .build())
         .addAnnotation(AnnotationSpec
-            .builder(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped.class)
+            .builder(ActivitiesMapped.class)
             .addMember("value", "$T.class", activityTypeInfo.javaType)
             .build())
         .addField(activityTypeNameSpec)

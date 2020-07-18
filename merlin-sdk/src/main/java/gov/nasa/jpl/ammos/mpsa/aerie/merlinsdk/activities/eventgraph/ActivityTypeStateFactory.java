@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
 
 public final class ActivityTypeStateFactory {
   private final ActivityModelQuerier querier;

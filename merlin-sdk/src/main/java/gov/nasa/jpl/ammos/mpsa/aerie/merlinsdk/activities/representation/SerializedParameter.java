@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
 
 import java.util.List;
 import java.util.Map;
