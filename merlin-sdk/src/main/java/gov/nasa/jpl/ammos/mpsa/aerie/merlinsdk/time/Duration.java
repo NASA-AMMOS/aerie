@@ -76,127 +76,261 @@ import java.util.List;
  * </p>
  */
 public final class Duration implements Comparable<Duration> {
-  // Range of -2^63 to 2^63 - 1.
+  // Range of (-2^63) to (2^63 - 1) microseconds.
+  // This comes out to almost 600,000 years, at microsecond resolution.
+  // Merlin was not designed for time scales longer than this.
   private final long durationInMicroseconds;
 
   private Duration(final long durationInMicroseconds) {
     this.durationInMicroseconds = durationInMicroseconds;
   }
 
+  /**
+   * The smallest observable span of time between instants.
+   *
+   * <p>
+   * This quantity can be used to obtain the smallest representable deviation from a given instant, i.e.
+   * `instant.minus(EPSILON)` and `instant.plus(EPSILON)`. The precise deviation from `instant` should not be assumed,
+   * except that it is no larger than {@link Duration#MICROSECOND}.
+   * </p>
+   */
   public static final Duration EPSILON = new Duration(1);
+
+  /**
+   * The empty span of time.
+   */
   public static final Duration ZERO = new Duration(0);
+
+  /**
+   * The largest observable negative span of time. Attempting to go "more negative" will cause an exception.
+   *
+   * <p>
+   * The value of this quantity should not be assumed.
+   * Currently, this is precisely -9,223,372,036,854,775,808 microseconds, or approximately -293,274 years.
+   * </p>
+   */
   public static final Duration MIN_VALUE = new Duration(Long.MIN_VALUE);
+
+  /**
+   * The largest observable positive span of time. Attempting to go "more positive" will cause an exception.
+   *
+   * <p>
+   * The value of this quantity should not be assumed.
+   * Currently, this is precisely +9,223,372,036,854,775,807 microseconds, or approximately 293,274 years.
+   * </p>
+   */
   public static final Duration MAX_VALUE = new Duration(Long.MAX_VALUE);
 
+  /** One microsecond (μs). */
   public static final Duration MICROSECOND = new Duration(1);
+  /** One millisecond (ms), equal to 1000μs. */
   public static final Duration MILLISECOND = MICROSECOND.times(1000);
+  /** One second (s), equal to 1000ms. */
   public static final Duration SECOND = MILLISECOND.times(1000);
+  /** One minute (m), equal to 60s. */
   public static final Duration MINUTE = SECOND.times(60);
+  /** One hour (h), equal to 60m. */
   public static final Duration HOUR = MINUTE.times(60);
 
+  /** The unit of measurement for microseconds. */
   public static final Duration MICROSECONDS = MICROSECOND;
+  /** The unit of measurement for milliseconds. */
   public static final Duration MILLISECONDS = MILLISECOND;
+  /** The unit of measurement for seconds. */
   public static final Duration SECONDS = SECOND;
+  /** The unit of measurement for minutes. */
   public static final Duration MINUTES = MINUTE;
+  /** The unit of measurement for hours. */
   public static final Duration HOURS = HOUR;
 
+  /** Construct a duration in terms of a multiple of some unit. */
   public static Duration of(final long quantity, final Duration unit) {
     return unit.times(quantity);
   }
 
+  /**
+   * Construct a duration as a multiple of some unit.
+   *
+   * <p>
+   * This factory method is intended to be imported statically and used unqualified.
+   * </p>
+   */
   public static Duration duration(final long quantity, final Duration unit) {
     return unit.times(quantity);
   }
 
-  public static Duration negate(final Duration duration) {
+  /**
+   * Flip the temporal direction of a duration. A duration into the past becomes one into the future, and vice versa.
+   *
+   * @param duration The duration to negate.
+   * @return A new duration with its temporal direction flipped.
+   * @throws ArithmeticException If the input duration is {@link #MIN_VALUE}.
+   */
+  public static Duration negate(final Duration duration) throws ArithmeticException {
     // amusingly, -MIN_VALUE = MIN_VALUE in 2's complement -- `multiplyExact` will correctly fail out in that case.
     return new Duration(Math.multiplyExact(-1, duration.durationInMicroseconds));
   }
 
+  /**
+   * Add two durations.
+   *
+   * @param left The first of the durations to sum.
+   * @param right The second of the durations to sum.
+   * @return The sum of the input durations.
+   * @throws ArithmeticException If the result would be less than {@link #MIN_VALUE} or greater than {@link #MAX_VALUE}.
+   */
   public static Duration add(final Duration left, final Duration right) throws ArithmeticException {
     return new Duration(Math.addExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }
 
+  /**
+   * Subtract one duration from another.
+   *
+   * @param left The duration to subtract from.
+   * @param right The duration to subtract from the first.
+   * @return The difference between the input durations.
+   * @throws ArithmeticException If the result would be less than {@link #MIN_VALUE} or greater than {@link #MAX_VALUE}.
+   */
   public static Duration subtract(final Duration left, final Duration right) throws ArithmeticException {
     return new Duration(Math.subtractExact(left.durationInMicroseconds, right.durationInMicroseconds));
   }
 
+  /**
+   * Scale a duration by a multiplier.
+   *
+   * @param scalar The amount to scale the duration by.
+   * @param unit The duration to be scaled.
+   * @return The scaled duration.
+   * @throws ArithmeticException If the result would be less than {@link #MIN_VALUE} or greater than {@link #MAX_VALUE}.
+   */
   public static Duration multiply(final long scalar, final Duration unit) throws ArithmeticException {
     return new Duration(Math.multiplyExact(scalar, unit.durationInMicroseconds));
   }
 
-  public static long divide(final Duration left, final Duration right) {
-    return left.durationInMicroseconds / right.durationInMicroseconds;
+  /**
+   * Obtain the number of integer quantities of one duration that fit completely within another duration.
+   *
+   * @param dividend The duration to be broken into quantities of the divisor.
+   * @param divisor The duration to break the dividend into multiples of.
+   * @return The integral number of times {@code divisor} goes into {@code dividend}.
+   */
+  public static long divide(final Duration dividend, final Duration divisor) {
+    return dividend.durationInMicroseconds / divisor.durationInMicroseconds;
   }
 
-  public static Duration remainder(final Duration left, final Duration right) {
-    return new Duration(left.durationInMicroseconds % right.durationInMicroseconds);
+  /**
+   * Obtain the span of time remaining after dividing one duration by another.
+   *
+   * @param divisor The duration to be broken into quantities of the divisor.
+   * @param dividend The duration to break the dividend into multiples of.
+   * @return The span of time left over.
+   */
+  public static Duration remainder(final Duration divisor, final Duration dividend) {
+    return new Duration(divisor.durationInMicroseconds % dividend.durationInMicroseconds);
   }
 
+  /** Obtain the smaller of two durations. */
   public static Duration min(final Duration x, final Duration y) {
     return Collections.min(List.of(x, y));
   }
 
+  /** Obtain the larger of two durations. */
   public static Duration max(final Duration x, final Duration y) {
     return Collections.max(List.of(x, y));
   }
 
+  /** @see Duration#add(Duration, Duration) */
   public Duration plus(final Duration other) throws ArithmeticException {
     return Duration.add(this, other);
   }
 
+  /** @see Duration#add(Duration, Duration) */
   public Duration plus(final long quantity, final Duration unit) throws ArithmeticException {
     return Duration.add(this, duration(quantity, unit));
   }
 
+  /** @see Duration#subtract(Duration, Duration) */
   public Duration minus(final Duration other) throws ArithmeticException {
     return Duration.subtract(this, other);
   }
 
+  /** @see Duration#subtract(Duration, Duration) */
   public Duration minus(final long quantity, final Duration unit) throws ArithmeticException {
     return Duration.subtract(this, duration(quantity, unit));
   }
 
+  /** @see Duration#multiply(long, Duration) */
   public Duration times(final long scalar) throws ArithmeticException {
     return Duration.multiply(scalar, this);
   }
 
+  /** @see Duration#divide(Duration, Duration) */
   public long dividedBy(final Duration unit) {
     return Duration.divide(this, unit);
   }
 
+  /** @see Duration#divide(Duration, Duration) */
   public long dividedBy(final long quantity, final Duration unit) {
     return Duration.divide(this, duration(quantity, unit));
   }
 
+  /** @see Duration#remainder(Duration, Duration) */
   public Duration remainderOf(final Duration unit) {
     return Duration.remainder(this, unit);
   }
 
+  /** @see Duration#remainder(Duration, Duration) */
   public Duration remainderOf(final long quantity, final Duration unit) {
     return Duration.remainder(this, duration(quantity, unit));
   }
 
+  /**
+   * Determine whether this duration is shorter than another.
+   *
+   * @see Duration#compareTo(Duration)
+   */
   public boolean shorterThan(final Duration other) {
     return this.compareTo(other) < 0;
   }
 
+  /**
+   * Determine whether this duration is longer than another.
+   *
+   * @see Duration#compareTo(Duration)
+   */
   public boolean longerThan(final Duration other) {
     return this.compareTo(other) > 0;
   }
 
+  /**
+   * Determine whether this duration points into the past. Shorthand for {@code duration.compareTo(ZERO) < 0}.
+   *
+   * @see Duration#compareTo(Duration)
+   */
   public boolean isNegative() {
     return this.durationInMicroseconds < 0;
   }
 
+  /**
+   * Determine whether this duration points into the future. Shorthand for {@code duration.compareTo(ZERO) > 0}.
+   *
+   * @see Duration#compareTo(Duration)
+   */
   public boolean isPositive() {
     return this.durationInMicroseconds > 0;
   }
+
+  /**
+   * Determine whether this duration points into the future. Shorthand for {@code duration.compareTo(ZERO) == 0}.
+   *
+   * @see Duration#compareTo(Duration)
+   */
 
   public boolean isZero() {
     return this.durationInMicroseconds == 0;
   }
 
+  /** Determine whether two durations are the same. */
   @Override
   public boolean equals(final Object o) {
     if (!(o instanceof Duration)) return false;
@@ -210,6 +344,13 @@ public final class Duration implements Comparable<Duration> {
     return Long.hashCode(this.durationInMicroseconds);
   }
 
+  /**
+   * Obtain a human-readable representation of this duration.
+   *
+   * <p>
+   * For example, {@code duration(-5, MINUTES).plus(1, SECOND).plus(2, MICROSECONDS)} is rendered as "-00:04:58.999998".
+   * </p>
+   */
   @Override
   public String toString() {
     var rest = this;
@@ -236,6 +377,7 @@ public final class Duration implements Comparable<Duration> {
     return String.format("%s%02d:%02d:%02d.%06d", sign, hours, minutes, seconds, microseconds);
   }
 
+  /** Determine whether this duration is greater than, less than, or equal to another duration. */
   @Override
   public int compareTo(final Duration other) {
     return Long.compare(this.durationInMicroseconds, other.durationInMicroseconds);
