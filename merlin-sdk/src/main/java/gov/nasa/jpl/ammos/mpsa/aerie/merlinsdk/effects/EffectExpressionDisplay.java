@@ -28,8 +28,8 @@ import java.util.function.Function;
  * @see EffectExpression
  * @see EffectTrait
  */
-public final class TreeLogger {
-  private TreeLogger() {}
+public final class EffectExpressionDisplay {
+  private EffectExpressionDisplay() {}
 
   /**
    * Render an event graph as a string using the event type's natural {@link Object#toString} implementation.
@@ -37,8 +37,8 @@ public final class TreeLogger {
    * @param expression The event graph to render as a string.
    * @return A textual representation of the graph.
    */
-  public static String displayTree(final EffectExpression<?> expression) {
-    return displayTree(expression, Objects::toString);
+  public static String displayGraph(final EffectExpression<?> expression) {
+    return displayGraph(expression, Objects::toString);
   }
 
   /**
@@ -49,9 +49,9 @@ public final class TreeLogger {
    * @param <Event> The type of event contained by the event graph.
    * @return A textual representation of the graph.
    */
-  public static <Event> String displayTree(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
+  public static <Event> String displayGraph(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
-        .evaluate(new LogEffectProjection<>(stringifier))
+        .evaluate(new DisplayEffectProjection<>(stringifier))
         .map(f -> f.apply(Parent.Unrestricted))
         .orElse("");
   }
@@ -59,12 +59,12 @@ public final class TreeLogger {
   private enum Parent { Unrestricted, Par, Seq }
 
   // An effect algebra for computing string representations of transactions.
-  private static final class LogEffectProjection<Event>
+  private static final class DisplayEffectProjection<Event>
       implements Projection<Event, Optional<Function<Parent, String>>>
   {
     private final Function<Event, String> stringifier;
 
-    public LogEffectProjection(final Function<Event, String> stringifier) {
+    public DisplayEffectProjection(final Function<Event, String> stringifier) {
       this.stringifier = stringifier;
     }
 
