@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
-  private PStack<Pair<History<T, Event>, ActivityContinuation<T, Event, Activity>>> spawns = ConsPStack.empty();
+  private PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> spawns = ConsPStack.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
@@ -42,7 +42,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
     return this.breadcrumbs;
   }
 
-  public final PStack<Pair<History<T, Event>, ActivityContinuation<T, Event, Activity>>> getSpawns() {
+  public final PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> getSpawns() {
     return this.spawns;
   }
 

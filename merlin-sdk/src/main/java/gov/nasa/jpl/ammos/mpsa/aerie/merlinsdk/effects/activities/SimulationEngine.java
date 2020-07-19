@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
+import org.pcollections.ConsPStack;
 
 import java.util.ArrayDeque;
 import java.util.Comparator;
@@ -53,29 +54,54 @@ public final class SimulationEngine<T, Event> {
 
     // Step up to the next job time.
     final var nextJobTime = this.queue.peek().getKey();
+    this.currentHistory = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
+    this.elapsedTime = nextJobTime;
 
-    var tip = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
+    // Process each task at this time, and any spawned sub-tasks.
+    final var frames = new ArrayDeque<TaskFrame<T, Event>>();
+    frames.push(this.getNextRootFrame());
+    this.currentHistory = this.processFrameStack(frames);
+  }
+
+  private TaskFrame<T, Event> getNextRootFrame() {
+    assert !this.queue.isEmpty();
+    final var nextJobTime = this.queue.peek().getKey();
 
     // Extract all events occurring at this time.
-    // More events might be added at this same time, so to ensure coherency, we handle events in complete batches.
-    final var eventList = new ArrayDeque<Pair<History<T, Event>, SimulationTask<T, Event>>>();
+    var tip = this.currentHistory;
+    var spawns = ConsPStack.<Pair<History<T, Event>, SimulationTask<T, Event>>>empty();
     while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
       tip = tip.fork();
-      eventList.push(Pair.of(tip, this.queue.poll().getValue()));
+      spawns = spawns.plus(Pair.of(tip, this.queue.poll().getValue()));
     }
 
-    // React to each event.
-    while (!eventList.isEmpty()) {
-      final var eventPair = eventList.pop();
-      final var eventTime = eventPair.getKey();
-      final var task = eventPair.getValue();
+    return new TaskFrame<>(tip, spawns);
+  }
 
-      final var endTime = task.runFrom(eventTime, this::schedule);
-      tip = tip.join(endTime);
+  private History<T, Event> processFrameStack(final ArrayDeque<TaskFrame<T, Event>> stack) {
+    while (true) {
+      assert !stack.isEmpty();
+
+      if (!stack.peek().branches.isEmpty()) {
+        // Execute the next sub-task.
+        final var frame = stack.peek();
+        final var branch = frame.branches.get(0);
+        frame.branches = frame.branches.minus(0);
+
+        final var branchTip = branch.getKey();
+        final var task = branch.getValue();
+
+        stack.push(task.runFrom(branchTip, this::schedule));
+      } else {
+        // Pop this completed sub-task.
+        final var frame = stack.pop();
+
+        if (stack.isEmpty()) return frame.tip;
+
+        final var parent = stack.peek();
+        parent.tip = parent.tip.join(frame.tip);
+      }
     }
-
-    this.currentHistory = tip;
-    this.elapsedTime = nextJobTime;
   }
 
   private void schedule(final ScheduleItem<T, Event> rule) {

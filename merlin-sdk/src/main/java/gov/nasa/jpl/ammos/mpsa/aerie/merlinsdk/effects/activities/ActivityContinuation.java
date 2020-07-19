@@ -49,7 +49,7 @@ public final class ActivityContinuation<T, Event, Activity> implements Simulatio
   }
 
   @Override
-  public History<T, Event> runFrom(final History<T, Event> history, final Consumer<ScheduleItem<T, Event>> scheduler) {
+  public TaskFrame<T, Event> runFrom(final History<T, Event> history, final Consumer<ScheduleItem<T, Event>> scheduler) {
     return this.reactor.react(history, scheduler, this);
   }
 
