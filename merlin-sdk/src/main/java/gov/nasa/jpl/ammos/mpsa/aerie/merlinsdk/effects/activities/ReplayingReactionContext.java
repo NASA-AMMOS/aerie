@@ -33,16 +33,12 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
     this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) task.getBreadcrumb(this.nextBreadcrumbIndex++)).next;
   }
 
-  public final History<T, Event> getCurrentHistory() {
-    return this.currentHistory;
+  public TaskFrame<T, Event> getResultFrame() {
+    return new TaskFrame<>(this.currentHistory, this.spawns);
   }
 
-  public final ReplayingTask<T, Event, Activity> getContinuation() {
+  public ReplayingTask<T, Event, Activity> getContinuation() {
     return this.continuation;
-  }
-
-  public final PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> getSpawns() {
-    return this.spawns;
   }
 
   @Override
@@ -51,11 +47,11 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
   }
 
   @Override
-  public final void emit(final Event event) {
+  public void emit(final Event event) {
     this.currentHistory = this.currentHistory.emit(event);
   }
 
-  public final void delay(final Duration duration) {
+  public void delay(final Duration duration) {
     if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       throw new Defer(duration);
     } else {
@@ -69,7 +65,7 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
   }
 
   @Override
-  public final void waitForActivity(final String activityId) {
+  public void waitForActivity(final String activityId) {
     if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       throw new Await(activityId);
     } else {
@@ -82,12 +78,12 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
     }
   }
 
-  public final void waitForChildren() {
+  public void waitForChildren() {
     for (final var child : this.children) this.waitForActivity(child);
   }
 
   @Override
-  public final String spawn(final Activity child) {
+  public String spawn(final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       final var continuation = this.factory.createReplayingTask(child);

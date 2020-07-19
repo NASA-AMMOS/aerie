@@ -73,7 +73,7 @@ public final class ReplayingTask<T, Event, Activity> implements SimulationTask<T
       scheduler.accept(new ScheduleItem.OnCompletion<>(request.activityId, context.getContinuation()));
     }
 
-    return new TaskFrame<>(context.getCurrentHistory(), context.getSpawns());
+    return context.getResultFrame();
   }
 
   @Override
