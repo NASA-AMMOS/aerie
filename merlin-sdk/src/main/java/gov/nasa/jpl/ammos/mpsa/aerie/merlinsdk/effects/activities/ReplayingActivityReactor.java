@@ -15,7 +15,7 @@ import org.pcollections.PStack;
 public final class ReplayingActivityReactor<T, Event, Activity>
     //@formatter:off  /* It is a little silly that IntelliJ can't format long generics. */
     implements Projection<
-      ResumeActivityEvent<ActivityContinuation<T, Event, Activity>>,
+      ActivityContinuation<T, Event, Activity>,
       Task<T, Event, ActivityContinuation<T, Event, Activity>>>
     //@formatter:on
 {
@@ -101,11 +101,11 @@ public final class ReplayingActivityReactor<T, Event, Activity>
 
   @Override
   public Task<T, Event, ActivityContinuation<T, Event, Activity>> atom(
-      final ResumeActivityEvent<ActivityContinuation<T, Event, Activity>> event)
+      final ActivityContinuation<T, Event, Activity> activity)
   {
     return time -> {
       time = time.fork();
-      final var task = Pair.of(event.activityId, event.activity.plus(new ActivityBreadcrumb.Advance<>(time)));
+      final var task = Pair.of(activity.activityId, activity.plus(new ActivityBreadcrumb.Advance<>(time)));
       final var frame = new Frame(time, ConsPStack.singleton(task));
       return this.runActivity(frame);
     };

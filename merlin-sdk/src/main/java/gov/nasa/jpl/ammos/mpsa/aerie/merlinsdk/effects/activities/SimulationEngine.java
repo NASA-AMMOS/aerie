@@ -14,26 +14,26 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
-  private final PriorityQueue<Pair<Duration, ResumeActivityEvent<Activity>>> queue =
+  private final PriorityQueue<Pair<Duration, Activity>> queue =
       new PriorityQueue<>(Comparator.comparing(Pair::getKey));
   private final Set<String> completed = new HashSet<>();
-  private final Map<String, Set<ResumeActivityEvent<Activity>>> conditioned = new HashMap<>();
+  private final Map<String, Set<Activity>> conditioned = new HashMap<>();
 
-  private final Projection<ResumeActivityEvent<Activity>, ? extends Task<T, Event, Activity>> reactor;
+  private final Projection<Activity, ? extends Task<T, Event, Activity>> reactor;
 
   private History<T, Event> currentHistory;
   private Duration elapsedTime = Duration.ZERO;
 
   public <TaskType extends Task<T, Event, Activity>> SimulationEngine(
       final History<T, Event> initialHistory,
-      final Projection<ResumeActivityEvent<Activity>, TaskType> reactor)
+      final Projection<Activity, TaskType> reactor)
   {
     this.reactor = reactor;
     this.currentHistory = initialHistory;
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
-    this.schedule(activity.getId(), new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
+    this.schedule(new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
   }
 
   public void runFor(final long quantity, final Duration unit) {
@@ -65,7 +65,7 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
 
     // Extract all events occurring at this time.
     // More events might be added at this same time, so to ensure coherency, we handle events in complete batches.
-    final var eventList = new ArrayDeque<Pair<History<T, Event>, ResumeActivityEvent<Activity>>>();
+    final var eventList = new ArrayDeque<Pair<History<T, Event>, Activity>>();
     while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
       tip = tip.fork();
       eventList.push(Pair.of(tip, this.queue.poll().getValue()));
@@ -75,24 +75,22 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
     while (!eventList.isEmpty()) {
       final var eventPair = eventList.pop();
       final var eventTime = eventPair.getKey();
-      final var event = eventPair.getValue();
+      final var task = eventPair.getValue();
 
-      final var result = this.reactor.atom(event).apply(eventTime);
+      final var result = this.reactor.atom(task).apply(eventTime);
       final var endTime = result.getLeft();
-      final var scheduledItems = result.getRight();
+      final var scheduledTasks = result.getRight();
 
       tip = tip.join(endTime);
-      for (final var entry : scheduledItems.entrySet()) {
-        this.schedule(entry.getKey(), entry.getValue());
-      }
+      scheduledTasks.values().forEach(this::schedule);
     }
 
     this.currentHistory = tip;
     this.elapsedTime = nextJobTime;
   }
 
-  private void schedule(final String activityId, final ScheduleItem<Activity> rule) {
-    if (this.completed.contains(activityId)) {
+  private void schedule(final ScheduleItem<Activity> rule) {
+    if (this.completed.contains(rule.getTaskId())) {
       throw new RuntimeException("Illegal attempt to re-process a completed task: " + rule);
     }
 
@@ -101,19 +99,19 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
       final var duration = ((ScheduleItem.Defer<Activity>) rule).duration;
       final var activity = ((ScheduleItem.Defer<Activity>) rule).activity;
 
-      this.queue.add(Pair.of(this.elapsedTime.plus(duration), new ResumeActivityEvent<>(activityId, activity)));
+      this.queue.add(Pair.of(this.elapsedTime.plus(duration), activity));
     } else if (rule instanceof ScheduleItem.OnCompletion) {
       final var waitId = ((ScheduleItem.OnCompletion<Activity>) rule).waitOn;
       final var activity = ((ScheduleItem.OnCompletion<Activity>) rule).activity;
 
-      final var resumption = new ResumeActivityEvent<>(activityId, activity);
       if (this.completed.contains(waitId)) {
-        this.queue.add(Pair.of(this.elapsedTime, resumption));
+        this.queue.add(Pair.of(this.elapsedTime, activity));
       } else {
-        this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(resumption);
+        this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(activity);
       }
     } else if (rule instanceof ScheduleItem.Complete) {
-      this.completed.add(((ScheduleItem.Complete<Activity>) rule).activityId);
+      final var activityId = ((ScheduleItem.Complete<Activity>) rule).activityId;
+      this.completed.add(activityId);
 
       final var conditionedActivities = this.conditioned.remove(activityId);
 
