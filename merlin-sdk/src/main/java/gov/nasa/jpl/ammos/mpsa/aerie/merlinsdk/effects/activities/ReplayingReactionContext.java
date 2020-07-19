@@ -3,32 +3,34 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.pcollections.ConsPStack;
-import org.pcollections.HashTreePMap;
-import org.pcollections.PMap;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
   private PStack<ActivityContinuation<T, Event, Activity>> spawns = ConsPStack.empty();
-  private PMap<String, ScheduleItem<T, Event>> deferred = HashTreePMap.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
   private final ReplayingActivityReactor<T, Event, Activity> reactor;
+  private final Consumer<ScheduleItem<T, Event>> scheduler;
   private History<T, Event> currentHistory;
   private final Set<String> children = new HashSet<>();
 
   public ReplayingReactionContext(
       final ReplayingActivityReactor<T, Event, Activity> reactor,
+      final Consumer<ScheduleItem<T, Event>> scheduler,
       final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs)
   {
     this.reactor = reactor;
-    this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(0)).next;
+    this.scheduler = scheduler;
     this.breadcrumbs = breadcrumbs;
-    this.nextBreadcrumbIndex = 1;
+
+    this.nextBreadcrumbIndex = 0;
+    this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(this.nextBreadcrumbIndex++)).next;
   }
 
   public final History<T, Event> getCurrentHistory() {
@@ -41,10 +43,6 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
 
   public final PStack<ActivityContinuation<T, Event, Activity>> getSpawns() {
     return this.spawns;
-  }
-
-  public final PMap<String, ScheduleItem<T, Event>> getDeferred() {
-    return this.deferred;
   }
 
   @Override
@@ -120,7 +118,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
       final var continuation = this.reactor.createSimulationTask(child);
       childId = continuation.getId();
 
-      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, continuation));
+      this.scheduler.accept(new ScheduleItem.Defer<>(delay, continuation));
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
     } else {

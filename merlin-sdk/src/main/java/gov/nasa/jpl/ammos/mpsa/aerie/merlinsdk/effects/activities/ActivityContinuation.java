@@ -1,12 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 
-import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public final class ActivityContinuation<T, Event, Activity> implements SimulationTask<T, Event> {
   private final ReplayingActivityReactor<T, Event, Activity> reactor;
@@ -50,8 +49,8 @@ public final class ActivityContinuation<T, Event, Activity> implements Simulatio
   }
 
   @Override
-  public Pair<History<T, Event>, Map<String, ScheduleItem<T, Event>>> runFrom(final History<T, Event> history) {
-    return this.reactor.react(history, this);
+  public History<T, Event> runFrom(final History<T, Event> history, final Consumer<ScheduleItem<T, Event>> scheduler) {
+    return this.reactor.react(history, scheduler, this);
   }
 
   @Override

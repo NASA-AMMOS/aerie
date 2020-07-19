@@ -70,12 +70,8 @@ public final class SimulationEngine<T, Event> {
       final var eventTime = eventPair.getKey();
       final var task = eventPair.getValue();
 
-      final var result = task.runFrom(eventTime);
-      final var endTime = result.getLeft();
-      final var scheduledTasks = result.getRight();
-
+      final var endTime = task.runFrom(eventTime, this::schedule);
       tip = tip.join(endTime);
-      scheduledTasks.values().forEach(this::schedule);
     }
 
     this.currentHistory = tip;
