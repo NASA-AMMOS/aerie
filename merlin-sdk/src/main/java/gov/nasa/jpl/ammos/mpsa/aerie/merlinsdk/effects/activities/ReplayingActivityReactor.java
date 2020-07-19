@@ -63,7 +63,7 @@ public final class ReplayingActivityReactor<T, Event, Activity>
           this.executor.execute(context, taskId, taskType);
 
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
-          continuation = new ScheduleItem.Complete<>();
+          continuation = new ScheduleItem.Complete<>(taskId);
         } catch (final ReplayingReactionContext.Defer request) {
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Defer<>(

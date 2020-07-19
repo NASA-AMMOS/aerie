@@ -1,8 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.tuple.Pair;
-import org.pcollections.PVector;
 
 import java.util.Objects;
 
@@ -40,9 +38,15 @@ public abstract class ScheduleItem<Activity> {
   }
 
   public static final class Complete<Activity> extends ScheduleItem<Activity> {
+    public final String activityId;
+
+    public Complete(final String activityId) {
+      this.activityId = activityId;
+    }
+
     @Override
     public String toString() {
-      return "Complete";
+      return String.format("Complete(id: \"%s\")", this.activityId.replace("\\", "\\\\").replace("\"", "\\\""));
     }
   }
 }

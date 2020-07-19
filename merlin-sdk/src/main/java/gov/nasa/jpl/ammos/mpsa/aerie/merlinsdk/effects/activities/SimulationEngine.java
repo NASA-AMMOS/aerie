@@ -113,7 +113,7 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
         this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(resumption);
       }
     } else if (rule instanceof ScheduleItem.Complete) {
-      this.completed.add(activityId);
+      this.completed.add(((ScheduleItem.Complete<Activity>) rule).activityId);
 
       final var conditionedActivities = this.conditioned.remove(activityId);
 
