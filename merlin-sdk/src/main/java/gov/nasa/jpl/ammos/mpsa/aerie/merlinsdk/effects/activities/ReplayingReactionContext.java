@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
+public final class ReplayingReactionContext<T, Event, Activity> implements ReactionContext<T, Event, Activity> {
   private PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> spawns = ConsPStack.empty();
   private ReplayingTask<T, Event, Activity> continuation;
   private int nextBreadcrumbIndex;
