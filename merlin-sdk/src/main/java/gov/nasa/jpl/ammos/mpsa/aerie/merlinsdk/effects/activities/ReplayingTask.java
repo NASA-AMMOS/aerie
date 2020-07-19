@@ -43,6 +43,14 @@ public final class ReplayingTask<T, Event, Activity> implements SimulationTask<T
     return new ReplayingTask<>(this.reactor, this.activityId, this.activity, breadcrumbs);
   }
 
+  public ActivityBreadcrumb<T, Event> getBreadcrumb(int index) {
+    return this.breadcrumbs.get(index);
+  }
+
+  public int getBreadcrumbCount() {
+    return this.breadcrumbs.size();
+  }
+
   @Override
   public String getId() {
     return this.activityId;
@@ -53,21 +61,16 @@ public final class ReplayingTask<T, Event, Activity> implements SimulationTask<T
       final History<T, Event> history,
       final Consumer<ScheduleItem<T, Event>> scheduler)
   {
-    final var context = new ReplayingReactionContext<>(this.reactor, scheduler, this.advancedTo(history).breadcrumbs);
+    final var context = new ReplayingReactionContext<>(this.reactor, scheduler, this.advancedTo(history));
 
     // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
     try {
       this.reactor.execute(context, this.activityId, this.activity);
-
       scheduler.accept(new ScheduleItem.Complete<>(this.activityId));
     } catch (final ReplayingReactionContext.Defer request) {
-      scheduler.accept(new ScheduleItem.Defer<>(
-          request.duration,
-          new ReplayingTask<>(this.reactor, this.activityId, this.activity, context.getBreadcrumbs())));
+      scheduler.accept(new ScheduleItem.Defer<>(request.duration, context.getContinuation()));
     } catch (final ReplayingReactionContext.Await request) {
-      scheduler.accept(new ScheduleItem.OnCompletion<>(
-          request.activityId,
-          new ReplayingTask<>(this.reactor, this.activityId, this.activity, context.getBreadcrumbs())));
+      scheduler.accept(new ScheduleItem.OnCompletion<>(request.activityId, context.getContinuation()));
     }
 
     return new TaskFrame<>(context.getCurrentHistory(), context.getSpawns());

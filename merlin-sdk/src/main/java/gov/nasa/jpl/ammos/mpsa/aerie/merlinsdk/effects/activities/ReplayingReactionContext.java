@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.ConsPStack;
 import org.pcollections.PStack;
-import org.pcollections.PVector;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -13,7 +12,7 @@ import java.util.function.Consumer;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
   private PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> spawns = ConsPStack.empty();
-  private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
+  private ReplayingTask<T, Event, Activity> continuation;
   private int nextBreadcrumbIndex;
 
   private final TaskFactory<T, Event, Activity> factory;
@@ -24,22 +23,22 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   public ReplayingReactionContext(
       final TaskFactory<T, Event, Activity> factory,
       final Consumer<ScheduleItem<T, Event>> scheduler,
-      final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs)
+      final ReplayingTask<T, Event, Activity> task)
   {
     this.factory = factory;
     this.scheduler = scheduler;
-    this.breadcrumbs = breadcrumbs;
+    this.continuation = task;
 
     this.nextBreadcrumbIndex = 0;
-    this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(this.nextBreadcrumbIndex++)).next;
+    this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) task.getBreadcrumb(this.nextBreadcrumbIndex++)).next;
   }
 
   public final History<T, Event> getCurrentHistory() {
     return this.currentHistory;
   }
 
-  public final PVector<ActivityBreadcrumb<T, Event>> getBreadcrumbs() {
-    return this.breadcrumbs;
+  public final ReplayingTask<T, Event, Activity> getContinuation() {
+    return this.continuation;
   }
 
   public final PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> getSpawns() {
@@ -57,10 +56,10 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   }
 
   public final void delay(final Duration duration) {
-    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+    if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       throw new Defer(duration);
     } else {
-      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      final var breadcrumb = this.continuation.getBreadcrumb(this.nextBreadcrumbIndex++);
       if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
         throw new RuntimeException("Unexpected breadcrumb on delay(): " + breadcrumb.getClass().getName());
       }
@@ -71,10 +70,10 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
 
   @Override
   public final void waitForActivity(final String activityId) {
-    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+    if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       throw new Await(activityId);
     } else {
-      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      final var breadcrumb = this.continuation.getBreadcrumb(this.nextBreadcrumbIndex++);
       if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
         throw new RuntimeException("Unexpected breadcrumb on waitForActivity(): " + breadcrumb.getClass().getName());
       }
@@ -90,17 +89,17 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   @Override
   public final String spawn(final Activity child) {
     final String childId;
-    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+    if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       final var continuation = this.factory.createReplayingTask(child);
       childId = continuation.getId();
 
       this.currentHistory = this.currentHistory.fork();
 
       this.spawns = this.spawns.plus(Pair.of(this.currentHistory, continuation));
-      this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
+      this.continuation = this.continuation.spawned(continuation.getId());
       this.nextBreadcrumbIndex += 1;
     } else {
-      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      final var breadcrumb = this.continuation.getBreadcrumb(this.nextBreadcrumbIndex++);
       if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
         throw new RuntimeException("Unexpected breadcrumb; expected spawn, got " + breadcrumb.getClass().getName());
       }
@@ -115,15 +114,15 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   @Override
   public String spawnAfter(final Duration delay, final Activity child) {
     final String childId;
-    if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
+    if (this.nextBreadcrumbIndex >= this.continuation.getBreadcrumbCount()) {
       final var continuation = this.factory.createReplayingTask(child);
       childId = continuation.getId();
 
       this.scheduler.accept(new ScheduleItem.Defer<>(delay, continuation));
-      this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
+      this.continuation = this.continuation.spawned(continuation.getId());
       this.nextBreadcrumbIndex += 1;
     } else {
-      final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex++);
+      final var breadcrumb = this.continuation.getBreadcrumb(this.nextBreadcrumbIndex++);
       if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
         throw new RuntimeException("Unexpected breadcrumb; expected spawn, got " + breadcrumb.getClass().getName());
       }
