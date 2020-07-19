@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +41,7 @@ public final class SimulationEngine<T, Event, Activity> {
   }
 
   public void enqueue(final Duration timeFromStart, final String activityId, final Activity activity) {
-    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(activityId, activity)));
+    this.schedule(activityId, new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
   }
 
   public void runFor(final long quantity, final Duration unit) {
@@ -63,67 +64,77 @@ public final class SimulationEngine<T, Event, Activity> {
   }
 
   public void step() {
-    // Collect all of the tasks associated with the next time point.
-    final var nextJob = this.popNextJob(this.reactor);
-    final var nextJobTime = nextJob.getKey();
-    final var nextJobTasks = nextJob.getValue();
+    if (this.queue.isEmpty()) return;
 
-    // Step up to the next job time, and perform the job.
-    this.currentHistory = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
-    this.elapsedTime = nextJobTime;
-    this.react(nextJobTasks);
-  }
+    // Step up to the next job time.
+    final var nextJobTime = this.queue.peek().getKey();
 
-  private <TaskType extends Task<T, Event, Activity>>
-  Pair<Duration, TaskType> popNextJob(final Projection<ResumeActivityEvent<Activity>, TaskType> reactor) {
-    final var nextJobTime = (this.queue.isEmpty())
-        ? Duration.ZERO
-        : this.queue.peek().getKey();
+    var tip = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
 
-    var tasks = reactor.empty();
+    // Extract all events occurring at this time.
+    // More events might be added at this same time, so to ensure coherency, we handle events in complete batches.
+    final var eventList = new ArrayDeque<Pair<History<T, Event>, ResumeActivityEvent<Activity>>>();
     while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
-      tasks = reactor.concurrently(tasks, reactor.atom(this.queue.poll().getValue()));
+      tip = tip.fork();
+      eventList.push(Pair.of(tip, this.queue.poll().getValue()));
     }
 
-    return Pair.of(nextJobTime, tasks);
+    // React to each event.
+    while (!eventList.isEmpty()) {
+      final var eventPair = eventList.pop();
+      final var eventTime = eventPair.getKey();
+      final var event = eventPair.getValue();
+
+      final var result = this.reactor.atom(event).apply(eventTime);
+      final var endTime = result.getLeft();
+      final var scheduledItems = result.getRight();
+
+      tip = tip.join(endTime);
+      for (final var entry : scheduledItems.entrySet()) {
+        this.schedule(entry.getKey(), entry.getValue());
+      }
+    }
+
+    this.currentHistory = tip;
+    this.elapsedTime = nextJobTime;
   }
 
-  private void react(final Task<T, Event, Activity> task) {
-    // React to the events scheduled at this time.
-    final var result = task.apply(this.currentHistory);
-    this.currentHistory = result.getLeft();
-    final var newJobs = result.getRight();
+  private void schedule(final String activityId, final ScheduleItem<Activity> rule) {
+    if (this.completed.contains(activityId)) {
+      throw new RuntimeException("Illegal attempt to re-process a completed task: " + rule);
+    }
 
-    // Accumulate the freshly scheduled items into our scheduling timeline.
-    for (final var entry : newJobs.entrySet()) {
-      final var activityId = entry.getKey();
-      final var rule = entry.getValue();
+    // This just screams for case classes and pattern-matching `switch`.
+    if (rule instanceof ScheduleItem.Defer) {
+      final var duration = ((ScheduleItem.Defer<Activity>) rule).duration;
+      final var activity = ((ScheduleItem.Defer<Activity>) rule).activity;
 
-      if (rule instanceof ScheduleItem.Defer) {
-        final var duration = ((ScheduleItem.Defer<Activity>) rule).duration;
-        final var activity = ((ScheduleItem.Defer<Activity>) rule).activity;
+      this.queue.add(Pair.of(this.elapsedTime.plus(duration), new ResumeActivityEvent<>(activityId, activity)));
+    } else if (rule instanceof ScheduleItem.OnCompletion) {
+      final var waitId = ((ScheduleItem.OnCompletion<Activity>) rule).waitOn;
+      final var activity = ((ScheduleItem.OnCompletion<Activity>) rule).activity;
 
-        this.queue.add(Pair.of(this.elapsedTime.plus(duration), new ResumeActivityEvent<>(activityId, activity)));
-      } else if (rule instanceof ScheduleItem.OnCompletion) {
-        final var waitId = ((ScheduleItem.OnCompletion<Activity>) rule).waitOn;
-        final var activity = ((ScheduleItem.OnCompletion<Activity>) rule).activity;
+      final var resumption = new ResumeActivityEvent<>(activityId, activity);
+      if (this.completed.contains(waitId)) {
+        this.queue.add(Pair.of(this.elapsedTime, resumption));
+      } else {
+        this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(resumption);
+      }
+    } else if (rule instanceof ScheduleItem.Complete) {
+      this.completed.add(activityId);
 
-        final var resumption = new ResumeActivityEvent<>(activityId, activity);
-        if (this.completed.contains(waitId)) {
-          this.queue.add(Pair.of(this.elapsedTime, resumption));
-        } else {
-          this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(resumption);
-        }
-      } else if (rule instanceof ScheduleItem.Complete) {
-        this.completed.add(activityId);
+      final var conditionedActivities = this.conditioned.remove(activityId);
 
-        final var conditionedActivities = this.conditioned.remove(entry.getKey());
-        if (conditionedActivities == null) continue;
-
+      if (conditionedActivities != null) {
         for (final var conditionedTask : conditionedActivities) {
           this.queue.add(Pair.of(this.elapsedTime, conditionedTask));
         }
       }
+    } else {
+      throw new Error(String.format(
+          "Unknown subclass `%s` of class `%s`",
+          rule.getClass().getName(),
+          ScheduleItem.class.getName()));
     }
   }
 
