@@ -1,20 +1,21 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.PVector;
 
-public abstract class ScheduleItem<T, Activity, Event> {
+import java.util.Objects;
+
+public abstract class ScheduleItem<Activity> {
   private ScheduleItem() {}
 
-  public static final class Defer<T, Activity, Event> extends ScheduleItem<T, Activity, Event> {
+  public static final class Defer<Activity> extends ScheduleItem<Activity> {
     public final Duration duration;
-    public final Activity activityType;
-    public final PVector<ActivityBreadcrumb<T, Event>> milestones;
+    public final Activity activity;
 
-    public Defer(final Duration duration, final Activity activityType, final PVector<ActivityBreadcrumb<T, Event>> milestones) {
-      this.duration = duration;
-      this.activityType = activityType;
-      this.milestones = milestones;
+    public Defer(final Duration duration, final Activity activity) {
+      this.duration = Objects.requireNonNull(duration);
+      this.activity = Objects.requireNonNull(activity);
     }
 
     @Override
@@ -23,15 +24,13 @@ public abstract class ScheduleItem<T, Activity, Event> {
     }
   }
 
-  public static final class OnCompletion<T, Activity, Event> extends ScheduleItem<T, Activity, Event> {
+  public static final class OnCompletion<Activity> extends ScheduleItem<Activity> {
     public final String waitOn;
-    public final Activity activityType;
-    public final PVector<ActivityBreadcrumb<T, Event>> milestones;
+    public final Activity activity;
 
-    public OnCompletion(final String waitOn, final Activity activityType, final PVector<ActivityBreadcrumb<T, Event>> milestones) {
+    public OnCompletion(final String waitOn, final Activity activity) {
       this.waitOn = waitOn;
-      this.activityType = activityType;
-      this.milestones = milestones;
+      this.activity = Objects.requireNonNull(activity);
     }
 
     @Override
@@ -40,7 +39,7 @@ public abstract class ScheduleItem<T, Activity, Event> {
     }
   }
 
-  public static final class Complete<T, Activity, Event> extends ScheduleItem<T, Activity, Event> {
+  public static final class Complete<Activity> extends ScheduleItem<Activity> {
     @Override
     public String toString() {
       return "Complete";

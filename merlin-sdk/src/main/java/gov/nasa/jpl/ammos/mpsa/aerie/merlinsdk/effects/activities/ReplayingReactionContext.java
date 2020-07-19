@@ -2,21 +2,20 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.ConsPStack;
 import org.pcollections.HashTreePMap;
 import org.pcollections.PMap;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
-import org.pcollections.TreePVector;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
-  private PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> spawns = ConsPStack.empty();
-  private PMap<String, ScheduleItem<T, Activity, Event>> deferred = HashTreePMap.empty();
+  private PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> spawns = ConsPStack.empty();
+  private PMap<String, ScheduleItem<ActivityContinuation<T, Event, Activity>>> deferred = HashTreePMap.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
@@ -37,11 +36,11 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
     return this.breadcrumbs;
   }
 
-  public final PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> getSpawns() {
+  public final PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> getSpawns() {
     return this.spawns;
   }
 
-  public final PMap<String, ScheduleItem<T, Activity, Event>> getDeferred() {
+  public final PMap<String, ScheduleItem<ActivityContinuation<T, Event, Activity>>> getDeferred() {
     return this.deferred;
   }
 
@@ -87,7 +86,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   }
 
   @Override
-  public final String spawn(final Activity activity) {
+  public final String spawn(final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
       this.currentHistory = this.currentHistory.fork();
@@ -96,7 +95,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
       //   Figure out a better way to identify activity instances.
       //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
       childId = UUID.randomUUID().toString();
-      this.spawns = this.spawns.plus(Triple.of(childId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(this.currentHistory))));
+      this.spawns = this.spawns.plus(Pair.of(childId, new ActivityContinuation<>(child, this.currentHistory)));
 
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
@@ -114,14 +113,14 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   }
 
   @Override
-  public String spawnAfter(final Duration delay, final Activity activity) {
+  public String spawnAfter(final Duration delay, final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
       // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
       //   Figure out a better way to identify activity instances.
       //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
       childId = UUID.randomUUID().toString();
-      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, activity, TreePVector.empty()));
+      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, new ActivityContinuation<>(child)));
 
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;

@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
-import org.pcollections.TreePVector;
 
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,20 +13,20 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.UUID;
 
-public final class SimulationEngine<T, Activity, Event> {
-  private final PriorityQueue<Pair<Duration, ResumeActivityEvent<T, Activity, Event>>> queue =
+public final class SimulationEngine<T, Event, Activity> {
+  private final PriorityQueue<Pair<Duration, ResumeActivityEvent<Activity>>> queue =
       new PriorityQueue<>(Comparator.comparing(Pair::getKey));
   private final Set<String> completed = new HashSet<>();
-  private final Map<String, Set<ResumeActivityEvent<T, Activity, Event>>> conditioned = new HashMap<>();
+  private final Map<String, Set<ResumeActivityEvent<Activity>>> conditioned = new HashMap<>();
 
-  private final Projection<ResumeActivityEvent<T, Activity, Event>, ? extends Task<T, Activity, Event>> reactor;
+  private final Projection<ResumeActivityEvent<Activity>, ? extends Task<T, Event, Activity>> reactor;
 
   private History<T, Event> currentHistory;
   private Duration elapsedTime = Duration.ZERO;
 
-  public <TaskType extends Task<T, Activity, Event>> SimulationEngine(
+  public <TaskType extends Task<T, Event, Activity>> SimulationEngine(
       final History<T, Event> initialHistory,
-      final Projection<ResumeActivityEvent<T, Activity, Event>, TaskType> reactor)
+      final Projection<ResumeActivityEvent<Activity>, TaskType> reactor)
   {
     this.reactor = reactor;
     this.currentHistory = initialHistory;
@@ -36,12 +35,12 @@ public final class SimulationEngine<T, Activity, Event> {
   public void enqueue(final Duration timeFromStart, final Activity activity) {
     // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
     //   Figure out a better way to identify activity instances.
-    //   Make sure we handle the cases in ReactionContextImpl, too.
+    //   Make sure we handle the cases in `ReplayingReactionContext`, too.
     this.enqueue(timeFromStart, UUID.randomUUID().toString(), activity);
   }
 
   public void enqueue(final Duration timeFromStart, final String activityId, final Activity activity) {
-    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(activityId, activity, TreePVector.empty())));
+    this.queue.add(Pair.of(timeFromStart, new ResumeActivityEvent<>(activityId, activity)));
   }
 
   public void runFor(final long quantity, final Duration unit) {
@@ -75,8 +74,8 @@ public final class SimulationEngine<T, Activity, Event> {
     this.react(nextJobTasks);
   }
 
-  private <TaskType extends Task<T, Activity, Event>>
-  Pair<Duration, TaskType> popNextJob(final Projection<ResumeActivityEvent<T, Activity, Event>, TaskType> reactor) {
+  private <TaskType extends Task<T, Event, Activity>>
+  Pair<Duration, TaskType> popNextJob(final Projection<ResumeActivityEvent<Activity>, TaskType> reactor) {
     final var nextJobTime = (this.queue.isEmpty())
         ? Duration.ZERO
         : this.queue.peek().getKey();
@@ -89,7 +88,7 @@ public final class SimulationEngine<T, Activity, Event> {
     return Pair.of(nextJobTime, tasks);
   }
 
-  private void react(final Task<T, Activity, Event> task) {
+  private void react(final Task<T, Event, Activity> task) {
     // React to the events scheduled at this time.
     final var result = task.apply(this.currentHistory);
     this.currentHistory = result.getLeft();
@@ -101,17 +100,15 @@ public final class SimulationEngine<T, Activity, Event> {
       final var rule = entry.getValue();
 
       if (rule instanceof ScheduleItem.Defer) {
-        final var duration = ((ScheduleItem.Defer<T, Activity, Event>) rule).duration;
-        final var activityType = ((ScheduleItem.Defer<T, Activity, Event>) rule).activityType;
-        final var milestones = ((ScheduleItem.Defer<T, Activity, Event>) rule).milestones;
+        final var duration = ((ScheduleItem.Defer<Activity>) rule).duration;
+        final var activity = ((ScheduleItem.Defer<Activity>) rule).activity;
 
-        this.queue.add(Pair.of(this.elapsedTime.plus(duration), new ResumeActivityEvent<>(activityId, activityType, milestones)));
+        this.queue.add(Pair.of(this.elapsedTime.plus(duration), new ResumeActivityEvent<>(activityId, activity)));
       } else if (rule instanceof ScheduleItem.OnCompletion) {
-        final var waitId = ((ScheduleItem.OnCompletion<T, Activity, Event>) rule).waitOn;
-        final var activityType = ((ScheduleItem.OnCompletion<T, Activity, Event>) rule).activityType;
-        final var milestones = ((ScheduleItem.OnCompletion<T, Activity, Event>) rule).milestones;
+        final var waitId = ((ScheduleItem.OnCompletion<Activity>) rule).waitOn;
+        final var activity = ((ScheduleItem.OnCompletion<Activity>) rule).activity;
 
-        final var resumption = new ResumeActivityEvent<>(activityId, activityType, milestones);
+        final var resumption = new ResumeActivityEvent<>(activityId, activity);
         if (this.completed.contains(waitId)) {
           this.queue.add(Pair.of(this.elapsedTime, resumption));
         } else {

@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ActivityContinuation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -49,7 +50,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, activityId, mapper.deserializeActivity(serializedInstance).get());
+      simulator.enqueue(startDelta, activityId, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -86,7 +87,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, mapper.deserializeActivity(serializedInstance).get());
+      simulator.enqueue(startDelta, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -94,7 +95,7 @@ public final class SimpleSimulator {
 
   private static <T, Event> SimulationResults simulate(
       final MerlinAdaptation.Querier<T, Event> querier,
-      final SimulationEngine<T, Activity, Event> simulator,
+      final SimulationEngine<T, Event, ActivityContinuation<T, Event, Activity>> simulator,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
@@ -170,7 +171,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, activityId, mapper.deserializeActivity(serializedInstance).get());
+      simulator.enqueue(startDelta, activityId, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
@@ -205,7 +206,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, mapper.deserializeActivity(serializedInstance).get());
+      simulator.enqueue(startDelta, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
@@ -215,7 +216,7 @@ public final class SimpleSimulator {
   // https://docs.oracle.com/javase/tutorial/java/generics/capture.html
   private static <T, Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation.Querier<T, Event> querier,
-      final SimulationEngine<T, Activity, Event> simulator,
+      final SimulationEngine<T, Event, ActivityContinuation<T, Event, Activity>> simulator,
       final Duration samplingPeriod
   )
   {
