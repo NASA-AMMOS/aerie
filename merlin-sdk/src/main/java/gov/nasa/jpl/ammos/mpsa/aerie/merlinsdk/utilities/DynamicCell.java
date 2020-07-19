@@ -15,16 +15,14 @@ public final class DynamicCell<T> implements Supplier<T> {
         this.dynamicSlot = dynamicSlot;
     }
 
+  /**
+   * Create a dynamically-scoped cell containing values of type {@link T}.
+   *
+   * @param <T> The type of value this cell will contain.
+   * @return A new cell that can contain values of type {@link T}.
+   */
     public static <T> DynamicCell<T> create() {
         return new DynamicCell<>(ThreadLocal.withInitial(() -> null));
-    }
-
-    /**
-     * Constructs an inheritable cell. Threads spawned in the scope of such a cell obtain their default value
-     * from this cell at the point the thread is spawned.
-     */
-    public static <T> DynamicCell<T> inheritableCell() {
-        return new DynamicCell<>(InheritableThreadLocal.withInitial(() -> null));
     }
 
     /**
