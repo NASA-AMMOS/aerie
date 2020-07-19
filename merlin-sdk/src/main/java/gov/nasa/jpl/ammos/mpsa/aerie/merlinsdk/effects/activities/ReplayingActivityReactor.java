@@ -20,12 +20,9 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
 
   private final class Frame {
     public History<T, Event> tip;
-    public PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> branches;
+    public PStack<ActivityContinuation<T, Event, Activity>> branches;
 
-    public Frame(
-        final History<T, Event> tip,
-        final PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> branches)
-    {
+    public Frame(final History<T, Event> tip, final PStack<ActivityContinuation<T, Event, Activity>> branches) {
       this.tip = tip;
       this.branches = branches;
     }
@@ -44,9 +41,9 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
         final var task = frame.branches.get(0);
         frame.branches = frame.branches.minus(0);
 
-        final var taskId = task.getLeft();
-        final var taskType = task.getRight().activity;
-        final var taskBreadcrumbs = task.getRight().breadcrumbs;
+        final var taskId = task.getId();
+        final var taskType = task.activity;
+        final var taskBreadcrumbs = task.breadcrumbs;
 
         final var context = new ReplayingReactionContext<>(this, taskBreadcrumbs);
 
@@ -98,8 +95,7 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
       final ActivityContinuation<T, Event, Activity> activity)
   {
     final var time = history.fork();
-    final var task = Pair.of(activity.getId(), activity.advancedTo(time));
-    final var frame = new Frame(time, ConsPStack.singleton(task));
+    final var frame = new Frame(time, ConsPStack.singleton(activity.advancedTo(time)));
     return this.runActivity(frame);
   }
 }

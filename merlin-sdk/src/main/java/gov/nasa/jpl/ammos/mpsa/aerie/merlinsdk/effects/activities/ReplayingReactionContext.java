@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.ConsPStack;
 import org.pcollections.HashTreePMap;
 import org.pcollections.PMap;
@@ -13,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
-  private PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> spawns = ConsPStack.empty();
+  private PStack<ActivityContinuation<T, Event, Activity>> spawns = ConsPStack.empty();
   private PMap<String, ScheduleItem<T, Event>> deferred = HashTreePMap.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
@@ -40,7 +39,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
     return this.breadcrumbs;
   }
 
-  public final PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> getSpawns() {
+  public final PStack<ActivityContinuation<T, Event, Activity>> getSpawns() {
     return this.spawns;
   }
 
@@ -98,7 +97,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
       final var continuation = this.reactor.createSimulationTask(child).advancedTo(this.currentHistory);
       childId = continuation.getId();
 
-      this.spawns = this.spawns.plus(Pair.of(childId, continuation));
+      this.spawns = this.spawns.plus(continuation);
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
     } else {
