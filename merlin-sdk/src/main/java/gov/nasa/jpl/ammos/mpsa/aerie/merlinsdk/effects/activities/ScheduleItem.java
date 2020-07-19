@@ -7,7 +7,9 @@ import java.util.Objects;
 public abstract class ScheduleItem<Activity> {
   private ScheduleItem() {}
 
-  public static final class Defer<Activity> extends ScheduleItem<Activity> {
+  public abstract String getTaskId();
+
+  public static final class Defer<Activity extends SimulationTask> extends ScheduleItem<Activity> {
     public final Duration duration;
     public final Activity activity;
 
@@ -17,18 +19,28 @@ public abstract class ScheduleItem<Activity> {
     }
 
     @Override
+    public String getTaskId() {
+      return this.activity.getId();
+    }
+
+    @Override
     public String toString() {
       return String.format("Defer(for: \"%s\")", this.duration);
     }
   }
 
-  public static final class OnCompletion<Activity> extends ScheduleItem<Activity> {
+  public static final class OnCompletion<Activity extends SimulationTask> extends ScheduleItem<Activity> {
     public final String waitOn;
     public final Activity activity;
 
     public OnCompletion(final String waitOn, final Activity activity) {
       this.waitOn = waitOn;
       this.activity = Objects.requireNonNull(activity);
+    }
+
+    @Override
+    public String getTaskId() {
+      return this.activity.getId();
     }
 
     @Override
@@ -42,6 +54,11 @@ public abstract class ScheduleItem<Activity> {
 
     public Complete(final String activityId) {
       this.activityId = activityId;
+    }
+
+    @Override
+    public String getTaskId() {
+      return this.activityId;
     }
 
     @Override
