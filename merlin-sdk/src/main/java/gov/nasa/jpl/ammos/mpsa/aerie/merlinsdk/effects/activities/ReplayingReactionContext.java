@@ -95,7 +95,8 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
       //   Figure out a better way to identify activity instances.
       //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
       childId = UUID.randomUUID().toString();
-      this.spawns = this.spawns.plus(Pair.of(childId, new ActivityContinuation<>(child, this.currentHistory)));
+      final var continuation = new ActivityContinuation<>(childId, child, this.currentHistory);
+      this.spawns = this.spawns.plus(Pair.of(childId, continuation));
 
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
@@ -120,7 +121,8 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
       //   Figure out a better way to identify activity instances.
       //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
       childId = UUID.randomUUID().toString();
-      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, new ActivityContinuation<>(child)));
+      final var continuation = new ActivityContinuation<T, Event, Activity>(childId, child);
+      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, continuation));
 
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;

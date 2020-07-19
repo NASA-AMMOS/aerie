@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 
 import java.util.ArrayDeque;
+import java.util.UUID;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.ConsPStack;
@@ -67,12 +68,12 @@ public final class ReplayingActivityReactor<T, Event, Activity>
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Defer<>(
               request.duration,
-              new ActivityContinuation<>(taskType, context.getBreadcrumbs()));
+              new ActivityContinuation<>(taskId, taskType, context.getBreadcrumbs()));
         } catch (final ReplayingReactionContext.Await request) {
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.OnCompletion<>(
               request.activityId,
-              new ActivityContinuation<>(taskType, context.getBreadcrumbs()));
+              new ActivityContinuation<>(taskId, taskType, context.getBreadcrumbs()));
         }
 
         scheduled = scheduled.plusAll(context.getDeferred()).plus(taskId, continuation);
@@ -88,6 +89,14 @@ public final class ReplayingActivityReactor<T, Event, Activity>
         }
       }
     }
+  }
+
+  public ActivityContinuation<T, Event, Activity> createSimulationTask(final Activity activity) {
+    return new ActivityContinuation<>(UUID.randomUUID().toString(), activity);
+  }
+
+  public ActivityContinuation<T, Event, Activity> createSimulationTask(final String id, final Activity activity) {
+    return new ActivityContinuation<>(id, activity);
   }
 
   @Override

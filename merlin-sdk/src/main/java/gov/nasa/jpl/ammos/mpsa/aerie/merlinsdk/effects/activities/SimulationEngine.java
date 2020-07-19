@@ -12,9 +12,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.UUID;
 
-public final class SimulationEngine<T, Event, Activity> {
+public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
   private final PriorityQueue<Pair<Duration, ResumeActivityEvent<Activity>>> queue =
       new PriorityQueue<>(Comparator.comparing(Pair::getKey));
   private final Set<String> completed = new HashSet<>();
@@ -34,14 +33,7 @@ public final class SimulationEngine<T, Event, Activity> {
   }
 
   public void enqueue(final Duration timeFromStart, final Activity activity) {
-    // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
-    //   Figure out a better way to identify activity instances.
-    //   Make sure we handle the cases in `ReplayingReactionContext`, too.
-    this.enqueue(timeFromStart, UUID.randomUUID().toString(), activity);
-  }
-
-  public void enqueue(final Duration timeFromStart, final String activityId, final Activity activity) {
-    this.schedule(activityId, new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
+    this.schedule(activity.getId(), new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
   }
 
   public void runFor(final long quantity, final Duration unit) {

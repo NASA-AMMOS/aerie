@@ -39,9 +39,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new SimulationEngine<>(
-        database.origin(),
-        new ReplayingActivityReactor<>(querier::runActivity));
+    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin(), reactor);
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -50,7 +49,9 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, activityId, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.enqueue(startDelta, reactor.createSimulationTask(
+          activityId,
+          mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -77,9 +78,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new SimulationEngine<>(
-        database.origin(),
-        new ReplayingActivityReactor<>(querier::runActivity));
+    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin(), reactor);
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -87,7 +87,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.enqueue(startDelta, reactor.createSimulationTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -160,9 +160,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new SimulationEngine<>(
-        database.origin(),
-        new ReplayingActivityReactor<>(querier::runActivity));
+    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin(), reactor);
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -171,7 +170,9 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, activityId, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.enqueue(
+          startDelta,
+          reactor.createSimulationTask(activityId, mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
@@ -196,9 +197,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new SimulationEngine<>(
-        database.origin(),
-        new ReplayingActivityReactor<>(querier::runActivity));
+    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin(), reactor);
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -206,7 +206,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, new ActivityContinuation<>(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.enqueue(startDelta, reactor.createSimulationTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
