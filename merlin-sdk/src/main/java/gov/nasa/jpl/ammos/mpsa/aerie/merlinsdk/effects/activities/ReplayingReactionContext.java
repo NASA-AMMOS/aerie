@@ -11,7 +11,6 @@ import org.pcollections.PVector;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
   private PStack<Pair<String, ActivityContinuation<T, Event, Activity>>> spawns = ConsPStack.empty();
@@ -96,13 +95,10 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
       this.currentHistory = this.currentHistory.fork();
 
-      // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
-      //   Figure out a better way to identify activity instances.
-      //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
-      childId = UUID.randomUUID().toString();
-      final var continuation = new ActivityContinuation<>(this.reactor, childId, child, this.currentHistory);
-      this.spawns = this.spawns.plus(Pair.of(childId, continuation));
+      final var continuation = this.reactor.createSimulationTask(child).plus(new ActivityBreadcrumb.Advance<>(this.currentHistory));
+      childId = continuation.getId();
 
+      this.spawns = this.spawns.plus(Pair.of(childId, continuation));
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
     } else {
@@ -122,13 +118,10 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   public String spawnAfter(final Duration delay, final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
-      // TODO: It is somewhat a code smell that we have to conjure our IDs randomly from the ether.
-      //   Figure out a better way to identify activity instances.
-      //   Make sure we handle the case in `ReplayingSimulationEngine`, too.
-      childId = UUID.randomUUID().toString();
-      final var continuation = new ActivityContinuation<>(this.reactor, childId, child);
-      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, continuation));
+      final var continuation = this.reactor.createSimulationTask(child);
+      childId = continuation.getId();
 
+      this.deferred = this.deferred.plus(childId, new ScheduleItem.Defer<>(delay, continuation));
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
     } else {
