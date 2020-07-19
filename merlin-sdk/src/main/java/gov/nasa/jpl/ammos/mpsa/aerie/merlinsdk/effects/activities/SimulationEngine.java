@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -13,21 +14,22 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.UUID;
 
-public final class ReplayingSimulationEngine<T, Activity, Event> {
-  private final PriorityQueue<Pair<Duration, ResumeActivityEvent<T, Activity, Event>>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getKey));
+public final class SimulationEngine<T, Activity, Event> {
+  private final PriorityQueue<Pair<Duration, ResumeActivityEvent<T, Activity, Event>>> queue =
+      new PriorityQueue<>(Comparator.comparing(Pair::getKey));
   private final Set<String> completed = new HashSet<>();
   private final Map<String, Set<ResumeActivityEvent<T, Activity, Event>>> conditioned = new HashMap<>();
 
-  private final ActivityReactor<T, Activity, Event> reactor;
+  private final Projection<ResumeActivityEvent<T, Activity, Event>, ? extends Task<T, Activity, Event>> reactor;
 
   private History<T, Event> currentHistory;
   private Duration elapsedTime = Duration.ZERO;
 
-  public ReplayingSimulationEngine(
+  public <TaskType extends Task<T, Activity, Event>> SimulationEngine(
       final History<T, Event> initialHistory,
-      final ActivityExecutor<T, Activity, Event> executor
-  ) {
-    this.reactor = new ActivityReactor<>(executor);
+      final Projection<ResumeActivityEvent<T, Activity, Event>, TaskType> reactor)
+  {
+    this.reactor = reactor;
     this.currentHistory = initialHistory;
   }
 
@@ -62,20 +64,29 @@ public final class ReplayingSimulationEngine<T, Activity, Event> {
   }
 
   public void step() {
-    if (this.queue.isEmpty()) return;
-    final var nextJobTime = this.queue.peek().getKey();
-
     // Collect all of the tasks associated with the next time point.
-    var tasks = this.reactor.atom(this.queue.poll().getValue());
-    while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
-      tasks = this.reactor.concurrently(tasks, this.reactor.atom(this.queue.poll().getValue()));
-    }
+    final var nextJob = this.popNextJob(this.reactor);
+    final var nextJobTime = nextJob.getKey();
+    final var nextJobTasks = nextJob.getValue();
 
     // Step up to the next job time, and perform the job.
     this.currentHistory = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
     this.elapsedTime = nextJobTime;
+    this.react(nextJobTasks);
+  }
 
-    this.react(tasks);
+  private <TaskType extends Task<T, Activity, Event>>
+  Pair<Duration, TaskType> popNextJob(final Projection<ResumeActivityEvent<T, Activity, Event>, TaskType> reactor) {
+    final var nextJobTime = (this.queue.isEmpty())
+        ? Duration.ZERO
+        : this.queue.peek().getKey();
+
+    var tasks = reactor.empty();
+    while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
+      tasks = reactor.concurrently(tasks, reactor.atom(this.queue.poll().getValue()));
+    }
+
+    return Pair.of(nextJobTime, tasks);
   }
 
   private void react(final Task<T, Activity, Event> task) {

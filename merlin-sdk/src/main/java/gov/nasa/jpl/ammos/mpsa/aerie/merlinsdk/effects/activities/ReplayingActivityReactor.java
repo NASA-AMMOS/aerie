@@ -14,10 +14,12 @@ import org.pcollections.PMap;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
 
-public final class ActivityReactor<T, Activity, Event> implements Projection<ResumeActivityEvent<T, Activity, Event>, Task<T, Activity, Event>> {
+public final class ReplayingActivityReactor<T, Activity, Event>
+    implements Projection<ResumeActivityEvent<T, Activity, Event>, Task<T, Activity, Event>>
+{
   private final ActivityExecutor<T, Activity, Event> executor;
 
-  public ActivityReactor(final ActivityExecutor<T, Activity, Event> executor) {
+  public ReplayingActivityReactor(final ActivityExecutor<T, Activity, Event> executor) {
     this.executor = executor;
   }
 
@@ -46,7 +48,7 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Res
         final var taskType = task.getMiddle();
         final var taskBreadcrumbs = task.getRight();
 
-        final var context = new ReactionContextImpl<T, Activity, Event>(taskBreadcrumbs);
+        final var context = new ReplayingReactionContext<T, Activity, Event>(taskBreadcrumbs);
 
         // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
         ScheduleItem<T, Activity, Event> continuation;
@@ -55,10 +57,10 @@ public final class ActivityReactor<T, Activity, Event> implements Projection<Res
 
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Complete<>();
-        } catch (final ReactionContextImpl.Defer request) {
+        } catch (final ReplayingReactionContext.Defer request) {
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.Defer<>(request.duration, taskType, context.getBreadcrumbs());
-        } catch (final ReactionContextImpl.Await request) {
+        } catch (final ReplayingReactionContext.Await request) {
           frames.push(new Frame(context.getCurrentHistory(), context.getSpawns()));
           continuation = new ScheduleItem.OnCompletion<>(request.activityId, taskType, context.getBreadcrumbs());
         }

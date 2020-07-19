@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-public final class ReactionContextImpl<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
+public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
   private PStack<Triple<String, Activity, PVector<ActivityBreadcrumb<T, Event>>>> spawns = ConsPStack.empty();
   private PMap<String, ScheduleItem<T, Activity, Event>> deferred = HashTreePMap.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
@@ -23,7 +23,7 @@ public final class ReactionContextImpl<T, Activity, Event> implements ReactionCo
   private History<T, Event> currentHistory;
   private final Set<String> children = new HashSet<>();
 
-  public ReactionContextImpl(final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs) {
+  public ReplayingReactionContext(final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs) {
     this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) breadcrumbs.get(0)).next;
     this.breadcrumbs = breadcrumbs;
     this.nextBreadcrumbIndex = 1;
