@@ -16,17 +16,17 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
-  private final ReplayingActivityReactor<T, Event, Activity> reactor;
+  private final TaskFactory<T, Event, Activity> factory;
   private final Consumer<ScheduleItem<T, Event>> scheduler;
   private History<T, Event> currentHistory;
   private final Set<String> children = new HashSet<>();
 
   public ReplayingReactionContext(
-      final ReplayingActivityReactor<T, Event, Activity> reactor,
+      final TaskFactory<T, Event, Activity> factory,
       final Consumer<ScheduleItem<T, Event>> scheduler,
       final PVector<ActivityBreadcrumb<T, Event>> breadcrumbs)
   {
-    this.reactor = reactor;
+    this.factory = factory;
     this.scheduler = scheduler;
     this.breadcrumbs = breadcrumbs;
 
@@ -91,7 +91,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   public final String spawn(final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
-      final var continuation = this.reactor.createSimulationTask(child);
+      final var continuation = this.factory.createReplayingTask(child);
       childId = continuation.getId();
 
       this.currentHistory = this.currentHistory.fork();
@@ -116,7 +116,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   public String spawnAfter(final Duration delay, final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
-      final var continuation = this.reactor.createSimulationTask(child);
+      final var continuation = this.factory.createReplayingTask(child);
       childId = continuation.getId();
 
       this.scheduler.accept(new ScheduleItem.Defer<>(delay, continuation));

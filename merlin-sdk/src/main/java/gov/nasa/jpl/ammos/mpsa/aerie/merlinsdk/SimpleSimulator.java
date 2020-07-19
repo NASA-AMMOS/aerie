@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingActivityReactor;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.TaskFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -37,7 +37,7 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
@@ -47,7 +47,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, reactor.createSimulationTask(
+      simulator.enqueue(startDelta, factory.createReplayingTask(
           activityId,
           mapper.deserializeActivity(serializedInstance).get()));
     }
@@ -76,7 +76,7 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
@@ -85,7 +85,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, reactor.createSimulationTask(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.enqueue(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -158,7 +158,7 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
@@ -170,7 +170,7 @@ public final class SimpleSimulator {
 
       simulator.enqueue(
           startDelta,
-          reactor.createSimulationTask(activityId, mapper.deserializeActivity(serializedInstance).get()));
+          factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
@@ -195,7 +195,7 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
@@ -204,7 +204,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, reactor.createSimulationTask(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.enqueue(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
