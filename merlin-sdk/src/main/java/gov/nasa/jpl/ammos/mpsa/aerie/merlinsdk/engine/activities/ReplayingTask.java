@@ -1,5 +1,9 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ScheduleItem;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationTask;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFrame;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
