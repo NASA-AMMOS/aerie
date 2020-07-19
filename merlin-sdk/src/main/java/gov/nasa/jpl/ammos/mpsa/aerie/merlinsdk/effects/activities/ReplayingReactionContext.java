@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.ConsPStack;
 import org.pcollections.PStack;
 import org.pcollections.PVector;
@@ -11,7 +12,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public final class ReplayingReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
-  private PStack<ActivityContinuation<T, Event, Activity>> spawns = ConsPStack.empty();
+  private PStack<Pair<History<T, Event>, ActivityContinuation<T, Event, Activity>>> spawns = ConsPStack.empty();
   private PVector<ActivityBreadcrumb<T, Event>> breadcrumbs;
   private int nextBreadcrumbIndex;
 
@@ -41,7 +42,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
     return this.breadcrumbs;
   }
 
-  public final PStack<ActivityContinuation<T, Event, Activity>> getSpawns() {
+  public final PStack<Pair<History<T, Event>, ActivityContinuation<T, Event, Activity>>> getSpawns() {
     return this.spawns;
   }
 
@@ -90,12 +91,12 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
   public final String spawn(final Activity child) {
     final String childId;
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
-      this.currentHistory = this.currentHistory.fork();
-
-      final var continuation = this.reactor.createSimulationTask(child).advancedTo(this.currentHistory);
+      final var continuation = this.reactor.createSimulationTask(child);
       childId = continuation.getId();
 
-      this.spawns = this.spawns.plus(continuation);
+      this.currentHistory = this.currentHistory.fork();
+
+      this.spawns = this.spawns.plus(Pair.of(this.currentHistory, continuation));
       this.breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
       this.nextBreadcrumbIndex += 1;
     } else {

@@ -6,6 +6,7 @@ import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.pcollections.ConsPStack;
 import org.pcollections.PStack;
 
@@ -18,9 +19,12 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
 
   private final class Frame {
     public History<T, Event> tip;
-    public PStack<ActivityContinuation<T, Event, Activity>> branches;
+    public PStack<Pair<History<T, Event>, ActivityContinuation<T, Event, Activity>>> branches;
 
-    public Frame(final History<T, Event> tip, final PStack<ActivityContinuation<T, Event, Activity>> branches) {
+    public Frame(
+        final History<T, Event> tip,
+        final PStack<Pair<History<T, Event>, ActivityContinuation<T, Event, Activity>>> branches)
+    {
       this.tip = tip;
       this.branches = branches;
     }
@@ -33,9 +37,11 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
     while (true) {
       {
         final var frame = frames.peek();
-        final var task = frame.branches.get(0);
+        final var branch = frame.branches.get(0);
         frame.branches = frame.branches.minus(0);
 
+        final var branchTip = branch.getKey();
+        final var task = branch.getValue().advancedTo(branchTip);
         final var taskId = task.getId();
         final var taskType = task.activity;
         final var taskBreadcrumbs = task.breadcrumbs;
@@ -86,7 +92,7 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
       final ActivityContinuation<T, Event, Activity> activity)
   {
     final var time = history.fork();
-    final var frame = new Frame(time, ConsPStack.singleton(activity.advancedTo(time)));
+    final var frame = new Frame(time, ConsPStack.singleton(Pair.of(time, activity)));
     return this.runActivity(frame, scheduler);
   }
 }
