@@ -98,7 +98,7 @@ public final class ReplayingActivityReactor<T, Event, Activity> {
       final ActivityContinuation<T, Event, Activity> activity)
   {
     final var time = history.fork();
-    final var task = Pair.of(activity.getId(), activity.plus(new ActivityBreadcrumb.Advance<>(time)));
+    final var task = Pair.of(activity.getId(), activity.advancedTo(time));
     final var frame = new Frame(time, ConsPStack.singleton(task));
     return this.runActivity(frame);
   }

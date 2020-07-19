@@ -29,22 +29,19 @@ public final class ActivityContinuation<T, Event, Activity> implements Simulatio
   public ActivityContinuation(
       final ReplayingActivityReactor<T, Event, Activity> reactor,
       final String activityId,
-      final Activity activity,
-      final History<T, Event> startTime)
-  {
-    this(reactor, activityId, activity, TreePVector.singleton(new ActivityBreadcrumb.Advance<>(startTime)));
-  }
-
-  public ActivityContinuation(
-      final ReplayingActivityReactor<T, Event, Activity> reactor,
-      final String activityId,
       final Activity activity)
   {
     this(reactor, activityId, activity, TreePVector.empty());
   }
 
-  public ActivityContinuation<T, Event, Activity> plus(final ActivityBreadcrumb<T, Event> breadcrumb) {
-    return new ActivityContinuation<>(this.reactor, this.activityId, this.activity, this.breadcrumbs.plus(breadcrumb));
+  public ActivityContinuation<T, Event, Activity> spawned(final String childId) {
+    final var breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Spawn<>(childId));
+    return new ActivityContinuation<>(this.reactor, this.activityId, this.activity, breadcrumbs);
+  }
+
+  public ActivityContinuation<T, Event, Activity> advancedTo(final History<T, Event> timePoint) {
+    final var breadcrumbs = this.breadcrumbs.plus(new ActivityBreadcrumb.Advance<>(timePoint));
+    return new ActivityContinuation<>(this.reactor, this.activityId, this.activity, breadcrumbs);
   }
 
   @Override

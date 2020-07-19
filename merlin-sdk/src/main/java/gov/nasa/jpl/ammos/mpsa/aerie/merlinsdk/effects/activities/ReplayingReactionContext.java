@@ -95,7 +95,7 @@ public final class ReplayingReactionContext<T, Activity, Event> implements React
     if (this.nextBreadcrumbIndex >= breadcrumbs.size()) {
       this.currentHistory = this.currentHistory.fork();
 
-      final var continuation = this.reactor.createSimulationTask(child).plus(new ActivityBreadcrumb.Advance<>(this.currentHistory));
+      final var continuation = this.reactor.createSimulationTask(child).advancedTo(this.currentHistory);
       childId = continuation.getId();
 
       this.spawns = this.spawns.plus(Pair.of(childId, continuation));
