@@ -49,8 +49,28 @@ public final class ActivityContinuation<T, Event, Activity> implements Simulatio
   }
 
   @Override
-  public TaskFrame<T, Event> runFrom(final History<T, Event> history, final Consumer<ScheduleItem<T, Event>> scheduler) {
-    return this.reactor.react(history, scheduler, this);
+  public TaskFrame<T, Event> runFrom(
+      final History<T, Event> history,
+      final Consumer<ScheduleItem<T, Event>> scheduler)
+  {
+    final var context = new ReplayingReactionContext<>(this.reactor, scheduler, this.advancedTo(history).breadcrumbs);
+
+    // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
+    try {
+      this.reactor.execute(context, this.activityId, this.activity);
+
+      scheduler.accept(new ScheduleItem.Complete<>(this.activityId));
+    } catch (final ReplayingReactionContext.Defer request) {
+      scheduler.accept(new ScheduleItem.Defer<>(
+          request.duration,
+          new ActivityContinuation<>(this.reactor, this.activityId, this.activity, context.getBreadcrumbs())));
+    } catch (final ReplayingReactionContext.Await request) {
+      scheduler.accept(new ScheduleItem.OnCompletion<>(
+          request.activityId,
+          new ActivityContinuation<>(this.reactor, this.activityId, this.activity, context.getBreadcrumbs())));
+    }
+
+    return new TaskFrame<>(context.getCurrentHistory(), context.getSpawns());
   }
 
   @Override
