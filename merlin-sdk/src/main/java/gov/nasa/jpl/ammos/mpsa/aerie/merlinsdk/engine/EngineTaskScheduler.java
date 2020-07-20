@@ -9,10 +9,12 @@ import java.util.Deque;
 
 /*package-local*/
 final class EngineTaskScheduler<T, Event> implements TaskScheduler<T, Event> {
+  private final String taskId;
   private final SimulationEngine<T, Event> engine;
   private final Deque<Pair<History<T, Event>, SimulationTask<T, Event>>> branches = new ArrayDeque<>();
 
-  public EngineTaskScheduler(final SimulationEngine<T, Event> engine) {
+  public EngineTaskScheduler(final SimulationEngine<T, Event> engine, final String taskId) {
+    this.taskId = taskId;
     this.engine = engine;
   }
 
@@ -37,7 +39,7 @@ final class EngineTaskScheduler<T, Event> implements TaskScheduler<T, Event> {
   }
 
   @Override
-  public void complete(final String taskId) {
-    this.engine.markCompleted(taskId);
+  public void complete() {
+    this.engine.markCompleted(this.taskId);
   }
 }

@@ -65,7 +65,7 @@ public final class ReplayingTask<T, Event, Activity> implements SimulationTask<T
     // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
     try {
       this.factory.execute(context, this.activityId, this.activity);
-      scheduler.complete(this.activityId);
+      scheduler.complete();
     } catch (final ReplayingReactionContext.Defer request) {
       scheduler.defer(request.duration, context.getContinuation());
     } catch (final ReplayingReactionContext.Await request) {

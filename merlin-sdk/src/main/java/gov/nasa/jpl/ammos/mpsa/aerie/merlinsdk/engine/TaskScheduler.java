@@ -7,5 +7,5 @@ public interface TaskScheduler<T, Event> {
   void spawn(History<T, Event> forkPoint, SimulationTask<T, Event> task);
   void defer(Duration delay, SimulationTask<T, Event> task);
   void await(String taskToAwait, SimulationTask<T, Event> task);
-  void complete(String taskId);
+  void complete();
 }

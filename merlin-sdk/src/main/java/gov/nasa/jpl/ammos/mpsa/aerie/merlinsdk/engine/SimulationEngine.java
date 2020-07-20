@@ -141,7 +141,7 @@ public final class SimulationEngine<T, Event> {
         final var branchTip = branch.getKey();
         final var task = branch.getValue();
 
-        final var scheduler = new EngineTaskScheduler<>(this);
+        final var scheduler = new EngineTaskScheduler<>(this, task.getId());
         final var endTime = task.runFrom(branchTip, scheduler);
 
         stack.push(new TaskFrame<>(endTime, scheduler.getBranches()));
