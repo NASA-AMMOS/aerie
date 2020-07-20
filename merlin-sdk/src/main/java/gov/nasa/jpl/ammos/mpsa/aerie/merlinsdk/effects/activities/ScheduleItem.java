@@ -4,16 +4,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Objects;
 
-public abstract class ScheduleItem<Activity> {
+public abstract class ScheduleItem<T, Event> {
   private ScheduleItem() {}
 
   public abstract String getTaskId();
 
-  public static final class Defer<Activity extends SimulationTask> extends ScheduleItem<Activity> {
+  public static final class Defer<T, Event> extends ScheduleItem<T, Event> {
     public final Duration duration;
-    public final Activity activity;
+    public final SimulationTask<T, Event> activity;
 
-    public Defer(final Duration duration, final Activity activity) {
+    public Defer(final Duration duration, final SimulationTask<T, Event> activity) {
       this.duration = Objects.requireNonNull(duration);
       this.activity = Objects.requireNonNull(activity);
     }
@@ -29,11 +29,11 @@ public abstract class ScheduleItem<Activity> {
     }
   }
 
-  public static final class OnCompletion<Activity extends SimulationTask> extends ScheduleItem<Activity> {
+  public static final class OnCompletion<T, Event> extends ScheduleItem<T, Event> {
     public final String waitOn;
-    public final Activity activity;
+    public final SimulationTask<T, Event> activity;
 
-    public OnCompletion(final String waitOn, final Activity activity) {
+    public OnCompletion(final String waitOn, final SimulationTask<T, Event> activity) {
       this.waitOn = waitOn;
       this.activity = Objects.requireNonNull(activity);
     }
@@ -49,7 +49,7 @@ public abstract class ScheduleItem<Activity> {
     }
   }
 
-  public static final class Complete<Activity> extends ScheduleItem<Activity> {
+  public static final class Complete<T, Event> extends ScheduleItem<T, Event> {
     public final String activityId;
 
     public Complete(final String activityId) {

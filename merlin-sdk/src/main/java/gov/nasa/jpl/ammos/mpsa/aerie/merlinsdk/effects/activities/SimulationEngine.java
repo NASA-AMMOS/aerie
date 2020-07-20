@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -13,26 +12,20 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
-  private final PriorityQueue<Pair<Duration, Activity>> queue =
+public final class SimulationEngine<T, Event> {
+  private final PriorityQueue<Pair<Duration, SimulationTask<T, Event>>> queue =
       new PriorityQueue<>(Comparator.comparing(Pair::getKey));
   private final Set<String> completed = new HashSet<>();
-  private final Map<String, Set<Activity>> conditioned = new HashMap<>();
-
-  private final Projection<Activity, ? extends Task<T, Event, Activity>> reactor;
+  private final Map<String, Set<SimulationTask<T, Event>>> conditioned = new HashMap<>();
 
   private History<T, Event> currentHistory;
   private Duration elapsedTime = Duration.ZERO;
 
-  public <TaskType extends Task<T, Event, Activity>> SimulationEngine(
-      final History<T, Event> initialHistory,
-      final Projection<Activity, TaskType> reactor)
-  {
-    this.reactor = reactor;
+  public SimulationEngine(final History<T, Event> initialHistory) {
     this.currentHistory = initialHistory;
   }
 
-  public void enqueue(final Duration timeFromStart, final Activity activity) {
+  public void enqueue(final Duration timeFromStart, final SimulationTask<T, Event> activity) {
     this.schedule(new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
   }
 
@@ -65,7 +58,7 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
 
     // Extract all events occurring at this time.
     // More events might be added at this same time, so to ensure coherency, we handle events in complete batches.
-    final var eventList = new ArrayDeque<Pair<History<T, Event>, Activity>>();
+    final var eventList = new ArrayDeque<Pair<History<T, Event>, SimulationTask<T, Event>>>();
     while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
       tip = tip.fork();
       eventList.push(Pair.of(tip, this.queue.poll().getValue()));
@@ -77,7 +70,7 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
       final var eventTime = eventPair.getKey();
       final var task = eventPair.getValue();
 
-      final var result = this.reactor.atom(task).apply(eventTime);
+      final var result = task.runFrom(eventTime);
       final var endTime = result.getLeft();
       final var scheduledTasks = result.getRight();
 
@@ -89,20 +82,20 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
     this.elapsedTime = nextJobTime;
   }
 
-  private void schedule(final ScheduleItem<Activity> rule) {
+  private void schedule(final ScheduleItem<T, Event> rule) {
     if (this.completed.contains(rule.getTaskId())) {
       throw new RuntimeException("Illegal attempt to re-process a completed task: " + rule);
     }
 
     // This just screams for case classes and pattern-matching `switch`.
     if (rule instanceof ScheduleItem.Defer) {
-      final var duration = ((ScheduleItem.Defer<Activity>) rule).duration;
-      final var activity = ((ScheduleItem.Defer<Activity>) rule).activity;
+      final var duration = ((ScheduleItem.Defer<T, Event>) rule).duration;
+      final var activity = ((ScheduleItem.Defer<T, Event>) rule).activity;
 
       this.queue.add(Pair.of(this.elapsedTime.plus(duration), activity));
     } else if (rule instanceof ScheduleItem.OnCompletion) {
-      final var waitId = ((ScheduleItem.OnCompletion<Activity>) rule).waitOn;
-      final var activity = ((ScheduleItem.OnCompletion<Activity>) rule).activity;
+      final var waitId = ((ScheduleItem.OnCompletion<T, Event>) rule).waitOn;
+      final var activity = ((ScheduleItem.OnCompletion<T, Event>) rule).activity;
 
       if (this.completed.contains(waitId)) {
         this.queue.add(Pair.of(this.elapsedTime, activity));
@@ -110,7 +103,7 @@ public final class SimulationEngine<T, Event, Activity extends SimulationTask> {
         this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(activity);
       }
     } else if (rule instanceof ScheduleItem.Complete) {
-      final var activityId = ((ScheduleItem.Complete<Activity>) rule).activityId;
+      final var activityId = ((ScheduleItem.Complete<T, Event>) rule).activityId;
       this.completed.add(activityId);
 
       final var conditionedActivities = this.conditioned.remove(activityId);

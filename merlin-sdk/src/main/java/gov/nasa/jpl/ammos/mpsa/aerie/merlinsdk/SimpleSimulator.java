@@ -1,9 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ActivityContinuation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingActivityReactor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -40,7 +38,7 @@ public final class SimpleSimulator {
   {
     final var querier = adaptation.makeQuerier(database);
     final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
-    final var simulator = new SimulationEngine<>(database.origin(), reactor);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -79,7 +77,7 @@ public final class SimpleSimulator {
   {
     final var querier = adaptation.makeQuerier(database);
     final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
-    final var simulator = new SimulationEngine<>(database.origin(), reactor);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -95,7 +93,7 @@ public final class SimpleSimulator {
 
   private static <T, Event> SimulationResults simulate(
       final MerlinAdaptation.Querier<T, Event> querier,
-      final SimulationEngine<T, Event, ActivityContinuation<T, Event, Activity>> simulator,
+      final SimulationEngine<T, Event> simulator,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
@@ -161,7 +159,7 @@ public final class SimpleSimulator {
   {
     final var querier = adaptation.makeQuerier(database);
     final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
-    final var simulator = new SimulationEngine<>(database.origin(), reactor);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -198,7 +196,7 @@ public final class SimpleSimulator {
   {
     final var querier = adaptation.makeQuerier(database);
     final var reactor = new ReplayingActivityReactor<>(querier::runActivity);
-    final var simulator = new SimulationEngine<>(database.origin(), reactor);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -216,7 +214,7 @@ public final class SimpleSimulator {
   // https://docs.oracle.com/javase/tutorial/java/generics/capture.html
   private static <T, Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation.Querier<T, Event> querier,
-      final SimulationEngine<T, Event, ActivityContinuation<T, Event, Activity>> simulator,
+      final SimulationEngine<T, Event> simulator,
       final Duration samplingPeriod
   )
   {
