@@ -6,12 +6,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -24,7 +27,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public final class ResponseSerializers {
-  public static <T> JsonValue serializeList(final Function<T, JsonValue> elementSerializer, final List<T> elements) {
+  public static <T> JsonValue serializeIterable(final Function<T, JsonValue> elementSerializer, final Iterable<T> elements) {
     if (elements == null) return JsonValue.NULL;
 
     final var builder = Json.createArrayBuilder();
@@ -110,15 +113,50 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeTimeline(final List<SerializedParameter> elements) {
-    return serializeList(ResponseSerializers::serializeParameter, elements);
+    return serializeIterable(ResponseSerializers::serializeParameter, elements);
   }
 
   public static JsonValue serializeTimestamp(final Duration timestamp) {
-    return Json.createValue(timestamp.durationInMicroseconds);
+    return Json.createValue(timestamp.dividedBy(Duration.MICROSECOND));
   }
 
   public static JsonValue serializeTimestamps(final List<Duration> elements) {
-    return serializeList(ResponseSerializers::serializeTimestamp, elements);
+    return serializeIterable(ResponseSerializers::serializeTimestamp, elements);
+  }
+
+  public static JsonValue serializeConstraintViolation(final ConstraintViolation violation) {
+    return Json.createObjectBuilder()
+            .add("associations", serializeConstraintViolationAssociations(violation))
+            .add("constraint", serializeConstraintViolationMetadata(violation))
+            .add("windows", serializeWindows(violation.violationWindows))
+            .build();
+  }
+
+  public static JsonValue serializeConstraintViolationAssociations(ConstraintViolation violation) {
+    return Json.createObjectBuilder()
+            .add("activityInstanceIds", serializeIterable(Json::createValue, violation.associatedActivityIds))
+            .add("stateIds", serializeIterable(Json::createValue, violation.associatedStateIds))
+            .build();
+  }
+
+  public static JsonValue serializeConstraintViolationMetadata(ConstraintViolation violation) {
+    return Json.createObjectBuilder()
+            .add("id", violation.id)
+            .add("name", violation.name)
+            .add("message", violation.message)
+            .add("category", violation.category)
+            .build();
+  }
+
+  public static JsonValue serializeWindows(Windows windows) {
+    return serializeIterable(ResponseSerializers::serializeWindow, windows);
+  }
+
+  public static JsonValue serializeWindow(final Window window) {
+    return Json.createObjectBuilder()
+            .add("start", window.start.dividedBy(Duration.MICROSECOND))
+            .add("end", window.end.dividedBy(Duration.MICROSECOND))
+            .build();
   }
 
   public static JsonValue serializeSimulationResults(final SimulationResults results) {
@@ -127,27 +165,28 @@ public final class ResponseSerializers {
     final var builder = Json.createObjectBuilder();
     builder.add("times", serializeTimestamps(results.timestamps));
     builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
+    builder.add("constraints", serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations));
     return builder.build();
   }
 
   public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
     return Json.createObjectBuilder()
-        .add("defer", scheduledActivity.getLeft().durationInMicroseconds)
+        .add("defer", scheduledActivity.getLeft().dividedBy(Duration.MICROSECOND))
         .add("type", scheduledActivity.getRight().getTypeName())
         .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
         .build();
   }
 
-  public static JsonValue serializeScheduledActivities(final List<Pair<Duration, SerializedActivity>> activities) {
-    return serializeList(ResponseSerializers::serializeScheduledActivity, activities);
+  public static JsonValue serializeScheduledActivities(final Map<String, Pair<Duration, SerializedActivity>> activities) {
+    return serializeMap(ResponseSerializers::serializeScheduledActivity, activities);
   }
 
   public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
     return Json.createObjectBuilder()
         .add("adaptationId", message.adaptationId)
         .add("startTime", DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn").withZone(ZoneOffset.UTC).format(message.startTime))
-        .add("samplingDuration", message.samplingDuration.durationInMicroseconds)
-        .add("samplingPeriod", message.samplingPeriod.durationInMicroseconds)
+        .add("samplingDuration", message.samplingDuration.dividedBy(Duration.MICROSECOND))
+        .add("samplingPeriod", message.samplingPeriod.dividedBy(Duration.MICROSECOND))
         .add("activities", serializeScheduledActivities(message.activityInstances))
         .build();
   }
@@ -230,19 +269,19 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onList(final ParameterSchema itemSchema) {
+    public JsonValue onSequence(final ParameterSchema itemSchema) {
       return Json
           .createObjectBuilder()
-          .add("type", "list")
+          .add("type", "sequence")
           .add("items", itemSchema.match(this))
           .build();
     }
 
     @Override
-    public JsonValue onMap(final Map<String, ParameterSchema> parameterSchemas) {
+    public JsonValue onStruct(final Map<String, ParameterSchema> parameterSchemas) {
       return Json
           .createObjectBuilder()
-          .add("type", "map")
+          .add("type", "struct")
           .add("items", serializeMap(x -> x.match(this), parameterSchemas))
           .build();
     }
@@ -253,7 +292,7 @@ public final class ResponseSerializers {
       return Json
               .createObjectBuilder()
               .add("type", "enumerated")
-              .add("items", serializeList(v -> Json.createObjectBuilder()
+              .add("items", serializeIterable(v -> Json.createObjectBuilder()
                       .add("key", v.name())
                       .add("label", v.toString())
                       .build(), enumValues))
@@ -289,7 +328,7 @@ public final class ResponseSerializers {
 
     @Override
     public JsonValue onList(final List<SerializedParameter> elements) {
-      return serializeList(x -> x.match(this), elements);
+      return serializeIterable(x -> x.match(this), elements);
     }
 
     @Override

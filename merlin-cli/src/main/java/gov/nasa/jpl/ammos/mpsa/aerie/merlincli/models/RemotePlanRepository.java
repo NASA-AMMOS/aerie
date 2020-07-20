@@ -15,7 +15,8 @@ import java.nio.file.Path;
 public class RemotePlanRepository implements PlanRepository {
 
     private final String baseURL = "http://localhost:27183/plans";
-    private final String instancePath = "activities";
+    private final String instancePath = "activity_instances";
+    private final String simulationResultsPath = "results";
     private HttpHandler httpClient;
 
     public RemotePlanRepository(HttpHandler httpClient) {
@@ -179,7 +180,7 @@ public class RemotePlanRepository implements PlanRepository {
     public void appendActivityInstances(String planId, String instanceListJson) throws PlanNotFoundException, InvalidJsonException, InvalidPlanException {
         HttpResponse response;
         try {
-            HttpPost request = new HttpPost(String.format("%s/%s", baseURL, planId));
+            HttpPost request = new HttpPost(String.format("%s/%s/activity_instances", baseURL, planId));
             addJsonToRequest(request, instanceListJson);
             response = this.httpClient.execute(request);
         } catch (IOException e) {
@@ -302,6 +303,37 @@ public class RemotePlanRepository implements PlanRepository {
                 //       PlanNotFound or ActivityInstanceNotFound errors, update this
                 throw new ActivityInstanceNotFoundException(
                         HttpUtilities.getErrorMessage(response, "Activity instance or plan not found")
+                );
+
+            default:
+                // TODO: Make this a more specific Error
+                // Should never happen because we don't have any other status codes from the service
+                throw new Error("Unexpected status code returned from plan service");
+        }
+    }
+
+    @Override
+    public void getSimulationResults(String planId, long samplingPeriod, String outName) throws PlanNotFoundException {
+        HttpResponse response;
+        try {
+            HttpGet request = new HttpGet(String.format("%s/%s/%s?sampling-period=%d", baseURL, planId, simulationResultsPath, samplingPeriod));
+            response = this.httpClient.execute(request);
+        } catch (IOException e) {
+            throw new Error(e);
+        }
+
+        switch (response.getStatusLine().getStatusCode()) {
+            case HttpStatus.SC_OK:
+                try {
+                    JsonUtilities.writeJson(response.getEntity().getContent(), Path.of(outName));
+                    return;
+                } catch (IOException e) {
+                    throw new Error(e);
+                }
+
+            case HttpStatus.SC_NOT_FOUND:
+                throw new PlanNotFoundException(
+                        HttpUtilities.getErrorMessage(response, "Plan not found")
                 );
 
             default:

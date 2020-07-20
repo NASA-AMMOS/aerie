@@ -20,6 +20,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ShortParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.StringParameterMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveDoubleArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveFloatArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveByteArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveShortArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveIntArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveLongArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveCharArrayParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveBooleanArrayParameterMapper;
+
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -99,6 +108,33 @@ final class ArrayType implements ParameterTypeReference {
     return CodeBlock.builder()
         .add("new $T<>($L, $T.class)", ArrayParameterMapper.class, this.elementType.getMapper(), this.elementType.getRawTypeName())
         .build();
+  }
+}
+
+final class PrimitiveArrayType<T> implements ParameterTypeReference {
+  private Class<? extends ParameterMapper<T>> primitiveArrayMapper;
+  private Class<? extends T> elementType;
+
+  public PrimitiveArrayType(Class<? extends ParameterMapper<T>> primitiveArrayMapper, Class<? extends T> elementType) {
+    this.elementType = elementType;
+    this.primitiveArrayMapper = primitiveArrayMapper;
+  }
+
+  @Override
+  public TypeName getTypeName() {
+    return TypeName.get(this.elementType);
+  }
+
+  @Override
+  public TypeName getRawTypeName() {
+    return getTypeName();
+  }
+
+  @Override
+  public CodeBlock getMapper() {
+    return CodeBlock.builder()
+            .add("new $T()", this.primitiveArrayMapper)
+            .build();
   }
 }
 
@@ -194,6 +230,15 @@ interface ParameterTypeReference {
   ParameterTypeReference CHAR = new NullaryType<>(CharacterParameterMapper.class, Character.class);
   ParameterTypeReference STRING = new NullaryType<>(StringParameterMapper.class, String.class);
   ParameterTypeReference BOOLEAN = new NullaryType<>(BooleanParameterMapper.class, Boolean.class);
+  ParameterTypeReference PRIM_DOUBLE_ARRAY = new PrimitiveArrayType<>(PrimitiveDoubleArrayParameterMapper.class, double[].class);
+  ParameterTypeReference PRIM_FLOAT_ARRAY = new PrimitiveArrayType<>(PrimitiveFloatArrayParameterMapper.class, float[].class);
+  ParameterTypeReference PRIM_BYTE_ARRAY = new PrimitiveArrayType<>(PrimitiveByteArrayParameterMapper.class, byte[].class);
+  ParameterTypeReference PRIM_SHORT_ARRAY = new PrimitiveArrayType<>(PrimitiveShortArrayParameterMapper.class, short[].class);
+  ParameterTypeReference PRIM_INT_ARRAY = new PrimitiveArrayType<>(PrimitiveIntArrayParameterMapper.class, int[].class);
+  ParameterTypeReference PRIM_LONG_ARRAY = new PrimitiveArrayType<>(PrimitiveLongArrayParameterMapper.class, long[].class);
+  ParameterTypeReference PRIM_CHAR_ARRAY = new PrimitiveArrayType<>(PrimitiveCharArrayParameterMapper.class, char[].class);
+  ParameterTypeReference PRIM_BOOLEAN_ARRAY = new PrimitiveArrayType<>(PrimitiveBooleanArrayParameterMapper.class, boolean[].class);
+
 
   static ParameterTypeReference nullable(final ParameterTypeReference valueType) {
     return new NullableType(valueType);

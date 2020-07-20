@@ -8,9 +8,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 import io.javalin.Javalin;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -28,7 +28,7 @@ import java.util.Map;
 public final class PlanBindingsTest {
   private static Javalin SERVER = null;
 
-  @BeforeAll
+  @BeforeClass
   public static void setupServer() {
     final StubApp app = new StubApp();
 
@@ -42,7 +42,7 @@ public final class PlanBindingsTest {
     SERVER.start();
   }
 
-  @AfterAll
+  @AfterClass
   public static void shutdownServer() {
     SERVER.stop();
   }

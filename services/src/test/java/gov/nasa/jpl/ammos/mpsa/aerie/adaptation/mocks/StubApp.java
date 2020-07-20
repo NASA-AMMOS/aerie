@@ -5,11 +5,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -49,7 +48,7 @@ public final class StubApp implements App {
     public static final List<String> INVALID_ACTIVITY_INSTANCE_FAILURES = List.of("just wrong");
     public static final List<String> UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES = List.of("Unconstructable activity instance");
 
-    public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(List.of(), Map.of());
+    public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(List.of(), Map.of(), List.of());
 
     static {
         VALID_NEW_ADAPTATION = new HashMap<>();

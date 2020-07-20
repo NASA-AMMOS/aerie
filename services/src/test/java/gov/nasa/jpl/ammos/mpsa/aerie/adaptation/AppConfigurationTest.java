@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,7 +17,12 @@ public final class AppConfigurationTest {
         String mongo_database = "mongo_database_test";
         String mongo_adaptation_collection = "mongo_adaptation_collection_test";
 
-        AppConfiguration expected = new AppConfiguration(http_port, mongo_uri, mongo_database, mongo_adaptation_collection);
+        AppConfiguration expected = AppConfiguration.builder()
+            .setHttpPort(http_port)
+            .setMongoUri(mongo_uri)
+            .setMongoDatabase(mongo_database)
+            .setMongoAdaptationCollection(mongo_adaptation_collection)
+            .build();
 
         JsonObject config = Json.createObjectBuilder()
                 .add("HTTP_PORT", http_port)

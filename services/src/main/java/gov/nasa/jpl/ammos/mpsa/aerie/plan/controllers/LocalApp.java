@@ -62,7 +62,6 @@ public final class LocalApp implements App {
     transaction.commit();
 
     if (patch.activityInstances != null) {
-      this.planRepository.deleteAllActivities(planId);
       for (final var entry : patch.activityInstances.entrySet()) {
         if (entry.getValue() == null) {
           this.removeActivityInstanceById(planId, entry.getKey());

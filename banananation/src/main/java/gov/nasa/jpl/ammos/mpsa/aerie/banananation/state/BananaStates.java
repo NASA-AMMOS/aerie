@@ -1,21 +1,62 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.BasicState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.states.interfaces.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityTypeStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.SettableState;
+
+import java.util.List;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.activityQuery;
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.ctx;
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.query;
 
 public final class BananaStates {
-    public final SettableState<Double> fruitState = new BasicState<>("fruit", 4.0);
-    public final SettableState<Double> peelState = new BasicState<>("peel", 4.0);
+  private static final ActivityTypeStateFactory activities = new ActivityTypeStateFactory(activityQuery);
 
-    public BananaStates(final Instant startTime) {
-        this.fruitState.initialize(startTime);
-        this.peelState.initialize(startTime);
-    }
+  public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(BananaEvent.independent(ev)));
 
-    public static final DynamicCell<BananaStates> modelRef = DynamicCell.inheritableCell();
-    public static BananaStates get() {
-        return modelRef.get();
+  public static final DoubleState fruit = factory.cumulative("fruit", 4.0);
+  public static final DoubleState peel = factory.cumulative("peel", 4.0);
+
+  public enum Flag { A, B }
+  public static final SettableState<Flag> flag = factory.enumerated("flag", Flag.A);
+
+  public static final List<ViolableConstraint> violableConstraints = List.of(
+      new ViolableConstraint(fruit.when(x -> x < 2).and(activities.ofType("BiteBanana").whenActive()))
+          .withId("consumingLowFruit")
+          .withName("Consuming Low Fruit")
+          .withMessage("Fruit rationing must be in effect when fruit is low")
+          .withCategory("severe"),
+      new ViolableConstraint(fruit.when(x -> x < 2))
+          .withId("minFruit")
+          .withName("Minimum Fruit")
+          .withMessage("Running dangerously low on fruit")
+          .withCategory("warning"),
+      new ViolableConstraint(fruit.when(x -> x > 10))
+          .withId("maxFruit")
+          .withName("Maximum Fruit")
+          .withMessage("Cannot hold more than 10 fruit")
+          .withCategory("severe"),
+      new ViolableConstraint(fruit.when(x -> x > 5).and(peel.when(y -> y > 5)))
+          .withId("fruitsAndPeels")
+          .withName("Fruit Peels")
+          .withMessage("Should throw away peels before getting more fruit")
+          .withCategory("warning"),
+      new ViolableConstraint(peel.when(y -> y > 10))
+          .withId("mexPeels")
+          .withName("Maximum Peels")
+          .withMessage("Too many peels is gross. Clean some up")
+          .withCategory("severe")
+  );
+  static {
+    final var constraintNames = new java.util.HashSet<String>();
+    for (final var violableConstraint : violableConstraints) {
+      if (!constraintNames.add(violableConstraint.name)) {
+        throw new Error("More than one violable constraint with name \"" + violableConstraint.name + "\". Each name must be unique.");
+      }
     }
+  }
 }

@@ -1,67 +1,48 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Comparator;
 
 /**
- * Abstract representation of a point in time.
- *
- * The particular measure of an instant of time is specifically hidden from clients of this class.
- * Do not attempt to compare instances of different implementations of Instant -- without
- * a pair of correlated base points to use as a basis of conversion, such comparison is impossible.
+ * Trait describing operations on time-like data.
  */
-public interface Instant extends Comparable<Instant> {
-  Instant plus(Duration duration);
-  Instant minus(Duration duration);
-  Duration durationFrom(Instant other);
+public interface Instant<T> extends Comparator<T> {
+  T origin();
+  T plus(T time, Duration duration);
+  T minus(T time, Duration duration);
+  Duration minus(T end, T start);
 
 
-  default Instant plus(final long quantity, final TimeUnit units) {
-    return this.plus(Duration.of(quantity, units));
+  default T plus(final T time, final long quantity, final TimeUnit units) {
+    return this.plus(time, Duration.of(quantity, units));
   }
 
-  default Instant minus(final long quantity, final TimeUnit units) {
-    return this.minus(Duration.of(quantity, units));
+  default T minus(final T time, final long quantity, final TimeUnit units) {
+    return this.minus(time, Duration.of(quantity, units));
   }
 
-  default Duration durationTo(Instant other) {
-    return other.durationFrom(this);
+  default boolean isBefore(final T left, final T right) {
+    return this.compare(left, right) < 0;
   }
 
-  default boolean isBefore(final Instant other) {
-    return this.compareTo(other) < 0;
+  default boolean isAfter(final T left, final T right) {
+    return this.compare(left, right) > 0;
   }
 
-  default boolean isAfter(final Instant other) {
-    return this.compareTo(other) > 0;
+  @SuppressWarnings("unchecked")
+  default T earliestOf(final T first, final T... rest) {
+    var best = first;
+    for (final var next : rest) {
+      best = (this.isBefore(next, best)) ? next : best;
+    }
+    return best;
   }
 
-  default Instant min(final Instant other) {
-    return Collections.min(List.of(this, other));
-  }
-
-  default Instant max(final Instant other) {
-    return Collections.max(List.of(this, other));
-  }
-
-
-  static Instant add(final Instant base, final Duration duration) {
-    return base.plus(duration);
-  }
-
-  static Instant subtract(final Instant base, final Duration duration) {
-    return base.minus(duration);
-  }
-
-  static Duration durationBetween(final Instant base, final Instant head) {
-    return base.durationTo(head);
-  }
-
-  static Instant min(final Instant x, final Instant y) {
-    return x.min(y);
-  }
-
-  static Instant max(final Instant x, final Instant y) {
-    return x.max(y);
+  @SuppressWarnings("unchecked")
+  default T latestOf(final T first, final T... rest) {
+    var best = first;
+    for (final var next : rest) {
+      best = (this.isAfter(next, best)) ? next : best;
+    }
+    return best;
   }
 }

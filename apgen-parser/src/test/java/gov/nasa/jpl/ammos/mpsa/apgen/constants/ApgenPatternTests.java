@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.apgen.constants;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.regex.Matcher;
 

@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 public final class FloatParameterMapper implements ParameterMapper<Float> {
   @Override
   public ParameterSchema getParameterSchema() {
-    return ParameterSchema.DOUBLE;
+    return ParameterSchema.REAL;
   }
 
   @Override

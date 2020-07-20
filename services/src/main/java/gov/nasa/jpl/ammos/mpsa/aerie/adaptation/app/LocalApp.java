@@ -4,20 +4,18 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import io.javalin.core.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -166,23 +164,9 @@ public final class LocalApp implements App {
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
      */
     @Override
-    public SimulationResults runSimulation(final CreateSimulationMessage message)
-        throws NoSuchAdaptationException,
-        // TODO: hide these exceptions behind a façade.
-        Adaptation.UnconstructableActivityInstanceException, Adaptation.NoSuchActivityTypeException
-    {
-        final var adaptation = loadAdaptation(message.adaptationId);
-        final var simulator = new Simulator(adaptation);
-
-        final var activityInstances = new ArrayList<Pair<Duration, Activity>>(message.activityInstances.size());
-        for (final var entry : message.activityInstances) {
-            final var startDelta = entry.getLeft();
-            final var serializedInstance = entry.getRight();
-
-            activityInstances.add(Pair.of(startDelta, adaptation.instantiateActivity(serializedInstance)));
-        }
-
-        return simulator.run(message.samplingDuration, message.samplingPeriod, activityInstances);
+    public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
+        return loadAdaptation(message.adaptationId)
+            .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod);
     }
 
     /**
@@ -194,12 +178,12 @@ public final class LocalApp implements App {
      *         it contains may not abide by the expected contract at load time.
      * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
      */
-    private Adaptation loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
+    private Adaptation<?> loadAdaptation(final String adaptationId) throws NoSuchAdaptationException, AdaptationLoadException {
         try {
             final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-            final MerlinAdaptation adaptation =
+            final MerlinAdaptation<?> adaptation =
                 AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
-            return new Adaptation(adaptation);
+            return new Adaptation<>(adaptation);
         } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
             throw new NoSuchAdaptationException(adaptationId, ex);
         } catch (final AdaptationLoader.AdaptationLoadException ex) {

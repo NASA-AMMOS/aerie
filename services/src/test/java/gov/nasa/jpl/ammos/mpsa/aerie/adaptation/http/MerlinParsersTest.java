@@ -13,17 +13,43 @@ import javax.json.Json;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.MerlinParsersTest.NestedLists.nestedList;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.recursiveP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class MerlinParsersTest {
+  public static final class NestedLists {
+    public final List<NestedLists> lists;
+
+    public NestedLists(final List<NestedLists> lists) {
+      this.lists = lists;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+      if (!(obj instanceof NestedLists)) return false;
+      final var other = (NestedLists) obj;
+      return Objects.equals(this.lists, other.lists);
+    }
+
+    @Override
+    public int hashCode() {
+      return this.lists.hashCode();
+    }
+
+    public static NestedLists nestedList(NestedLists... lists) {
+      return new NestedLists(List.of(lists));
+    }
+  }
+
   @Test
   public void testRecursiveList() {
-    final JsonParser<List<Object>> listsP =
-        recursiveP(self -> listP(self).map(y -> (List<Object>) (Object) y));
+    final var listsP =
+        recursiveP((JsonParser<NestedLists> self) -> listP(self).map(NestedLists::new));
 
     final var foo = Json
         . createArrayBuilder()
@@ -42,10 +68,9 @@ public final class MerlinParsersTest {
     assertThat(
         listsP.parse(foo).getSuccessOrThrow()
     ).isEqualTo(
-        List.of(
-            List.of(List.of()),
-            List.of(List.of(), List.of(), List.of())
-        )
+        nestedList(
+            nestedList(nestedList()),
+            nestedList(nestedList(), nestedList(), nestedList()))
     );
   }
 
@@ -58,8 +83,8 @@ public final class MerlinParsersTest {
         . add("samplingDuration", 5_000_000 /* microseconds */)
         . add("samplingPeriod", 500_000 /* microseconds */)
         . add("activities", Json
-            . createArrayBuilder()
-            . add(Json
+            . createObjectBuilder()
+            . add("0", Json
                 . createObjectBuilder()
                 . add("type", "BiteBanana")
                 . add("defer", 10_000_000 /* microseconds */)
@@ -81,8 +106,8 @@ public final class MerlinParsersTest {
         Instant.parse("1992-08-11T01:30:00Z"),
         Duration.of(5, TimeUnit.SECONDS),
         Duration.of(500, TimeUnit.MILLISECONDS),
-        List.of(
-            Pair.of(
+        Map.of(
+            "0", Pair.of(
                 Duration.of(10, TimeUnit.SECONDS),
                 new SerializedActivity("BiteBanana", Map.of(
                     "biteSize", SerializedParameter.of(10.0),

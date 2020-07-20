@@ -5,13 +5,22 @@ import java.util.List;
 
 public final class Duration implements Comparable<Duration> {
   // Range of -2^63 to 2^63 - 1.
-  public final long durationInMicroseconds;
+  private final long durationInMicroseconds;
 
   private Duration(final long durationInMicroseconds) {
     this.durationInMicroseconds = durationInMicroseconds;
   }
 
-  public static final Duration ZERO = Duration.of(0, TimeUnit.MICROSECONDS);
+  public static final Duration EPSILON = new Duration(1);
+  public static final Duration ZERO = new Duration(0);
+  public static final Duration MIN_VALUE = new Duration(Long.MIN_VALUE);
+  public static final Duration MAX_VALUE = new Duration(Long.MAX_VALUE);
+
+  public static final Duration MICROSECOND = duration(1, TimeUnit.MICROSECONDS);
+  public static final Duration MILLISECONDS = duration(1, TimeUnit.MILLISECONDS);
+  public static final Duration SECOND = duration(1, TimeUnit.SECONDS);
+  public static final Duration MINUTE = duration(1, TimeUnit.MINUTES);
+  public static final Duration HOUR = duration(1, TimeUnit.HOURS);
 
   public static Duration of(final long quantity, final TimeUnit units) {
     switch (units) {
@@ -20,10 +29,17 @@ public final class Duration implements Comparable<Duration> {
       case SECONDS:      return new Duration(quantity * 1000000L);
       case MINUTES:      return new Duration(quantity * 1000000L * 60L);
       case HOURS:        return new Duration(quantity * 1000000L * 60L * 60L);
-      case DAYS:         return new Duration(quantity * 1000000L * 60L * 60L * 24L);
-      case WEEKS:        return new Duration(quantity * 1000000L * 60L * 60L * 24L * 7L);
       default: throw new Error("Unknown TimeUnit value: " + units);
     }
+  }
+
+  public static Duration duration(final long quantity, final TimeUnit units) {
+    return of(quantity, units);
+  }
+
+  public static Duration negate(final Duration duration) {
+    // amusingly, -MIN_VALUE = MIN_VALUE in 2's complement -- `multiplyExact` will correctly fail out in that case.
+    return new Duration(Math.multiplyExact(-1, duration.durationInMicroseconds));
   }
 
   public static Duration add(final Duration left, final Duration right) throws ArithmeticException {
@@ -32,6 +48,18 @@ public final class Duration implements Comparable<Duration> {
 
   public static Duration subtract(final Duration left, final Duration right) throws ArithmeticException {
     return new Duration(Math.subtractExact(left.durationInMicroseconds, right.durationInMicroseconds));
+  }
+
+  public static Duration multiply(final long scalar, final Duration unit) throws ArithmeticException {
+    return new Duration(Math.multiplyExact(scalar, unit.durationInMicroseconds));
+  }
+
+  public static long divide(final Duration left, final Duration right) {
+    return left.durationInMicroseconds / right.durationInMicroseconds;
+  }
+
+  public static Duration remainder(final Duration left, final Duration right) {
+    return new Duration(left.durationInMicroseconds % right.durationInMicroseconds);
   }
 
   public static Duration min(final Duration x, final Duration y) {
@@ -47,7 +75,7 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public Duration plus(final long quantity, final TimeUnit units) throws ArithmeticException {
-    return Duration.add(this, Duration.of(quantity, units));
+    return Duration.add(this, duration(quantity, units));
   }
 
   public Duration minus(final Duration other) throws ArithmeticException {
@@ -55,7 +83,27 @@ public final class Duration implements Comparable<Duration> {
   }
 
   public Duration minus(final long quantity, final TimeUnit units) throws ArithmeticException {
-    return Duration.subtract(this, Duration.of(quantity, units));
+    return Duration.subtract(this, duration(quantity, units));
+  }
+
+  public Duration times(final long scalar) throws ArithmeticException {
+    return Duration.multiply(scalar, this);
+  }
+
+  public long dividedBy(final Duration other) {
+    return Duration.divide(this, other);
+  }
+
+  public long dividedBy(final long quantity, final TimeUnit units) {
+    return Duration.divide(this, duration(quantity, units));
+  }
+
+  public Duration remainderOf(final Duration other) {
+    return Duration.remainder(this, other);
+  }
+
+  public Duration remainderOf(final long quantity, final TimeUnit units) {
+    return Duration.remainder(this, duration(quantity, units));
   }
 
   public boolean shorterThan(final Duration other) {
@@ -93,11 +141,33 @@ public final class Duration implements Comparable<Duration> {
 
   @Override
   public String toString() {
-    return "" + this.durationInMicroseconds + "µs";
+    return String.format("%+d", this.durationInMicroseconds);
   }
 
   @Override
   public int compareTo(final Duration other) {
-    return Long.compareUnsigned(this.durationInMicroseconds, other.durationInMicroseconds);
+    return Long.compare(this.durationInMicroseconds, other.durationInMicroseconds);
+  }
+
+  public static final class Trait implements Instant<Duration> {
+    @Override
+    public Duration origin() {
+      return Duration.ZERO;
+    }
+
+    @Override
+    public Duration plus(final Duration time, final Duration duration) {
+      return Duration.add(time, duration);
+    }
+
+    @Override
+    public Duration minus(final Duration time, final Duration duration) {
+      return Duration.subtract(time, duration);
+    }
+
+    @Override
+    public int compare(final Duration left, final Duration right) {
+      return left.compareTo(right);
+    }
   }
 }

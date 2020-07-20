@@ -30,6 +30,7 @@ public final class AerieAppDriver {
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
+      if (configuration.enableJavalinLogging) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
           .registerPlugin(new PlanBindings(controller));

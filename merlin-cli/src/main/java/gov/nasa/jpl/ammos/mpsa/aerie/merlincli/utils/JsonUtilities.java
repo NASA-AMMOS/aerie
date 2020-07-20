@@ -1,20 +1,25 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.stream.MalformedJsonException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 
+import javax.json.Json;
+import javax.json.JsonReader;
+import javax.json.JsonArray;
+import javax.json.JsonValue;
+import javax.json.stream.JsonParsingException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.Properties;
 
 public class JsonUtilities {
 
@@ -25,7 +30,7 @@ public class JsonUtilities {
      */
     public static String prettify(String json) {
         Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-        JsonElement je = JsonParser.parseString(json);
+        com.google.gson.JsonElement je = com.google.gson.JsonParser.parseString(json);
         return gson.toJson(je);
     }
 
@@ -35,7 +40,8 @@ public class JsonUtilities {
      * @param path - The path to which the output should be written (should not already exist)
      * @return boolean whether write was successful
      */
-    // TODO: Throw IOException instead of handling it here
+    // TODO: Throw Exceptions instead of printing error messages
+    //       Outputting errors is not the responsibility of this utility class
     public static boolean writeJson(String body, Path path) {
         try {
             String json = prettify(body);
@@ -64,20 +70,20 @@ public class JsonUtilities {
 
     public static boolean writePlanToJSON(Plan plan, Path output, String adaptationId, String startTimestamp, String name) {
         Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-        JsonObject jsonPlan = buildPlanJsonObject(plan, adaptationId, startTimestamp, name);
+        com.google.gson.JsonObject jsonPlan = buildPlanJsonObject(plan, adaptationId, startTimestamp, name);
         String jsonPlanString = gson.toJson(jsonPlan);
         return writeJson(jsonPlanString, output);
     }
 
-    public static JsonObject buildPlanJsonObject(Plan plan, String adaptationId, String startTimestamp, String name) {
-        JsonObject jsonPlan = new JsonObject();
+    public static com.google.gson.JsonObject buildPlanJsonObject(Plan plan, String adaptationId, String startTimestamp, String name) {
+        com.google.gson.JsonObject jsonPlan = new com.google.gson.JsonObject();
         jsonPlan.addProperty("adaptationId", adaptationId);
         jsonPlan.addProperty("startTimestamp", startTimestamp);
         jsonPlan.addProperty("name", name);
 
-        JsonArray activities = new JsonArray();
+        com.google.gson.JsonArray activities = new com.google.gson.JsonArray();
         for (gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstance act : plan.getActivityInstanceList()) {
-            JsonObject jsonAct = new JsonObject();
+            com.google.gson.JsonObject jsonAct = new com.google.gson.JsonObject();
             jsonAct.addProperty("activityType", act.getType());
             jsonAct.addProperty("name", act.getName());
 
@@ -85,9 +91,9 @@ public class JsonUtilities {
                 jsonAct.addProperty("startTimestamp", act.getAttribute("Start").getValue());
             }
 
-            JsonArray parameters = new JsonArray();
+            com.google.gson.JsonArray parameters = new com.google.gson.JsonArray();
             for (gov.nasa.jpl.ammos.mpsa.apgen.model.ActivityInstanceParameter param : act.getParameters()) {
-                JsonObject jsonParam = new JsonObject();
+                com.google.gson.JsonObject jsonParam = new com.google.gson.JsonObject();
                 jsonParam.addProperty("name", param.getName());
                 jsonParam.addProperty("type", param.getType());
                 jsonParam.addProperty("value", param.getValue());
@@ -139,16 +145,44 @@ public class JsonUtilities {
         return parseAdaptationJson(new String(jsonStream.readAllBytes()));
     }
 
+    public static String getErrorMessageFromJsonValue(JsonValue jsonValue) throws ResponseWithoutErrorMessageException {
+        try {
+            switch(jsonValue.getValueType()) {
+                case OBJECT:
+                    return jsonValue.asJsonObject().getString("message");
+                case ARRAY:
+                    JsonArray jsonArray = jsonValue.asJsonArray();
+                    // Return only the first error message
+                    return getErrorMessageFromJsonValue(jsonArray.get(0));
+                default:
+                    // JsonValue doesn't contain a message
+                    throw new ResponseWithoutErrorMessageException("JSON value neither object nor array");
+            }
+        } catch (NullPointerException | IndexOutOfBoundsException e) {
+            throw new ResponseWithoutErrorMessageException(e);
+        }
+    }
+
     public static String getErrorMessageFromFailureResponse(String responseBody) throws ResponseWithoutErrorMessageException {
-        var bodyProperties = Optional.ofNullable(new Gson().fromJson(responseBody, Properties.class));
-        return bodyProperties
-                .map(p -> p.getProperty("message"))
-                .orElseThrow(ResponseWithoutErrorMessageException::new);
+        try {
+            JsonReader reader = Json.createReader(new StringReader(responseBody));
+            return getErrorMessageFromJsonValue(reader.readValue());
+        } catch (JsonParsingException e) {
+            throw new ResponseWithoutErrorMessageException(e);
+        }
     }
 
     public static String getErrorMessageFromFailureResponse(InputStream jsonStream) throws IOException, ResponseWithoutErrorMessageException {
         return getErrorMessageFromFailureResponse(new String(jsonStream.readAllBytes()));
     }
 
-    public static class ResponseWithoutErrorMessageException extends Exception {}
+    public static class ResponseWithoutErrorMessageException extends Exception {
+        public ResponseWithoutErrorMessageException(Exception sourceException) {
+            super(sourceException);
+        }
+
+        public ResponseWithoutErrorMessageException(String message) {
+            super(message);
+        }
+    }
 }

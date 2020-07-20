@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -219,6 +219,58 @@ public final class LocalAppTest {
 
     // THEN
     assertThat(fixtures.planRepository.getPlan(planId).name).isEqualTo(patch.name);
+  }
+
+  @Test
+  public void shouldPatchPlanActivities() throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
+
+    final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
+    final String planId = fixtures.planRepository.createPlan(newPlan);
+
+    // Add 3 activity instances to the plan
+    final String activity1Id = fixtures.planRepository.createActivity(planId, fixtures.createValidActivityInstance());
+    final String activity2Id = fixtures.planRepository.createActivity(planId, fixtures.createValidActivityInstance());
+    final ActivityInstance activity3 = fixtures.createValidActivityInstance();
+    activity3.startTimestamp = "2018-331T04:00:00";
+    final String activity3Id = fixtures.planRepository.createActivity(planId, activity3);
+
+    // Create a unique activity instance to patch activity 2 with
+    final ActivityInstance patchedInstance = fixtures.createValidActivityInstance();
+    patchedInstance.startTimestamp = "2020-138T22:33:45";
+
+    // WHEN
+    // Create the plan patch
+    final Plan patch = new Plan();
+    Map<String, ActivityInstance> instances = new HashMap<>();
+    instances.put(activity1Id, null);
+    instances.put(activity2Id, patchedInstance);
+    patch.activityInstances = instances;
+
+    controller.updatePlan(planId, patch);
+
+    // THEN
+
+    // Plan metadata should be unchanged
+    Plan patchedPlan = fixtures.planRepository.getPlan(planId);
+    assertThat(patchedPlan.name).isEqualTo(newPlan.name);
+    assertThat(patchedPlan.adaptationId).isEqualTo(newPlan.adaptationId);
+    assertThat(patchedPlan.startTimestamp).isEqualTo(newPlan.startTimestamp);
+    assertThat(patchedPlan.endTimestamp).isEqualTo(newPlan.endTimestamp);
+
+    // Should contain just 2 activity instances now
+    Map<String, ActivityInstance> patchedInstanceList = patchedPlan.activityInstances;
+    assertThat(patchedInstanceList.size()).isEqualTo(2);
+
+    // Activity 2 should exist but have a patched start time
+    assertThat(patchedInstanceList.get(activity2Id)).isNotNull();
+    assertThat(patchedInstanceList.get(activity2Id).startTimestamp).isEqualTo(patchedInstance.startTimestamp);
+
+    // Activity 3 should be exactly the same
+    assertThat(patchedInstanceList.get(activity3Id)).isNotNull();
+    assertThat(patchedInstanceList.get(activity3Id)).isEqualTo(activity3);
   }
 
   @Test

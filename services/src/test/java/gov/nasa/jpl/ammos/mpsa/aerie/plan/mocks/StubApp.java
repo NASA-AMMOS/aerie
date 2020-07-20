@@ -12,6 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.JsonValue;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -186,6 +187,6 @@ public final class StubApp implements App {
       throw new NoSuchPlanException(planId);
     }
 
-    return new SimulationResults(Instant.EPOCH, List.of(), Map.of());
+    return new SimulationResults(Instant.EPOCH, List.of(), Map.of(), JsonValue.EMPTY_JSON_ARRAY);
   }
 }

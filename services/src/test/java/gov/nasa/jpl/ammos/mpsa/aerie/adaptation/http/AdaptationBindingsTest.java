@@ -7,9 +7,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Seriali
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.AfterClass;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -33,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public final class AdaptationBindingsTest {
     private static Javalin SERVER = null;
 
-    @BeforeAll
+    @BeforeClass
     public static void setupServer() {
         final StubApp app = new StubApp();
 
@@ -45,7 +46,7 @@ public final class AdaptationBindingsTest {
         SERVER.start();
     }
 
-    @AfterAll
+    @AfterClass
     public static void shutdownServer() {
         SERVER.stop();
     }
@@ -355,8 +356,8 @@ public final class AdaptationBindingsTest {
             StubApp.EXISTENT_ADAPTATION_ID,
             Instant.EPOCH,
             Duration.ZERO, Duration.ZERO,
-            List.of(
-                Pair.of(Duration.ZERO, StubApp.VALID_ACTIVITY_INSTANCE)
+            Map.of(
+                "0", Pair.of(Duration.ZERO, StubApp.VALID_ACTIVITY_INSTANCE)
             )
         );
 

@@ -1,12 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.fruit;
+import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.peel;
 
 /**
  * Peel a banana, in preparation for consumption.
@@ -38,12 +40,10 @@ public final class PeelBananaActivity implements Activity {
 
   @Override
   public void modelEffects() {
-    final var states = BananaStates.get();
-
     if (this.peelDirection.equals("fromStem")) {
-      states.fruitState.set(states.fruitState.get() - MASHED_BANANA_AMOUNT);
+      fruit.add(-MASHED_BANANA_AMOUNT);
     }
 
-    states.peelState.set(states.peelState.get() - 1.0);
+    peel.add(-1.0);
   }
 }

@@ -15,8 +15,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -228,7 +228,7 @@ public class RemoteAdaptationRepositoryTests {
         assertThat(new JsonMatcher(activityTypeJson).matches(expectedActivityTypeJson)).isTrue();
     }
 
-    @Disabled("No way to distinguish AdaptationNotFound from ActivityTypeNotDefined yet")
+    @Ignore("No way to distinguish AdaptationNotFound from ActivityTypeNotDefined yet")
     @Test
     public void testGetActivityTypeAdaptationNotFound() {
         String adaptationId = "test-activity-type-id";

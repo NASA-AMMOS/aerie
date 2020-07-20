@@ -3,17 +3,22 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
+import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.totalDownlinkedDataBits;
 
 /**
- * DownlinkData an amount of data from a specific bin.
+ * DownlinkData data from each channel according to downlinkPriority
+ * as specified in Config until totalAmount has been reached
  *
  * @subsystem Data
- * @contact mkumar
  */
 @ActivityType(name="DownlinkData", generateMapper=true)
 public class DownlinkData implements Activity {
@@ -22,13 +27,13 @@ public class DownlinkData implements Activity {
     public boolean downlinkAll = true;
 
     @Parameter
-    public double downlinkAmount = 0.0;
+    public int totalBits = 0;
 
     @Override
     public List<String> validateParameters() {
         final List<String> failures = new ArrayList<>();
 
-        if (this.downlinkAmount <= 0  && !downlinkAll) {
+        if (this.totalBits <= 0  && !downlinkAll) {
             failures.add("downlinked amount must be positive");
         }
 
@@ -37,14 +42,47 @@ public class DownlinkData implements Activity {
 
     @Override
     public void modelEffects() {
-        final var states = SampleMissionStates.getModel();
-        if (downlinkAll){
-            states.dataBin.downlink();
-        }
-        else {
-            states.dataBin.downlink(downlinkAmount);
+        if (downlinkAll) {
+            downlinkAll();
+        } else {
+            downlinkBits(totalBits);
         }
     }
 
+    /**
+     * Downlink all data from all channels in order by priority
+     */
+    private void downlinkAll() {
+        for (final var channel : Config.downlinkPriority) {
+            final var downlinkVolume = channel.get();
+            downlinkChannelVolume(channel, downlinkVolume);
+        }
+    }
 
+    /**
+     * Downlink a total volume across all channels in order by priority
+     * Once the total volume has been reached, now more downlink occurs
+     * @param totalBits - The total amount of bits to downlink
+     */
+    private void downlinkBits(int totalBits) {
+        int remainingBits = totalBits;
+        for (final var channel : Config.downlinkPriority) {
+            // TODO: Remove coercion when data channel states become integers
+            int downlinkVolume = Math.min(channel.get().intValue(), remainingBits);
+            downlinkChannelVolume(channel, downlinkVolume);
+
+            remainingBits -= downlinkVolume;
+            if (remainingBits == 0) break;
+        }
+    }
+
+    // TODO: Change from `double` to `int` when data channel states become integers
+    private void downlinkChannelVolume(DoubleState channel, double downlinkVolume) {
+        channel.add(-downlinkVolume);
+        totalDownlinkedDataBits.add(+downlinkVolume);
+
+        // Wait for downlink duration
+        long downlinkDuration = ((long) downlinkVolume) / Config.downlinkRate;
+        ctx.delay(Duration.of(downlinkDuration, TimeUnit.SECONDS));
+    }
 }
