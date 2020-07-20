@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
-import org.pcollections.ConsPStack;
 
 import java.util.ArrayDeque;
 import java.util.Comparator;
@@ -26,8 +25,28 @@ public final class SimulationEngine<T, Event> {
     this.currentHistory = initialHistory;
   }
 
-  public void enqueue(final Duration timeFromStart, final SimulationTask<T, Event> activity) {
-    this.schedule(new ScheduleItem.Defer<>(timeFromStart.minus(this.elapsedTime), activity));
+  public void defer(final Duration delay, final SimulationTask<T, Event> task) {
+    this.queue.add(Pair.of(this.elapsedTime.plus(delay), task));
+  }
+
+  public void await(final String taskToAwait, final SimulationTask<T, Event> task) {
+    if (this.completed.contains(taskToAwait)) {
+      this.queue.add(Pair.of(this.elapsedTime, task));
+    } else {
+      this.conditioned.computeIfAbsent(taskToAwait, k -> new HashSet<>()).add(task);
+    }
+  }
+
+  /*package-local*/
+  void markCompleted(final String taskId) {
+    this.completed.add(taskId);
+
+    final var conditionedActivities = this.conditioned.remove(taskId);
+    if (conditionedActivities == null) return;
+
+    for (final var conditionedTask : conditionedActivities) {
+      this.queue.add(Pair.of(this.elapsedTime, conditionedTask));
+    }
   }
 
   public void runFor(final long quantity, final Duration unit) {
@@ -69,10 +88,10 @@ public final class SimulationEngine<T, Event> {
 
     // Extract all events occurring at this time.
     var tip = this.currentHistory;
-    var spawns = ConsPStack.<Pair<History<T, Event>, SimulationTask<T, Event>>>empty();
+    var spawns = new ArrayDeque<Pair<History<T, Event>, SimulationTask<T, Event>>>();
     while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
       tip = tip.fork();
-      spawns = spawns.plus(Pair.of(tip, this.queue.poll().getValue()));
+      spawns.push(Pair.of(tip, this.queue.poll().getValue()));
     }
 
     return new TaskFrame<>(tip, spawns);
@@ -85,13 +104,14 @@ public final class SimulationEngine<T, Event> {
       if (!stack.peek().branches.isEmpty()) {
         // Execute the next sub-task.
         final var frame = stack.peek();
-        final var branch = frame.branches.get(0);
-        frame.branches = frame.branches.minus(0);
-
+        final var branch = frame.popBranch();
         final var branchTip = branch.getKey();
         final var task = branch.getValue();
 
-        stack.push(task.runFrom(branchTip, this::schedule));
+        final var scheduler = new EngineTaskScheduler<>(this);
+        final var endTime = task.runFrom(branchTip, scheduler);
+
+        stack.push(new TaskFrame<>(endTime, scheduler.getBranches()));
       } else {
         // Pop this completed sub-task.
         final var frame = stack.pop();
@@ -101,45 +121,6 @@ public final class SimulationEngine<T, Event> {
         final var parent = stack.peek();
         parent.tip = parent.tip.join(frame.tip);
       }
-    }
-  }
-
-  private void schedule(final ScheduleItem<T, Event> rule) {
-    if (this.completed.contains(rule.getTaskId())) {
-      throw new RuntimeException("Illegal attempt to re-process a completed task: " + rule);
-    }
-
-    // This just screams for case classes and pattern-matching `switch`.
-    if (rule instanceof ScheduleItem.Defer) {
-      final var duration = ((ScheduleItem.Defer<T, Event>) rule).duration;
-      final var activity = ((ScheduleItem.Defer<T, Event>) rule).activity;
-
-      this.queue.add(Pair.of(this.elapsedTime.plus(duration), activity));
-    } else if (rule instanceof ScheduleItem.OnCompletion) {
-      final var waitId = ((ScheduleItem.OnCompletion<T, Event>) rule).waitOn;
-      final var activity = ((ScheduleItem.OnCompletion<T, Event>) rule).activity;
-
-      if (this.completed.contains(waitId)) {
-        this.queue.add(Pair.of(this.elapsedTime, activity));
-      } else {
-        this.conditioned.computeIfAbsent(waitId, k -> new HashSet<>()).add(activity);
-      }
-    } else if (rule instanceof ScheduleItem.Complete) {
-      final var activityId = ((ScheduleItem.Complete<T, Event>) rule).activityId;
-      this.completed.add(activityId);
-
-      final var conditionedActivities = this.conditioned.remove(activityId);
-
-      if (conditionedActivities != null) {
-        for (final var conditionedTask : conditionedActivities) {
-          this.queue.add(Pair.of(this.elapsedTime, conditionedTask));
-        }
-      }
-    } else {
-      throw new Error(String.format(
-          "Unknown subclass `%s` of class `%s`",
-          rule.getClass().getName(),
-          ScheduleItem.class.getName()));
     }
   }
 

@@ -47,7 +47,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, factory.createReplayingTask(
+      simulator.defer(startDelta, factory.createReplayingTask(
           activityId,
           mapper.deserializeActivity(serializedInstance).get()));
     }
@@ -85,7 +85,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -168,7 +168,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(
+      simulator.defer(
           startDelta,
           factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).get()));
     }
@@ -204,7 +204,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);

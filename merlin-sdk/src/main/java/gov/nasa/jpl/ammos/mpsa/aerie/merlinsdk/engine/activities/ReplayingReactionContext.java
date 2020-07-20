@@ -1,32 +1,25 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ScheduleItem;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFrame;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskScheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.tuple.Pair;
-import org.pcollections.ConsPStack;
-import org.pcollections.PStack;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public final class ReplayingReactionContext<T, Event, Activity> implements ReactionContext<T, Event, Activity> {
-  private PStack<Pair<History<T, Event>, SimulationTask<T, Event>>> spawns = ConsPStack.empty();
   private ReplayingTask<T, Event, Activity> continuation;
   private int nextBreadcrumbIndex;
 
   private final TaskFactory<T, Event, Activity> factory;
-  private final Consumer<ScheduleItem<T, Event>> scheduler;
+  private final TaskScheduler<T, Event> scheduler;
   private History<T, Event> currentHistory;
   private final Set<String> children = new HashSet<>();
 
   public ReplayingReactionContext(
       final TaskFactory<T, Event, Activity> factory,
-      final Consumer<ScheduleItem<T, Event>> scheduler,
+      final TaskScheduler<T, Event> scheduler,
       final ReplayingTask<T, Event, Activity> task)
   {
     this.factory = factory;
@@ -35,10 +28,6 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
 
     this.nextBreadcrumbIndex = 0;
     this.currentHistory = ((ActivityBreadcrumb.Advance<T, Event>) task.getBreadcrumb(this.nextBreadcrumbIndex++)).next;
-  }
-
-  public TaskFrame<T, Event> getResultFrame() {
-    return new TaskFrame<>(this.currentHistory, this.spawns);
   }
 
   public ReplayingTask<T, Event, Activity> getContinuation() {
@@ -95,7 +84,7 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
 
       this.currentHistory = this.currentHistory.fork();
 
-      this.spawns = this.spawns.plus(Pair.of(this.currentHistory, continuation));
+      this.scheduler.spawn(this.currentHistory, continuation);
       this.continuation = this.continuation.spawned(continuation.getId());
       this.nextBreadcrumbIndex += 1;
     } else {
@@ -118,7 +107,7 @@ public final class ReplayingReactionContext<T, Event, Activity> implements React
       final var continuation = this.factory.createReplayingTask(child);
       childId = continuation.getId();
 
-      this.scheduler.accept(new ScheduleItem.Defer<>(delay, continuation));
+      this.scheduler.defer(delay, continuation);
       this.continuation = this.continuation.spawned(continuation.getId());
       this.nextBreadcrumbIndex += 1;
     } else {

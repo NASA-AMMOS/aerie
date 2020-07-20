@@ -1,15 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.ScheduleItem;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFrame;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskScheduler;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public final class ReplayingTask<T, Event, Activity> implements SimulationTask<T, Event> {
   private final TaskFactory<T, Event, Activity> factory;
@@ -61,23 +59,20 @@ public final class ReplayingTask<T, Event, Activity> implements SimulationTask<T
   }
 
   @Override
-  public TaskFrame<T, Event> runFrom(
-      final History<T, Event> history,
-      final Consumer<ScheduleItem<T, Event>> scheduler)
-  {
+  public History<T, Event> runFrom(final History<T, Event> history, final TaskScheduler<T, Event> scheduler) {
     final var context = new ReplayingReactionContext<>(this.factory, scheduler, this.advancedTo(history));
 
     // TODO: avoid using exceptions for control flow by wrapping the executor in a Thread
     try {
       this.factory.execute(context, this.activityId, this.activity);
-      scheduler.accept(new ScheduleItem.Complete<>(this.activityId));
+      scheduler.complete(this.activityId);
     } catch (final ReplayingReactionContext.Defer request) {
-      scheduler.accept(new ScheduleItem.Defer<>(request.duration, context.getContinuation()));
+      scheduler.defer(request.duration, context.getContinuation());
     } catch (final ReplayingReactionContext.Await request) {
-      scheduler.accept(new ScheduleItem.OnCompletion<>(request.activityId, context.getContinuation()));
+      scheduler.await(request.activityId, context.getContinuation());
     }
 
-    return context.getResultFrame();
+    return context.now();
   }
 
   @Override
