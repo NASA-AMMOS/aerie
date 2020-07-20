@@ -231,7 +231,7 @@ public final class SimpleSimulator {
         timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
       }
     }
-    while (simulator.hasMoreJobs()) {
+    while (simulator.hasMoreTasks()) {
       simulator.runFor(samplingPeriod);
 
       timestamps.add(simulator.getElapsedTime());
