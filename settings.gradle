@@ -5,3 +5,6 @@ include 'plan-service'
 include 'adaptation-service'
 include 'banananation'
 include 'sample-adaptation'
+
+include 'apgen-parser'
+include 'merlin-cli'
