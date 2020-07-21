@@ -200,6 +200,18 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
+    public void performSimulation(String planId, long samplingPeriod, String outName) {
+        try {
+            System.out.println("Requesting simulation results...");
+            this.planRepository.getSimulationResults(planId, samplingPeriod, outName);
+        } catch (PlanRepository.PlanNotFoundException e) {
+            System.out.println(String.format("Plan simulation results could not be retrieved: %s", e.getMessage()));
+            return;
+        }
+        System.out.println(String.format("SUCCESS: Simulation of plan completed. Results written to %s", outName));
+    }
+
+    @Override
     public String createAdaptation(Path path, Adaptation adaptation) {
         if (!Files.exists(path)) {
             System.out.println(String.format("File not found: %s", path));
@@ -315,10 +327,5 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
         if (JsonUtilities.writePlanToJSON(plan, Path.of(output), adaptationId, startTimestamp, name)) {
             System.out.println(String.format("SUCCESS: Plan file written to %s", output));
         }
-    }
-
-    @Override
-    public void performSimulation(String planId) {
-        throw new NotImplementedException("Simulation within an Aerie deployment is not yet supported.");
     }
 }

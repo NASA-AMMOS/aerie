@@ -3,15 +3,16 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+/*
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.Apsis;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.Globals.Body;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.jpltime.Time;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinmultimissionmodels.geometry.spicewrappers.Apsides;
+*/
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice.SpiceLoader;
 import spice.basic.CSPICE;
 import spice.basic.SpiceErrorException;
@@ -91,6 +92,7 @@ public class Geometry {
         }
     }
 
+    /*
     public static List<Time> getPeriapsides(Config config) {
         Body target = Body.SUN;
         Body observer = Body.JUNO;
@@ -120,4 +122,5 @@ public class Geometry {
             return List.of();
         }
     }
+    */
 }

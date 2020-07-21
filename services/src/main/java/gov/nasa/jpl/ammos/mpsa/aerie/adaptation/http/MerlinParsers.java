@@ -77,7 +77,7 @@ public abstract class MerlinParsers {
       . field("startTime", instantP)
       . field("samplingDuration", durationP)
       . field("samplingPeriod", durationP)
-      . field("activities", listP(scheduledActivityP))
+      . field("activities", mapP(scheduledActivityP))
       . map(uncurry5(adaptationId -> startTime -> samplingDuration -> samplingPeriod -> activities ->
           new CreateSimulationMessage(adaptationId, startTime, samplingDuration, samplingPeriod, activities)));
 }

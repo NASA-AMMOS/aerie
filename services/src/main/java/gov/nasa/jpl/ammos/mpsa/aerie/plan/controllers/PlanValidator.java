@@ -84,13 +84,16 @@ public final class PlanValidator {
           .collect(Collectors.toSet());
 
       with("activityInstances", () -> {
-        for (final String activityId : patch.activityInstances.keySet()) {
+        for (final var entry : patch.activityInstances.entrySet()) {
+          final var activityId = entry.getKey();
+          final var activityInstance = entry.getValue();
           if (!validActivityIds.contains(activityId)) {
             with(activityId, () -> addError("no activity with id in plan"));
           }
-        }
 
-        validateActivityMap(adaptationId, patch.activityInstances);
+          if (activityInstance != null)
+            with(activityId, () -> validateActivity(adaptationId, activityInstance));
+        }
       });
     }
   }

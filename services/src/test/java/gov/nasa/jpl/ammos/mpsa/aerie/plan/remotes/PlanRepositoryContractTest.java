@@ -5,8 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public abstract class PlanRepositoryContractTest {
 
   protected abstract void resetRepository();
 
-  @BeforeEach
+  @Before
   public void resetRepositoryBeforeEachTest() {
     this.resetRepository();
   }

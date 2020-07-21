@@ -101,7 +101,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeDuration(final Duration timestamp) {
-    return Json.createValue(timestamp.durationInMicroseconds);
+    return Json.createValue(timestamp.dividedBy(Duration.MICROSECOND));
   }
 
   public static JsonValue serializeSimulationResults(final SimulationResults results) {
@@ -113,6 +113,7 @@ public final class ResponseSerializers {
         .add("resources", serializeMap(
             elements -> serializeList(element -> serializeActivityParameter(element), elements),
             results.timelines))
+        .add("constraints", results.constraints)
         .build();
   }
 

@@ -1,7 +1,7 @@
-version: "3.3"
+version: "3.7"
 services:
   adaptation:
-    image: "${DOCKER_URL}/adaptation:${ADAPTATION_DOCKER_TAG}"
+    image: "${DOCKER_URL}/adaptation:${DOCKER_TAG}"
     ports: ["27182:27182"]
     depends_on: ["adaptation_mongo"]
     volumes:
@@ -12,7 +12,7 @@ services:
     ports: ["27020:27020"]
     volumes: ["adaptation_mongo_data:/data/db"]
   plan:
-    image: "${DOCKER_URL}/plan:${PLAN_DOCKER_TAG}"
+    image: "${DOCKER_URL}/plan:${DOCKER_TAG}"
     depends_on: ["plan_mongo"]
     ports: ["27183:27183"]
     restart: always
@@ -21,8 +21,16 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit"
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes: ["rabbitmq_data:/data/rabbitmq"]
 
 volumes:
   adaptation_files:
   adaptation_mongo_data:
   plan_mongo_data:
+  rabbitmq_data:

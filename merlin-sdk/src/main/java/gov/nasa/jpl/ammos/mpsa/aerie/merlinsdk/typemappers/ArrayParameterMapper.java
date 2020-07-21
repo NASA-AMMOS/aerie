@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 
 public class ArrayParameterMapper<T> implements ParameterMapper<T[]> {
     private final ParameterMapper<T> elementMapper;
@@ -19,16 +18,20 @@ public class ArrayParameterMapper<T> implements ParameterMapper<T[]> {
 
     @Override
     public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofList(elementMapper.getParameterSchema());
+        return ParameterSchema.ofSequence(elementMapper.getParameterSchema());
     }
 
     @Override
     public Result<T[], String> deserializeParameter(SerializedParameter serializedParameter) {
-        final List<SerializedParameter> list = serializedParameter.asList().get(); // TODO: Could fail, should fix
-        final T[] arr = (T[])Array.newInstance(this.elementClass, list.size());
+        final var list = serializedParameter.asList().get(); // TODO: Could fail, should fix
+
+        @SuppressWarnings("unchecked")
+        final var arr = (T[]) Array.newInstance(this.elementClass, list.size());
+
         for (int i=0; i<list.size(); i++) {
             arr[i] = this.elementMapper.deserializeParameter(list.get(i)).getSuccessOrThrow();
         }
+
         return Result.success(arr);
     }
 

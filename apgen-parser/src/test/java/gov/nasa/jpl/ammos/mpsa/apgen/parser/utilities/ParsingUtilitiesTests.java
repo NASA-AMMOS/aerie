@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.apgen.parser.utilities;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 import static gov.nasa.jpl.ammos.mpsa.apgen.parser.utilities.ParsingUtilities.removeComment;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;

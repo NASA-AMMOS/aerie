@@ -1,37 +1,61 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Instant;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+
+import java.util.List;
+import java.util.Set;
 
 /**
- * A system-level representation of a mission-specific adaptation.
+ * A mission-agnostic interface to the capabilities provided by a mission-specific adaptation.
  *
- * The Merlin system, and Aerie in a broader sense, must be able to extract information from
- * an adaptation in order to tune its multi-mission capabilities to the needs of a specific
- * mission. This interface is the top-level entry point: the first adaptation object that
- * Merlin will interact with is an {@code MerlinAdaptation}.
+ * <p>
+ * The Merlin system, and Aerie in a broader sense, must be able to extract information
+ * from an adaptation in order to tune its multi-mission capabilities to the needs of
+ * a specific mission. This interface is the top-level entry point: the first adaptation object
+ * that Merlin will interact with is an {@code MerlinAdaptation}.
+ * </p>
  *
- * An implementation of {@code MerlinAdaptation} ought to announce itself in an associated
- * {@code module-info.java} file in the adaptation bundle. For instance:
+ * <p>
+ * An implementation of {@code MerlinAdaptation} must be registered in a file in the adaptation JAR
+ * named {@code META-INF/services/gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation}. This file
+ * shall contain the fully-qualified name of the implementing class, such as
+ * {@code gov.nasa.jpl.ammos.mpsa.aerie.banananation.Banananation}.
+ * </p>
  *
- * <pre>
- *   import gov.nasa.jpl.ammos.mpsa.aerie.bananatation.Bananatation;
- *   import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+ * <p>
+ * An implementation of {@code MerlinAdaptation} must provide a no-arguments constructor. This constructor
+ * should not generally perform any work, as the adaptation object may be constructed simply to check metadata
+ * or perform other validation.
+ * </p>
  *
- *   module gov.nasa.jpl.ammos.mpsa.aerie.bananatation {
- *     requires gov.nasa.jpl.ammos.mpsa.aerie.merlin;
+ * <p>
+ * An implementation of {@code MerlinAdaptation} must be annotated with @{@link Adaptation}.
+ * </p>
  *
- *     provides MerlinAdaptation with Bananatation;
- *   }
- * </pre>
+ * @see AbstractMerlinAdaptation
  */
-public interface MerlinAdaptation {
+public interface MerlinAdaptation<Event> {
   /**
-   * Gets the system-level representation of the activity types understood by this adaptation.
+   * Provides a mission-agnostic representation of the activity types provided by this adaptation.
    *
-   * @return The activity mapper for this adaptation.
+   * @return An activity mapper.
    */
   ActivityMapper getActivityMapper();
 
-  SimulationState newSimulationState(final Instant simulationStartTime);
+  <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
+
+  interface Querier<T, Event> {
+    void runActivity(ReactionContext<T, Activity, Event> ctx, String activityId, Activity activity);
+
+    Set<String> states();
+    SerializedParameter getSerializedStateAt(String name, History<T, Event> history);
+    List<ConstraintViolation> getConstraintViolationsAt(History<T, Event> history);
+  }
 }

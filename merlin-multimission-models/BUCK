@@ -1,6 +1,6 @@
 java_library(
     name = "merlin-multimission-models",
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = [],
     exported_deps=["//merlin-sdk:merlin-sdk",
                    "//third-party:JNISpice",
                    "//third-party/merlin-multimission-models/core:merlin-multimission-models",],
@@ -10,7 +10,7 @@ java_library(
 
 java_test(
     name = "test",
-    srcs = glob(["src/test/**/*.java"]),
+    srcs = [],
     deps = [
         # Third Party
         "//third-party/merlin-multimission-models/test:merlin-multimission-models",

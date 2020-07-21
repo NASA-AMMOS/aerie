@@ -17,20 +17,15 @@ java_binary(
     main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.MainCLI",
 )
 
-java_library(
-    name = "tests-lib",
-    srcs = glob(["src/test/java/**/*"]),
+java_test(
+    name = "test",
+    srcs = glob(["src/test/**/*"]),
     resources = glob(["src/test/resources/**/*"]),
     resources_root = "src/test/resources/",
     extra_arguments = ["-Xlint:all"],
     deps = [
         ":lib",
         "//third-party/merlin-cli/test:merlin-cli",
+        ":merlin-cli"
     ],
-)
-
-java_binary(
-    name = "unit-tests",
-    deps = [":tests-lib"],
-    main_class = "gov.nasa.jpl.ammos.mpsa.aerie.merlincli.TestMain",
 )
