@@ -1,0 +1,23 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
+dependencies {
+  annotationProcessor project(':merlin-sdk')
+
+  compileOnly project(':merlin-sdk')
+  implementation 'org.apache.commons:commons-collections4:4.4'
+  implementation 'org.apache.commons:commons-lang3:3.9'
+  implementation 'commons-io:commons-io:2.6'
+
+  testImplementation project(':merlin-sdk')
+  testImplementation 'org.apache.commons:commons-math3:3.6.1'
+  testImplementation 'org.assertj:assertj-core:3.13.2'
+  testImplementation 'junit:junit:4.12'
+}
+
