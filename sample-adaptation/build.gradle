@@ -8,7 +8,7 @@ java {
 }
 
 dependencies {
-  annotationProcessor project(':merlin-sdk')
+  annotationProcessor project(':activity-processor')
 
   compileOnly project(':merlin-sdk')
   implementation 'org.apache.commons:commons-collections4:4.4'
