@@ -1,3 +1,5 @@
 rootProject.name = 'aerie'
 
 include 'merlin-sdk'
+include 'plan-service'
+include 'adaptation-service'
