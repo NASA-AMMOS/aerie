@@ -84,30 +84,22 @@ pipeline {
         stage ('Build') {
             steps {
                 echo "Building $ARTIFACT_TAG..."
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    echo "Building all build targets"
-                    buck build //...
-                    """
-                    if (statusCode > 0) {
-                        error "Failure in Build stage."
-                    }
-                }
+                sh './gradlew classes'
             }
         }
 
         stage ('Test') {
             steps {
-                echo "TODO: Run tests via BUCK"
-                sh "buck test //... --xml ${env.WORKSPACE}/testOutput.xml"
-            }
-        }
+                sh './gradlew test'
 
-        stage('TestRail') {
-            steps {
-                  echo "Uploading tests to test rail."
-                  sh "scripts/testrail.sh ${env.WORKSPACE}/testOutput.xml $TESTRAIL_SUITE_ID"
+                // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
+                // Bump their last modified time to trick Jenkins.
+                sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
+                junit testResults: '*/build/test-results/test/*.xml'
+
+                // TODO: Fix this script to work with the JUnit XML files produced by Gradle.
+                //echo "Uploading tests to test rail."
+                //sh "scripts/testrail.sh ${env.WORKSPACE}/testOutput.xml $TESTRAIL_SUITE_ID"
             }
         }
     }
