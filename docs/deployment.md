@@ -111,6 +111,10 @@ The `docker-compose` file are parameterized with the [.env](../.env) file.
 
 
 
+## Aerie Editor Deployment Instructions
+The instructions for Aerie editor deployment can be found here [here](https://github.jpl.nasa.gov/Aerie/aerieeditor/blob/develop/docs/DEPLOYMENT.md#deployment)
+
+The deployment of Aerie editor will utilize docker in the future. 
 
 
 
