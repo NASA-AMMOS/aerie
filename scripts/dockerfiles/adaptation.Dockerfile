@@ -7,4 +7,4 @@ EXPOSE 27182
 VOLUME ["/usr/src/app/adaptation_files"]
 
 WORKDIR /usr/src/app
-ENTRYPOINT ["java", "-jar", "adaptation-service.jar"]
+ENTRYPOINT ["java", "-Xmx2g", "-jar", "adaptation-service.jar"]
