@@ -21,7 +21,7 @@ public final class SimulationInstant {
   }
 
   public Duration durationFrom(final SimulationInstant other) {
-    return Duration.of(Math.subtractExact(this.microsecondsFromStart, other.microsecondsFromStart), TimeUnit.MICROSECONDS);
+    return Duration.MICROSECOND.times(Math.subtractExact(this.microsecondsFromStart, other.microsecondsFromStart));
   }
 
   public int compareTo(final SimulationInstant other) {

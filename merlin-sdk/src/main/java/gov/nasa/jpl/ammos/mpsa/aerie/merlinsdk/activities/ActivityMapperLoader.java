@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.JsonUtilities;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +28,7 @@ public class ActivityMapperLoader {
         // Parse the JSON
         Map<String, String> activityMappings;
         try {
-            activityMappings = JsonUtilities.parseStringStringMap(jsonStream);
+            activityMappings = parseStringStringMap(jsonStream);
         } catch (IOException e) {
             throw new ActivityMapperLoadException(e);
         }
@@ -59,6 +62,11 @@ public class ActivityMapperLoader {
         } catch (ClassNotFoundException e) {
             throw new ActivityMapperLoadException(e);
         }
+    }
+
+    private static Map<String, String> parseStringStringMap(InputStream jsonStream) throws IOException {
+        JsonParser parser = new JsonFactory().createParser(jsonStream);
+        return new ObjectMapper().readValue(parser, new TypeReference<Map<String, String>>() {});
     }
 
     public static class ActivityMapperLoadException extends Exception {

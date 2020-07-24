@@ -91,7 +91,7 @@ public interface EffectExpression<Event> {
 
       @Override
       public String toString() {
-        return TreeLogger.displayTree(this);
+        return EffectExpressionDisplay.displayGraph(this);
       }
     };
   }
@@ -136,7 +136,7 @@ public interface EffectExpression<Event> {
 
       @Override
       public String toString() {
-        return TreeLogger.displayTree(this);
+        return EffectExpressionDisplay.displayGraph(this);
       }
     };
   }

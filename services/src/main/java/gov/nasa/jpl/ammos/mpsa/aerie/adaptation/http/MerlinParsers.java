@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.JsonValue.ValueType;
@@ -42,7 +41,7 @@ public abstract class MerlinParsers {
 
   public static final JsonParser<Duration> durationP
       = longP
-      . map(microseconds -> Duration.of(microseconds, TimeUnit.MICROSECONDS));
+      . map(microseconds -> Duration.of(microseconds, Duration.MICROSECONDS));
 
   public static final JsonParser<SerializedParameter> serializedParameterP =
       recursiveP(selfP -> BasicParsers

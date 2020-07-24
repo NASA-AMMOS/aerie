@@ -11,7 +11,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -184,7 +183,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       scheduledActivities.add(Pair.of(activity.startTime.durationFrom(SimulationInstant.ORIGIN), activity.activity));
     }
 
-    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, Duration.of(samplingPeriod, TimeUnit.MICROSECONDS));
+    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, Duration.of(samplingPeriod, Duration.MICROSECONDS));
     System.out.println(results.timelines);
   }
 

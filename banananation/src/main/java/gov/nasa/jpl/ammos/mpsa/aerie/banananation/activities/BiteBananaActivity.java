@@ -2,8 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.Flag;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -169,6 +169,6 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
 
   @Override
   public String toString() {
-    return TreeLogger.displayTree(this);
+    return EffectExpressionDisplay.displayGraph(this);
   }
 }

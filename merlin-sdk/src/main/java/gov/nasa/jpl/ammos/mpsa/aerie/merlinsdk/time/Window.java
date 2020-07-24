@@ -21,24 +21,24 @@ public final class Window {
     return new Window(start, end);
   }
 
-  public static Window between(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
-    return between(Duration.of(startQuantity, startUnits), Duration.of(endQuantity, endUnits));
+  public static Window between(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
+    return between(Duration.of(startQuantity, startUnit), Duration.of(endQuantity, endUnit));
   }
 
   public static Window window(final Duration start, final Duration end) {
     return between(start, end);
   }
 
-  public static Window window(final long startQuantity, final TimeUnit startUnits, final long endQuantity, final TimeUnit endUnits) {
-    return between(startQuantity, startUnits, endQuantity, endUnits);
+  public static Window window(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
+    return between(startQuantity, startUnit, endQuantity, endUnit);
   }
 
   public static Window at(final Duration point) {
     return new Window(point, point);
   }
 
-  public static Window at(final long quantity, final TimeUnit units) {
-    return at(Duration.of(quantity, units));
+  public static Window at(final long quantity, final Duration unit) {
+    return at(Duration.of(quantity, unit));
   }
 
   public static final Window EMPTY = new Window(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));

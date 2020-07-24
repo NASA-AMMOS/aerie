@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.squareup.javapoet.JavaFile;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -32,10 +32,10 @@ import java.util.Map;
 import java.util.HashMap;
 
 @SupportedAnnotationTypes({
-    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType",
-    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ParameterType",
-    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter",
-    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivitiesMapped",
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType",
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType",
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter",
+    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.MerlinAdaptation",
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)

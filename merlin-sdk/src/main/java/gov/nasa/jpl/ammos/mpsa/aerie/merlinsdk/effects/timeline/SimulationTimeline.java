@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
@@ -135,7 +134,7 @@ public final class SimulationTimeline<T, Event> {
           final var path = (ActivePath.TopLevel<Effect>) currentPath;
           final var wait = (EventPoint.Waiting<Event>) point;
 
-          path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, TimeUnit.MICROSECONDS), path.effect));
+          path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, Duration.MICROSECONDS), path.effect));
           path.effect = trait.empty();
           pointIndex = wait.previous;
         }

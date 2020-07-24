@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -34,34 +33,34 @@ public class LocalSimulation {
 
     public static void main(String[] args) {
         final var schedule = List.of(
-                Pair.of(Duration.of(0, TimeUnit.SECONDS), new SerializedActivity("RunInstrument",
+                Pair.of(Duration.of(0, Duration.SECONDS), new SerializedActivity("RunInstrument",
                         Map.of("durationInSeconds", SerializedParameter.of(300),
                                 "dataMode", SerializedParameter.of("LOW")))),
-                Pair.of(Duration.of(600, TimeUnit.SECONDS), new SerializedActivity("RunInstrument",
+                Pair.of(Duration.of(600, Duration.SECONDS), new SerializedActivity("RunInstrument",
                         Map.of("durationInSeconds", SerializedParameter.of(600),
                                 "dataMode", SerializedParameter.of("MED")))),
-                Pair.of(Duration.of(720, TimeUnit.SECONDS), new SerializedActivity("PreheatCamera",
+                Pair.of(Duration.of(720, Duration.SECONDS), new SerializedActivity("PreheatCamera",
                         Map.of("heatDurationInSeconds", SerializedParameter.of(1800)))),
-                Pair.of(Duration.of(1620, TimeUnit.SECONDS), new SerializedActivity("CapturePanorama",
+                Pair.of(Duration.of(1620, Duration.SECONDS), new SerializedActivity("CapturePanorama",
                                 Map.of("nFramesHorizontal", SerializedParameter.of(4),
                                         "nFramesVertical", SerializedParameter.of(2),
                                         "imageQuality", SerializedParameter.of(90)))),
-                Pair.of(Duration.of(1900, TimeUnit.SECONDS), new SerializedActivity("RunInstrument",
+                Pair.of(Duration.of(1900, Duration.SECONDS), new SerializedActivity("RunInstrument",
                         Map.of("durationInSeconds", SerializedParameter.of(3000),
                                 "dataMode", SerializedParameter.of("MED")))),
-                Pair.of(Duration.of(25200, TimeUnit.SECONDS), new SerializedActivity("DownlinkData",
+                Pair.of(Duration.of(25200, Duration.SECONDS), new SerializedActivity("DownlinkData",
                         Map.of("downlinkAll", SerializedParameter.of(true),
                                 "totalBits", SerializedParameter.of(0)))),
-                Pair.of(Duration.of(30000, TimeUnit.SECONDS), new SerializedActivity("RunInstrument",
+                Pair.of(Duration.of(30000, Duration.SECONDS), new SerializedActivity("RunInstrument",
                         Map.of("durationInSeconds", SerializedParameter.of(7500),
                                 "dataMode", SerializedParameter.of("MED")))),
-                Pair.of(Duration.of(40000, TimeUnit.SECONDS), new SerializedActivity("CapturePanorama",
+                Pair.of(Duration.of(40000, Duration.SECONDS), new SerializedActivity("CapturePanorama",
                         Map.of("nFramesHorizontal", SerializedParameter.of(8),
                                 "nFramesVertical", SerializedParameter.of(2),
                                 "imageQuality", SerializedParameter.of(80))))
         );
         final var adaptation = new SampleAdaptation();
-        final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Duration.of(100, TimeUnit.MILLISECONDS));
+        final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Duration.of(100, Duration.MILLISECONDS));
 
         /*
         Minimum allowed battery capacity is Config.startBatteryCapacity_J*0.3

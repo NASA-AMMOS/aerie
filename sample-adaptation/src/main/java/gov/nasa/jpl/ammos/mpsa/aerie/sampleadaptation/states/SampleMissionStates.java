@@ -1,10 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityTypeStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityTypeStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.IndependentStateFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.IndependentStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.RunInstrument;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
