@@ -134,13 +134,13 @@ pipeline {
                     # For adaptations
                     mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
                     cp sample-adaptation/build/libs/*.jar \
-                       bananation/build/libs/*.jar \
+                       banananation/build/libs/*.jar \
                        /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
 
                     # For services
                     mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
                     cp plan-service/build/distributions/*.tar \
-                       adaptation-service/distributions/libs/*.tar \
+                       adaptation-service/build/distributions/*.tar \
                        /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
 
                     # For merlin-sdk
