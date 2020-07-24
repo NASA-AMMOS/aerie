@@ -61,6 +61,14 @@ def getPublishPath() {
     }
 }
 
+def getArtifactTag() {
+    if (GIT_BRANCH ==~ /(develop|staging|release-.*)/) {
+        return GIT_BRANCH
+    } else {
+        return GIT_COMMIT
+    }
+}
+
 // Save built image name:tag
 def buildImages = []
 // Save dockerfile name inside scipt/Dockerfiles
@@ -73,7 +81,7 @@ pipeline {
     }
 
     environment {
-        ARTIFACT_TAG = "${GIT_BRANCH}"
+        ARTIFACT_TAG = "${getArtifactTag()}"
         ARTIFACTORY_URL = "${getArtifactoryUrl()}"
         AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
         AWS_DEFAULT_REGION = 'us-gov-west-1'
