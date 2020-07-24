@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 
@@ -52,7 +52,7 @@ public interface MerlinAdaptation<Event> {
   <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
 
   interface Querier<T, Event> {
-    void runActivity(ReactionContext<T, Activity, Event> ctx, String activityId, Activity activity);
+    void runActivity(ReactionContext<T, Event, Activity> ctx, String activityId, Activity activity);
 
     Set<String> states();
     SerializedParameter getSerializedStateAt(String name, History<T, Event> history);

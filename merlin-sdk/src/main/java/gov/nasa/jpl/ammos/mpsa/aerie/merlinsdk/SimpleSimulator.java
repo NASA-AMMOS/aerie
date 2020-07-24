@@ -1,10 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReplayingSimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -37,7 +37,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -46,7 +47,9 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, activityId, mapper.deserializeActivity(serializedInstance).get());
+      simulator.defer(startDelta, factory.createReplayingTask(
+          activityId,
+          mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
@@ -73,7 +76,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -81,15 +85,15 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, mapper.deserializeActivity(serializedInstance).get());
+      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
     }
-    
+
     return simulate(querier, simulator, simulationDuration, samplingPeriod);
   }
 
   private static <T, Event> SimulationResults simulate(
       final MerlinAdaptation.Querier<T, Event> querier,
-      final ReplayingSimulationEngine<T, Activity, Event> simulator,
+      final SimulationEngine<T, Event> simulator,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
@@ -154,7 +158,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -163,7 +168,9 @@ public final class SimpleSimulator {
       final var startDelta = entry.getValue().getLeft();
       final var serializedInstance = entry.getValue().getRight();
 
-      simulator.enqueue(startDelta, activityId, mapper.deserializeActivity(serializedInstance).get());
+      simulator.defer(
+          startDelta,
+          factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
@@ -188,7 +195,8 @@ public final class SimpleSimulator {
   )
   {
     final var querier = adaptation.makeQuerier(database);
-    final var simulator = new ReplayingSimulationEngine<>(database.origin(), querier::runActivity);
+    final var factory = new TaskFactory<>(querier::runActivity);
+    final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
     final var mapper = adaptation.getActivityMapper();
@@ -196,7 +204,7 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.enqueue(startDelta, mapper.deserializeActivity(serializedInstance).get());
+      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
     }
 
     return simulateToCompletion(querier, simulator, samplingPeriod);
@@ -206,11 +214,10 @@ public final class SimpleSimulator {
   // https://docs.oracle.com/javase/tutorial/java/generics/capture.html
   private static <T, Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation.Querier<T, Event> querier,
-      final ReplayingSimulationEngine<T, Activity, Event> simulator,
+      final SimulationEngine<T, Event> simulator,
       final Duration samplingPeriod
   )
   {
-
     final var timestamps = new ArrayList<Duration>();
     final var timelines = new HashMap<String, List<SerializedParameter>>();
     for (final var stateName : querier.states()) {
@@ -224,7 +231,7 @@ public final class SimpleSimulator {
         timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
       }
     }
-    while (simulator.hasMoreJobs()) {
+    while (simulator.hasMoreTasks()) {
       simulator.runFor(samplingPeriod);
 
       timestamps.add(simulator.getElapsedTime());

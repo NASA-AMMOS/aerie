@@ -11,8 +11,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelQu
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.DynamicActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.DynamicReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -39,7 +39,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setD
 
 public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
     // Create two DynamicCells to provide ReactionContext and StateContext to modeling code
-    private final static DynamicCell<ReactionContext<?, Activity, SampleEvent>> reactionContext = DynamicCell.create();
+    private final static DynamicCell<ReactionContext<?, SampleEvent, Activity>> reactionContext = DynamicCell.create();
     private final static DynamicCell<SampleQuerier<?>.StateQuerier> stateContext = DynamicCell.create();
 
     // Define a function to take a state name and provide questions that can be asked based on current context
@@ -52,7 +52,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     // Provide direct access to methods on the context stored in the dynamic cell.
     // e.g. instead of `reactionContext.get().spawn(act)`, just use `ctx.spawn(act)`.
-    public static final ReactionContext<?, Activity, SampleEvent> ctx = new DynamicReactionContext<>(() -> reactionContext.get());
+    public static final ReactionContext<?, SampleEvent, Activity> ctx = new DynamicReactionContext<>(() -> reactionContext.get());
 
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
@@ -103,7 +103,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     }
 
     @Override
-    public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final String activityId, final Activity activity) {
+    public void runActivity(final ReactionContext<T, SampleEvent, Activity> ctx, final String activityId, final Activity activity) {
         // Run the activity in the context of the given reaction context as well as the established state queries.
         // The activity can affect the simulation by emitting events against the reaction context,
         // and can query states to change its behavior based on simulation state.

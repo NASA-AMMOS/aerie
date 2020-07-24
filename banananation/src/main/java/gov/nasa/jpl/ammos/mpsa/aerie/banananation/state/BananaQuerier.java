@@ -19,8 +19,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model.Settable
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model.RegisterState;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -39,10 +39,10 @@ import java.util.function.Supplier;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setDynamic;
 
 public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, BananaEvent> {
-  private static final DynamicCell<ReactionContext<?, Activity, BananaEvent>> reactionContext = DynamicCell.create();
+  private static final DynamicCell<ReactionContext<?, BananaEvent, Activity>> reactionContext = DynamicCell.create();
   private static final DynamicCell<BananaQuerier<?>.InnerQuerier> queryContext = DynamicCell.create();
 
-  public static final ReactionContext<?, Activity, BananaEvent> ctx = new DynamicReactionContext<>(reactionContext::get);
+  public static final ReactionContext<?, BananaEvent, Activity> ctx = new DynamicReactionContext<>(reactionContext::get);
   public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new DynamicStateQuery<>(() -> queryContext.get().getRegisterQuery(name));
   public static final ActivityModelQuerier activityQuery = new DynamicActivityModelQuerier(() -> queryContext.get().getActivityQuery());
 
@@ -86,7 +86,7 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   }
 
   @Override
-  public void runActivity(final ReactionContext<T, Activity, BananaEvent> ctx, final String activityId, final Activity activity) {
+  public void runActivity(final ReactionContext<T, BananaEvent, Activity> ctx, final String activityId, final Activity activity) {
     setDynamic(queryContext, new InnerQuerier(ctx::now), () ->
         setDynamic(reactionContext, ctx, () -> {
           ctx.emit(BananaEvent.activity(ActivityEvent.startActivity(activityId, this.activityMapper.serializeActivity(activity).get())));

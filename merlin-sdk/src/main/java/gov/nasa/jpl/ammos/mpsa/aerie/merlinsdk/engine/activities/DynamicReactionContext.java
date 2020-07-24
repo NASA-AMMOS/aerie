@@ -1,14 +1,14 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.function.Supplier;
 
-public final class DynamicReactionContext<T, Activity, Event> implements ReactionContext<T, Activity, Event> {
-  private final Supplier<ReactionContext<T, Activity, Event>> activeContext;
+public final class DynamicReactionContext<T, Activity, Event> implements ReactionContext<T, Event, Activity> {
+  private final Supplier<ReactionContext<T, Event, Activity>> activeContext;
 
-  public DynamicReactionContext(final Supplier<ReactionContext<T, Activity, Event>> activeContext) {
+  public DynamicReactionContext(final Supplier<ReactionContext<T, Event, Activity>> activeContext) {
     this.activeContext = activeContext;
   }
 

@@ -1,9 +1,9 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-public interface ReactionContext<T, Activity, Event> {
+public interface ReactionContext<T, Event, Activity> {
   History<T, Event> now();
 
   void emit(Event event);
