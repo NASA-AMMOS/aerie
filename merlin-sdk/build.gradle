@@ -1,5 +1,6 @@
 plugins {
-  id 'java-library' 
+  id 'java-library'
+  id 'jacoco'
 }
 
 java {
@@ -9,6 +10,8 @@ java {
   withJavadocJar()
   withSourcesJar()
 }
+
+jacocoTestReport.dependsOn test
 
 // Link references to standard Java classes to the official Java 11 documentation.
 javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
