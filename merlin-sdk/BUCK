@@ -18,6 +18,8 @@ java_test(
     srcs = glob(["src/test/java/**/*"]),
     resources = glob(["src/test/resources/**/*"]),
     resources_root = "src/test/resources/",
+    annotation_processors = ["gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor.EventProcessor"],
+    annotation_processor_deps = ["//merlin-sdk:merlin-sdk"],
     deps = [
         "//third-party/merlin-sdk/test:merlin-sdk",
         "//third-party:JNISpice",
