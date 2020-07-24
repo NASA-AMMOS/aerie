@@ -79,16 +79,14 @@ pipeline {
         AWS_DEFAULT_REGION = 'us-gov-west-1'
         AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
         AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
-        BUCK_HOME = "/usr/local/bin"
-        BUCK_OUT = "${env.WORKSPACE}/buck-out"
         DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
         AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
         LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
-        WATCHMAN_HOME = "/opt/watchman"
         ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
         AWS_ECR_PATH = "${AWS_ECR}/aerie"
         DOCKERFILE_PATH = "scripts/dockerfiles"
+        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
     }
 
     stages {
@@ -102,23 +100,19 @@ pipeline {
         stage ('Build') {
             steps {
                 echo "Building $ARTIFACT_TAG..."
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    echo "Building all build targets"
-                    buck build //...
-                    """
-                    if (statusCode > 0) {
-                        error "Failure in Build stage."
-                    }
-                }
+                sh './gradlew classes'
             }
         }
 
         stage ('Test') {
             steps {
-                echo "TODO: Run tests via BUCK"
-                sh "buck test //..."
+                sh "./gradlew test"
+
+                // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
+                // Bump their last modified time to trick Jenkins.
+                sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
+
+                junit testResults: '*/build/test-results/test/*.xml'
             }
         }
 
@@ -135,24 +129,29 @@ pipeline {
                     """
                     echo ${BUILD_NUMBER}
 
+                    ./gradlew assemble
+
                     # For adaptations
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations && \
-                    find . -name "merlin-multimission-models.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\; && \
-                    find . -name "sample-adaptation.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\; && \
-                    find . -name "banananation.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\;
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
+                    cp sample-adaptation/build/libs/*.jar \
+                       bananation/build/libs/*.jar \
+                       /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
 
                     # For services
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services && \
-                    find . -name "plan-service.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/services/ \\; && \
-                    find . -name "adaptation-service.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/services/ \\;
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
+                    cp plan-service/build/distributions/*.tar \
+                       adaptation-service/distributions/libs/*.tar \
+                       /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
 
                     # For merlin-sdk
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk && \
-                    find . -name "merlin-sdk.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/ \\;
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
+                    cp merlin-sdk/build/libs/*.jar \
+                       /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
 
                     # For merlin-cli
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli && \
-                    find . -name "merlin-cli.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/ \\;
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
+                    cp merlin-cli/build/distributions/*.tar \
+                       /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
 
                     tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
                     """

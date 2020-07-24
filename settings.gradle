@@ -1,0 +1,17 @@
+rootProject.name = 'aerie'
+
+// Adaptation support
+include 'merlin-sdk'
+include 'activity-processor'
+
+// Adaptations
+include 'banananation'
+include 'sample-adaptation'
+
+// Services for deployment within the Aerie infrastructure
+include 'plan-service'
+include 'adaptation-service'
+
+// Command-line interface direct to services
+include 'apgen-parser'
+include 'merlin-cli'

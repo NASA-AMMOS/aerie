@@ -17,21 +17,21 @@ import java.util.function.Function;
  * A persistent representation of {@link EffectExpression}s.
  *
  * <p>
- * <code>SimulationTimeline</code> is an efficient implementation of {@link EffectExpression} that supports multiple
+ * {@code SimulationTimeline} is an efficient implementation of {@link EffectExpression} that supports multiple
  * simultaneous unterminated timelines. The equivalent of an {@link EventGraph} for <code>SimulationTimeline</code>s
  * is a {@link History}, which may be extended with events and evaluated against {@link Projection}s.
  * </p>
  *
  * <p>
- * For efficiency, {@link Projection}s may be registered with a <code>SimulationTimeline</code> so their results
+ * For efficiency, {@link Projection}s may be registered with a {@code SimulationTimeline} so their results
  * are cached and reused for later queries.
  * </p>
  *
  * <p>
- * The <a href="https://kean.blog/post/phantom-types">phantom type parameter</a> <code>T</code> distinguishes
+ * The <a href="https://kean.blog/post/phantom-types">phantom type parameter</a> {@code T} distinguishes
  * one timeline from another, ensuring that time points and projectors related to one timeline cannot accidentally
- * be used with another timeline. <code>SimulationTimeline</code> instances are instantiated with an unknown type
- * for this type parameter, represented by the wildcard symbol <code>&lt;?&gt;</?></code>.
+ * be used with another timeline. {@code SimulationTimeline} instances are instantiated with an unknown type
+ * for this type parameter, represented by the wildcard symbol {@code <?>}.
  * </p>
  *
  * @param <T> A phantom type parameter that distinguishes individual timeline instances.
