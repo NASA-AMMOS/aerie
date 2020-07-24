@@ -1,50 +1,40 @@
-def getDockerCompatibleTag(tag){
-    def fixedTag = tag.replaceAll('\\+', '-')
-    return fixedTag
+def getDockerCompatibleTag(tag) {
+    return tag.replaceAll('\\+', '-')
 }
 
-def getDockerImageName(folder){
-    files = findFiles(glob: "${DOCKERFILE_PATH}/*.*")
+def getDockerImageName(folder) {
     def list = []
 
-    for (def file : files) {
-        def token = (file.getName()).tokenize('.')
+    for (def file : findFiles(glob: "${DOCKERFILE_PATH}/*.*")) {
+        def token = file.getName().tokenize('.')
         if (token.size() > 1 && token[1] == "Dockerfile") {
             list.push(token[0])
         } else {
             println("File not added " + token[0])
         }
     }
-    return list
 
+    return list
 }
 
-def getAWSTag(tag){
+def getAWSTag(tag) {
     if (tag ==~ /release-.*/) {
         return "release"
-    }
-    if (tag ==~ /develop/) {
+    } else if (tag ==~ /develop/) {
         return "develop"
-    }
-    if (tag ==~ /staging/) {
+    } else if (tag ==~ /staging/) {
         return "staging"
+    } else {
+        return "unknown"
     }
-    return "unknown"
 }
 
 def getArtifactoryUrl() {
-    echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
-
     if (GIT_BRANCH ==~ /release-.*/){
-        echo "Publishing to 16003-RELEASE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16003"
-    } 
-    else if (GIT_BRANCH ==~ /staging/) {
-        echo "Publishing to 16002-STAGE-LOCAL"
+    } else if (GIT_BRANCH ==~ /staging/) {
         return "cae-artifactory.jpl.nasa.gov:16002"
-    }
-    else {
-        echo "Publishing to 16001-DEVELOP-LOCAL"
+    } else {
         return "cae-artifactory.jpl.nasa.gov:16001"
     }
 }
@@ -52,11 +42,9 @@ def getArtifactoryUrl() {
 def getPublishPath() {
     if (GIT_BRANCH ==~ /release-.*/) {
         return "general/gov/nasa/jpl/aerie/"
-    } 
-    else if (GIT_BRANCH ==~ /staging/) {
+    } else if (GIT_BRANCH ==~ /staging/) {
         return "general-stage/gov/nasa/jpl/aerie/"
-    } 
-    else {
+    } else {
         return "general-develop/gov/nasa/jpl/aerie/"
     }
 }
@@ -71,48 +59,48 @@ def getArtifactTag() {
 
 // Save built image name:tag
 def buildImages = []
-// Save dockerfile name inside scipt/Dockerfiles
+// Save dockerfile name inside script/Dockerfiles
 def imageNames = []
 
 pipeline {
-
     agent {
         label 'coronado || Pismo || San-clemente || Sugarloaf'
     }
 
     environment {
-        ARTIFACT_TAG = "${getArtifactTag()}"
-        ARTIFACTORY_URL = "${getArtifactoryUrl()}"
+        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk'
+        ARTIFACT_TAG = getArtifactTag()
+
+        DOCKERFILE_PATH = "scripts/dockerfiles"
+        DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
+        DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
+
+        ARTIFACTORY_URL = getArtifactoryUrl()
+        ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
+
         AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
         AWS_DEFAULT_REGION = 'us-gov-west-1'
         AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
-        AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
-        DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
-        AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
-        DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
-        LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
-        ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
         AWS_ECR_PATH = "${AWS_ECR}/aerie"
-        DOCKERFILE_PATH = "scripts/dockerfiles"
-        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
+        AWS_TAG = getAWSTag(DOCKER_TAG)
     }
 
     stages {
-        stage('Setup'){
+        stage('Setup') {
             steps {
                 echo "Printing environment variables..."
                 sh "env | sort"
             }
         }
 
-        stage ('Build') {
+        stage('Build') {
             steps {
-                echo "Building $ARTIFACT_TAG..."
                 sh './gradlew classes'
             }
         }
 
-        stage ('Test') {
+        stage('Test') {
             steps {
                 sh "./gradlew test"
 
@@ -124,14 +112,11 @@ pipeline {
             }
         }
 
-        stage ('Assemble') {
+        stage('Assemble') {
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
-                echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
+                sh """
                     echo ${BUILD_NUMBER}
 
                     ./gradlew assemble
@@ -160,26 +145,20 @@ pipeline {
 
                     tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
                     tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-                    """
-
-                    if (statusCode > 0) {
-                        error "Failure in Assemble stage."
-                    }
-                }
+                """.stripIndent()
             }
         }
 
-        stage ('Release') {
+        stage('Release') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
 
             steps {
+                echo "Publishing to $ARTIFACTORY_URL"
+
                 script {
-                    try {
-                        def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
-                        def uploadSpec =
-                        """
+                    def uploadSpec = """
                         {
                             "files": [
                                 {
@@ -194,7 +173,13 @@ pipeline {
                                 }
                             ]
                         }
-                        """
+                    """
+
+                    try {
+                        def server = Artifactory.newServer(
+                            url: 'https://cae-artifactory.jpl.nasa.gov/artifactory',
+                            credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86')
+
                         def buildInfo = server.upload spec: uploadSpec
                         server.publishBuildInfo buildInfo
                     } catch (Exception e) {
@@ -205,10 +190,11 @@ pipeline {
             }
         }
 
-        stage ('Docker') {
+        stage('Docker') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
+
             steps {
                 script {
                     imageNames = getDockerImageName(env.DOCKERFILE_DIR)
@@ -220,9 +206,7 @@ pipeline {
                             buildImages.push(tag_name)
                         }
                     }
-
                 }
-
             }
         }
 
@@ -231,31 +215,38 @@ pipeline {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
             steps {
-                echo 'Deployment stage started...'
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'mpsa-aws-test-account']]) {
-                    script{
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'mpsa-aws-test-account']]
+                ) {
+                    script {
                         echo 'Logging out docker'
                         sh 'docker logout || true'
                         echo 'Logging into ECR'
-                        sh ('aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR')
+                        sh 'aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR'
 
                         def filenames = getDockerImageName(env.DOCKERFILE_DIR)
-                        docker.withRegistry(AWS_ECR){
+                        docker.withRegistry(AWS_ECR) {
                             for (def name: imageNames) {
-                                def old_tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
-                                def new_tag_name="$AWS_ECR_PATH/$name:$AWS_TAG"
-                                def changeTagCmd = "docker tag $old_tag_name $new_tag_name"
-                                def pushCmd = "docker push $new_tag_name"
+                                def old_tag_name = "$ARTIFACT_PATH/$name:$DOCKER_TAG"
+                                def new_tag_name = "$AWS_ECR_PATH/$name:$AWS_TAG"
 
                                 // retag the image and push to aws
-                                sh changeTagCmd
-                                sh pushCmd
+                                sh "docker tag $old_tag_name $new_tag_name"
+                                sh "docker push $new_tag_name"
+
                                 buildImages.push(new_tag_name)
                             }
+
                             sleep 5
                             try {
                                 sh '''
-                                aws ecs stop-task --cluster "aerie-${AWS_TAG}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${AWS_TAG}-cluster" --output text --query taskArns[0])
+                                    aws ecs stop-task \
+                                        --cluster "aerie-${AWS_TAG}-cluster" \
+                                        --task $(aws ecs list-tasks \
+                                                     --cluster "aerie-${AWS_TAG}-cluster" \
+                                                     --output text \
+                                                     --query taskArns[0])
                                 '''
                             } catch (Exception e) {
                                 echo "Restarting failed since the task does not exist."
@@ -273,8 +264,7 @@ pipeline {
             script {
                 println(buildImages)
                 for (def image: buildImages) {
-                    def removeCmd = "docker rmi $image"
-                    sh removeCmd
+                    sh "docker rmi $image"
                 }
             }
             echo 'Cleaning up images'
