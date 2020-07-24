@@ -116,10 +116,7 @@ pipeline {
             }
         }
 
-        stage ('Archive') {
-            when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-            }
+        stage ('Assemble') {
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
@@ -154,24 +151,22 @@ pipeline {
                        /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
 
                     tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
-                    """
-
-                    if (statusCode > 0) {
-                        error "Failure in Archive stage."
-                    }
-                }
-
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
                     tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
                     """
 
                     if (statusCode > 0) {
-                        error "Failure in Archive stage."
+                        error "Failure in Assemble stage."
                     }
                 }
+            }
+        }
 
+        stage ('Release') {
+            when {
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+            }
+
+            steps {
                 script {
                     try {
                         def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
