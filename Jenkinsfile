@@ -110,8 +110,6 @@ pipeline {
 
     stage('Assemble') {
       steps {
-        // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
-
         sh """
           echo ${BUILD_NUMBER}
 
@@ -152,6 +150,7 @@ pipeline {
         echo "Publishing to $ARTIFACTORY_URL"
 
         script {
+          // TODO: Publish merlin-sdk.jar to Artifactory as a Maven package
           def uploadSpec = JsonOutput.toJson([
             files: [
               [
