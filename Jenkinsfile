@@ -2,6 +2,10 @@ def getDockerCompatibleTag(tag) {
   return tag.replaceAll('\\+', '-')
 }
 
+def getArtifactoryTagName(name) {
+  return "$ARTIFACT_PATH/$name:$DOCKER_TAG"
+}
+
 def getDockerImageName(folder) {
   def list = []
 
@@ -59,8 +63,6 @@ def getArtifactTag() {
 
 // Save built image name:tag
 def buildImages = []
-// Save dockerfile name inside script/Dockerfiles
-def imageNames = []
 
 pipeline {
   agent {
@@ -189,11 +191,10 @@ pipeline {
 
       steps {
         script {
-          imageNames = getDockerImageName(env.DOCKERFILE_DIR)
           docker.withRegistry("https://$ARTIFACTORY_URL", '9db65bd3-f8f0-4de0-b344-449ae2782b86') {
-            for (def name: imageNames) {
-              def tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
-              def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm ." )
+            for (def name: getDockerImageName(env.DOCKERFILE_DIR)) {
+              def tag_name = getArtifactoryTagName(name)
+              def image = docker.build(tag_name, "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm .")
               image.push()
               buildImages.push(tag_name)
             }
@@ -217,10 +218,9 @@ pipeline {
             echo 'Logging into ECR'
             sh 'aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR'
 
-            def filenames = getDockerImageName(env.DOCKERFILE_DIR)
             docker.withRegistry(AWS_ECR) {
-              for (def name: imageNames) {
-                def old_tag_name = "$ARTIFACT_PATH/$name:$DOCKER_TAG"
+              for (def name: getDockerImageName(env.DOCKERFILE_DIR)) {
+                def old_tag_name = getArtifactoryTagName(name)
                 def new_tag_name = "$AWS_ECR_PATH/$name:$AWS_TAG"
 
                 // retag the image and push to aws
