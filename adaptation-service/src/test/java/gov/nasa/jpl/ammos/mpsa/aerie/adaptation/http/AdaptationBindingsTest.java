@@ -42,7 +42,7 @@ public final class AdaptationBindingsTest {
             config.enableCorsForAllOrigins();
             config.registerPlugin(new AdaptationBindings(app));
         });
-        SERVER.start();
+        SERVER.start(0);  // 0 for arbitrary port
     }
 
     @AfterClass

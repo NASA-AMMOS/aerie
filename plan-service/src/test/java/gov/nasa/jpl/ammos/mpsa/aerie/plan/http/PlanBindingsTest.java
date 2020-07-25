@@ -39,7 +39,7 @@ public final class PlanBindingsTest {
           .registerPlugin(new PlanBindings(app));
     });
 
-    SERVER.start();
+    SERVER.start(0);  // 0 for arbitrary port
   }
 
   @AfterClass
