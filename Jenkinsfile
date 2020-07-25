@@ -44,9 +44,10 @@ def getArtifactoryUrl() {
 }
 
 def getPublishPath() {
-  if (GIT_BRANCH ==~ /release-.*/) {
-    return "general/gov/nasa/jpl/aerie/"
-  } else if (GIT_BRANCH ==~ /staging/) {
+  def matcher = (GIT_BRANCH =~ /release-(.*)/)
+  if (matcher.matches()) {
+    return "general/gov/nasa/jpl/aerie/${matcher[0][1]}/"
+  } else if (GIT_BRANCH == 'staging') {
     return "general-stage/gov/nasa/jpl/aerie/"
   } else {
     return "general-develop/gov/nasa/jpl/aerie/"
