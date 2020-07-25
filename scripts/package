@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -e
+
+REPOSITORY_DIR=$(dirname $(dirname $(realpath -s ${BASH_SOURCE})))
+TAR_PREP_DIR=$(mktemp -d)
+
+# For adaptations
+mkdir -p "${TAR_PREP_DIR}"/adaptations
+cp "${REPOSITORY_DIR}"/sample-adaptation/build/libs/*.jar \
+   "${REPOSITORY_DIR}"/banananation/build/libs/*.jar \
+   "${TAR_PREP_DIR}"/adaptations/
+
+# For services
+mkdir -p "${TAR_PREP_DIR}"/services
+cp "${REPOSITORY_DIR}"/plan-service/build/distributions/*.tar \
+   "${REPOSITORY_DIR}"/adaptation-service/build/distributions/*.tar \
+   "${TAR_PREP_DIR}"/services/
+
+# For merlin-sdk
+mkdir -p "${TAR_PREP_DIR}"/merlin-sdk
+cp "${REPOSITORY_DIR}"/merlin-sdk/build/libs/*.jar \
+   "${TAR_PREP_DIR}"/merlin-sdk/
+
+# For merlin-cli
+mkdir -p "${TAR_PREP_DIR}"/merlin-cli
+cp "${REPOSITORY_DIR}"/merlin-cli/build/distributions/*.tar \
+   "${TAR_PREP_DIR}"/merlin-cli/
+
+tar -czf aerie.tar.gz -C "${TAR_PREP_DIR}" .
+tar -czf aerie-docker-compose.tar.gz -C "${REPOSITORY_DIR}"/scripts/docker-compose-aerie .
+
+rm -rf "${TAR_PREP_DIR}"

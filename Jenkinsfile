@@ -111,34 +111,7 @@ pipeline {
 
     stage('Assemble') {
       steps {
-        sh """
-          echo ${BUILD_NUMBER}
-
-          # For adaptations
-          mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
-          cp sample-adaptation/build/libs/*.jar \
-             banananation/build/libs/*.jar \
-             /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
-
-          # For services
-          mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
-          cp plan-service/build/distributions/*.tar \
-             adaptation-service/build/distributions/*.tar \
-             /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
-
-          # For merlin-sdk
-          mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
-          cp merlin-sdk/build/libs/*.jar \
-             /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
-
-          # For merlin-cli
-          mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
-          cp merlin-cli/build/distributions/*.tar \
-             /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
-
-          tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
-          tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-        """.stripIndent()
+        sh 'scripts/package'
       }
     }
 
@@ -152,16 +125,17 @@ pipeline {
 
         script {
           // TODO: Publish merlin-sdk.jar to Artifactory as a Maven package
+          def publishPath = getPublishPath()
           def uploadSpec = JsonOutput.toJson([
             files: [
               [
-                pattern: "aerie-${ARTIFACT_TAG}.tar.gz",
-                target: getPublishPath(),
+                pattern: "aerie.tar.gz",
+                target: publishPath,
                 recursive: false,
               ],
               [
                 pattern: "aerie-docker-compose.tar.gz",
-                target: getPublishPath(),
+                target: publishPath,
                 recursive: false,
               ],
             ],
@@ -262,9 +236,6 @@ pipeline {
 
       echo 'Logging out docker'
       sh 'docker logout || true'
-
-      echo 'Remove temp folder'
-      sh 'rm -rf /tmp/aerie-jenkins'
     }
 
     unstable {
