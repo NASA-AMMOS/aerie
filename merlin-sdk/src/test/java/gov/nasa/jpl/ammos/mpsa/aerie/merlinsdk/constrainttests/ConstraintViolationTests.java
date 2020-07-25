@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constrainttests;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ConstraintViolationTest {
+public class ConstraintViolationTests {
 
   @Test
   public void ConstraintViolationTest() {
@@ -25,8 +25,8 @@ public class ConstraintViolationTest {
 
     var windows = violation.violationWindows;
     Windows expected = new Windows();
-    expected.add(0, TimeUnit.SECONDS, 3, TimeUnit.SECONDS);
-    expected.add(5, TimeUnit.SECONDS, 8, TimeUnit.SECONDS);
+    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
+    expected.add(5, Duration.SECONDS, 8, Duration.SECONDS);
     assertEquals(windows, expected);
   }
 
