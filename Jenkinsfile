@@ -152,22 +152,20 @@ pipeline {
         echo "Publishing to $ARTIFACTORY_URL"
 
         script {
-          def uploadSpec = """
-            {
-              "files": [
-                {
-                  "pattern": "aerie-${ARTIFACT_TAG}.tar.gz",
-                  "target": "${getPublishPath()}",
-                  "recursive": false
-                },
-                {
-                  "pattern": "aerie-docker-compose.tar.gz",
-                  "target": "${getPublishPath()}",
-                  "recursive": false
-                }
-              ]
-            }
-          """
+          def uploadSpec = JsonOutput.toJson([
+            files: [
+              [
+                pattern: "aerie-${ARTIFACT_TAG}.tar.gz",
+                target: getPublishPath(),
+                recursive: false,
+              ],
+              [
+                pattern: "aerie-docker-compose.tar.gz",
+                target: getPublishPath(),
+                recursive: false,
+              ],
+            ],
+          ])
 
           try {
             def server = Artifactory.newServer(
