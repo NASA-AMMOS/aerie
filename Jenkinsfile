@@ -96,13 +96,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh './gradlew classes'
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh "./gradlew test"
+                sh './gradlew build'
 
                 // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
                 // Bump their last modified time to trick Jenkins.
@@ -118,8 +112,6 @@ pipeline {
 
                 sh """
                     echo ${BUILD_NUMBER}
-
-                    ./gradlew assemble
 
                     # For adaptations
                     mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
