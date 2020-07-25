@@ -96,7 +96,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh './gradlew build'
+                sh './gradlew build --parallel'
 
                 // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
                 // Bump their last modified time to trick Jenkins.
