@@ -4,18 +4,18 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Paramet
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
-public final class CharacterParameterMapper implements ParameterMapper<Character> {
+public final class CharacterValueMapper implements ValueMapper<Character> {
   @Override
-  public ParameterSchema getParameterSchema() {
+  public ParameterSchema getValueSchema() {
     return ParameterSchema.STRING;
   }
 
   @Override
-  public Result<Character, String> deserializeParameter(final SerializedParameter serializedParameter) {
-    return serializedParameter
+  public Result<Character, String> deserializeValue(final SerializedParameter serializedValue) {
+    return serializedValue
         .asString()
         .map(Result::<String, String>success)
-        .orElseGet(() -> Result.failure("Expected string, got " + serializedParameter.toString()))
+        .orElseGet(() -> Result.failure("Expected string, got " + serializedValue.toString()))
         .match(
             string -> {
               if (string.length() != 1) {
@@ -29,7 +29,7 @@ public final class CharacterParameterMapper implements ParameterMapper<Character
   }
 
   @Override
-  public SerializedParameter serializeParameter(final Character parameter) {
-    return SerializedParameter.of(Character.toString(parameter));
+  public SerializedParameter serializeValue(final Character value) {
+    return SerializedParameter.of(Character.toString(value));
   }
 }

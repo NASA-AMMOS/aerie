@@ -8,35 +8,35 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class MapParameterMapper<K, V> implements ParameterMapper<Map<K, V>> {
-  private final ParameterMapper<K> keyMapper;
-  private final ParameterMapper<V> elementMapper;
+public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
+  private final ValueMapper<K> keyMapper;
+  private final ValueMapper<V> elementMapper;
 
-  public MapParameterMapper(final ParameterMapper<K> keyMapper, final ParameterMapper<V> elementMapper) {
+  public MapValueMapper(final ValueMapper<K> keyMapper, final ValueMapper<V> elementMapper) {
     this.keyMapper = keyMapper;
     this.elementMapper = elementMapper;
   }
 
   @Override
-  public ParameterSchema getParameterSchema() {
+  public ParameterSchema getValueSchema() {
     return ParameterSchema.ofStruct(Map.of(
-        "keys", ParameterSchema.ofSequence(keyMapper.getParameterSchema()),
-        "values", ParameterSchema.ofSequence(elementMapper.getParameterSchema())));
+        "keys", ParameterSchema.ofSequence(keyMapper.getValueSchema()),
+        "values", ParameterSchema.ofSequence(elementMapper.getValueSchema())));
   }
 
   @Override
-  public Result<Map<K, V>, String> deserializeParameter(final SerializedParameter serializedParameter) {
-    return serializedParameter
+  public Result<Map<K, V>, String> deserializeValue(final SerializedParameter serializedValue) {
+    return serializedValue
         .asMap()
         .map(Result::<Map<String, SerializedParameter>, String>success)
-        .orElseGet(() -> Result.failure("Expected list, got " + serializedParameter.toString()))
+        .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
         .match(
             serializedMap -> {
-              final var keys = new ListParameterMapper<>(this.keyMapper)
-                  .deserializeParameter(serializedMap.get("keys"))
+              final var keys = new ListValueMapper<>(this.keyMapper)
+                  .deserializeValue(serializedMap.get("keys"))
                   .getSuccessOrThrow();
-              final var values = new ListParameterMapper<>(this.elementMapper)
-                  .deserializeParameter(serializedMap.get("values"))
+              final var values = new ListValueMapper<>(this.elementMapper)
+                  .deserializeValue(serializedMap.get("values"))
                   .getSuccessOrThrow();
 
               final var map = new HashMap<K, V>();
@@ -51,7 +51,7 @@ public final class MapParameterMapper<K, V> implements ParameterMapper<Map<K, V>
   }
 
   @Override
-  public SerializedParameter serializeParameter(final Map<K, V> fields) {
+  public SerializedParameter serializeValue(final Map<K, V> fields) {
     final var keys = new ArrayList<K>();
     final var values = new ArrayList<V>();
     for (final var field : fields.entrySet()) {
@@ -60,8 +60,8 @@ public final class MapParameterMapper<K, V> implements ParameterMapper<Map<K, V>
     }
 
     return SerializedParameter.of(Map.of(
-        "keys", new ListParameterMapper<>(this.keyMapper).serializeParameter(keys),
-        "values", new ListParameterMapper<>(this.elementMapper).serializeParameter(values)
+        "keys", new ListValueMapper<>(this.keyMapper).serializeValue(keys),
+        "values", new ListValueMapper<>(this.elementMapper).serializeValue(values)
     ));
   }
 }

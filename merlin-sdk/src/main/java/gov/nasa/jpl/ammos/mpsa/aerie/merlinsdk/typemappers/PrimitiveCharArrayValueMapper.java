@@ -7,25 +7,25 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrimitiveFloatArrayParameterMapper implements ParameterMapper<float[]> {
+public class PrimitiveCharArrayValueMapper implements ValueMapper<char[]> {
     @Override
-    public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofSequence(ParameterSchema.REAL);
+    public ParameterSchema getValueSchema() {
+        return ParameterSchema.ofSequence(ParameterSchema.STRING);
     }
 
     @Override
-    public Result<float[], String> deserializeParameter(SerializedParameter serializedParameter) {
-        var elementMapper = new FloatParameterMapper();
-        return serializedParameter
+    public Result<char[], String> deserializeValue(SerializedParameter serializedValue) {
+        var elementMapper = new CharacterValueMapper();
+        return serializedValue
                 .asList()
                 .map(Result::<List<SerializedParameter>, String>success)
-                .orElseGet(() -> Result.failure("Expected list, got " + serializedParameter.toString()))
+                .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
                 .match(
                         serializedElements -> {
-                            final float[] elements = new float[serializedElements.size()];
+                            final char[] elements = new char[serializedElements.size()];
                             int index = 0;
                             for (final var serializedElement : serializedElements) {
-                                final var result = elementMapper.deserializeParameter(serializedElement);
+                                final var result = elementMapper.deserializeValue(serializedElement);
                                 if (result.getKind() == Result.Kind.Failure) return result.mapSuccess(_left -> null);
 
                                 // SAFETY: `result` must be a Success variant.
@@ -38,10 +38,10 @@ public class PrimitiveFloatArrayParameterMapper implements ParameterMapper<float
     }
 
     @Override
-    public SerializedParameter serializeParameter(float[] elements) {
+    public SerializedParameter serializeValue(char[] elements) {
         final var serializedElements = new ArrayList<SerializedParameter>(elements.length);
         for (final var element : elements) {
-            serializedElements.add(SerializedParameter.of(element));
+            serializedElements.add(SerializedParameter.of(Character.toString(element)));
         }
         return SerializedParameter.of(serializedElements);
     }

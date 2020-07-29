@@ -7,25 +7,25 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PrimitiveDoubleArrayParameterMapper implements ParameterMapper<double[]> {
+public class PrimitiveDoubleArrayValueMapper implements ValueMapper<double[]> {
     @Override
-    public ParameterSchema getParameterSchema() {
+    public ParameterSchema getValueSchema() {
         return ParameterSchema.ofSequence(ParameterSchema.REAL);
     }
 
     @Override
-    public Result<double[], String> deserializeParameter(SerializedParameter serializedParameter) {
-        var elementMapper = new DoubleParameterMapper();
-        return serializedParameter
+    public Result<double[], String> deserializeValue(SerializedParameter serializedValue) {
+        var elementMapper = new DoubleValueMapper();
+        return serializedValue
                 .asList()
                 .map(Result::<List<SerializedParameter>, String>success)
-                .orElseGet(() -> Result.failure("Expected list, got " + serializedParameter.toString()))
+                .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
                 .match(
                         serializedElements -> {
                             final double[] elements = new double[serializedElements.size()];
                             int index = 0;
                             for (final var serializedElement : serializedElements) {
-                                final var result = elementMapper.deserializeParameter(serializedElement);
+                                final var result = elementMapper.deserializeValue(serializedElement);
                                 if (result.getKind() == Result.Kind.Failure) return result.mapSuccess(_left -> null);
 
                                 // SAFETY: `result` must be a Success variant.
@@ -38,7 +38,7 @@ public class PrimitiveDoubleArrayParameterMapper implements ParameterMapper<doub
     }
 
     @Override
-    public SerializedParameter serializeParameter(double[] elements) {
+    public SerializedParameter serializeValue(double[] elements) {
         final var serializedElements = new ArrayList<SerializedParameter>(elements.length);
         for (final var element : elements) {
             serializedElements.add(SerializedParameter.of(element));

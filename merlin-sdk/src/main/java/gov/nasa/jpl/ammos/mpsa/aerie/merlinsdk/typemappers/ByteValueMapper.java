@@ -4,23 +4,23 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Paramet
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
-public final class IntegerParameterMapper implements ParameterMapper<Integer> {
+public final class ByteValueMapper implements ValueMapper<Byte> {
   @Override
-  public ParameterSchema getParameterSchema() {
+  public ParameterSchema getValueSchema() {
     return ParameterSchema.INT;
   }
 
   @Override
-  public Result<Integer, String> deserializeParameter(final SerializedParameter serializedParameter) {
-    return serializedParameter
+  public Result<Byte, String> deserializeValue(final SerializedParameter serializedValue) {
+    return serializedValue
         .asInt()
         .map(Result::<Long, String>success)
-        .orElseGet(() -> Result.failure("Expected integral number, got " + serializedParameter.toString()))
+        .orElseGet(() -> Result.failure("Expected integral number, got " + serializedValue.toString()))
         .match(
             (Long x) -> {
-              final var y = x.intValue();
+              final var y = x.byteValue();
               if (x != y) {
-                return Result.failure("Invalid parameter; value outside range of `int`");
+                return Result.failure("Invalid parameter; value outside range of `byte`");
               } else {
                 return Result.success(y);
               }
@@ -30,7 +30,7 @@ public final class IntegerParameterMapper implements ParameterMapper<Integer> {
   }
 
   @Override
-  public SerializedParameter serializeParameter(final Integer parameter) {
-    return SerializedParameter.of(parameter);
+  public SerializedParameter serializeValue(final Byte value) {
+    return SerializedParameter.of(value);
   }
 }

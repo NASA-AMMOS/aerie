@@ -7,39 +7,39 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class ArrayParameterMapper<T> implements ParameterMapper<T[]> {
-    private final ParameterMapper<T> elementMapper;
+public class ArrayValueMapper<T> implements ValueMapper<T[]> {
+    private final ValueMapper<T> elementMapper;
     private final Class<? super T> elementClass;
 
-    public ArrayParameterMapper(final ParameterMapper<T> elementMapper, Class<? super T> elementClass) {
+    public ArrayValueMapper(final ValueMapper<T> elementMapper, Class<? super T> elementClass) {
         this.elementMapper = elementMapper;
         this.elementClass = elementClass;
     }
 
     @Override
-    public ParameterSchema getParameterSchema() {
-        return ParameterSchema.ofSequence(elementMapper.getParameterSchema());
+    public ParameterSchema getValueSchema() {
+        return ParameterSchema.ofSequence(elementMapper.getValueSchema());
     }
 
     @Override
-    public Result<T[], String> deserializeParameter(SerializedParameter serializedParameter) {
-        final var list = serializedParameter.asList().get(); // TODO: Could fail, should fix
+    public Result<T[], String> deserializeValue(SerializedParameter serializedValue) {
+        final var list = serializedValue.asList().get(); // TODO: Could fail, should fix
 
         @SuppressWarnings("unchecked")
         final var arr = (T[]) Array.newInstance(this.elementClass, list.size());
 
         for (int i=0; i<list.size(); i++) {
-            arr[i] = this.elementMapper.deserializeParameter(list.get(i)).getSuccessOrThrow();
+            arr[i] = this.elementMapper.deserializeValue(list.get(i)).getSuccessOrThrow();
         }
 
         return Result.success(arr);
     }
 
     @Override
-    public SerializedParameter serializeParameter(T[] parameter) {
+    public SerializedParameter serializeValue(T[] value) {
         final var serializedElements = new ArrayList<SerializedParameter>();
-        for (final var element : parameter) {
-            serializedElements.add(this.elementMapper.serializeParameter(element));
+        for (final var element : value) {
+            serializedElements.add(this.elementMapper.serializeValue(element));
         }
         return SerializedParameter.of(serializedElements);
     }

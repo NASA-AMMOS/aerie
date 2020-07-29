@@ -7,29 +7,29 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ListParameterMapper<T> implements ParameterMapper<List<T>> {
-  private final ParameterMapper<T> elementMapper;
+public final class ListValueMapper<T> implements ValueMapper<List<T>> {
+  private final ValueMapper<T> elementMapper;
 
-  public ListParameterMapper(final ParameterMapper<T> elementMapper) {
+  public ListValueMapper(final ValueMapper<T> elementMapper) {
     this.elementMapper = elementMapper;
   }
 
   @Override
-  public ParameterSchema getParameterSchema() {
-    return ParameterSchema.ofSequence(elementMapper.getParameterSchema());
+  public ParameterSchema getValueSchema() {
+    return ParameterSchema.ofSequence(elementMapper.getValueSchema());
   }
 
   @Override
-  public Result<List<T>, String> deserializeParameter(final SerializedParameter serializedParameter) {
-    return serializedParameter
+  public Result<List<T>, String> deserializeValue(final SerializedParameter serializedValue) {
+    return serializedValue
         .asList()
         .map(Result::<List<SerializedParameter>, String>success)
-        .orElseGet(() -> Result.failure("Expected list, got " + serializedParameter.toString()))
+        .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
         .match(
             serializedElements -> {
               final var elements = new ArrayList<T>();
               for (final var serializedElement : serializedElements) {
-                final var result = this.elementMapper.deserializeParameter(serializedElement);
+                final var result = this.elementMapper.deserializeValue(serializedElement);
                 if (result.getKind() == Result.Kind.Failure) return result.mapSuccess(_left -> null);
 
                 // SAFETY: `result` must be a Success variant.
@@ -42,10 +42,10 @@ public final class ListParameterMapper<T> implements ParameterMapper<List<T>> {
   }
 
   @Override
-  public SerializedParameter serializeParameter(final List<T> elements) {
+  public SerializedParameter serializeValue(final List<T> elements) {
     final var serializedElements = new ArrayList<SerializedParameter>();
     for (final var element : elements) {
-      serializedElements.add(this.elementMapper.serializeParameter(element));
+      serializedElements.add(this.elementMapper.serializeValue(element));
     }
     return SerializedParameter.of(serializedElements);
   }

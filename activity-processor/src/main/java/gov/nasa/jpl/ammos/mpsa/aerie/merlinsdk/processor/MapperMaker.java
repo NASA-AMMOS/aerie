@@ -17,7 +17,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.Paramet
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -43,7 +43,7 @@ class MapperMaker {
 
       mapperFieldSpecs.add(FieldSpec
         .builder(
-            ParameterizedTypeName.get(ClassName.get(ParameterMapper.class), parameterTypeReference.getTypeName()),
+            ParameterizedTypeName.get(ClassName.get(ValueMapper.class), parameterTypeReference.getTypeName()),
             "mapper_" + parameterName,
             Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .initializer("$L", parameterTypeReference.getMapper())
@@ -66,7 +66,7 @@ class MapperMaker {
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
 
-        blockBuilder.addStatement("$1L.put($2S, this.mapper_$2L.getParameterSchema())", parametersVarName, parameterName);
+        blockBuilder.addStatement("$1L.put($2S, this.mapper_$2L.getValueSchema())", parametersVarName, parameterName);
       }
 
       schemasBlock = blockBuilder.build();
@@ -112,7 +112,7 @@ class MapperMaker {
         blockBuilder
             .add("case $S:\n", parameterName)
             .indent()
-            .addStatement("$L.$L = this.mapper_$L.deserializeParameter($L.getValue()).getSuccessOrThrow()",
+            .addStatement("$L.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow()",
                 activityVarName, parameterName, parameterName, entryVarName)
             .addStatement("break")
             .unindent();
@@ -165,7 +165,7 @@ class MapperMaker {
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
 
-        blockBuilder.addStatement("$L.put($S, this.mapper_$L.serializeParameter($L.$L))",
+        blockBuilder.addStatement("$L.put($S, this.mapper_$L.serializeValue($L.$L))",
             parametersVarName, parameterName, parameterName, activityVarName, parameterName);
       }
 
