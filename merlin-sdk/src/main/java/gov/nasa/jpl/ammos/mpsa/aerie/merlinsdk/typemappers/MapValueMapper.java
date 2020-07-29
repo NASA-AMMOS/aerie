@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
@@ -25,10 +25,10 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   }
 
   @Override
-  public Result<Map<K, V>, String> deserializeValue(final SerializedParameter serializedValue) {
+  public Result<Map<K, V>, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asMap()
-        .map(Result::<Map<String, SerializedParameter>, String>success)
+        .map(Result::<Map<String, SerializedValue>, String>success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
         .match(
             serializedMap -> {
@@ -51,7 +51,7 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   }
 
   @Override
-  public SerializedParameter serializeValue(final Map<K, V> fields) {
+  public SerializedValue serializeValue(final Map<K, V> fields) {
     final var keys = new ArrayList<K>();
     final var values = new ArrayList<V>();
     for (final var field : fields.entrySet()) {
@@ -59,7 +59,7 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
       values.add(field.getValue());
     }
 
-    return SerializedParameter.of(Map.of(
+    return SerializedValue.of(Map.of(
         "keys", new ListValueMapper<>(this.keyMapper).serializeValue(keys),
         "values", new ListValueMapper<>(this.elementMapper).serializeValue(values)
     ));

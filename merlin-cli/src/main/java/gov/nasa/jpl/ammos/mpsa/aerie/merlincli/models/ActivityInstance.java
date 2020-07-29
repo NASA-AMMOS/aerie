@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 
 import java.util.Map;
 
@@ -12,7 +12,7 @@ public class ActivityInstance {
     private String activityType;
     private String startTimestamp;
     private String name;
-    private Map<String, SerializedParameter> parameters;
+    private Map<String, SerializedValue> parameters;
 
     public ActivityInstance() {
         this.activityType = null;
@@ -71,11 +71,11 @@ public class ActivityInstance {
         return name;
     }
 
-    public void setParameters(Map<String, SerializedParameter> parameters) {
+    public void setParameters(Map<String, SerializedValue> parameters) {
         this.parameters = parameters;
     }
 
-    public Map<String, SerializedParameter> getParameters() {
+    public Map<String, SerializedValue> getParameters() {
         return Map.copyOf(this.parameters);
     }
 }

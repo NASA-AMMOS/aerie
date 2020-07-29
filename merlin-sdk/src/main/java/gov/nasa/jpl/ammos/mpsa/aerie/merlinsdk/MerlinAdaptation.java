@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
@@ -55,7 +55,7 @@ public interface MerlinAdaptation<Event> {
     void runActivity(ReactionContext<T, Event, Activity> ctx, String activityId, Activity activity);
 
     Set<String> states();
-    SerializedParameter getSerializedStateAt(String name, History<T, Event> history);
+    SerializedValue getSerializedStateAt(String name, History<T, Event> history);
     List<ConstraintViolation> getConstraintViolationsAt(History<T, Event> history);
   }
 }

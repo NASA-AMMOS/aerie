@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
@@ -48,12 +48,12 @@ public final class ResponseSerializers {
     return serializeList(x -> serializeString(x), elements);
   }
 
-  public static JsonValue serializeActivityParameter(final SerializedParameter parameter) {
+  public static JsonValue serializeActivityParameter(final SerializedValue parameter) {
     if (parameter == null) return JsonValue.NULL;
     return parameter.match(new ParameterSerializationVisitor());
   }
 
-  public static JsonValue serializeActivityParameterMap(final Map<String, SerializedParameter> fields) {
+  public static JsonValue serializeActivityParameterMap(final Map<String, SerializedValue> fields) {
     return serializeMap(x -> serializeActivityParameter(x), fields);
   }
 
@@ -174,7 +174,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  static private class ParameterSerializationVisitor implements SerializedParameter.Visitor<JsonValue> {
+  static private class ParameterSerializationVisitor implements SerializedValue.Visitor<JsonValue> {
     @Override
     public JsonValue onNull() {
       return JsonValue.NULL;
@@ -201,12 +201,12 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onMap(final Map<String, SerializedParameter> fields) {
+    public JsonValue onMap(final Map<String, SerializedValue> fields) {
       return serializeMap(x -> x.match(this), fields);
     }
 
     @Override
-    public JsonValue onList(final List<SerializedParameter> elements) {
+    public JsonValue onList(final List<SerializedValue> elements) {
       return serializeList(x -> x.match(this), elements);
     }
   }

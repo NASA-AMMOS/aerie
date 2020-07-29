@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -169,7 +169,7 @@ public final class AdaptationBindings implements Plugin {
             final String adaptationId = ctx.pathParam("adaptationId");
             final String activityTypeId = ctx.pathParam("activityTypeId");
 
-            final Map<String, SerializedParameter> activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
+            final Map<String, SerializedValue> activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
             final SerializedActivity serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
             final List<String> failures = this.app.validateActivityParameters(adaptationId, serializedActivity);

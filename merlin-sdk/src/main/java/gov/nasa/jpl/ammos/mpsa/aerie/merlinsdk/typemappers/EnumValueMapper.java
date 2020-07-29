@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> {
@@ -17,7 +17,7 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
     }
 
     @Override
-    public Result<E, String> deserializeValue(SerializedParameter serializedValue) {
+    public Result<E, String> deserializeValue(SerializedValue serializedValue) {
         return serializedValue
                 .asString()
                 .map(Result::<String, String>success)
@@ -26,8 +26,8 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
     }
 
     @Override
-    public SerializedParameter serializeValue(E value) {
-        return SerializedParameter.of(value.name());
+    public SerializedValue serializeValue(E value) {
+        return SerializedValue.of(value.name());
     }
 
     private Result<E, String> deserializeEnumValue(String name) {

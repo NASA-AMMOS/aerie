@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.IndependentStateEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
@@ -16,14 +16,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public final class IndependentStateFactory {
-  private final Map<String, SerializedParameter> settableStates = new HashMap<>();
+  private final Map<String, SerializedValue> settableStates = new HashMap<>();
   private final Map<String, Double> cumulableStates = new HashMap<>();
 
-  private final Function<String, StateQuery<SerializedParameter>> model;
+  private final Function<String, StateQuery<SerializedValue>> model;
   private final Consumer<IndependentStateEvent> emitter;
 
   public IndependentStateFactory(
-      final Function<String, StateQuery<SerializedParameter>> model,
+      final Function<String, StateQuery<SerializedValue>> model,
       final Consumer<IndependentStateEvent> emitter
   ) {
     this.model = model;
@@ -79,7 +79,7 @@ public final class IndependentStateFactory {
     return this.settable(name, initialValue, new StringValueMapper());
   }
 
-  public Map<String, SerializedParameter> getSettableStates() {
+  public Map<String, SerializedValue> getSettableStates() {
     return Collections.unmodifiableMap(this.settableStates);
   }
 

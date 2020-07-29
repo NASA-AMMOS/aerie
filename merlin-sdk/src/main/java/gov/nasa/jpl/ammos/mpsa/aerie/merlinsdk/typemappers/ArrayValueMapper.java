@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.lang.reflect.Array;
@@ -22,7 +22,7 @@ public class ArrayValueMapper<T> implements ValueMapper<T[]> {
     }
 
     @Override
-    public Result<T[], String> deserializeValue(SerializedParameter serializedValue) {
+    public Result<T[], String> deserializeValue(SerializedValue serializedValue) {
         final var list = serializedValue.asList().get(); // TODO: Could fail, should fix
 
         @SuppressWarnings("unchecked")
@@ -36,11 +36,11 @@ public class ArrayValueMapper<T> implements ValueMapper<T[]> {
     }
 
     @Override
-    public SerializedParameter serializeValue(T[] value) {
-        final var serializedElements = new ArrayList<SerializedParameter>();
+    public SerializedValue serializeValue(T[] value) {
+        final var serializedElements = new ArrayList<SerializedValue>();
         for (final var element : value) {
             serializedElements.add(this.elementMapper.serializeValue(element));
         }
-        return SerializedParameter.of(serializedElements);
+        return SerializedValue.of(serializedElements);
     }
 }

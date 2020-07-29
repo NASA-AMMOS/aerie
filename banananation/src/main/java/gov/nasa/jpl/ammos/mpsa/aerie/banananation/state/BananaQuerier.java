@@ -4,13 +4,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.DynamicActivityModelQuerier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.DynamicStateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model.CumulableEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model.CumulableStateApplicator;
@@ -43,13 +43,13 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   private static final DynamicCell<BananaQuerier<?>.InnerQuerier> queryContext = DynamicCell.create();
 
   public static final ReactionContext<?, BananaEvent, Activity> ctx = new DynamicReactionContext<>(reactionContext::get);
-  public static final Function<String, StateQuery<SerializedParameter>> query = (name) -> new DynamicStateQuery<>(() -> queryContext.get().getRegisterQuery(name));
+  public static final Function<String, StateQuery<SerializedValue>> query = (name) -> new DynamicStateQuery<>(() -> queryContext.get().getRegisterQuery(name));
   public static final ActivityModelQuerier activityQuery = new DynamicActivityModelQuerier(() -> queryContext.get().getActivityQuery());
 
   private final ActivityMapper activityMapper;
 
   private final Set<String> stateNames = new HashSet<>();
-  private final Map<String, Query<T, BananaEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
+  private final Map<String, Query<T, BananaEvent, RegisterState<SerializedValue>>> settables = new HashMap<>();
   private final Map<String, Query<T, BananaEvent, RegisterState<Double>>> cumulables = new HashMap<>();
   private final Query<T, BananaEvent, ActivityModel> activityModel;
 
@@ -102,13 +102,13 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   }
 
   @Override
-  public SerializedParameter getSerializedStateAt(final String name, final History<T, BananaEvent> history) {
+  public SerializedValue getSerializedStateAt(final String name, final History<T, BananaEvent> history) {
     return this.getRegisterQueryAt(name, history).get();
   }
 
-  public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, BananaEvent> history) {
+  public StateQuery<SerializedValue> getRegisterQueryAt(final String name, final History<T, BananaEvent> history) {
     if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history);
-    else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedParameter::of);
+    else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedValue::of);
     else throw new RuntimeException("State \"" + name + "\" is not defined");
   }
 
@@ -135,7 +135,7 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
       this.currentHistory = currentHistory;
     }
 
-    public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
+    public StateQuery<SerializedValue> getRegisterQuery(final String name) {
       return BananaQuerier.this.getRegisterQueryAt(name, this.currentHistory.get());
     }
 

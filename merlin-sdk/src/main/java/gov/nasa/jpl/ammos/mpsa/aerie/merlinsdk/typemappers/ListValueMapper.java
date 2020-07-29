@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
@@ -20,10 +20,10 @@ public final class ListValueMapper<T> implements ValueMapper<List<T>> {
   }
 
   @Override
-  public Result<List<T>, String> deserializeValue(final SerializedParameter serializedValue) {
+  public Result<List<T>, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asList()
-        .map(Result::<List<SerializedParameter>, String>success)
+        .map(Result::<List<SerializedValue>, String>success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
         .match(
             serializedElements -> {
@@ -42,11 +42,11 @@ public final class ListValueMapper<T> implements ValueMapper<List<T>> {
   }
 
   @Override
-  public SerializedParameter serializeValue(final List<T> elements) {
-    final var serializedElements = new ArrayList<SerializedParameter>();
+  public SerializedValue serializeValue(final List<T> elements) {
+    final var serializedElements = new ArrayList<SerializedValue>();
     for (final var element : elements) {
       serializedElements.add(this.elementMapper.serializeValue(element));
     }
-    return SerializedParameter.of(serializedElements);
+    return SerializedValue.of(serializedElements);
   }
 }

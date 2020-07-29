@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.RequestDeserializers;
@@ -156,11 +156,11 @@ public final class RemoteAdaptationService implements AdaptationService {
     return timestamps;
   }
 
-  private static Map<String, List<SerializedParameter>> deserializeTimelines(final JsonValue json) {
+  private static Map<String, List<SerializedValue>> deserializeTimelines(final JsonValue json) {
     if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
     final var jsonObject = (JsonObject) json;
 
-    final var timelines = new HashMap<String, List<SerializedParameter>>(jsonObject.size());
+    final var timelines = new HashMap<String, List<SerializedValue>>(jsonObject.size());
     for (final var entry : jsonObject.entrySet()) {
       timelines.put(entry.getKey(), deserializeTimeline(entry.getValue()));
     }
@@ -168,11 +168,11 @@ public final class RemoteAdaptationService implements AdaptationService {
     return timelines;
   }
 
-  private static List<SerializedParameter> deserializeTimeline(final JsonValue json) {
+  private static List<SerializedValue> deserializeTimeline(final JsonValue json) {
     if (!(json instanceof JsonArray)) throw new InvalidServiceResponseException();
     final var jsonArray = (JsonArray) json;
 
-    final var timeline = new ArrayList<SerializedParameter>(jsonArray.size());
+    final var timeline = new ArrayList<SerializedValue>(jsonArray.size());
     for (final var item : jsonArray) {
       try {
         timeline.add(RequestDeserializers.deserializeActivityParameter(item));
@@ -221,8 +221,8 @@ public final class RemoteAdaptationService implements AdaptationService {
     return parameterFailures;
   }
 
-  private JsonValue serializeActivityParameter(final SerializedParameter parameter) {
-    return parameter.match(new SerializedParameter.Visitor<>() {
+  private JsonValue serializeActivityParameter(final SerializedValue parameter) {
+    return parameter.match(new SerializedValue.Visitor<>() {
       @Override
       public JsonValue onNull() {
         return JsonValue.NULL;
@@ -249,18 +249,18 @@ public final class RemoteAdaptationService implements AdaptationService {
       }
 
       @Override
-      public JsonValue onMap(final Map<String, SerializedParameter> value) {
+      public JsonValue onMap(final Map<String, SerializedValue> value) {
         return serializeActivityParameterMap(value);
       }
 
       @Override
-      public JsonValue onList(final List<SerializedParameter> value) {
+      public JsonValue onList(final List<SerializedValue> value) {
         return serializeActivityParameterList(value);
       }
     });
   }
 
-  private JsonValue serializeActivityParameterMap(final Map<String, SerializedParameter> parameterMap) {
+  private JsonValue serializeActivityParameterMap(final Map<String, SerializedValue> parameterMap) {
     final var parameters = Json.createObjectBuilder();
     for (final var entry : parameterMap.entrySet()) {
       parameters.add(entry.getKey(), serializeActivityParameter(entry.getValue()));
@@ -268,7 +268,7 @@ public final class RemoteAdaptationService implements AdaptationService {
     return parameters.build();
   }
 
-  private JsonValue serializeActivityParameterList(final List<SerializedParameter> parameterList) {
+  private JsonValue serializeActivityParameterList(final List<SerializedValue> parameterList) {
     final var parameters = Json.createArrayBuilder();
     for (final var parameter : parameterList) {
       parameters.add(serializeActivityParameter(parameter));

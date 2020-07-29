@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Objects;
 public final class ActivityInstance {
   public String type;
   public String startTimestamp;
-  public Map<String, SerializedParameter> parameters;
+  public Map<String, SerializedValue> parameters;
 
   public ActivityInstance() {}
 

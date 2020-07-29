@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -31,12 +31,12 @@ public final class Fixtures {
         "BiteBanana", new ActivityType("BiteBanana", Map.of(
             "biteSize", ParameterSchema.REAL
         ), Map.of(
-            "biteSize", SerializedParameter.of(1.0)
+            "biteSize", SerializedValue.of(1.0)
         )),
         "PeelBanana", new ActivityType("PeelBanana", Map.of(
             "peelDirection", ParameterSchema.STRING
         ), Map.of(
-            "peelDirection", SerializedParameter.of("fromStem")
+            "peelDirection", SerializedValue.of("fromStem")
         ))
     );
 

@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 public final class NullableValueMapper<T> implements ValueMapper<T> {
@@ -17,7 +17,7 @@ public final class NullableValueMapper<T> implements ValueMapper<T> {
   }
 
   @Override
-  public Result<T, String> deserializeValue(final SerializedParameter serializedValue) {
+  public Result<T, String> deserializeValue(final SerializedValue serializedValue) {
     if (serializedValue.isNull()) {
       return Result.success(null);
     } else {
@@ -26,9 +26,9 @@ public final class NullableValueMapper<T> implements ValueMapper<T> {
   }
 
   @Override
-  public SerializedParameter serializeValue(final T value) {
+  public SerializedValue serializeValue(final T value) {
     if (value == null) {
-      return SerializedParameter.NULL;
+      return SerializedValue.NULL;
     } else {
       return this.valueMapper.serializeValue(value);
     }

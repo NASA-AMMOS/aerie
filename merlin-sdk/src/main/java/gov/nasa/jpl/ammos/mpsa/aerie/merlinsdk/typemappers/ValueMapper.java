@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 /**
@@ -22,7 +22,7 @@ public interface ValueMapper<T> {
    * @param serializedValue A mission-agnostic representation of a domain value.
    * @return Either an adaptation-specific domain object, or a deserialization failure.
    */
-  Result<T, String> deserializeValue(SerializedParameter serializedValue);
+  Result<T, String> deserializeValue(SerializedValue serializedValue);
 
   /**
    * Produces a mission-agnostic representation of an adaptation-specific domain value.
@@ -30,5 +30,5 @@ public interface ValueMapper<T> {
    * @param value An adaptation-specific domain object.
    * @return A mission-agnostic representation of {@code value}.
    */
-  SerializedParameter serializeValue(T value);
+  SerializedValue serializeValue(T value);
 }

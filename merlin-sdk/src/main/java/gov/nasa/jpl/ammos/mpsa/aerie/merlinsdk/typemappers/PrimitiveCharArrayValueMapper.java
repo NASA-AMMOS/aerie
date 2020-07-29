@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
@@ -14,11 +14,11 @@ public class PrimitiveCharArrayValueMapper implements ValueMapper<char[]> {
     }
 
     @Override
-    public Result<char[], String> deserializeValue(SerializedParameter serializedValue) {
+    public Result<char[], String> deserializeValue(SerializedValue serializedValue) {
         var elementMapper = new CharacterValueMapper();
         return serializedValue
                 .asList()
-                .map(Result::<List<SerializedParameter>, String>success)
+                .map(Result::<List<SerializedValue>, String>success)
                 .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
                 .match(
                         serializedElements -> {
@@ -38,11 +38,11 @@ public class PrimitiveCharArrayValueMapper implements ValueMapper<char[]> {
     }
 
     @Override
-    public SerializedParameter serializeValue(char[] elements) {
-        final var serializedElements = new ArrayList<SerializedParameter>(elements.length);
+    public SerializedValue serializeValue(char[] elements) {
+        final var serializedElements = new ArrayList<SerializedValue>(elements.length);
         for (final var element : elements) {
-            serializedElements.add(SerializedParameter.of(Character.toString(element)));
+            serializedElements.add(SerializedValue.of(Character.toString(element)));
         }
-        return SerializedParameter.of(serializedElements);
+        return SerializedValue.of(serializedElements);
     }
 }

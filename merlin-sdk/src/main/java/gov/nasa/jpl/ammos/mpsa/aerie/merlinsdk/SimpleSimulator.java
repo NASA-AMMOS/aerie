@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory;
@@ -99,7 +99,7 @@ public final class SimpleSimulator {
   )
   {
     final var timestamps = new ArrayList<Duration>();
-    final var timelines = new HashMap<String, List<SerializedParameter>>();
+    final var timelines = new HashMap<String, List<SerializedValue>>();
     for (final var stateName : querier.states()) {
       timelines.put(stateName, new ArrayList<>());
     }
@@ -219,7 +219,7 @@ public final class SimpleSimulator {
   )
   {
     final var timestamps = new ArrayList<Duration>();
-    final var timelines = new HashMap<String, List<SerializedParameter>>();
+    final var timelines = new HashMap<String, List<SerializedValue>>();
     for (final var stateName : querier.states()) {
       timelines.put(stateName, new ArrayList<>());
     }

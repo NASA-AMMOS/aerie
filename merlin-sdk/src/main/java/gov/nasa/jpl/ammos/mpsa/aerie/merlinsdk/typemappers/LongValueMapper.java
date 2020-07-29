@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 public final class LongValueMapper implements ValueMapper<Long> {
@@ -11,7 +11,7 @@ public final class LongValueMapper implements ValueMapper<Long> {
   }
 
   @Override
-  public Result<Long, String> deserializeValue(final SerializedParameter serializedValue) {
+  public Result<Long, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asInt()
         .map(Result::<Long, String>success)
@@ -19,7 +19,7 @@ public final class LongValueMapper implements ValueMapper<Long> {
   }
 
   @Override
-  public SerializedParameter serializeValue(final Long value) {
-    return SerializedParameter.of(value);
+  public SerializedValue serializeValue(final Long value) {
+    return SerializedValue.of(value);
   }
 }

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
@@ -52,6 +52,6 @@ public interface PlanRepository {
 
     ActivityTransaction setType(String type);
     ActivityTransaction setStartTimestamp(String timestamp);
-    ActivityTransaction setParameters(Map<String, SerializedParameter> parameters);
+    ActivityTransaction setParameters(Map<String, SerializedValue> parameters);
   }
 }

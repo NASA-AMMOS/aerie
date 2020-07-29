@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -43,24 +43,24 @@ public abstract class MerlinParsers {
       = longP
       . map(microseconds -> Duration.of(microseconds, Duration.MICROSECONDS));
 
-  public static final JsonParser<SerializedParameter> serializedParameterP =
+  public static final JsonParser<SerializedValue> serializedParameterP =
       recursiveP(selfP -> BasicParsers
-          . <SerializedParameter>sumP()
+          . <SerializedValue>sumP()
           . when(ValueType.NULL,
-              nullP.map(SerializedParameter::of))
+              nullP.map(SerializedValue::of))
           . when(ValueType.TRUE,
-              boolP.map(SerializedParameter::of))
+              boolP.map(SerializedValue::of))
           . when(ValueType.FALSE,
-              boolP.map(SerializedParameter::of))
+              boolP.map(SerializedValue::of))
           . when(ValueType.STRING,
-              stringP.map(SerializedParameter::of))
+              stringP.map(SerializedValue::of))
           . when(ValueType.NUMBER, chooseP(
-              longP.map(SerializedParameter::of),
-              doubleP.map(SerializedParameter::of)))
+              longP.map(SerializedValue::of),
+              doubleP.map(SerializedValue::of)))
           . when(ValueType.ARRAY,
-              listP(selfP).map(SerializedParameter::of))
+              listP(selfP).map(SerializedValue::of))
           . when(ValueType.OBJECT,
-              mapP(selfP).map(SerializedParameter::of)));
+              mapP(selfP).map(SerializedValue::of)));
 
   public static final JsonParser<Pair<Duration, SerializedActivity>> scheduledActivityP
       = productP
