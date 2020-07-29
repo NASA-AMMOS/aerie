@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;

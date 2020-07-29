@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
 
