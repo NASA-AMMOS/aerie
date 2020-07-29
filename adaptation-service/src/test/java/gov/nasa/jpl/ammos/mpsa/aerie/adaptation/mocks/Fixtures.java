@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 
 import java.net.URI;
@@ -29,12 +29,12 @@ public final class Fixtures {
 
     public final Map<String, ActivityType> ACTIVITY_TYPES = Map.of(
         "BiteBanana", new ActivityType("BiteBanana", Map.of(
-            "biteSize", ParameterSchema.REAL
+            "biteSize", ValueSchema.REAL
         ), Map.of(
             "biteSize", SerializedValue.of(1.0)
         )),
         "PeelBanana", new ActivityType("PeelBanana", Map.of(
-            "peelDirection", ParameterSchema.STRING
+            "peelDirection", ValueSchema.STRING
         ), Map.of(
             "peelDirection", SerializedValue.of("fromStem")
         ))

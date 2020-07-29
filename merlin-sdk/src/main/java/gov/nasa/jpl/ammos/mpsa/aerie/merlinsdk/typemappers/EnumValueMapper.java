@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
@@ -12,8 +12,8 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
     }
 
     @Override
-    public ParameterSchema getValueSchema() {
-        return ParameterSchema.ofEnum(enumType);
+    public ValueSchema getValueSchema() {
+        return ValueSchema.ofEnum(enumType);
     }
 
     @Override

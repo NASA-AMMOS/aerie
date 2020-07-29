@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
@@ -9,8 +9,8 @@ import java.util.List;
 
 public class PrimitiveShortArrayValueMapper implements ValueMapper<short[]> {
     @Override
-    public ParameterSchema getValueSchema() {
-        return ParameterSchema.ofSequence(ParameterSchema.INT);
+    public ValueSchema getValueSchema() {
+        return ValueSchema.ofSequence(ValueSchema.INT);
     }
 
     @Override

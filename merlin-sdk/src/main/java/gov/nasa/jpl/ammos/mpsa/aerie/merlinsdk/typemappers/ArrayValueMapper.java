@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
@@ -17,8 +17,8 @@ public class ArrayValueMapper<T> implements ValueMapper<T[]> {
     }
 
     @Override
-    public ParameterSchema getValueSchema() {
-        return ParameterSchema.ofSequence(elementMapper.getValueSchema());
+    public ValueSchema getValueSchema() {
+        return ValueSchema.ofSequence(elementMapper.getValueSchema());
     }
 
     @Override

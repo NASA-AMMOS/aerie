@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 
@@ -28,7 +28,7 @@ public final class StubApp implements App {
     public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
     public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
         EXISTENT_ACTIVITY_TYPE,
-        Map.of("Param", ParameterSchema.STRING),
+        Map.of("Param", ValueSchema.STRING),
         Map.of("Param", SerializedValue.of("Default")));
 
     public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(

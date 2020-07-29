@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 
 import java.util.Map;
@@ -16,7 +16,7 @@ public interface ActivityMapper {
    *
    * @return A set of named activity schemas.
    */
-  Map<String, Map<String, ParameterSchema>> getActivitySchemas();
+  Map<String, Map<String, ValueSchema>> getActivitySchemas();
 
   /**
    * Produces an adaptation-specific activity domain object from a mission-agnostic representation.

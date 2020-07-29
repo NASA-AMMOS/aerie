@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 public final class CharacterValueMapper implements ValueMapper<Character> {
   @Override
-  public ParameterSchema getValueSchema() {
-    return ParameterSchema.STRING;
+  public ValueSchema getValueSchema() {
+    return ValueSchema.STRING;
   }
 
   @Override

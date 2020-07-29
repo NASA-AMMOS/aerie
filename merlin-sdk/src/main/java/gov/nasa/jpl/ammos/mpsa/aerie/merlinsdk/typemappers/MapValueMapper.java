@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
@@ -18,10 +18,10 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   }
 
   @Override
-  public ParameterSchema getValueSchema() {
-    return ParameterSchema.ofStruct(Map.of(
-        "keys", ParameterSchema.ofSequence(keyMapper.getValueSchema()),
-        "values", ParameterSchema.ofSequence(elementMapper.getValueSchema())));
+  public ValueSchema getValueSchema() {
+    return ValueSchema.ofStruct(Map.of(
+        "keys", ValueSchema.ofSequence(keyMapper.getValueSchema()),
+        "values", ValueSchema.ofSequence(elementMapper.getValueSchema())));
   }
 
   @Override

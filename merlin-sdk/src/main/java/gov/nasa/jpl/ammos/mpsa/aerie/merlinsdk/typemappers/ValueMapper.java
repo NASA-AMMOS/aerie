@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
@@ -14,7 +14,7 @@ public interface ValueMapper<T> {
    *
    * @return A parameter schema.
    */
-  ParameterSchema getValueSchema();
+  ValueSchema getValueSchema();
 
   /**
     * Produces an adaptation-specific domain value from a mission-agnostic representation.

@@ -13,7 +13,7 @@ import com.squareup.javapoet.AnnotationSpec;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped;
@@ -82,8 +82,8 @@ class MapperMaker {
             typeUtils.getDeclaredType(
                 elementUtils.getTypeElement(Map.class.getCanonicalName()),
                 elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),
-                elementUtils.getTypeElement(ParameterSchema.class.getCanonicalName()).asType()))))
-        .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, ParameterSchema.class)
+                elementUtils.getTypeElement(ValueSchema.class.getCanonicalName()).asType()))))
+        .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, ValueSchema.class)
         .addCode(schemasBlock)
         .addStatement("return $T.of($L, $L)", Map.class, activityTypeNameSpec.name, parametersVarName)
         .build();

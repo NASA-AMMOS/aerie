@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -37,7 +37,7 @@ public final class Adaptation<Event> {
     }
 
     public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {
-        final Map<String, Map<String, ParameterSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
+        final Map<String, Map<String, ValueSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
         if (activitySchemas == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
 
         final Map<String, ActivityType> activityTypes = new HashMap<>();
@@ -61,10 +61,10 @@ public final class Adaptation<Event> {
     }
 
     public ActivityType getActivityType(final String activityTypeId) throws NoSuchActivityTypeException, AdaptationContractException {
-        final Map<String, Map<String, ParameterSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
+        final Map<String, Map<String, ValueSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
         if (activitySchemas == null) throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName() + ".getActivitySchemas() returned null");
 
-        final Map<String, ParameterSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
+        final Map<String, ValueSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
         if (activitySchema == null) throw new NoSuchActivityTypeException();
 
         final Activity activity;
