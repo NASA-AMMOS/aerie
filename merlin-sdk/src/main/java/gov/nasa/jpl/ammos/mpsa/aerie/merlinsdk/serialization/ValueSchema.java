@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -123,6 +124,20 @@ public abstract class ValueSchema {
   }
 
   /**
+   * Creates a {@link ValueSchema} representing a {@link Duration} type.
+   *
+   * @return A new {@link ValueSchema} representing a {@link Duration} type.
+   */
+  private static ValueSchema ofDuration() {
+    return new ValueSchema() {
+      @Override
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onDuration();
+      }
+    };
+  }
+
+  /**
    * Creates a {@link ValueSchema} representing a homogeneous list of elements matching
    *   the provided {@link ValueSchema}s.
    *
@@ -175,6 +190,7 @@ public abstract class ValueSchema {
   public static final ValueSchema INT = ofInt();
   public static final ValueSchema BOOLEAN = ofBoolean();
   public static final ValueSchema STRING = ofString();
+  public static final ValueSchema DURATION = ofDuration();
 
   /**
    * Provides a default case on top of the base Visitor.
@@ -199,6 +215,11 @@ public abstract class ValueSchema {
 
     @Override
     public T onBoolean() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onDuration() {
       return this.onDefault();
     }
 
@@ -298,6 +319,21 @@ public abstract class ValueSchema {
   }
 
   /**
+   * Asserts that this object represents a Duration.
+   *
+   * @return A non-empty {@link Optional} if this object represents a Duration.
+   *   Otherwise, returns an empty {@link Optional}.
+   */
+  public Optional<Unit> asDuration() {
+    return this.match(new OptionalVisitor<>() {
+      @Override
+      public Optional<Unit> onDuration() {
+        return Optional.of(Unit.UNIT);
+      }
+    });
+  }
+
+  /**
    * Attempts to access this schema as a list of {@code ValueSchema}s.
    *
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
@@ -366,6 +402,11 @@ public abstract class ValueSchema {
       }
 
       @Override
+      public String onDuration() {
+        return "ValueSchema.DURATION";
+      }
+
+      @Override
       public String onSequence(final ValueSchema value) {
         return "[" + value + "]";
       }
@@ -406,6 +447,11 @@ public abstract class ValueSchema {
       @Override
       public Boolean onString() {
         return other.asString().isPresent();
+      }
+
+      @Override
+      public Boolean onDuration() {
+        return other.asDuration().isPresent();
       }
 
       @Override
