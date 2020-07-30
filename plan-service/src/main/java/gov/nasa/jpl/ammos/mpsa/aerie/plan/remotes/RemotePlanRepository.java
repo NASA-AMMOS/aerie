@@ -5,7 +5,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
@@ -246,36 +246,36 @@ public final class RemotePlanRepository implements PlanRepository {
     }
   }
 
-  private SerializedParameter parameterFromDocument(final Document document) {
+  private SerializedValue parameterFromDocument(final Document document) {
     switch (document.getString("type")) {
       case "null":
-        return SerializedParameter.NULL;
+        return SerializedValue.NULL;
       case "string":
-        return SerializedParameter.of(document.getString("value"));
+        return SerializedValue.of(document.getString("value"));
       case "int":
-        return SerializedParameter.of(document.getLong("value"));
+        return SerializedValue.of(document.getLong("value"));
       case "double":
-        return SerializedParameter.of(document.getDouble("value"));
+        return SerializedValue.of(document.getDouble("value"));
       case "boolean":
-        return SerializedParameter.of(document.getBoolean("value"));
+        return SerializedValue.of(document.getBoolean("value"));
       case "list":
         final List<Document> itemDocuments = document.getList("value", Document.class);
 
-        final List<SerializedParameter> items = new ArrayList<>();
+        final List<SerializedValue> items = new ArrayList<>();
         for (final var itemDocument : itemDocuments) {
           items.add(parameterFromDocument(itemDocument));
         }
 
-        return SerializedParameter.of(items);
+        return SerializedValue.of(items);
       case "map":
         final Document fieldsDocument = document.get("value", Document.class);
 
-        final Map<String, SerializedParameter> fields = new HashMap<>();
+        final Map<String, SerializedValue> fields = new HashMap<>();
         for (final var entry : fieldsDocument.entrySet()) {
           fields.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
         }
 
-        return SerializedParameter.of(fields);
+        return SerializedValue.of(fields);
       default:
         throw new Error("unexpected bad data in database");
     }
@@ -284,7 +284,7 @@ public final class RemotePlanRepository implements PlanRepository {
   private ActivityInstance activityFromDocument(final Document document) {
     final Document parametersDocument = document.get("parameters", Document.class);
 
-    final Map<String, SerializedParameter> parameters = new HashMap<>();
+    final Map<String, SerializedValue> parameters = new HashMap<>();
     for (final var entry : parametersDocument.entrySet()) {
       parameters.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
     }
@@ -310,8 +310,8 @@ public final class RemotePlanRepository implements PlanRepository {
     return plan;
   }
 
-  private Document toDocument(final SerializedParameter parameter) {
-    return parameter.match(new SerializedParameter.Visitor<>() {
+  private Document toDocument(final SerializedValue parameter) {
+    return parameter.match(new SerializedValue.Visitor<>() {
       @Override
       public Document onNull() {
         final Document document = new Document();
@@ -352,7 +352,7 @@ public final class RemotePlanRepository implements PlanRepository {
       }
 
       @Override
-      public Document onList(List<SerializedParameter> items) {
+      public Document onList(List<SerializedValue> items) {
         final List<Document> itemDocuments = new ArrayList<>();
         for (final var item : items) {
           itemDocuments.add(item.match(this));
@@ -365,7 +365,7 @@ public final class RemotePlanRepository implements PlanRepository {
       }
 
       @Override
-      public Document onMap(Map<String, SerializedParameter> fields) {
+      public Document onMap(Map<String, SerializedValue> fields) {
         final Document fieldsDocument = new Document();
         for (final var field : fields.entrySet()) {
           fieldsDocument.put(field.getKey(), field.getValue().match(this));
@@ -379,7 +379,7 @@ public final class RemotePlanRepository implements PlanRepository {
     });
   }
 
-  private Document toDocument(final Map<String, SerializedParameter> parameters) {
+  private Document toDocument(final Map<String, SerializedValue> parameters) {
     final Document parametersDocument = new Document();
     for (final var entry : parameters.entrySet()) {
       parametersDocument.put(entry.getKey(), toDocument(entry.getValue()));
@@ -491,7 +491,7 @@ public final class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setParameters(final Map<String, SerializedParameter> parameters) {
+    public ActivityTransaction setParameters(final Map<String, SerializedValue> parameters) {
       this.patch = combine(this.patch, set("parameters", toDocument(parameters)));
       return this;
     }

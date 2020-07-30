@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.IndependentStateEventProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.traits.SettableEffectTrait;
 
 import java.util.Objects;
 
-public final class SettableEffectEvaluator extends IndependentStateEventProjection<SettableEffect<SerializedParameter>> {
+public final class SettableEffectEvaluator extends IndependentStateEventProjection<SettableEffect<SerializedValue>> {
     private final String stateName;
 
     public SettableEffectEvaluator(final String stateName) {
@@ -16,13 +16,13 @@ public final class SettableEffectEvaluator extends IndependentStateEventProjecti
     }
 
     @Override
-    public final SettableEffect<SerializedParameter> add(final String stateName, final double amount) {
+    public final SettableEffect<SerializedValue> add(final String stateName, final double amount) {
         if (!Objects.equals(this.stateName, stateName)) return this.unhandled();
         return SettableEffect.conflict();
     }
 
     @Override
-    public final SettableEffect<SerializedParameter> set(final String stateName, final SerializedParameter value) {
+    public final SettableEffect<SerializedValue> set(final String stateName, final SerializedValue value) {
         if (!Objects.equals(this.stateName, stateName)) return this.unhandled();
         return SettableEffect.setTo(value);
     }

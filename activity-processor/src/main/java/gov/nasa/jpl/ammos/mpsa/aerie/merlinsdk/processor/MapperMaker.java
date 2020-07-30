@@ -13,11 +13,11 @@ import com.squareup.javapoet.AnnotationSpec;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ParameterMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -43,7 +43,7 @@ class MapperMaker {
 
       mapperFieldSpecs.add(FieldSpec
         .builder(
-            ParameterizedTypeName.get(ClassName.get(ParameterMapper.class), parameterTypeReference.getTypeName()),
+            ParameterizedTypeName.get(ClassName.get(ValueMapper.class), parameterTypeReference.getTypeName()),
             "mapper_" + parameterName,
             Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
         .initializer("$L", parameterTypeReference.getMapper())
@@ -66,7 +66,7 @@ class MapperMaker {
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
 
-        blockBuilder.addStatement("$1L.put($2S, this.mapper_$2L.getParameterSchema())", parametersVarName, parameterName);
+        blockBuilder.addStatement("$1L.put($2S, this.mapper_$2L.getValueSchema())", parametersVarName, parameterName);
       }
 
       schemasBlock = blockBuilder.build();
@@ -82,8 +82,8 @@ class MapperMaker {
             typeUtils.getDeclaredType(
                 elementUtils.getTypeElement(Map.class.getCanonicalName()),
                 elementUtils.getTypeElement(String.class.getCanonicalName()).asType(),
-                elementUtils.getTypeElement(ParameterSchema.class.getCanonicalName()).asType()))))
-        .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, ParameterSchema.class)
+                elementUtils.getTypeElement(ValueSchema.class.getCanonicalName()).asType()))))
+        .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, ValueSchema.class)
         .addCode(schemasBlock)
         .addStatement("return $T.of($L, $L)", Map.class, activityTypeNameSpec.name, parametersVarName)
         .build();
@@ -112,7 +112,7 @@ class MapperMaker {
         blockBuilder
             .add("case $S:\n", parameterName)
             .indent()
-            .addStatement("$L.$L = this.mapper_$L.deserializeParameter($L.getValue()).getSuccessOrThrow()",
+            .addStatement("$L.$L = this.mapper_$L.deserializeValue($L.getValue()).getSuccessOrThrow()",
                 activityVarName, parameterName, parameterName, entryVarName)
             .addStatement("break")
             .unindent();
@@ -165,7 +165,7 @@ class MapperMaker {
       for (final var entry : activityTypeInfo.parameters) {
         final var parameterName = entry.getKey();
 
-        blockBuilder.addStatement("$L.put($S, this.mapper_$L.serializeParameter($L.$L))",
+        blockBuilder.addStatement("$L.put($S, this.mapper_$L.serializeValue($L.$L))",
             parametersVarName, parameterName, parameterName, activityVarName, parameterName);
       }
 
@@ -183,7 +183,7 @@ class MapperMaker {
         .addStatement("if (!($L instanceof $T)) return $T.empty()", abstractActivitySpec.name, activityTypeInfo.javaType, Optional.class)
         .addStatement("final $T $L = ($T)abstractActivity", activityTypeInfo.javaType, activityVarName, activityTypeInfo.javaType)
         .addCode("\n")
-        .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, SerializedParameter.class)
+        .addStatement("final var $L = new $T<$T, $T>()", parametersVarName, HashMap.class, String.class, SerializedValue.class)
         .addCode(serializeParametersBlock)
         .addCode("\n")
         .addStatement("return $T.of(new $T($L, $L))", Optional.class, SerializedActivity.class, activityTypeNameSpec.name, parametersVarName)

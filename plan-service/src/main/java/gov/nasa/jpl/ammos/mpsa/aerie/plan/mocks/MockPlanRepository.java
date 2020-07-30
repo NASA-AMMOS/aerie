@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
@@ -234,7 +234,7 @@ public final class MockPlanRepository implements PlanRepository {
 
     private Optional<String> type = Optional.empty();
     private Optional<String> startTimestamp = Optional.empty();
-    private Optional<Map<String, SerializedParameter>> parameters = Optional.empty();
+    private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
     public MockActivityTransaction(final String planId, final String activityId) {
       this.planId = planId;
@@ -271,7 +271,7 @@ public final class MockPlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setParameters(final Map<String, SerializedParameter> parameters) {
+    public ActivityTransaction setParameters(final Map<String, SerializedValue> parameters) {
       this.parameters = Optional.of(new HashMap<>(parameters));
       return this;
     }

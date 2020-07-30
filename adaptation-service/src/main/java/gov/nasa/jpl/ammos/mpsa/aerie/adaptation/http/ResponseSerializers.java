@@ -8,9 +8,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
@@ -43,23 +43,23 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
-  public static JsonValue serializeParameterSchema(final ParameterSchema schema) {
+  public static JsonValue serializeParameterSchema(final ValueSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
     return schema.match(new ParameterSchemaSerializer());
   }
 
-  public static JsonValue serializeParameterSchemas(final Map<String, ParameterSchema> schemas) {
+  public static JsonValue serializeParameterSchemas(final Map<String, ValueSchema> schemas) {
     return serializeMap(ResponseSerializers::serializeParameterSchema, schemas);
   }
 
-  public static JsonValue serializeActivityParameter(final SerializedParameter parameter) {
+  public static JsonValue serializeActivityParameter(final SerializedValue parameter) {
     if (parameter == null) return JsonValue.NULL;
 
     return parameter.match(new ParameterSerializer());
   }
 
-  public static JsonValue serializeActivityParameters(final Map<String, SerializedParameter> parameters) {
+  public static JsonValue serializeActivityParameters(final Map<String, SerializedValue> parameters) {
     return serializeMap(ResponseSerializers::serializeActivityParameter, parameters);
   }
 
@@ -108,11 +108,11 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeParameter(final SerializedParameter parameter) {
+  public static JsonValue serializeParameter(final SerializedValue parameter) {
     return parameter.match(new ParameterSerializer());
   }
 
-  public static JsonValue serializeTimeline(final List<SerializedParameter> elements) {
+  public static JsonValue serializeTimeline(final List<SerializedValue> elements) {
     return serializeIterable(ResponseSerializers::serializeParameter, elements);
   }
 
@@ -235,7 +235,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  private static final class ParameterSchemaSerializer implements ParameterSchema.Visitor<JsonValue> {
+  private static final class ParameterSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
     @Override
     public JsonValue onReal() {
       return Json
@@ -269,7 +269,7 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onSequence(final ParameterSchema itemSchema) {
+    public JsonValue onSequence(final ValueSchema itemSchema) {
       return Json
           .createObjectBuilder()
           .add("type", "sequence")
@@ -278,7 +278,7 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onStruct(final Map<String, ParameterSchema> parameterSchemas) {
+    public JsonValue onStruct(final Map<String, ValueSchema> parameterSchemas) {
       return Json
           .createObjectBuilder()
           .add("type", "struct")
@@ -300,7 +300,7 @@ public final class ResponseSerializers {
     }
   }
 
-  private static final class ParameterSerializer implements SerializedParameter.Visitor<JsonValue> {
+  private static final class ParameterSerializer implements SerializedValue.Visitor<JsonValue> {
     @Override
     public JsonValue onNull() {
       return JsonValue.NULL;
@@ -327,12 +327,12 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onList(final List<SerializedParameter> elements) {
+    public JsonValue onList(final List<SerializedValue> elements) {
       return serializeIterable(x -> x.match(this), elements);
     }
 
     @Override
-    public JsonValue onMap(final Map<String, SerializedParameter> fields) {
+    public JsonValue onMap(final Map<String, SerializedValue> fields) {
       return serializeMap(x -> x.match(this), fields);
     }
   }

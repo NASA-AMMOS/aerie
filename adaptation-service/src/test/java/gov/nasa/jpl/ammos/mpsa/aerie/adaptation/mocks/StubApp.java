@@ -6,9 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -28,18 +28,18 @@ public final class StubApp implements App {
     public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
     public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
         EXISTENT_ACTIVITY_TYPE,
-        Map.of("Param", ParameterSchema.STRING),
-        Map.of("Param", SerializedParameter.of("Default")));
+        Map.of("Param", ValueSchema.STRING),
+        Map.of("Param", SerializedValue.of("Default")));
 
     public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
         EXISTENT_ACTIVITY_TYPE,
-        Map.of("Param", SerializedParameter.of("Value")));
+        Map.of("Param", SerializedValue.of("Value")));
     public static final SerializedActivity INVALID_ACTIVITY_INSTANCE = new SerializedActivity(
         EXISTENT_ACTIVITY_TYPE,
-        Map.of("Param", SerializedParameter.of("")));
+        Map.of("Param", SerializedValue.of("")));
     public static final SerializedActivity UNCONSTRUCTABLE_ACTIVITY_INSTANCE = new SerializedActivity(
         EXISTENT_ACTIVITY_TYPE,
-        Map.of("Nonexistent", SerializedParameter.of("Value")));
+        Map.of("Nonexistent", SerializedValue.of("Value")));
     public static final SerializedActivity NONEXISTENT_ACTIVITY_INSTANCE = new SerializedActivity(
         NONEXISTENT_ACTIVITY_TYPE,
         Map.of());

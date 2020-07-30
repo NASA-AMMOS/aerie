@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
@@ -27,9 +27,9 @@ import static java.util.Collections.unmodifiableMap;
  */
 public final class SerializedActivity {
   private final String typeName;
-  private final Map<String, SerializedParameter> parameters;
+  private final Map<String, SerializedValue> parameters;
 
-  public SerializedActivity(final String typeName, final Map<String, SerializedParameter> parameters) {
+  public SerializedActivity(final String typeName, final Map<String, SerializedValue> parameters) {
     this.typeName = Objects.requireNonNull(typeName);
     this.parameters = Objects.requireNonNull(parameters);
   }
@@ -48,7 +48,7 @@ public final class SerializedActivity {
    *
    * @return A map of serialized parameters keyed by parameter name.
    */
-  public Map<String, SerializedParameter> getParameters() {
+  public Map<String, SerializedValue> getParameters() {
     return unmodifiableMap(this.parameters);
   }
 

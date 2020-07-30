@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import javax.json.JsonValue;
@@ -12,10 +12,10 @@ import java.util.Objects;
 public final class SimulationResults {
   public final Instant startTime;
   public final List<Duration> timestamps;
-  public final Map<String, List<SerializedParameter>> timelines;
+  public final Map<String, List<SerializedValue>> timelines;
   public final JsonValue constraints;
 
-  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedParameter>> timelines, JsonValue constraints) {
+  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedValue>> timelines, JsonValue constraints) {
     this.startTime = startTime;
     this.timestamps = timestamps;
     this.timelines = timelines;

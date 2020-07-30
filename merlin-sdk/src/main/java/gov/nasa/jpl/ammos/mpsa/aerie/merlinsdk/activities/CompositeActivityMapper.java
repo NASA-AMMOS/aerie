@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import static java.util.Collections.unmodifiableMap;
 
 public class CompositeActivityMapper implements ActivityMapper {
   private final Map<String, ActivityMapper> activityMappers;
-  private final Map<String, Map<String, ParameterSchema>> activitySchemas;
+  private final Map<String, Map<String, ValueSchema>> activitySchemas;
 
   public CompositeActivityMapper(final Map<String, ActivityMapper> activityMappers) {
     this.activityMappers = activityMappers;
@@ -25,7 +25,7 @@ public class CompositeActivityMapper implements ActivityMapper {
 
 
   @Override
-  public Map<String, Map<String, ParameterSchema>> getActivitySchemas() {
+  public Map<String, Map<String, ValueSchema>> getActivitySchemas() {
     return this.activitySchemas;
   }
 
@@ -41,13 +41,13 @@ public class CompositeActivityMapper implements ActivityMapper {
     return lookupMapper(activityType).flatMap(m -> m.serializeActivity(activity));
   }
 
-  private static Map<String, Map<String, ParameterSchema>> immutableActivitySchemas(final Map<String, ActivityMapper> activityMappers) {
-    final Map<String, Map<String, ParameterSchema>> clonedSchemas = new HashMap<>();
+  private static Map<String, Map<String, ValueSchema>> immutableActivitySchemas(final Map<String, ActivityMapper> activityMappers) {
+    final Map<String, Map<String, ValueSchema>> clonedSchemas = new HashMap<>();
 
     for (final var mapper : activityMappers.values()) {
       for (final var activityEntry : mapper.getActivitySchemas().entrySet()) {
         final String activityName = activityEntry.getKey();
-        final Map<String, ParameterSchema> activityParameters = new HashMap<>(activityEntry.getValue());
+        final Map<String, ValueSchema> activityParameters = new HashMap<>(activityEntry.getValue());
 
         clonedSchemas.put(activityName, activityParameters);
       }

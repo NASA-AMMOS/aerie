@@ -3,13 +3,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEffectEvaluator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.DynamicActivityModelQuerier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.DynamicReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
@@ -43,7 +43,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     private final static DynamicCell<SampleQuerier<?>.StateQuerier> stateContext = DynamicCell.create();
 
     // Define a function to take a state name and provide questions that can be asked based on current context
-    public static final Function<String, StateQuery<SerializedParameter>> query = (name) ->
+    public static final Function<String, StateQuery<SerializedValue>> query = (name) ->
         new DynamicStateQuery<>(() -> stateContext.get().getRegisterQuery(name));
 
     // Provide access to activity information based on the current context.
@@ -57,7 +57,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
     private final Set<String> stateNames = new HashSet<>();
-    private final Map<String, Query<T, SampleEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<SerializedValue>>> settables = new HashMap<>();
     private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> cumulables = new HashMap<>();
 
     // Model the durations of (and relationships between) activities.
@@ -127,7 +127,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     }
 
     @Override
-    public SerializedParameter getSerializedStateAt(final String name, final History<T, SampleEvent> history) {
+    public SerializedValue getSerializedStateAt(final String name, final History<T, SampleEvent> history) {
         return this.getRegisterQueryAt(name, history).get();
     }
 
@@ -148,9 +148,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         });
     }
 
-    public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
+    public StateQuery<SerializedValue> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
         if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history);
-        else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedParameter::of);
+        else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedValue::of);
         else throw new RuntimeException("State \"" + name + "\" is not defined");
     }
 
@@ -164,7 +164,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         }
 
         // Get a queryable object representing the named state.
-        public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
+        public StateQuery<SerializedValue> getRegisterQuery(final String name) {
             return SampleQuerier.this.getRegisterQueryAt(name, this.historySupplier.get());
         }
 

@@ -2,8 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -109,10 +109,10 @@ public final class MerlinParsersTest {
             "0", Pair.of(
                 Duration.of(10, Duration.SECONDS),
                 new SerializedActivity("BiteBanana", Map.of(
-                    "biteSize", SerializedParameter.of(10.0),
-                    "complex", SerializedParameter.of(Map.of(
-                        "int", SerializedParameter.of(10),
-                        "str", SerializedParameter.of("hi")))
+                    "biteSize", SerializedValue.of(10.0),
+                    "complex", SerializedValue.of(Map.of(
+                        "int", SerializedValue.of(10),
+                        "str", SerializedValue.of("hi")))
                 ))
             )
         )

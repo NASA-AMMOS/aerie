@@ -2,8 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -13,7 +13,7 @@ import java.util.Map;
 public class LocalSimulation {
 
     public static void printValues(String id, SimulationResults results, String label) {
-        List<SerializedParameter> values = results.timelines.get(id);
+        List<SerializedValue> values = results.timelines.get(id);
         System.out.println(label);
         for (int i = 1; i < values.size(); i++) {
             if (!(values.get(i-1).equals(values.get(i)))){
@@ -34,30 +34,30 @@ public class LocalSimulation {
     public static void main(String[] args) {
         final var schedule = List.of(
                 Pair.of(Duration.of(0, Duration.SECONDS), new SerializedActivity("RunInstrument",
-                        Map.of("durationInSeconds", SerializedParameter.of(300),
-                                "dataMode", SerializedParameter.of("LOW")))),
+                        Map.of("durationInSeconds", SerializedValue.of(300),
+                                "dataMode", SerializedValue.of("LOW")))),
                 Pair.of(Duration.of(600, Duration.SECONDS), new SerializedActivity("RunInstrument",
-                        Map.of("durationInSeconds", SerializedParameter.of(600),
-                                "dataMode", SerializedParameter.of("MED")))),
+                        Map.of("durationInSeconds", SerializedValue.of(600),
+                                "dataMode", SerializedValue.of("MED")))),
                 Pair.of(Duration.of(720, Duration.SECONDS), new SerializedActivity("PreheatCamera",
-                        Map.of("heatDurationInSeconds", SerializedParameter.of(1800)))),
+                        Map.of("heatDurationInSeconds", SerializedValue.of(1800)))),
                 Pair.of(Duration.of(1620, Duration.SECONDS), new SerializedActivity("CapturePanorama",
-                                Map.of("nFramesHorizontal", SerializedParameter.of(4),
-                                        "nFramesVertical", SerializedParameter.of(2),
-                                        "imageQuality", SerializedParameter.of(90)))),
+                                Map.of("nFramesHorizontal", SerializedValue.of(4),
+                                        "nFramesVertical", SerializedValue.of(2),
+                                        "imageQuality", SerializedValue.of(90)))),
                 Pair.of(Duration.of(1900, Duration.SECONDS), new SerializedActivity("RunInstrument",
-                        Map.of("durationInSeconds", SerializedParameter.of(3000),
-                                "dataMode", SerializedParameter.of("MED")))),
+                        Map.of("durationInSeconds", SerializedValue.of(3000),
+                                "dataMode", SerializedValue.of("MED")))),
                 Pair.of(Duration.of(25200, Duration.SECONDS), new SerializedActivity("DownlinkData",
-                        Map.of("downlinkAll", SerializedParameter.of(true),
-                                "totalBits", SerializedParameter.of(0)))),
+                        Map.of("downlinkAll", SerializedValue.of(true),
+                                "totalBits", SerializedValue.of(0)))),
                 Pair.of(Duration.of(30000, Duration.SECONDS), new SerializedActivity("RunInstrument",
-                        Map.of("durationInSeconds", SerializedParameter.of(7500),
-                                "dataMode", SerializedParameter.of("MED")))),
+                        Map.of("durationInSeconds", SerializedValue.of(7500),
+                                "dataMode", SerializedValue.of("MED")))),
                 Pair.of(Duration.of(40000, Duration.SECONDS), new SerializedActivity("CapturePanorama",
-                        Map.of("nFramesHorizontal", SerializedParameter.of(8),
-                                "nFramesVertical", SerializedParameter.of(2),
-                                "imageQuality", SerializedParameter.of(80))))
+                        Map.of("nFramesHorizontal", SerializedValue.of(8),
+                                "nFramesVertical", SerializedValue.of(2),
+                                "imageQuality", SerializedValue.of(80))))
         );
         final var adaptation = new SampleAdaptation();
         final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Duration.of(100, Duration.MILLISECONDS));

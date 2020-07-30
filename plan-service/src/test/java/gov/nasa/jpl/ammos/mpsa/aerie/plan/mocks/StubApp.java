@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceException;
@@ -44,7 +44,7 @@ public final class StubApp implements App {
     EXISTENT_ACTIVITY.type = "existent activity";
     EXISTENT_ACTIVITY.startTimestamp = "start timestamp";
     EXISTENT_ACTIVITY.parameters = Map.of(
-        "abc", SerializedParameter.of("test-param")
+        "abc", SerializedValue.of("test-param")
     );
 
     VALID_ACTIVITY = new ActivityInstance();

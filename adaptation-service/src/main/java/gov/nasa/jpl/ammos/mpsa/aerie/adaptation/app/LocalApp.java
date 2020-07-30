@@ -9,7 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import io.javalin.core.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 

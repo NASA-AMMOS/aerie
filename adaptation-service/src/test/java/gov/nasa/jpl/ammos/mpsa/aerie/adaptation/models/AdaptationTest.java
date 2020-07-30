@@ -5,8 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -74,7 +74,7 @@ public final class AdaptationTest {
         // GIVEN
         final SerializedActivity serializedActivity = new SerializedActivity(
             "BiteBanana",
-            Map.of("biteSize", SerializedParameter.of(1.0)));
+            Map.of("biteSize", SerializedValue.of(1.0)));
 
         // WHEN
         final Activity activityInstance = adaptation.instantiateActivity(serializedActivity);
@@ -88,7 +88,7 @@ public final class AdaptationTest {
         // GIVEN
         final SerializedActivity serializedActivity = new SerializedActivity(
             "BiteBanana",
-            Map.of("biteSize", SerializedParameter.of("a string!?")));
+            Map.of("biteSize", SerializedValue.of("a string!?")));
 
         // WHEN
         final Throwable thrown = catchThrowable(() -> adaptation.instantiateActivity(serializedActivity));
@@ -102,7 +102,7 @@ public final class AdaptationTest {
         // GIVEN
         final SerializedActivity serializedActivity = new SerializedActivity(
             "BiteBanana",
-            Map.of("Nonexistent", SerializedParameter.of("")));
+            Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN
         final Throwable thrown = catchThrowable(() -> adaptation.instantiateActivity(serializedActivity));

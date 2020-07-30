@@ -1,19 +1,19 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.ParameterSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 
 import java.util.*;
 
 public final class ActivityType {
     public final String name;
-    public final Map<String, ParameterSchema> parameters;
-    public final Map<String, SerializedParameter> defaults;
+    public final Map<String, ValueSchema> parameters;
+    public final Map<String, SerializedValue> defaults;
 
     public ActivityType(
         final String name,
-        final Map<String, ParameterSchema> parameterSchema,
-        final Map<String, SerializedParameter> defaults
+        final Map<String, ValueSchema> parameterSchema,
+        final Map<String, SerializedValue> defaults
     ) {
         this.name = name;
         this.parameters = Map.copyOf(parameterSchema);

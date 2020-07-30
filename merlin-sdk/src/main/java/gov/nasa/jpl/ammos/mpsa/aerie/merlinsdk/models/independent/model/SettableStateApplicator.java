@@ -1,34 +1,34 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.traits.SettableEffect;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-public final class SettableStateApplicator implements Applicator<SettableEffect<SerializedParameter>, RegisterState<SerializedParameter>> {
-  private final SerializedParameter initialValue;
+public final class SettableStateApplicator implements Applicator<SettableEffect<SerializedValue>, RegisterState<SerializedValue>> {
+  private final SerializedValue initialValue;
 
-  public SettableStateApplicator(final SerializedParameter initialValue) {
+  public SettableStateApplicator(final SerializedValue initialValue) {
     this.initialValue = initialValue;
   }
 
   @Override
-  public RegisterState<SerializedParameter> initial() {
+  public RegisterState<SerializedValue> initial() {
     return new RegisterState<>(this.initialValue);
   }
 
   @Override
-  public RegisterState<SerializedParameter> duplicate(final RegisterState<SerializedParameter> register) {
+  public RegisterState<SerializedValue> duplicate(final RegisterState<SerializedValue> register) {
     return new RegisterState<>(register);
   }
 
   @Override
-  public void step(final RegisterState<SerializedParameter> register, final Duration duration) {
+  public void step(final RegisterState<SerializedValue> register, final Duration duration) {
     register.step(duration);
   }
 
   @Override
-  public void apply(final RegisterState<SerializedParameter> register, final SettableEffect<SerializedParameter> change) {
+  public void apply(final RegisterState<SerializedValue> register, final SettableEffect<SerializedValue> change) {
     change.visit(new SettableEffect.Visitor<>() {
       @Override
       public Object empty() {
@@ -37,7 +37,7 @@ public final class SettableStateApplicator implements Applicator<SettableEffect<
       }
 
       @Override
-      public Object setTo(final SerializedParameter value) {
+      public Object setTo(final SerializedValue value) {
         register.set(value);
         return null;
       }

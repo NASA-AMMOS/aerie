@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
@@ -11,7 +11,7 @@ import java.util.Optional;
  * A serializable description of the structure of an activity parameter.
  *
  * Implementors of the {@link ActivityType} protocol may be constructed from parameters
- * (which are themselves implementors of the {@link ParameterType} protocol). A {@link ParameterSchema}
+ * (which are themselves implementors of the {@link ParameterType} protocol). A {@link ValueSchema}
  * is an adaptation-agnostic representation of the serialized structure of a parameter.
  *
  * For instance, if an activity accepts two parameters, each of which is a 3D point in space,
@@ -27,10 +27,10 @@ import java.util.Optional;
  */
 // TODO: We will likely want to extend ParameterSchema to support common semantic types
 //   such as DateTime objects (which might otherwise be serialized as strings).
-public abstract class ParameterSchema {
+public abstract class ValueSchema {
   // Closed type family -- the only legal subclasses are those defined within the body of
   // this class definition.
-  private ParameterSchema() {}
+  private ValueSchema() {}
 
   /**
    * Calls the appropriate method of the passed Visitor depending on the kind of data
@@ -60,18 +60,18 @@ public abstract class ParameterSchema {
     T onInt();
     T onBoolean();
     T onString();
-    T onSequence(ParameterSchema value);
-    T onStruct(Map<String, ParameterSchema> value);
+    T onSequence(ValueSchema value);
+    T onStruct(Map<String, ValueSchema> value);
     T onEnum(Class<? extends Enum<?>> enumeration);
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing a real number parameter type.
+   * Creates a {@link ValueSchema} representing a real number parameter type.
    *
-   * @return A new {@link ParameterSchema} representing a real number parameter type.
+   * @return A new {@link ValueSchema} representing a real number parameter type.
    */
-  private static ParameterSchema ofReal() {
-    return new ParameterSchema() {
+  private static ValueSchema ofReal() {
+    return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onReal();
@@ -80,12 +80,12 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing an integral number parameter type.
+   * Creates a {@link ValueSchema} representing an integral number parameter type.
    *
-   * @return A new {@link ParameterSchema} representing an integral number parameter type.
+   * @return A new {@link ValueSchema} representing an integral number parameter type.
    */
-  private static ParameterSchema ofInt() {
-    return new ParameterSchema() {
+  private static ValueSchema ofInt() {
+    return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onInt();
@@ -94,12 +94,12 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing a {@link boolean} parameter type.
+   * Creates a {@link ValueSchema} representing a {@link boolean} parameter type.
    *
-   * @return A new {@link ParameterSchema} representing a {@link boolean} parameter type.
+   * @return A new {@link ValueSchema} representing a {@link boolean} parameter type.
    */
-  private static ParameterSchema ofBoolean() {
-    return new ParameterSchema() {
+  private static ValueSchema ofBoolean() {
+    return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onBoolean();
@@ -108,12 +108,12 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing a {@link String} parameter type.
+   * Creates a {@link ValueSchema} representing a {@link String} parameter type.
    *
-   * @return A new {@link ParameterSchema} representing a {@link String} parameter type.
+   * @return A new {@link ValueSchema} representing a {@link String} parameter type.
    */
-  private static ParameterSchema ofString() {
-    return new ParameterSchema() {
+  private static ValueSchema ofString() {
+    return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onString();
@@ -122,15 +122,15 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing a homogeneous list of elements matching
-   *   the provided {@link ParameterSchema}s.
+   * Creates a {@link ValueSchema} representing a homogeneous list of elements matching
+   *   the provided {@link ValueSchema}s.
    *
-   * @param value A {@link ParameterSchema}.
-   * @return A new {@link ParameterSchema} representing a homogeneous list of elements.
+   * @param value A {@link ValueSchema}.
+   * @return A new {@link ValueSchema} representing a homogeneous list of elements.
    */
-  public static ParameterSchema ofSequence(final ParameterSchema value) {
+  public static ValueSchema ofSequence(final ValueSchema value) {
     Objects.requireNonNull(value);
-    return new ParameterSchema() {
+    return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onSequence(value);
@@ -139,16 +139,16 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing a heterogeneous set of named elements matching
-   *   the associated {@link ParameterSchema}s.
+   * Creates a {@link ValueSchema} representing a heterogeneous set of named elements matching
+   *   the associated {@link ValueSchema}s.
    *
-   * @param map Any set of named {@link ParameterSchema}s.
-   * @return A new {@link ParameterSchema} representing a heterogeneous set of named {@link ParameterSchema}s.
+   * @param map Any set of named {@link ValueSchema}s.
+   * @return A new {@link ValueSchema} representing a heterogeneous set of named {@link ValueSchema}s.
    */
-  public static ParameterSchema ofStruct(final Map<String, ParameterSchema> map) {
+  public static ValueSchema ofStruct(final Map<String, ValueSchema> map) {
     for (final var v : Objects.requireNonNull(map).values()) Objects.requireNonNull(v);
     final var value = Map.copyOf(map);
-    return new ParameterSchema() {
+    return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onStruct(value);
@@ -157,23 +157,23 @@ public abstract class ParameterSchema {
   }
 
   /**
-   * Creates a {@link ParameterSchema} representing an {@link Enum} parameter type.
+   * Creates a {@link ValueSchema} representing an {@link Enum} parameter type.
    *
-   * @return A new {@link ParameterSchema} representing an {@link Enum} parameter type.
+   * @return A new {@link ValueSchema} representing an {@link Enum} parameter type.
    */
-  public static ParameterSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
+  public static ValueSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
     Objects.requireNonNull(enumeration);
-    return new ParameterSchema() {
+    return new ValueSchema() {
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onEnum(enumeration);
       }
     };
   }
 
-  public static final ParameterSchema REAL = ofReal();
-  public static final ParameterSchema INT = ofInt();
-  public static final ParameterSchema BOOLEAN = ofBoolean();
-  public static final ParameterSchema STRING = ofString();
+  public static final ValueSchema REAL = ofReal();
+  public static final ValueSchema INT = ofInt();
+  public static final ValueSchema BOOLEAN = ofBoolean();
+  public static final ValueSchema STRING = ofString();
 
   /**
    * Provides a default case on top of the base Visitor.
@@ -207,12 +207,12 @@ public abstract class ParameterSchema {
     }
 
     @Override
-    public T onSequence(final ParameterSchema value) {
+    public T onSequence(final ValueSchema value) {
       return this.onDefault();
     }
 
     @Override
-    public T onStruct(final Map<String, ParameterSchema> value) {
+    public T onStruct(final Map<String, ValueSchema> value) {
       return this.onDefault();
     }
   }
@@ -302,10 +302,10 @@ public abstract class ParameterSchema {
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
    *   object represents a list parameter type. Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<ParameterSchema> asSequence() {
+  public Optional<ValueSchema> asSequence() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<ParameterSchema> onSequence(final ParameterSchema value) {
+      public Optional<ValueSchema> onSequence(final ValueSchema value) {
         return Optional.of(value);
       }
     });
@@ -317,10 +317,10 @@ public abstract class ParameterSchema {
    * @return An {@link Optional} containing a map if this object represents a map parameter type.
    *   Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<Map<String, ParameterSchema>> asStruct() {
+  public Optional<Map<String, ValueSchema>> asStruct() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Map<String, ParameterSchema>> onStruct(final Map<String, ParameterSchema> value) {
+      public Optional<Map<String, ValueSchema>> onStruct(final Map<String, ValueSchema> value) {
         return Optional.of(value);
       }
     });
@@ -365,12 +365,12 @@ public abstract class ParameterSchema {
       }
 
       @Override
-      public String onSequence(final ParameterSchema value) {
+      public String onSequence(final ValueSchema value) {
         return "[" + value + "]";
       }
 
       @Override
-      public String onStruct(final Map<String, ParameterSchema> value) {
+      public String onStruct(final Map<String, ValueSchema> value) {
         return String.valueOf(value);
       }
 
@@ -383,8 +383,8 @@ public abstract class ParameterSchema {
 
   @Override
   public boolean equals(final Object o) {
-    if (!(o instanceof ParameterSchema)) return false;
-    final var other = (ParameterSchema) o;
+    if (!(o instanceof ValueSchema)) return false;
+    final var other = (ValueSchema) o;
 
     return this.match(new Visitor<>() {
       @Override
@@ -408,12 +408,12 @@ public abstract class ParameterSchema {
       }
 
       @Override
-      public Boolean onSequence(final ParameterSchema value) {
+      public Boolean onSequence(final ValueSchema value) {
         return other.asSequence().map(x -> x.equals(value)).orElse(false);
       }
 
       @Override
-      public Boolean onStruct(final Map<String, ParameterSchema> value) {
+      public Boolean onStruct(final Map<String, ValueSchema> value) {
         return other.asStruct().map(x -> x.equals(value)).orElse(false);
       }
 
