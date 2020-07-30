@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * A serializable description of the structure of an activity parameter.
+ * A serializable description of the structure of a value such as an activity parameter.
  *
  * Implementors of the {@link ActivityType} protocol may be constructed from parameters
  * (which are themselves implementors of the {@link ParameterType} protocol). A {@link ValueSchema}
@@ -25,7 +25,7 @@ import java.util.Optional;
  * This class is implemented using the Visitor pattern, following the approach considered at
  * http://blog.higher-order.com/blog/2009/08/21/structural-pattern-matching-in-java/.
  */
-// TODO: We will likely want to extend ParameterSchema to support common semantic types
+// TODO: We will likely want to extend ValueSchema to support common semantic types
 //   such as DateTime objects (which might otherwise be serialized as strings).
 public abstract class ValueSchema {
   // Closed type family -- the only legal subclasses are those defined within the body of
@@ -44,9 +44,9 @@ public abstract class ValueSchema {
   public abstract <T> T match(Visitor<T> visitor);
 
   /**
-   * An operation to be performed over the schema described by a ParameterSchema.
+   * An operation to be performed over the schema described by a ValueSchema.
    *
-   * A method must be defined for each kind of data that a ParameterSchema may describe.
+   * A method must be defined for each kind of data that a ValueSchema may describe.
    * This may be likened to the pattern-matching capability built into languages such as Rust
    * or Haskell.
    *
@@ -60,15 +60,16 @@ public abstract class ValueSchema {
     T onInt();
     T onBoolean();
     T onString();
+    T onDuration();
     T onSequence(ValueSchema value);
     T onStruct(Map<String, ValueSchema> value);
     T onEnum(Class<? extends Enum<?>> enumeration);
   }
 
   /**
-   * Creates a {@link ValueSchema} representing a real number parameter type.
+   * Creates a {@link ValueSchema} representing the domain of real numbers.
    *
-   * @return A new {@link ValueSchema} representing a real number parameter type.
+   * @return A new {@link ValueSchema} representing the domain of real numbers.
    */
   private static ValueSchema ofReal() {
     return new ValueSchema() {
@@ -80,9 +81,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Creates a {@link ValueSchema} representing an integral number parameter type.
+   * Creates a {@link ValueSchema} representing the domain of integers.
    *
-   * @return A new {@link ValueSchema} representing an integral number parameter type.
+   * @return A new {@link ValueSchema} representing the domain of integers.
    */
   private static ValueSchema ofInt() {
     return new ValueSchema() {
@@ -94,9 +95,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Creates a {@link ValueSchema} representing a {@link boolean} parameter type.
+   * Creates a {@link ValueSchema} representing a {@link boolean} type.
    *
-   * @return A new {@link ValueSchema} representing a {@link boolean} parameter type.
+   * @return A new {@link ValueSchema} representing a {@link boolean} type.
    */
   private static ValueSchema ofBoolean() {
     return new ValueSchema() {
@@ -108,9 +109,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Creates a {@link ValueSchema} representing a {@link String} parameter type.
+   * Creates a {@link ValueSchema} representing a {@link String} type.
    *
-   * @return A new {@link ValueSchema} representing a {@link String} parameter type.
+   * @return A new {@link ValueSchema} representing a {@link String} type.
    */
   private static ValueSchema ofString() {
     return new ValueSchema() {
@@ -157,9 +158,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Creates a {@link ValueSchema} representing an {@link Enum} parameter type.
+   * Creates a {@link ValueSchema} representing an {@link Enum} type.
    *
-   * @return A new {@link ValueSchema} representing an {@link Enum} parameter type.
+   * @return A new {@link ValueSchema} representing an {@link Enum} type.
    */
   public static ValueSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
     Objects.requireNonNull(enumeration);
@@ -237,9 +238,9 @@ public abstract class ValueSchema {
   public enum Unit { UNIT }
 
   /**
-   * Asserts that this object represents a double parameter type.
+   * Asserts that this object represents a real number.
    *
-   * @return A non-empty {@link Optional} if this object represents a double parameter type.
+   * @return A non-empty {@link Optional} if this object represents a real number.
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asReal() {
@@ -252,9 +253,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Asserts that this object represents an int parameter type.
+   * Asserts that this object represents an integer.
    *
-   * @return A non-empty {@link Optional} if this object represents an int parameter type.
+   * @return A non-empty {@link Optional} if this object represents an integer.
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asInt() {
@@ -267,9 +268,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Asserts that this object represents a boolean parameter type.
+   * Asserts that this object represents a boolean.
    *
-   * @return A non-empty {@link Optional} if this object represents an boolean parameter type.
+   * @return A non-empty {@link Optional} if this object represents an boolean.
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asBoolean() {
@@ -282,9 +283,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Asserts that this object represents a String parameter type.
+   * Asserts that this object represents a String.
    *
-   * @return A non-empty {@link Optional} if this object represents an String parameter type.
+   * @return A non-empty {@link Optional} if this object represents a String.
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Unit> asString() {
@@ -297,10 +298,10 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Attempts to access this schema as a list of {@code ParameterSchema}s.
+   * Attempts to access this schema as a list of {@code ValueSchema}s.
    *
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
-   *   object represents a list parameter type. Otherwise, returns an empty {@link Optional}.
+   *   object represents a sequence. Otherwise, returns an empty {@link Optional}.
    */
   public Optional<ValueSchema> asSequence() {
     return this.match(new OptionalVisitor<>() {
@@ -312,9 +313,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Attempts to access this schema as a map of named {@code ParameterSchema}s.
+   * Attempts to access this schema as a map of named {@code ValueSchema}s.
    *
-   * @return An {@link Optional} containing a map if this object represents a map parameter type.
+   * @return An {@link Optional} containing a map if this object represents a map.
    *   Otherwise, returns an empty {@link Optional}.
    */
   public Optional<Map<String, ValueSchema>> asStruct() {
@@ -327,9 +328,9 @@ public abstract class ValueSchema {
   }
 
   /**
-   * Asserts that this object represents an enum parameter type.
+   * Asserts that this object represents an enumeration.
    *
-   * @return An {@link Optional} containing an enum if this object represents an Enum parameter type.
+   * @return An {@link Optional} containing an enum if this object represents an enumeration.
    *   Otherwise, returns an empty {@link Optional}
    */
   public Optional<Class<? extends Enum<?>>> asEnum() {
@@ -346,22 +347,22 @@ public abstract class ValueSchema {
     return this.match(new Visitor<>() {
       @Override
       public String onReal() {
-        return "ParameterSchema.REAL";
+        return "ValueSchema.REAL";
       }
 
       @Override
       public String onInt() {
-        return "ParameterSchema.INT";
+        return "ValueSchema.INT";
       }
 
       @Override
       public String onBoolean() {
-        return "ParameterSchema.BOOLEAN";
+        return "ValueSchema.BOOLEAN";
       }
 
       @Override
       public String onString() {
-        return "ParameterSchema.STRING";
+        return "ValueSchema.STRING";
       }
 
       @Override
@@ -376,7 +377,7 @@ public abstract class ValueSchema {
 
       @Override
       public String onEnum(Class<? extends Enum<?>> enumeration) {
-        return "ParameterSchema.ENUM(" + enumeration.getName() + ")";
+        return "ValueSchema.ENUM(" + enumeration.getName() + ")";
       }
     });
   }
