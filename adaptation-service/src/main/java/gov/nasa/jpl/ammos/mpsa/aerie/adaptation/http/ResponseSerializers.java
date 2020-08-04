@@ -46,7 +46,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeParameterSchema(final ValueSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
-    return schema.match(new ParameterSchemaSerializer());
+    return schema.match(new ValueSchemaSerializer());
   }
 
   public static JsonValue serializeParameterSchemas(final Map<String, ValueSchema> schemas) {
@@ -235,7 +235,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  private static final class ParameterSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
+  private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
     @Override
     public JsonValue onReal() {
       return Json
@@ -265,6 +265,14 @@ public final class ResponseSerializers {
       return Json
           .createObjectBuilder()
           .add("type", "string")
+          .build();
+    }
+
+    @Override
+    public JsonValue onDuration() {
+      return Json
+          .createObjectBuilder()
+          .add("type", "duration")
           .build();
     }
 
