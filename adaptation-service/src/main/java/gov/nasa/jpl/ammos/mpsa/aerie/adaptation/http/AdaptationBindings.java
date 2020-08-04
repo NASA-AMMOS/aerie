@@ -275,7 +275,11 @@ public final class AdaptationBindings implements Plugin {
     }
 
     private <T> T parseJson(final String subject, final JsonParser<T> parser) throws InvalidEntityException {
+      try {
         final var requestJson = Json.createReader(new StringReader(subject)).readValue();
         return parser.parse(requestJson).getSuccessOrThrow(() -> new InvalidEntityException());
+      } catch (JsonParsingException e) {
+        throw new InvalidEntityException("invalid json");
+      }
     }
 }
