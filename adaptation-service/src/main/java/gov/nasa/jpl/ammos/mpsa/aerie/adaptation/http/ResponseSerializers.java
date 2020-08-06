@@ -191,11 +191,18 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
-    // TODO: Improve diagnostic information
+  public static JsonValue serializeInvalidJsonException(final InvalidJsonException ex) {
     return Json.createObjectBuilder()
         .add("kind", "invalid-entity")
         .add("message", "invalid json")
+        .build();
+  }
+
+  public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
+    return Json.createObjectBuilder()
+        .add("kind", "invalid-entity")
+        .add("breadcrumbs", Json.createArrayBuilder(ex.breadcrumbs).build())
+        .add("message", ex.message)
         .build();
   }
 

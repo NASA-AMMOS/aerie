@@ -177,6 +177,8 @@ public final class AdaptationBindings implements Plugin {
             ctx.result(ResponseSerializers.serializeFailureList(failures).toString());
         } catch (final App.NoSuchAdaptationException ex) {
             ctx.status(404);
+        } catch (final InvalidJsonException ex) {
+            ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
         } catch (final InvalidEntityException ex) {
             ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
         }
@@ -193,8 +195,11 @@ public final class AdaptationBindings implements Plugin {
             // Request entity is not valid JSON.
             // TODO: report this failure with a better response body
             ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-json").build().toString());
+        } catch (final InvalidJsonException ex) {
+            // Request body is invalid json
+            ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
         } catch (final InvalidEntityException ex) {
-            // Request entity does not have the expected shape.
+            // Request entity does not have the expected shape
             ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
         } catch (final App.NoSuchAdaptationException ex) {
             // The requested adaptation does not exist.
@@ -265,7 +270,7 @@ public final class AdaptationBindings implements Plugin {
             if (!validationErrors.isEmpty()) throw new ValidationException("Validation failed", validationErrors);
         }
 
-        return NewAdaptation.builder()
+      return NewAdaptation.builder()
             .setName(ctx.formParam("name"))
             .setVersion(ctx.formParam("version"))
             .setMission(ctx.formParam("mission"))
@@ -274,12 +279,13 @@ public final class AdaptationBindings implements Plugin {
             .build();
     }
 
-    private <T> T parseJson(final String subject, final JsonParser<T> parser) throws InvalidEntityException {
+    private <T> T parseJson(final String subject, final JsonParser<T> parser) throws InvalidJsonException, InvalidEntityException {
       try {
         final var requestJson = Json.createReader(new StringReader(subject)).readValue();
-        return parser.parse(requestJson).getSuccessOrThrow(() -> new InvalidEntityException());
+        final var result = parser.parse(requestJson);
+        return result.getSuccessOrThrow(() -> new InvalidEntityException(result.failureReason()));
       } catch (JsonParsingException e) {
-        throw new InvalidEntityException("invalid json");
+        throw new InvalidJsonException();
       }
     }
 }
