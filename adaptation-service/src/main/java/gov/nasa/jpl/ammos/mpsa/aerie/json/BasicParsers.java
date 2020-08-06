@@ -25,29 +25,29 @@ public abstract class BasicParsers {
   public static final JsonParser<Boolean> boolP = json -> {
     if (Objects.equals(json, JsonValue.TRUE)) return JsonParseResult.success(true);
     if (Objects.equals(json, JsonValue.FALSE)) return JsonParseResult.success(false);
-    return JsonParseResult.failure();
+    return JsonParseResult.failure("expected boolean");
   };
 
   public static final JsonParser<String> stringP = json -> {
-    if (!(json instanceof JsonString)) return JsonParseResult.failure();
+    if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
 
     return JsonParseResult.success(((JsonString) json).getString());
   };
 
   public static final JsonParser<Long> longP = json -> {
-    if (!(json instanceof JsonNumber)) return JsonParseResult.failure();
+    if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected long");
 
     return JsonParseResult.success(((JsonNumber) json).longValue());
   };
 
   public static final JsonParser<Double> doubleP = json -> {
-    if (!(json instanceof JsonNumber)) return JsonParseResult.failure();
+    if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected double");
 
     return JsonParseResult.success(((JsonNumber) json).doubleValue());
   };
 
   public static final JsonParser<Long> nullP = json -> {
-    if (!Objects.equals(json, JsonValue.NULL)) return JsonParseResult.failure();
+    if (!Objects.equals(json, JsonValue.NULL)) return JsonParseResult.failure("expected null");
 
     return JsonParseResult.success(null);
   };
@@ -55,7 +55,7 @@ public abstract class BasicParsers {
 
   public static JsonParser<String> literalP(final String x) {
     return json -> {
-      if (!Objects.equals(json, Json.createValue(x))) return JsonParseResult.failure();
+      if (!Objects.equals(json, Json.createValue(x))) return JsonParseResult.failure("string literal does not match expected value: \"" + x + "\"");
 
       return JsonParseResult.success(x);
     };
@@ -63,7 +63,7 @@ public abstract class BasicParsers {
 
   public static JsonParser<Long> literalP(final long x) {
     return json -> {
-      if (!Objects.equals(json, Json.createValue(x))) return JsonParseResult.failure();
+      if (!Objects.equals(json, Json.createValue(x))) return JsonParseResult.failure("long literal does not match expected value: \"" + x + "\"");
 
       return JsonParseResult.success(x);
     };
@@ -71,7 +71,7 @@ public abstract class BasicParsers {
 
   public static JsonParser<Double> literalP(final double x) {
     return json -> {
-      if (!Objects.equals(json, Json.createValue(x))) return JsonParseResult.failure();
+      if (!Objects.equals(json, Json.createValue(x))) return JsonParseResult.failure("double literal does not match expected value: \"" + x + "\"");
 
       return JsonParseResult.success(x);
     };
@@ -79,7 +79,7 @@ public abstract class BasicParsers {
 
   public static JsonParser<Boolean> literalP(final boolean x) {
     return json -> {
-      if (!Objects.equals(json, x ? JsonValue.TRUE : JsonValue.FALSE)) return JsonParseResult.failure();
+      if (!Objects.equals(json, x ? JsonValue.TRUE : JsonValue.FALSE)) return JsonParseResult.failure("boolean literal does not match expected value: \"" + x + "\"");
 
       return JsonParseResult.success(x);
     };
@@ -87,13 +87,15 @@ public abstract class BasicParsers {
 
   public static <T> JsonParser<List<T>> listP(final JsonParser<T> elementParser) {
     return json -> {
-      if (!(json instanceof JsonArray)) return JsonParseResult.failure();
+      if (!(json instanceof JsonArray)) return JsonParseResult.failure("expected list");
 
-      final var list = new ArrayList<T>(json.asJsonArray().size());
-      for (final var element : json.asJsonArray()) {
+      final var jsonArray = json.asJsonArray();
+      final var list = new ArrayList<T>(jsonArray.size());
+      for (int index=0; index < jsonArray.size(); index++) {
+        final var element = jsonArray.get(index);
         final var result = elementParser.parse(element);
 
-        if (result.isFailure()) return result.mapSuccess(x -> null);
+        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(Integer.toString(index)));
         list.add(result.getSuccessOrThrow());
       }
 
@@ -103,13 +105,13 @@ public abstract class BasicParsers {
 
   public static <S> JsonParser<Map<String, S>> mapP(final JsonParser<S> fieldParser) {
     return json -> {
-      if (!(json instanceof JsonObject)) return JsonParseResult.failure();
+      if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
 
       final var map = new HashMap<String, S>(json.asJsonObject().size());
       for (final var field : json.asJsonObject().entrySet()) {
         final var result = fieldParser.parse(field.getValue());
 
-        if (result.isFailure()) return result.mapSuccess(x -> null);
+        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(field.getKey()));
         map.put(field.getKey(), result.getSuccessOrThrow());
       }
 
@@ -140,7 +142,7 @@ public abstract class BasicParsers {
         return result.mapSuccess(x -> (T) x);
       }
 
-      return JsonParseResult.failure();
+      return JsonParseResult.failure("not parsable into acceptable type");
     };
   }
 

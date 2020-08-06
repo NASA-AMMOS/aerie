@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.json;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -20,11 +22,44 @@ public interface JsonParseResult<T> {
     };
   }
 
+  static <T> JsonParseResult<T> failure(String reason) {
+    return new JsonParseResult<>() {
+      @Override
+      public <Result, Throws extends Throwable> Result match(final Visitor<? super T, Result, Throws> visitor) throws Throws {
+        return visitor.onFailure();
+      }
+
+      @Override
+      public FailureReason failureReason() {
+        return new FailureReason(reason);
+      }
+    };
+  }
+
+  static <T> JsonParseResult<T> failure(FailureReason reason) {
+    return new JsonParseResult<>() {
+      @Override
+      public <Result, Throws extends Throwable> Result match(final Visitor<? super T, Result, Throws> visitor) throws Throws {
+        return visitor.onFailure();
+      }
+
+      @Override
+      public FailureReason failureReason() {
+        return reason;
+      }
+    };
+  }
+
   static <T> JsonParseResult<T> failure() {
     return new JsonParseResult<>() {
       @Override
       public <Result, Throws extends Throwable> Result match(final Visitor<? super T, Result, Throws> visitor) throws Throws {
         return visitor.onFailure();
+      }
+
+      @Override
+      public FailureReason failureReason() {
+        return new FailureReason("Unknown reason");
       }
     };
   }
@@ -38,7 +73,7 @@ public interface JsonParseResult<T> {
 
       @Override
       public JsonParseResult<S> onFailure() {
-        return JsonParseResult.failure();
+        return JsonParseResult.failure(failureReason());
       }
     });
   }
@@ -73,5 +108,24 @@ public interface JsonParseResult<T> {
 
   default T getSuccessOrThrow() {
     return this.getSuccessOrThrow(() -> new RuntimeException("Called getSuccessOrThrow on a Failure case"));
+  }
+
+  default FailureReason failureReason() {
+    return new FailureReason("invalid json");
+  }
+
+  class FailureReason {
+    public final List<String> breadcrumbs;
+    public final String reason;
+
+    public FailureReason(String reason) {
+      this.reason = reason;
+      this.breadcrumbs = new ArrayList<>();
+    }
+
+    public FailureReason prependBreadcrumb(String breadcrumb) {
+      breadcrumbs.add(0, breadcrumb);
+      return this;
+    }
   }
 }
