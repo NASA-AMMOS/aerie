@@ -1,0 +1,103 @@
+extend type AerieSubscription {
+  scheduleTypeCreated: ScheduleTypeCreatedEvent!
+  scheduleTypeDeprecated(id: ID): ScheduleTypeDeprecatedEvent
+
+  scheduleCreated: ScheduleCreatedEvent!
+  scheduleDeleted(id: ID): ScheduleDeletedEvent
+  activityScheduled(scheduleId: ID!): ActivityScheduledEvent
+  activityRescheduled(scheduleId: ID!): ActivityRescheduledEvent
+  activityRemoved(scheduleId: ID!): ActivityRemovedEvent
+  activityArgumentChanged(scheduleId: ID!): ActivityArgumentChangedEvent
+}
+
+type ScheduleTypeCreatedEvent {
+  # Event data
+  id: ID!
+  name: String!
+  version: String!
+  # The JAR blob is not included in this event because
+  #   1. it is held in a different store from the event log,
+  #   2. it is usually very large, and
+  #   3. we do not want to couple too tightly to JAR-based definitions.
+
+  # Relations
+  scheduleType: ScheduleType!
+}
+
+type ScheduleTypeDeprecatedEvent {
+  # Event data
+  id: ID!
+  deprecated: Boolean!
+
+  # Relations
+  scheduleType: ScheduleType!
+}
+
+type ScheduleCreatedEvent {
+  # Event data
+  id: ID!
+  scheduleTypeId: ID!
+  name: String!
+  startTime: Time!
+  duration: ElapsedTime!
+
+  # Relations
+  scheduleType: ScheduleType!
+  schedule: Schedule!
+}
+
+type ScheduleDeletedEvent {
+  # Event data
+  id: ID!
+}
+
+type ActivityScheduledEvent {
+  # Event data
+  activityId: ID!
+  startTime: ElapsedTime!
+  type: String!
+  arguments: [ActivityArgument!]!
+
+  # Relations
+  schedule: Schedule!
+  activity: Activity!
+}
+
+type ActivityRescheduledEvent {
+  # Event data
+  activityId: ID!
+  startTime: ElapsedTime!
+
+  # Relations
+  schedule: Schedule!
+  activity: Activity!
+}
+
+type ActivityRemovedEvent {
+  # Event data
+  activityId: ID!
+
+  # Relations
+  schedule: Schedule!
+}
+
+type ActivityArgumentChangedEvent {
+  # Event data
+  activityId: ID!
+  name: String!
+  value: MissionValue
+
+  # Relations
+  schedule: Schedule!
+  activity: Activity!
+}
+
+type ActivityArgumentResetEvent {
+  # Event data
+  activityId: ID!
+  name: String!
+
+  # Relations
+  schedule: Schedule!
+  activity: Activity!
+}
