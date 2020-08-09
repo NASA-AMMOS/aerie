@@ -38,7 +38,7 @@ def getArtifactoryUrl() {
     if (GIT_BRANCH ==~ /release-.*/){
         echo "Publishing to 16003-RELEASE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16003"
-    } 
+    }
     else if (GIT_BRANCH ==~ /staging/) {
         echo "Publishing to 16002-STAGE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16002"
@@ -52,10 +52,10 @@ def getArtifactoryUrl() {
 def getPublishPath() {
     if (GIT_BRANCH ==~ /release-.*/) {
         return "general/gov/nasa/jpl/aerie/"
-    } 
+    }
     else if (GIT_BRANCH ==~ /staging/) {
         return "general-stage/gov/nasa/jpl/aerie/"
-    } 
+    }
     else {
         return "general-develop/gov/nasa/jpl/aerie/"
     }
@@ -67,6 +67,17 @@ def getArtifactTag() {
     } else {
         return GIT_COMMIT
     }
+}
+
+void setBuildStatus(String message, String state, String context) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: env.GIT_URL],
+      commitShaSource: [$class: "ManuallyEnteredShaSource", sha: env.GIT_COMMIT],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state.toUpperCase()]] ]
+  ]);
 }
 
 // Save built image name:tag
@@ -107,6 +118,7 @@ pipeline {
 
         stage ('Build') {
             steps {
+                script { setBuildStatus("Building", "pending", "jenkins/branch-check"); }
                 echo "Building $ARTIFACT_TAG..."
                 sh './gradlew classes'
             }
@@ -114,6 +126,7 @@ pipeline {
 
         stage ('Test') {
             steps {
+                script { setBuildStatus("Testing", "pending", "jenkins/branch-check"); }
                 sh "./gradlew test"
 
                 // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
@@ -285,6 +298,8 @@ pipeline {
 
             echo 'Remove temp folder'
             sh 'rm -rf /tmp/aerie-jenkins'
+
+            setBuildStatus("Build ${currentBuild.currentResult}", "${currentBuild.currentResult}", "jenkins/branch-check")
         }
 
         unstable {
