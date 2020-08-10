@@ -19,8 +19,8 @@ public abstract class ProductParsers {
 
     @Override
     public JsonParseResult<Unit> parse(final JsonValue json) {
-      if (!(json instanceof JsonObject)) return JsonParseResult.failure();
-      if (!json.asJsonObject().isEmpty()) return JsonParseResult.failure();
+      if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
+      if (!json.asJsonObject().isEmpty()) return JsonParseResult.failure("expected empty object");
 
       return JsonParseResult.success(Unit.UNIT);
     }
@@ -57,7 +57,7 @@ public abstract class ProductParsers {
 
     @Override
     public JsonParseResult<T> parse(final JsonValue json) {
-      if (!(json instanceof JsonObject)) return JsonParseResult.failure();
+      if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
       final var obj = (JsonObject) json;
 
       // Extract all of the fields we want.
@@ -75,13 +75,13 @@ public abstract class ProductParsers {
           }
         } else {
           if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.failure();
+            result = JsonParseResult.failure("required field not present");
           } else {
             result = field.valueParser.parse(obj.get(field.name));
           }
         }
 
-        if (result.isFailure()) return result.mapSuccess(x -> null);
+        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(field.name));
         accumulator = result.getSuccessOrThrow();
       }
 
@@ -103,18 +103,19 @@ public abstract class ProductParsers {
           }
         } else {
           if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.failure();
+            result = JsonParseResult.failure("required field not present");
           } else {
             result = field.valueParser.parse(obj.get(field.name));
           }
         }
 
-        if (result.isFailure()) return result.mapSuccess(x -> null);
+        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(field.name));
         accumulator = Pair.of(accumulator, result.getSuccessOrThrow());
       }
 
       // Check that it contains only the fields we want.
-      if (obj.keySet().size() + defaultedFields != this.fields.size()) return JsonParseResult.failure();
+      // TODO: We should take note of what extra fields are present and report them
+      if (obj.keySet().size() + defaultedFields != this.fields.size()) return JsonParseResult.failure("unexpected extra fields present");
 
       // SAFETY: established by loop invariant.
       @SuppressWarnings("unchecked")
