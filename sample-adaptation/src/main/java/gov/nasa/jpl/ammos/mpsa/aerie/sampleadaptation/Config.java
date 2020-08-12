@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.List;

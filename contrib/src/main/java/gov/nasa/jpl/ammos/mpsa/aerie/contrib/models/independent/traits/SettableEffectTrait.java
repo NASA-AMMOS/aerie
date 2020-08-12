@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.traits;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.traits;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
 

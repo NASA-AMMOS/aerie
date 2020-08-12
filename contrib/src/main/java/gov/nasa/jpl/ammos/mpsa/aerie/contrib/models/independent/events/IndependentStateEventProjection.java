@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.events;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.AbstractProjection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;

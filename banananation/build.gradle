@@ -12,9 +12,11 @@ dependencies {
   testAnnotationProcessor project(':activity-processor')
 
   compileOnly project(':merlin-sdk')
+  compileOnly project(':contrib')
   implementation 'org.apache.commons:commons-lang3:3.9'
 
   testImplementation project(':merlin-sdk')
+  testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.13.2'
   testImplementation 'junit:junit:4.12'
 }
