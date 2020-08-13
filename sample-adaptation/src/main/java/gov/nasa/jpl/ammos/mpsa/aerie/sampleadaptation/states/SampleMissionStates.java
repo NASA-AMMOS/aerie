@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.typemappers.Vector3DValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityTypeStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
@@ -8,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.IndependentState
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument.RunInstrument;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import java.util.List;
 
@@ -28,6 +31,8 @@ public final class SampleMissionStates {
     public static final DoubleState instrumentDataBits = factory.cumulative("instrumentData", 0.0);
     public static final DoubleState cameraDataBits = factory.cumulative("cameraData", 0.0);
     public static final DoubleState totalDownlinkedDataBits = factory.cumulative("totalDownlinkedData", 0.0);
+
+    public static final SettableState<Vector3D> cameraPointing = factory.settable("cameraPointing", new Vector3D(1, 0, 0), new Vector3DValueMapper());
 
     public static final List<ViolableConstraint> violableConstraints = List.of(
             new ViolableConstraint(batteryCapacity.whenLessThan(Config.startBatteryCapacity_J * 0.3))
