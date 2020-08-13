@@ -1,0 +1,149 @@
+pipeline {
+
+    agent {
+        label 'CAE-Jenkins2-DH-Agents-Linux'
+    }
+    stages {
+        stage ('Setup') {
+            steps {
+                sh 'git checkout gh-pages'
+                echo "Printing environment variables..."
+                sh "env | sort"
+            }
+        }
+        stage ('Passing Deploy Key to Agent') {
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'GitHub-aerie-write', keyFileVariable: 'DEPLOY_KEY', passphraseVariable: '', usernameVariable: '')]) {
+                        sh 'cp ${DEPLOY_KEY} id_rsa'
+                        sh 'ls -l'
+                    }
+                }
+            }
+        }
+        stage ('Enter Docker Container') {
+            agent {
+                docker {
+                    reuseNode true
+                    registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+                    registryCredentialsId 'Artifactory-credential'
+                    image 'gov/nasa/jpl/ammos/mpsa/aerie/ubuntu:18.04'
+                    alwaysPull true
+                    args '-u root --mount type=bind,source=${WORKSPACE},target=/home --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+                }
+            }
+            stages{
+                stage ('Configure docker dependencies') {
+                    steps {
+                        sh 'apt update'
+                        sh 'apt install git -y'
+                        sh 'apt install python3.8 -y'
+                        sh 'apt install python3-pip -y'
+                        sh 'apt install pandoc -y'
+                        sh 'apt-get install texlive-latex-base -y'
+                        sh 'apt-get install texlive-latex-recommended -y'
+                        sh 'apt-get install texlive-fonts-recommended -y'
+                        sh 'pip3 install sphinx'
+                        sh 'pip3 install recommonmark'
+                    }
+                }
+                stage ('Setup docker Git credentials') {
+                    steps {
+                        sh 'mkdir -p ~/.ssh && mv id_rsa ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa'
+                        sh 'ssh-keyscan -t rsa github.jpl.nasa.gov >> ~/.ssh/known_hosts'
+                    }
+                }
+                stage ('Clone Aerie.wiki repo') {
+                    steps {
+                        sh 'git clone git@github.jpl.nasa.gov:Aerie/aerie.wiki.git'
+                        sh 'ls -la'
+                    }
+                }
+                stage ('Building html documents') {
+                    steps {
+                        sh script:
+                        """
+                            cd aerie.wiki
+                            sphinx-quickstart -p Aerie -a aerie -v ${BUILD_NUMBER} --extensions=recommonmark --ext-githubpages -q
+                            make html
+                        """
+                    }
+                }
+                stage ('Building PDF documents') {
+                    steps {
+                        sh script:
+                        """
+                            cd aerie.wiki
+                            mkdir -p pdf
+                            find ./ -iname "*.md" -type f -exec sh -c 'pandoc "\${0}" -t latex -o "./pdf/\$(basename \${0%.md}.pdf)"' {} \\;
+                            cd pdf
+                            ls -la
+                        """
+                    }
+                }
+                stage ('Copy generated documents') {
+                    steps {
+                        sh script:
+                        """
+                            pwd
+                            ls -la
+                            cp -r aerie.wiki/pdf .
+                            cp -r aerie.wiki/_build/html .
+                            mv html/.nojekyll .
+                        """
+                    }
+                }
+                stage ('Upload documents') {
+                    steps {
+                        sh 'pwd'
+                        sh 'ls -la'
+                        sh 'ls html/ -la'
+                        sh 'git config user.email "achong@jpl.nasa.gov"'
+                        sh 'git config user.name "Automatic Job"'
+                        sh 'git add html/'
+                        sh 'git add pdf/'
+                        sh 'git add .nojekyll'
+                        sh 'git reset -- html/index.html'
+                        sh 'git status -uno'
+                        sh 'git commit -m "Auto commit generated html documents"'
+                        sh 'git push'
+                    }
+                }
+            }
+            post {
+                cleanup {
+                    sh 'rm ~/.ssh/id_rsa'
+                }
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Cleaning up images'
+            sh "docker image prune -f"
+
+            echo 'Logging out docker'
+            sh 'docker logout || true'
+        }
+        unstable {
+            emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                <p>Jenkins job unstable (failed tests): <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
+            """,
+            mimeType: 'text/html',
+            recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
+        }
+        failure {
+            emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+            body: """
+                <p>Jenkins job failure: <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
+            """,
+            mimeType: 'text/html',
+            recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+        }
+        cleanup {
+            cleanWs()
+            deleteDir()
+        }
+    }
+}
