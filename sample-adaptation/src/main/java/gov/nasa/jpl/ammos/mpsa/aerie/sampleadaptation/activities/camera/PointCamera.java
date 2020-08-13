@@ -20,6 +20,11 @@ public class PointCamera implements Activity {
     @Parameter
     public Vector3D focusPoint;
 
+    public PointCamera() {}
+    public PointCamera(Vector3D focusPoint) {
+        this.focusPoint = focusPoint;
+    }
+
     public List<String> validateParameters() {
         List<String> validationErrors = new ArrayList<>();
 
