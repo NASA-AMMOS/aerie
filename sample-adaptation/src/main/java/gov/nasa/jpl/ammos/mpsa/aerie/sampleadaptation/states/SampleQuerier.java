@@ -123,7 +123,10 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     @Override
     public Set<String> states() {
-        return this.cumulables.keySet();
+        final var states = new HashSet<String>();
+        states.addAll(this.cumulables.keySet());
+        states.addAll(this.settables.keySet());
+        return states;
     }
 
     @Override
