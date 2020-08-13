@@ -41,6 +41,12 @@ public class LocalSimulation {
                                 "dataMode", SerializedValue.of("MED")))),
                 Pair.of(Duration.of(720, Duration.SECONDS), new SerializedActivity("PreheatCamera",
                         Map.of("heatDurationInSeconds", SerializedValue.of(1800)))),
+                Pair.of(Duration.of(720, Duration.SECONDS), new SerializedActivity("PointCamera",
+                        Map.of("focusPoint", SerializedValue.of(
+                            List.of(
+                                SerializedValue.of(10.0),
+                                SerializedValue.of(10.0),
+                                SerializedValue.of(10.0)))))),
                 Pair.of(Duration.of(1620, Duration.SECONDS), new SerializedActivity("CapturePanorama",
                                 Map.of("nFramesHorizontal", SerializedValue.of(4),
                                         "nFramesVertical", SerializedValue.of(2),
@@ -96,5 +102,7 @@ public class LocalSimulation {
          */
         printValues("cameraData", results, "\nCamera Data values: ");
         printConstraintWindows("maxAllocatedCameraData", results,  "\nConstraint windows for max camera data: ");
+
+        printValues("cameraPointing", results, "\nCamera Pointing Vector: ");
     }
 }
