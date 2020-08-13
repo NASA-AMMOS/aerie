@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 

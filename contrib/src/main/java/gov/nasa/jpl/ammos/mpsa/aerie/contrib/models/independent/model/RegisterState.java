@@ -1,6 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.StateQuery;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 

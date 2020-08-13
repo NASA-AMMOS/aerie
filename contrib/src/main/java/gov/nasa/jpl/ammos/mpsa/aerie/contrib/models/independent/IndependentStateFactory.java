@@ -1,7 +1,7 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.IndependentStateEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.events.IndependentStateEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;

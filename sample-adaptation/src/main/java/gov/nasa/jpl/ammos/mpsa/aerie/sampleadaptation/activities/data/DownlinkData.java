@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 
 import java.util.ArrayList;

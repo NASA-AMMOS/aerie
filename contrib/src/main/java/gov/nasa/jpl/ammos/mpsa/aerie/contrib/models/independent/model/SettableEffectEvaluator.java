@@ -1,9 +1,9 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.IndependentStateEventProjection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.traits.SettableEffect;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.traits.SettableEffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.events.IndependentStateEventProjection;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.traits.SettableEffect;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.traits.SettableEffectTrait;
 
 import java.util.Objects;
 

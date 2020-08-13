@@ -1,8 +1,8 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.model;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.DefaultIndependentStateEventHandler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.independent.events.IndependentStateEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.events.DefaultIndependentStateEventHandler;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.events.IndependentStateEvent;
 
 import java.util.Objects;
 

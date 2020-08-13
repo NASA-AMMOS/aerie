@@ -1,0 +1,18 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+
+  withJavadocJar()
+  withSourcesJar()
+}
+
+// Link references to standard Java classes to the official Java 11 documentation.
+javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+
+dependencies {
+  compileOnly project(':merlin-sdk')
+}
