@@ -1,0 +1,269 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Installation &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p>The Aerie command line interface for planning allows manipulation of plans in batch using the commands listed below. In order to use the command line interface users have run Aerie on their localhost, where the end points are hardcoded in an Aerie config file. In the future, the CLI can be configured to point to any host machine to make requests against. At that point, aerie services can run anywhere, and the CLI will work from any other machine as long as it has the proper host configured. Example input/output JSON is given in the <a class="reference external" href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/User-Guide-Appendix">appendix</a> for reference.</p>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>The CLI is contained in a JAR file that can be downloaded from <a class="reference external" href="https://cae-artifactory.jpl.nasa.gov/">Artifactory</a>. To install it, download the tar file located <a class="reference external" href="https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/general-develop/gov/nasa/jpl/ammos/mpsa/aerie/aerie-develop.tar.gz">here</a>. Note that you may need to log in to Artifactory to reach the download link. Decompress the file to your desired location. This can be done manually by going to your desired location in a terminal and entering</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>tar -xzf ~/Downloads/aerie-develop.tar.gz
+</pre></div>
+</div>
+<p>The JAR will now be located at <code class="docutils literal notranslate"><span class="pre">&lt;installation-path&gt;/merlin-cli/merlin-cli.jar</span></code>. The CLI can now be run by executing</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>java -jar &lt;installation-path&gt;/merlin-cli/merlin-cli.jar
+</pre></div>
+</div>
+<p>but this is cumbersome, so we suggest setting up an alias to run the cli. For shells such as Bash and Zsh (the default shells for recent Macintosh computers), this can be done as such:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">alias</span> merlin-cli<span class="o">=</span><span class="s2">&quot;java -jar &lt;installation-path&gt;/merlin-cli/merlin-cli.jar&quot;</span>
+</pre></div>
+</div>
+<p>At this point the CLI can be run by entering <code class="docutils literal notranslate"><span class="pre">merlin-cli</span></code> at the command prompt, however if a new terminal is opened the alias will need to be set up again. To avoid this, add the alias to your rc file, so it will be initialized every time your terminal starts up.</p>
+<p>Below is an example of how to install the merlin CLI to <code class="docutils literal notranslate"><span class="pre">~/opt</span></code> after downloading the .tar.gz file in zsh:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> ~/opt
+tar -xzf ~/Downloads/aerie-develop.tar.gz
+<span class="nb">alias</span> merlin-cli<span class="o">=</span><span class="s2">&quot;java -jar ~/opt/merlin-cli/merlin-cli.jar&quot;</span>
+</pre></div>
+</div>
+<div class="section" id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<p>It is possible when running the JAR file you will see something like the following error:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Error</span><span class="p">:</span> <span class="n">A</span> <span class="n">JNI</span> <span class="n">error</span> <span class="n">has</span> <span class="n">occurred</span><span class="p">,</span> <span class="n">please</span> <span class="n">check</span> <span class="n">your</span> <span class="n">installation</span> <span class="ow">and</span> <span class="k">try</span> <span class="n">again</span>
+<span class="ne">Exception</span> <span class="ow">in</span> <span class="n">thread</span> <span class="s2">&quot;main&quot;</span> <span class="n">java</span><span class="o">.</span><span class="n">lang</span><span class="o">.</span><span class="n">UnsupportedClassVersionError</span><span class="p">:</span> <span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">ammos</span><span class="o">/</span><span class="n">mpsa</span><span class="o">/</span><span class="n">aerie</span><span class="o">/</span><span class="n">merlincli</span><span class="o">/</span><span class="n">MainCLI</span>
+<span class="n">has</span> <span class="n">been</span> <span class="n">compiled</span> <span class="n">by</span> <span class="n">a</span> <span class="n">more</span> <span class="n">recent</span> <span class="n">version</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Java</span> <span class="n">Runtime</span> <span class="p">(</span><span class="k">class</span> <span class="nc">file</span> <span class="n">version</span> <span class="mf">55.0</span><span class="p">),</span> <span class="n">this</span> <span class="n">version</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Java</span>
+<span class="n">Runtime</span> <span class="n">only</span> <span class="n">recognizes</span> <span class="k">class</span> <span class="nc">file</span> <span class="n">versions</span> <span class="n">up</span> <span class="n">to</span> <span class="mf">52.0</span>
+</pre></div>
+</div>
+<p>If this error occurs, the cause is likely due to a mismatch in the version of Java being run and the version the JAR was compiled with. The CLI uses Java 11, so Java 11 should be used to run the CLI. Your java version can be checked by entering <code class="docutils literal notranslate"><span class="pre">java</span> <span class="pre">-version</span></code> at the command prompt.</p>
+</div>
+</div>
+<div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>The CLI is currently designed to automatically connect to a local deployment of the Aerie services (see <a class="reference external" href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment">here</a>). In the future, the CLI will be configurable to connect to remote services, but at this time only use with a local deployment is possible.</p>
+<div class="section" id="create-a-single-adaptation">
+<h2>Create a single adaptation<a class="headerlink" href="#create-a-single-adaptation" title="Permalink to this headline">¶</a></h2>
+<p>Create an adaptation from a JAR file and metadata, returns an adaptation ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli --create-adaptation &lt;path-to-adaptation-jar&gt; <span class="nv">name</span><span class="o">=</span>&lt;name&gt; <span class="nv">version</span><span class="o">=</span>&lt;version&gt; <span class="nv">mission</span><span class="o">=</span>&lt;mission&gt; <span class="nv">owner</span><span class="o">=</span>&lt;owner&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-all-adaptations">
+<h2>Query all adaptations<a class="headerlink" href="#query-all-adaptations" title="Permalink to this headline">¶</a></h2>
+<p>Returns a list of all adaptations indexed by adaptation ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli --list-adaptations
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-adaptation-metadata">
+<h2>Query adaptation metadata<a class="headerlink" href="#query-adaptation-metadata" title="Permalink to this headline">¶</a></h2>
+<p>Returns metadata of an adaptation specified with ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -a &lt;adaptation-id&gt; --view-adaptation
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-all-activity-types-in-an-adaptation">
+<h2>Query all activity types in an adaptation<a class="headerlink" href="#query-all-activity-types-in-an-adaptation" title="Permalink to this headline">¶</a></h2>
+<p>Returns a list of activity types indexed by activity type name. For each activity type, parameter names and types as well as default values are given.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -a &lt;adaptation-id&gt; --activity-types
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-an-activity-type-in-an-adaptation">
+<h2>Query an activity type in an adaptation<a class="headerlink" href="#query-an-activity-type-in-an-adaptation" title="Permalink to this headline">¶</a></h2>
+<p>Returns a list of parameters as well as their default values for an activity type specified by ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -a &lt;adaptation-id&gt; --activity-type &lt;activity-type-id&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-activity-type-parameters">
+<h2>Query activity type parameters<a class="headerlink" href="#query-activity-type-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Returns a list of activity type parameters for a given activity type within an adaptation, both specified by ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -a &lt;adaptation-id&gt; --activity-type-parameters &lt;activity-type-id&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-an-adaptation">
+<h2>Delete an adaptation<a class="headerlink" href="#delete-an-adaptation" title="Permalink to this headline">¶</a></h2>
+<p>Remove an adaptation specified by ID from the adaptation service.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -a &lt;adaptation-id&gt; --delete-adaptation
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-a-plan">
+<h2>Create a plan<a class="headerlink" href="#create-a-plan" title="Permalink to this headline">¶</a></h2>
+<p>Create a plan by uploading a plan JSON file. The JSON should contain all required fields including adaptation ID, plan name, start timestamp and end timestamp (YYYY-DDDThh:mm:ss). Adaptation ID must be for a valid adaptation, and activity instances must be valid according to the adaptation.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli --create-plan &lt;path-to-plan-json&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-plans">
+<h2>Query plans<a class="headerlink" href="#query-plans" title="Permalink to this headline">¶</a></h2>
+<p>Returns a list of existing plans indexed by plan ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli --list-plans
+</pre></div>
+</div>
+</div>
+<div class="section" id="query-an-activity-instance">
+<h2>Query an activity instance<a class="headerlink" href="#query-an-activity-instance" title="Permalink to this headline">¶</a></h2>
+<p>Given a plan and activity instance ID, return activity instance metadata and parameter list.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --display-activity &lt;activity-instance-id&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="update-plan-metadata">
+<h2>Update plan metadata<a class="headerlink" href="#update-plan-metadata" title="Permalink to this headline">¶</a></h2>
+<p>Update plan metadata via key/value pairs. Valid fields are: <code class="docutils literal notranslate"><span class="pre">adaptationId</span></code>,  <code class="docutils literal notranslate"><span class="pre">startTimestamp</span></code>, <code class="docutils literal notranslate"><span class="pre">endTimestamp</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --update-plan &lt;field&gt;<span class="o">=</span>&lt;value&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="update-an-activity-instance">
+<h2>Update an activity instance<a class="headerlink" href="#update-an-activity-instance" title="Permalink to this headline">¶</a></h2>
+<p>Update any attribute of an activity instance specified by unique ID.  Note that activity instance parameters cannot be updated this way. Valid fields are: <code class="docutils literal notranslate"><span class="pre">startTimestamp</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code>.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --update-activity &lt;field&gt;<span class="o">=</span>&lt;value&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-an-activity-instance">
+<h2>Delete an activity instance<a class="headerlink" href="#delete-an-activity-instance" title="Permalink to this headline">¶</a></h2>
+<p>Delete an activity instance from a plan by ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --delete-activity &lt;activity-instance-id&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="delete-a-plan">
+<h2>Delete a plan<a class="headerlink" href="#delete-a-plan" title="Permalink to this headline">¶</a></h2>
+<p>Delete a plan specified by ID.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --delete-plan
+</pre></div>
+</div>
+</div>
+<div class="section" id="update-plan-from-a-file">
+<h2>Update plan from a file<a class="headerlink" href="#update-plan-from-a-file" title="Permalink to this headline">¶</a></h2>
+<p>Upload a JSON file containing fields of a plan to be updated. All fields except adaptation ID may be updated this way. Any fields that are left out will remain unchanged. Note that individual activity instances cannot be updated this way, and including any activity instances in the plan update JSON will replace the current activity instance set with them.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --update-plan-from-file &lt;path-to-json&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="append-activity-instances-to-a-plan-by-file-upload">
+<h2>Append activity instances to a plan by file upload<a class="headerlink" href="#append-activity-instances-to-a-plan-by-file-upload" title="Permalink to this headline">¶</a></h2>
+<p>This action will retain activity instances in the plan, but add all new activity instances specified by a JSON file.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --append-activities &lt;path-to-json&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="download-a-plan-json">
+<h2>Download a plan JSON<a class="headerlink" href="#download-a-plan-json" title="Permalink to this headline">¶</a></h2>
+<p>Download plan in a JSON file format. Note that a downloaded plan JSON is different from the format for creating a plan in that activity instances are given as a map indexed by activity ID instead of a list.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --download-plan &lt;output-path&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="simulate-a-plan">
+<h2>Simulate a plan<a class="headerlink" href="#simulate-a-plan" title="Permalink to this headline">¶</a></h2>
+<p>Kick off a simulation of a plan by ID, with results written to a file. Takes a sampling period (in microseconds) to determine how often to sample states for simulation results. Note that the local version of this command currently ignores the output path, and instead prints results to the console.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli -p &lt;plan-id&gt; --simulate &lt;sampling-period&gt; &lt;output-path&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="convert-an-apgen-apf-file-to-a-merlin-json-plan-file">
+<h2>Convert an APGen APF file to a Merlin JSON Plan file<a class="headerlink" href="#convert-an-apgen-apf-file-to-a-merlin-json-plan-file" title="Permalink to this headline">¶</a></h2>
+<p>APF files can be converted to Merlin input JSON file format. The action requires specifying a path to the APGEN adaptation <code class="docutils literal notranslate"><span class="pre">.aaf</span></code> files.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>merlin-cli --convert-apf &lt;path-to-apf-file&gt; &lt;output-path&gt; &lt;path-to-apgen-adaptation-directory&gt;
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Aerie-Command-Line-Interface.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

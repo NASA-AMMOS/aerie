@@ -1,0 +1,325 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Panel Editor &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p>Users can create custom planning views for different sub-systems<br />(e.g. science, engineering, thermal, etc.), where only data (e.g. activities and states) for those sub-systems are visualized. This is done through a mission-authored <a class="reference external" href="https://www.json.org/json-en.html">JSON</a> file. The format of that file and how to update it is the subject of this document.</p>
+<div class="section" id="panel-editor">
+<h1>Panel Editor<a class="headerlink" href="#panel-editor" title="Permalink to this headline">¶</a></h1>
+<p>In order to change the configuration object, navigate to the plan page<br />and press <code class="docutils literal notranslate"><span class="pre">⌘e</span> <span class="pre">(command</span> <span class="pre">e)</span></code>, which should open up the Panel Editor in the right drawer.<br />Make your changes to the JSON object and press <code class="docutils literal notranslate"><span class="pre">⌘s</span> <span class="pre">(command</span> <span class="pre">s)</span></code>.<br />You should see the UI update with your changes as long as your JSON object has no errors.<br />Check the <a class="reference external" href="https://webmasters.stackexchange.com/a/77337">console</a> if you suspect your JSON object has errors. If your errors persist, don’t hesitate to ask on <a class="reference external" href="https://app.slack.com/client/T024LMMEZ/C0163E42UBF">#mpsa-aerie-users</a>.</p>
+<p><strong>Note that edited configurations are not currently saved between browser refreshes. This will be added in future releases.</strong></p>
+<img width="1024" src="https://github.jpl.nasa.gov/storage/user/2179/files/6a2d0380-bfa7-11ea-917e-85a7af6047c9"></div>
+<div class="section" id="panels">
+<h1>Panels<a class="headerlink" href="#panels" title="Permalink to this headline">¶</a></h1>
+<p>The planning UI consists of a list of panels, and each <code class="docutils literal notranslate"><span class="pre">Panel</span></code> has the following <a class="reference external" href="https://www.typescriptlang.org/docs/handbook/interfaces.html">interface</a>:</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="kr">interface</span> <span class="nx">Panel</span> <span class="p">{</span>
+  <span class="nx">bands?</span>: <span class="kt">Band</span><span class="p">[];</span> <span class="c1">// For type &#39;timeline&#39;</span>
+  <span class="nx">id</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">iframe</span><span class="o">?:</span> <span class="p">{</span> <span class="c1">// For type &#39;iframe&#39;</span>
+    <span class="nx">src</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="p">};</span>
+  <span class="nx">menu?</span>: <span class="kt">PanelMenuItem</span><span class="p">[];</span>
+  <span class="nx">size</span>: <span class="kt">number</span><span class="p">;</span> <span class="c1">// Size percentage of the panel (0% - 100%)</span>
+  <span class="nx">table</span><span class="o">?:</span> <span class="p">{</span> <span class="c1">// For type &#39;table&#39;</span>
+    <span class="nx">columns</span>: <span class="kt">string</span><span class="p">[];</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;activity&#39;</span><span class="p">;</span> <span class="c1">// Only &#39;activity&#39; typed tables are allowed right now</span>
+  <span class="p">};</span>
+  <span class="nx">title</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;iframe&#39;</span> <span class="o">|</span> <span class="s1">&#39;table&#39;</span> <span class="o">|</span> <span class="s1">&#39;timeline&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="menu">
+<h2>Menu<a class="headerlink" href="#menu" title="Permalink to this headline">¶</a></h2>
+<p>Each panel can have an associated menu specified with an <code class="docutils literal notranslate"><span class="pre">action</span></code>, <code class="docutils literal notranslate"><span class="pre">icon</span></code>, and <code class="docutils literal notranslate"><span class="pre">title</span></code>.<br />The current actions we support are:</p>
+<ol class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">link</span></code> adds a link that opens a new browser tab to the specified <code class="docutils literal notranslate"><span class="pre">url</span></code> in the <code class="docutils literal notranslate"><span class="pre">data</span></code> object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">restore</span></code> is useful if the panel is type <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/UI-Configurability#timeline">timeline</a>. It resets the timeline to it’s max-time-rage (i.e. zooms all the way out).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">simulate</span></code> runs a simulation. Any state bands with simulation result states will be updated after a simulation.</p></li>
+</ol>
+<p>More actions will be supported in the future and they will be more customizable. The icon should be a <a class="reference external" href="https://material.io/resources/icons/?style=baseline">material icon</a>. The menu interface looks like this:</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="kr">export</span> <span class="nx">type</span> <span class="nx">PanelMenuItemAction</span> <span class="o">=</span> <span class="s1">&#39;link&#39;</span> <span class="o">|</span> <span class="s1">&#39;restore&#39;</span> <span class="o">|</span> <span class="s1">&#39;simulate&#39;</span><span class="p">;</span>
+
+<span class="kr">export</span> <span class="kr">interface</span> <span class="nx">PanelMenuItem</span> <span class="p">{</span>
+  <span class="nx">action</span>: <span class="kt">PanelMenuItemAction</span><span class="p">;</span>
+  <span class="nx">data</span><span class="o">?:</span> <span class="p">{</span>
+    <span class="nx">url?</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="p">};</span>
+  <span class="nx">icon</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">title</span>: <span class="kt">string</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A couple example menu JSON objects looks like this:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">[</span>
+  <span class="p">{</span>
+    <span class="nt">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;link&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;data&quot;</span><span class="p">:</span> <span class="p">{</span>
+      <span class="nt">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;https://google.com&quot;</span>
+    <span class="p">},</span>
+    <span class="nt">&quot;icon&quot;</span><span class="p">:</span> <span class="s2">&quot;link&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Google&quot;</span>
+  <span class="p">},</span>
+  <span class="p">{</span>
+    <span class="nt">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;restore&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;icon&quot;</span><span class="p">:</span> <span class="s2">&quot;restore&quot;</span><span class="p">,</span>
+    <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Restore Time&quot;</span>
+  <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="types">
+<h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
+<p>There are currently three types of supported panels: iframe, table, and timeline. The following sections will detail how to create each of these panel types.</p>
+<div class="section" id="inline-frame-iframe">
+<h3>Inline Frame (iframe)<a class="headerlink" href="#inline-frame-iframe" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe">iframe</a> panel allows you to embed a custom HTML page inside of the panel. To create an iframe panel you need to specify <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">&quot;iframe&quot;</span></code>, a unique <code class="docutils literal notranslate"><span class="pre">id</span></code>, a <code class="docutils literal notranslate"><span class="pre">size</span></code>, a <code class="docutils literal notranslate"><span class="pre">title</span></code>, and an <code class="docutils literal notranslate"><span class="pre">iframe</span></code> object with a <code class="docutils literal notranslate"><span class="pre">src</span></code>. The <code class="docutils literal notranslate"><span class="pre">src</span></code> is a URL of the HTML page you are embedding in the panel. Here is a basic example of specifying an iframe panel:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;panel3&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;iframe&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;src&quot;</span><span class="p">:</span> <span class="s2">&quot;https://www.chartjs.org/samples/latest/charts/line/basic.html&quot;</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+  <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Line Chart&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;iframe&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="table">
+<h3>Table<a class="headerlink" href="#table" title="Permalink to this headline">¶</a></h3>
+<p>The table panel allows you to view data as a table with columns and rows. You can currently only create table panels for activity data. To create a table panel you need to specify <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">&quot;table&quot;</span></code>, a unique <code class="docutils literal notranslate"><span class="pre">id</span></code>, a <code class="docutils literal notranslate"><span class="pre">size</span></code>, a <code class="docutils literal notranslate"><span class="pre">title</span></code>, and a <code class="docutils literal notranslate"><span class="pre">table</span></code> object. The table object specifies the columns you want to see in your data. For example if you want to see an activities <code class="docutils literal notranslate"><span class="pre">startTimestamp</span></code> property you specify it in the column. There is also a special <code class="docutils literal notranslate"><span class="pre">select</span></code> column that allows the column to be selected. Here is a basic example of specifying a table panel:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;panel2&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+  <span class="nt">&quot;table&quot;</span><span class="p">:</span> <span class="p">{</span>
+    <span class="nt">&quot;columns&quot;</span><span class="p">:</span> <span class="p">[</span>
+      <span class="s2">&quot;select&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;type&quot;</span><span class="p">,</span>
+      <span class="s2">&quot;startTimestamp&quot;</span>
+    <span class="p">],</span>
+    <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;activity&quot;</span>
+  <span class="p">},</span>
+  <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Activity Table&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;table&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="timeline">
+<h3>Timeline<a class="headerlink" href="#timeline" title="Permalink to this headline">¶</a></h3>
+<p>The timeline panel allows you to specify visualizations of time-ordered data. To create a timeline panel you need to specify <code class="docutils literal notranslate"><span class="pre">type:</span> <span class="pre">&quot;timeline&quot;</span></code>, a unique <code class="docutils literal notranslate"><span class="pre">id</span></code>, a <code class="docutils literal notranslate"><span class="pre">size</span></code>, a <code class="docutils literal notranslate"><span class="pre">title</span></code>, and a list of <code class="docutils literal notranslate"><span class="pre">bands</span></code>. Here is the minimum JSON needed to specify a timeline panel:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;bands&quot;</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;panel0&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;size&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+  <span class="nt">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;My First Panel&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;timeline&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To visualize data in a timeline you need to add band objects to the <code class="docutils literal notranslate"><span class="pre">bands</span></code> array. A band is a layered visualization of time-ordered data. Each layer of a band is specified as an object of the <code class="docutils literal notranslate"><span class="pre">subBands</span></code> array. The interfaces for a <code class="docutils literal notranslate"><span class="pre">Band</span></code> and <code class="docutils literal notranslate"><span class="pre">SubBand</span></code> are as follows:</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="kr">interface</span> <span class="nx">Band</span> <span class="p">{</span>
+  <span class="nx">height?</span>: <span class="kt">number</span><span class="p">;</span>
+  <span class="nx">id</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">subBands</span>: <span class="kt">SubBand</span><span class="p">[];</span>
+  <span class="nx">yAxes?</span>: <span class="kt">Axis</span><span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="kr">interface</span> <span class="nx">SubBand</span> <span class="p">{</span>
+  <span class="nx">chartType</span><span class="o">:</span> <span class="s1">&#39;activity&#39;</span> <span class="o">|</span> <span class="s1">&#39;line&#39;</span> <span class="o">|</span> <span class="s1">&#39;x-range&#39;</span><span class="p">;</span> <span class="c1">// How we actually visualize the data</span>
+  <span class="nx">color?</span>: <span class="kt">string</span><span class="p">;</span> <span class="c1">// Color of all data points</span>
+  <span class="nx">filter</span><span class="o">?:</span> <span class="p">{</span>
+    <span class="nx">activity</span><span class="o">?:</span> <span class="p">{</span>
+      <span class="nx">type?</span>: <span class="kt">string</span><span class="p">;</span> <span class="c1">// JS regex filtering the type of activity we want to see</span>
+    <span class="p">};</span>
+    <span class="nx">state</span><span class="o">?:</span> <span class="p">{</span>
+      <span class="nx">name?</span>: <span class="kt">string</span><span class="p">;</span> <span class="c1">// JS regex filtering the name of state we want to see</span>
+    <span class="p">};</span>
+  <span class="p">};</span>
+  <span class="nx">id</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;activity&#39;</span> <span class="o">|</span> <span class="s1">&#39;state&#39;</span><span class="p">;</span> <span class="c1">// Type of data the sub-band visualizes</span>
+  <span class="nx">yAxisId?</span>: <span class="kt">string</span><span class="p">;</span> <span class="c1">// Optional y-axis ID link</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here is a JSON object that creates a single band with one activity sub-band. Notice there are no <code class="docutils literal notranslate"><span class="pre">yAxes</span></code>, as activities do not typically have y-values. Also notice the <code class="docutils literal notranslate"><span class="pre">filter</span></code> property, which is a <a class="reference external" href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">JavaScript Regular Expression</a> that specifies we only want to see <code class="docutils literal notranslate"><span class="pre">activity</span></code> of <code class="docutils literal notranslate"><span class="pre">type</span></code> <code class="docutils literal notranslate"><span class="pre">.*</span></code>. This is a regex for giving all activity types.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;band0&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;subBands&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;chartType&quot;</span><span class="p">:</span> <span class="s2">&quot;activity&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;filter&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;activity&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;.*&quot;</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;subBand0&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;activity&quot;</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For data that has y-values (for example state data), you can specify a y-axis and link a sub-band to it by ID. Here are the interfaces for <code class="docutils literal notranslate"><span class="pre">Axis</span></code> and <code class="docutils literal notranslate"><span class="pre">Label</span></code>:</p>
+<div class="highlight-ts notranslate"><div class="highlight"><pre><span></span><span class="kr">interface</span> <span class="nx">Axis</span> <span class="p">{</span>
+  <span class="nx">id</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">color?</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">label?</span>: <span class="kt">Label</span><span class="p">;</span>
+  <span class="nx">scaleDomain?</span>: <span class="kt">number</span><span class="p">[];</span>
+  <span class="nx">tickCount?</span>: <span class="kt">number</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kr">interface</span> <span class="nx">Label</span> <span class="p">{</span>
+  <span class="nx">align?</span>: <span class="kt">CanvasTextAlign</span><span class="p">;</span>
+  <span class="nx">baseline?</span>: <span class="kt">CanvasTextBaseline</span><span class="p">;</span>
+  <span class="nx">color?</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">fontFace?</span>: <span class="kt">string</span><span class="p">;</span>
+  <span class="nx">fontSize?</span>: <span class="kt">number</span><span class="p">;</span>
+  <span class="nx">hidden?</span>: <span class="kt">boolean</span><span class="p">;</span>
+  <span class="nx">text</span>: <span class="kt">string</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Y-axes are specified in the band separately from sub-bands so we can specify multi-way relationships between axes and sub-bands. For example you could have many sub-bands corresponding to a single axis.</p>
+<p>Here is the JSON for creating a band with two overlayed <code class="docutils literal notranslate"><span class="pre">state</span></code> sub-bands. The first sub-band shows only states with the name <code class="docutils literal notranslate"><span class="pre">peel</span></code>, and uses the y-axis with ID <code class="docutils literal notranslate"><span class="pre">yAxis1</span></code>. The second sub-band shows only states with the name <code class="docutils literal notranslate"><span class="pre">fruit</span></code>, and uses the y-axis with the ID <code class="docutils literal notranslate"><span class="pre">yAxis2</span></code>.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;band1&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;subBands&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;chartType&quot;</span><span class="p">:</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;filter&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;state&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;peel&quot;</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;subBand1&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;yAxisId&quot;</span><span class="p">:</span> <span class="s2">&quot;yAxis1&quot;</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;chartType&quot;</span><span class="p">:</span> <span class="s2">&quot;line&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;filter&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;state&quot;</span><span class="p">:</span> <span class="p">{</span>
+          <span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;fruit&quot;</span>
+        <span class="p">}</span>
+      <span class="p">},</span>
+      <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;subBand2&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;yAxisId&quot;</span><span class="p">:</span> <span class="s2">&quot;yAxis2&quot;</span>
+    <span class="p">}</span>
+  <span class="p">],</span>
+  <span class="nt">&quot;yAxes&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;yAxis1&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;peel&quot;</span>
+      <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+      <span class="nt">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;yAxis2&quot;</span><span class="p">,</span>
+      <span class="nt">&quot;label&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;fruit&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/UI-Configurability.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

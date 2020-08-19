@@ -1,0 +1,3 @@
+Plans can be created via Planning Web Gui or by uploading a JSON plan file through CLI. Instructions on these interfaces can be found in their respective pages. 
+
+A sample JSON Plan file format can be found in the [User Guide Appendix](https://github.jpl.nasa.gov/MPS/aerie/wiki/User-Guide-Appendix)

@@ -1,0 +1,155 @@
+## Constraints
+
+### Introduction
+In general, constraints are used to describe behavior, typically undesired, and determine when in a schedule that behavior is occurring.  This behavior can be simple, such as the following:   
+```The battery state of charge should never be below 30% of its full capacity at all times.```
+
+They can also be used to express more complicated behavior, such as the following:   
+```When the S/C is less than 0.5AU from the Sun, the maximum rate in the x direction should not exceed 2mrad/sec, the camera instrument should not be on, and a downlink activity should not occur.```
+
+This section describes how to represent these types of behavior and check when in a schedule this behavior is occurring with using the tools in the `Merlin-SDK`.
+
+### Atomic Constraints
+`Atomic Constraints` are constraints that describe *a* condition for *one* State or *one* Activity. These constraints can be used as building blocks to create `Compound Constraints`. Alternatively, Atomic Constraints can be thought of as constraints that cannot be "broken down" any further. 
+
+For example, consider an adaptation that includes the following states and activities:
+* `batterySOC`: a `State` that represents battery state of charge as a percentage
+* `distanceFromSun`: a State that represents the S/C distance from the sun in AU
+* `cameraStatus`: a State that represents the camera status as a String with the following expected values: `on, off, standby`
+* `downlinkData`: an `Activity` that represents the downlink of data from the S/C
+
+All of the following are examples of conditions that can be expressed with Atomic Constraints:
+* `batterySOC` below 30
+* `distanceFromSun` less than 0.5
+* `cameraStatus` is `on`
+* `downlinkData` is occurring
+
+### Behavior Specified by Atomic Constraints
+The evaluation of a constraint can be thought of as the answer to the following query: when in the schedule is the condition specified by the constraint satisfied? Depending on the object being referenced by the Atomic Constraint, there are different types of conditions that can be expressed.
+
+#### States
+A `State` has built in convenience methods that can be used to specify constraints. The following methods provide queries about a State's value. A well configured IDE can help with discovery (via autocompletion) of the different constraint query methods available.
+
+* `whenLessThan(Double x)`
+* `whenGreaterThan(Double x)`
+* `whenLessThanOrEqualTo(Double x)`
+* `whenGreaterThanOrEqualTo(Double x)`
+* `whenEqualWithin(Double x, Double tolerance)`
+
+Mission modelers can also specify their own condition using the method:
+* `when(Predicate<Double> condition)`
+
+For example, a mission modeler could create a constraint that, when evaluated, will provide the occurrences when the battery state of charge is below 30% with the following code:   
+```Constraint socMin = batterySOC.whenLessThan(30);```
+
+Alternatively, an adapter could chose not to use the convenience methods and supply their own lambda:   
+```Constraint socMin = batterySOC.when(x -> x < 30);```
+
+### Activities
+The `ActivityTypeStateFactory` provides the `ofType` method, which can be used to specify the activity type of interest and returns an `ActivityTypeState`.  The `ActivityTypeState` provides the `whenActive()` method, which returns a `Constraint`.  Consider an adaptation that has a instantiated the variable `activities` to be an `ActivityTypeStateFactory` and includes a `downlinkData` activity.  This `ActivityTypeStateFactory` and `ActivityTypeState` can be used to specify an activity type and create a constraint referencing that type, respectively:
+
+```Constraint whenDownlinkingData = activities.ofType("downlinkData").whenActive();```
+
+This constraint, when evaluated, will provide data which represents the start time and end time of each activity instance.
+
+
+### The Evaluation of Atomic Constraints & Windows
+A constraint is evaluated against the schedule that is produced by a simulation. The schedule describes the simulated effects of activities, and captures when activity instances started and ended and how the value represented by a state changes over time. When an Atomic Constraint is evaluated, it is evaluated over the entire duration of a schedule. In other words, the constraint will be evaluated from the beginning of the schedule to the end of the schedule. If at any point during the schedule the behavior described by the constraint occurs, the constraint has been violated.
+
+The violation of a constraint is captured by a `Window`.  A `Window` is a Merlin-SDK object that has a start and an end `Duration`.  The evaluation of a constraint produces a list of disjoint (non-overlapping) windows, where each window represents the duration of a violation.  The start and end times of a violation can be produced by adding the start and end durations with the start time of the schedule.  A user can use the `Aerie Planning UI` to visualize these violation windows. 
+
+For example, consider a constraint representing `batterySOC` below 30, and a schedule that starts at time 0μs and ends at 100μs. In this hypothetical schedule, the `batterySOC` starts at 100, and is set to 25 at 75μs, and is then set to 35 at 80μs.  The evaluation of this constraint will produce one violation, which the Merlin-SDK will represent as a Window with the start duration as 75μs and the end duration as 80μs.
+
+### Compound Constraints and Logical Operators
+Atomic Constraints can be used as building blocks to create more complicated constraints, Compound Constraints.  Consider the following description of behavior that can be represented by a Compound Constraint:
+
+```When the S/C is less than 0.5AU from the Sun, the camera status is on```
+
+This behavior describes the windows during which the S/C is less than 0.5AU from the Sun and the camera status is on.  This is equivalent to the intersection of windows produced by Atomic Constraints `distanceFromSun.whenLessThan(0.5)` and `cameraStatus.when(x -> x.equals("on"))`.  The `Constraint` interface in the Merlin-SDK provides methods that can be used to build Compound Constraints and perform the required operations on sets of windows.  The following methods are provided in the `Constraint` interface:
+* `and(Constraint other)`: returns a Constraint representing the intersection of windows
+* `or(Constraint other)`: returns a Constraint representing the union of windows
+* `minus(Constraint other)`: returns a Constraint representing the subtraction of a sets of windows
+
+While there is a conceptual difference between Atomic Constraints and Compound Constraints, they are both implemented with the `Constraint` interface in the Merlin-SDK.  For instance, the example discussed in this section can be implemented with the following code:   
+```Constraint cameraAltitude = cameraStatus.when(x -> x.equals("on")).and(distanceFromSun.whenLessThan(0.5));```
+
+Compound Constraints can also be implemented using the `exists` method provided by the ActivityTypeState class.  The `exists` method accepts a `Function<ActivityInstanceState, Constraint>`, or a method that accepts an `ActivityInstanceState` object and returns a `Constraint` objects. The `exists` method can be used to specify a certain condition for each instance of the specified activity type (see the next section for examples). 
+
+
+### Creating Constraints for the UI: The Merlin-SDK Violable Constraint
+The `ViolableConstraint` object in the Merlin-SDK should be used to create constraints in an adaptation.  The ViolableConstraint wraps constraints with data necessary for producing constraint violations and visualizing in the Aerie Planning UI. For example, in addition to defining a violable condition, the ViolableConstraint class includes the following data:
+* constraint id: a user provided id
+* violation message: a user provided message describing the violation if it occurs
+* violation category: e.g. "severe", "moderate", etc.
+* name: a user provided name (Note violable constraint names must be unique)
+
+ A list of all `ViolableConstraints` should be included in the states file such that the Querier (seen [here](https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation#querier)) can easily get all ViolableConstraints to determine constraint violations for a simulation.  
+
+Example of a ViolableConstraint:   
+```
+ViolableConstraint socConstraint  
+    =  new ViolableConstraint(batterySOC.whenLessThan(30).and(cameraStatus.when(x -> x.equals("on"))))   
+        .withId("minSOCAndCameraOn")   
+        .withName("Min Battery SoC and Camera On")   
+        .withMessage("Battery capacity too low for imaging")   
+        .withCategory("severe");
+``` 
+
+Currently, this `exists` method *must* be used when creating constraints referencing an activity, in order to associate any potential constraint violations with an activity id.  For example, the following constraint describes the windows during which a `downlinkData` activity occurred:
+
+```
+        ViolableConstraint downlinkDataOccurring =
+                new ViolableConstraint(activities
+                        .ofType(downlinkData.class)
+                        .exists(act -> act.whenActive()))
+                        .withId("downlinking")
+                        .withName("Downlinking of data occurring")
+                        .withMessage("Nothing wrong - just an example constraint")
+                        .withCategory("none");
+```
+
+A more realistic Compound Constraint involving an activity type may describe the following scenario:
+`When the camera status is on, a downlink activity should not occur.`
+
+```
+        ViolableConstraint downlinkingWithCameraOn =
+                new ViolableConstraint(activities
+                        .ofType(downlinkData.class)
+                        .exists(act -> Constraint.and(
+                                act.whenActive(),
+                                cameraStatus.when(m -> m.equals("on")))))
+                        .withId("cameraOnandDownlink")
+                        .withName("Downlinking with Camera On")
+                        .withMessage("Potential for lost images")
+                        .withCategory("moderate");
+```
+### Adding ViolableConstraints to a Merlin-SDK Simulation
+A mission modeler can fork the Aerie repo, and replace the ViolableConstraints in [SampleMissionStates](https://github.jpl.nasa.gov/MPS/aerie/blob/develop/sample-adaptation/src/main/java/gov/nasa/jpl/ammos/mpsa/aerie/sampleadaptation/states/SampleMissionStates.java) referenced by the `List<ViolableConstraint> violableConstraints` variable to incorporate their constraints in their simulation. 
+
+#### Ensuring Unique Constraint Names
+In Aerie 0.4, it is necessary to have a unique name for each `ViolableConstraint`. This can easily be checked by adding the following code snippet under your `violableConstraints` list:
+
+```
+List<ViolableConstraint> violableConstraints = List.of( ... );
+static {
+    final var constraintNames = new java.util.HashSet<>();
+    for (final var violableConstraint : violableConstraints) {
+      if (!constraintNames.add(violableConstraint.name)) {
+        throw new Error("More than one violable constraint with name \"" + violableConstraint.name + "\". Each name must be unique.");
+      }
+    }
+  }
+```
+
+### Constraint Violations
+Whereas a `ViolableConstraint` defines a condition that _may_ be violated, a `ConstraintViolation` object is used to represent actual violations of a `ViolableConstraint` for a given simulation. At the end of the execution of a simulation, the results of the simulation will be used to evaluate the `ViolableConstraints`. A constraint is violated if the behavior it specifies occurs.
+
+The results of an execution of a simulation will include a list of constraint violations.  Constraint violations can be reviewed in the UI. A constraint violation is represented by a `ConstraintViolation` type in the Merlin-SDK, and has the following information: 
+* constraint name - a user provided name
+* constraint id - a user provided id 
+* constraint violation message - a user provided message the should describe the violation that occurred
+* a list of windows representing the times during which violations occurred - this list is a result of constraint evaluation
+
+The Merlin-SDK `SimpleSimulator` will return `SimulationResults` after executing a simulation, which contain a list of `ConstraintViolation` objects.  The information contained by the list of constraint violations is serialized into a JSON format, and this data is then sent to the [Aerie Planning UI](https://github.jpl.nasa.gov/MPS/aerie/wiki/Aerie-Planning-UI). The UI can be used to inspect the windows of violated constraints.  The UI visualizes a constraint with a transparent red box superimposed on a timeline. For example, the image below displays when a constraint on the `batteryCapacity` state is being violated.
+
+[[images/ConstraintUI.png]]

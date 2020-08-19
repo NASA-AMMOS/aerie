@@ -1,0 +1,121 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merlin Activity Plans &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="merlin-activity-plans">
+<h1>Merlin Activity Plans<a class="headerlink" href="#merlin-activity-plans" title="Permalink to this headline">¶</a></h1>
+<p>Aerie provides a  “plan service” that manages a repository of plans. Access to this repository is mediated by a REST-based interface exposed by the service. The repository itself is currently implemented with MongoDB.
+The repository of plans may be queried for a list of all plans, and new plans may be added to the repository. Existing plans may be retrieved in full, replaced in full or in part, or deleted in full. The list of activities in a plan may be appended to (by creating a new activity) and retrieved in full. Individual activities in a plan may be retrieved in full, replaced in full or in part, and deleted in full.</p>
+<p>Operations on plans are validated to ensure consistency with the adaptation-specific activity model with which they are associated. Stored plans shall contain activities whose parameter names and types are defined by the associated activity type.</p>
+<div class="section" id="plan-data-composition">
+<h2>Plan Data composition<a class="headerlink" href="#plan-data-composition" title="Permalink to this headline">¶</a></h2>
+<p>The plan repository contains a set of JSON-style documents with the following top-level attributes:</p>
+<ul class="simple">
+<li><p>id: A database-specific unique key identifying the plan.</p></li>
+<li><p>adaptationId: A database-specific foreign key identifying the adaptation that the plan was built against.</p></li>
+<li><p>name: A user-meaningful string specifying the name of the plan.</p></li>
+<li><p>startTimestamp: A DOY-style timestamp describing the instant at which the plan is considered to be applicable (e.g. “2020-198T01:23:45”).</p></li>
+<li><p>endTimestamp: A DOY-style timestamp describing the instant at which the plan is considered no longer to be applicable.</p></li>
+<li><p>activityInstances: A list of activity instances which comprise the plan.A plan is conceptually composed of activity instances. Each activity instance has the following attributes:</p></li>
+<li><p>id: A database-specific foreign key identifying the type of activity this instance represents.</p></li>
+<li><p>type: A string denoting the name of the activity type of this activity instance.</p></li>
+<li><p>startTimestamp: A timestamp describing the instant at which this activity instance is considered to begin.</p></li>
+<li><p>parameters: A map from parameter name to parameter value specifying the fine-grained behavior of this activity instance. These parameters are specified as part of an activity instance, and may recursively contain further parameter data. Each parameter may be an arbitrary JSON document, but their structure should match that expected by the parameter definition in the associated adaptation.</p></li>
+</ul>
+<p>A formal Plan file SIS will be provided in upcoming deliveries. For a sample plan file see Appendix.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Merlin-Activity-Plans.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

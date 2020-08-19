@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Introduction &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>This document is a guide to how to make use of current Aerie capabilities as of A29.0 delivery. AERIE is a new software system being developed by the MPSA element of Multi -mission Ground System and Services (MGSS), a subsystem of AMMOS (Advanced Multi -mission Operations System). AERIE will support activity planning, sequencing, and spacecraft analysis of mission operations. This guide will be updated as new features are added.</p>
+</div>
+<div class="section" id="aerie-overview">
+<h1>Aerie Overview<a class="headerlink" href="#aerie-overview" title="Permalink to this headline">¶</a></h1>
+<p>Aerie is a collection of loosely coupled services that support activity planning and sequencing needs of missions with modelling, simulation, scheduling and validation capabilities. Aerie will replace legacy MGSS tools including but not limited to APGEN, SEQGEN, MPS Editor, MPS Server, Slinc II / CTS and ULSGEN. A29.0 version of Aerie provides mainly the following:</p>
+<ul class="simple">
+<li><p>Merlin adaptation framework offering a subset of APGEN capabilities</p></li>
+<li><p>Merlin web GUI for activity planning</p></li>
+<li><p>Merlin command line interface for activity planning</p></li>
+<li><p>Falcon smart command editor GUI</p></li>
+</ul>
+</div>
+<div class="section" id="references">
+<h1>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h1>
+<p>Aerie Software Requirements Document (Aerie SRD) - DOC-002388
+Aerie Product Guide - DOC-002537
+MGSS Implementation and Task Requirements - DOC -001455
+JPL Software Development Rules 57653</p>
+</div>
+<div class="section" id="creating-a-mission-model-with-merlin-framework">
+<h1>Creating a Mission Model with Merlin Framework<a class="headerlink" href="#creating-a-mission-model-with-merlin-framework" title="Permalink to this headline">¶</a></h1>
+<p>A Merlin mission model can simulate a variety of states, governed by system models, and perturbed by executed activities. The below diagram summarizes the relationships between activities, system models, and states that are simulated over the course of a mission plan.
+<img alt="https://lh6.googleusercontent.com/lhf4uAanmqVf6TcEBKjNoPRs00HEu4IRR7SpYAZMXsuGCTVKPDUhNlEwWB4Izfw67WlQi5tQN_YZqx_exwUzLziwMXtuHJ6KG8z_YPaUfGfEPiBQOk7d5snqCdyTMyIto2sDkLmK" src="https://lh6.googleusercontent.com/lhf4uAanmqVf6TcEBKjNoPRs00HEu4IRR7SpYAZMXsuGCTVKPDUhNlEwWB4Izfw67WlQi5tQN_YZqx_exwUzLziwMXtuHJ6KG8z_YPaUfGfEPiBQOk7d5snqCdyTMyIto2sDkLmK" /></p>
+<p>In order to complete this plan simulation, adaptation has to have activities with effect models, and system models that describe the response to these effects. A29.0 Merlin adaptation framework provides constructs to describe activities, system models and states. Scheduling, scheduling rules and constraints are not yet supported by the Merlin adaptation framework.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Mission-Modeler-Guide.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

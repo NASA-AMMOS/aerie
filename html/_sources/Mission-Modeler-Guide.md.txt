@@ -1,0 +1,24 @@
+# Introduction
+
+This document is a guide to how to make use of current Aerie capabilities as of A29.0 delivery. AERIE is a new software system being developed by the MPSA element of Multi -mission Ground System and Services (MGSS), a subsystem of AMMOS (Advanced Multi -mission Operations System). AERIE will support activity planning, sequencing, and spacecraft analysis of mission operations. This guide will be updated as new features are added.
+
+# Aerie Overview
+
+Aerie is a collection of loosely coupled services that support activity planning and sequencing needs of missions with modelling, simulation, scheduling and validation capabilities. Aerie will replace legacy MGSS tools including but not limited to APGEN, SEQGEN, MPS Editor, MPS Server, Slinc II / CTS and ULSGEN. A29.0 version of Aerie provides mainly the following:  
+ - Merlin adaptation framework offering a subset of APGEN capabilities
+ - Merlin web GUI for activity planning 
+ - Merlin command line interface for activity planning
+ - Falcon smart command editor GUI
+  
+# References
+
+Aerie Software Requirements Document (Aerie SRD) - DOC-002388
+Aerie Product Guide - DOC-002537
+MGSS Implementation and Task Requirements - DOC -001455
+JPL Software Development Rules 57653
+
+# Creating a Mission Model with Merlin Framework
+A Merlin mission model can simulate a variety of states, governed by system models, and perturbed by executed activities. The below diagram summarizes the relationships between activities, system models, and states that are simulated over the course of a mission plan.
+![](https://lh6.googleusercontent.com/lhf4uAanmqVf6TcEBKjNoPRs00HEu4IRR7SpYAZMXsuGCTVKPDUhNlEwWB4Izfw67WlQi5tQN_YZqx_exwUzLziwMXtuHJ6KG8z_YPaUfGfEPiBQOk7d5snqCdyTMyIto2sDkLmK)
+
+In order to complete this plan simulation, adaptation has to have activities with effect models, and system models that describe the response to these effects. A29.0 Merlin adaptation framework provides constructs to describe activities, system models and states. Scheduling, scheduling rules and constraints are not yet supported by the Merlin adaptation framework.

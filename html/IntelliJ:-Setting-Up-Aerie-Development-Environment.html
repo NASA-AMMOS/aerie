@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>&lt;no title&gt; &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p>Download Aerie Repository</p>
+<p>Download Aerie source code from the link below in your desire location (and from now on, we will refer this location as “Path-to-Aerie”): git&#64;github.jpl.nasa.gov:MPS/aerie.git
+Import source code into IntelliJ project</p>
+<p>Open up IntelliJ click File &gt; New &gt; Project</p>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image1.png]</p>
+<p>Click “Next” and “Next” again until you see the screen below:</p>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image2.png]</p>
+<p>In Project location: specify the location from 1 and click “Finish”
+Setup Modules</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open up “Project Structure” by going to File -&gt; Project Structure or use the short key “Holding command” + “ ;”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image3.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Make sure “Project SDK:” is set to “ 11 java version 11.05” and 
+</pre></div>
+</div>
+<p>“Project language level:” is set to “SDK default (11 -Local….)”</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Click on “Modules” on the left-hand side menu. We are going to add the Aerie Modules one by one in the follow Step.
+If you see “aerie” on the Modules, Please select it and click the “-“ sign on top to remove it.
+We are going to configure the Aerie’s modules one by one.
+apgen-parser
+    Click on the “+” sign on the middle menu section
+    Select “New module” and click “Next”
+    On the Content root, click the left hand side folder icon and select your “Path-to-aerie”/aerie/apgen-parser
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image4.png]</p>
+<p>The Module name should appear automatically. Click “Finish” and you will see the window below:</p>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image5.png]</p>
+<p>banananation</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Repeat</span> <span class="n">the</span> <span class="n">step</span> <span class="kn">from</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">1</span> <span class="kn">from</span> <span class="p">(</span><span class="n">a</span> <span class="n">to</span> <span class="n">d</span><span class="p">)</span> <span class="k">with</span> <span class="n">the</span> <span class="n">exception</span> <span class="n">of</span> <span class="n">Content</span> <span class="n">root</span><span class="o">.</span> 
+</pre></div>
+</div>
+<p>Select “Path-to-Aerie”/aerie/banananation for Content root.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">merlin</span><span class="o">-</span><span class="n">cli</span>
+    <span class="n">Repeat</span> <span class="n">the</span> <span class="n">step</span> <span class="kn">from</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">1</span> <span class="kn">from</span> <span class="p">(</span><span class="n">a</span> <span class="n">to</span> <span class="n">d</span><span class="p">)</span> <span class="k">with</span> <span class="n">the</span> <span class="n">exception</span> <span class="n">of</span> <span class="n">Content</span> <span class="n">root</span><span class="o">.</span> 
+</pre></div>
+</div>
+<p>Select “Path-to-Aerie”/aerie/merlin-cli for Content root.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">merlin</span><span class="o">-</span><span class="n">multimission</span><span class="o">-</span><span class="n">models</span>
+    <span class="n">Repeat</span> <span class="n">the</span> <span class="n">step</span> <span class="kn">from</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">1</span> <span class="kn">from</span> <span class="p">(</span><span class="n">a</span> <span class="n">to</span> <span class="n">d</span><span class="p">)</span> <span class="k">with</span> <span class="n">the</span> <span class="n">exception</span> <span class="n">of</span> <span class="n">Content</span> <span class="n">root</span><span class="o">.</span> 
+</pre></div>
+</div>
+<p>Select “Path-to-Aerie”/aerie/merlin-multimission-models for Content root.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">merlin</span><span class="o">-</span><span class="n">sdk</span>
+    <span class="n">Repeat</span> <span class="n">the</span> <span class="n">step</span> <span class="kn">from</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">1</span> <span class="kn">from</span> <span class="p">(</span><span class="n">a</span> <span class="n">to</span> <span class="n">d</span><span class="p">)</span> <span class="k">with</span> <span class="n">the</span> <span class="n">exception</span> <span class="n">of</span> <span class="n">Content</span> <span class="n">root</span><span class="o">.</span> 
+</pre></div>
+</div>
+<p>Select “Path-to-Aerie”/aerie/merlin-sdk for Content root.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sample</span><span class="o">-</span><span class="n">adaptation</span>
+    <span class="n">Repeat</span> <span class="n">the</span> <span class="n">step</span> <span class="kn">from</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">1</span> <span class="kn">from</span> <span class="p">(</span><span class="n">a</span> <span class="n">to</span> <span class="n">d</span><span class="p">)</span> <span class="k">with</span> <span class="n">the</span> <span class="n">exception</span> <span class="n">of</span> <span class="n">Content</span> <span class="n">root</span><span class="o">.</span> 
+</pre></div>
+</div>
+<p>Select “Path-to-Aerie”/aerie/ sample-adaptation for Content root.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">services</span>
+    <span class="n">Repeat</span> <span class="n">the</span> <span class="n">step</span> <span class="kn">from</span> <span class="mf">3.5</span><span class="o">.</span><span class="mi">1</span> <span class="kn">from</span> <span class="p">(</span><span class="n">a</span> <span class="n">to</span> <span class="n">d</span><span class="p">)</span> <span class="k">with</span> <span class="n">the</span> <span class="n">exception</span> <span class="n">of</span> <span class="n">Content</span> <span class="n">root</span><span class="o">.</span> 
+</pre></div>
+</div>
+<p>Select “Path-to-Aerie”/aerie/ services for Content root.</p>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image6.png]</p>
+<p>This is what it should look like after all the modules are added.
+Setup Module Dependencies
+apgen-parser</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select apgen-parser in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/apgen-parser/test and click “Open”
+Select “Jars and Directories…” again
+Go to “Path-to-Aerie”/aerie/third-party and click “Open”
+After that you should see something similar below:
+Check all the newly added dependencies and click “Apply”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image7.png]<br />banananation</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select banananation in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/banananation/core and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/banananation/test and click “Open”
+Select “Jars and Directories…” again
+Go to “Path-to-Aerie”/aerie/third-party and click “Open”
+Select “Module Dependency…”
+Select “merlin-sdk” and click “OK”
+After that you should see something similar below:
+Check all the newly added dependencies and click “Apply”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image8.png]
+merlin-cli</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select merlin-cli in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/merlin-cli/core and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/merlin-cli/test and click “Open”
+Select “Module Dependency…”
+Select “apgen-parser” and click “OK”
+Select “Module Dependency…”
+Select “merlin-sdk” and click “OK”
+After that you should see something similar below:
+Check all the newly added dependencies and click “Apply”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image9.png]
+merlin-multimission-models</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select merlin-multimission-models in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/merlin-multimission-models/core and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/merlin-multimission-models/test and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party and click “Open”
+Select “Module Dependency…”
+Select “merlin-sdk” and click “OK”
+After that you should see something similar below:
+Check all the newly added dependencies and click “Apply”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image10.png]
+merlin-sdk</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select merlin-sdk in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/merlin-sdk/core and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/merlin-sdk/test and click “Open”
+Select “Jars and Directories…” again
+Go to “Path-to-Aerie”/aerie/third-party and click “Open”
+After that you should see something similar below:
+Check all the newly added dependencies and click “Apply”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image13.png]
+sample-adaptation</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select sample-adaptation in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/sample-adaptation/core and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/sample-adaptation/test and click “Open”
+Select “Module Dependency…”
+Select “merlin-multimission-models” and click “OK”
+Select “Module Dependency…”
+Select “merlin-sdk” and click “OK”
+After that you should see something similar below:
+Check all the newly added dependencies and click “Apply”
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image11.png]
+services</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select services in the middle column.
+Click on the “Dependencies” Tab and click on the “+” near the bottom.
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/services/core and click “Open”
+Select “Jars and Directories…”
+Go to “Path-to-Aerie”/aerie/third-party/services/test and click “Open”
+Select “Module Dependency…”
+Select “merlin-sdk” and click “OK”
+After that you should see something similar below:
+Check all the newly added dependencies and click “OK” to finish added Dependencies for Aerie’s Modules
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image12.png]
+Setup Module Sources
+apgen-parser</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, select services in the middle column.
+Select “apgen-parser”
+Click on the “Sources” Tab.
+If there is “Source Folders” on the left side, remove it by clicking the “x”
+Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+Select “src -&gt; test -&gt; java”, and click on the “Tests”
+Select “src -&gt; test -&gt; resources”, and click on “Test Resources”
+If you have a target folder, you should Excluded it
+After that you should see something similar below:
+Click “Apply” to confirm the changes 
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image14.png]
+Banananation</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Select “banananation”
+Click on the “Sources” Tab.
+If there is “Source Folders” on the left side, remove it by clicking the “x”
+Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+Select “src -&gt; main -&gt; resources”, and click on the “Resources”
+Select “src -&gt; test -&gt; java”, and click on the “Tests”
+If you have a target folder, you should Exclude it
+After that you should see something similar below:
+Click “Apply” to confirm the changes
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image15.png]
+merlin-cli</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Select “merlin-cli”
+Click on the “Sources” Tab.
+If there is “Source Folders” on the left side, remove it by clicking the “x”
+Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+Select “src -&gt; test -&gt; java”, and click on the “Tests”
+Select “src -&gt; test -&gt; resources”, and click on “Test Resources”
+If you have a target folder, you should Exclude it
+After that you should see something similar below
+Click “Apply” to confirm the changes
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image16.png]</p>
+<p>merlin-multimission-models</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Select “merlin-multimission-models”
+Click on the “Sources” Tab.
+If there is “Source Folders” on the left side, remove it by clicking the “x”
+Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+Select “src -&gt; test -&gt; java”, and click on the “Tests”
+If you have a target folder, you should Exclude it
+After that you should see something similar below:
+Click “Apply” to confirm the changes
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image17.png]
+merlin-sdk</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Select “merlin-sdk”
+Click on the “Sources” Tab.
+If there is “Source Folders” on the left side, remove it by clicking the “x”
+Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+Select “src -&gt; main -&gt; resources”, and click on the “Resources”
+Select “src -&gt; test -&gt; java”, and click on the “Tests”
+If you have a target folder, you should Exclude it
+After that you should see something similar below:
+Click “Apply” to confirm the changes
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image18.png]
+sample-adaptation</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Select “sample-adaptation”
+Click on the “Sources” Tab.
+If there is “Source Folders” on the left side, remove it by clicking the “x”
+Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+Select “src -&gt; main -&gt; resources”, and click on the “Resources”
+Select “src -&gt; test -&gt; java”, and click on the “Tests”
+If you have a target folder, you should Exclude it
+After that you should see something similar below:
+Click “Apply” to confirm the changes
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image19.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Services
+    Select “sample-adaptation”
+    Click on the “Sources” Tab.
+    If there is “Source Folders” on the left side, remove it by clicking the “x”
+    Select “src -&gt; main -&gt; java”, and click on the “Sources” next to “Mark as:”
+    Select “src -&gt; main -&gt; resources”, and click on the “Resources”
+    Select “src -&gt; test -&gt; java”, and click on the “Tests”
+    Select “src -&gt; main -&gt; resources”, and click on the “Test Resources”
+    If you have a target folder, you should Exclude it
+    After that you should see something similar below:
+    Click “Ok” to confirm the changes to finish Sources setup for Aerie’s Modules
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image20.png]
+Setup Artifacts</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Project Structure”, and select “Artifacts” on the left column.
+Click “+” then goto “JAR -&gt; From Modules with dependencies…”
+Select “merlin-sdk” in Module like below:
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image21.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Click</span> <span class="n">OK</span> <span class="ow">and</span> <span class="n">you</span> <span class="n">will</span> <span class="n">see</span> <span class="n">this</span> <span class="n">below</span><span class="p">:</span>
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image22.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>In the Available Elements, click on each of the module to expand it. Right click on each of the Jar files and “Extract into Output Root”.  You should see something similar below:
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image23.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Save the “Output directory” path, we will use this to setup our Annotation Processors.
+Click “OK” to finish Artifacts setup for Aerie
+</pre></div>
+</div>
+<p>Set up Annotation Processors for Aerie</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Open “Preferences” by going to “IntelliJ IDEA -&gt; Preferences”
+Go to “Annotation Processors” on the left side of the menu under “Build, Execution, Deployment -&gt; Compiler”
+On the middle column near the bottom, there is a “+” icon, click it and input “merlin-adaptation” under “Profile name” like below:
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image24.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Click “OK”
+Select “banananation” and click on the left arrow in the middle column near the bottom.
+Select “sample-adaptation” and click on the left arrow in the middle column near the bottom.
+Click on “banananation” and check on “Enable annotation processing”
+Select “Processor path” and use the “Output directory” path from 6.6 and paste it here and add merlin-sdk.jar at the end. (it will be “Output directory/merlin-sdk.jar”)
+Add New “Annotation processors:” (gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.processor.ActivityProcessor)
+You should see similar setting below:
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image25.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Click “OK” to finish setting Aerie Annotation processors.
+</pre></div>
+</div>
+<p>Ready to compile Aerie and configure output directory for Annotation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Click “Build -&gt; Build Artifact… -&gt; Rebuild”
+Click “Build -&gt; Rebuild Project
+Open “Project Structure”, select “Modules -&gt; banananation”.
+Click “Add Content Root” on the right side
+Go to “Path-to-aerie”/aerie/out/production/banananation/generated” click “Open”
+You should see something like below:
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image27.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>select “Modules -&gt; sample-adaptation”
+Click “Add Content Root” on the right side
+Go to “Path-to-aerie”/aerie/out/production/sample-adaptation/generated” click “Open”
+You should see something like below:
+</pre></div>
+</div>
+<p>[Mission Planning Sequencing and Analysis &gt; Setting Up Aerie In Intellij &gt; image26.png]</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Click “OK”, rebuild the project and done. 
+</pre></div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/IntelliJ:-Setting-Up-Aerie-Development-Environment.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

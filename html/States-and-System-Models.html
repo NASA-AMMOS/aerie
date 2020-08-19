@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merlin States &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="merlin-states">
+<h1>Merlin States<a class="headerlink" href="#merlin-states" title="Permalink to this headline">¶</a></h1>
+<p>In Merlin, a state is any value that is tracked during the course of a simulation. Merlin states can be used for a myriad of purposes, including tracking of finite resources, various geometric attributes, ground and flight events, spacecraft states that are altered by activities, and more. In Aerie 0.4, we provide two types of states that can be used in adaptations: settable and cumulable.</p>
+<p>Settable states are states whose value can be changed by setting it directly to a desired value. An very common example of a settable state would be a spacecraft or instrument mode. Cumulable states are states whose value can be changed by adding a value to the current value. Examples of cumulable states include remaining battery capacity and volume in a data channel.</p>
+</div>
+<div class="section" id="creating-states">
+<h1>Creating States<a class="headerlink" href="#creating-states" title="Permalink to this headline">¶</a></h1>
+<p>To create states in Merlin, the first thing you will need is an instance of our <code class="docutils literal notranslate"><span class="pre">IndependentStateFactory</span></code>. This factory hides away the details of settable and cumulable states so adaptation engineers only need declare the states they want to include in their adaptation. Let’s take a look at an example state declaration class:</p>
+<p>ExampleStates</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">gov.nasa.jpl.example.states.ExampleQuerier.activityQuerier</span><span class="p">;</span>
+<span class="kn">import static</span> <span class="nn">gov.nasa.jpl.example.states.ExampleQuerier.query</span><span class="p">;</span>
+<span class="kn">import static</span> <span class="nn">gov.nasa.jpl.example.states.ExampleQuerier.ctx</span><span class="p">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExampleStates</span> <span class="p">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">ActivityTypeStateFactory</span> <span class="n">activities</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ActivityTypeStateFactory</span><span class="p">(</span><span class="n">activityQuerier</span><span class="p">);</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">IndependentStateFactory</span> <span class="n">factory</span> <span class="o">=</span> <span class="k">new</span> <span class="n">IndependentStateFactory</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="p">(</span><span class="n">ev</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ctx</span><span class="p">.</span><span class="na">emit</span><span class="p">(</span><span class="n">ExampleEvent</span><span class="p">.</span><span class="na">independent</span><span class="p">(</span><span class="n">ev</span><span class="p">)));</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">heaterPoweredOn</span> <span class="o">=</span> <span class="n">factory</span><span class="p">.</span><span class="na">bool</span><span class="p">(</span><span class="s">&quot;heaterPoweredOn&quot;</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">DoubleState</span> <span class="n">batteryCapacity</span> <span class="o">=</span> <span class="n">factory</span><span class="p">.</span><span class="na">cumulative</span><span class="p">(</span><span class="s">&quot;batteryCapacity&quot;</span><span class="p">,</span> <span class="mf">1000000.0</span><span class="p">);</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">ViolableConstraint</span><span class="o">&gt;</span> <span class="n">violableConstraints</span> <span class="o">=</span> <span class="n">List</span><span class="p">.</span><span class="na">of</span><span class="p">(</span>
+            <span class="c1">//...</span>
+    <span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Here the <code class="docutils literal notranslate"><span class="pre">activities</span></code> and <code class="docutils literal notranslate"><span class="pre">factory</span></code> variables are created using the <code class="docutils literal notranslate"><span class="pre">activityQuerier</span></code>, <code class="docutils literal notranslate"><span class="pre">query</span></code> and <code class="docutils literal notranslate"><span class="pre">ctx</span></code> variables from the Querier shown on the <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation">Developing an Adaptation</a> page. The <code class="docutils literal notranslate"><span class="pre">activities</span></code> variable can be used to construct <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Constraints#activities">activity constraints</a>.With the factory instantiated, states can be created by simply calling the appropriate method for the desired state type. References to these states are kept <code class="docutils literal notranslate"><span class="pre">public</span> <span class="pre">static</span> <span class="pre">final</span></code> so that activity models may easily access states while keeping them safe from reassignment, which would surely cause issues. The <code class="docutils literal notranslate"><span class="pre">violableConstraints</span></code> list at the bottom should be used to declare <code class="docutils literal notranslate"><span class="pre">ViolableConstraints</span></code>, for which more information can be found on the <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Constraints">Constraints</a> page.</p>
+<p>It may be desirable, especially for large adaptations, to organize state declarations into separate files. In this case, you should keep a “master” state file, which instantiates the <code class="docutils literal notranslate"><span class="pre">IndependentStateFactory</span></code>. Each state declaration file should then refer to the master factory when declaring states, thus all states will be registered with the factory, and be tracked during simulation runs.</p>
+<p>With an instance of an <code class="docutils literal notranslate"><span class="pre">IndependentStateFactory</span></code> in hand, states can now be added to your adaptation. In this section we will go over the types of states available in Aerie 0.4:</p>
+<div class="section" id="cumulable-states">
+<h2>Cumulable States<a class="headerlink" href="#cumulable-states" title="Permalink to this headline">¶</a></h2>
+<p>In Aerie 0.4, cumulable states must have <code class="docutils literal notranslate"><span class="pre">Double</span></code> values. These can be created by supplying a name and initial value to the factory’s <code class="docutils literal notranslate"><span class="pre">cumulative()</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">DoubleState</span> <span class="n">batteryCapacity</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">cumulative</span><span class="p">(</span><span class="s2">&quot;batteryCapacity&quot;</span><span class="p">,</span> <span class="mf">1000000.0</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="settable-states">
+<h2>Settable States<a class="headerlink" href="#settable-states" title="Permalink to this headline">¶</a></h2>
+<p>Settable states can take on a variety of types. Each can be created by calling the appropriate factory method, and supplying a name and initial value. Examples showcasing the appropriate method for each type are provided below.</p>
+<div class="section" id="string-value">
+<h3>String value<a class="headerlink" href="#string-value" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">spacecraftMode</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">string</span><span class="p">(</span><span class="s2">&quot;spacecraftMode&quot;</span><span class="p">,</span> <span class="s2">&quot;idle&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="integer-value">
+<h3>Integer value<a class="headerlink" href="#integer-value" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">samplesAcquired</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">integer</span><span class="p">(</span><span class="s2">&quot;samplesAcquired&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="double-value">
+<h3>Double value<a class="headerlink" href="#double-value" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">solarArrayAngle</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="s2">&quot;solarArrayAngle&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="boolean-value">
+<h3>Boolean value<a class="headerlink" href="#boolean-value" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">heaterPoweredOn</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="s2">&quot;heaterPoweredOn&quot;</span><span class="p">,</span> <span class="n">false</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="enumerated-value">
+<h3>Enumerated value<a class="headerlink" href="#enumerated-value" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">enum</span> <span class="n">InstrumentMode</span> <span class="p">{</span> <span class="n">ON</span><span class="p">,</span> <span class="n">OFF</span> <span class="p">}</span>
+<span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">InstrumentMode</span><span class="o">&gt;</span> <span class="n">instrumentState</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">enumerated</span><span class="p">(</span><span class="s2">&quot;instrumentState&quot;</span><span class="p">,</span> <span class="n">InstrumentMode</span><span class="o">.</span><span class="n">OFF</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="custom-settable-states">
+<h2>Custom Settable States<a class="headerlink" href="#custom-settable-states" title="Permalink to this headline">¶</a></h2>
+<p>In addition to the pre-defined settable state types, <code class="docutils literal notranslate"><span class="pre">IndependentStateFactory</span></code> provides a <code class="docutils literal notranslate"><span class="pre">settable()</span></code> method to define a custom settable state. This method works similarly to the above factory methods, but it takes an additional parameter, <code class="docutils literal notranslate"><span class="pre">ParameterMapper&lt;T&gt;</span> <span class="pre">mapper</span></code>. This method allows adaptation engineers to provide a <code class="docutils literal notranslate"><span class="pre">ParameterMapper</span></code> (documented <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Activity-Mappers#parameter-mappers">here</a>) to create a settable state of a custom type. The following example demonstrates how to create such a state, assuming the adaptation engineer has defined a <code class="docutils literal notranslate"><span class="pre">CustomType</span></code> class along with a <code class="docutils literal notranslate"><span class="pre">CustomTypeParameterMapper</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">public</span> <span class="n">static</span> <span class="n">final</span> <span class="n">SettableState</span><span class="o">&lt;</span><span class="n">CustomType</span><span class="o">&gt;</span> <span class="n">customState</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">settable</span><span class="p">(</span><span class="s2">&quot;customState&quot;</span><span class="p">,</span> <span class="n">new</span> <span class="n">CustomType</span><span class="p">(</span><span class="o">...</span><span class="p">),</span> <span class="n">new</span> <span class="n">CustomTypeParameterMapper</span><span class="p">());</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/States-and-System-Models.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

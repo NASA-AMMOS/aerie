@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Uploading Adaptations &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p>Once Aerie services are installed on a mission server the Aerie planning web application will be available, which provides a graphical user interface to create, view, update and delete adaptations and plans. This section will refer to the demo instance of the UI available at:<br />https://aerie-develop.jpl.nasa.gov</p>
+<div class="section" id="uploading-adaptations">
+<h1>Uploading Adaptations<a class="headerlink" href="#uploading-adaptations" title="Permalink to this headline">¶</a></h1>
+<p>Adaptations can be uploaded to the adaptation service through the UI. To navigate to the <a class="reference external" href="https://aerie-develop.jpl.nasa.gov/#/adaptations">adaptations page</a>, click  the <code class="docutils literal notranslate"><span class="pre">Adaptations</span></code> icon on the on the left navigation bar. Once an <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation">adaptation jar</a> is prepared, it can be uploaded to the adaptation service with a name, version, mission and owner. The name and version must match (in case and form) the name and version specified in the adaptation.</p>
+<p>For example, if the adaptation is defined in code as<br /><code class="docutils literal notranslate"><span class="pre">&#64;Adaptation(​​name=​&quot;Banananation&quot;,</span> <span class="pre">v​ersion​=&quot;0.0.1&quot;)</span></code>, then the name field must be entered as <code class="docutils literal notranslate"><span class="pre">Banananation</span></code> and the version as <code class="docutils literal notranslate"><span class="pre">0.0.1</span></code>. Once the adaptation is uploaded it will be listed in the table shown in Figure 1. Adaptations can be deleted from this table using the context menu by right clicking on the adaptation.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%202.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%202.png" /><br /><em>Figure 1: Upload adaptations, and view existing adaptations.</em></p>
+</div>
+<div class="section" id="creating-plans">
+<h1>Creating Plans<a class="headerlink" href="#creating-plans" title="Permalink to this headline">¶</a></h1>
+<p>To navigate to the <a class="reference external" href="https://aerie-develop.jpl.nasa.gov/#/plans">plans page</a>, click the <code class="docutils literal notranslate"><span class="pre">Plans</span></code> icon on the left navigation bar. Users can use the left panel to create new plans associated with any adaptation in the adaptation service. A <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> date has to be specified to create a plan.
+Existing plans are listed in the table on the right. Use right click on the table to reveal a drop down menu to delete and view plans.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%203.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%203.png" />
+<em>Figure 2: Create plans, and view existing plans.</em></p>
+</div>
+<div class="section" id="view-and-edit-plans">
+<h1>View and Edit Plans<a class="headerlink" href="#view-and-edit-plans" title="Permalink to this headline">¶</a></h1>
+<p>Once a user clicks on an existing plan, they can view contents, add/remove activity instances, and edit activity instance parameters. The plan view is split into the following default panels:</p>
+<ul class="simple">
+<li><p>Schedule Visualization</p></li>
+<li><p>Simulation Visualization</p></li>
+<li><p>Activity Instances Table</p></li>
+<li><p>Side drawer containing:</p>
+<ul>
+<li><p>Activity Dictionary</p></li>
+<li><p>Activity Instance Details</p></li>
+</ul>
+</li>
+</ul>
+<p>In the default side drawer the activity dictionary is displayed. Once a type or instance is selected, users can view details such as metadata and parameters by moving the arrow keys down. Activities can be dragged into the timeline from the activity dictionary. Once instances are added they will appear in the Activity Instances Table panel.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%204.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%204.png" />
+<em>Figure 3: Default panels.</em></p>
+<p>When a user clicks on an activity instance in the plan, the form to update activity parameters and start time will appear on the right drawer as shown in Figure 4. Users can use this form view to remove instances from the plan.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%205.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%205.png" />
+<em>Figure 4: When an activity instance in plan is selected, its details will appear in the right drawer.</em></p>
+<p>In the schedule and simulation elements, violations are shown as red regions in their respective bands as well as the corresponding time axis.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%204.1.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%204.1.png" />
+<em>Figure 4.1: When violations occur, they will be represented as red areas on the timeline, with an accompanying hover state.</em></p>
+<p>Horizontal guides may be added to any simulation or activity schedule band. The horizontal guides control UI may be accessed through each band’s three dots more menu.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%204.2.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%204.2.png" />
+*Figure 4.2: Horizontal guides may be added to each activity schedule or simulation bands</p>
+<p>Aerie UI provides a flexible arrangement where users can hide any of these panels by simply dragging dividers vertically. In Figure 5 this feature of the UI is illustrated.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%206.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%206.png" />
+<em>Figure 5: The bottom panels are dragged to the top edge completely leaving only one panels in view.</em></p>
+<p>Note that all the default panels outlined here can be configured and changed based on the needs of a mission. You can read about how to do that in the <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/UI-Configurability">UI Configurability</a> documentation.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Aerie-Planning-UI.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

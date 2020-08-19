@@ -1,0 +1,354 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>What is an Activity Mapper &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <ul class="simple">
+<li><p>To include: Documentation on <code class="docutils literal notranslate"><span class="pre">SerializedParameter</span></code> for assistance with creating
+custom Activity Mappers. We should expand on <code class="docutils literal notranslate"><span class="pre">ParameterSchema</span></code> as well, though
+we will likely want to change the way we approach the topic once we add support
+for generating Activity Mappers that use custom Parameter Mappers.</p></li>
+</ul>
+<div class="section" id="what-is-an-activity-mapper">
+<h1>What is an Activity Mapper<a class="headerlink" href="#what-is-an-activity-mapper" title="Permalink to this headline">¶</a></h1>
+<p>An Activity Mapper is a Java class that both implements the <code class="docutils literal notranslate"><span class="pre">ActivityMapper</span></code>
+interface, and contains the <code class="docutils literal notranslate"><span class="pre">ActivitiesMapped</span></code> annotation. It is required that
+each Activity Type in an adaptation have an associated Activity Mapper, to provide
+provide three capabilities:</p>
+<ul class="simple">
+<li><p>Describe the structure of an activity type</p></li>
+<li><p>Serialize instances of associated Activity Types</p></li>
+<li><p>Deserialize instances of associated Activity Types</p></li>
+</ul>
+</div>
+<div class="section" id="activitiesmapped-annotation">
+<h1><code class="docutils literal notranslate"><span class="pre">&#64;ActivitiesMapped</span></code> Annotation<a class="headerlink" href="#activitiesmapped-annotation" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">&#64;ActivitiesMapped</span></code> annotation tells what Activity Types the associated
+Activity Mapper provides the aforementioned capabilities for. Below is an example
+of the annotation as it would appear in an adaptation for an Activity Mapper
+called <code class="docutils literal notranslate"><span class="pre">ExampleMapper</span></code> that maps a single Activity Type called <code class="docutils literal notranslate"><span class="pre">ExampleActivity</span></code> (It is important to note that the Activity Types listed in the annotation be
+denoted by their class name, which may sometimes differ from the actual Activity
+Type name).</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="nd">@ActivitiesMapped</span><span class="p">({</span><span class="n">ExampleActivity</span><span class="p">.</span><span class="na">class</span><span class="p">})</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExampleMapper</span> <span class="kd">implements</span> <span class="n">ActivityMapper</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activity-schema">
+<h1>Activity Schema<a class="headerlink" href="#activity-schema" title="Permalink to this headline">¶</a></h1>
+<p>Each Activity Mapper must describe the structure of its associated Activity Types
+by implementing the <code class="docutils literal notranslate"><span class="pre">getActivitySchemas()</span></code> method whose signature is shown below:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="o">&gt;&gt;</span> <span class="nf">getActivitySchemas</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Map</span></code> returned by this method should contain a schema for each associated
+Activity Type, indexed by Activity Type name. Each activity schema is represented
+by another <code class="docutils literal notranslate"><span class="pre">Map</span></code>, supplying parameter names as keys, and the corresponding
+<code class="docutils literal notranslate"><span class="pre">ParameterSchemas</span></code> as values.</p>
+</div>
+<div class="section" id="serialization">
+<h1>Serialization<a class="headerlink" href="#serialization" title="Permalink to this headline">¶</a></h1>
+<p>Activity Mappers must supply a <code class="docutils literal notranslate"><span class="pre">serialize()</span></code> method as specified by the following
+signature:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Optional</span><span class="o">&lt;</span><span class="n">SerializedActivity</span><span class="o">&gt;</span> <span class="nf">serializeActivity</span><span class="p">(</span><span class="n">Activity</span> <span class="n">activity</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Optional</span></code> returned by this method should be empty if the provided <code class="docutils literal notranslate"><span class="pre">Activity</span></code>
+is not an instance of an Activity Type mapped by this Activity Mapper. However, if
+the provided <code class="docutils literal notranslate"><span class="pre">Activity</span></code> is indeed an instance of one of the Activity Types the
+Activity Mapper handles, then a <code class="docutils literal notranslate"><span class="pre">SerializedActivity</span></code> representing the instance
+should be returned.</p>
+</div>
+<div class="section" id="deserialization">
+<h1>Deserialization<a class="headerlink" href="#deserialization" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">deserialize()</span></code> method must also be provided by Activity Mappers, and is
+described by the following method signature:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">Optional</span><span class="o">&lt;</span><span class="n">Activity</span><span class="o">&gt;</span> <span class="nf">deserializeActivity</span><span class="p">(</span><span class="n">SerializedActivity</span> <span class="n">serializedActivity</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">Optional</span></code> returned by this method should be empty if no instance for any of
+the associated Activity Types can be constructed from the provided
+<code class="docutils literal notranslate"><span class="pre">SerializedActivity</span></code>. Otherwise, an instance of the associated Activity Type that
+fits the provided <code class="docutils literal notranslate"><span class="pre">SerializedActivity</span></code> should be provided.</p>
+<p>It is important to note that the result of an Activity Mapper’s <code class="docutils literal notranslate"><span class="pre">serialize()</span></code> method be
+accepted by the mapper’s <code class="docutils literal notranslate"><span class="pre">deserialize()</span></code> method, and vice-versa.</p>
+</div>
+<div class="section" id="creating-activity-mappers">
+<h1>Creating Activity Mappers<a class="headerlink" href="#creating-activity-mappers" title="Permalink to this headline">¶</a></h1>
+<p>Even if one understands what an Activity Mapper should contain, it is another
+challenge entirely to actually create one. In many cases, it may be enough to
+simply have Merlin generate one for Activity Types. If this is the case,
+<code class="docutils literal notranslate"><span class="pre">generateMapper</span></code> should be set to <code class="docutils literal notranslate"><span class="pre">true</span></code> in the <code class="docutils literal notranslate"><span class="pre">&#64;ActivityType</span></code> annotation for the
+Activity Type (this is set to <code class="docutils literal notranslate"><span class="pre">false</span></code> by default).</p>
+<p>Currently, Merlin can generate Activity Mappers for Activity Types which contain
+only supported parameter types. This means that for Activity Types containing
+custom parameter types, adaptation engineers will need to supply custom activity
+mappers (we are planning to add support for custom activity mappers in the future,
+though some work by the adaptation engineer will still be required).</p>
+<div class="section" id="using-custom-parameter-types-in-activity-types">
+<h2>Using Custom Parameter Types in Activity Types<a class="headerlink" href="#using-custom-parameter-types-in-activity-types" title="Permalink to this headline">¶</a></h2>
+<p>If a custom parameter type needed to be utilized in an Activity Type, custom mappers has to be created. This is a two step process:</p>
+<ol class="simple">
+<li><p>Custom activity mapper has to be created for the activity in which you want to add the custom parameter.</p></li>
+<li><p>Custom parameter mapper has to be created.
+To expedite the first mapper generation, adapters can rely on the automatic activity mapper generator by excluding the custom parameters in a first pass, and then manually edit the mapper to include the custom parameters. Entities with custom mappers should not include annotations to avoid conflict between automatic generation process. In the future, mapper generation for custom parameters will be automated.</p></li>
+</ol>
+<p>To create a custom Activity Mapper, a Java class meeting the criteria for Activity
+Mappers should be created. A skeleton for all Activity Mappers is given below:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="nd">@ActivitiesMapped</span><span class="p">({</span><span class="n">ExampleActivity</span><span class="p">.</span><span class="na">class</span><span class="p">})</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExampleMapper</span> <span class="kd">implements</span> <span class="n">ActivityMapper</span> <span class="p">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="o">&gt;&gt;</span> <span class="nf">getActivitySchemas</span><span class="p">()</span> <span class="p">{</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">Activity</span><span class="o">&gt;</span> <span class="nf">deserializeActivity</span><span class="p">(</span><span class="n">SerializedActivity</span> <span class="n">serializedActivity</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">SerializedActivity</span> <span class="nf">serializeActivity</span><span class="p">(</span><span class="n">Activity</span> <span class="n">activity</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A custom Activity Mapper may be constructed from scratch, though one can get a
+head start by generating a partial mapper for an Activity Type. To do this,
+temporarily comment out any <code class="docutils literal notranslate"><span class="pre">&#64;Parameter</span></code> annotations for custom parameters, and
+add <code class="docutils literal notranslate"><span class="pre">generateMapper=true</span></code> to the <code class="docutils literal notranslate"><span class="pre">&#64;ActivityType</span></code> annotation, then run the Merlin
+annotation processor. This will generate a mapper for the Activity Type that
+handles all supported parameter types. The adaptation engineer can then copy this
+generated mapper to their source folder and add logic for custom parameter types,
+using the generated code as a guide. Note that when using this procedure, the
+<code class="docutils literal notranslate"><span class="pre">&#64;generated</span></code> annotation should be removed from the Activity Mapper, and the
+temporary changes to the Activity Type should be removed.</p>
+</div>
+</div>
+<div class="section" id="parameter-mappers">
+<h1>Parameter Mappers<a class="headerlink" href="#parameter-mappers" title="Permalink to this headline">¶</a></h1>
+<p>In creating an Activity Mapper, it may be useful to use Parameter Mappers.
+A <code class="docutils literal notranslate"><span class="pre">ParameterMapper</span></code> is similar to an <code class="docutils literal notranslate"><span class="pre">ActivityMapper</span></code> in, but focuses on a
+single Activity Parameter. Properly used, Parameter Mappers can make Activity
+Mappers quite simple, handling all the dirty work at the parameter level. In fact,
+Merlin’s generated Activity Mappers work exclusively using Parameter Mappers.</p>
+<p>One of the most convenient things about using Parameter Mappers is the fact that
+Merlin comes with them already defined for all supported parameter types.
+Furthermore, Parameter Mappers for combinations of supported types can easily
+be created by passing one <code class="docutils literal notranslate"><span class="pre">ParameterMapper</span></code> into another during instantiation.</p>
+<p>Although we provide Parameter Mappers for supported parameter types, it is
+entirely acceptable to create custom Parameter Mappers for use in custom Activity
+Mappers. This can be done by writing a Java class which implements the
+<code class="docutils literal notranslate"><span class="pre">ParameterMapper</span></code> interface. Below is a Parameter Mapper for a String type
+parameter as an example:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">StringParameterMapper</span> <span class="kd">implements</span> <span class="n">ParameterMapper</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">ParameterSchema</span> <span class="nf">getParameterSchema</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">ParameterSchema</span><span class="p">.</span><span class="na">STRING</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Result</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="nf">deserializeParameter</span><span class="p">(</span><span class="kd">final</span> <span class="n">SerializedParameter</span> <span class="n">serializedParameter</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">serializedParameter</span>
+            <span class="p">.</span><span class="na">asString</span><span class="p">()</span>
+            <span class="p">.</span><span class="na">map</span><span class="p">(</span><span class="n">Result</span><span class="p">::</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">String</span><span class="o">&gt;</span><span class="n">success</span><span class="p">)</span>
+            <span class="p">.</span><span class="na">orElseGet</span><span class="p">(()</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">.</span><span class="na">failure</span><span class="p">(</span><span class="s">&quot;Expected string, got &quot;</span> <span class="o">+</span> <span class="n">serializedParameter</span><span class="p">.</span><span class="na">toString</span><span class="p">()));</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">SerializedParameter</span> <span class="nf">serializeParameter</span><span class="p">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">parameter</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">SerializedParameter</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">parameter</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-activity-mapper">
+<h1>Example Activity Mapper<a class="headerlink" href="#example-activity-mapper" title="Permalink to this headline">¶</a></h1>
+<p>Below is an example of an Activity Type and its Activity mapper for reference:</p>
+<div class="section" id="activity-type">
+<h2>Activity Type<a class="headerlink" href="#activity-type" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="nd">@ActivityType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">RunHeaters</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RunHeatersActivity</span> <span class="p">{</span>
+
+    <span class="nd">@Parameter</span>
+    <span class="kd">public</span> <span class="kt">double</span> <span class="n">heatDuration</span><span class="p">;</span>
+
+    <span class="nd">@Parameter</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="n">heatIntensity</span><span class="p">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">modelEffects</span><span class="p">()</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activity-mapper">
+<h2>Activity Mapper<a class="headerlink" href="#activity-mapper" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="nd">@ActivitiesMapped</span><span class="p">({</span><span class="n">RunHeatersActivity</span><span class="p">.</span><span class="na">class</span><span class="p">})</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RunHeatersMapper</span> <span class="kd">implements</span> <span class="n">ActivityMapper</span> <span class="p">{</span>
+
+    <span class="c1">// Instantiate a ParameterMapper for each parameter of the RunHeater activity</span>
+    <span class="c1">// These allow us to delegate to ParameterMappers for parameter-specific work</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">ParameterMapper</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">mapper_heatDuration</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NullableParameterMapper</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">DoubleParameterMapper</span><span class="p">());</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">ParameterMapper</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">mapper_heatIntensity</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NullableParameterMapper</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="k">new</span> <span class="n">IntegerParameterMapper</span><span class="p">());</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="o">&gt;&gt;</span> <span class="nf">getActivitySchemas</span><span class="p">()</span> <span class="p">{</span>
+
+        <span class="c1">// Instantiate the Activity Schemas map</span>
+        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="o">&gt;&gt;</span> <span class="n">activitySchemas</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+
+        <span class="c1">// Build the Activity Schema for the RunHeaters activity</span>
+        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="o">&gt;</span> <span class="n">runHeatersSchema</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+        <span class="n">runHeatersSchema</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;heatDuration&quot;</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="p">.</span><span class="na">DOUBLE</span><span class="p">);</span>
+        <span class="n">runHeatersSchema</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;heatIntensity&quot;</span><span class="p">,</span> <span class="n">ParameterSchema</span><span class="p">.</span><span class="na">INTEGER</span><span class="p">);</span>
+
+        <span class="c1">// Populate the Activity Schemas map</span>
+        <span class="c1">// Note that the Activity Type name is used for the Activity Schema map</span>
+        <span class="c1">// instead of the Activity Type class</span>
+        <span class="n">activitySchemas</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;RunHeaters&quot;</span><span class="p">,</span> <span class="n">runHeatersSchema</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">activitySchemas</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">Activity</span><span class="o">&gt;</span> <span class="nf">deserializeActivity</span><span class="p">(</span><span class="n">SerializedActivity</span> <span class="n">serializedActivity</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// If activity is not the supported type, return empty optional </span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">serializedActivity</span><span class="p">.</span><span class="na">getTypeName</span><span class="p">().</span><span class="na">equals</span><span class="p">(</span><span class="s">&quot;RunHeaters&quot;</span><span class="p">))</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">empty</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Create the Activity Instance and set parameter values if present</span>
+        <span class="kd">final</span> <span class="kd">var</span> <span class="n">activity</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RunHeatersActivity</span><span class="p">();</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">final</span> <span class="kd">var</span> <span class="n">entry</span> <span class="p">:</span> <span class="n">serializedActivity</span><span class="p">.</span><span class="na">getParameters</span><span class="p">().</span><span class="na">entrySet</span><span class="p">())</span> <span class="p">{</span>
+            <span class="k">switch</span> <span class="p">(</span><span class="n">entry</span><span class="p">.</span><span class="na">getKey</span><span class="p">())</span> <span class="p">{</span>
+                <span class="k">case</span> <span class="s">&quot;heatDuration&quot;</span><span class="p">:</span>
+                    <span class="n">activity</span><span class="p">.</span><span class="na">heatDuration</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="na">mapper_heatDuration</span><span class="p">.</span><span class="na">deserializeParameter</span><span class="p">(</span><span class="n">entry</span><span class="p">.</span><span class="na">getValue</span><span class="p">()).</span><span class="na">getSuccessOrThrow</span><span class="p">();</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="k">case</span> <span class="s">&quot;heatIntensity&quot;</span><span class="p">:</span>
+                    <span class="n">activity</span><span class="p">.</span><span class="na">heatIntensity</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="na">mapper_heatIntensity</span><span class="p">.</span><span class="na">deserializeParameter</span><span class="p">(</span><span class="n">entry</span><span class="p">.</span><span class="na">getValue</span><span class="p">()).</span><span class="na">getSuccessOrThrow</span><span class="p">();</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="k">default</span><span class="p">:</span>
+                    <span class="c1">// Unexpected parameter key present, return empty optional</span>
+                    <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">empty</span><span class="p">();</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">activity</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">SerializedActivity</span> <span class="nf">serializeActivity</span><span class="p">(</span><span class="n">Activity</span> <span class="n">activity</span><span class="p">)</span> <span class="p">{</span>
+
+        <span class="c1">// If activity is not suppoorted, return empty Optional</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="n">activity</span> <span class="k">instanceof</span> <span class="n">RunHeatersActivity</span><span class="p">))</span> <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">empty</span><span class="p">();</span>
+
+        <span class="kd">final</span> <span class="n">RunHeatersActivity</span> <span class="n">activity</span> <span class="o">=</span> <span class="p">(</span><span class="n">RunHeatersActivity</span><span class="p">)</span><span class="n">activity</span><span class="p">;</span>
+
+        <span class="kd">final</span> <span class="kd">var</span> <span class="n">parameters</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">SerializedParameter</span><span class="o">&gt;</span><span class="p">();</span>
+        <span class="n">parameters</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;heatDuration&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="na">mapper_heatDuration</span><span class="p">.</span><span class="na">serializeParameter</span><span class="p">(</span><span class="n">activity</span><span class="p">.</span><span class="na">heatDuration</span><span class="p">));</span>
+        <span class="n">parameters</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="s">&quot;heatIntensity&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="na">mapper_heatIntensity</span><span class="p">.</span><span class="na">serializeParameter</span><span class="p">(</span><span class="n">activity</span><span class="p">.</span><span class="na">heatIntensity</span><span class="p">));</span>
+
+        <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="k">new</span> <span class="n">SerializedActivity</span><span class="p">(</span><span class="n">ACTIVITY_TYPE</span><span class="p">,</span> <span class="n">parameters</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Activity-Mappers.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

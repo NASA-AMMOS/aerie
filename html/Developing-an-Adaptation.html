@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adaptation Class &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p>An adaptation defines a set of activity types and states that make up a system model to be simulated by Merlin. To create an adaptation, the merlin-sdk must be included in your Java project. The merlin-sdk JAR file is available in <a class="reference external" href="https://cae-artifactory.jpl.nasa.gov/">Artifactory</a> at this <a class="reference external" href="https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/general/gov/nasa/jpl/aerie/aerie-release-0.4.0.tar.gz">location</a>.</p>
+<p>Note that to access the download link for the merlin-sdk, you will need to log in to Artifactory. Once downloaded, decompress the file to your desired location. The merlin-sdk.jar file is available under the merlin-sdk folder.
+Include this JAR as a library in your Java project. Instructions how to include a library in a project for your Java IDE should be easy to find online.</p>
+<div class="section" id="adaptation-class">
+<h1>Adaptation Class<a class="headerlink" href="#adaptation-class" title="Permalink to this headline">¶</a></h1>
+<p>Every adaptation must provide an adaptation class which satisfies the following:</p>
+<ol class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">&#64;Adaptation</span></code> annotation on the class, declaring adaptation name and version</p></li>
+<li><p>Implement the <code class="docutils literal notranslate"><span class="pre">MerlinAdaptation</span></code> interface, supplying an Event type</p></li>
+<li><p>Provide activity mappers by implementing the <code class="docutils literal notranslate"><span class="pre">getActivityMapper()</span></code> method</p></li>
+<li><p>Provide a Querier by implementing the <code class="docutils literal notranslate"><span class="pre">makeQuerier()</span></code> method</p></li>
+</ol>
+<p>Below is an example of an Adaptation class which uses custom ExampleEvent and ExampleQuerier types, which will be discussed in subsequent sections:</p>
+<div class="section" id="exampleadaptation-class">
+<h2>ExampleAdaptation Class<a class="headerlink" href="#exampleadaptation-class" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">package</span> <span class="nn">gov.nasa.jpl.example</span><span class="p">;</span>
+
+<span class="nd">@Adaptation</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;example&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s">&quot;0.1&quot;</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExampleAdaptation</span> <span class="kd">implements</span> <span class="n">MerlinAdaptation</span><span class="o">&lt;</span><span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="p">{</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">ActivityMapper</span> <span class="nf">getActivityMapper</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">ActivityMapperLoader</span><span class="p">.</span><span class="na">loadActivityMapper</span><span class="p">(</span><span class="n">ExampleAdaptation</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="n">ActivityMapperLoader</span><span class="p">.</span><span class="na">ActivityMapperLoadException</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">Querier</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="nf">makeQuerier</span><span class="p">(</span><span class="kd">final</span> <span class="n">SimulationTimeline</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">BananaEvent</span><span class="o">&gt;</span> <span class="n">database</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">ExampleQuerier</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">database</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="events">
+<h1>Events<a class="headerlink" href="#events" title="Permalink to this headline">¶</a></h1>
+<p>As previously mentioned, Merlin adaptations define activity types which influence states during a simulation. Events are used to represent these influences. As there are different types of possible Events that can occur, we use the visitor pattern to define a uniform Event type that can be used in an adaptation. We begin by defining an Event class, such as the one shown below:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">ExampleEvent</span> <span class="p">{</span>
+    <span class="kd">private</span> <span class="nf">ExampleEvent</span><span class="p">()</span> <span class="p">{}</span>
+
+    <span class="kd">public</span> <span class="kd">abstract</span> <span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">Result</span> <span class="nf">visit</span><span class="p">(</span><span class="n">ExampleEventHandler</span><span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">visitor</span><span class="p">);</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">ExampleEvent</span> <span class="nf">independent</span><span class="p">(</span><span class="kd">final</span> <span class="n">IndependentStateEvent</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">Objects</span><span class="p">.</span><span class="na">requireNonNull</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">ExampleEvent</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">Result</span> <span class="nf">visit</span><span class="p">(</span><span class="kd">final</span> <span class="n">ExampleEventHandler</span><span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">visitor</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="n">visitor</span><span class="p">.</span><span class="na">independent</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">ExampleEvent</span> <span class="nf">activity</span><span class="p">(</span><span class="kd">final</span> <span class="n">ActivityEvent</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">Objects</span><span class="p">.</span><span class="na">requireNonNull</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">ExampleEvent</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">Result</span> <span class="nf">visit</span><span class="p">(</span><span class="kd">final</span> <span class="n">ExampleEventHandler</span><span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="n">visitor</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="n">visitor</span><span class="p">.</span><span class="na">activity</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">final</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">IndependentStateEvent</span><span class="o">&gt;</span> <span class="nf">asIndependent</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="na">visit</span><span class="p">(</span><span class="k">new</span> <span class="n">DefaultExampleEventHandler</span><span class="o">&lt;&gt;</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">IndependentStateEvent</span><span class="o">&gt;</span> <span class="nf">unhandled</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">empty</span><span class="p">();</span>
+            <span class="p">}</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">IndependentStateEvent</span><span class="o">&gt;</span> <span class="nf">independent</span><span class="p">(</span><span class="n">IndependentStateEvent</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">final</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">ActivityEvent</span><span class="o">&gt;</span> <span class="nf">asActivity</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="na">visit</span><span class="p">(</span><span class="k">new</span> <span class="n">DefaultExampleEventHandler</span><span class="o">&lt;&gt;</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">ActivityEvent</span><span class="o">&gt;</span> <span class="nf">unhandled</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">empty</span><span class="p">();</span>
+            <span class="p">}</span>
+
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Optional</span><span class="o">&lt;</span><span class="n">ActivityEvent</span><span class="o">&gt;</span> <span class="nf">activity</span><span class="p">(</span><span class="kd">final</span> <span class="n">ActivityEvent</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="n">Optional</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In short, the use of the visitor pattern here allows any event to be easily interpreted as the appropriate type. In this example, there are two types of events, independent state and activity events.</p>
+<p>The careful observer may have noticed that there are two types referenced in the above example which have not yet been defined: <code class="docutils literal notranslate"><span class="pre">ExampleEventHandler</span></code> and <code class="docutils literal notranslate"><span class="pre">DefaultExampleEventHandler</span></code>. These types provide the second half of the visitor pattern, the actual visitor that interprets events. Both are shown below:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">ExampleEventHandler</span><span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="n">Result</span> <span class="nf">independent</span><span class="p">(</span><span class="n">IndependentStateEvent</span> <span class="n">event</span><span class="p">);</span>
+    <span class="n">Result</span> <span class="nf">activity</span><span class="p">(</span><span class="n">ActivityEvent</span> <span class="n">event</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">DefaultExampleEventHandler</span><span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">ExampleEventHandler</span><span class="o">&lt;</span><span class="n">Result</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="n">Result</span> <span class="nf">unhandled</span><span class="p">();</span>
+
+    <span class="nd">@Override</span>
+    <span class="k">default</span> <span class="n">Result</span> <span class="nf">independent</span><span class="p">(</span><span class="n">IndependentStateEvent</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">unhandled</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="k">default</span> <span class="n">Result</span> <span class="nf">activity</span><span class="p">(</span><span class="n">ActivityEvent</span> <span class="n">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">unhandled</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ExampleEventHandler</span></code> interface is a barebones visitor definition, declaring a method for each type of Event that may be visited. <code class="docutils literal notranslate"><span class="pre">DefaultExampleEventHandler</span></code> extends <code class="docutils literal notranslate"><span class="pre">ExampleEventHandler</span></code> by adding an <code class="docutils literal notranslate"><span class="pre">unhandled()</span></code> method, and defining a default implementation of the <code class="docutils literal notranslate"><span class="pre">independent()</span></code> method that calls it. This allows instances of <code class="docutils literal notranslate"><span class="pre">ExampleEventHandler</span></code> to be created on the fly without having to define every method. This is especially useful when creating an event handler for a known subset of event types.</p>
+<p>Together, the above class and interfaces define an adaptation’s <code class="docutils literal notranslate"><span class="pre">Event</span></code>. In Aerie 0.4, these can be copied with little modification for a custom adaptation.</p>
+</div>
+<div class="section" id="querier">
+<h1>Querier<a class="headerlink" href="#querier" title="Permalink to this headline">¶</a></h1>
+<p>With your adaptation’s event types defined, you can now define a Querier. The purpose of the Querier is to provide a connection between Merlin’s simulation engine and your adaptation logic. The Querier has four basic responsibilities:</p>
+<ol class="simple">
+<li><p>Run activities in a provided context</p></li>
+<li><p>Provide state names</p></li>
+<li><p>Determine state values from an event history</p></li>
+<li><p>Determine constraint violations from an event history</p></li>
+</ol>
+<p>In Aerie 0.4, this is a bit complex, but we provide a template to make implementing your Querier as simple as possible. Below is an example:</p>
+<div class="section" id="examplequerier">
+<h2>ExampleQuerier<a class="headerlink" href="#examplequerier" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ExampleQuerier</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">implements</span> <span class="n">MerlinAdaptation</span><span class="p">.</span><span class="na">Querier</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">DynamicCell</span><span class="o">&lt;</span><span class="n">ReactionContext</span><span class="o">&lt;?</span><span class="p">,</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;&gt;</span> <span class="n">reactionContext</span> <span class="o">=</span> <span class="n">DynamicCell</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">DynamicCell</span><span class="o">&lt;</span><span class="n">ExampleQuerier</span><span class="o">&lt;?&gt;</span><span class="p">.</span><span class="na">StateQuerier</span><span class="o">&gt;</span> <span class="n">stateContext</span> <span class="o">=</span> <span class="n">DynamicCell</span><span class="p">.</span><span class="na">create</span><span class="p">();</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">Function</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">StateQuery</span><span class="o">&lt;</span><span class="n">SerializedParameter</span><span class="o">&gt;&gt;</span> <span class="n">query</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">-&gt;</span>
+            <span class="k">new</span> <span class="n">DynamicStateQuery</span><span class="o">&lt;&gt;</span><span class="p">(()</span> <span class="o">-&gt;</span> <span class="n">stateContext</span><span class="p">.</span><span class="na">get</span><span class="p">().</span><span class="na">getRegisterQuery</span><span class="p">(</span><span class="n">name</span><span class="p">));</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">ActivityModelQuerier</span> <span class="n">activityQuerier</span> <span class="o">=</span>
+            <span class="k">new</span> <span class="n">DynamicActivityModelQuerier</span><span class="p">(()</span> <span class="o">-&gt;</span> <span class="n">stateContext</span><span class="p">.</span><span class="na">get</span><span class="p">().</span><span class="na">getActivityQuery</span><span class="p">());</span>
+    
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">ReactionContext</span><span class="o">&lt;?</span><span class="p">,</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="n">ctx</span> <span class="o">=</span> <span class="k">new</span> <span class="n">DynamicReactionContext</span><span class="o">&lt;&gt;</span><span class="p">(()</span> <span class="o">-&gt;</span> <span class="n">reactionContext</span><span class="p">.</span><span class="na">get</span><span class="p">());</span>
+
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">ActivityMapper</span> <span class="n">activityMapper</span><span class="p">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Query</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="p">,</span> <span class="n">ActivityModel</span><span class="o">&gt;</span> <span class="n">activityModel</span><span class="p">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">stateNames</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Query</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="p">,</span> <span class="n">RegisterState</span><span class="o">&lt;</span><span class="n">SerializedParameter</span><span class="o">&gt;&gt;&gt;</span> <span class="n">settables</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Query</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="p">,</span> <span class="n">RegisterState</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;&gt;&gt;</span> <span class="n">cumulables</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+
+    <span class="kd">public</span> <span class="nf">ExampleQuerier</span><span class="p">(</span><span class="kd">final</span> <span class="n">ActivityMapper</span> <span class="n">activityMapper</span><span class="p">,</span> <span class="kd">final</span> <span class="n">SimulationTimeline</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="n">timeline</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="na">activityMapper</span> <span class="o">=</span> <span class="n">activityMapper</span><span class="p">;</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="na">activityModel</span> <span class="o">=</span> <span class="n">timeline</span><span class="p">.</span><span class="na">register</span><span class="p">(</span>
+                <span class="k">new</span> <span class="n">ActivityEffectEvaluator</span><span class="p">().</span><span class="na">filterContramap</span><span class="p">(</span><span class="n">ExampleEvent</span><span class="p">::</span><span class="n">asActivity</span><span class="p">),</span>
+                <span class="k">new</span> <span class="n">ActivityModelApplicator</span><span class="p">());</span>
+
+        <span class="c1">// Register a Query object for each settable state</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">final</span> <span class="kd">var</span> <span class="n">entry</span> <span class="p">:</span> <span class="n">ExampleStates</span><span class="p">.</span><span class="na">factory</span><span class="p">.</span><span class="na">getSettableStates</span><span class="p">().</span><span class="na">entrySet</span><span class="p">())</span> <span class="p">{</span>
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">name</span> <span class="o">=</span> <span class="n">entry</span><span class="p">.</span><span class="na">getKey</span><span class="p">();</span>
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">initialValue</span> <span class="o">=</span> <span class="n">entry</span><span class="p">.</span><span class="na">getValue</span><span class="p">();</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">stateNames</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="p">(</span><span class="s">&quot;State \&quot;&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;\&quot; already defined&quot;</span><span class="p">);</span>
+            <span class="k">this</span><span class="p">.</span><span class="na">stateNames</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>
+
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">query</span> <span class="o">=</span> <span class="n">timeline</span><span class="p">.</span><span class="na">register</span><span class="p">(</span>
+                    <span class="k">new</span> <span class="n">SettableEffectEvaluator</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="na">filterContramap</span><span class="p">(</span><span class="n">ExampleEvent</span><span class="p">::</span><span class="n">asIndependent</span><span class="p">),</span>
+                    <span class="k">new</span> <span class="n">SettableStateApplicator</span><span class="p">(</span><span class="n">initialValue</span><span class="p">));</span>
+
+            <span class="k">this</span><span class="p">.</span><span class="na">settables</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Register a Query object for each cumulable state</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">final</span> <span class="kd">var</span> <span class="n">entry</span> <span class="p">:</span> <span class="n">ExampleStates</span><span class="p">.</span><span class="na">factory</span><span class="p">.</span><span class="na">getCumulableStates</span><span class="p">().</span><span class="na">entrySet</span><span class="p">())</span> <span class="p">{</span>
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">name</span> <span class="o">=</span> <span class="n">entry</span><span class="p">.</span><span class="na">getKey</span><span class="p">();</span>
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">initialValue</span> <span class="o">=</span> <span class="n">entry</span><span class="p">.</span><span class="na">getValue</span><span class="p">();</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">stateNames</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="p">(</span><span class="s">&quot;State \&quot;&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;\&quot; already defined&quot;</span><span class="p">);</span>
+            <span class="k">this</span><span class="p">.</span><span class="na">stateNames</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>
+
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">query</span> <span class="o">=</span> <span class="n">timeline</span><span class="p">.</span><span class="na">register</span><span class="p">(</span>
+                    <span class="k">new</span> <span class="n">CumulableEffectEvaluator</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="na">filterContramap</span><span class="p">(</span><span class="n">ExampleEvent</span><span class="p">::</span><span class="n">asIndependent</span><span class="p">),</span>
+                    <span class="k">new</span> <span class="n">CumulableStateApplicator</span><span class="p">(</span><span class="n">initialValue</span><span class="p">));</span>
+
+            <span class="k">this</span><span class="p">.</span><span class="na">cumulables</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">query</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">runActivity</span><span class="p">(</span><span class="n">ReactionContext</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">String</span> <span class="n">activityId</span><span class="p">,</span> <span class="n">Activity</span> <span class="n">activity</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">reactionContext</span><span class="p">.</span><span class="na">setWithin</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="p">()</span> <span class="o">-&gt;</span>
+                <span class="n">stateContext</span><span class="p">.</span><span class="na">setWithin</span><span class="p">(</span><span class="k">new</span> <span class="n">StateQuerier</span><span class="p">(</span><span class="n">ctx</span><span class="p">::</span><span class="n">now</span><span class="p">),</span> <span class="p">()</span> <span class="o">-&gt;</span>
+                        <span class="n">activity</span><span class="p">.</span><span class="na">modelEffects</span><span class="p">()));</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="nf">states</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">Collections</span><span class="p">.</span><span class="na">unmodifiableSet</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">stateNames</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">SerializedParameter</span> <span class="nf">getSerializedStateAt</span><span class="p">(</span><span class="n">String</span> <span class="n">name</span><span class="p">,</span> <span class="n">History</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="n">history</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">settables</span><span class="p">.</span><span class="na">containsKey</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="na">settables</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="na">getAt</span><span class="p">(</span><span class="n">history</span><span class="p">).</span><span class="na">get</span><span class="p">();</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">cumulables</span><span class="p">.</span><span class="na">containsKey</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">return</span> <span class="n">SerializedParameter</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">cumulables</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="na">getAt</span><span class="p">(</span><span class="n">history</span><span class="p">).</span><span class="na">get</span><span class="p">());</span>
+        <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="p">(</span><span class="s">&quot;State \&quot;&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;\&quot; is not defined&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">ConstraintViolation</span><span class="o">&gt;</span> <span class="nf">getConstraintViolationsAt</span><span class="p">(</span><span class="n">History</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="n">history</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">final</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">ConstraintViolation</span><span class="o">&gt;</span> <span class="n">violations</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+
+        <span class="kd">final</span> <span class="kd">var</span> <span class="n">stateQuerier</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StateQuerier</span><span class="p">(()</span> <span class="o">-&gt;</span> <span class="n">history</span><span class="p">);</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kd">final</span> <span class="kd">var</span> <span class="n">violableConstraint</span> <span class="p">:</span> <span class="n">ExampleStates</span><span class="p">.</span><span class="na">violableConstraints</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">// Set the constraint&#39;s getWindows method within the context of the history and evaluate it</span>
+            <span class="kd">final</span> <span class="kd">var</span> <span class="n">violationWindows</span> <span class="o">=</span> <span class="n">stateContext</span><span class="p">.</span><span class="na">setWithin</span><span class="p">(</span><span class="n">stateQuerier</span><span class="p">,</span> <span class="n">violableConstraint</span><span class="p">::</span><span class="n">getWindows</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">violationWindows</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">())</span> <span class="p">{</span>
+                <span class="n">violations</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span> <span class="n">ConstraintViolation</span><span class="p">(</span><span class="n">violationWindows</span><span class="p">,</span> <span class="n">violableConstraint</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">violations</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="n">StateQuery</span><span class="o">&lt;</span><span class="n">SerializedParameter</span><span class="o">&gt;</span> <span class="nf">getRegisterQueryAt</span><span class="p">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">name</span><span class="p">,</span> <span class="kd">final</span> <span class="n">History</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;</span> <span class="n">history</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">settables</span><span class="p">.</span><span class="na">containsKey</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="na">settables</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="na">getAt</span><span class="p">(</span><span class="n">history</span><span class="p">);</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">cumulables</span><span class="p">.</span><span class="na">containsKey</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">return</span> <span class="n">StateQuery</span><span class="p">.</span><span class="na">from</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">cumulables</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">name</span><span class="p">).</span><span class="na">getAt</span><span class="p">(</span><span class="n">history</span><span class="p">),</span> <span class="n">SerializedParameter</span><span class="p">::</span><span class="n">of</span><span class="p">);</span>
+        <span class="k">else</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="p">(</span><span class="s">&quot;State \&quot;&quot;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s">&quot;\&quot; is not defined&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">StateQuerier</span> <span class="p">{</span>
+        <span class="kd">private</span> <span class="kd">final</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">History</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;&gt;</span> <span class="n">historySupplier</span><span class="p">;</span>
+
+        <span class="kd">public</span> <span class="nf">StateQuerier</span><span class="p">(</span><span class="kd">final</span> <span class="n">Supplier</span><span class="o">&lt;</span><span class="n">History</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span> <span class="n">ExampleEvent</span><span class="o">&gt;&gt;</span> <span class="n">historySupplier</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">this</span><span class="p">.</span><span class="na">historySupplier</span> <span class="o">=</span> <span class="n">historySupplier</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="kd">public</span> <span class="n">StateQuery</span><span class="o">&lt;</span><span class="n">SerializedParameter</span><span class="o">&gt;</span> <span class="nf">getRegisterQuery</span><span class="p">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">name</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">ExampleQuerier</span><span class="p">.</span><span class="na">this</span><span class="p">.</span><span class="na">getRegisterQueryAt</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="na">historySupplier</span><span class="p">.</span><span class="na">get</span><span class="p">());</span>
+        <span class="p">}</span>
+
+        <span class="kd">public</span> <span class="n">ActivityModelQuerier</span> <span class="nf">getActivityQuery</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="n">ExampleQuerier</span><span class="p">.</span><span class="na">this</span><span class="p">.</span><span class="na">activityModel</span><span class="p">.</span><span class="na">getAt</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">historySupplier</span><span class="p">.</span><span class="na">get</span><span class="p">());</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It is not necessary to understand the details of this file, since our template should get you set up and you’ll need not worry about it again. Thus, if you are uninterested you may skip to the next section.</p>
+<p>If you are still reading, then let’s take a look at our <code class="docutils literal notranslate"><span class="pre">ExampleQuerier</span></code>. Starting at the top, we have two <code class="docutils literal notranslate"><span class="pre">DynamicCell</span></code> context variables. In short, a <code class="docutils literal notranslate"><span class="pre">DynamicCell</span></code> is a container for something, in this case context, that may change. This allows us to pass context to adaptation logic without having to pass it through the callstack by inserting it into the cell prior to calling the adaptation. Throughout the Querier you can see <code class="docutils literal notranslate"><span class="pre">setWithin()</span></code> called on the <code class="docutils literal notranslate"><span class="pre">DynamicCells</span></code>. This is what sets the value in the <code class="docutils literal notranslate"><span class="pre">DynamicCell</span></code> before running the adaptation logic that needs the context. In the case of activity models, the <code class="docutils literal notranslate"><span class="pre">ctx</span></code> variable declared farther down provides an interface to reach the current context.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">query</span></code> field provides an interface into the <code class="docutils literal notranslate"><span class="pre">StateQuerier</span></code> inner class defined at the bottom, which provides access to the <code class="docutils literal notranslate"><span class="pre">stateContext</span></code> to activities and states. Given an event history, the <code class="docutils literal notranslate"><span class="pre">StateQuerier</span></code> provides the ability to get a state value, as well as the ability to determine windows when a condition is met by some state. After the previously mentioned <code class="docutils literal notranslate"><span class="pre">ctx</span></code> variable are activity and state information variables. These are instantiated by the constructor, and should hold the activity mapper and model tools, as well as all the settable and cumulable states. The constructor itself just populates these variables using the states class that should be defined (see <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/States-and-System-Models">here</a>).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">runActivity()</span></code> method takes a <code class="docutils literal notranslate"><span class="pre">ReactionContext</span></code> as well as an activity instance to run. The method body sets the <code class="docutils literal notranslate"><span class="pre">reactionContext</span></code> and provides a lambda expression. The lambda then sets the <code class="docutils literal notranslate"><span class="pre">stateContext</span></code> and runs the activity model. With both <code class="docutils literal notranslate"><span class="pre">DynamicCell</span></code>s populated, the activity can access the <code class="docutils literal notranslate"><span class="pre">reactionContext</span></code> through the public <code class="docutils literal notranslate"><span class="pre">ctx</span></code> variable, or the <code class="docutils literal notranslate"><span class="pre">stateContext</span></code> through the public <code class="docutils literal notranslate"><span class="pre">query</span></code> variable.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">states()</span></code> method returns a set of the available state names. Following that is <code class="docutils literal notranslate"><span class="pre">getSerializedStateAt()</span></code>, which provides the value of a named state given a history. The <code class="docutils literal notranslate"><span class="pre">getConstraintViolationsAt()</span></code> method processes an event history to determine any constraint violations. It is worth noting that to determine constraint violations, only the <code class="docutils literal notranslate"><span class="pre">stateContext</span></code> is needed, so only the <code class="docutils literal notranslate"><span class="pre">stateContext</span></code> is given a value. Finally, <code class="docutils literal notranslate"><span class="pre">getRegisterQueryAt()</span></code> provides a <code class="docutils literal notranslate"><span class="pre">StateQuery</span></code> over a given parameter. This is used by the <code class="docutils literal notranslate"><span class="pre">StateQuerier</span></code> inner class for the <code class="docutils literal notranslate"><span class="pre">getRegisterQuery()</span></code> method.</p>
+</div>
+</div>
+<div class="section" id="building-a-mission-model">
+<h1>Building a Mission Model<a class="headerlink" href="#building-a-mission-model" title="Permalink to this headline">¶</a></h1>
+<p>With your basic adaptation setup, you will be ready to begin defining your mission model. A mission model consists of three main pieces: <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Activities">activities</a>, <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/States-and-System-Models">states</a> and <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Constraints">constraints</a>. In a typical adaptation, states are used to track available resources, and other system state. Activities define actions that the system can perform, which usually have effects on system state. Constraints serve a variety of purposes, including flagging undesirable (or unacceptable) conditions when they occur, and determining appropriate windows of opportunity for scheduling activities.</p>
+</div>
+<div class="section" id="uploading-an-adaptation">
+<h1>Uploading an Adaptation<a class="headerlink" href="#uploading-an-adaptation" title="Permalink to this headline">¶</a></h1>
+<p>When your adaptation is ready to be uploaded, the first step is to package it into a JAR file. This can be done manually, or using your IDE’s built-in tools, though it is necessary to include all dependencies in the JAR. Be sure to include the contents of the resources folder as well, as the META-INF directory should contain the services folder that tells Merlin about your adaptation class.</p>
+<p>Once a JAR is acquired, it must be uploaded the Aerie through one of our interfaces (merlin-cli or the GUI). When uploading an adaptation, in addition to the JAR file you must supply a name, version, mission and owner. Currently, it is vital that the name and version match those declared in the <code class="docutils literal notranslate"><span class="pre">&#64;Adaptation</span></code> annotation on the adaptation class. If this is not the case, the adaptation will fail to load into Merlin properly, and the upload request will be rejected.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Developing-an-Adaptation.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

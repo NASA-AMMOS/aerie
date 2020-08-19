@@ -1,0 +1,17 @@
+
+    
+Running an Aerie simulation requires an adaptation that describes effects of activities over modeled states, and a plan file that declares a schedule of activity instances with specified parameters. 
+A plan file must be created with respect to an adaptation file, since activities in a plan and their parameters are validated against activity type definitions in the adaptation. 
+
+Aerie takes the adaptation and the plan file as inputs and executes a simulation. Simulation currently returns all states declared in the adaptation at a parameterized sampling rate. The simulation results format will be improved in upcoming releases. In later releases of Aerie will also return constraint violation results. 
+
+Here's a summary workflow to getting a simulation result from Aerie.
+1. Install Aerie services following instructions on [Product Guide](https://github.jpl.nasa.gov/MPS/aerie/wiki/Product-Guide)
+2. Create an Aerie adaptation following the instructions on [Developing an Adaptation](https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation) page.
+3. Upload the adaptation to the adaptation service through [Planning Web GUI](https://github.jpl.nasa.gov/MPS/aerie/wiki/Aerie-Planning-UI) or [CLI-Command Line Interface](https://github.jpl.nasa.gov/MPS/aerie/wiki/Aerie-Command-Line-Interface). 
+4. Create a plan with the adaptation using again the [Planning Web GUI](https://github.jpl.nasa.gov/MPS/aerie/wiki/Aerie-Planning-UI) or [CLI](https://github.jpl.nasa.gov/MPS/aerie/wiki/Aerie-Command-Line-Interface)
+5. Trigger simulation via either interfaces listed above. 
+
+Details of each step are described in their respective pages. 
+
+

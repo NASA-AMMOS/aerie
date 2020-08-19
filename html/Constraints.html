@@ -1,0 +1,248 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Constraints &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="constraints">
+<h1>Constraints<a class="headerlink" href="#constraints" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>In general, constraints are used to describe behavior, typically undesired, and determine when in a schedule that behavior is occurring.  This behavior can be simple, such as the following:<br /><code class="docutils literal notranslate"><span class="pre">The</span> <span class="pre">battery</span> <span class="pre">state</span> <span class="pre">of</span> <span class="pre">charge</span> <span class="pre">should</span> <span class="pre">never</span> <span class="pre">be</span> <span class="pre">below</span> <span class="pre">30%</span> <span class="pre">of</span> <span class="pre">its</span> <span class="pre">full</span> <span class="pre">capacity</span> <span class="pre">at</span> <span class="pre">all</span> <span class="pre">times.</span></code></p>
+<p>They can also be used to express more complicated behavior, such as the following:<br /><code class="docutils literal notranslate"><span class="pre">When</span> <span class="pre">the</span> <span class="pre">S/C</span> <span class="pre">is</span> <span class="pre">less</span> <span class="pre">than</span> <span class="pre">0.5AU</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">Sun,</span> <span class="pre">the</span> <span class="pre">maximum</span> <span class="pre">rate</span> <span class="pre">in</span> <span class="pre">the</span> <span class="pre">x</span> <span class="pre">direction</span> <span class="pre">should</span> <span class="pre">not</span> <span class="pre">exceed</span> <span class="pre">2mrad/sec,</span> <span class="pre">the</span> <span class="pre">camera</span> <span class="pre">instrument</span> <span class="pre">should</span> <span class="pre">not</span> <span class="pre">be</span> <span class="pre">on,</span> <span class="pre">and</span> <span class="pre">a</span> <span class="pre">downlink</span> <span class="pre">activity</span> <span class="pre">should</span> <span class="pre">not</span> <span class="pre">occur.</span></code></p>
+<p>This section describes how to represent these types of behavior and check when in a schedule this behavior is occurring with using the tools in the <code class="docutils literal notranslate"><span class="pre">Merlin-SDK</span></code>.</p>
+</div>
+<div class="section" id="atomic-constraints">
+<h2>Atomic Constraints<a class="headerlink" href="#atomic-constraints" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Atomic</span> <span class="pre">Constraints</span></code> are constraints that describe <em>a</em> condition for <em>one</em> State or <em>one</em> Activity. These constraints can be used as building blocks to create <code class="docutils literal notranslate"><span class="pre">Compound</span> <span class="pre">Constraints</span></code>. Alternatively, Atomic Constraints can be thought of as constraints that cannot be “broken down” any further.</p>
+<p>For example, consider an adaptation that includes the following states and activities:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">batterySOC</span></code>: a <code class="docutils literal notranslate"><span class="pre">State</span></code> that represents battery state of charge as a percentage</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distanceFromSun</span></code>: a State that represents the S/C distance from the sun in AU</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cameraStatus</span></code>: a State that represents the camera status as a String with the following expected values: <code class="docutils literal notranslate"><span class="pre">on,</span> <span class="pre">off,</span> <span class="pre">standby</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">downlinkData</span></code>: an <code class="docutils literal notranslate"><span class="pre">Activity</span></code> that represents the downlink of data from the S/C</p></li>
+</ul>
+<p>All of the following are examples of conditions that can be expressed with Atomic Constraints:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">batterySOC</span></code> below 30</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distanceFromSun</span></code> less than 0.5</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cameraStatus</span></code> is <code class="docutils literal notranslate"><span class="pre">on</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">downlinkData</span></code> is occurring</p></li>
+</ul>
+</div>
+<div class="section" id="behavior-specified-by-atomic-constraints">
+<h2>Behavior Specified by Atomic Constraints<a class="headerlink" href="#behavior-specified-by-atomic-constraints" title="Permalink to this headline">¶</a></h2>
+<p>The evaluation of a constraint can be thought of as the answer to the following query: when in the schedule is the condition specified by the constraint satisfied? Depending on the object being referenced by the Atomic Constraint, there are different types of conditions that can be expressed.</p>
+<div class="section" id="states">
+<h3>States<a class="headerlink" href="#states" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">State</span></code> has built in convenience methods that can be used to specify constraints. The following methods provide queries about a State’s value. A well configured IDE can help with discovery (via autocompletion) of the different constraint query methods available.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">whenLessThan(Double</span> <span class="pre">x)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">whenGreaterThan(Double</span> <span class="pre">x)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">whenLessThanOrEqualTo(Double</span> <span class="pre">x)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">whenGreaterThanOrEqualTo(Double</span> <span class="pre">x)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">whenEqualWithin(Double</span> <span class="pre">x,</span> <span class="pre">Double</span> <span class="pre">tolerance)</span></code></p></li>
+</ul>
+<p>Mission modelers can also specify their own condition using the method:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">when(Predicate&lt;Double&gt;</span> <span class="pre">condition)</span></code></p></li>
+</ul>
+<p>For example, a mission modeler could create a constraint that, when evaluated, will provide the occurrences when the battery state of charge is below 30% with the following code:<br /><code class="docutils literal notranslate"><span class="pre">Constraint</span> <span class="pre">socMin</span> <span class="pre">=</span> <span class="pre">batterySOC.whenLessThan(30);</span></code></p>
+<p>Alternatively, an adapter could chose not to use the convenience methods and supply their own lambda:<br /><code class="docutils literal notranslate"><span class="pre">Constraint</span> <span class="pre">socMin</span> <span class="pre">=</span> <span class="pre">batterySOC.when(x</span> <span class="pre">-&gt;</span> <span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">30);</span></code></p>
+</div>
+</div>
+<div class="section" id="activities">
+<h2>Activities<a class="headerlink" href="#activities" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ActivityTypeStateFactory</span></code> provides the <code class="docutils literal notranslate"><span class="pre">ofType</span></code> method, which can be used to specify the activity type of interest and returns an <code class="docutils literal notranslate"><span class="pre">ActivityTypeState</span></code>.  The <code class="docutils literal notranslate"><span class="pre">ActivityTypeState</span></code> provides the <code class="docutils literal notranslate"><span class="pre">whenActive()</span></code> method, which returns a <code class="docutils literal notranslate"><span class="pre">Constraint</span></code>.  Consider an adaptation that has a instantiated the variable <code class="docutils literal notranslate"><span class="pre">activities</span></code> to be an <code class="docutils literal notranslate"><span class="pre">ActivityTypeStateFactory</span></code> and includes a <code class="docutils literal notranslate"><span class="pre">downlinkData</span></code> activity.  This <code class="docutils literal notranslate"><span class="pre">ActivityTypeStateFactory</span></code> and <code class="docutils literal notranslate"><span class="pre">ActivityTypeState</span></code> can be used to specify an activity type and create a constraint referencing that type, respectively:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Constraint</span> <span class="pre">whenDownlinkingData</span> <span class="pre">=</span> <span class="pre">activities.ofType(&quot;downlinkData&quot;).whenActive();</span></code></p>
+<p>This constraint, when evaluated, will provide data which represents the start time and end time of each activity instance.</p>
+</div>
+<div class="section" id="the-evaluation-of-atomic-constraints-windows">
+<h2>The Evaluation of Atomic Constraints &amp; Windows<a class="headerlink" href="#the-evaluation-of-atomic-constraints-windows" title="Permalink to this headline">¶</a></h2>
+<p>A constraint is evaluated against the schedule that is produced by a simulation. The schedule describes the simulated effects of activities, and captures when activity instances started and ended and how the value represented by a state changes over time. When an Atomic Constraint is evaluated, it is evaluated over the entire duration of a schedule. In other words, the constraint will be evaluated from the beginning of the schedule to the end of the schedule. If at any point during the schedule the behavior described by the constraint occurs, the constraint has been violated.</p>
+<p>The violation of a constraint is captured by a <code class="docutils literal notranslate"><span class="pre">Window</span></code>.  A <code class="docutils literal notranslate"><span class="pre">Window</span></code> is a Merlin-SDK object that has a start and an end <code class="docutils literal notranslate"><span class="pre">Duration</span></code>.  The evaluation of a constraint produces a list of disjoint (non-overlapping) windows, where each window represents the duration of a violation.  The start and end times of a violation can be produced by adding the start and end durations with the start time of the schedule.  A user can use the <code class="docutils literal notranslate"><span class="pre">Aerie</span> <span class="pre">Planning</span> <span class="pre">UI</span></code> to visualize these violation windows.</p>
+<p>For example, consider a constraint representing <code class="docutils literal notranslate"><span class="pre">batterySOC</span></code> below 30, and a schedule that starts at time 0μs and ends at 100μs. In this hypothetical schedule, the <code class="docutils literal notranslate"><span class="pre">batterySOC</span></code> starts at 100, and is set to 25 at 75μs, and is then set to 35 at 80μs.  The evaluation of this constraint will produce one violation, which the Merlin-SDK will represent as a Window with the start duration as 75μs and the end duration as 80μs.</p>
+</div>
+<div class="section" id="compound-constraints-and-logical-operators">
+<h2>Compound Constraints and Logical Operators<a class="headerlink" href="#compound-constraints-and-logical-operators" title="Permalink to this headline">¶</a></h2>
+<p>Atomic Constraints can be used as building blocks to create more complicated constraints, Compound Constraints.  Consider the following description of behavior that can be represented by a Compound Constraint:</p>
+<p><code class="docutils literal notranslate"><span class="pre">When</span> <span class="pre">the</span> <span class="pre">S/C</span> <span class="pre">is</span> <span class="pre">less</span> <span class="pre">than</span> <span class="pre">0.5AU</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">Sun,</span> <span class="pre">the</span> <span class="pre">camera</span> <span class="pre">status</span> <span class="pre">is</span> <span class="pre">on</span></code></p>
+<p>This behavior describes the windows during which the S/C is less than 0.5AU from the Sun and the camera status is on.  This is equivalent to the intersection of windows produced by Atomic Constraints <code class="docutils literal notranslate"><span class="pre">distanceFromSun.whenLessThan(0.5)</span></code> and <code class="docutils literal notranslate"><span class="pre">cameraStatus.when(x</span> <span class="pre">-&gt;</span> <span class="pre">x.equals(&quot;on&quot;))</span></code>.  The <code class="docutils literal notranslate"><span class="pre">Constraint</span></code> interface in the Merlin-SDK provides methods that can be used to build Compound Constraints and perform the required operations on sets of windows.  The following methods are provided in the <code class="docutils literal notranslate"><span class="pre">Constraint</span></code> interface:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">and(Constraint</span> <span class="pre">other)</span></code>: returns a Constraint representing the intersection of windows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">or(Constraint</span> <span class="pre">other)</span></code>: returns a Constraint representing the union of windows</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minus(Constraint</span> <span class="pre">other)</span></code>: returns a Constraint representing the subtraction of a sets of windows</p></li>
+</ul>
+<p>While there is a conceptual difference between Atomic Constraints and Compound Constraints, they are both implemented with the <code class="docutils literal notranslate"><span class="pre">Constraint</span></code> interface in the Merlin-SDK.  For instance, the example discussed in this section can be implemented with the following code:<br /><code class="docutils literal notranslate"><span class="pre">Constraint</span> <span class="pre">cameraAltitude</span> <span class="pre">=</span> <span class="pre">cameraStatus.when(x</span> <span class="pre">-&gt;</span> <span class="pre">x.equals(&quot;on&quot;)).and(distanceFromSun.whenLessThan(0.5));</span></code></p>
+<p>Compound Constraints can also be implemented using the <code class="docutils literal notranslate"><span class="pre">exists</span></code> method provided by the ActivityTypeState class.  The <code class="docutils literal notranslate"><span class="pre">exists</span></code> method accepts a <code class="docutils literal notranslate"><span class="pre">Function&lt;ActivityInstanceState,</span> <span class="pre">Constraint&gt;</span></code>, or a method that accepts an <code class="docutils literal notranslate"><span class="pre">ActivityInstanceState</span></code> object and returns a <code class="docutils literal notranslate"><span class="pre">Constraint</span></code> objects. The <code class="docutils literal notranslate"><span class="pre">exists</span></code> method can be used to specify a certain condition for each instance of the specified activity type (see the next section for examples).</p>
+</div>
+<div class="section" id="creating-constraints-for-the-ui-the-merlin-sdk-violable-constraint">
+<h2>Creating Constraints for the UI: The Merlin-SDK Violable Constraint<a class="headerlink" href="#creating-constraints-for-the-ui-the-merlin-sdk-violable-constraint" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">ViolableConstraint</span></code> object in the Merlin-SDK should be used to create constraints in an adaptation.  The ViolableConstraint wraps constraints with data necessary for producing constraint violations and visualizing in the Aerie Planning UI. For example, in addition to defining a violable condition, the ViolableConstraint class includes the following data:</p>
+<ul class="simple">
+<li><p>constraint id: a user provided id</p></li>
+<li><p>violation message: a user provided message describing the violation if it occurs</p></li>
+<li><p>violation category: e.g. “severe”, “moderate”, etc.</p></li>
+<li><p>name: a user provided name (Note violable constraint names must be unique)</p></li>
+</ul>
+<p>A list of all <code class="docutils literal notranslate"><span class="pre">ViolableConstraints</span></code> should be included in the states file such that the Querier (seen <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation#querier">here</a>) can easily get all ViolableConstraints to determine constraint violations for a simulation.</p>
+<p>Example of a ViolableConstraint:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ViolableConstraint</span> <span class="n">socConstraint</span>  
+    <span class="o">=</span>  <span class="n">new</span> <span class="n">ViolableConstraint</span><span class="p">(</span><span class="n">batterySOC</span><span class="o">.</span><span class="n">whenLessThan</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span><span class="o">.</span><span class="ow">and</span><span class="p">(</span><span class="n">cameraStatus</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">x</span> <span class="o">-&gt;</span> <span class="n">x</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">&quot;on&quot;</span><span class="p">))))</span>   
+        <span class="o">.</span><span class="n">withId</span><span class="p">(</span><span class="s2">&quot;minSOCAndCameraOn&quot;</span><span class="p">)</span>   
+        <span class="o">.</span><span class="n">withName</span><span class="p">(</span><span class="s2">&quot;Min Battery SoC and Camera On&quot;</span><span class="p">)</span>   
+        <span class="o">.</span><span class="n">withMessage</span><span class="p">(</span><span class="s2">&quot;Battery capacity too low for imaging&quot;</span><span class="p">)</span>   
+        <span class="o">.</span><span class="n">withCategory</span><span class="p">(</span><span class="s2">&quot;severe&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Currently, this <code class="docutils literal notranslate"><span class="pre">exists</span></code> method <em>must</em> be used when creating constraints referencing an activity, in order to associate any potential constraint violations with an activity id.  For example, the following constraint describes the windows during which a <code class="docutils literal notranslate"><span class="pre">downlinkData</span></code> activity occurred:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="n">ViolableConstraint</span> <span class="n">downlinkDataOccurring</span> <span class="o">=</span>
+                <span class="n">new</span> <span class="n">ViolableConstraint</span><span class="p">(</span><span class="n">activities</span>
+                        <span class="o">.</span><span class="n">ofType</span><span class="p">(</span><span class="n">downlinkData</span><span class="o">.</span><span class="n">class</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">act</span> <span class="o">-&gt;</span> <span class="n">act</span><span class="o">.</span><span class="n">whenActive</span><span class="p">()))</span>
+                        <span class="o">.</span><span class="n">withId</span><span class="p">(</span><span class="s2">&quot;downlinking&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">withName</span><span class="p">(</span><span class="s2">&quot;Downlinking of data occurring&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">withMessage</span><span class="p">(</span><span class="s2">&quot;Nothing wrong - just an example constraint&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">withCategory</span><span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>A more realistic Compound Constraint involving an activity type may describe the following scenario:
+<code class="docutils literal notranslate"><span class="pre">When</span> <span class="pre">the</span> <span class="pre">camera</span> <span class="pre">status</span> <span class="pre">is</span> <span class="pre">on,</span> <span class="pre">a</span> <span class="pre">downlink</span> <span class="pre">activity</span> <span class="pre">should</span> <span class="pre">not</span> <span class="pre">occur.</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>        <span class="n">ViolableConstraint</span> <span class="n">downlinkingWithCameraOn</span> <span class="o">=</span>
+                <span class="n">new</span> <span class="n">ViolableConstraint</span><span class="p">(</span><span class="n">activities</span>
+                        <span class="o">.</span><span class="n">ofType</span><span class="p">(</span><span class="n">downlinkData</span><span class="o">.</span><span class="n">class</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">act</span> <span class="o">-&gt;</span> <span class="n">Constraint</span><span class="o">.</span><span class="ow">and</span><span class="p">(</span>
+                                <span class="n">act</span><span class="o">.</span><span class="n">whenActive</span><span class="p">(),</span>
+                                <span class="n">cameraStatus</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">m</span> <span class="o">-&gt;</span> <span class="n">m</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">&quot;on&quot;</span><span class="p">)))))</span>
+                        <span class="o">.</span><span class="n">withId</span><span class="p">(</span><span class="s2">&quot;cameraOnandDownlink&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">withName</span><span class="p">(</span><span class="s2">&quot;Downlinking with Camera On&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">withMessage</span><span class="p">(</span><span class="s2">&quot;Potential for lost images&quot;</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">withCategory</span><span class="p">(</span><span class="s2">&quot;moderate&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="adding-violableconstraints-to-a-merlin-sdk-simulation">
+<h2>Adding ViolableConstraints to a Merlin-SDK Simulation<a class="headerlink" href="#adding-violableconstraints-to-a-merlin-sdk-simulation" title="Permalink to this headline">¶</a></h2>
+<p>A mission modeler can fork the Aerie repo, and replace the ViolableConstraints in <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/sample-adaptation/src/main/java/gov/nasa/jpl/ammos/mpsa/aerie/sampleadaptation/states/SampleMissionStates.java">SampleMissionStates</a> referenced by the <code class="docutils literal notranslate"><span class="pre">List&lt;ViolableConstraint&gt;</span> <span class="pre">violableConstraints</span></code> variable to incorporate their constraints in their simulation.</p>
+<div class="section" id="ensuring-unique-constraint-names">
+<h3>Ensuring Unique Constraint Names<a class="headerlink" href="#ensuring-unique-constraint-names" title="Permalink to this headline">¶</a></h3>
+<p>In Aerie 0.4, it is necessary to have a unique name for each <code class="docutils literal notranslate"><span class="pre">ViolableConstraint</span></code>. This can easily be checked by adding the following code snippet under your <code class="docutils literal notranslate"><span class="pre">violableConstraints</span></code> list:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>List&lt;ViolableConstraint&gt; violableConstraints = List.of( ... );
+static {
+    final var constraintNames = new java.util.HashSet&lt;&gt;();
+    for (final var violableConstraint : violableConstraints) {
+      if (!constraintNames.add(violableConstraint.name)) {
+        throw new Error(&quot;More than one violable constraint with name \&quot;&quot; + violableConstraint.name + &quot;\&quot;. Each name must be unique.&quot;);
+      }
+    }
+  }
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="constraint-violations">
+<h2>Constraint Violations<a class="headerlink" href="#constraint-violations" title="Permalink to this headline">¶</a></h2>
+<p>Whereas a <code class="docutils literal notranslate"><span class="pre">ViolableConstraint</span></code> defines a condition that <em>may</em> be violated, a <code class="docutils literal notranslate"><span class="pre">ConstraintViolation</span></code> object is used to represent actual violations of a <code class="docutils literal notranslate"><span class="pre">ViolableConstraint</span></code> for a given simulation. At the end of the execution of a simulation, the results of the simulation will be used to evaluate the <code class="docutils literal notranslate"><span class="pre">ViolableConstraints</span></code>. A constraint is violated if the behavior it specifies occurs.</p>
+<p>The results of an execution of a simulation will include a list of constraint violations.  Constraint violations can be reviewed in the UI. A constraint violation is represented by a <code class="docutils literal notranslate"><span class="pre">ConstraintViolation</span></code> type in the Merlin-SDK, and has the following information:</p>
+<ul class="simple">
+<li><p>constraint name - a user provided name</p></li>
+<li><p>constraint id - a user provided id</p></li>
+<li><p>constraint violation message - a user provided message the should describe the violation that occurred</p></li>
+<li><p>a list of windows representing the times during which violations occurred - this list is a result of constraint evaluation</p></li>
+</ul>
+<p>The Merlin-SDK <code class="docutils literal notranslate"><span class="pre">SimpleSimulator</span></code> will return <code class="docutils literal notranslate"><span class="pre">SimulationResults</span></code> after executing a simulation, which contain a list of <code class="docutils literal notranslate"><span class="pre">ConstraintViolation</span></code> objects.  The information contained by the list of constraint violations is serialized into a JSON format, and this data is then sent to the <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Aerie-Planning-UI">Aerie Planning UI</a>. The UI can be used to inspect the windows of violated constraints.  The UI visualizes a constraint with a transparent red box superimposed on a timeline. For example, the image below displays when a constraint on the <code class="docutils literal notranslate"><span class="pre">batteryCapacity</span></code> state is being violated.</p>
+<p>[[images/ConstraintUI.png]]</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Constraints.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

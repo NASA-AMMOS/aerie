@@ -1,0 +1,20 @@
+# Merlin Activity Plans 
+Aerie provides a  "plan service" that manages a repository of plans. Access to this repository is mediated by a REST-based interface exposed by the service. The repository itself is currently implemented with MongoDB.
+The repository of plans may be queried for a list of all plans, and new plans may be added to the repository. Existing plans may be retrieved in full, replaced in full or in part, or deleted in full. The list of activities in a plan may be appended to (by creating a new activity) and retrieved in full. Individual activities in a plan may be retrieved in full, replaced in full or in part, and deleted in full.
+
+Operations on plans are validated to ensure consistency with the adaptation-specific activity model with which they are associated. Stored plans shall contain activities whose parameter names and types are defined by the associated activity type.
+
+## Plan Data composition
+The plan repository contains a set of JSON-style documents with the following top-level attributes:
+* id: A database-specific unique key identifying the plan.
+* adaptationId: A database-specific foreign key identifying the adaptation that the plan was built against.
+* name: A user-meaningful string specifying the name of the plan.
+* startTimestamp: A DOY-style timestamp describing the instant at which the plan is considered to be applicable (e.g. “2020-198T01:23:45”).
+* endTimestamp: A DOY-style timestamp describing the instant at which the plan is considered no longer to be applicable.
+* activityInstances: A list of activity instances which comprise the plan.A plan is conceptually composed of activity instances. Each activity instance has the following attributes:
+* id: A database-specific foreign key identifying the type of activity this instance represents.
+* type: A string denoting the name of the activity type of this activity instance.
+* startTimestamp: A timestamp describing the instant at which this activity instance is considered to begin.
+* parameters: A map from parameter name to parameter value specifying the fine-grained behavior of this activity instance. These parameters are specified as part of an activity instance, and may recursively contain further parameter data. Each parameter may be an arbitrary JSON document, but their structure should match that expected by the parameter definition in the associated adaptation.
+
+A formal Plan file SIS will be provided in upcoming deliveries. For a sample plan file see Appendix. 

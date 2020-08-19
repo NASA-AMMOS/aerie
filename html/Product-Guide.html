@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Installation &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="product-installation">
+<h1>Product Installation<a class="headerlink" href="#product-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation-instructions">
+<h2>Installation Instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this headline">¶</a></h2>
+<p>Installation instructions are found in the Aerie repository <a class="reference external" href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment">deployment documentation</a>. If you have any questions or issues, don’t hesitate to ask on <a class="reference external" href="https://app.slack.com/client/T024LMMEZ/C0163E42UBF">#mpsa-aerie-users</a>.</p>
+</div>
+<div class="section" id="docker-containers">
+<h2>Docker Containers<a class="headerlink" href="#docker-containers" title="Permalink to this headline">¶</a></h2>
+<p>Goto the <a class="reference external" href="https://cae-artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-release-local/gov/nasa/jpl/aerie">Artifactory Aerie Docker repository</a> and log in with your JPL credentials. The latest released containers are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">local</span><span class="o">/</span><span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">aerie</span><span class="o">/</span><span class="n">adaptation</span><span class="o">/</span><span class="n">release</span><span class="o">-</span><span class="mf">0.4</span><span class="o">.</span><span class="mi">0</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">local</span><span class="o">/</span><span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">aerie</span><span class="o">/</span><span class="n">plan</span><span class="o">/</span><span class="n">release</span><span class="o">-</span><span class="mf">0.4</span><span class="o">.</span><span class="mi">0</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">local</span><span class="o">/</span><span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">aerie</span><span class="o">-</span><span class="n">apollo</span><span class="o">/</span><span class="n">release</span><span class="o">-</span><span class="mf">0.4</span><span class="o">.</span><span class="mi">0</span>
+<span class="n">docker</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="n">local</span><span class="o">/</span><span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">aerie</span><span class="o">-</span><span class="n">ui</span><span class="o">/</span><span class="n">release</span><span class="o">-</span><span class="mf">0.4</span><span class="o">.</span><span class="mi">0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-docker-compose">
+<h2>Example Docker-Compose<a class="headerlink" href="#example-docker-compose" title="Permalink to this headline">¶</a></h2>
+<p>An example Docker Compose file is available for deployment. You can use <a class="reference external" href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment.md#customer-deployment">these instructions</a> to help you deploy.</p>
+<p><code class="docutils literal notranslate"><span class="pre">general-develop/gov/nasa/jpl/aerie/aerie-docker-compose.tar.gz</span></code></p>
+</div>
+<div class="section" id="tars">
+<h2>TARs<a class="headerlink" href="#tars" title="Permalink to this headline">¶</a></h2>
+<p>If you just want the Aerie JAR files you can find them at:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">general</span><span class="o">/</span><span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">aerie</span><span class="o">/</span><span class="n">aerie</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="mf">0.4</span><span class="o">.</span><span class="mf">0.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+</pre></div>
+</div>
+<p>The Aerie Editor (Falcon) can be found at:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">general</span><span class="o">/</span><span class="n">gov</span><span class="o">/</span><span class="n">nasa</span><span class="o">/</span><span class="n">jpl</span><span class="o">/</span><span class="n">aerie</span><span class="o">/</span><span class="n">aerie</span><span class="o">-</span><span class="n">editor</span><span class="o">-</span><span class="n">release</span><span class="o">-</span><span class="mf">0.4</span><span class="o">.</span><span class="mf">0.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="known-issues">
+<h2>Known Issues<a class="headerlink" href="#known-issues" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li><p>When using the IntelliJ IDE, upon a source file change, only the affected source files will be recompiled. This causes conflicts with the annotations processing being used for Activity Mapping. For now manually rebuilding every time is the solution.</p></li>
+</ol>
+</div>
+</div>
+<div class="section" id="system-requirements">
+<h1>System Requirements<a class="headerlink" href="#system-requirements" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="software-requirements">
+<h2>Software Requirements<a class="headerlink" href="#software-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Name | Version
+— | —
+DOCKER | 19.X
+*NODEJS	| 12.X LTS
+*NPM | 6.X
+*OPEN JDK | 11.X</p>
+<p>*For build purposes only. Not needed for installing the application.</p>
+</div>
+<div class="section" id="supported-browsers">
+<h2>Supported Browsers<a class="headerlink" href="#supported-browsers" title="Permalink to this headline">¶</a></h2>
+<p>Name | Version
+— | —
+CHROME | LATEST
+FIREFOX | LATEST</p>
+</div>
+<div class="section" id="hardware-requirements">
+<h2>Hardware Requirements<a class="headerlink" href="#hardware-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Hardware | Details
+— | —
+CPU | 2 GIGAHERTZ (GHZ) FREQUENCY OR ABOVE
+RAM | 4 GB AT MINIMUM
+DISPLAY RESOLUTION | 2560-BY-1600, RECOMMENDED
+INTERNET CONNECTION | HIGH-SPEED CONNECTION, AT LEAST 10MBPS</p>
+</div>
+<div class="section" id="tcp-port-requirements">
+<h2>TCP Port Requirements<a class="headerlink" href="#tcp-port-requirements" title="Permalink to this headline">¶</a></h2>
+<p>Service | Port
+— | —
+Aerie UI | 8080
+Adapataion | 27182
+Plan | 27183
+RabittMQ | 15762
+Aerie Apollo | 27184</p>
+</div>
+</div>
+<div class="section" id="administration">
+<h1>Administration<a class="headerlink" href="#administration" title="Permalink to this headline">¶</a></h1>
+<p>This product is using Docker containers to run the application. There are total of five Docker containers that are internally bridged (connected) to run the application. Containers can be restarted in case of any issues using Docker CLI. Only port 8080 from the UI container is exposed to outside.</p>
+<div class="section" id="environment-variables">
+<h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<p>Aerie software does not have any environment variables at this point in time.</p>
+</div>
+<div class="section" id="network-communications">
+<h2>Network Communications<a class="headerlink" href="#network-communications" title="Permalink to this headline">¶</a></h2>
+<p>The Aerie deployment configures the port numbers for each container via docker-compose. The port numbers must match those declared within the services’ config.json. In a large majority of Aerie deployments no change to these port numbers will be needed, nor should one be made. The only port number that might be desired to change is the Aerie-UI port (8080). in this case the number to change is the first port number of the pair [XXXX:XXXX]. The second number represents the port number within the container itself.  An example of this would be ports: [“8080:80”]. The number that needs to be changed is the first port which is 8080.</p>
+</div>
+<div class="section" id="id1">
+<h2>Environment Variables<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>Port Type | Default Port Number | Description
+— | — | —
+TCP | 8080 | UI Port</p>
+</div>
+<div class="section" id="administration-procedures">
+<h2>Administration Procedures<a class="headerlink" href="#administration-procedures" title="Permalink to this headline">¶</a></h2>
+<p>Aerie is orchestrated as a set of Docker containers. Each of the software components are packaged and run in an isolated docker container independently from one another. There exists seven docker containers:</p>
+<ul class="simple">
+<li><p>Aerie-UI: Hosts the web application and communicates with Aerie via the GraphQL Apollo Server.</p></li>
+<li><p>Aerie-Apollo: The GraphQL Apollo Server which functions as the Aerie API Gateway against which clients can submit GraphQL queries and mutations.</p></li>
+<li><p>Adaptation: Handles all the logic and functionality for the model Adaptation for activity planning.</p></li>
+<li><p>Adaptation-mongo: Holds the data for Adaptation container.</p></li>
+<li><p>Plan: Handles all the logic and functionality for activity planning.</p></li>
+<li><p>Plan-mongo: Holds the data for Plan container.</p></li>
+<li><p>RabbitMQ: The Aerie services’ message bus message exchange instance.</p></li>
+</ul>
+<p>The Adaptation, Plan, and Apollo servers communicate to each other via a REST API (internal to Aerie) with the ports specified in the docker-compose file. The database containers, Adaptation-mongo and Plan-mongo are isolated to connect only with their respective service container (Adaptation or Plan).</p>
+</div>
+</div>
+<div class="section" id="product-support">
+<h1>Product Support<a class="headerlink" href="#product-support" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="defect-reporting-procedure">
+<h2>Defect Reporting Procedure<a class="headerlink" href="#defect-reporting-procedure" title="Permalink to this headline">¶</a></h2>
+<p>All defect reports should go to aerie_support&#64;jpl.nasa.gov.</p>
+</div>
+<div class="section" id="points-of-contact">
+<h2>Points of Contact<a class="headerlink" href="#points-of-contact" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Adaptation: Kenneally, Patrick W, Development Lead</p></li>
+<li><p>Administration: Kenneally, Patrick W, Development Lead</p></li>
+<li><p>General Help: Alper Ramaswamy, Emine Basak, Product Lead</p></li>
+<li><p><a class="reference external" href="https://app.slack.com/client/T024LMMEZ/C0163E42UBF">#mpsa-aerie-users</a>: User help Slack channel</p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Product-Guide.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

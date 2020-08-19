@@ -1,0 +1,91 @@
+## Appendix
+
+### CLI JSON DOWNLOAD PLAN FORMAT SAMPLE
+
+```json
+{
+    "name": "example_plan",
+    "adaptationId": "5df16e65a920f467637bac3a",
+    "startTimestamp": "2018-331T00:00:00",
+    "endTimestamp": "2018-332T00:00:00",
+    "activityInstances": {
+        "5e1caea5176cfc2d58b2c54a": {
+            "type": "BiteBanana",
+            "startTimestamp": "2018-331T04:00:00",
+            "parameters": {
+                "biteSize": 7.0
+            }
+        },
+        "5e1caea5176cfc2d58b2c54b": {
+            "type": "PeelBanana",
+            "startTimestamp": "2018-331T04:00:00",
+            "parameters": {
+                "peelDirection": "fromStem"
+            }
+        }
+    }
+}
+```
+
+### CLI JSON UPLOAD PLAN FORMAT SAMPLE (No unique ID for activity instances) 
+
+```json
+{
+    "adaptationId": "5df16e65a920f467637bac3a",
+    "endTimestamp": "2018-331T00:00:00",
+    "name": "example_plan",
+    "startTimestamp": "2018-332T00:00:00",
+    "activityInstances": [
+	  {
+  	      "type": "BiteBanana",
+  	      "parameters": {
+      	          "biteSize": 7.0
+  	      },
+  	      "startTimestamp": "2018-331T04:00:00"
+	  },
+        {
+            "type": "PeelBanana",
+            "parameters": {
+                "peelDirection": "fromStem"
+            },
+  	     "startTimestamp": "2018-331T04:00:00"
+	  }
+    ]
+}
+```
+
+### CLI JSON APPEND ACTIVITY INSTANCES FORMAT SAMPLE
+
+```json
+[
+    {
+        "type": "BiteBanana",
+        "parameters": {
+      	      "biteSize": 7.0
+        },
+        "startTimestamp": "2018-331T04:00:00"
+    },
+    {
+        "type": "PeelBanana",
+        "parameters": {
+            "peelDirection": "fromStem"
+        },
+        "startTimestamp": "2018-331T04:00:00"
+    }
+]
+```
+
+### QUERY AN ACTIVITY TYPE FOR AN ADAPTATION OUTPUT SAMPLE
+
+```json
+{
+    "parameters": {
+        "peelDirection": {
+            "type": "string"
+        }
+    },
+    "defaults": {
+        "peelDirection": "fromStem"
+    }
+}
+```

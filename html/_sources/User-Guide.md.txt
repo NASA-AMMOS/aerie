@@ -1,0 +1,17 @@
+# Aerie 0.3 Users Guide 
+
+
+# Overview
+
+This document is a guide to how to make use of current Aerie capabilities as of Aerie 0.3 delivery. Aerie is a new software system to support activity planning, sequencing and spacecraft analysis needs of missions. Aerie is being developed by the MPSA element of Multi-mission Ground System and Services (MGSS), a subsystem of AMMOS (Advanced Multi -mission Operations System). This guide will be updated as new features are added. 
+
+Aerie is a collection of loosely coupled services that support activity planning and sequencing needs of missions with modelling, simulation, scheduling and rule validation capabilities. Aerie will replace legacy MGSS tools including but not limited to APGEN, SEQGEN, MPS Editor, MPS Server, Slinc II / CTS and  ULSGEN. Aerie 0.3 provides mainly the following:
+
+1. Merlin adaptation framework offering a subset of APGEN capabilities,
+1. Merlin web GUI for activity planning,  
+1. Merlin command line interface for activity planning, and
+1. Falcon smart sequence editor GUI. 
+
+# Prerequisites 
+An adaptation is simply a software that models spacecraft behavior while performing a set of activities over a plan duration. Merlin adaptations can simulate a variety of states that are perturbed by executed activities, and governed by system models. Merlin plans describe a scheduled collection of activity instances with specified parameters. Documentation below guides users on how to upload an existing adaptation jar file, how to create plans with that adaptation, and how to edit and simulate those plans. For users to complete these steps, they should be able to build adaptations and have access to an Aerie installation. For details of how to create adaptations with Aerie refer to the [Mission Modeler Guide](https://github.jpl.nasa.gov/Aerie/aerie/wiki/Mission-Modeler-Guide). For information on how to install Aerie services refer to the [Product Guide](https://github.jpl.nasa.gov/Aerie/aerie/wiki/Product-Guide).  
+

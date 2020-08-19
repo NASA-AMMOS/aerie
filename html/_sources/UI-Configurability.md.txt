@@ -1,0 +1,252 @@
+Users can create custom planning views for different sub-systems    
+(e.g. science, engineering, thermal, etc.), where only data (e.g. activities and states) for those sub-systems are visualized. This is done through a mission-authored [JSON](https://www.json.org/json-en.html) file. The format of that file and how to update it is the subject of this document.
+
+# Panel Editor
+
+In order to change the configuration object, navigate to the plan page  
+and press `⌘e (command e)`, which should open up the Panel Editor in the right drawer.  
+Make your changes to the JSON object and press `⌘s (command s)`.  
+You should see the UI update with your changes as long as your JSON object has no errors.  
+Check the [console](https://webmasters.stackexchange.com/a/77337) if you suspect your JSON object has errors. If your errors persist, don't hesitate to ask on [#mpsa-aerie-users](https://app.slack.com/client/T024LMMEZ/C0163E42UBF). 
+
+**Note that edited configurations are not currently saved between browser refreshes. This will be added in future releases.**
+
+<img width="1024" src="https://github.jpl.nasa.gov/storage/user/2179/files/6a2d0380-bfa7-11ea-917e-85a7af6047c9">
+
+# Panels
+
+The planning UI consists of a list of panels, and each `Panel` has the following [interface](https://www.typescriptlang.org/docs/handbook/interfaces.html):
+
+```ts
+interface Panel {
+  bands?: Band[]; // For type 'timeline'
+  id: string;
+  iframe?: { // For type 'iframe'
+    src: string;
+  };
+  menu?: PanelMenuItem[];
+  size: number; // Size percentage of the panel (0% - 100%)
+  table?: { // For type 'table'
+    columns: string[];
+    type: 'activity'; // Only 'activity' typed tables are allowed right now
+  };
+  title: string;
+  type: 'iframe' | 'table' | 'timeline';
+}
+```
+
+## Menu
+
+Each panel can have an associated menu specified with an `action`, `icon`, and `title`.  
+The current actions we support are:
+
+1. `link` adds a link that opens a new browser tab to the specified `url` in the `data` object.
+1. `restore` is useful if the panel is type [timeline](https://github.jpl.nasa.gov/MPS/aerie/wiki/UI-Configurability#timeline). It resets the timeline to it's max-time-rage (i.e. zooms all the way out).
+1. `simulate` runs a simulation. Any state bands with simulation result states will be updated after a simulation. 
+
+More actions will be supported in the future and they will be more customizable. The icon should be a [material icon](https://material.io/resources/icons/?style=baseline). The menu interface looks like this:
+
+```ts
+export type PanelMenuItemAction = 'link' | 'restore' | 'simulate';
+
+export interface PanelMenuItem {
+  action: PanelMenuItemAction;
+  data?: {
+    url?: string;
+  };
+  icon: string;
+  title: string;
+}
+```
+
+A couple example menu JSON objects looks like this:
+
+```json
+[
+  {
+    "action": "link",
+    "data": {
+      "url": "https://google.com"
+    },
+    "icon": "link",
+    "title": "Google"
+  },
+  {
+    "action": "restore",
+    "icon": "restore",
+    "title": "Restore Time"
+  }
+]
+```
+
+## Types
+
+There are currently three types of supported panels: iframe, table, and timeline. The following sections will detail how to create each of these panel types.
+
+### Inline Frame (iframe)
+
+The [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) panel allows you to embed a custom HTML page inside of the panel. To create an iframe panel you need to specify `type: "iframe"`, a unique `id`, a `size`, a `title`, and an `iframe` object with a `src`. The `src` is a URL of the HTML page you are embedding in the panel. Here is a basic example of specifying an iframe panel:
+
+```json
+{
+  "id": "panel3",
+  "iframe": {
+    "src": "https://www.chartjs.org/samples/latest/charts/line/basic.html"
+  },
+  "size": 100,
+  "title": "Line Chart",
+  "type": "iframe"
+}
+```
+
+### Table
+
+The table panel allows you to view data as a table with columns and rows. You can currently only create table panels for activity data. To create a table panel you need to specify `type: "table"`, a unique `id`, a `size`, a `title`, and a `table` object. The table object specifies the columns you want to see in your data. For example if you want to see an activities `startTimestamp` property you specify it in the column. There is also a special `select` column that allows the column to be selected. Here is a basic example of specifying a table panel:
+
+```json
+{
+  "id": "panel2",
+  "size": 100,
+  "table": {
+    "columns": [
+      "select",
+      "type",
+      "startTimestamp"
+    ],
+    "type": "activity"
+  },
+  "title": "Activity Table",
+  "type": "table"
+}
+```
+
+### Timeline
+
+The timeline panel allows you to specify visualizations of time-ordered data. To create a timeline panel you need to specify `type: "timeline"`, a unique `id`, a `size`, a `title`, and a list of `bands`. Here is the minimum JSON needed to specify a timeline panel:
+
+```json
+{
+  "bands": [],
+  "id": "panel0",
+  "size": 100,
+  "title": "My First Panel",
+  "type": "timeline"
+}
+```
+
+To visualize data in a timeline you need to add band objects to the `bands` array. A band is a layered visualization of time-ordered data. Each layer of a band is specified as an object of the `subBands` array. The interfaces for a `Band` and `SubBand` are as follows:
+
+```ts
+interface Band {
+  height?: number;
+  id: string;
+  subBands: SubBand[];
+  yAxes?: Axis[];
+}
+
+interface SubBand {
+  chartType: 'activity' | 'line' | 'x-range'; // How we actually visualize the data
+  color?: string; // Color of all data points
+  filter?: {
+    activity?: {
+      type?: string; // JS regex filtering the type of activity we want to see
+    };
+    state?: {
+      name?: string; // JS regex filtering the name of state we want to see
+    };
+  };
+  id: string;
+  type: 'activity' | 'state'; // Type of data the sub-band visualizes
+  yAxisId?: string; // Optional y-axis ID link
+}
+```
+
+Here is a JSON object that creates a single band with one activity sub-band. Notice there are no `yAxes`, as activities do not typically have y-values. Also notice the `filter` property, which is a [JavaScript Regular Expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) that specifies we only want to see `activity` of `type` `.*`. This is a regex for giving all activity types.
+
+```json
+{
+  "id": "band0",
+  "subBands": [
+    {
+      "chartType": "activity",
+      "filter": {
+        "activity": {
+          "type": ".*"
+        }
+      },
+      "id": "subBand0",
+      "type": "activity"
+    }
+  ]
+}
+```
+
+For data that has y-values (for example state data), you can specify a y-axis and link a sub-band to it by ID. Here are the interfaces for `Axis` and `Label`:
+
+```ts
+interface Axis {
+  id: string;
+  color?: string;
+  label?: Label;
+  scaleDomain?: number[];
+  tickCount?: number;
+}
+
+interface Label {
+  align?: CanvasTextAlign;
+  baseline?: CanvasTextBaseline;
+  color?: string;
+  fontFace?: string;
+  fontSize?: number;
+  hidden?: boolean;
+  text: string;
+}
+```
+
+Y-axes are specified in the band separately from sub-bands so we can specify multi-way relationships between axes and sub-bands. For example you could have many sub-bands corresponding to a single axis.
+
+Here is the JSON for creating a band with two overlayed `state` sub-bands. The first sub-band shows only states with the name `peel`, and uses the y-axis with ID `yAxis1`. The second sub-band shows only states with the name `fruit`, and uses the y-axis with the ID `yAxis2`.
+
+```json
+{
+  "id": "band1",
+  "subBands": [
+    {
+      "chartType": "line",
+      "filter": {
+        "state": {
+          "name": "peel"
+        }
+      },
+      "id": "subBand1",
+      "type": "state",
+      "yAxisId": "yAxis1"
+    },
+    {
+      "chartType": "line",
+      "filter": {
+        "state": {
+          "name": "fruit"
+        }
+      },
+      "id": "subBand2",
+      "type": "state",
+      "yAxisId": "yAxis2"
+    }
+  ],
+  "yAxes": [
+    {
+      "id": "yAxis1",
+      "label": {
+        "text": "peel"
+      }
+    },
+    {
+      "id": "yAxis2",
+      "label": {
+        "text": "fruit"
+      }
+    }
+  ]
+}
+```

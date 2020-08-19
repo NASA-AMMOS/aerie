@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Activity Annotation &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <ul class="simple">
+<li><p>To include: workarounds for activity and parameter mappers</p></li>
+</ul>
+<p>The mission system’s behavior is modeled as a series of activities that emit discrete events. These events are manifested by the real mission system as the schedule of tasks of ground based assets and a spacecraft’s onboard sequences, commands, or flight software. Activities in Merlin are entities whose role is to emit stimuli (events) to which the mission model will react. Activities can therefore describe the relation: “when this activity occurs, this kind of thing should happen”.</p>
+<p>Activity Type are prototypes for activity instances that will be executed in a plan. Activity Type are java classes that implement the Activity interface provided by the Merlin framework, include a default constructor, and optional overloaded constructors. When compiled, each Activity Type will have its own .java file. Activity types can be organized into hierarchical packages, for example as <code class="docutils literal notranslate"><span class="pre">gov.nasa.jpl.europa.clipper.gnc.TCMActivity</span></code></p>
+<p>Activity Type consist of:</p>
+<ul class="simple">
+<li><p>metadata</p></li>
+<li><p>parameters that describe the range in execution and effects of the activity</p></li>
+<li><p>effect model that describes how the system will be perturbed when the activity is executed.</p></li>
+</ul>
+<div class="section" id="activity-annotation">
+<h1>Activity Annotation<a class="headerlink" href="#activity-annotation" title="Permalink to this headline">¶</a></h1>
+<p>An activity type definition should be annotated with the <code class="docutils literal notranslate"><span class="pre">&#64;ActivityType</span></code> tag. An activity type is declared with its name using the following annotation:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="nd">@ActivityType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;TurnInstrumentOff&quot;</span><span class="p">,</span> <span class="n">generateMapper</span><span class="o">=</span><span class="n">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By doing so, the Merlin annotation processor can discover all activity types declared in the mission model, validate that activity type names are unique. The <code class="docutils literal notranslate"><span class="pre">generateMapper</span></code> flag tells Merlin to generate an activity mapper for the activity. If this is left out, or set to false, you will need to provide your own custom activity mapper. See <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Activity-Mappers">here</a> for more information on activity mappers.</p>
+</div>
+<div class="section" id="activity-metadata">
+<h1>Activity Metadata<a class="headerlink" href="#activity-metadata" title="Permalink to this headline">¶</a></h1>
+<p>Metadata of activities are structured such that the Merlin annotation processor can extract this metadata given particular keywords. Currently, the Merlin annotation processor recognizes the following tags: <code class="docutils literal notranslate"><span class="pre">contact,</span> <span class="pre">subsystem,</span> <span class="pre">brief_description,</span> </code>and<code class="docutils literal notranslate"> <span class="pre">verbose_description.</span></code></p>
+<p>These metadata tags are placed in a JavaDocs style comment block above the Activity Type to which they refer. For example:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="cm">/**</span>
+<span class="cm"> * @subsystem Data</span>
+<span class="cm"> * @contact mkumar</span>
+<span class="cm"> * @brief_description A data management activity that deletes old files</span>
+<span class="cm"> */</span>
+</pre></div>
+</div>
+<p>These tags are processed, at compile time, by the annotation processor to create documentation for the Activity types that are described in the mission model.</p>
+</div>
+<div class="section" id="activity-parameters">
+<h1>Activity Parameters<a class="headerlink" href="#activity-parameters" title="Permalink to this headline">¶</a></h1>
+<p>Parameters for activity types define how much an activity execution can vary. These parameters are used to determine the effects of the activity, as well as it’s duration, decomposition and expansion into commands.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="cm">/**</span>
+<span class="cm"> * The bus power consumed by the instrument while it is turned on measured in Watts</span>
+<span class="cm"> */</span>
+<span class="nd">@Parameter</span>
+<span class="kd">public</span> <span class="kt">double</span> <span class="n">instrumentPower_W</span> <span class="o">=</span> <span class="mf">100.0</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The annotation processor is similarly used to extract and generate serialization code for parameters of activity types. The annotation processor also allows authors of a mission model to create mission specific parameter types, ensuring that they will be recognized by the Merlin framework.</p>
+<p>Parameters of an activity can be validated and restricted by providing a <code class="docutils literal notranslate"><span class="pre">validateParameters()</span></code> method:</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="nd">@Override</span>
+<span class="kd">public</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span>  <span class="nf">validateParameters</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">final</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">failures</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">instrumentPower</span> <span class="o">&lt;=</span>  <span class="mf">0.0</span> <span class="o">||</span> <span class="n">instrumentPower</span> <span class="o">&gt;=</span>  <span class="mf">1000.0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">failures</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="s">&quot;data rate must be positive and greater than 0&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">failures</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activity-effects">
+<h1>Activity Effects<a class="headerlink" href="#activity-effects" title="Permalink to this headline">¶</a></h1>
+<p>Effects of activity types should be defined in the <code class="docutils literal notranslate"><span class="pre">modelEffects()</span></code> method of the activity. The <code class="docutils literal notranslate"><span class="pre">modelEffects()</span></code> method is called by the simulation engine when the activity is executed.</p>
+<p>The Merlin simulation engine is decoupled from the other areas of Merlin, such as states and activities. The simulation context is an implicit (behind the scenes) provider of semantic simulation control and provides a number of functions which allow for specific manipulation of activities within the simulation:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">delay(duration)</span></code>: Delay the currently-running activity for the given duration. On resumption, it will observe effects caused by other activities over the intervening timespan.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">waitForActivity(activityId)</span></code>: Delay the currently-running activity until the activity with specified ID has completed. On resumption, it will observe effects caused by other activities over the intervening timespan.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">waitForChildren()</span></code>: Delay the currently-running activity until all child activities have completed. On resumption, it will observe effects caused by other activities over the intervening timespan.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spawn(activity)</span></code>: Spawn a new activity as a child of the currently-running activity at the current point in time. The child will initially see any effects caused by its parent up to this point. The parent will continue execution uninterrupted, and will not intially see any effects caused by its child.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">spawnAfter(duration,</span> <span class="pre">activity)</span></code>: Asynchronously spawn a new activity as a child of the currently-running activity at the specired duration after the current point in time. The child will initially see any effects caused by its parent up to that point. The parent will continue execution from the current time point uninterrupted, and will not initially see any effects caused by its child.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">call(activity)</span></code>: Spawn a new activity as a child of the currently-running activity at the current point in time. The child will initially see any effects caused by its parent up to this point. The parent will halt execution until the child activity has completed. This is equivalent to calling <code class="docutils literal notranslate"><span class="pre">waitForActivity(spawn(activity))</span></code>.</p></li>
+</ul>
+<p>This context is provided from the Merlin simulation engine to an adaptation’s Querier (see <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation#querier">here</a>) such that it can be imported directly into your activity models from your Querier. Below is an example of an activity which imports the <code class="docutils literal notranslate"><span class="pre">ctx</span></code> context variable from the Querier shown <a class="reference external" href="https://github.jpl.nasa.gov/MPS/aerie/wiki/Developing-an-Adaptation#querier">here</a>.</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import static</span> <span class="nn">gov.nasa.jpl.example.states.ExampleQuerier.ctx</span><span class="p">;</span>
+<span class="kn">import static</span> <span class="nn">gov.nasa.jpl.example.states.ExampleStates.batteryCapacity</span><span class="p">;</span>
+
+<span class="nd">@ActivityType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;RunHeater&quot;</span><span class="p">,</span> <span class="n">generateMapper</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">RunHeater</span> <span class="kd">implements</span> <span class="n">Activity</span> <span class="p">{</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">energyConsumptionRate</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+
+    <span class="nd">@Parameter</span>
+    <span class="kd">public</span> <span class="kt">long</span> <span class="n">durationInSeconds</span><span class="p">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">modelEffects</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">final</span> <span class="kt">double</span> <span class="n">totalEnergyUsed</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="na">durationInSeconds</span><span class="o">*</span><span class="n">energyConsumptionRate</span><span class="p">;</span>
+
+        <span class="n">ctx</span><span class="p">.</span><span class="na">spawn</span><span class="p">(</span><span class="k">new</span> <span class="n">PowerOnHeater</span><span class="p">());</span>
+        <span class="n">batteryCapacity</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="o">-</span><span class="n">totalEnergyUsed</span><span class="p">);</span>
+        <span class="n">ctx</span><span class="p">.</span><span class="na">spawnAfter</span><span class="p">(</span><span class="n">Duration</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">durationInSeconds</span><span class="p">,</span> <span class="n">TimeUnit</span><span class="p">.</span><span class="na">SECONDS</span><span class="p">),</span> <span class="k">new</span> <span class="n">PowerOffHeater</span><span class="p">());</span>
+        <span class="n">ctx</span><span class="p">.</span><span class="na">waitForChildren</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Since the <code class="docutils literal notranslate"><span class="pre">ctx</span></code> context and <code class="docutils literal notranslate"><span class="pre">batteryCapacity</span></code> state variables are statically imported, they can be referred to directly by name in the <code class="docutils literal notranslate"><span class="pre">modelEffects()</span></code> method. This activity first places a <code class="docutils literal notranslate"><span class="pre">PowerOnHeater</span></code> activity at the start of the activity. Next the total energy used by running a heater for a parameterized duration is subtracted from the batteryCapacity state. Next the <code class="docutils literal notranslate"><span class="pre">PowerOffHeater</span></code> activity is queued up to occur after the run duration. Finally, the activity waits for its children, ensuring that the duration of this activity covers it’s children.</p>
+</div>
+<div class="section" id="a-note-about-decomposition">
+<h1>A Note about Decomposition<a class="headerlink" href="#a-note-about-decomposition" title="Permalink to this headline">¶</a></h1>
+<p>In Merlin mission models, decomposition of an activity is not an independent method, rather it is defined within the <code class="docutils literal notranslate"><span class="pre">modelEffects()</span></code> method by means of invoking child activities. These activities can be invoked using the <code class="docutils literal notranslate"><span class="pre">call()</span></code> method, where the rest of the modelEffects code waits for the child activity to complete; or using the <code class="docutils literal notranslate"><span class="pre">spawn()</span></code> and <code class="docutils literal notranslate"><span class="pre">spawnAfter()</span></code> methods, where the modelEffects continues to execute without waiting for the child activity to complete. These two methods allow any arbitrary serial and parallel arrangement of child activities. This approach replaces duration estimate based wait calls with event based waits. Hence, this allows for not keeping track of estimated durations of activities, while also improving the readability of the activity procedure as a linear sequence of events. Merlin supports a maximum duration parameter which can be used to detect modeling / simulation errors, as well as for display purposes. After a simulation run, simulated durations can be used for display purposes.</p>
+<p>If desirable, users can choose to follow APGEN / Blackbird paradigm by simply spawning all child activities at the beginning of the modelEffects() method, and then posting effects interleaved with <code class="docutils literal notranslate"><span class="pre">waitFor(duration)</span></code> method, where the duration is the estimate for child activity durations.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Activities.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

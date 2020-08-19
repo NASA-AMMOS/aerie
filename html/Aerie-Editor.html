@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Installation &#8212; Aerie 70 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <p>Aerie Editor (Falcon) is a web-based <a class="reference external" href="https://code.visualstudio.com/">Visual Studio Code</a> (VS Code) text editor that supports code completion, error diagnostics, tooltips, syntax highlighting, snippets, bracket-matching, auto-indentation, and <a class="reference external" href="https://code.visualstudio.com/docs/editor/whyvscode">many more</a> robust features.</p>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>The editor needs to be installed on a machine for each user in their home directory. This ensures the users files are available for editing in the explorer and are not exposed to other users on the system. You can find more complete installation instructions <a class="reference external" href="https://github.jpl.nasa.gov/Aerie/aerie-editor/blob/develop/docs/DEPLOYMENT">here</a>.</p>
+</div>
+<div class="section" id="basic-usage">
+<h1>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
+<p>The editor can be integrated with mission SEQGEN adaptations by adding an SMF file to the editor <a class="reference external" href="https://code.visualstudio.com/docs/editor/multi-root-workspaces">workspace</a>. The editor parses SMF files in the workspace and uses them to validate sequences. The editor also outputs sequences in both the SASF and SATF formats, which can be ingested by SEQGEN to create an SSF file. In Figure 1 below, the SMF file can be seen in the workspace. As users start typing valid command stems, an autocomplete popover appears, filtering and listing all commands starting with that stem.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%207.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%207.png" /><br /><em>Figure 1: Code completion of commands based on SMF file in the workspace.</em></p>
+<p>Additionally, Figure 2 shows the support for real-time sequence validation as users type commands. For wrong command stems, missing parameters, or wrong parameter names, the incorrect area will be underlined in red and an error message tooltip will be displayed upon hover.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%208.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%208.png" /><br /><em>Figure 2: Error diagnostics of incorrect parameter names for a command.</em></p>
+</div>
+<div class="section" id="git-integration">
+<h1>Git Integration<a class="headerlink" href="#git-integration" title="Permalink to this headline">¶</a></h1>
+<p>All files in the workspace live on the editor installation machine. However, there is inherent support for pointing the application to a <a class="reference external" href="https://git-scm.com/">Git</a> repository where files may be shared and stored for the whole mission. Git is available if the workspace is pointed to a directory that contains a <a class="reference external" href="https://githowto.com/git_internals_git_directory">.git</a> directory. For more advanced integration on VS Code and Git, please refer to the <a class="reference external" href="https://code.visualstudio.com/docs/editor/versioncontrol#_git-support">VS Code Git</a> documentation.</p>
+</div>
+<div class="section" id="explorer">
+<h1>Explorer<a class="headerlink" href="#explorer" title="Permalink to this headline">¶</a></h1>
+<p>Users can create, delete, and rename files and directories via the Explorer. For a more detailed explanation   see the <a class="reference external" href="https://code.visualstudio.com/docs/getstarted/userinterface#_explorer">VS Code Explorer</a> documentation.</p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%209.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%209.png" />
+<em>Figure 3: To create files and folders use the icons shown at the upper right corner of the Explorer.</em></p>
+<p><img alt="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%2010.png" src="https://github.jpl.nasa.gov/MPS/aerie/blob/develop/docs/UserGuideImages/fig%2010.png" /><br /><em>Figure 4: To rename any file or folder double click on the name, which will turn name field into an input box.</em></p>
+</div>
+<div class="section" id="seqgen-integration">
+<h1>SEQGEN Integration<a class="headerlink" href="#seqgen-integration" title="Permalink to this headline">¶</a></h1>
+<p>To invoke SEQGEN, click the button that shows up at the bottom of the editor window that says <code class="docutils literal notranslate"><span class="pre">run</span> <span class="pre">Seqgen</span></code>. Note that the button will only show up if SEQGEN and <a class="reference external" href="https://github.jpl.nasa.gov/Europa-PESS/sequencing">eurcseq</a> is installed on the machine (on the <code class="docutils literal notranslate"><span class="pre">PATH</span></code>) that the editor is installed on. After running SEQGEN, the SSF file will be added to the editor workspace. If the workspace is a Git repository then the output files will be added to the repo as changed files but not as commits. To add them to the repo, users need to do a commit and push.</p>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>To configure running SEQGEN, you need to create a file called <code class="docutils literal notranslate"><span class="pre">settings.json</span></code> in the <a class="reference external" href="https://code.visualstudio.com/docs/getstarted/settings">.vscode</a> folder in your workspace. It should have the following properties:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;seq.seqgenInputDir&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;seq.seqgenOutputDir&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+  <span class="nt">&quot;seq.smfDirs&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>| Property | Description |
+|-|-|
+| seqgenInputDir | Absolute path to the directory containing <code class="docutils literal notranslate"><span class="pre">.seq</span></code> files |
+| seqgenOutputDir | Absolute path of output directory for SEQGEN |
+| smfDirs | A list of directory absolute paths containing SMF files |</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Aerie</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, aerie.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/Aerie-Editor.md.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
