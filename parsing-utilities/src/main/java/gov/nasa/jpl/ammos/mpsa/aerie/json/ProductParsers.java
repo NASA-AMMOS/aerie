@@ -129,7 +129,8 @@ public abstract class ProductParsers {
 
       // Check that it contains only the fields we want.
       // TODO: We should take note of what extra fields are present and report them
-      if (obj.keySet().size() + defaultedFields != this.fields.size()) return JsonParseResult.failure("unexpected extra fields present");
+      //       As a temporary workaround error if more than the total number of fields are present
+      if (obj.keySet().size() + defaultedFields > this.fields.size()) return JsonParseResult.failure("unexpected extra fields present");
 
       // SAFETY: established by loop invariant.
       @SuppressWarnings("unchecked")
