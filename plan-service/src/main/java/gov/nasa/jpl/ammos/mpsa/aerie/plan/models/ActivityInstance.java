@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public final class ActivityInstance {
   public String type;
-  public String startTimestamp;
+  public Timestamp startTimestamp;
   public Map<String, SerializedValue> parameters;
 
   public ActivityInstance() {}

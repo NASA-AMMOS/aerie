@@ -11,6 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -291,7 +292,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     final ActivityInstance activity = new ActivityInstance();
     activity.type = document.getString("type");
-    activity.startTimestamp = document.getString("startTimestamp");
+    activity.startTimestamp = Timestamp.fromString(document.getString("startTimestamp"));
     activity.parameters = parameters;
 
     return activity;
@@ -300,8 +301,8 @@ public final class RemotePlanRepository implements PlanRepository {
   private Plan planFromDocuments(final Document planDocument, final FindIterable<Document> activityDocuments) {
     final Plan plan = new Plan();
     plan.name = planDocument.getString("name");
-    plan.startTimestamp = planDocument.getString("startTimestamp");
-    plan.endTimestamp = planDocument.getString("endTimestamp");
+    plan.startTimestamp = Timestamp.fromString(planDocument.getString("startTimestamp"));
+    plan.endTimestamp = Timestamp.fromString(planDocument.getString("endTimestamp"));
     plan.adaptationId = planDocument.getString("adaptationId");
     plan.activityInstances = documentStream(activityDocuments)
         .map(doc -> Pair.of(doc.getObjectId("_id").toString(), activityFromDocument(doc)))
@@ -391,7 +392,7 @@ public final class RemotePlanRepository implements PlanRepository {
     final Document activityDocument = new Document();
     activityDocument.put("planId", new ObjectId(planId));
     activityDocument.put("type", activity.type);
-    activityDocument.put("startTimestamp", activity.startTimestamp);
+    activityDocument.put("startTimestamp", activity.startTimestamp.toString());
     activityDocument.put("parameters", toDocument(activity.parameters));
 
     return activityDocument;
@@ -400,8 +401,8 @@ public final class RemotePlanRepository implements PlanRepository {
   private Document toDocument(final NewPlan newPlan) {
     final Document planDocument = new Document();
     planDocument.put("name", newPlan.name);
-    planDocument.put("startTimestamp", newPlan.startTimestamp);
-    planDocument.put("endTimestamp", newPlan.endTimestamp);
+    planDocument.put("startTimestamp", newPlan.startTimestamp.toString());
+    planDocument.put("endTimestamp", newPlan.endTimestamp.toString());
     planDocument.put("adaptationId", newPlan.adaptationId);
 
     return planDocument;
@@ -441,15 +442,15 @@ public final class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public PlanTransaction setStartTimestamp(final String timestamp) {
-      this.patch = combine(this.patch, set("startTimestamp", timestamp));
+    public PlanTransaction setStartTimestamp(final Timestamp timestamp) {
+      this.patch = combine(this.patch, set("startTimestamp", timestamp.toString()));
       this.notEmpty = true;
       return this;
     }
 
     @Override
-    public PlanTransaction setEndTimestamp(final String timestamp) {
-      this.patch = combine(this.patch, set("endTimestamp", timestamp));
+    public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
+      this.patch = combine(this.patch, set("endTimestamp", timestamp.toString()));
       this.notEmpty = true;
       return this;
     }
@@ -485,8 +486,8 @@ public final class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setStartTimestamp(final String startTimestamp) {
-      this.patch = combine(this.patch, set("startTimestamp", startTimestamp));
+    public ActivityTransaction setStartTimestamp(final Timestamp startTimestamp) {
+      this.patch = combine(this.patch, set("startTimestamp", startTimestamp.toString()));
       return this;
     }
 

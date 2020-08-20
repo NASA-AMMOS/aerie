@@ -7,8 +7,8 @@ import java.util.Objects;
 public final class Plan {
   public String name;
   public String adaptationId;
-  public String startTimestamp;
-  public String endTimestamp;
+  public Timestamp startTimestamp;
+  public Timestamp endTimestamp;
   public Map<String, ActivityInstance> activityInstances;
 
   public Plan() {}

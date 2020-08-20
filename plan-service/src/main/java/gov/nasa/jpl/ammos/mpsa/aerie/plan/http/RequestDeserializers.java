@@ -4,12 +4,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +26,17 @@ public final class RequestDeserializers {
     final JsonString stringJson = (JsonString)jsonValue;
 
     return stringJson.getString();
+  }
+
+  public static Timestamp deserializeTimestamp(final JsonValue jsonValue) throws InvalidEntityException {
+    if (!(jsonValue instanceof JsonString)) throw new InvalidEntityException();
+    final JsonString stringJson = (JsonString)jsonValue;
+
+    try {
+      return Timestamp.fromString(stringJson.getString());
+    } catch (final DateTimeParseException e) {
+      throw new InvalidEntityException();
+    }
   }
 
   public static SerializedValue deserializeActivityParameter(final JsonValue jsonValue) throws InvalidEntityException {
@@ -79,7 +92,7 @@ public final class RequestDeserializers {
     final JsonObject activityInstanceJson = (JsonObject)jsonValue;
 
     Optional<String> type = Optional.empty();
-    Optional<String> startTimestamp = Optional.empty();
+    Optional<Timestamp> startTimestamp = Optional.empty();
     Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
     for (final var entry : activityInstanceJson.entrySet()) {
@@ -93,7 +106,7 @@ public final class RequestDeserializers {
 
         case "startTimestamp":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          startTimestamp = Optional.of(deserializeString(entryValue));
+          startTimestamp = Optional.of(deserializeTimestamp(entryValue));
           break;
 
         case "parameters":
@@ -119,7 +132,7 @@ public final class RequestDeserializers {
     final JsonObject activityInstanceJson = (JsonObject)jsonValue;
 
     Optional<String> type = Optional.empty();
-    Optional<String> startTimestamp = Optional.empty();
+    Optional<Timestamp> startTimestamp = Optional.empty();
     Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
     for (final var entry : activityInstanceJson.entrySet()) {
@@ -133,7 +146,7 @@ public final class RequestDeserializers {
 
         case "startTimestamp":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          startTimestamp = Optional.of(deserializeString(entryValue));
+          startTimestamp = Optional.of(deserializeTimestamp(entryValue));
           break;
 
         case "parameters":
@@ -200,8 +213,8 @@ public final class RequestDeserializers {
     final JsonObject newPlanJson = (JsonObject)jsonValue;
 
     Optional<String> name = Optional.empty();
-    Optional<String> startTimestamp = Optional.empty();
-    Optional<String> endTimestamp = Optional.empty();
+    Optional<Timestamp> startTimestamp = Optional.empty();
+    Optional<Timestamp> endTimestamp = Optional.empty();
     Optional<Map<String, ActivityInstance>> activityInstances = Optional.empty();
 
     for (final var entry : newPlanJson.entrySet()) {
@@ -215,12 +228,12 @@ public final class RequestDeserializers {
 
         case "startTimestamp":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          startTimestamp = Optional.of(deserializeString(entryValue));
+          startTimestamp = Optional.of(deserializeTimestamp(entryValue));
           break;
 
         case "endTimestamp":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          endTimestamp = Optional.of(deserializeString(entryValue));
+          endTimestamp = Optional.of(deserializeTimestamp(entryValue));
           break;
 
         case "activityInstances":
@@ -248,8 +261,8 @@ public final class RequestDeserializers {
 
     Optional<String> name = Optional.empty();
     Optional<String> adaptationId = Optional.empty();
-    Optional<String> startTimestamp = Optional.empty();
-    Optional<String> endTimestamp = Optional.empty();
+    Optional<Timestamp> startTimestamp = Optional.empty();
+    Optional<Timestamp> endTimestamp = Optional.empty();
     Optional<List<ActivityInstance>> activityInstances = Optional.empty();
 
     for (final var entry : newPlanJson.entrySet()) {
@@ -268,12 +281,12 @@ public final class RequestDeserializers {
 
         case "startTimestamp":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          startTimestamp = Optional.of(deserializeString(entryValue));
+          startTimestamp = Optional.of(deserializeTimestamp(entryValue));
           break;
 
         case "endTimestamp":
           if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-          endTimestamp = Optional.of(deserializeString(entryValue));
+          endTimestamp = Optional.of(deserializeTimestamp(entryValue));
           break;
 
         case "activityInstances":

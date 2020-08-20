@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.CreatedEntity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -44,6 +45,11 @@ public final class ResponseSerializers {
     return Json.createValue(value);
   }
 
+  public static JsonValue serializeTimestamp(final Timestamp timestamp) {
+    if (timestamp == null) return JsonValue.NULL;
+    return Json.createValue(timestamp.toString());
+  }
+
   public static JsonValue serializeStringList(final List<String> elements) {
     return serializeList(x -> serializeString(x), elements);
   }
@@ -62,7 +68,7 @@ public final class ResponseSerializers {
 
     return Json.createObjectBuilder()
         .add("type", serializeString(activityInstance.type))
-        .add("startTimestamp", serializeString(activityInstance.startTimestamp))
+        .add("startTimestamp", serializeTimestamp(activityInstance.startTimestamp))
         .add("parameters", serializeActivityParameterMap(activityInstance.parameters))
         .build();
   }
@@ -75,8 +81,8 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
         .add("name", serializeString(plan.name))
         .add("adaptationId", serializeString(plan.adaptationId))
-        .add("startTimestamp", serializeString(plan.startTimestamp))
-        .add("endTimestamp", serializeString(plan.endTimestamp))
+        .add("startTimestamp", serializeTimestamp(plan.startTimestamp))
+        .add("endTimestamp", serializeTimestamp(plan.endTimestamp))
         .add("activityInstances", serializeActivityInstanceMap(plan.activityInstances))
         .build();
   }

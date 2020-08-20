@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 
 import java.util.ArrayList;
 
@@ -54,8 +55,8 @@ public final class Fixtures {
 
     plan.adaptationId = this.EXISTENT_ADAPTATION_ID;
     plan.name = name;
-    plan.startTimestamp = "0000-111T22:33:44";
-    plan.endTimestamp = "1111-222T33:44:55";
+    plan.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
+    plan.endTimestamp = Timestamp.fromString("1111-222T00:44:55");
     plan.activityInstances = new ArrayList<>();
 
     return plan;
@@ -65,7 +66,7 @@ public final class Fixtures {
     final ActivityInstance activityInstance = new ActivityInstance();
 
     activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
-    activityInstance.startTimestamp = "0000-111T22:33:44";
+    activityInstance.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
     activityInstance.parameters = StubAdaptationService.VALID_ACTIVITY_PARAMETERS.getParameters();
 
     return activityInstance;

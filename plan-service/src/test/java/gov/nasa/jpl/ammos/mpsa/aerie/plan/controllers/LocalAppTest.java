@@ -13,6 +13,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -234,12 +235,12 @@ public final class LocalAppTest {
     final String activity1Id = fixtures.planRepository.createActivity(planId, fixtures.createValidActivityInstance());
     final String activity2Id = fixtures.planRepository.createActivity(planId, fixtures.createValidActivityInstance());
     final ActivityInstance activity3 = fixtures.createValidActivityInstance();
-    activity3.startTimestamp = "2018-331T04:00:00";
+    activity3.startTimestamp = Timestamp.fromString("2018-331T04:00:00");
     final String activity3Id = fixtures.planRepository.createActivity(planId, activity3);
 
     // Create a unique activity instance to patch activity 2 with
     final ActivityInstance patchedInstance = fixtures.createValidActivityInstance();
-    patchedInstance.startTimestamp = "2020-138T22:33:45";
+    patchedInstance.startTimestamp = Timestamp.fromString("2020-138T22:33:45");
 
     // WHEN
     // Create the plan patch
@@ -555,7 +556,6 @@ public final class LocalAppTest {
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
     final ActivityInstance expectedActivityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    expectedActivityInstance.startTimestamp += ".000";
 
     // WHEN
     final ActivityInstance patch = new ActivityInstance();
@@ -576,7 +576,6 @@ public final class LocalAppTest {
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
     final ActivityInstance expectedActivityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    expectedActivityInstance.startTimestamp += ".000";
 
     // WHEN
     final ActivityInstance patch = new ActivityInstance();
@@ -598,7 +597,6 @@ public final class LocalAppTest {
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
     final ActivityInstance expectedActivityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    expectedActivityInstance.startTimestamp += ".000";
 
     // WHEN
     final ActivityInstance patch = new ActivityInstance();
@@ -641,7 +639,6 @@ public final class LocalAppTest {
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
     final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    activityInstance.startTimestamp += ".001";
 
     // WHEN
     controller.replaceActivityInstance(planId, activityInstanceId, activityInstance);
@@ -659,7 +656,6 @@ public final class LocalAppTest {
     final String planId = fixtures.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
     final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    activityInstance.startTimestamp += ".001";
 
     // WHEN
     final Throwable thrown = catchThrowable(() -> controller.replaceActivityInstance(planId, activityInstanceId, activityInstance));
@@ -678,7 +674,6 @@ public final class LocalAppTest {
     final String planId = fixtures.EXISTENT_PLAN_ID;
     final String activityInstanceId = fixtures.NONEXISTENT_ACTIVITY_INSTANCE_ID;
     final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
-    activityInstance.startTimestamp += ".001";
 
     // WHEN
     final Throwable thrown = catchThrowable(() -> controller.replaceActivityInstance(planId, activityInstanceId, activityInstance));

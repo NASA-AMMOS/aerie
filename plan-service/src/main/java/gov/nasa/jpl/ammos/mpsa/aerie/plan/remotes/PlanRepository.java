@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
@@ -42,8 +43,8 @@ public interface PlanRepository {
     void commit() throws NoSuchPlanException;
 
     PlanTransaction setName(String name);
-    PlanTransaction setStartTimestamp(String timestamp);
-    PlanTransaction setEndTimestamp(String timestamp);
+    PlanTransaction setStartTimestamp(Timestamp timestamp);
+    PlanTransaction setEndTimestamp(Timestamp timestamp);
     PlanTransaction setAdaptationId(String adaptationId);
   }
 
@@ -51,7 +52,7 @@ public interface PlanRepository {
     void commit() throws NoSuchPlanException, NoSuchActivityInstanceException;
 
     ActivityTransaction setType(String type);
-    ActivityTransaction setStartTimestamp(String timestamp);
+    ActivityTransaction setStartTimestamp(Timestamp timestamp);
     ActivityTransaction setParameters(Map<String, SerializedValue> parameters);
   }
 }

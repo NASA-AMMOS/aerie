@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.RequestDeserializers;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 
 import javax.json.Json;
@@ -85,15 +86,15 @@ public final class RemoteAdaptationService implements AdaptationService {
 
   @Override
   public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
-    final var startTime = timestampToInstant(plan.startTimestamp);
+    final var startTime = plan.startTimestamp.toInstant();
 
     final HttpResponse<String> response;
     try {
-      final var samplingDuration = startTime.until(timestampToInstant(plan.endTimestamp), ChronoUnit.MICROS);
+      final var samplingDuration = startTime.until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS);
 
       final var requestBody = Json.createObjectBuilder()
           .add("adaptationId", plan.adaptationId)
-          .add("startTime", plan.startTimestamp)
+          .add("startTime", plan.startTimestamp.toString())
           .add("samplingDuration", samplingDuration)
           .add("samplingPeriod", samplingPeriod)
           .add("activities", serializeScheduledActivities(plan))
@@ -184,12 +185,6 @@ public final class RemoteAdaptationService implements AdaptationService {
     return timeline;
   }
 
-  private static Instant timestampToInstant(final String timestamp) {
-    // TODO: handle parse errors
-    final var format = DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss[.n]");
-    return LocalDateTime.parse(timestamp, format).atZone(ZoneOffset.UTC).toInstant();
-  }
-
   private static List<String> deserializeActivityValidation(final JsonValue json) {
     if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
 
@@ -277,14 +272,14 @@ public final class RemoteAdaptationService implements AdaptationService {
   }
 
   private JsonValue serializeScheduledActivities(final Plan plan) {
-    final var startTime = timestampToInstant(plan.startTimestamp);
+    final var startTime = plan.startTimestamp.toInstant();
 
     final var scheduledActivities = Json.createObjectBuilder();
     for (final var entry : plan.activityInstances.entrySet()) {
       final var id = entry.getKey();
       final var activity = entry.getValue();
       scheduledActivities.add(id, Json.createObjectBuilder()
-              .add("defer", startTime.until(timestampToInstant(activity.startTimestamp), ChronoUnit.MICROS))
+              .add("defer", startTime.until(activity.startTimestamp.toInstant(), ChronoUnit.MICROS))
               .add("type", activity.type)
               .add("parameters", serializeActivityParameterMap(activity.parameters))
               .build());
