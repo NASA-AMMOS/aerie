@@ -113,7 +113,7 @@ public final class PlanBindingsTest {
   @Test
   public void shouldAddValidPlan() throws IOException, InterruptedException {
     // GIVEN
-    final NewPlan plan = StubApp.VALID_NEW_PLAN;
+    final JsonValue plan = StubApp.VALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans", plan);
@@ -131,7 +131,7 @@ public final class PlanBindingsTest {
   @Test
   public void shouldNotAddInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
-    final NewPlan plan = StubApp.INVALID_NEW_PLAN;
+    final JsonValue plan = StubApp.INVALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans", plan);
@@ -146,7 +146,7 @@ public final class PlanBindingsTest {
   public void shouldReplaceExistentPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
-    final NewPlan plan = StubApp.VALID_NEW_PLAN;
+    final JsonValue plan = StubApp.VALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId, plan);
@@ -159,7 +159,7 @@ public final class PlanBindingsTest {
   public void shouldNotReplaceNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final NewPlan plan = StubApp.VALID_NEW_PLAN;
+    final JsonValue plan = StubApp.VALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId, plan);
@@ -172,7 +172,7 @@ public final class PlanBindingsTest {
   public void shouldNotReplaceInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
-    final NewPlan plan = StubApp.INVALID_NEW_PLAN;
+    final JsonValue plan = StubApp.INVALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId, plan);
@@ -187,7 +187,7 @@ public final class PlanBindingsTest {
   public void shouldPatchExistentPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
-    final Plan patch = StubApp.VALID_PATCH;
+    final JsonValue patch = StubApp.VALID_PATCH_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
@@ -200,7 +200,7 @@ public final class PlanBindingsTest {
   public void shouldNotPatchNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final Plan patch = StubApp.VALID_PATCH;
+    final JsonValue patch = StubApp.VALID_PATCH_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
@@ -213,7 +213,7 @@ public final class PlanBindingsTest {
   public void shouldNotPatchInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
-    final Plan patch = StubApp.INVALID_PATCH;
+    final JsonValue patch = StubApp.INVALID_PATCH_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
@@ -329,10 +329,10 @@ public final class PlanBindingsTest {
   public void shouldAddActivityInstancesToPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
-    final ActivityInstance activityInstance = StubApp.VALID_ACTIVITY;
+    final JsonValue activityInstanceList = StubApp.VALID_ACTIVITY_LIST_JSON;
 
     // WHEN
-    final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", List.of(activityInstance));
+    final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", activityInstanceList);
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -344,10 +344,10 @@ public final class PlanBindingsTest {
   public void shouldNotAddActivityInstancesToNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
     final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final ActivityInstance activityInstance = StubApp.VALID_ACTIVITY;
+    final JsonValue activityInstanceList = StubApp.VALID_ACTIVITY_LIST_JSON;
 
     // WHEN
-    final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", List.of(activityInstance));
+    final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", activityInstanceList);
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(404);
@@ -357,10 +357,10 @@ public final class PlanBindingsTest {
   public void shouldNotAddInvalidActivityInstancesToPlan() throws IOException, InterruptedException, InvalidEntityException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
-    final ActivityInstance activityInstance = StubApp.INVALID_ACTIVITY;
+    final JsonValue activityInstanceList = StubApp.INVALID_ACTIVITY_LIST_JSON;
 
     // WHEN
-    final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", List.of(activityInstance));
+    final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", activityInstanceList);
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(400);
@@ -410,7 +410,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance patch = StubApp.VALID_ACTIVITY;
+    final JsonValue patch = StubApp.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -424,7 +424,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance patch = StubApp.VALID_ACTIVITY;
+    final JsonValue patch = StubApp.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -438,7 +438,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.NONEXISTENT_ACTIVITY_ID;
-    final ActivityInstance patch = StubApp.VALID_ACTIVITY;
+    final JsonValue patch = StubApp.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -452,7 +452,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance patch = StubApp.INVALID_ACTIVITY;
+    final JsonValue patch = StubApp.INVALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -470,7 +470,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance activityInstance = StubApp.VALID_ACTIVITY;
+    final JsonValue activityInstance = StubApp.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -484,7 +484,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.NONEXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance activityInstance = StubApp.VALID_ACTIVITY;
+    final JsonValue activityInstance = StubApp.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -498,7 +498,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.NONEXISTENT_ACTIVITY_ID;
-    final ActivityInstance activityInstance = StubApp.VALID_ACTIVITY;
+    final JsonValue activityInstance = StubApp.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -512,7 +512,7 @@ public final class PlanBindingsTest {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance activityInstance = StubApp.INVALID_ACTIVITY;
+    final JsonValue activityInstance = StubApp.INVALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
