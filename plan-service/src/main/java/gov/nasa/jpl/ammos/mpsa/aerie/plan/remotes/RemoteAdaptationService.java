@@ -1,10 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.RequestDeserializers;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
@@ -16,20 +17,31 @@ import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.anyP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.boolP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.chooseP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.doubleP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.listP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.longP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.nullP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.productP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.recursiveP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.Uncurry.uncurry3;
 
 public final class RemoteAdaptationService implements AdaptationService {
   private final HttpRequester client;
@@ -108,6 +120,7 @@ public final class RemoteAdaptationService implements AdaptationService {
     switch (response.statusCode()) {
       case 200: {
         final var responseJson = Json.createReader(new StringReader(response.body())).readValue();
+
         return deserializeSimulationResults(startTime, responseJson);
       }
 
@@ -133,56 +146,41 @@ public final class RemoteAdaptationService implements AdaptationService {
     }
   }
 
-  private static SimulationResults deserializeSimulationResults(final Instant startTime, final JsonValue json) {
+  private static JsonParser<Duration> durationP
+      = longP
+      .map(v -> Duration.of(v, Duration.MICROSECONDS));
+
+  private static JsonParser<SerializedValue> serializedValueP =
+  recursiveP(selfP -> BasicParsers
+      . <SerializedValue>sumP()
+      . when(ValueType.NULL,
+             nullP.map(SerializedValue::of))
+      . when(ValueType.TRUE,
+             boolP.map(SerializedValue::of))
+      . when(ValueType.FALSE,
+             boolP.map(SerializedValue::of))
+      . when(ValueType.STRING,
+             stringP.map(SerializedValue::of))
+      . when(ValueType.NUMBER, chooseP(
+          longP.map(SerializedValue::of),
+          doubleP.map(SerializedValue::of)))
+      . when(ValueType.ARRAY,
+             listP(selfP).map(SerializedValue::of))
+      . when(ValueType.OBJECT,
+             mapP(selfP).map(SerializedValue::of)));
+
+  private static JsonParser<List<Duration>> timestampsP = listP(durationP);
+  private static JsonParser<Map<String, List<SerializedValue>>> timelinesP = mapP(listP(serializedValueP));
+
+  public static SimulationResults deserializeSimulationResults(final Instant startTime, final JsonValue json) {
     if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
     final var jsonObject = (JsonObject) json;
 
-    final var timestamps = deserializeTimestamps(jsonObject.get("times"));
-    final var timelines = deserializeTimelines(jsonObject.get("resources"));
+    final var timestamps = timestampsP.parse(jsonObject.get("times")).getSuccessOrThrow(InvalidServiceResponseException::new);
+    final var timelines = timelinesP.parse(jsonObject.get("resources")).getSuccessOrThrow(InvalidServiceResponseException::new);
     final var constraints = jsonObject.get("constraints");
 
     return new SimulationResults(startTime, timestamps, timelines, constraints);
-  }
-
-  private static List<Duration> deserializeTimestamps(final JsonValue json) {
-    if (!(json instanceof JsonArray)) throw new InvalidServiceResponseException();
-    final var jsonArray = (JsonArray) json;
-
-    final var timestamps = new ArrayList<Duration>(jsonArray.size());
-    for (final var item : jsonArray) {
-      final var timestamp = Duration.of(((JsonNumber) item).longValue(), Duration.MICROSECONDS);
-      timestamps.add(timestamp);
-    }
-
-    return timestamps;
-  }
-
-  private static Map<String, List<SerializedValue>> deserializeTimelines(final JsonValue json) {
-    if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
-    final var jsonObject = (JsonObject) json;
-
-    final var timelines = new HashMap<String, List<SerializedValue>>(jsonObject.size());
-    for (final var entry : jsonObject.entrySet()) {
-      timelines.put(entry.getKey(), deserializeTimeline(entry.getValue()));
-    }
-
-    return timelines;
-  }
-
-  private static List<SerializedValue> deserializeTimeline(final JsonValue json) {
-    if (!(json instanceof JsonArray)) throw new InvalidServiceResponseException();
-    final var jsonArray = (JsonArray) json;
-
-    final var timeline = new ArrayList<SerializedValue>(jsonArray.size());
-    for (final var item : jsonArray) {
-      try {
-        timeline.add(RequestDeserializers.deserializeActivityParameter(item));
-      } catch (final InvalidEntityException ex) {
-        throw new InvalidServiceResponseException();
-      }
-    }
-
-    return timeline;
   }
 
   private static List<String> deserializeActivityValidation(final JsonValue json) {

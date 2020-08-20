@@ -19,6 +19,12 @@ public final class ActivityInstance {
     this.parameters = (other.parameters == null) ? null : new HashMap<>(other.parameters);
   }
 
+  public ActivityInstance(final String type, final Timestamp startTimestamp, final Map<String, SerializedValue> parameters) {
+    this.type = type;
+    this.startTimestamp = startTimestamp;
+    this.parameters = (parameters != null) ? Map.copyOf(parameters) : null;
+  }
+
   @Override
   public boolean equals(final Object object) {
     if (object.getClass() != ActivityInstance.class) {

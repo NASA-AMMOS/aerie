@@ -27,6 +27,20 @@ public final class NewPlan {
     }
   }
 
+  public NewPlan(
+      final String name,
+      final String adaptationId,
+      final Timestamp startTimestamp,
+      final Timestamp endTimestamp,
+      final List<ActivityInstance> activityInstances
+  ) {
+    this.name = name;
+    this.adaptationId = adaptationId;
+    this.startTimestamp = startTimestamp;
+    this.endTimestamp = endTimestamp;
+    this.activityInstances = List.copyOf(activityInstances);
+  }
+
   @Override
   public boolean equals(final Object object) {
     if (object.getClass() != NewPlan.class) {

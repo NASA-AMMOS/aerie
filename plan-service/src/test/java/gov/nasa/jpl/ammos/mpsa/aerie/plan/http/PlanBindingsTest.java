@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.plan.http.MerlinParsers.activityInstanceP;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.mocks.StubApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
@@ -16,6 +19,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.bind.JsonbBuilder;
+import javax.json.stream.JsonParsingException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
@@ -50,6 +54,18 @@ public final class PlanBindingsTest {
   private final URI baseUri = URI.create("http://localhost:" + SERVER.port());
   private final HttpClient rawHttpClient = HttpClient.newHttpClient();
   private final HttpRequester client = new HttpRequester(rawHttpClient, baseUri);
+
+  private <T> T parseJson(final String subject, final JsonParser<T> parser)
+  throws InvalidJsonException, InvalidEntityException
+  {
+    try {
+      final var requestJson = Json.createReader(new StringReader(subject)).readValue();
+      final var result = parser.parse(requestJson);
+      return result.getSuccessOrThrow(() -> new InvalidEntityException(List.of(result.failureReason())));
+    } catch (JsonParsingException e) {
+      throw new InvalidJsonException(e);
+    }
+  }
 
   @Test
   public void shouldEnableCors() throws IOException, InterruptedException {
@@ -251,7 +267,7 @@ public final class PlanBindingsTest {
   }
 
   @Test
-  public void shouldGetActivityInstances() throws IOException, InterruptedException, InvalidEntityException {
+  public void shouldGetActivityInstances() throws IOException, InterruptedException, InvalidEntityException, InvalidJsonException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityId = StubApp.EXISTENT_ACTIVITY_ID;
@@ -264,7 +280,7 @@ public final class PlanBindingsTest {
     assertThat(response.statusCode()).isEqualTo(200);
 
     final var responseJson = Json.createReader(new StringReader(response.body())).readValue();
-    final Map<String, ActivityInstance> activities = RequestDeserializers.deserializeActivityInstanceMap(responseJson);
+    final Map<String, ActivityInstance> activities = parseJson(responseJson.toString(), mapP(activityInstanceP));
 
     assertThat(activities).containsEntry(activityId, activity);
   }
@@ -282,7 +298,7 @@ public final class PlanBindingsTest {
   }
 
   @Test
-  public void shouldGetActivityInstanceById() throws IOException, InterruptedException, InvalidEntityException {
+  public void shouldGetActivityInstanceById() throws IOException, InterruptedException, InvalidEntityException, InvalidJsonException {
     // GIVEN
     final String planId = StubApp.EXISTENT_PLAN_ID;
     final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
@@ -295,7 +311,7 @@ public final class PlanBindingsTest {
     assertThat(response.statusCode()).isEqualTo(200);
 
     final var responseJson = Json.createReader(new StringReader(response.body())).readValue();
-    final ActivityInstance activityInstance = RequestDeserializers.deserializeActivityInstance(responseJson);
+    final ActivityInstance activityInstance = parseJson(responseJson.toString(), activityInstanceP);
     assertThat(activityInstance).isEqualTo(expectedActivityInstance);
   }
 

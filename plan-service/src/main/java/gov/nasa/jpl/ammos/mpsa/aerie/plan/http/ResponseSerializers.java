@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.controllers.Breadcrumb;
@@ -11,6 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.CreatedEntity;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -159,11 +161,39 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
-    // TODO: Improve diagnostic information
+  public static JsonValue serializeInvalidJsonException(final InvalidJsonException ex) {
     return Json.createObjectBuilder()
-        .add("message", "invalid json")
-        .build();
+               .add("kind", "invalid-entity")
+               .add("message", "invalid json")
+               .build();
+  }
+
+  public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
+    return Json.createObjectBuilder()
+               .add("kind", "invalid-entity")
+               .add("failures", serializeList(ResponseSerializers::serializeFailureReason, ex.failures))
+               .build();
+  }
+
+  public static JsonValue serializeFailureReason(final FailureReason failure) {
+    return Json.createObjectBuilder()
+               .add("breadcrumbs", serializeList(ResponseSerializers::serializeParseFailureBreadcrumb, failure.breadcrumbs))
+               .add("message", failure.reason)
+               .build();
+  }
+
+  public static JsonValue serializeParseFailureBreadcrumb(final gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb breadcrumb) {
+    return breadcrumb.visit(new gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb.BreadcrumbVisitor<>() {
+      @Override
+      public JsonValue onString(final String s) {
+        return Json.createValue(s);
+      }
+
+      @Override
+      public JsonValue onInteger(final Integer i) {
+        return Json.createValue(i);
+      }
+    });
   }
 
   public static JsonValue serializeNoSuchPlanException(final NoSuchPlanException ex) {
