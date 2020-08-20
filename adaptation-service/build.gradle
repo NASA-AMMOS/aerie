@@ -16,6 +16,7 @@ application {
 dependencies {
   implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
+  implementation project(':contrib')
 
   implementation 'org.apache.commons:commons-lang3:3.9'
   implementation 'io.javalin:javalin:3.8.0'
