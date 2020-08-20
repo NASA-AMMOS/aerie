@@ -15,12 +15,12 @@ application {
 
 dependencies {
   implementation project(':merlin-sdk')
+  implementation project(':parsing-utilities')
 
   implementation 'org.apache.commons:commons-lang3:3.9'
   implementation 'io.javalin:javalin:3.8.0'
   implementation 'org.mongodb:mongodb-driver-sync:3.11.0'
   implementation 'org.slf4j:slf4j-simple:1.7.26'
-  implementation 'org.eclipse:yasson:1.0.5'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
   testImplementation 'org.assertj:assertj-core:3.13.2'
