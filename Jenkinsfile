@@ -1,9 +1,9 @@
-def getDockerCompatibleTag(tag){
+def getDockerCompatibleTag(tag) {
     def fixedTag = tag.replaceAll('\\+', '-')
     return fixedTag
 }
 
-def getDockerImageName(folder){
+def getDockerImageName(folder) {
     files = findFiles(glob: "${DOCKERFILE_PATH}/*.*")
     def list = []
 
@@ -19,7 +19,7 @@ def getDockerImageName(folder){
 
 }
 
-def getAWSTag(tag){
+def getAWSTag(tag) {
     if (tag ==~ /release-.*/) {
         return "release"
     }
@@ -98,6 +98,7 @@ pipeline {
         AWS_DEFAULT_REGION = 'us-gov-west-1'
         AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
         AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
+        AERIE_SECRET_ACCESS_KEY = credentials('Aerie-Access-Token')
         DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
         AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
@@ -109,13 +110,12 @@ pipeline {
     }
 
     stages {
-        stage('Setup'){
+        stage ('Setup') {
             steps {
                 echo "Printing environment variables..."
                 sh "env | sort"
             }
         }
-
         stage ('Build') {
             steps {
                 script { setBuildStatus("Building", "pending", "jenkins/branch-check"); }
@@ -123,7 +123,6 @@ pipeline {
                 sh './gradlew classes'
             }
         }
-
         stage ('Test') {
             steps {
                 script { setBuildStatus("Testing", "pending", "jenkins/branch-check"); }
@@ -136,7 +135,6 @@ pipeline {
                 junit testResults: '*/build/test-results/test/*.xml'
             }
         }
-
         stage ('Assemble') {
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
@@ -181,12 +179,43 @@ pipeline {
                 }
             }
         }
+        stage ('Generate Javadoc for Merlin-SDK') {
+             when {
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+            }
+            steps {
+                script {
+                    def statusCode = sh returnStatus: true, script:
+                    """
+                    # For merlin-sdk
+                    cd merlin-sdk
+                    ../gradlew javadoc
+                    cd build/docs
+                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc
+                    cp -r javadoc/ /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc/.
+                    ls -la /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc/
+                    cd ${WORKSPACE}
+                    git checkout gh-pages
+                    cp -r /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc/javadoc .
+                    ls -la
+                    git config user.email "achong@jpl.nasa.gov"
+                    git config user.name "Auto flow"
+                    git add javadoc/*
+                    git commit -m "Auto commit for Merlin-SDK javadoc"
+                    git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
+                    unset AERIE_SECRET_ACCESS_KEY
+                    """
 
+                    if (statusCode > 0) {
+                        error "Failure in Assemble stage."
+                    }
+                }
+            }
+        }
         stage ('Release') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
-
             steps {
                 script {
                     try {
@@ -217,7 +246,6 @@ pipeline {
                 }
             }
         }
-
         stage ('Docker') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
@@ -233,13 +261,10 @@ pipeline {
                             buildImages.push(tag_name)
                         }
                     }
-
                 }
-
             }
         }
-
-        stage('Deploy') {
+        stage ('Deploy') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
@@ -280,7 +305,6 @@ pipeline {
             }
         }
     }
-
     post {
         always {
             script {
@@ -301,7 +325,6 @@ pipeline {
 
             setBuildStatus("Build ${currentBuild.currentResult}", "${currentBuild.currentResult}", "jenkins/branch-check")
         }
-
         unstable {
             emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
             body: """
@@ -310,7 +333,6 @@ pipeline {
             mimeType: 'text/html',
             recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
         }
-
         failure {
             emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
             body: """
@@ -318,6 +340,10 @@ pipeline {
             """,
             mimeType: 'text/html',
             recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+        }
+        cleanup {
+            cleanWs()
+            deleteDir()
         }
     }
 }
