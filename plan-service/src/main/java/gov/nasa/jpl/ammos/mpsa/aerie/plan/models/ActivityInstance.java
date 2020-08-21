@@ -27,11 +27,11 @@ public final class ActivityInstance {
 
   @Override
   public boolean equals(final Object object) {
-    if (object.getClass() != ActivityInstance.class) {
+    if (!(object instanceof ActivityInstance)) {
       return false;
     }
 
-    final ActivityInstance other = (ActivityInstance)object;
+    final var other = (ActivityInstance)object;
     return
         (  Objects.equals(this.type, other.type)
         && Objects.equals(this.startTimestamp, other.startTimestamp)

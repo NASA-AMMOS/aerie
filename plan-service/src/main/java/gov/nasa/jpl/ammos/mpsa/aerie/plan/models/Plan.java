@@ -43,11 +43,11 @@ public final class Plan {
 
   @Override
   public boolean equals(final Object object) {
-    if (object.getClass() != Plan.class) {
+    if (!(object instanceof Plan)) {
       return false;
     }
 
-    final Plan other = (Plan)object;
+    final var other = (Plan)object;
     return
         (  Objects.equals(this.name, other.name)
         && Objects.equals(this.adaptationId, other.adaptationId)

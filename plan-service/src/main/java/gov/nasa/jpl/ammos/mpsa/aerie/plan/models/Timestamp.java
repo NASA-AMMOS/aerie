@@ -29,11 +29,11 @@ public class Timestamp {
   }
 
   public boolean equals(final Object object) {
-    if (object.getClass() != Timestamp.class) {
+    if (!(object instanceof Timestamp)) {
       return false;
     }
 
-    final Timestamp other = (Timestamp)object;
+    final var other = (Timestamp)object;
     return this.time.equals(other.time);
   }
 }
