@@ -81,7 +81,14 @@ public abstract class ProductParsers {
           }
         }
 
-        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(field.name));
+        if (result.isFailure()) {
+          return JsonParseResult.failure(
+              result
+              .failureReason()
+              .prependBreadcrumb(
+                  Breadcrumb.ofString(field.name)
+              ));
+        }
         accumulator = result.getSuccessOrThrow();
       }
 
@@ -109,7 +116,14 @@ public abstract class ProductParsers {
           }
         }
 
-        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(field.name));
+        if (result.isFailure()) {
+          return JsonParseResult.failure(
+              result
+              .failureReason()
+              .prependBreadcrumb(
+                  Breadcrumb.ofString(field.name)
+              ));
+        }
         accumulator = Pair.of(accumulator, result.getSuccessOrThrow());
       }
 

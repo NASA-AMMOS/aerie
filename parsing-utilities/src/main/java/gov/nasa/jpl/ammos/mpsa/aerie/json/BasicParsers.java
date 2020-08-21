@@ -95,7 +95,14 @@ public abstract class BasicParsers {
         final var element = jsonArray.get(index);
         final var result = elementParser.parse(element);
 
-        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(Integer.toString(index)));
+        if (result.isFailure()) {
+          return JsonParseResult.failure(
+              result
+              .failureReason()
+              .prependBreadcrumb(
+                  Breadcrumb.ofInteger(index)
+              ));
+        }
         list.add(result.getSuccessOrThrow());
       }
 
@@ -111,7 +118,14 @@ public abstract class BasicParsers {
       for (final var field : json.asJsonObject().entrySet()) {
         final var result = fieldParser.parse(field.getValue());
 
-        if (result.isFailure()) return JsonParseResult.failure(result.failureReason().prependBreadcrumb(field.getKey()));
+        if (result.isFailure()) {
+          return JsonParseResult.failure(
+              result
+              .failureReason()
+              .prependBreadcrumb(
+                  Breadcrumb.ofString(field.getKey())
+              ));
+        }
         map.put(field.getKey(), result.getSuccessOrThrow());
       }
 

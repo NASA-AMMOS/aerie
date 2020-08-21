@@ -115,7 +115,7 @@ public interface JsonParseResult<T> {
   }
 
   class FailureReason {
-    public final List<String> breadcrumbs;
+    public final List<Breadcrumb> breadcrumbs;
     public final String reason;
 
     public FailureReason(String reason) {
@@ -123,7 +123,7 @@ public interface JsonParseResult<T> {
       this.breadcrumbs = new ArrayList<>();
     }
 
-    public FailureReason prependBreadcrumb(String breadcrumb) {
+    public FailureReason prependBreadcrumb(Breadcrumb breadcrumb) {
       breadcrumbs.add(0, breadcrumb);
       return this;
     }
