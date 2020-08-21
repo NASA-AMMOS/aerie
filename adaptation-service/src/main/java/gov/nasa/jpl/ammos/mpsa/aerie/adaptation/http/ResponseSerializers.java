@@ -16,6 +16,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -202,7 +203,14 @@ public final class ResponseSerializers {
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
     return Json.createObjectBuilder()
         .add("kind", "invalid-entity")
-        .add("failures", serializeIterable(ResponseSerializers::serializeBreadcrumb, ex.breadcrumbs))
+        .add("failures", serializeIterable(ResponseSerializers::serializeFailureReason, ex.failures))
+        .build();
+  }
+
+  public static JsonValue serializeFailureReason(final FailureReason failure) {
+    return Json.createObjectBuilder()
+        .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeBreadcrumb, failure.breadcrumbs))
+        .add("message", failure.reason)
         .build();
   }
 

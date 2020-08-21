@@ -311,9 +311,9 @@ public final class AdaptationBindings implements Plugin {
     try {
       final var requestJson = Json.createReader(new StringReader(subject)).readValue();
       final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow(() -> new InvalidEntityException(result.failureReason()));
+      return result.getSuccessOrThrow(() -> new InvalidEntityException(List.of(result.failureReason())));
     } catch (JsonParsingException e) {
-      throw new InvalidJsonException();
+      throw new InvalidJsonException(e);
     }
   }
 }
