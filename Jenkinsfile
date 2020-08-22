@@ -140,76 +140,61 @@ pipeline {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
                 echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    echo ${BUILD_NUMBER}
+                sh """
+                echo ${BUILD_NUMBER}
 
-                    ./gradlew assemble
+                ./gradlew assemble
 
-                    # For adaptations
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
-                    cp sample-adaptation/build/libs/*.jar \
-                       banananation/build/libs/*.jar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
+                # For adaptations
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
+                cp sample-adaptation/build/libs/*.jar \
+                   banananation/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
 
-                    # For services
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
-                    cp plan-service/build/distributions/*.tar \
-                       adaptation-service/build/distributions/*.tar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
+                # For services
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
+                cp plan-service/build/distributions/*.tar \
+                   adaptation-service/build/distributions/*.tar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
 
-                    # For merlin-sdk
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
-                    cp merlin-sdk/build/libs/*.jar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
+                # For merlin-sdk
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
+                cp merlin-sdk/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
 
-                    # For merlin-cli
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
-                    cp merlin-cli/build/distributions/*.tar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
+                # For merlin-cli
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
+                cp merlin-cli/build/distributions/*.tar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
 
-                    tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
-                    tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-                    """
-
-                    if (statusCode > 0) {
-                        error "Failure in Assemble stage."
-                    }
-                }
+                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
+                tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
+                """
             }
+
         }
         stage ('Generate Javadoc for Merlin-SDK') {
-             when {
+            when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
             steps {
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    # For merlin-sdk
-                    cd merlin-sdk
-                    ../gradlew javadoc
-                    cd build/docs
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc
-                    cp -r javadoc/ /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc/.
-                    ls -la /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc/
-                    cd ${WORKSPACE}
-                    git checkout gh-pages
-                    cp -r /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk-javadoc/javadoc .
-                    ls -la
-                    git config user.email "achong@jpl.nasa.gov"
-                    git config user.name "Auto flow"
-                    git add javadoc/*
-                    git commit -m "Auto commit for Merlin-SDK javadoc"
-                    git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
-                    unset AERIE_SECRET_ACCESS_KEY
-                    """
+                sh """
+                JAVADOC_PREP_DIR=\$(mktemp -d)
 
-                    if (statusCode > 0) {
-                        error "Failure in Assemble stage."
-                    }
-                }
+                ./gradlew merlin-sdk:javadoc
+                cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+
+                git checkout gh-pages
+                cp -r \${JAVADOC_PREP_DIR}/javadoc .
+                rm -rf \${JAVADOC_PREP_DIR}
+                ls -la
+
+                git config user.email "achong@jpl.nasa.gov"
+                git config user.name "Jenkins gh-pages sync"
+                git add javadoc/
+                git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
+                git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
+                """
             }
         }
         stage ('Release') {
