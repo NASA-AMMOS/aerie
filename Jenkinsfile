@@ -1,9 +1,9 @@
-def getDockerCompatibleTag(tag){
+def getDockerCompatibleTag(tag) {
     def fixedTag = tag.replaceAll('\\+', '-')
     return fixedTag
 }
 
-def getDockerImageName(folder){
+def getDockerImageName(folder) {
     files = findFiles(glob: "${DOCKERFILE_PATH}/*.*")
     def list = []
 
@@ -19,7 +19,7 @@ def getDockerImageName(folder){
 
 }
 
-def getAWSTag(tag){
+def getAWSTag(tag) {
     if (tag ==~ /release-.*/) {
         return "release"
     }
@@ -98,6 +98,7 @@ pipeline {
         AWS_DEFAULT_REGION = 'us-gov-west-1'
         AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
         AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
+        AERIE_SECRET_ACCESS_KEY = credentials('Aerie-Access-Token')
         DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
         AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
@@ -109,13 +110,12 @@ pipeline {
     }
 
     stages {
-        stage('Setup'){
+        stage ('Setup') {
             steps {
                 echo "Printing environment variables..."
                 sh "env | sort"
             }
         }
-
         stage ('Build') {
             steps {
                 script { setBuildStatus("Building", "pending", "jenkins/branch-check"); }
@@ -123,7 +123,6 @@ pipeline {
                 sh './gradlew classes'
             }
         }
-
         stage ('Test') {
             steps {
                 script { setBuildStatus("Testing", "pending", "jenkins/branch-check"); }
@@ -136,57 +135,71 @@ pipeline {
                 junit testResults: '*/build/test-results/test/*.xml'
             }
         }
-
         stage ('Assemble') {
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
                 echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    echo ${BUILD_NUMBER}
+                sh """
+                echo ${BUILD_NUMBER}
 
-                    ./gradlew assemble
+                ./gradlew assemble
 
-                    # For adaptations
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
-                    cp sample-adaptation/build/libs/*.jar \
-                       banananation/build/libs/*.jar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
+                # For adaptations
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
+                cp sample-adaptation/build/libs/*.jar \
+                   banananation/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
 
-                    # For services
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
-                    cp plan-service/build/distributions/*.tar \
-                       adaptation-service/build/distributions/*.tar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
+                # For services
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
+                cp plan-service/build/distributions/*.tar \
+                   adaptation-service/build/distributions/*.tar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
 
-                    # For merlin-sdk
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
-                    cp merlin-sdk/build/libs/*.jar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
+                # For merlin-sdk
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
+                cp merlin-sdk/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
 
-                    # For merlin-cli
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
-                    cp merlin-cli/build/distributions/*.tar \
-                       /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
+                # For merlin-cli
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
+                cp merlin-cli/build/distributions/*.tar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
 
-                    tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
-                    tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-                    """
+                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
+                tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
+                """
+            }
 
-                    if (statusCode > 0) {
-                        error "Failure in Assemble stage."
-                    }
-                }
+        }
+        stage ('Generate Javadoc for Merlin-SDK') {
+            when {
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+            }
+            steps {
+                sh """
+                JAVADOC_PREP_DIR=\$(mktemp -d)
+
+                ./gradlew merlin-sdk:javadoc
+                cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+
+                git checkout gh-pages
+                rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc javadoc/
+                rm -rf \${JAVADOC_PREP_DIR}
+
+                git config user.email "achong@jpl.nasa.gov"
+                git config user.name "Jenkins gh-pages sync"
+                git add javadoc/
+                git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
+                git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
+                """
             }
         }
-
         stage ('Release') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
-
             steps {
                 script {
                     try {
@@ -217,7 +230,6 @@ pipeline {
                 }
             }
         }
-
         stage ('Docker') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
@@ -233,13 +245,10 @@ pipeline {
                             buildImages.push(tag_name)
                         }
                     }
-
                 }
-
             }
         }
-
-        stage('Deploy') {
+        stage ('Deploy') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
@@ -280,7 +289,6 @@ pipeline {
             }
         }
     }
-
     post {
         always {
             script {
@@ -301,7 +309,6 @@ pipeline {
 
             setBuildStatus("Build ${currentBuild.currentResult}", "${currentBuild.currentResult}", "jenkins/branch-check")
         }
-
         unstable {
             emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
             body: """
@@ -310,7 +317,6 @@ pipeline {
             mimeType: 'text/html',
             recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
         }
-
         failure {
             emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
             body: """
@@ -318,6 +324,10 @@ pipeline {
             """,
             mimeType: 'text/html',
             recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+        }
+        cleanup {
+            cleanWs()
+            deleteDir()
         }
     }
 }
