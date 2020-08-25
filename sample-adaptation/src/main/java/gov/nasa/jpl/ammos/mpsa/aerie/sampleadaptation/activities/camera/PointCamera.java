@@ -28,7 +28,7 @@ public class PointCamera implements Activity {
     public List<String> validateParameters() {
         List<String> validationErrors = new ArrayList<>();
 
-        if (focusPoint == null || focusPoint.equals(Vector3D.ZERO)) {
+        if (focusPoint != null && focusPoint.equals(Vector3D.ZERO)) {
             return List.of("focusPoint must be a non-zero vector");
         }
 
@@ -36,6 +36,8 @@ public class PointCamera implements Activity {
     }
 
     public void modelEffects() {
+        if (focusPoint == null) return;
+        
         Vector3D currentPointing = cameraPointing.get();
         Vector3D targetPointing = focusPoint.normalize();
 
