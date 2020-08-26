@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -15,6 +16,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -201,9 +203,29 @@ public final class ResponseSerializers {
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
     return Json.createObjectBuilder()
         .add("kind", "invalid-entity")
-        .add("breadcrumbs", Json.createArrayBuilder(ex.breadcrumbs).build())
-        .add("message", ex.message)
+        .add("failures", serializeIterable(ResponseSerializers::serializeFailureReason, ex.failures))
         .build();
+  }
+
+  public static JsonValue serializeFailureReason(final FailureReason failure) {
+    return Json.createObjectBuilder()
+        .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeBreadcrumb, failure.breadcrumbs))
+        .add("message", failure.reason)
+        .build();
+  }
+
+  public static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {
+    return breadcrumb.visit(new Breadcrumb.BreadcrumbVisitor<>() {
+      @Override
+      public JsonValue onString(final String s) {
+        return Json.createValue(s);
+      }
+
+      @Override
+      public JsonValue onInteger(final Integer i) {
+        return Json.createValue(i);
+      }
+    });
   }
 
   public static JsonValue serializeValidationException(final ValidationException ex) {

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.utils;
 
-import javax.json.bind.JsonbBuilder;
+import javax.json.JsonValue;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -23,18 +23,17 @@ public final class HttpRequester {
     return sendRequest(method, path, Optional.empty());
   }
 
-  public <T> HttpResponse<String> sendRequest(final String method, final String path, T body)
+  public <T> HttpResponse<String> sendRequest(final String method, final String path, JsonValue body)
       throws IOException, InterruptedException
   {
     return sendRequest(method, path, Optional.of(body));
   }
 
-  public <T> HttpResponse<String> sendRequest(final String method, final String path, final Optional<T> body)
+  public <T> HttpResponse<String> sendRequest(final String method, final String path, final Optional<JsonValue> body)
       throws IOException, InterruptedException
   {
-    // TODO: Remove JSON-B -- probably just take an `Optional<JsonValue>` instead of an arbitrary `Optional<T>`.
     final HttpRequest.BodyPublisher bodyPublisher = body
-        .map(x -> HttpRequest.BodyPublishers.ofString(JsonbBuilder.create().toJson(x)))
+        .map(x -> HttpRequest.BodyPublishers.ofString(x.toString()))
         .orElseGet(HttpRequest.BodyPublishers::noBody);
 
     final HttpRequest request = HttpRequest.newBuilder()

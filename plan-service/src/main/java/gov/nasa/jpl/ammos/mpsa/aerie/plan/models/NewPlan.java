@@ -7,8 +7,8 @@ import java.util.Objects;
 public final class NewPlan {
   public String name;
   public String adaptationId;
-  public String startTimestamp;
-  public String endTimestamp;
+  public Timestamp startTimestamp;
+  public Timestamp endTimestamp;
   public List<ActivityInstance> activityInstances;
 
   public NewPlan() {}
@@ -27,13 +27,27 @@ public final class NewPlan {
     }
   }
 
+  public NewPlan(
+      final String name,
+      final String adaptationId,
+      final Timestamp startTimestamp,
+      final Timestamp endTimestamp,
+      final List<ActivityInstance> activityInstances
+  ) {
+    this.name = name;
+    this.adaptationId = adaptationId;
+    this.startTimestamp = startTimestamp;
+    this.endTimestamp = endTimestamp;
+    this.activityInstances = List.copyOf(activityInstances);
+  }
+
   @Override
   public boolean equals(final Object object) {
-    if (object.getClass() != NewPlan.class) {
+    if (!(object instanceof NewPlan)) {
       return false;
     }
 
-    final NewPlan other = (NewPlan)object;
+    final var other = (NewPlan)object;
     return
         (  Objects.equals(this.name, other.name)
         && Objects.equals(this.adaptationId, other.adaptationId)

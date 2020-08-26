@@ -8,7 +8,7 @@ import java.util.Objects;
 
 public final class ActivityInstance {
   public String type;
-  public String startTimestamp;
+  public Timestamp startTimestamp;
   public Map<String, SerializedValue> parameters;
 
   public ActivityInstance() {}
@@ -19,13 +19,19 @@ public final class ActivityInstance {
     this.parameters = (other.parameters == null) ? null : new HashMap<>(other.parameters);
   }
 
+  public ActivityInstance(final String type, final Timestamp startTimestamp, final Map<String, SerializedValue> parameters) {
+    this.type = type;
+    this.startTimestamp = startTimestamp;
+    this.parameters = (parameters != null) ? Map.copyOf(parameters) : null;
+  }
+
   @Override
   public boolean equals(final Object object) {
-    if (object.getClass() != ActivityInstance.class) {
+    if (!(object instanceof ActivityInstance)) {
       return false;
     }
 
-    final ActivityInstance other = (ActivityInstance)object;
+    final var other = (ActivityInstance)object;
     return
         (  Objects.equals(this.type, other.type)
         && Objects.equals(this.startTimestamp, other.startTimestamp)

@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchActivityInstanceExcep
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.NewPlan;
+import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes.PlanRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
@@ -182,8 +183,8 @@ public final class MockPlanRepository implements PlanRepository {
     private final String planId;
 
     private Optional<String> name = Optional.empty();
-    private Optional<String> startTimestamp = Optional.empty();
-    private Optional<String> endTimestamp = Optional.empty();
+    private Optional<Timestamp> startTimestamp = Optional.empty();
+    private Optional<Timestamp> endTimestamp = Optional.empty();
     private Optional<String> adaptationId = Optional.empty();
 
     public MockPlanTransaction(final String planId) {
@@ -210,13 +211,13 @@ public final class MockPlanRepository implements PlanRepository {
     }
 
     @Override
-    public PlanTransaction setStartTimestamp(final String timestamp) {
+    public PlanTransaction setStartTimestamp(final Timestamp timestamp) {
       this.startTimestamp = Optional.of(timestamp);
       return this;
     }
 
     @Override
-    public PlanTransaction setEndTimestamp(final String timestamp) {
+    public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
       this.endTimestamp = Optional.of(timestamp);
       return this;
     }
@@ -233,7 +234,7 @@ public final class MockPlanRepository implements PlanRepository {
     private final String activityId;
 
     private Optional<String> type = Optional.empty();
-    private Optional<String> startTimestamp = Optional.empty();
+    private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
     public MockActivityTransaction(final String planId, final String activityId) {
@@ -265,7 +266,7 @@ public final class MockPlanRepository implements PlanRepository {
     }
 
     @Override
-    public ActivityTransaction setStartTimestamp(final String timestamp) {
+    public ActivityTransaction setStartTimestamp(final Timestamp timestamp) {
       this.startTimestamp = Optional.of(timestamp);
       return this;
     }

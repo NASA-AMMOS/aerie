@@ -9,6 +9,9 @@ include 'contrib'
 include 'banananation'
 include 'sample-adaptation'
 
+// Service support
+include 'parsing-utilities'
+
 // Services for deployment within the Aerie infrastructure
 include 'plan-service'
 include 'adaptation-service'
