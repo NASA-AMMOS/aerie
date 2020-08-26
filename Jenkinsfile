@@ -173,29 +173,6 @@ pipeline {
             }
 
         }
-        stage ('Generate Javadoc for Merlin-SDK') {
-            when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-            }
-            steps {
-                sh """
-                JAVADOC_PREP_DIR=\$(mktemp -d)
-
-                ./gradlew merlin-sdk:javadoc
-                cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
-
-                git checkout gh-pages
-                rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc javadoc/
-                rm -rf \${JAVADOC_PREP_DIR}
-
-                git config user.email "achong@jpl.nasa.gov"
-                git config user.name "Jenkins gh-pages sync"
-                git add javadoc/
-                git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
-                git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
-                """
-            }
-        }
         stage ('Release') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
@@ -286,6 +263,30 @@ pipeline {
                         }
                     }
                 }
+            }
+        }
+        stage ('Generate Javadoc for Merlin-SDK') {
+            when {
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+            }
+            steps {
+                sh """
+                JAVADOC_PREP_DIR=\$(mktemp -d)
+
+                ./gradlew merlin-sdk:javadoc
+                cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+
+                git checkout gh-pages
+                rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc javadoc/
+                rm -rf \${JAVADOC_PREP_DIR}
+
+                git config user.email "achong@jpl.nasa.gov"
+                git config user.name "Jenkins gh-pages sync"
+                git add javadoc/
+                git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
+                git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
+                git checkout ${GIT_BRANCH}
+                """
             }
         }
     }
