@@ -96,19 +96,28 @@ type Activity implements Node {
 
   type: ActivityType!
   arguments: [ActivityArgument!]!
+  argument(name: [String!]!): [ActivityArgument]!
   window: Window!
 
   validationFailures: [ActivityValidationFailure!]!
 
-  rootAncestor: Activity!
   parent: Activity
+  rootAncestor: Activity!
+  ancestors: [Activity!]!
   children: [Activity!]!
+  descendants: [Activity!]!
 }
 
 type ActivityArgument {
   name: String!
+
+  """
+  The type may be null if an activity instance is created with an argument for a nonexistent parameter.
+  """
   type: ActivityArgumentType
+
   value: MissionValue
+
   overridden: Boolean!
 }
 
@@ -154,10 +163,10 @@ type ScheduleType implements Node {
   defaultConstraints: [ProvidedConstraint!]!
 
   activityTypes: [ActivityType!]!
-  activityType(name: String!): ActivityType
+  activityType(name: [String!]!): [ActivityType]!
 
   stateTypes: [StateType!]!
-  stateType(name: String!): StateType
+  stateType(name: [String!]!): [StateType]!
 
   # TODO: Add queries for events and conditions
   #   States are defined by a profile over time
@@ -178,7 +187,19 @@ type ProvidedConstraint {
 
 type ActivityType {
   name: String!
+  description: String
+  tags: [String!]!
+
+  """
+  Use case for color still unclear -- does this need to be inherent to activity types,
+  or can it be derived based on other data (such as from tags)?
+  """
+  color: String
+
+  estimatedDuration: ElapsedTime!
+
   parameters: [ActivityArgumentType!]!
+  parameter(name: [String!]!): [ActivityArgumentType]!
 }
 
 type ActivityArgumentType {
