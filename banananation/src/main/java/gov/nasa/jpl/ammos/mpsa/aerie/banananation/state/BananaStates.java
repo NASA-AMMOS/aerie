@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.IndependentStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.SettableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes.StateComparator;
 
 import java.util.List;
 
@@ -25,27 +26,27 @@ public final class BananaStates {
   public static final SettableState<Flag> flag = factory.enumerated("flag", Flag.A);
 
   public static final List<ViolableConstraint> violableConstraints = List.of(
-      new ViolableConstraint(fruit.when(x -> x < 2).and(activities.ofType("BiteBanana").whenActive()))
+      new ViolableConstraint(fruit.whenLessThan(2.0).and(activities.ofType("BiteBanana").whenActive()))
           .withId("consumingLowFruit")
           .withName("Consuming Low Fruit")
           .withMessage("Fruit rationing must be in effect when fruit is low")
           .withCategory("severe"),
-      new ViolableConstraint(fruit.when(x -> x < 2))
+      new ViolableConstraint(fruit.whenLessThan(2.0))
           .withId("minFruit")
           .withName("Minimum Fruit")
           .withMessage("Running dangerously low on fruit")
           .withCategory("warning"),
-      new ViolableConstraint(fruit.when(x -> x > 10))
+      new ViolableConstraint(fruit.whenGreaterThan(10.0))
           .withId("maxFruit")
           .withName("Maximum Fruit")
           .withMessage("Cannot hold more than 10 fruit")
           .withCategory("severe"),
-      new ViolableConstraint(fruit.when(x -> x > 5).and(peel.when(y -> y > 5)))
+      new ViolableConstraint(fruit.whenGreaterThan(5.0).and(peel.whenGreaterThan(5.0)))
           .withId("fruitsAndPeels")
           .withName("Fruit Peels")
           .withMessage("Should throw away peels before getting more fruit")
           .withCategory("warning"),
-      new ViolableConstraint(peel.when(y -> y > 10))
+      new ViolableConstraint(peel.whenGreaterThan(10.0))
           .withId("mexPeels")
           .withName("Maximum Peels")
           .withMessage("Too many peels is gross. Clean some up")
