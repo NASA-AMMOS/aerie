@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constrainttests;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 import org.junit.Test;
@@ -120,7 +121,7 @@ public class ConstraintInterfaceTests {
   @Test
   public void ConstructorUsingAState() {
     var constraint = Constraint.createStateConstraint(ConstraintTestSetup.stateA, () -> new Windows(
-        ConstraintTestSetup.a));
+        ConstraintTestSetup.a), ConstraintStructure.ofStateConstraint(null, null, null));
     var windows = constraint.getWindows();
 
     assertTrue(constraint.getStateIds().contains(ConstraintTestSetup.stateA));
@@ -130,7 +131,7 @@ public class ConstraintInterfaceTests {
   @Test
   public void ConstructorUsingAStateSet() {
     var constraint = Constraint.createStateConstraint(ConstraintTestSetup.stateIDs, () -> new Windows(
-        ConstraintTestSetup.a));
+        ConstraintTestSetup.a), ConstraintStructure.ofStateConstraint(null, null, null));
     var windows = constraint.getWindows();
 
     checkStateSet(constraint);
@@ -140,7 +141,7 @@ public class ConstraintInterfaceTests {
   @Test
   public void ConstructorUsingAnActivity() {
     var constraint = Constraint.createActivityConstraint(ConstraintTestSetup.actA, () -> new Windows(
-        ConstraintTestSetup.a));
+        ConstraintTestSetup.a), ConstraintStructure.ofActivityConstraint(null, null));
     var windows = constraint.getWindows();
 
     assertTrue(constraint.getActivityIds().contains(ConstraintTestSetup.actA));
@@ -150,7 +151,7 @@ public class ConstraintInterfaceTests {
   @Test
   public void ConstructorUsingAnActivitySet() {
     var constraint = Constraint.createActivityConstraint(ConstraintTestSetup.activityIDs, () -> new Windows(
-        ConstraintTestSetup.a));
+        ConstraintTestSetup.a), ConstraintStructure.ofActivityConstraint(null, null));
     var windows = constraint.getWindows();
 
     checkActivitySet(constraint);
@@ -160,10 +161,12 @@ public class ConstraintInterfaceTests {
   @Test
   public void ConstructorUsingStateAndActivity() {
     var constraint = Constraint.create(
+        null,
         ConstraintTestSetup.activityIDs,
         ConstraintTestSetup.stateIDs,
         () -> new Windows(
-            ConstraintTestSetup.a));
+            ConstraintTestSetup.a),
+        null);
     checkActivitySet(constraint);
     checkStateSet(constraint);
   }
@@ -181,10 +184,10 @@ public class ConstraintInterfaceTests {
         ConstraintTestSetup.actD);
     Set<String> act2 = Set.of(ConstraintTestSetup.actC, ConstraintTestSetup.actD);
 
-    var constraint1 = Constraint.create(act1, state1, () -> new Windows(ConstraintTestSetup.a));
-    var constraint2 = Constraint.create(act2, state2, () -> new Windows(ConstraintTestSetup.a));
+    var constraint1 = Constraint.create(null, act1, state1, () -> new Windows(ConstraintTestSetup.a), null);
+    var constraint2 = Constraint.create(null, act2, state2, () -> new Windows(ConstraintTestSetup.a), null);
 
-    var combined = Constraint.combine(constraint1, constraint2, Windows::subtractAll);
+    var combined = Constraint.combine(constraint1, constraint2, Windows::subtractAll, null);
     Set<String> actIDs = combined.getActivityIds();
     var stateIDs = combined.getStateIds();
 

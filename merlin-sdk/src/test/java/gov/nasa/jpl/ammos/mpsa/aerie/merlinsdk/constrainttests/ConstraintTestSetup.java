@@ -38,12 +38,12 @@ public class ConstraintTestSetup {
   public static Set<String> stateIDs = Set.of(stateA, stateB, stateC, stateD);
 
   //Windows: [0,3], [5,8], [11,15], [20,25], [27,29]
-  public static Constraint c1 = Constraint.create(() -> new Windows(a, b, c, d, e));
+  public static Constraint c1 = Constraint.create(() -> new Windows(a, b, c, d, e), null);
 
   //Windows: [6,10], [11,15], [17,18], [21,27]
-  public static Constraint c2 = Constraint.create(() -> new Windows(alpha, beta, gamma, delta));
+  public static Constraint c2 = Constraint.create(() -> new Windows(alpha, beta, gamma, delta), null);
 
-  static Constraint constraint = Constraint.create(activityIDs, stateIDs, () -> new Windows(a));
+  static Constraint constraint = Constraint.create(null, activityIDs, stateIDs, () -> new Windows(a), null);
 
   public static String constraintID = "123";
   public static String name = "A Test Constraint";
