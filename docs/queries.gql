@@ -140,7 +140,7 @@ type Constraint implements Node {
 type ConstraintViolation {
   window: Window!
   activities: [Activity!]!
-  states: [String!]
+  states: [String!]!
 
   severity: String!
   message: String!
