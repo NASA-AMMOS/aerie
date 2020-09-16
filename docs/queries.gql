@@ -131,6 +131,7 @@ type Constraint implements Node {
   id: ID!
 
   name: String!
+  description: String!
   violations: [ConstraintViolation!]!
 
   category: String
@@ -143,7 +144,6 @@ type ConstraintViolation {
   states: [String!]!
 
   severity: String!
-  message: String!
 }
 
 type Window {
