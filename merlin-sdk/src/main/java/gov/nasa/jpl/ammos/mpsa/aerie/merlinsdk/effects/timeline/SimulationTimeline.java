@@ -51,7 +51,7 @@ public final class SimulationTimeline<T, Event> {
   /*package-local*/ static final int START_INDEX = -1;
 
   // Use a wildcard as an existential quantifier. The caller cannot know what concrete type this is instantiated over,
-  // so two separate SimulationTimeline instances cannot interfere with each other.
+  //   so two separate SimulationTimeline instances cannot interfere with each other.
   public static <Event> SimulationTimeline<?, Event> create() {
     return new SimulationTimeline<>();
   }
@@ -93,6 +93,8 @@ public final class SimulationTimeline<T, Event> {
     return this.times.get(index);
   }
 
+  // PRECONDITION: `startTime` occurs-before `endTime`.
+  //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
       final EffectTrait<Effect> trait,
@@ -101,16 +103,16 @@ public final class SimulationTimeline<T, Event> {
       final int endTime
   ) {
     // NOTE: In principle, we can determine the maximum size of the path stack.
-    // Whenever two time points are joined, increment a counter on the resulting time point.
-    // This counter can then be used to allocate a stack of just the right size.
+    //   Whenever two time points are joined, increment a counter on the resulting time point.
+    //   This counter can then be used to allocate a stack of just the right size.
     final var pathStack = new ArrayDeque<ActivePath<Effect>>();
     var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, trait.empty());
     var pointIndex = endTime;
 
-    // NOTE: In principle, we can bound this loop by determining the maximum number
-    // of time points we will visit. Whenever a new time point is generated from an old one,
-    // its count would be updated appropriately. (Emitting an event adds one; joining two branches
-    // adds the branches and subtracts the base.)
+    // TERMINATION: In principle, we can bound this loop by determining the maximum number
+    //   of time points we will visit. Whenever a new time point is generated from an old one,
+    //   its count would be updated appropriately. (Emitting an event adds one; joining two branches
+    //   adds the branches and subtracts the base.)
     while (true) {
       if (currentPath.basePoint() != pointIndex) {
         // There's still more path to follow!
@@ -147,7 +149,7 @@ public final class SimulationTimeline<T, Event> {
       } else if (currentPath instanceof ActivePath.Right) {
         // We've just finished evaluating the right side of a concurrence.
         // We already evaluated the left side, so bind them together and accumulate the result
-        // into the open path one level up. We'll continue from the given base point.
+        //   into the open path one level up. We'll continue from the given base point.
         final var path = (ActivePath.Right<Effect>) currentPath;
         currentPath = pathStack.pop();
         currentPath.accumulate(next -> trait.sequentially(trait.concurrently(path.left, path.right), next));
