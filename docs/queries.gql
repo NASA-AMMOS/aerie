@@ -131,19 +131,20 @@ type Constraint implements Node {
   id: ID!
 
   name: String!
-  violations: [ConstraintViolation!]!
+  description: String!
+  specification: ConstraintSpecification!
 
   category: String
-  # TODO: query about constraint definition
+
+  violations: [ConstraintViolation!]!
 }
 
 type ConstraintViolation {
   window: Window!
   activities: [Activity!]!
-  states: [String!]
+  states: [String!]!
 
   severity: String!
-  message: String!
 }
 
 type Window {
@@ -260,3 +261,8 @@ scalar Time
 An opaque binary blob
 """
 scalar Blob
+
+"""
+A formal constraint specification in logic
+"""
+scalar ConstraintSpecification

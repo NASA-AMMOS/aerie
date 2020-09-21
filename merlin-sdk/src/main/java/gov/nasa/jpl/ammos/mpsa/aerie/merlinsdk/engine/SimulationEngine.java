@@ -24,6 +24,11 @@ public final class SimulationEngine<T, Event> {
   // For each task, a set of tasks awaiting its completion.
   private final Map<String, Set<SimulationTask<T, Event>>> conditioned = new HashMap<>();
 
+  // The elapsed time when a task was first resumed.
+  private final Map<String, Duration> taskStartTimes = new HashMap<>();
+  // The elapsed time when a task reported completion.
+  private final Map<String, Duration> taskEndTimes = new HashMap<>();
+
 
   // The history of events produced by tasks.
   private History<T, Event> currentHistory;
@@ -46,7 +51,7 @@ public final class SimulationEngine<T, Event> {
 
   public void await(final String taskToAwait, final SimulationTask<T, Event> task) {
     if (this.completed.contains(taskToAwait)) {
-      this.queue.add(Pair.of(this.elapsedTime, task));
+      this.defer(Duration.ZERO, task);
     } else {
       this.conditioned.computeIfAbsent(taskToAwait, k -> new HashSet<>()).add(task);
     }
@@ -55,12 +60,13 @@ public final class SimulationEngine<T, Event> {
   /*package-local*/
   void markCompleted(final String taskId) {
     this.completed.add(taskId);
+    this.taskEndTimes.put(taskId, this.elapsedTime);
 
     final var conditionedActivities = this.conditioned.remove(taskId);
     if (conditionedActivities == null) return;
 
     for (final var conditionedTask : conditionedActivities) {
-      this.queue.add(Pair.of(this.elapsedTime, conditionedTask));
+      this.defer(Duration.ZERO, conditionedTask);
     }
   }
 
@@ -142,9 +148,10 @@ public final class SimulationEngine<T, Event> {
         final var task = branch.getValue();
 
         final var scheduler = new EngineTaskScheduler<>(this, task.getId());
-        final var endTime = task.runFrom(branchTip, scheduler);
+        final var suspendTime = task.runFrom(branchTip, scheduler);
 
-        stack.push(new TaskFrame<>(endTime, scheduler.getBranches()));
+        this.taskStartTimes.putIfAbsent(task.getId(), this.elapsedTime);
+        stack.push(new TaskFrame<>(suspendTime, scheduler.getBranches()));
       } else {
         // Join this completed sub-task with its parent.
         final var frame = stack.pop();
@@ -163,6 +170,21 @@ public final class SimulationEngine<T, Event> {
 
   public History<T, Event> getCurrentHistory() {
     return this.currentHistory;
+  }
+
+  public Map<String, Pair<Duration, Duration>> getTaskWindows() {
+    final var windows = new HashMap<String, Pair<Duration, Duration>>();
+
+    for (final var endEntry : this.taskEndTimes.entrySet()) {
+      final var taskId = endEntry.getKey();
+      final var endTime = endEntry.getValue();
+
+      final var startTime = this.taskStartTimes.get(taskId);
+
+      windows.put(taskId, Pair.of(startTime, endTime));
+    }
+
+    return windows;
   }
 
   public Duration getElapsedTime() {
