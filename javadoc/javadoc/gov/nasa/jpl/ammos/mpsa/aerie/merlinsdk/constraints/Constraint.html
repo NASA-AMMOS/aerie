@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":18,"i1":1,"i2":1,"i3":1,"i4":1,"i5":1,"i6":1,"i7":1,"i8":1,"i9":6,"i10":6,"i11":6,"i12":18,"i13":1,"i14":18,"i15":1};
+var data = {"i0":18,"i1":1,"i2":1,"i3":1,"i4":1,"i5":1,"i6":1,"i7":1,"i8":1,"i9":6,"i10":6,"i11":6,"i12":6,"i13":6,"i14":18,"i15":1,"i16":18,"i17":1};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -161,45 +161,53 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#combine(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,java.util.function.BiConsumer)">combine</a></span>&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;x,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#combine(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,java.util.function.BiConsumer,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes.Connector)">combine</a></span>&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;x,
        <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;y,
-       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiConsumer.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiConsumer</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>,&#8203;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowCombinator)</code></th>
+       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiConsumer.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiConsumer</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>,&#8203;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowCombinator,
+       <a href="ConditionTypes.Connector.html" title="enum in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConditionTypes.Connector</a>&nbsp;connector)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#create(java.util.function.Supplier)">create</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#create(java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">create</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+      <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#create(java.util.Set,java.util.Set,java.util.function.Supplier)">create</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#create(java.util.Set,java.util.Set,java.util.Set,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">create</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityTypes,
+      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;stateIds,
-      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</code></th>
+      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+      <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createActivityConstraint(java.lang.String,java.util.function.Supplier)">createActivityConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;activityId,
-                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createActivityConstraint(java.lang.String,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">createActivityConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;activityId,
+                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                        <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createActivityConstraint(java.util.Set,java.util.function.Supplier)">createActivityConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
-                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createActivityConstraint(java.util.Set,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">createActivityConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
+                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                        <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createStateConstraint(java.lang.String,java.util.function.Supplier)">createStateConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;stateId,
-                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createStateConstraint(java.lang.String,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">createStateConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;stateId,
+                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                     <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createStateConstraint(java.util.Set,java.util.function.Supplier)">createStateConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;stateIds,
-                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createStateConstraint(java.util.Set,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">createStateConstraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;stateIds,
+                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                     <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i9" class="rowColor">
@@ -209,31 +217,41 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getStateIds()">getStateIds</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getActivityTypes()">getActivityTypes</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i11" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getStateIds()">getStateIds</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code><a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getStructure()">getStructure</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i13" class="rowColor">
 <td class="colFirst"><code><a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getWindows()">getWindows</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>default <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#minus(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint)">minus</a></span>&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#minus(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint)">minus</a></span>&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;x,
      <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;y)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>default <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#or(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint)">or</a></span>&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>static <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#or(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint)">or</a></span>&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;x,
   <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;y)</code></th>
@@ -274,6 +292,15 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;getStateIds()</pre>
 </li>
 </ul>
+<a id="getActivityTypes()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getActivityTypes</h4>
+<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;getActivityTypes()</pre>
+</li>
+</ul>
 <a id="getWindows()">
 <!--   -->
 </a>
@@ -281,6 +308,15 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <h4>getWindows</h4>
 <pre class="methodSignature"><a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;getWindows()</pre>
+</li>
+</ul>
+<a id="getStructure()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getStructure</h4>
+<pre class="methodSignature"><a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;getStructure()</pre>
 </li>
 </ul>
 <a id="and(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint)">
@@ -340,47 +376,51 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
                         <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;y)</pre>
 </li>
 </ul>
-<a id="createStateConstraint(java.lang.String,java.util.function.Supplier)">
+<a id="createStateConstraint(java.lang.String,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createStateConstraint</h4>
 <pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;createStateConstraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;stateId,
-                                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</pre>
+                                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                                        <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</pre>
 </li>
 </ul>
-<a id="createStateConstraint(java.util.Set,java.util.function.Supplier)">
+<a id="createStateConstraint(java.util.Set,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createStateConstraint</h4>
 <pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;createStateConstraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;stateIds,
-                                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</pre>
+                                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                                        <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</pre>
 </li>
 </ul>
-<a id="createActivityConstraint(java.lang.String,java.util.function.Supplier)">
+<a id="createActivityConstraint(java.lang.String,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createActivityConstraint</h4>
 <pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;createActivityConstraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;activityId,
-                                           <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</pre>
+                                           <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                                           <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</pre>
 </li>
 </ul>
-<a id="createActivityConstraint(java.util.Set,java.util.function.Supplier)">
+<a id="createActivityConstraint(java.util.Set,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>createActivityConstraint</h4>
 <pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;createActivityConstraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
-                                           <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</pre>
+                                           <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                                           <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</pre>
 </li>
 </ul>
-<a id="combine(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,java.util.function.BiConsumer)">
+<a id="combine(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint,java.util.function.BiConsumer,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes.Connector)">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -388,27 +428,31 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <h4>combine</h4>
 <pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;combine&#8203;(<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;x,
                           <a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;y,
-                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiConsumer.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiConsumer</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>,&#8203;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowCombinator)</pre>
+                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiConsumer.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiConsumer</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>,&#8203;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowCombinator,
+                          <a href="ConditionTypes.Connector.html" title="enum in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConditionTypes.Connector</a>&nbsp;connector)</pre>
 </li>
 </ul>
-<a id="create(java.util.function.Supplier)">
+<a id="create(java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>create</h4>
-<pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;create&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</pre>
+<pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;create&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                         <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</pre>
 </li>
 </ul>
-<a id="create(java.util.Set,java.util.Set,java.util.function.Supplier)">
+<a id="create(java.util.Set,java.util.Set,java.util.Set,java.util.function.Supplier,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>create</h4>
-<pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;create&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
+<pre class="methodSignature">static&nbsp;<a href="Constraint.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">Constraint</a>&nbsp;create&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityTypes,
+                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;activityIds,
                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;stateIds,
-                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier)</pre>
+                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;<a href="../time/Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&gt;&nbsp;windowSupplier,
+                         <a href="ConstraintStructure.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintStructure</a>&nbsp;structure)</pre>
 </li>
 </ul>
 </li>
