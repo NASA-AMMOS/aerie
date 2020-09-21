@@ -25,7 +25,8 @@ public final class IndependentStateFactory {
   public IndependentStateFactory(
       final Function<String, StateQuery<SerializedValue>> model,
       final Consumer<IndependentStateEvent> emitter
-  ) {
+  )
+  {
     this.model = model;
     this.emitter = emitter;
   }
@@ -39,7 +40,8 @@ public final class IndependentStateFactory {
         name,
         () -> mapper.deserializeValue(query.get()).getSuccessOrThrow(),
         pred -> query.when(x -> pred.test(mapper.deserializeValue(x).getSuccessOrThrow())),
-        value -> this.emitter.accept(IndependentStateEvent.set(name, mapper.serializeValue(value))));
+        value -> this.emitter.accept(IndependentStateEvent.set(name, mapper.serializeValue(value))),
+        mapper);
   }
 
   public DoubleState cumulative(final String name, final double initialValue) {

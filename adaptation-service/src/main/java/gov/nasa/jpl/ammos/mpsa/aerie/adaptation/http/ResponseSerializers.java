@@ -9,6 +9,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure.ConstraintStructureVisitor;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -20,6 +24,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -29,7 +34,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 public final class ResponseSerializers {
-  public static <T> JsonValue serializeIterable(final Function<T, JsonValue> elementSerializer, final Iterable<T> elements) {
+  public static <T> JsonValue serializeIterable(
+      final Function<T, JsonValue> elementSerializer,
+      final Iterable<T> elements)
+  {
     if (elements == null) return JsonValue.NULL;
 
     final var builder = Json.createArrayBuilder();
@@ -65,6 +73,67 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityParameter, parameters);
   }
 
+  public static JsonValue serializeConstraintStructure(ConstraintStructure structure) {
+
+    return structure.visit(new ConstraintStructureVisitor<>() {
+
+      @Override
+      public JsonValue onActivityConstraintStructure(
+          final String activityType,
+          final ConditionTypes.ActivityCondition condition)
+      {
+        return Json.createObjectBuilder()
+                   .add("constraint type", "Activity")
+                   .add("activity type", activityType)
+                   .add("condition", condition.toString())
+                   .build();
+      }
+
+      @Override
+      public JsonValue onStateConstraintStructure(
+          final String stateName,
+          final ConditionTypes.StateComparator comparator,
+          final SerializedValue value)
+      {
+        return Json.createObjectBuilder()
+                   .add("constraint type", "State")
+                   .add("state name", stateName)
+                   .add("comparator", comparator.toString())
+                   .add("value", serializeParameter(value))
+                   .build();
+      }
+
+      @Override
+      public JsonValue onComplexConstraintStructure(
+          final ConditionTypes.Connector connector,
+          final ConstraintStructure left,
+          final ConstraintStructure right)
+      {
+        return Json.createObjectBuilder()
+                   .add("constraint type", "Complex")
+                   .add("connector", connector.toString())
+                   .add("left", serializeConstraintStructure(left))
+                   .add("right", serializeConstraintStructure(right))
+                   .build();
+      }
+    });
+  }
+
+  public static JsonValue serializeConstraintType(final ViolableConstraint constraintType) {
+    return Json
+        .createObjectBuilder()
+        .add("name", constraintType.name)
+        .add("message", constraintType.message)
+        .add("category", constraintType.category)
+        .add("stateIDs", Json.createArrayBuilder(constraintType.getStateIds()))
+        .add("activityTypes", Json.createArrayBuilder(constraintType.getActivityTypes()))
+        .add("structure", serializeConstraintStructure(constraintType.getStructure())).build();
+  }
+
+  public static JsonValue serializeConstraintTypes(List<ViolableConstraint> constraintTypes) {
+    return serializeIterable(ResponseSerializers::serializeConstraintType, constraintTypes);
+  }
+
   public static JsonValue serializeActivityType(final ActivityType activityType) {
     return Json
         .createObjectBuilder()
@@ -94,20 +163,20 @@ public final class ResponseSerializers {
   public static JsonValue serializeFailureList(final List<String> failures) {
     if (failures.size() > 0) {
       return Json.createObjectBuilder()
-          .add("instantiable", JsonValue.FALSE)
-          .add("failures", Json.createArrayBuilder(failures))
-          .build();
+                 .add("instantiable", JsonValue.FALSE)
+                 .add("failures", Json.createArrayBuilder(failures))
+                 .build();
     } else {
       return Json.createObjectBuilder()
-          .add("instantiable", JsonValue.TRUE)
-          .build();
+                 .add("instantiable", JsonValue.TRUE)
+                 .build();
     }
   }
 
   public static JsonValue serializedCreatedId(final String entityId) {
     return Json.createObjectBuilder()
-        .add("id", entityId)
-        .build();
+               .add("id", entityId)
+               .build();
   }
 
   public static JsonValue serializeParameter(final SerializedValue parameter) {
@@ -128,26 +197,26 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeConstraintViolation(final ConstraintViolation violation) {
     return Json.createObjectBuilder()
-            .add("associations", serializeConstraintViolationAssociations(violation))
-            .add("constraint", serializeConstraintViolationMetadata(violation))
-            .add("windows", serializeWindows(violation.violationWindows))
-            .build();
+               .add("associations", serializeConstraintViolationAssociations(violation))
+               .add("constraint", serializeConstraintViolationMetadata(violation))
+               .add("windows", serializeWindows(violation.violationWindows))
+               .build();
   }
 
   public static JsonValue serializeConstraintViolationAssociations(ConstraintViolation violation) {
     return Json.createObjectBuilder()
-            .add("activityInstanceIds", serializeIterable(Json::createValue, violation.associatedActivityIds))
-            .add("stateIds", serializeIterable(Json::createValue, violation.associatedStateIds))
-            .build();
+               .add("activityInstanceIds", serializeIterable(Json::createValue, violation.associatedActivityIds))
+               .add("stateIds", serializeIterable(Json::createValue, violation.associatedStateIds))
+               .build();
   }
 
   public static JsonValue serializeConstraintViolationMetadata(ConstraintViolation violation) {
     return Json.createObjectBuilder()
-            .add("id", violation.id)
-            .add("name", violation.name)
-            .add("message", violation.message)
-            .add("category", violation.category)
-            .build();
+               .add("id", violation.id)
+               .add("name", violation.name)
+               .add("message", violation.message)
+               .add("category", violation.category)
+               .build();
   }
 
   public static JsonValue serializeWindows(Windows windows) {
@@ -156,9 +225,9 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeWindow(final Window window) {
     return Json.createObjectBuilder()
-            .add("start", window.start.dividedBy(Duration.MICROSECOND))
-            .add("end", window.end.dividedBy(Duration.MICROSECOND))
-            .build();
+               .add("start", window.start.dividedBy(Duration.MICROSECOND))
+               .add("end", window.end.dividedBy(Duration.MICROSECOND))
+               .build();
   }
 
   public static JsonValue serializeSimulationResults(final SimulationResults results) {
@@ -167,16 +236,18 @@ public final class ResponseSerializers {
     final var builder = Json.createObjectBuilder();
     builder.add("times", serializeTimestamps(results.timestamps));
     builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
-    builder.add("constraints", serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations));
+    builder.add(
+        "constraints",
+        serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations));
     return builder.build();
   }
 
   public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
     return Json.createObjectBuilder()
-        .add("defer", scheduledActivity.getLeft().dividedBy(Duration.MICROSECOND))
-        .add("type", scheduledActivity.getRight().getTypeName())
-        .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
-        .build();
+               .add("defer", scheduledActivity.getLeft().dividedBy(Duration.MICROSECOND))
+               .add("type", scheduledActivity.getRight().getTypeName())
+               .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
+               .build();
   }
 
   public static JsonValue serializeScheduledActivities(final Map<String, Pair<Duration, SerializedActivity>> activities) {
@@ -185,33 +256,38 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
     return Json.createObjectBuilder()
-        .add("adaptationId", message.adaptationId)
-        .add("startTime", DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn").withZone(ZoneOffset.UTC).format(message.startTime))
-        .add("samplingDuration", message.samplingDuration.dividedBy(Duration.MICROSECOND))
-        .add("samplingPeriod", message.samplingPeriod.dividedBy(Duration.MICROSECOND))
-        .add("activities", serializeScheduledActivities(message.activityInstances))
-        .build();
+               .add("adaptationId", message.adaptationId)
+               .add(
+                   "startTime",
+                   DateTimeFormatter
+                       .ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn")
+                       .withZone(ZoneOffset.UTC)
+                       .format(message.startTime))
+               .add("samplingDuration", message.samplingDuration.dividedBy(Duration.MICROSECOND))
+               .add("samplingPeriod", message.samplingPeriod.dividedBy(Duration.MICROSECOND))
+               .add("activities", serializeScheduledActivities(message.activityInstances))
+               .build();
   }
 
   public static JsonValue serializeInvalidJsonException(final InvalidJsonException ex) {
     return Json.createObjectBuilder()
-        .add("kind", "invalid-entity")
-        .add("message", "invalid json")
-        .build();
+               .add("kind", "invalid-entity")
+               .add("message", "invalid json")
+               .build();
   }
 
   public static JsonValue serializeInvalidEntityException(final InvalidEntityException ex) {
     return Json.createObjectBuilder()
-        .add("kind", "invalid-entity")
-        .add("failures", serializeIterable(ResponseSerializers::serializeFailureReason, ex.failures))
-        .build();
+               .add("kind", "invalid-entity")
+               .add("failures", serializeIterable(ResponseSerializers::serializeFailureReason, ex.failures))
+               .build();
   }
 
   public static JsonValue serializeFailureReason(final FailureReason failure) {
     return Json.createObjectBuilder()
-        .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeBreadcrumb, failure.breadcrumbs))
-        .add("message", failure.reason)
-        .build();
+               .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeBreadcrumb, failure.breadcrumbs))
+               .add("message", failure.reason)
+               .build();
   }
 
   public static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {
@@ -231,37 +307,37 @@ public final class ResponseSerializers {
   public static JsonValue serializeValidationException(final ValidationException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
-        .add("message", "invalid entity")
-        .add("failures", Json.createArrayBuilder(ex.getValidationErrors()))
-        .build();
+               .add("message", "invalid entity")
+               .add("failures", Json.createArrayBuilder(ex.getValidationErrors()))
+               .build();
   }
 
   public static JsonValue serializeAdaptationRejectedException(final App.AdaptationRejectedException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
-        .add("message", "adaptation rejected: " + ex.getMessage())
-        .build();
+               .add("message", "adaptation rejected: " + ex.getMessage())
+               .build();
   }
 
   public static JsonValue serializeAdaptationContractException(final Adaptation.AdaptationContractException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
-        .add("message", ex.getMessage())
-        .build();
+               .add("message", ex.getMessage())
+               .build();
   }
 
   public static JsonValue serializeAdaptationLoadException(final LocalApp.AdaptationLoadException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
-        .add("message", ex.getMessage())
-        .build();
+               .add("message", ex.getMessage())
+               .build();
   }
 
   public static JsonValue serializeAdaptationAccessException(final RemoteAdaptationRepository.AdaptationAccessException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
-        .add("message", ex.getMessage())
-        .build();
+               .add("message", ex.getMessage())
+               .build();
   }
 
   private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
@@ -327,13 +403,13 @@ public final class ResponseSerializers {
     public JsonValue onEnum(Class<? extends Enum<?>> enumeration) {
       var enumValues = Arrays.asList(enumeration.getEnumConstants());
       return Json
-              .createObjectBuilder()
-              .add("type", "enumerated")
-              .add("items", serializeIterable(v -> Json.createObjectBuilder()
-                      .add("key", v.name())
-                      .add("label", v.toString())
-                      .build(), enumValues))
-              .build();
+          .createObjectBuilder()
+          .add("type", "enumerated")
+          .add("items", serializeIterable(v -> Json.createObjectBuilder()
+                                                   .add("key", v.name())
+                                                   .add("label", v.toString())
+                                                   .build(), enumValues))
+          .build();
     }
   }
 

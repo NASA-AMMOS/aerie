@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import io.javalin.Javalin;
@@ -72,6 +73,9 @@ public final class AdaptationBindings implements Plugin {
               });
             });
           });
+          path("constraints", () -> {
+            get(this::getConstraintTypes);
+          });
         });
       });
 
@@ -134,6 +138,18 @@ public final class AdaptationBindings implements Plugin {
       final String adaptationId = ctx.pathParam("adaptationId");
 
       this.app.removeAdaptation(adaptationId);
+    } catch (final App.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void getConstraintTypes(final Context ctx) {
+    try {
+      final String adaptationId = ctx.pathParam("adaptationId");
+
+      final List<ViolableConstraint> constraintTypes = this.app.getConstraintTypes(adaptationId);
+
+      ctx.result(ResponseSerializers.serializeConstraintTypes(constraintTypes).toString());
     } catch (final App.NoSuchAdaptationException ex) {
       ctx.status(404);
     }

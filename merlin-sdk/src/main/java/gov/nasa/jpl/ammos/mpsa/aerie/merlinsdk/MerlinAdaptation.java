@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
@@ -48,6 +49,7 @@ public interface MerlinAdaptation<Event> {
    * @return An activity mapper.
    */
   ActivityMapper getActivityMapper();
+  List<ViolableConstraint> getViolableConstraints();
 
   <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
 
