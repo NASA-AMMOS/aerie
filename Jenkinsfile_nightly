@@ -61,16 +61,14 @@ pipeline {
         AWS_ECR_PATH = "${AWS_ECR}/aerie"
         AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
         AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
-        BUCK_HOME = "/usr/local/bin"
-        BUCK_OUT = "${env.WORKSPACE}/buck-out"
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
         DOCKERFILE_PATH = "scripts/dockerfiles"
         DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
+        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
         LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
         TESTRAIL_API_KEY = credentials('testrail-api-key')
         TESTRAIL_SUITE_ID = 4115
         TESTRAIL_USERNAME = credentials('testrail-username')
-        WATCHMAN_HOME = "/opt/watchman"
     }
 
     stages {
