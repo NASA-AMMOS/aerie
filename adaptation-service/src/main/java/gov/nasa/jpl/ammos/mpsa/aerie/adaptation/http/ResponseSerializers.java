@@ -13,6 +13,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure.ConstraintStructureVisitor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.SimulatedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -24,7 +25,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -51,6 +51,11 @@ public final class ResponseSerializers {
     final var builder = Json.createObjectBuilder();
     for (final var entry : fields.entrySet()) builder.add(entry.getKey(), fieldSerializer.apply(entry.getValue()));
     return builder.build();
+  }
+
+  public static <T> JsonValue serializeNullable(final Function<T, JsonValue> serializer, final T value) {
+    if (value != null) return serializer.apply(value);
+    else return JsonValue.NULL;
   }
 
   public static JsonValue serializeParameterSchema(final ValueSchema schema) {
@@ -195,6 +200,10 @@ public final class ResponseSerializers {
     return serializeIterable(ResponseSerializers::serializeTimestamp, elements);
   }
 
+  public static JsonValue serializeDuration(final Duration duration) {
+    return Json.createValue(duration.dividedBy(Duration.MICROSECONDS));
+  }
+
   public static JsonValue serializeConstraintViolation(final ConstraintViolation violation) {
     return Json.createObjectBuilder()
                .add("associations", serializeConstraintViolationAssociations(violation))
@@ -239,7 +248,23 @@ public final class ResponseSerializers {
     builder.add(
         "constraints",
         serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations));
+    builder.add("activities", serializeSimulatedActivities(results.simulatedActivities));
     return builder.build();
+  }
+
+  public static JsonValue serializeSimulatedActivities(final Map<String, SimulatedActivity> simulatedActivities) {
+    return serializeMap(ResponseSerializers::serializeSimulatedActivity, simulatedActivities);
+  }
+
+  public static JsonValue serializeSimulatedActivity(final SimulatedActivity simulatedActivity) {
+    return Json.createObjectBuilder()
+               .add("type", simulatedActivity.type)
+               .add("parameters", serializeActivityParameters(simulatedActivity.parameters))
+               .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
+               .add("duration", serializeDuration(simulatedActivity.duration))
+               .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
+               .add("children", serializeIterable(Json::createValue, simulatedActivity.childIds))
+               .build();
   }
 
   public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
