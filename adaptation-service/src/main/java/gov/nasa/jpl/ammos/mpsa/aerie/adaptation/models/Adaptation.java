@@ -11,6 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -34,10 +35,11 @@ public final class Adaptation<Event> {
   public SimulationResults simulate(
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration simulationDuration,
-      final Duration samplingPeriod
+      final Duration samplingPeriod,
+      final Instant startTime
   )
   {
-    return SimpleSimulator.simulate(this.adaptation, schedule, simulationDuration, samplingPeriod);
+    return SimpleSimulator.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
   }
 
   public List<ViolableConstraint> getConstraintTypes() throws AdaptationContractException {

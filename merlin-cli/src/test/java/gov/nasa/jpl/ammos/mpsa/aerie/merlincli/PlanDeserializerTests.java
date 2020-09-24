@@ -74,8 +74,8 @@ public class PlanDeserializerTests {
 
         assertThat(plan.getAdaptationId()).isEqualTo("testAdaptationId");
         assertThat(plan.getName()).isEqualTo("testPlan");
-        assertThat(plan.getStartTimestamp()).isEqualTo("2018-331T00:00:00");
-        assertThat(plan.getEndTimestamp()).isEqualTo("2018-332T00:00:00");
+        assertThat(plan.getStartTimestamp()).isEqualTo(PlanDeserializer.deserializeTimestamp("2018-331T00:00:00"));
+        assertThat(plan.getEndTimestamp()).isEqualTo(PlanDeserializer.deserializeTimestamp("2018-332T00:00:00"));
         assertThat(plan.getActivityInstances().size()).isEqualTo(2);
 
         ActivityInstance activity1 = plan.getActivityInstances().get(0);

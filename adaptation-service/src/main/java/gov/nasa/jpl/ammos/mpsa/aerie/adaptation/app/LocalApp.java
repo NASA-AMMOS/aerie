@@ -176,7 +176,7 @@ public final class LocalApp implements App {
   @Override
   public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
     return loadAdaptation(message.adaptationId)
-        .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod);
+        .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod, message.startTime);
   }
 
   /**

@@ -42,6 +42,6 @@ public final class StubAdaptationService implements AdaptationService {
   public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
     if (!Objects.equals(plan.adaptationId, EXISTENT_ADAPTATION_ID)) throw new NoSuchAdaptationException();
 
-    return new SimulationResults(Instant.EPOCH, List.of(), Map.of(), JsonValue.EMPTY_JSON_ARRAY);
+    return new SimulationResults(Instant.EPOCH, List.of(), Map.of(), JsonValue.EMPTY_JSON_ARRAY, JsonValue.EMPTY_JSON_OBJECT);
   }
 }

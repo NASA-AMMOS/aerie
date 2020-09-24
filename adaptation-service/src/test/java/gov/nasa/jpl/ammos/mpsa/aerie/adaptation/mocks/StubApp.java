@@ -12,6 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -56,7 +57,8 @@ public final class StubApp implements App {
       List.of(),
       Map.of(),
       Map.of(),
-      Map.of());
+      Map.of(),
+      Instant.MIN);
 
   static {
     VALID_NEW_ADAPTATION = new HashMap<>();

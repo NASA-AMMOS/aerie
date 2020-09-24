@@ -28,6 +28,7 @@ import javax.json.Json;
 import javax.json.JsonValue;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -200,6 +201,14 @@ public final class ResponseSerializers {
     return serializeIterable(ResponseSerializers::serializeTimestamp, elements);
   }
 
+  public static JsonValue serializeTimestampString(final TemporalAccessor timestamp) {
+    return Json.createValue(
+        DateTimeFormatter
+            .ofPattern("uuuu-DDD'T'HH:mm:ss.SSSSSS")
+            .withZone(ZoneOffset.UTC)
+            .format(timestamp));
+  }
+
   public static JsonValue serializeDuration(final Duration duration) {
     return Json.createValue(duration.dividedBy(Duration.MICROSECONDS));
   }
@@ -260,7 +269,7 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
                .add("type", simulatedActivity.type)
                .add("parameters", serializeActivityParameters(simulatedActivity.parameters))
-               .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
+               .add("startTimestamp", serializeTimestampString(simulatedActivity.start))
                .add("duration", serializeDuration(simulatedActivity.duration))
                .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
                .add("children", serializeIterable(Json::createValue, simulatedActivity.childIds))
@@ -282,12 +291,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
     return Json.createObjectBuilder()
                .add("adaptationId", message.adaptationId)
-               .add(
-                   "startTime",
-                   DateTimeFormatter
-                       .ofPattern("uuuu-DDD'T'HH:mm:ss.nnnnnnnnn")
-                       .withZone(ZoneOffset.UTC)
-                       .format(message.startTime))
+               .add("startTime", serializeTimestampString(message.startTime))
                .add("samplingDuration", message.samplingDuration.dividedBy(Duration.MICROSECOND))
                .add("samplingPeriod", message.samplingPeriod.dividedBy(Duration.MICROSECOND))
                .add("activities", serializeScheduledActivities(message.activityInstances))

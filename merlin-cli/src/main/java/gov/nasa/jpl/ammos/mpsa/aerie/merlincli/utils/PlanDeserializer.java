@@ -10,6 +10,10 @@ import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +64,23 @@ public final class PlanDeserializer {
         final JsonString stringJson = (JsonString)jsonValue;
 
         return stringJson.getString();
+    }
+
+    public static Instant deserializeTimestamp(final JsonValue jsonValue) throws InvalidEntityException {
+        if (!(jsonValue instanceof JsonString)) throw new InvalidEntityException();
+        return deserializeTimestamp(((JsonString)jsonValue).getString());
+    }
+
+    public static Instant deserializeTimestamp(final String str) throws InvalidEntityException {
+        try {
+            return Instant.from(
+                DateTimeFormatter
+                    .ofPattern("uuuu-DDD'T'HH:mm:ss[.nnnnnnnnn]")
+                    .withZone(ZoneOffset.UTC)
+                    .parse(str));
+        } catch (DateTimeParseException e) {
+            throw new InvalidEntityException(e);
+        }
     }
 
     public static Map<String, SerializedValue> deserializeActivityParameterMap(final JsonValue jsonValue) throws InvalidEntityException {
@@ -134,8 +155,8 @@ public final class PlanDeserializer {
 
         Optional<String> name = Optional.empty();
         Optional<String> adaptationId = Optional.empty();
-        Optional<String> startTimestamp = Optional.empty();
-        Optional<String> endTimestamp = Optional.empty();
+        Optional<Instant> startTimestamp = Optional.empty();
+        Optional<Instant> endTimestamp = Optional.empty();
         Optional<List<ActivityInstance>> activityInstances = Optional.empty();
 
         for (final var entry : newPlanJson.entrySet()) {
@@ -154,12 +175,12 @@ public final class PlanDeserializer {
 
                 case "startTimestamp":
                     if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-                    startTimestamp = Optional.of(deserializeString(entryValue));
+                    startTimestamp = Optional.of(deserializeTimestamp(entryValue));
                     break;
 
                 case "endTimestamp":
                     if (entryValue == JsonValue.NULL) throw new InvalidEntityException();
-                    endTimestamp = Optional.of(deserializeString(entryValue));
+                    endTimestamp = Optional.of(deserializeTimestamp(entryValue));
                     break;
 
                 case "activityInstances":

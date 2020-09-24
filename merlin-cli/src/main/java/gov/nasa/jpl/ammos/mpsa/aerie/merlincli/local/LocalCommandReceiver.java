@@ -23,6 +23,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.*;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
@@ -49,6 +50,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     }
 
     String adaptationId = plan.getAdaptationId();
+    Instant startTime = plan.getStartTimestamp();
     List<ScheduledActivity> scheduledActivities = new ArrayList<>();
     List<ActivityInstance> plannedActivities = plan.getActivityInstances();
     try {
@@ -60,7 +62,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       return;
     }
 
-    Schedule schedule = new Schedule(adaptationId, scheduledActivities);
+    Schedule schedule = new Schedule(adaptationId, startTime, scheduledActivities);
 
     String basename = Path.of(path).getFileName().toString();
     String name = basename;
@@ -183,7 +185,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       scheduledActivities.add(Pair.of(activity.startTime.durationFrom(SimulationInstant.ORIGIN), activity.activity));
     }
 
-    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, Duration.of(samplingPeriod, Duration.MICROSECONDS));
+    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, schedule.startTime, Duration.of(samplingPeriod, Duration.MICROSECONDS));
     System.out.println(results.timelines);
   }
 
