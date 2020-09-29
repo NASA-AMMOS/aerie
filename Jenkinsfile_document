@@ -3,6 +3,10 @@ pipeline {
     agent {
         label 'CAE-Jenkins2-DH-Agents-Linux'
     }
+    parameters {
+        string(name: 'OUTPUT_FOLDER', defaultValue: 'TEST')
+        string(name: 'TITLE', defaultValue: 'TEST-Documentation')
+    }
     stages {
         stage ('Setup') {
             steps {
@@ -37,14 +41,19 @@ pipeline {
                     steps {
                         sh 'apt update'
                         sh 'apt install git -y'
-                        sh 'apt install python3.8 -y'
-                        sh 'apt install python3-pip -y'
-                        sh 'apt install pandoc -y'
-                        sh 'apt-get install texlive-latex-base -y'
-                        sh 'apt-get install texlive-latex-recommended -y'
-                        sh 'apt-get install texlive-fonts-recommended -y'
-                        sh 'pip3 install sphinx'
-                        sh 'pip3 install recommonmark'
+                        sh 'apt install nodejs -y'
+                        sh 'apt install npm -y'
+                        sh 'npm install -g github-wikito-converter'
+                        sh 'apt install xfonts-75dpi -y'
+                        sh 'apt install libjpeg-turbo8 -y'
+                        sh 'apt install fontconfig -y'
+                        sh 'apt install xfonts-base -y'
+                        sh 'apt install libxrender1 -y'
+                        sh 'apt install rsync -y'
+                        sh 'apt install wget -y'
+                        sh 'wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb'
+                        sh 'dpkg -i wkhtmltox_0.12.5-1.bionic_amd64.deb'
+
                     }
                 }
                 stage ('Setup docker Git credentials') {
@@ -63,9 +72,8 @@ pipeline {
                     steps {
                         sh script:
                         """
-                            cd aerie.wiki
-                            sphinx-quickstart -p Aerie -a aerie -v ${BUILD_NUMBER} --extensions=recommonmark --ext-githubpages -q
-                            make html
+                            mkdir -p auto-html/${OUTPUT_FOLDER}
+                            gwtc -f html -n index -t ${TITLE} -o auto-html/${OUTPUT_FOLDER} ./aerie.wiki
                         """
                     }
                 }
@@ -73,11 +81,8 @@ pipeline {
                     steps {
                         sh script:
                         """
-                            cd aerie.wiki
-                            mkdir -p pdf
-                            find ./ -iname "*.md" -type f -exec sh -c 'pandoc "\${0}" -t latex -o "./pdf/\$(basename \${0%.md}.pdf)"' {} \\;
-                            cd pdf
-                            ls -la
+                            mkdir -p auto-pdf/${OUTPUT_FOLDER}
+                            gwtc -f pdf -n Aerie-Documentation -t ${TITLE} -o auto-pdf/${OUTPUT_FOLDER} ./aerie.wiki
                         """
                     }
                 }
@@ -85,11 +90,8 @@ pipeline {
                     steps {
                         sh script:
                         """
-                            pwd
-                            ls -la
-                            cp -r aerie.wiki/pdf .
-                            cp -r aerie.wiki/_build/html .
-                            mv html/.nojekyll .
+                            rsync -av --delete auto-html/${OUTPUT_FOLDER} html
+                            rsync -av --delete auto-pdf/${OUTPUT_FOLDER} pdf
                         """
                     }
                 }
@@ -100,12 +102,10 @@ pipeline {
                         sh 'ls html/ -la'
                         sh 'git config user.email "achong@jpl.nasa.gov"'
                         sh 'git config user.name "Automatic Job"'
-                        sh 'git add html/'
-                        sh 'git add pdf/'
-                        sh 'git add .nojekyll'
-                        sh 'git reset -- html/index.html'
+                        sh 'git add html/${OUTPUT_FOLDER}'
+                        sh 'git add pdf/${OUTPUT_FOLDER}'
                         sh 'git status -uno'
-                        sh 'git commit -m "Auto commit generated html documents"'
+                        sh 'git commit -m "Auto commit generated documents"'
                         sh 'git push'
                     }
                 }
