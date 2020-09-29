@@ -44,6 +44,10 @@ public final class Adaptation<Event> {
     return this.adaptation.getViolableConstraints();
   }
 
+  public Map<String, ValueSchema> getStateSchemas() {
+    return this.adaptation.getStateSchemas();
+  }
+
   public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {
     final Map<String, Map<String, ValueSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
     if (activitySchemas == null) {

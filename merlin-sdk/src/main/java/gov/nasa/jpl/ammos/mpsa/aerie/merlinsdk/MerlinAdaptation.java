@@ -9,8 +9,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -50,7 +52,7 @@ public interface MerlinAdaptation<Event> {
    */
   ActivityMapper getActivityMapper();
   List<ViolableConstraint> getViolableConstraints();
-
+  Map<String, ValueSchema> getStateSchemas();
   <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
 
   interface Querier<T, Event> {
