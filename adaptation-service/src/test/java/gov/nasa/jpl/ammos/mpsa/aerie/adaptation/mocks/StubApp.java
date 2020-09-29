@@ -125,6 +125,15 @@ public final class StubApp implements App {
   }
 
   @Override
+  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId) throws NoSuchAdaptationException {
+    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
+      throw new NoSuchAdaptationException(adaptationId);
+    }
+
+    return Map.of();
+  }
+
+  @Override
   public Map<String, ActivityType> getActivityTypes(final String adaptationId) throws NoSuchAdaptationException {
     if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
       throw new NoSuchAdaptationException(adaptationId);
