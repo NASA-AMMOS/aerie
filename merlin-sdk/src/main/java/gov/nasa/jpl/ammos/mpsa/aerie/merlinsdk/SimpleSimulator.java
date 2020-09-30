@@ -167,13 +167,19 @@ public final class SimpleSimulator {
 
     final var endTime = simulator.getCurrentHistory();
 
-    return new SimulationResults(
+    final var results = new SimulationResults(
         timestamps,
         timelines,
         querier.getConstraintViolationsAt(endTime),
         factory.getTaskRecords(),
         simulator.getTaskWindows(),
         startTime);
+
+    if (!results.unfinishedActivities.isEmpty()) {
+      throw new Error("There should be no unfinished activities when simulating to completion.");
+    }
+
+    return results;
   }
 
   public static <Event> SimulationResults simulateToCompletion(
@@ -295,12 +301,18 @@ public final class SimpleSimulator {
 
     final var endTime = simulator.getCurrentHistory();
 
-    return new SimulationResults(
+    final var results = new SimulationResults(
         timestamps,
         timelines,
         querier.getConstraintViolationsAt(endTime),
         factory.getTaskRecords(),
         simulator.getTaskWindows(),
         startTime);
+
+    if (!results.unfinishedActivities.isEmpty()) {
+      throw new Error("There should be no unfinished activities when simulating to completion.");
+    }
+
+    return results;
   }
 }
