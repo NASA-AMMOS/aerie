@@ -57,7 +57,6 @@ public final class StubApp implements App {
       List.of(),
       Map.of(),
       Map.of(),
-      Map.of(),
       Instant.MIN);
 
   static {

@@ -165,9 +165,8 @@ public final class SimpleSimulator {
         timestamps,
         timelines,
         querier.getConstraintViolationsAt(endTime),
-        factory.getTaskSpecifications(),
+        factory.getTaskRecords(),
         simulator.getTaskWindows(),
-        factory.getTaskParents(),
         startTime);
   }
 
@@ -294,9 +293,8 @@ public final class SimpleSimulator {
         timestamps,
         timelines,
         querier.getConstraintViolationsAt(endTime),
-        factory.getTaskSpecifications(),
+        factory.getTaskRecords(),
         simulator.getTaskWindows(),
-        factory.getTaskParents(),
         startTime);
   }
 }

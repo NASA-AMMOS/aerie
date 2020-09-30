@@ -1,19 +1,18 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory.TaskRecord;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.SimulatedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public final class SimulationResults {
   public final List<Duration> timestamps;
@@ -25,44 +24,44 @@ public final class SimulationResults {
       final List<Duration> timestamps,
       final Map<String, List<SerializedValue>> timelines,
       final List<ConstraintViolation> constraintViolations,
-      final Map<String, SerializedActivity> activityMap,
+      final Map<String, TaskRecord> activityRecords,
       final Map<String, Window> activityWindows,
-      final Map<String, Optional<String>> activityParents,
-      final Instant startTime
-  ) {
+      final Instant startTime)
+  {
     this.timestamps = timestamps;
     this.timelines = timelines;
     this.constraintViolations = constraintViolations;
-    this.simulatedActivities = buildSimulatedActivities(activityMap, activityWindows, activityParents, startTime);
+    this.simulatedActivities = buildSimulatedActivities(startTime, activityRecords, activityWindows);
   }
 
   private Map<String, SimulatedActivity> buildSimulatedActivities(
-      final Map<String, SerializedActivity> activityMap,
-      final Map<String, Window> activityWindows,
-      final Map<String, Optional<String>> activityParents,
-      final Instant startTime
-  ) {
+      final Instant startTime,
+      final Map<String, TaskRecord> activityRecords,
+      final Map<String, Window> activityWindows)
+  {
     final var simulatedActivities = new HashMap<String, SimulatedActivity>();
     final var activityChildren = new HashMap<String, List<String>>();
 
     // Create the list of children for every activity
-    for (final var id : activityParents.keySet()) activityChildren.put(id, new ArrayList<>());
-    for (final var entry : activityParents.entrySet()) {
-      if (entry.getValue().isPresent()) {
-        activityChildren.get(entry.getValue().get()).add(entry.getKey());
+    for (final var id : activityRecords.keySet()) activityChildren.put(id, new ArrayList<>());
+    for (final var entry : activityRecords.entrySet()) {
+      final var parentId = entry.getValue().parentId;
+
+      if (parentId.isPresent()) {
+        activityChildren.get(parentId.get()).add(entry.getKey());
       }
     }
 
-    for (final var id : activityMap.keySet()) {
-      final var activity = activityMap.get(id);
+    for (final var id : activityRecords.keySet()) {
+      final var activityRecord = activityRecords.get(id);
       final var window = activityWindows.get(id);
 
       simulatedActivities.put(id, new SimulatedActivity(
-          activity.getTypeName(),
-          activity.getParameters(),
+          activityRecord.specification.getTypeName(),
+          activityRecord.specification.getParameters(),
           Duration.addToInstant(startTime, window.start),
           window.duration(),
-          activityParents.get(id).orElse(null),
+          activityRecord.parentId.orElse(null),
           activityChildren.get(id)
       ));
     }
