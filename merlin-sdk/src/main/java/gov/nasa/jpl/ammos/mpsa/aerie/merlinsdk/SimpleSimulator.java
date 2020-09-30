@@ -132,6 +132,7 @@ public final class SimpleSimulator {
 
     // Run simulation to completion, sampling states at periodic intervals.
     {
+      // Get an initial sample.
       {
         timestamps.add(simulator.getElapsedTime());
         for (final var stateName : timelines.keySet()) {
@@ -139,6 +140,7 @@ public final class SimpleSimulator {
         }
       }
 
+      // Sample periodically until the sampling duration expires.
       final var remainder = simulationDuration.remainderOf(samplingPeriod);
       for (long i = 0; i < simulationDuration.dividedBy(samplingPeriod); ++i) {
         simulator.runFor(samplingPeriod);
@@ -149,6 +151,7 @@ public final class SimpleSimulator {
         }
       }
 
+      // Take one last sample if the period doesn't evenly divide the duration.
       if (!remainder.isZero()) {
         simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
 
@@ -157,6 +160,9 @@ public final class SimpleSimulator {
           timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
         }
       }
+
+      // Simulate any remaining activities to completion; take no samples.
+      while (simulator.hasMoreTasks()) simulator.step();
     }
 
     final var endTime = simulator.getCurrentHistory();
