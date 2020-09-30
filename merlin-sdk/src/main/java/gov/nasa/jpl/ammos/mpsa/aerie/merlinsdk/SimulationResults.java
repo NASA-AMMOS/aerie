@@ -19,6 +19,7 @@ public final class SimulationResults {
   public final Map<String, List<SerializedValue>> timelines;
   public final List<ConstraintViolation> constraintViolations;
   public final Map<String, SimulatedActivity> simulatedActivities;
+  public final Map<String, SerializedActivity> unfinishedActivities = new HashMap<>();
 
   public SimulationResults(
       final List<Duration> timestamps,
@@ -54,16 +55,21 @@ public final class SimulationResults {
 
     for (final var id : activityRecords.keySet()) {
       final var activityRecord = activityRecords.get(id);
-      final var window = activityWindows.get(id);
 
-      simulatedActivities.put(id, new SimulatedActivity(
-          activityRecord.specification.getTypeName(),
-          activityRecord.specification.getParameters(),
-          Duration.addToInstant(startTime, window.start),
-          window.duration(),
-          activityRecord.parentId.orElse(null),
-          activityChildren.get(id)
-      ));
+      if (!activityWindows.containsKey(id)) {
+        this.unfinishedActivities.put(id, activityRecord.specification);
+      } else {
+        final var window = activityWindows.get(id);
+
+        simulatedActivities.put(id, new SimulatedActivity(
+            activityRecord.specification.getTypeName(),
+            activityRecord.specification.getParameters(),
+            Duration.addToInstant(startTime, window.start),
+            window.duration(),
+            activityRecord.parentId.orElse(null),
+            activityChildren.get(id)
+        ));
+      }
     }
 
     return simulatedActivities;
