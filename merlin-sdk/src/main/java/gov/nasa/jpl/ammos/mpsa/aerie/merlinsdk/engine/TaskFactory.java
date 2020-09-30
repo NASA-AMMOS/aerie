@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ActivityExecutor;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReplayingTask;
@@ -10,29 +9,37 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static java.util.Collections.unmodifiableMap;
 
 public final class TaskFactory<T, Event, Activity> {
+  private final Function<Activity, SerializedActivity> extractSpecification;
   private final ActivityExecutor<T, Event, Activity> executor;
+
   private final Map<String, Optional<String>> taskParents;
-  private final Map<String, Activity> taskSpecifications;
+  private final Map<String, SerializedActivity> taskSpecifications;
   private final Optional<String> taskId;
 
   private TaskFactory(
+      final Function<Activity, SerializedActivity> extractSpecification,
       final ActivityExecutor<T, Event, Activity> executor,
       final Map<String, Optional<String>> taskParents,
-      final Map<String, Activity> taskSpecifications,
+      final Map<String, SerializedActivity> taskSpecifications,
       final Optional<String> taskId)
   {
+    this.extractSpecification = extractSpecification;
     this.executor = executor;
     this.taskParents = taskParents;
     this.taskSpecifications = taskSpecifications;
     this.taskId = taskId;
   }
 
-  public TaskFactory(final ActivityExecutor<T, Event, Activity> executor) {
-    this(executor, new HashMap<>(), new HashMap<>(), Optional.empty());
+  public TaskFactory(
+      final Function<Activity, SerializedActivity> extractSpecification,
+      final ActivityExecutor<T, Event, Activity> executor)
+  {
+    this(extractSpecification, executor, new HashMap<>(), new HashMap<>(), Optional.empty());
   }
 
   public void execute(final ReactionContext<T, Event, Activity> ctx, final String activityId, final Activity activity) {
@@ -43,7 +50,7 @@ public final class TaskFactory<T, Event, Activity> {
     return unmodifiableMap(this.taskParents);
   }
 
-  public Map<String, Activity> getTaskSpecifications() {
+  public Map<String, SerializedActivity> getTaskSpecifications() {
     return unmodifiableMap(this.taskSpecifications);
   }
 
@@ -54,9 +61,14 @@ public final class TaskFactory<T, Event, Activity> {
 
   public ReplayingTask<T, Event, Activity> createReplayingTask(final String id, final Activity activity) {
     this.taskParents.putIfAbsent(id, this.taskId);
-    this.taskSpecifications.put(id, activity);
+    this.taskSpecifications.put(id, this.extractSpecification.apply(activity));
 
-    final var factory = new TaskFactory<>(this.executor, this.taskParents, this.taskSpecifications, Optional.of(id));
+    final var factory = new TaskFactory<>(
+        this.extractSpecification,
+        this.executor,
+        this.taskParents,
+        this.taskSpecifications,
+        Optional.of(id));
     return new ReplayingTask<>(factory, id, activity);
   }
 }
