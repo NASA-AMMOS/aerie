@@ -179,8 +179,9 @@ public final class RemoteAdaptationService implements AdaptationService {
     final var timestamps = timestampsP.parse(jsonObject.get("times")).getSuccessOrThrow(InvalidServiceResponseException::new);
     final var timelines = timelinesP.parse(jsonObject.get("resources")).getSuccessOrThrow(InvalidServiceResponseException::new);
     final var constraints = jsonObject.get("constraints");
+    final var activities = jsonObject.get("activities");
 
-    return new SimulationResults(startTime, timestamps, timelines, constraints);
+    return new SimulationResults(startTime, timestamps, timelines, constraints, activities);
   }
 
   private static List<String> deserializeActivityValidation(final JsonValue json) {

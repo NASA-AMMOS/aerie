@@ -122,6 +122,7 @@ public final class ResponseSerializers {
             elements -> serializeList(element -> serializeActivityParameter(element), elements),
             results.timelines))
         .add("constraints", results.constraints)
+        .add("activities", results.activities)
         .build();
   }
 

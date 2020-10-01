@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -66,7 +67,7 @@ public class LocalSimulation {
                                 "imageQuality", SerializedValue.of(80))))
         );
         final var adaptation = new SampleAdaptation();
-        final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Duration.of(100, Duration.MILLISECONDS));
+        final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Instant.MIN, Duration.of(100, Duration.MILLISECONDS));
 
         /*
         Minimum allowed battery capacity is Config.startBatteryCapacity_J*0.3
