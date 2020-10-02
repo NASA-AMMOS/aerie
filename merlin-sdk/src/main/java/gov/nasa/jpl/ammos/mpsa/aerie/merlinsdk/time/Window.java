@@ -56,6 +56,11 @@ public final class Window {
     return other.isEmpty() || (!this.isEmpty() && !this.end.shorterThan(other.end) && !other.start.shorterThan(this.start));
   }
 
+  public Duration duration() {
+    if (this.isEmpty()) return Duration.ZERO;
+    return this.end.minus(this.start);
+  }
+
   /**
    * Returns the largest window contained by both `x` and `y`.
    */
