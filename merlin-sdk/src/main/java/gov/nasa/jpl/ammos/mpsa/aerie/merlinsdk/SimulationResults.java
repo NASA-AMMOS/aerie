@@ -5,10 +5,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +26,7 @@ public final class SimulationResults {
       final Map<String, List<SerializedValue>> timelines,
       final List<ConstraintViolation> constraintViolations,
       final Map<String, SerializedActivity> activityMap,
-      final Map<String, Pair<Duration, Duration>> activityWindows,
+      final Map<String, Window> activityWindows,
       final Map<String, Optional<String>> activityParents,
       final Instant startTime
   ) {
@@ -38,7 +38,7 @@ public final class SimulationResults {
 
   private Map<String, SimulatedActivity> buildSimulatedActivities(
       final Map<String, SerializedActivity> activityMap,
-      final Map<String, Pair<Duration, Duration>> activityWindows,
+      final Map<String, Window> activityWindows,
       final Map<String, Optional<String>> activityParents,
       final Instant startTime
   ) {
@@ -60,8 +60,8 @@ public final class SimulationResults {
       simulatedActivities.put(id, new SimulatedActivity(
           activity.getTypeName(),
           activity.getParameters(),
-          Duration.addToInstant(startTime, window.getLeft()),
-          window.getRight().minus(window.getLeft()),
+          Duration.addToInstant(startTime, window.start),
+          window.duration(),
           activityParents.get(id).orElse(null),
           activityChildren.get(id)
       ));
