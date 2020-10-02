@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
@@ -172,8 +173,8 @@ public final class SimulationEngine<T, Event> {
     return this.currentHistory;
   }
 
-  public Map<String, Pair<Duration, Duration>> getTaskWindows() {
-    final var windows = new HashMap<String, Pair<Duration, Duration>>();
+  public Map<String, Window> getTaskWindows() {
+    final var windows = new HashMap<String, Window>();
 
     for (final var endEntry : this.taskEndTimes.entrySet()) {
       final var taskId = endEntry.getKey();
@@ -181,7 +182,7 @@ public final class SimulationEngine<T, Event> {
 
       final var startTime = this.taskStartTimes.get(taskId);
 
-      windows.put(taskId, Pair.of(startTime, endTime));
+      windows.put(taskId, Window.between(startTime, endTime));
     }
 
     return windows;

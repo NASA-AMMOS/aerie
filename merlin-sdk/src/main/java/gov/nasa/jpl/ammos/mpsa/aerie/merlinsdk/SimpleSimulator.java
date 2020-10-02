@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Function;
 
 public final class SimpleSimulator {
   private SimpleSimulator() {}
@@ -41,12 +42,16 @@ public final class SimpleSimulator {
       final Duration samplingPeriod
   )
   {
+    final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
-    final var factory = new TaskFactory<>(querier::runActivity);
+
+    final Function<Activity, SerializedActivity> serializer = (activity) ->
+        mapper.serializeActivity(activity).orElseThrow();
+
+    final var factory = new TaskFactory<>(serializer, querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
-    final var mapper = adaptation.getActivityMapper();
     for (final var entry : schedule.entrySet()) {
       final var activityId = entry.getKey();
       final var startDelta = entry.getValue().getLeft();
@@ -57,7 +62,7 @@ public final class SimpleSimulator {
           mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory, mapper);
+    return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory);
   }
 
   public static <Event> SimulationResults simulate(
@@ -68,7 +73,13 @@ public final class SimpleSimulator {
       final Duration samplingPeriod
   )
   {
-    return simulate(adaptation, SimulationTimeline.create(), instanceList, startTime, simulationDuration, samplingPeriod);
+    return simulate(
+        adaptation,
+        SimulationTimeline.create(),
+        instanceList,
+        startTime,
+        simulationDuration,
+        samplingPeriod);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -82,20 +93,26 @@ public final class SimpleSimulator {
       final Duration samplingPeriod
   )
   {
+    final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
-    final var factory = new TaskFactory<>(querier::runActivity);
+
+    final Function<Activity, SerializedActivity> serializer = (activity) ->
+        mapper.serializeActivity(activity).orElseThrow();
+
+    final var factory = new TaskFactory<>(serializer, querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
-    final var mapper = adaptation.getActivityMapper();
     for (final var entry : instanceList) {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
+      simulator.defer(
+          startDelta,
+          factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory, mapper);
+    return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory);
   }
 
   private static <T, Event> SimulationResults simulate(
@@ -104,8 +121,7 @@ public final class SimpleSimulator {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod,
-      final TaskFactory<T, Event, Activity> factory,
-      final ActivityMapper mapper
+      final TaskFactory<T, Event, Activity> factory
   )
   {
     final var timestamps = new ArrayList<Duration>();
@@ -116,6 +132,7 @@ public final class SimpleSimulator {
 
     // Run simulation to completion, sampling states at periodic intervals.
     {
+      // Get an initial sample.
       {
         timestamps.add(simulator.getElapsedTime());
         for (final var stateName : timelines.keySet()) {
@@ -123,6 +140,7 @@ public final class SimpleSimulator {
         }
       }
 
+      // Sample periodically until the sampling duration expires.
       final var remainder = simulationDuration.remainderOf(samplingPeriod);
       for (long i = 0; i < simulationDuration.dividedBy(samplingPeriod); ++i) {
         simulator.runFor(samplingPeriod);
@@ -133,6 +151,7 @@ public final class SimpleSimulator {
         }
       }
 
+      // Take one last sample if the period doesn't evenly divide the duration.
       if (!remainder.isZero()) {
         simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
 
@@ -141,20 +160,26 @@ public final class SimpleSimulator {
           timelines.get(stateName).add(querier.getSerializedStateAt(stateName, simulator.getCurrentHistory()));
         }
       }
+
+      // Simulate any remaining activities to completion; take no samples.
+      while (simulator.hasMoreTasks()) simulator.step();
     }
 
     final var endTime = simulator.getCurrentHistory();
-    final var constraintResults = querier.getConstraintViolationsAt(endTime);
-    final var activitySpecs = factory.getTaskSpecifications();
-    final var activityWindows = simulator.getTaskWindows();
-    final var activityParents = factory.getTaskParents();
 
-    final var activityMap = new HashMap<String, SerializedActivity>();
-    for (final var entry : activitySpecs.entrySet()) {
-      activityMap.put(entry.getKey(), mapper.serializeActivity(entry.getValue()).orElseThrow());
+    final var results = new SimulationResults(
+        timestamps,
+        timelines,
+        querier.getConstraintViolationsAt(endTime),
+        factory.getTaskRecords(),
+        simulator.getTaskWindows(),
+        startTime);
+
+    if (!results.unfinishedActivities.isEmpty()) {
+      throw new Error("There should be no unfinished activities when simulating to completion.");
     }
 
-    return new SimulationResults(timestamps, timelines, constraintResults, activityMap, activityWindows, activityParents, startTime);
+    return results;
   }
 
   public static <Event> SimulationResults simulateToCompletion(
@@ -177,12 +202,16 @@ public final class SimpleSimulator {
       final Duration samplingPeriod
   )
   {
+    final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
-    final var factory = new TaskFactory<>(querier::runActivity);
+
+    final Function<Activity, SerializedActivity> serializer = (activity) ->
+        mapper.serializeActivity(activity).orElseThrow();
+
+    final var factory = new TaskFactory<>(serializer, querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
-    final var mapper = adaptation.getActivityMapper();
     for (final var entry : schedule.entrySet()) {
       final var activityId = entry.getKey();
       final var startDelta = entry.getValue().getLeft();
@@ -193,7 +222,7 @@ public final class SimpleSimulator {
           factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory, mapper);
+    return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory);
   }
 
   public static <Event> SimulationResults simulateToCompletion(
@@ -216,20 +245,26 @@ public final class SimpleSimulator {
       final Duration samplingPeriod
   )
   {
+    final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
-    final var factory = new TaskFactory<>(querier::runActivity);
+
+    final Function<Activity, SerializedActivity> serializer = (activity) ->
+        mapper.serializeActivity(activity).orElseThrow();
+
+    final var factory = new TaskFactory<>(serializer, querier::runActivity);
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
-    final var mapper = adaptation.getActivityMapper();
     for (final var entry : instanceList) {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
+      simulator.defer(
+          startDelta,
+          factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory, mapper);
+    return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -239,8 +274,7 @@ public final class SimpleSimulator {
       final SimulationEngine<T, Event> simulator,
       final Instant startTime,
       final Duration samplingPeriod,
-      final TaskFactory<T, Event, Activity> factory,
-      final ActivityMapper mapper
+      final TaskFactory<T, Event, Activity> factory
   )
   {
     final var timestamps = new ArrayList<Duration>();
@@ -266,16 +300,19 @@ public final class SimpleSimulator {
     }
 
     final var endTime = simulator.getCurrentHistory();
-    final var constraintResults = querier.getConstraintViolationsAt(endTime);
-    final var activitySpecs = factory.getTaskSpecifications();
-    final var activityWindows = simulator.getTaskWindows();
-    final var activityParents = factory.getTaskParents();
 
-    final var activityMap = new HashMap<String, SerializedActivity>();
-    for (final var entry : activitySpecs.entrySet()) {
-      activityMap.put(entry.getKey(), mapper.serializeActivity(entry.getValue()).orElseThrow());
+    final var results = new SimulationResults(
+        timestamps,
+        timelines,
+        querier.getConstraintViolationsAt(endTime),
+        factory.getTaskRecords(),
+        simulator.getTaskWindows(),
+        startTime);
+
+    if (!results.unfinishedActivities.isEmpty()) {
+      throw new Error("There should be no unfinished activities when simulating to completion.");
     }
 
-    return new SimulationResults(timestamps, timelines, constraintResults, activityMap, activityWindows, activityParents, startTime);
+    return results;
   }
 }
