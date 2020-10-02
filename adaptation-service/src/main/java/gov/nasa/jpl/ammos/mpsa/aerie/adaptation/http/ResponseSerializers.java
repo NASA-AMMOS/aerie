@@ -237,6 +237,10 @@ public final class ResponseSerializers {
                .build();
   }
 
+  public static JsonValue serializeStatesSchemas(Map<String, ValueSchema> schemaMap) {
+    return serializeMap(ResponseSerializers::serializeParameterSchema, schemaMap);
+  }
+
   public static JsonValue serializeWindows(Windows windows) {
     return serializeIterable(ResponseSerializers::serializeWindow, windows);
   }

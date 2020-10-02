@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -75,6 +76,9 @@ public final class AdaptationBindings implements Plugin {
           });
           path("constraints", () -> {
             get(this::getConstraintTypes);
+          });
+          path("stateSchemas", () -> {
+            get(this::getStateSchemas);
           });
         });
       });
@@ -150,6 +154,18 @@ public final class AdaptationBindings implements Plugin {
       final List<ViolableConstraint> constraintTypes = this.app.getConstraintTypes(adaptationId);
 
       ctx.result(ResponseSerializers.serializeConstraintTypes(constraintTypes).toString());
+    } catch (final App.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void getStateSchemas(final Context ctx) {
+    try {
+      final String adaptationId = ctx.pathParam("adaptationId");
+
+      final Map<String, ValueSchema> schemaMap = this.app.getStatesSchemas(adaptationId);
+
+      ctx.result(ResponseSerializers.serializeStatesSchemas(schemaMap).toString());
     } catch (final App.NoSuchAdaptationException ex) {
       ctx.status(404);
     }

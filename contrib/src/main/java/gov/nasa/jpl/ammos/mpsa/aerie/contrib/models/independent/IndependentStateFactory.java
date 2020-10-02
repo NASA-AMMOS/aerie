@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.events.IndependentStateEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 public final class IndependentStateFactory {
   private final Map<String, SerializedValue> settableStates = new HashMap<>();
   private final Map<String, Double> cumulableStates = new HashMap<>();
+  private final Map<String, ValueSchema> stateSchemas = new HashMap<>();
 
   private final Function<String, StateQuery<SerializedValue>> model;
   private final Consumer<IndependentStateEvent> emitter;
@@ -36,6 +38,8 @@ public final class IndependentStateFactory {
 
     final var query = this.model.apply(name);
 
+    this.stateSchemas.put(name, mapper.getValueSchema());
+
     return new SettableState<>(
         name,
         () -> mapper.deserializeValue(query.get()).getSuccessOrThrow(),
@@ -50,6 +54,8 @@ public final class IndependentStateFactory {
     this.cumulableStates.put(name, initialValue);
 
     final var query = this.model.apply(name);
+
+    this.stateSchemas.put(name, mapper.getValueSchema());
 
     return new DoubleState(
         name,
@@ -87,5 +93,9 @@ public final class IndependentStateFactory {
 
   public Map<String, Double> getCumulableStates() {
     return Collections.unmodifiableMap(this.cumulableStates);
+  }
+
+  public Map<String, ValueSchema> getStateSchemas() {
+    return this.stateSchemas;
   }
 }

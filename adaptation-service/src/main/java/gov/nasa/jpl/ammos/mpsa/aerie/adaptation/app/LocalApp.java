@@ -11,6 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import io.javalin.core.util.FileUtil;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -90,6 +91,13 @@ public final class LocalApp implements App {
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     return loadAdaptation(adaptationID).getConstraintTypes();
+  }
+
+  @Override
+  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
+  throws NoSuchAdaptationException, AdaptationLoadException
+  {
+    return loadAdaptation(adaptationId).getStateSchemas();
   }
 
   /**

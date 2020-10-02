@@ -7,6 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,8 @@ public interface App {
   throws NoSuchAdaptationException;
 
   List<ViolableConstraint> getConstraintTypes(String adaptationID)
+  throws NoSuchAdaptationException;
+  Map<String, ValueSchema> getStatesSchemas(String adaptationId)
   throws NoSuchAdaptationException;
   Map<String, ActivityType> getActivityTypes(String adaptationId)
   throws NoSuchAdaptationException;
