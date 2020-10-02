@@ -101,7 +101,7 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeTimestamp(final Instant instant) {
     final var formattedTimestamp = DateTimeFormatter
-        .ofPattern("uuuu-DDD'T'HH:mm:ss[.n]")
+        .ofPattern("uuuu-DDD'T'HH:mm:ss.SSSSSS")
         .withZone(ZoneOffset.UTC)
         .format(instant);
 
@@ -122,6 +122,7 @@ public final class ResponseSerializers {
             elements -> serializeList(element -> serializeActivityParameter(element), elements),
             results.timelines))
         .add("constraints", results.constraints)
+        .add("activities", results.activities)
         .build();
   }
 

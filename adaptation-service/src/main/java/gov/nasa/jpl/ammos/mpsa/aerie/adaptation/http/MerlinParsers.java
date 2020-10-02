@@ -13,6 +13,8 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Collections;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.boolP;
@@ -31,11 +33,17 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.json.Uncurry.uncurry5;
 public abstract class MerlinParsers {
   private MerlinParsers() {}
 
+  // This builder must be used to get optional subsecond values
+  // See: https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+  private static final DateTimeFormatter timestampFormat =
+      new DateTimeFormatterBuilder().appendPattern("uuuu-DDD'T'HH:mm:ss")
+                                    .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).toFormatter();
+
   public static final JsonParser<Instant> instantP
       = stringP
       . map(s -> LocalDateTime
           // TODO: handle parse errors
-          . parse(s, DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss[.n]"))
+          . parse(s, timestampFormat)
           . atZone(ZoneOffset.UTC)
           . toInstant());
 

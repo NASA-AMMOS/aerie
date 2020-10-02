@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,7 @@ public final class Main {
         Pair.of(duration(1500, MILLISECONDS), new SerializedActivity("BiteBanana", Map.of())));
 
     final var adaptation = new Banananation();
-    final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, duration(100, MILLISECONDS));
+    final var results = SimpleSimulator.simulateToCompletion(adaptation, schedule, Instant.MIN, duration(100, MILLISECONDS));
 
     System.out.println(results.timestamps);
     System.out.println(results.timelines);

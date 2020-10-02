@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -8,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.TaskFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -19,11 +22,12 @@ public final class SimpleSimulator {
   public static <Event> SimulationResults simulate(
       final MerlinAdaptation<Event> adaptation,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
   {
-    return simulate(adaptation, SimulationTimeline.create(), schedule, simulationDuration, samplingPeriod);
+    return simulate(adaptation, SimulationTimeline.create(), schedule, startTime, simulationDuration, samplingPeriod);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -32,6 +36,7 @@ public final class SimpleSimulator {
       final MerlinAdaptation<Event> adaptation,
       final SimulationTimeline<T, Event> database,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
@@ -49,20 +54,21 @@ public final class SimpleSimulator {
 
       simulator.defer(startDelta, factory.createReplayingTask(
           activityId,
-          mapper.deserializeActivity(serializedInstance).get()));
+          mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulate(querier, simulator, simulationDuration, samplingPeriod);
+    return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory, mapper);
   }
 
   public static <Event> SimulationResults simulate(
       final MerlinAdaptation<Event> adaptation,
       final List<Pair<Duration, SerializedActivity>> instanceList,
+      final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
   {
-    return simulate(adaptation, SimulationTimeline.create(), instanceList, simulationDuration, samplingPeriod);
+    return simulate(adaptation, SimulationTimeline.create(), instanceList, startTime, simulationDuration, samplingPeriod);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -71,6 +77,7 @@ public final class SimpleSimulator {
       final MerlinAdaptation<Event> adaptation,
       final SimulationTimeline<T, Event> database,
       final List<Pair<Duration, SerializedActivity>> instanceList,
+      final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
   )
@@ -85,17 +92,20 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulate(querier, simulator, simulationDuration, samplingPeriod);
+    return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory, mapper);
   }
 
   private static <T, Event> SimulationResults simulate(
       final MerlinAdaptation.Querier<T, Event> querier,
       final SimulationEngine<T, Event> simulator,
+      final Instant startTime,
       final Duration simulationDuration,
-      final Duration samplingPeriod
+      final Duration samplingPeriod,
+      final TaskFactory<T, Event, Activity> factory,
+      final ActivityMapper mapper
   )
   {
     final var timestamps = new ArrayList<Duration>();
@@ -135,17 +145,26 @@ public final class SimpleSimulator {
 
     final var endTime = simulator.getCurrentHistory();
     final var constraintResults = querier.getConstraintViolationsAt(endTime);
+    final var activitySpecs = factory.getTaskSpecifications();
+    final var activityWindows = simulator.getTaskWindows();
+    final var activityParents = factory.getTaskParents();
 
-    return new SimulationResults(timestamps, timelines, constraintResults);
+    final var activityMap = new HashMap<String, SerializedActivity>();
+    for (final var entry : activitySpecs.entrySet()) {
+      activityMap.put(entry.getKey(), mapper.serializeActivity(entry.getValue()).orElseThrow());
+    }
+
+    return new SimulationResults(timestamps, timelines, constraintResults, activityMap, activityWindows, activityParents, startTime);
   }
 
   public static <Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation<Event> adaptation,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
       final Duration samplingPeriod
   )
   {
-    return simulateToCompletion(adaptation, SimulationTimeline.create(), schedule, samplingPeriod);
+    return simulateToCompletion(adaptation, SimulationTimeline.create(), schedule, startTime, samplingPeriod);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -154,6 +173,7 @@ public final class SimpleSimulator {
       final MerlinAdaptation<Event> adaptation,
       final SimulationTimeline<T, Event> database,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
       final Duration samplingPeriod
   )
   {
@@ -170,19 +190,20 @@ public final class SimpleSimulator {
 
       simulator.defer(
           startDelta,
-          factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).get()));
+          factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulateToCompletion(querier, simulator, samplingPeriod);
+    return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory, mapper);
   }
 
   public static <Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation<Event> adaptation,
       final List<Pair<Duration, SerializedActivity>> instanceList,
+      final Instant startTime,
       final Duration samplingPeriod
   )
   {
-    return simulateToCompletion(adaptation, SimulationTimeline.create(), instanceList, samplingPeriod);
+    return simulateToCompletion(adaptation, SimulationTimeline.create(), instanceList, startTime, samplingPeriod);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -191,6 +212,7 @@ public final class SimpleSimulator {
       final MerlinAdaptation<Event> adaptation,
       final SimulationTimeline<T, Event> database,
       final List<Pair<Duration, SerializedActivity>> instanceList,
+      final Instant startTime,
       final Duration samplingPeriod
   )
   {
@@ -204,10 +226,10 @@ public final class SimpleSimulator {
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
-      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).get()));
+      simulator.defer(startDelta, factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
     }
 
-    return simulateToCompletion(querier, simulator, samplingPeriod);
+    return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory, mapper);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -215,7 +237,10 @@ public final class SimpleSimulator {
   private static <T, Event> SimulationResults simulateToCompletion(
       final MerlinAdaptation.Querier<T, Event> querier,
       final SimulationEngine<T, Event> simulator,
-      final Duration samplingPeriod
+      final Instant startTime,
+      final Duration samplingPeriod,
+      final TaskFactory<T, Event, Activity> factory,
+      final ActivityMapper mapper
   )
   {
     final var timestamps = new ArrayList<Duration>();
@@ -242,7 +267,15 @@ public final class SimpleSimulator {
 
     final var endTime = simulator.getCurrentHistory();
     final var constraintResults = querier.getConstraintViolationsAt(endTime);
+    final var activitySpecs = factory.getTaskSpecifications();
+    final var activityWindows = simulator.getTaskWindows();
+    final var activityParents = factory.getTaskParents();
 
-    return new SimulationResults(timestamps, timelines, constraintResults);
+    final var activityMap = new HashMap<String, SerializedActivity>();
+    for (final var entry : activitySpecs.entrySet()) {
+      activityMap.put(entry.getKey(), mapper.serializeActivity(entry.getValue()).orElseThrow());
+    }
+
+    return new SimulationResults(timestamps, timelines, constraintResults, activityMap, activityWindows, activityParents, startTime);
   }
 }

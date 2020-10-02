@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlincli;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.Adaptation;
 
 import java.nio.file.Path;
+import java.time.Instant;
 
 /**
  * A receiver for Merlin commands.

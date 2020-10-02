@@ -14,12 +14,14 @@ public final class SimulationResults {
   public final List<Duration> timestamps;
   public final Map<String, List<SerializedValue>> timelines;
   public final JsonValue constraints;
+  public final JsonValue activities;
 
-  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedValue>> timelines, JsonValue constraints) {
+  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedValue>> timelines, JsonValue constraints, JsonValue activities) {
     this.startTime = startTime;
     this.timestamps = timestamps;
     this.timelines = timelines;
     this.constraints = constraints;
+    this.activities = activities;
   }
 
   @Override
@@ -29,7 +31,8 @@ public final class SimulationResults {
         " startTime=" + startTime + "," +
         " timestamps=" + timestamps + "," +
         " timelines=" + timelines + "," +
-        " constraints=" + constraints +
+        " constraints=" + constraints + "," +
+        " activities=" + activities +
         " }";
   }
 
@@ -43,11 +46,12 @@ public final class SimulationResults {
         && Objects.equals(this.timestamps, other.timestamps)
         && Objects.equals(this.timelines, other.timelines)
         && Objects.equals(this.constraints, other.constraints)
+        && Objects.equals(this.activities, other.activities)
         );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.startTime, this.timestamps, this.timelines, this.constraints);
+    return Objects.hash(this.startTime, this.timestamps, this.timelines, this.constraints, this.activities);
   }
 }

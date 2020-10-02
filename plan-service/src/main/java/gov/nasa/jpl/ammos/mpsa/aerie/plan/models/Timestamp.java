@@ -5,11 +5,16 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 
 public class Timestamp {
-
-  private static final DateTimeFormatter format = DateTimeFormatter.ofPattern("uuuu-DDD'T'HH:mm:ss[.n]");
+  // This builder must be used to get optional subsecond values
+  // See: https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+  private static final DateTimeFormatter format =
+      new DateTimeFormatterBuilder().appendPattern("uuuu-DDD'T'HH:mm:ss")
+                                    .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).toFormatter();
   private ZonedDateTime time;
 
   private Timestamp(String timestamp) throws DateTimeParseException {

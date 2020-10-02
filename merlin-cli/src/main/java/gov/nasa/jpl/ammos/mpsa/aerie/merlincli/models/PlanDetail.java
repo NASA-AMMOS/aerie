@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.exceptions.InvalidTokenException;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,15 +13,15 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.TokenMap.parseToken
 public class PlanDetail {
     private String _id;
     private String adaptationId;
-    private String startTimestamp;
+    private Instant startTimestamp;
     private String name;
-    private String endTimestamp;
+    private Instant endTimestamp;
     private List<ActivityInstance> activityInstances = new ArrayList<ActivityInstance>();
 
     public PlanDetail() {
     }
 
-    public PlanDetail(String _id, String adaptationId, String endTimestamp, String name, String startTimestamp,
+    public PlanDetail(String _id, String adaptationId, Instant endTimestamp, String name, Instant startTimestamp,
             ArrayList<ActivityInstance> activityInstances) {
         this._id = _id;
         this.adaptationId = adaptationId;
@@ -38,10 +41,10 @@ public class PlanDetail {
                     plan.setAdaptationId(tokenMap.getValue());
                     break;
                 case "startTimestamp":
-                    plan.setStartTimestamp(tokenMap.getValue());
+                  plan.setStartTimestamp(readTimestampToken(tokenMap.getValue()));
                     break;
                 case "endTimestamp":
-                    plan.setEndTimestamp(tokenMap.getValue());
+                    plan.setEndTimestamp(readTimestampToken(tokenMap.getValue()));
                     break;
                 case "name":
                     plan.setName(tokenMap.getValue());
@@ -78,11 +81,11 @@ public class PlanDetail {
         this.adaptationId = adaptationId;
     }
 
-    public String getStartTimestamp() {
+    public Instant getStartTimestamp() {
         return this.startTimestamp;
     }
 
-    public void setStartTimestamp(String startTimestamp) {
+    public void setStartTimestamp(Instant startTimestamp) {
         this.startTimestamp = startTimestamp;
     }
 
@@ -94,11 +97,19 @@ public class PlanDetail {
         this.name = name;
     }
 
-    public String getEndTimestamp() {
+    public Instant getEndTimestamp() {
         return this.endTimestamp;
     }
 
-    public void setEndTimestamp(String endTimestamp) {
+    public void setEndTimestamp(Instant endTimestamp) {
         this.endTimestamp = endTimestamp;
+    }
+
+    private static Instant readTimestampToken(String token) throws InvalidTokenException {
+      try {
+        return PlanDeserializer.deserializeTimestamp(token);
+      } catch (InvalidEntityException e) {
+        throw new InvalidTokenException(token, "invalid timestamp", e);
+      }
     }
 }
