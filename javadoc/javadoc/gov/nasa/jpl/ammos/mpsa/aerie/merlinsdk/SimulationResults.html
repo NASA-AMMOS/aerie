@@ -167,6 +167,11 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#timestamps">timestamps</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#unfinishedActivities">unfinishedActivities</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
 </table>
 </li>
 </ul>
@@ -185,12 +190,11 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.util.List,java.util.Map,java.util.List,java.util.Map,java.util.Map,java.util.Map,java.time.Instant)">SimulationResults</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&gt;&nbsp;timestamps,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.util.List,java.util.Map,java.util.List,java.util.Map,java.util.Map,java.time.Instant)">SimulationResults</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&gt;&nbsp;timestamps,
                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&nbsp;timelines,
                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="constraints/ConstraintViolation.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintViolation</a>&gt;&nbsp;constraintViolations,
-                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&nbsp;activityMap,
-                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&gt;&gt;&nbsp;activityWindows,
-                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&gt;&nbsp;activityParents,
+                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="engine/TaskFactory.TaskRecord.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine">TaskFactory.TaskRecord</a>&gt;&nbsp;activityRecords,
+                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="time/Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&gt;&nbsp;activityWindows,
                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -258,10 +262,19 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <a id="simulatedActivities">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>simulatedActivities</h4>
 <pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="engine/activities/SimulatedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities">SimulatedActivity</a>&gt; simulatedActivities</pre>
+</li>
+</ul>
+<a id="unfinishedActivities">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>unfinishedActivities</h4>
+<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt; unfinishedActivities</pre>
 </li>
 </ul>
 </li>
@@ -274,7 +287,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(java.util.List,java.util.Map,java.util.List,java.util.Map,java.util.Map,java.util.Map,java.time.Instant)">
+<a id="&lt;init&gt;(java.util.List,java.util.Map,java.util.List,java.util.Map,java.util.Map,java.time.Instant)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -283,9 +296,8 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <pre>public&nbsp;SimulationResults&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&gt;&nbsp;timestamps,
                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&nbsp;timelines,
                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="constraints/ConstraintViolation.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ConstraintViolation</a>&gt;&nbsp;constraintViolations,
-                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&nbsp;activityMap,
-                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&gt;&gt;&nbsp;activityWindows,
-                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&gt;&nbsp;activityParents,
+                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="engine/TaskFactory.TaskRecord.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine">TaskFactory.TaskRecord</a>&gt;&nbsp;activityRecords,
+                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="time/Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&gt;&nbsp;activityWindows,
                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime)</pre>
 </li>
 </ul>
