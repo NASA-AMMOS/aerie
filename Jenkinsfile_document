@@ -4,8 +4,7 @@ pipeline {
         label 'CAE-Jenkins2-DH-Agents-Linux'
     }
     parameters {
-        string(name: 'OUTPUT_FOLDER', defaultValue: 'TEST')
-        string(name: 'TITLE', defaultValue: 'TEST-Documentation')
+        string(name: 'TAG', defaultValue: 'TEST-Documentation')
     }
     stages {
         stage ('Setup') {
@@ -72,8 +71,8 @@ pipeline {
                     steps {
                         sh script:
                         """
-                            mkdir -p auto-html/${OUTPUT_FOLDER}
-                            gwtc -f html -n index -t ${TITLE} -o auto-html/${OUTPUT_FOLDER} ./aerie.wiki
+                            mkdir -p auto-html/${TAG}
+                            gwtc -f html -n index -t ${TAG} -o auto-html/${TAG} ./aerie.wiki
                         """
                     }
                 }
@@ -81,8 +80,8 @@ pipeline {
                     steps {
                         sh script:
                         """
-                            mkdir -p auto-pdf/${OUTPUT_FOLDER}
-                            gwtc -f pdf -n Aerie-Documentation -t ${TITLE} -o auto-pdf/${OUTPUT_FOLDER} ./aerie.wiki
+                            mkdir -p auto-pdf/${TAG}
+                            gwtc -f pdf -n Aerie-Documentation -t ${TAG} -o auto-pdf/${TAG} ./aerie.wiki
                         """
                     }
                 }
@@ -90,8 +89,8 @@ pipeline {
                     steps {
                         sh script:
                         """
-                            rsync -av --delete auto-html/${OUTPUT_FOLDER} html
-                            rsync -av --delete auto-pdf/${OUTPUT_FOLDER} pdf
+                            rsync -av --delete auto-html/${TAG} html
+                            rsync -av --delete auto-pdf/${TAG} pdf
                         """
                     }
                 }
@@ -102,8 +101,8 @@ pipeline {
                         sh 'ls html/ -la'
                         sh 'git config user.email "achong@jpl.nasa.gov"'
                         sh 'git config user.name "Automatic Job"'
-                        sh 'git add html/${OUTPUT_FOLDER}'
-                        sh 'git add pdf/${OUTPUT_FOLDER}'
+                        sh 'git add html/${TAG}'
+                        sh 'git add pdf/${TAG}'
                         sh 'git status -uno'
                         sh 'git commit -m "Auto commit generated documents"'
                         sh 'git push'
