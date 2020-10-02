@@ -56,23 +56,14 @@ public final class SimulationResults {
     for (final var id : activityMap.keySet()) {
       final var activity = activityMap.get(id);
       final var window = activityWindows.get(id);
-      final var duration = window.getRight().minus(window.getLeft());
-      final var parent = activityParents.get(id).orElse(null);
-      final var children = activityChildren.get(id);
-
-      // Java Instants don't provide capability to add microseconds
-      // Add millis and micros separately to avoid possible overflow
-      final var millis = window.getLeft().dividedBy(Duration.MILLISECONDS);
-      final var micros = window.getLeft().remainderOf(Duration.MILLISECONDS).dividedBy(Duration.MICROSECONDS);
-      final var start = startTime.plusMillis(millis).plusNanos(1000 * micros);
 
       simulatedActivities.put(id, new SimulatedActivity(
           activity.getTypeName(),
           activity.getParameters(),
-          start,
-          duration,
-          parent,
-          children
+          Duration.addToInstant(startTime, window.getLeft()),
+          window.getRight().minus(window.getLeft()),
+          activityParents.get(id).orElse(null),
+          activityChildren.get(id)
       ));
     }
 

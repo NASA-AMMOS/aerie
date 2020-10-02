@@ -239,6 +239,15 @@ public final class Duration implements Comparable<Duration> {
     return Collections.max(List.of(x, y));
   }
 
+  /** Apply a duration to a {@link java.time.Instant}. */
+  public static java.time.Instant addToInstant(final java.time.Instant instant, final Duration duration) {
+    // Java Instants don't provide capability to add microseconds
+    // Add millis and micros separately to avoid possible overflow
+    return instant
+        .plusMillis(duration.dividedBy(Duration.MILLISECONDS))
+        .plusNanos(1000 * duration.remainderOf(Duration.MILLISECONDS).dividedBy(Duration.MICROSECONDS));
+  }
+
   /** @see Duration#add(Duration, Duration) */
   public Duration plus(final Duration other) throws ArithmeticException {
     return Duration.add(this, other);
