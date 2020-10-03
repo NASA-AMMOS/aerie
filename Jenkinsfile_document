@@ -67,30 +67,32 @@ pipeline {
                         sh 'ls -la'
                     }
                 }
-                stage ('Building html documents') {
+                stage ('Building HTML documents') {
                     steps {
-                        sh script:
-                        """
-                            mkdir -p auto-html/${TAG}
-                            gwtc -f html -n index -t ${TAG} -o auto-html/${TAG} ./aerie.wiki
+                        sh """
+                            DOC_PREP_DIR=\$(mktemp -d)
+                            mkdir -p \${DOC_PREP_DIR}/wiki
+                            gwtc -f html -n index -t ${TAG} -o \${DOC_PREP_DIR}/wiki ./aerie.wiki
+                            rsync -av --delete \${DOC_PREP_DIR}/wiki ${TAG}
+                            rm -rf \${DOC_PREP_DIR}
                         """
                     }
                 }
                 stage ('Building PDF documents') {
                     steps {
-                        sh script:
-                        """
-                            mkdir -p auto-pdf/${TAG}
-                            gwtc -f pdf -n Aerie-Documentation -t ${TAG} -o auto-pdf/${TAG} ./aerie.wiki
+                        sh """
+                            DOC_PREP_DIR=\$(mktemp -d)
+                            mkdir -p \${DOC_PREP_DIR}/pdf
+                            gwtc -f pdf -n Aerie-${TAG} -t ${TAG} -o \${DOC_PREP_DIR}/pdf ./aerie.wiki
+                            rsync -av --delete \${DOC_PREP_DIR}/pdf ${TAG}
+                            rm -rf \${DOC_PREP_DIR}
                         """
                     }
                 }
-                stage ('Copy generated documents') {
+                stage ('Copying JAVADOC documents') {
                     steps {
-                        sh script:
-                        """
-                            rsync -av --delete auto-html/${TAG} html
-                            rsync -av --delete auto-pdf/${TAG} pdf
+                        sh """
+                            rsync -av --delete javadoc ${TAG}
                         """
                     }
                 }
@@ -101,8 +103,9 @@ pipeline {
                         sh 'ls html/ -la'
                         sh 'git config user.email "achong@jpl.nasa.gov"'
                         sh 'git config user.name "Automatic Job"'
-                        sh 'git add html/${TAG}'
-                        sh 'git add pdf/${TAG}'
+                        sh 'git add ${TAG}/wiki'
+                        sh 'git add ${TAG}/pdf'
+                        sh 'git add ${TAG}/javadoc'
                         sh 'git status -uno'
                         sh 'git commit -m "Auto commit generated documents"'
                         sh 'git push'
