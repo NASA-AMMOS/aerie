@@ -277,7 +277,7 @@ pipeline {
                 cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
 
                 git checkout gh-pages
-                rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc javadoc/
+                rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc/ javadoc
                 rm -rf \${JAVADOC_PREP_DIR}
 
                 git config user.email "achong@jpl.nasa.gov"
