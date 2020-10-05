@@ -1,0 +1,17 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_11
+  targetCompatibility = JavaVersion.VERSION_11
+}
+
+dependencies {
+  implementation project(':merlin-sdk')
+
+  implementation 'org.apache.commons:commons-collections4:4.4'
+  implementation 'org.apache.commons:commons-lang3:3.9'
+  implementation 'com.squareup:javapoet:1.11.1'
+  implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
+}

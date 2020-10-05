@@ -8,10 +8,11 @@ import java.util.function.Supplier;
  * An effect algebra for combining nullary functions whose codomain is another effect algebra.
  *
  * <p>
- * Nullary functions `f : () -> a` are essentially equivalent to the type `a` itself, since each function maps to only
- * a single value. These are useful in strict languages like Java to prevent a costly computation from being performed
- * unless the value is actually deemed necessary. In this way, the <code>SupplierEffectTrait</code> can be considered to
- * lift an "eager" effect algebra into a "lazy" one.
+ * Nullary functions {@code f : () -> a} are essentially equivalent to the type {@code a} itself,
+ * since each function maps to only a single value. These are useful in strict languages like Java
+ * to prevent a costly computation from being performed unless the value is actually deemed necessary.
+ * In this way, the {@code SupplierEffectTrait} can be considered to lift an "eager" effect algebra
+ * into a "lazy" one.
  * </p>
  *
  * @param <Effect> The type of effect to be lifted into a lazy-evaluation context.

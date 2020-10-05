@@ -12,12 +12,12 @@ public interface Instant<T> extends Comparator<T> {
   Duration minus(T end, T start);
 
 
-  default T plus(final T time, final long quantity, final TimeUnit units) {
-    return this.plus(time, Duration.of(quantity, units));
+  default T plus(final T time, final long quantity, final Duration unit) {
+    return this.plus(time, Duration.of(quantity, unit));
   }
 
-  default T minus(final T time, final long quantity, final TimeUnit units) {
-    return this.minus(time, Duration.of(quantity, units));
+  default T minus(final T time, final long quantity, final Duration unit) {
+    return this.minus(time, Duration.of(quantity, unit));
   }
 
   default boolean isBefore(final T left, final T right) {

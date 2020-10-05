@@ -1,0 +1,268 @@
+schema { query: AerieQuery, mutation: AerieMutation, subscription: AerieSubscription }
+type AerieMutation
+type AerieQuery
+type AerieSubscription
+
+
+extend type AerieQuery {
+  scheduleTypes: [ScheduleType!]!
+  scheduleType(id: [ID!]!): [ScheduleType]!
+
+  schedules: [Schedule!]!
+  schedule(id: [ID!]!): [Schedule]!
+
+  # For caching and uniform access; see https://graphql.org/learn/global-object-identification/
+  node(id: ID!): Node
+}
+
+type Schedule implements Node {
+  id: ID!
+  type: ScheduleType!
+
+  startTime: Time!
+  endTime: Time!
+  duration: ElapsedTime!
+
+  activities: Activities!
+  constraints: Constraints!
+
+  state(name: String!, arguments: [StateIndexInput!]): State
+}
+
+"""
+A view on the set of activities occurring in a schedule
+"""
+type Activities {
+  """
+  All occurring activities, without restriction
+  """
+  all: [Activity!]!
+
+  """
+  All activities, excluding those decomposed from others
+  """
+  roots: [Activity!]!
+
+  """
+  Any activities with validation failures
+  """
+  invalid: [Activity!]!
+
+  byId(id: [ID!]!): [Activity]!
+  byType(type: String!): [Activity!]
+}
+
+"""
+A view on the set of constraints checked by a schedule
+"""
+type Constraints {
+  all: [Constraint!]!
+  violated: [Constraint!]!
+
+  byId(name: [ID!]!): [Constraint]!
+  byCategory(category: [String!]!): [[Constraint!]]!
+}
+
+type State {
+  name: String!
+  indices: [StateIndex!]!
+
+  """
+  A symbolic representation of the state's value over time
+  """
+  profile(startTime: ElapsedTime!, duration: ElapsedTime!)
+    : StateProfile!
+
+  """
+  Evenly-distributed samples of the state's value over time
+  """
+  samples(startTime: ElapsedTime!, duration: ElapsedTime!, sampleCount: Int!)
+    : [MissionValue!]!
+}
+
+type StateIndex {
+  name: String!
+  value: MissionValue
+}
+
+input StateIndexInput {
+  name: String!
+  value: MissionValue
+}
+
+
+type Activity implements Node {
+  id: ID!
+
+  type: ActivityType!
+  arguments: [ActivityArgument!]!
+  argument(name: [String!]!): [ActivityArgument]!
+  window: Window!
+
+  validationFailures: [ActivityValidationFailure!]!
+
+  parent: Activity
+  rootAncestor: Activity!
+  ancestors: [Activity!]!
+  children: [Activity!]!
+  descendants: [Activity!]!
+}
+
+type ActivityArgument {
+  name: String!
+
+  """
+  The type may be null if an activity instance is created with an argument for a nonexistent parameter.
+  """
+  type: ActivityArgumentType
+
+  value: MissionValue
+
+  overridden: Boolean!
+}
+
+type ActivityValidationFailure {
+  description: String!
+  contributingArguments: [String!]!
+}
+
+
+type Constraint implements Node {
+  id: ID!
+
+  name: String!
+  description: String!
+  specification: ConstraintSpecification!
+
+  category: String
+
+  violations: [ConstraintViolation!]!
+}
+
+type ConstraintViolation {
+  window: Window!
+  activities: [Activity!]!
+  states: [String!]!
+
+  severity: String!
+}
+
+type Window {
+  startAt: ElapsedTime!
+  endAt: ElapsedTime!
+  duration: ElapsedTime!
+}
+
+
+type ScheduleType implements Node {
+  id: ID!
+
+  name: String!
+  version: String!
+  deprecated: Boolean!
+
+  defaultConstraints: [ProvidedConstraint!]!
+
+  activityTypes: [ActivityType!]!
+  activityType(name: [String!]!): [ActivityType]!
+
+  stateTypes: [StateType!]!
+  stateType(name: [String!]!): [StateType]!
+
+  # TODO: Add queries for events and conditions
+  #   States are defined by a profile over time
+  #   Events are defined by occurrences at instants
+  #   Conditions are defined by windows covering time
+}
+
+"""
+A constraint provided automatically for every new schedule
+"""
+type ProvidedConstraint {
+  name: String!
+
+  category: String
+  # TODO: Add query for constraint definition
+}
+
+
+type ActivityType {
+  name: String!
+  description: String
+  tags: [String!]!
+
+  """
+  Use case for color still unclear -- does this need to be inherent to activity types,
+  or can it be derived based on other data (such as from tags)?
+  """
+  color: String
+
+  estimatedDuration: ElapsedTime!
+
+  parameters: [ActivityArgumentType!]!
+  parameter(name: [String!]!): [ActivityArgumentType]!
+}
+
+type ActivityArgumentType {
+  name: String!
+  schema: MissionValueSchema!
+  default: MissionValue
+}
+
+
+type StateType {
+  name: String!
+  schema: MissionValueSchema!
+
+  """
+  A family of states is indexed by some values
+  """
+  indices: [StateIndexType!]!
+}
+
+type StateIndexType {
+  name: String!
+  schema: MissionValueSchema!
+}
+
+
+# For caching and uniform access; see https://graphql.org/learn/global-object-identification/
+interface Node {
+  id: ID!
+}
+
+
+"""
+A generic description of a kind of mission-specific value
+"""
+scalar MissionValueSchema
+
+"""
+A generic representation of a mission-specific value
+"""
+scalar MissionValue
+
+"""
+A symbolic definition of a piecewise function of time
+"""
+scalar StateProfile
+
+"""
+A non-negative duration
+"""
+scalar ElapsedTime
+
+"""
+An ISO 8601 representation of a date and time, e.g. 2020-023T01:23:45.003300
+"""
+scalar Time
+
+"""
+An opaque binary blob
+"""
+scalar Blob
+
+"""
+A formal constraint specification in logic
+"""
+scalar ConstraintSpecification

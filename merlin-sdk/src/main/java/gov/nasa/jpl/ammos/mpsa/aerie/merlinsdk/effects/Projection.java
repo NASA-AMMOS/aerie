@@ -30,7 +30,7 @@ public interface Projection<Event, Effect> extends EffectTrait<Effect> {
    * trait.
    *
    * A <code>Projection</code> is an <code>EffectTrait</code> with an additionam function from events to effects. This
-   * factory method allows a <code>Projection</code>> to be constructed from these components without requiring a new
+   * factory method allows a <code>Projection</code> to be constructed from these components without requiring a new
    * class declaration.
    *
    * @param trait The trait against which the {@link #empty}, {@link #sequentially}, and {@link #concurrently} methods

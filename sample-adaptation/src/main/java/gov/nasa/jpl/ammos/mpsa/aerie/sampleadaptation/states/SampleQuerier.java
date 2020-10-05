@@ -3,27 +3,27 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityEvent;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.ActivityModelQuerier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.eventgraph.DynamicActivityModelQuerier;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityModelQuerier;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.DynamicActivityModelQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.DynamicReactionContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.DynamicReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DynamicStateQuery;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.StateQuery;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.CumulableStateApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.RegisterState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableEffectEvaluator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.model.SettableStateApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DynamicStateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.StateQuery;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model.CumulableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model.CumulableStateApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model.RegisterState;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model.SettableEffectEvaluator;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.model.SettableStateApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.events.SampleEvent;
 
 import java.util.ArrayList;
@@ -35,15 +35,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.DynamicCell.setDynamic;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setDynamic;
 
 public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent> {
     // Create two DynamicCells to provide ReactionContext and StateContext to modeling code
-    private final static DynamicCell<ReactionContext<?, Activity, SampleEvent>> reactionContext = DynamicCell.create();
+    private final static DynamicCell<ReactionContext<?, SampleEvent, Activity>> reactionContext = DynamicCell.create();
     private final static DynamicCell<SampleQuerier<?>.StateQuerier> stateContext = DynamicCell.create();
 
     // Define a function to take a state name and provide questions that can be asked based on current context
-    public static final Function<String, StateQuery<SerializedParameter>> query = (name) ->
+    public static final Function<String, StateQuery<SerializedValue>> query = (name) ->
         new DynamicStateQuery<>(() -> stateContext.get().getRegisterQuery(name));
 
     // Provide access to activity information based on the current context.
@@ -52,12 +52,12 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     // Provide direct access to methods on the context stored in the dynamic cell.
     // e.g. instead of `reactionContext.get().spawn(act)`, just use `ctx.spawn(act)`.
-    public static final ReactionContext<?, Activity, SampleEvent> ctx = new DynamicReactionContext<>(() -> reactionContext.get());
+    public static final ReactionContext<?, SampleEvent, Activity> ctx = new DynamicReactionContext<>(() -> reactionContext.get());
 
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
     private final Set<String> stateNames = new HashSet<>();
-    private final Map<String, Query<T, SampleEvent, RegisterState<SerializedParameter>>> settables = new HashMap<>();
+    private final Map<String, Query<T, SampleEvent, RegisterState<SerializedValue>>> settables = new HashMap<>();
     private final Map<String, Query<T, SampleEvent, RegisterState<Double>>> cumulables = new HashMap<>();
 
     // Model the durations of (and relationships between) activities.
@@ -103,7 +103,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
     }
 
     @Override
-    public void runActivity(final ReactionContext<T, Activity, SampleEvent> ctx, final String activityId, final Activity activity) {
+    public void runActivity(final ReactionContext<T, SampleEvent, Activity> ctx, final String activityId, final Activity activity) {
         // Run the activity in the context of the given reaction context as well as the established state queries.
         // The activity can affect the simulation by emitting events against the reaction context,
         // and can query states to change its behavior based on simulation state.
@@ -123,11 +123,14 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
 
     @Override
     public Set<String> states() {
-        return this.cumulables.keySet();
+        final var states = new HashSet<String>();
+        states.addAll(this.cumulables.keySet());
+        states.addAll(this.settables.keySet());
+        return states;
     }
 
     @Override
-    public SerializedParameter getSerializedStateAt(final String name, final History<T, SampleEvent> history) {
+    public SerializedValue getSerializedStateAt(final String name, final History<T, SampleEvent> history) {
         return this.getRegisterQueryAt(name, history).get();
     }
 
@@ -148,9 +151,9 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         });
     }
 
-    public StateQuery<SerializedParameter> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
+    public StateQuery<SerializedValue> getRegisterQueryAt(final String name, final History<T, SampleEvent> history) {
         if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history);
-        else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedParameter::of);
+        else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedValue::of);
         else throw new RuntimeException("State \"" + name + "\" is not defined");
     }
 
@@ -164,7 +167,7 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SampleEvent
         }
 
         // Get a queryable object representing the named state.
-        public StateQuery<SerializedParameter> getRegisterQuery(final String name) {
+        public StateQuery<SerializedValue> getRegisterQuery(final String name) {
             return SampleQuerier.this.getRegisterQueryAt(name, this.historySupplier.get());
         }
 

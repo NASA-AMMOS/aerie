@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit.MICROSECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

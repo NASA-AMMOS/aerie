@@ -1,16 +1,16 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.data;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.totalDownlinkedDataBits;
 
@@ -83,6 +83,6 @@ public class DownlinkData implements Activity {
 
         // Wait for downlink duration
         long downlinkDuration = ((long) downlinkVolume) / Config.downlinkRate;
-        ctx.delay(Duration.of(downlinkDuration, TimeUnit.SECONDS));
+        ctx.delay(duration(downlinkDuration, SECONDS));
     }
 }

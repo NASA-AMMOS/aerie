@@ -8,7 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *
  * <p>
  * For a pair of values <code>(a, b) : A * B</code>, where <code>A</code> and <code>B</code> are effect algebras, we can
- * define <code>(a, b) | (c, d) = ((a | c), (b | d))</code> and <code>(a, b); (c, d) = ((a; c), (b; d))/code>. In other
+ * define <code>(a, b) | (c, d) = ((a | c), (b | d))</code> and <code>(a, b); (c, d) = ((a; c), (b; d))</code>. In other
  * words, pairs are composed component-wise. This is useful when collecting two distinct kinds of effects simultaneously.
  * </p>
  *

@@ -8,10 +8,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlincli.utils.PlanDeserializer;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.SimulationInstant;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -24,6 +23,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.*;
 
 public class LocalCommandReceiver implements MerlinCommandReceiver {
@@ -50,6 +50,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
     }
 
     String adaptationId = plan.getAdaptationId();
+    Instant startTime = plan.getStartTimestamp();
     List<ScheduledActivity> scheduledActivities = new ArrayList<>();
     List<ActivityInstance> plannedActivities = plan.getActivityInstances();
     try {
@@ -61,7 +62,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       return;
     }
 
-    Schedule schedule = new Schedule(adaptationId, scheduledActivities);
+    Schedule schedule = new Schedule(adaptationId, startTime, scheduledActivities);
 
     String basename = Path.of(path).getFileName().toString();
     String name = basename;
@@ -184,7 +185,7 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       scheduledActivities.add(Pair.of(activity.startTime.durationFrom(SimulationInstant.ORIGIN), activity.activity));
     }
 
-    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, Duration.of(samplingPeriod, TimeUnit.MICROSECONDS));
+    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, schedule.startTime, Duration.of(samplingPeriod, Duration.MICROSECONDS));
     System.out.println(results.timelines);
   }
 

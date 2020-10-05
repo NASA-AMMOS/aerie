@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.independentstates.DoubleState;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates;
 
 import java.util.List;
@@ -18,6 +18,8 @@ public class Config {
     public static final double referenceSolarPower_W = 1000.0; //1KW @1AU rated solar array
     public static final double instrumentPower = 500.0; // Watts = J/s
     public static final double cameraHeaterPower = 200.0; // Watts = J/s
+    public static final double cameraRotationRate = 0.0027777777777778; // radians/s (0.5 degrees per second)
+    public static final double cameraRotationPower = 50.0; // Watts J/s
     public static final long downlinkRate = (long)2000.0; // bits per second
 
     // Ordering prioritizes which data gets downlinked first

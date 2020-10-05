@@ -1,3 +1,22 @@
+
+## Building Aerie
+Aerie uses [Gradle](https://docs.gradle.org/) as its build system.
+You do not need to install Gradle explicitly -- use the Gradle wrapper
+included in the repository root, e.g. `./gradlew build`.
+
+Examples of common Gradle tasks:
+* `build`: Compile, test, and assemble all subprojects.
+* `classes`: Compile all Java subprojects.
+* `test`: Build and test all subprojects.
+* `tasks`: List all tasks known to Gradle.
+* `{project}:test`: Build and test the named subproject.
+
+### IntelliJ IDEA
+
+If you use IntelliJ IDEA, you can simply import the Aerie repository
+into IntelliJ as a Gradle project. No additional configuration is required.
+
+## PRs
 Contributions to the Aerie repository should abide by the following conventions:
 
 * Branches should be named `feature/AERIE-XXX--short-desc` or `hotfix/short-desc`, where "AERIE-XXX" is the associated Jira ticket.

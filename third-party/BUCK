@@ -1,5 +1,0 @@
-prebuilt_jar(
-    name = 'JNISpice',
-    binary_jar = 'JNISpice-1.0-20190517.205223-2.jar',
-    visibility = ['PUBLIC']
-)

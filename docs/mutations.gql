@@ -1,0 +1,124 @@
+extend type AerieMutation {
+  defineScheduleType(
+    name: String!
+    version: String!
+    jar: Blob!
+  ): DefineScheduleTypeResult
+
+  deprecateScheduleType(scheduleTypeId: [ID!]!): [DeprecateScheduleTypeResult]!
+  undeprecateScheduleType(scheduleTypeId: [ID!]!): [UndeprecateScheduleTypeResult]!
+}
+
+union DefineScheduleTypeResult =
+  | ScheduleType
+  | ScheduleTypeAlreadyExists
+  | InvalidAdaptationJar
+
+union DeprecateScheduleTypeResult =
+  | ScheduleType
+  | NoSuchScheduleType
+
+union UndeprecateScheduleTypeResult =
+  | ScheduleType
+  | NoSuchScheduleType
+
+
+extend type AerieMutation {
+  createSchedule(
+    scheduleTypeId: ID!
+    name: String!
+    startTime: Time!
+    duration: ElapsedTime!
+  ): CreateScheduleResult
+
+  deleteSchedule(scheduleId: [ID!]!): [DeleteScheduleResult]!
+
+  scheduleActivity(
+    scheduleId: ID!
+    startTime: ElapsedTime!
+    type: String!
+    arguments: [ActivityArgumentInput!]!
+  ): ScheduleActivityResult
+
+  rescheduleActivity(activityId: ID!, startTime: ElapsedTime!): RescheduleActivityResult
+
+  removeActivity(activityId: [ID!]!): [RemoveActivityResult]!
+
+  removeAllActivities(scheduleId: ID!): RemoveAllActivitiesResult
+
+  setActivityArgument(activityId: ID!, argument: [ActivityArgumentInput!]!): [SetActivityArgumentResult]!
+
+  resetActivityArgument(activityId: ID!, argumentName: [String!]!): [ResetActivityArgumentResult]!
+}
+
+union CreateScheduleResult =
+  | Schedule
+  | NoSuchScheduleType
+  | ScheduleAlreadyExists
+  | MalformedSchedule
+
+union DeleteScheduleResult =
+  | AerieQuery
+  | NoSuchSchedule
+
+union ScheduleActivityResult =
+  | Activity
+  | NoSuchSchedule
+  | MalformedActivity
+
+union RescheduleActivityResult =
+  | Activity
+  | NoSuchActivity
+
+union RemoveActivityResult =
+  | Schedule
+  | NoSuchActivity
+
+union RemoveAllActivitiesResult =
+  | Schedule
+  | NoSuchSchedule
+
+union SetActivityArgumentResult =
+  | Activity
+  | NoSuchActivity
+  | NoSuchActivityArgument
+  | MalformedActivityArgument
+
+union ResetActivityArgumentResult =
+  | Activity
+  | NoSuchActivity
+  | NoSuchActivityArgument
+
+
+input ActivityArgumentInput {
+  name: String!
+  value: MissionValue
+}
+
+
+type NoSuchScheduleType
+type ScheduleTypeAlreadyExists
+
+type NoSuchSchedule
+type ScheduleAlreadyExists
+
+type NoSuchActivityType
+type NoSuchActivity
+type NoSuchActivityArgument
+
+type MalformedActivityArgument {
+  messages: [String!]!
+}
+
+type InvalidAdaptationJar {
+  messages: [String!]!
+}
+
+type MalformedSchedule {
+  messages: [String!]!
+}
+
+type MalformedActivity {
+  extraArguments: [String!]!
+  illTypedArguments: [String!]!
+}

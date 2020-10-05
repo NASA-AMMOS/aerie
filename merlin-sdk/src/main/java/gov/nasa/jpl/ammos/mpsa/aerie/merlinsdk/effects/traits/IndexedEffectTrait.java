@@ -8,9 +8,9 @@ import java.util.function.Function;
  * An effect algebra over functions from some index space to another effect algebra.
  *
  * <p>
- * For any pair of functions <code>f, g : A -> B</code>, where <code>B</code> is itself an effect algebra, we can define
- * <code>(f; g)(x) = f(x); g(x)</code> and <code>(f | g)(x) = f(x) | g(x)</code>. This is useful when the same kind of
- * effect may apply to a number of independent resources. If <code>a : A</code> is a resource, then <code>f(a) : B</code>
+ * For any pair of functions {@code f, g : A -> B}, where {@code B} is itself an effect algebra, we can define
+ * {@code (f; g)(x) = f(x); g(x)} and {@code (f | g)(x) = f(x) | g(x)}. This is useful when the same kind of
+ * effect may apply to a number of independent resources. If {@code a : A} is a resource, then {@code f(a) : B}
  * is the effect upon that resource.
  * </p>
  *

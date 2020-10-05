@@ -2,14 +2,17 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.representation.SerializedParameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.activities.ReactionContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ReactionContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -48,14 +51,15 @@ public interface MerlinAdaptation<Event> {
    * @return An activity mapper.
    */
   ActivityMapper getActivityMapper();
-
+  List<ViolableConstraint> getViolableConstraints();
+  Map<String, ValueSchema> getStateSchemas();
   <T> Querier<T, Event> makeQuerier(final SimulationTimeline<T, Event> database);
 
   interface Querier<T, Event> {
-    void runActivity(ReactionContext<T, Activity, Event> ctx, String activityId, Activity activity);
+    void runActivity(ReactionContext<T, Event, Activity> ctx, String activityId, Activity activity);
 
     Set<String> states();
-    SerializedParameter getSerializedStateAt(String name, History<T, Event> history);
+    SerializedValue getSerializedStateAt(String name, History<T, Event> history);
     List<ConstraintViolation> getConstraintViolationsAt(History<T, Event> history);
   }
 }

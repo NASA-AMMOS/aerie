@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
@@ -18,21 +17,21 @@ import java.util.function.Function;
  * A persistent representation of {@link EffectExpression}s.
  *
  * <p>
- * <code>SimulationTimeline</code> is an efficient implementation of {@link EffectExpression} that supports multiple
+ * {@code SimulationTimeline} is an efficient implementation of {@link EffectExpression} that supports multiple
  * simultaneous unterminated timelines. The equivalent of an {@link EventGraph} for <code>SimulationTimeline</code>s
  * is a {@link History}, which may be extended with events and evaluated against {@link Projection}s.
  * </p>
  *
  * <p>
- * For efficiency, {@link Projection}s may be registered with a <code>SimulationTimeline</code> so their results
+ * For efficiency, {@link Projection}s may be registered with a {@code SimulationTimeline} so their results
  * are cached and reused for later queries.
  * </p>
  *
  * <p>
- * The <a href="https://kean.blog/post/phantom-types">phantom type parameter</a> <code>T</code> distinguishes
+ * The <a href="https://kean.blog/post/phantom-types">phantom type parameter</a> {@code T} distinguishes
  * one timeline from another, ensuring that time points and projectors related to one timeline cannot accidentally
- * be used with another timeline. <code>SimulationTimeline</code> instances are instantiated with an unknown type
- * for this type parameter, represented by the wildcard symbol <code>&lt;?&gt;</?></code>.
+ * be used with another timeline. {@code SimulationTimeline} instances are instantiated with an unknown type
+ * for this type parameter, represented by the wildcard symbol {@code <?>}.
  * </p>
  *
  * @param <T> A phantom type parameter that distinguishes individual timeline instances.
@@ -52,7 +51,7 @@ public final class SimulationTimeline<T, Event> {
   /*package-local*/ static final int START_INDEX = -1;
 
   // Use a wildcard as an existential quantifier. The caller cannot know what concrete type this is instantiated over,
-  // so two separate SimulationTimeline instances cannot interfere with each other.
+  //   so two separate SimulationTimeline instances cannot interfere with each other.
   public static <Event> SimulationTimeline<?, Event> create() {
     return new SimulationTimeline<>();
   }
@@ -94,6 +93,8 @@ public final class SimulationTimeline<T, Event> {
     return this.times.get(index);
   }
 
+  // PRECONDITION: `startTime` occurs-before `endTime`.
+  //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
       final EffectTrait<Effect> trait,
@@ -102,16 +103,16 @@ public final class SimulationTimeline<T, Event> {
       final int endTime
   ) {
     // NOTE: In principle, we can determine the maximum size of the path stack.
-    // Whenever two time points are joined, increment a counter on the resulting time point.
-    // This counter can then be used to allocate a stack of just the right size.
+    //   Whenever two time points are joined, increment a counter on the resulting time point.
+    //   This counter can then be used to allocate a stack of just the right size.
     final var pathStack = new ArrayDeque<ActivePath<Effect>>();
     var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, trait.empty());
     var pointIndex = endTime;
 
-    // NOTE: In principle, we can bound this loop by determining the maximum number
-    // of time points we will visit. Whenever a new time point is generated from an old one,
-    // its count would be updated appropriately. (Emitting an event adds one; joining two branches
-    // adds the branches and subtracts the base.)
+    // TERMINATION: In principle, we can bound this loop by determining the maximum number
+    //   of time points we will visit. Whenever a new time point is generated from an old one,
+    //   its count would be updated appropriately. (Emitting an event adds one; joining two branches
+    //   adds the branches and subtracts the base.)
     while (true) {
       if (currentPath.basePoint() != pointIndex) {
         // There's still more path to follow!
@@ -135,7 +136,7 @@ public final class SimulationTimeline<T, Event> {
           final var path = (ActivePath.TopLevel<Effect>) currentPath;
           final var wait = (EventPoint.Waiting<Event>) point;
 
-          path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, TimeUnit.MICROSECONDS), path.effect));
+          path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, Duration.MICROSECONDS), path.effect));
           path.effect = trait.empty();
           pointIndex = wait.previous;
         }
@@ -148,7 +149,7 @@ public final class SimulationTimeline<T, Event> {
       } else if (currentPath instanceof ActivePath.Right) {
         // We've just finished evaluating the right side of a concurrence.
         // We already evaluated the left side, so bind them together and accumulate the result
-        // into the open path one level up. We'll continue from the given base point.
+        //   into the open path one level up. We'll continue from the given base point.
         final var path = (ActivePath.Right<Effect>) currentPath;
         currentPath = pathStack.pop();
         currentPath.accumulate(next -> trait.sequentially(trait.concurrently(path.left, path.right), next));

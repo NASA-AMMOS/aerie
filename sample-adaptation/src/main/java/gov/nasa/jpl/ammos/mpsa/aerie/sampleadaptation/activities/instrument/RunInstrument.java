@@ -1,15 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.activities.instrument;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.TimeUnit;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleQuerier.ctx;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.batteryCapacity;
 import static gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states.SampleMissionStates.instrumentDataBits;
@@ -52,6 +52,6 @@ public class RunInstrument implements Activity {
         instrumentDataBits.add(dataGenerated);
         batteryCapacity.add(-powerConsumed);
 
-        ctx.spawnAfter(Duration.of(durationInSeconds, TimeUnit.SECONDS), new TurnInstrumentOff());
+        ctx.spawnAfter(duration(durationInSeconds, SECONDS), new TurnInstrumentOff());
     }
 }

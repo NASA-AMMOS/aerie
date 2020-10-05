@@ -1,9 +1,9 @@
-def getDockerCompatibleTag(tag){
+def getDockerCompatibleTag(tag) {
     def fixedTag = tag.replaceAll('\\+', '-')
     return fixedTag
 }
 
-def getDockerImageName(folder){
+def getDockerImageName(folder) {
     files = findFiles(glob: "${DOCKERFILE_PATH}/*.*")
     def list = []
 
@@ -19,7 +19,7 @@ def getDockerImageName(folder){
 
 }
 
-def getAWSTag(tag){
+def getAWSTag(tag) {
     if (tag ==~ /release-.*/) {
         return "release"
     }
@@ -38,7 +38,7 @@ def getArtifactoryUrl() {
     if (GIT_BRANCH ==~ /release-.*/){
         echo "Publishing to 16003-RELEASE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16003"
-    } 
+    }
     else if (GIT_BRANCH ==~ /staging/) {
         echo "Publishing to 16002-STAGE-LOCAL"
         return "cae-artifactory.jpl.nasa.gov:16002"
@@ -52,13 +52,32 @@ def getArtifactoryUrl() {
 def getPublishPath() {
     if (GIT_BRANCH ==~ /release-.*/) {
         return "general/gov/nasa/jpl/aerie/"
-    } 
+    }
     else if (GIT_BRANCH ==~ /staging/) {
         return "general-stage/gov/nasa/jpl/aerie/"
-    } 
+    }
     else {
         return "general-develop/gov/nasa/jpl/aerie/"
     }
+}
+
+def getArtifactTag() {
+    if (GIT_BRANCH ==~ /(develop|staging|release-.*)/) {
+        return GIT_BRANCH
+    } else {
+        return GIT_COMMIT
+    }
+}
+
+void setBuildStatus(String message, String state, String context) {
+  step([
+      $class: "GitHubCommitStatusSetter",
+      reposSource: [$class: "ManuallyEnteredRepositorySource", url: env.GIT_URL],
+      commitShaSource: [$class: "ManuallyEnteredShaSource", sha: env.GIT_COMMIT],
+      contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
+      errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+      statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state.toUpperCase()]] ]
+  ]);
 }
 
 // Save built image name:tag
@@ -73,106 +92,92 @@ pipeline {
     }
 
     environment {
-        ARTIFACT_TAG = "${GIT_BRANCH}"
+        ARTIFACT_TAG = "${getArtifactTag()}"
         ARTIFACTORY_URL = "${getArtifactoryUrl()}"
         AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
         AWS_DEFAULT_REGION = 'us-gov-west-1'
         AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
         AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
-        BUCK_HOME = "/usr/local/bin"
-        BUCK_OUT = "${env.WORKSPACE}/buck-out"
+        AERIE_SECRET_ACCESS_KEY = credentials('Aerie-Access-Token')
         DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
         AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
         DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
         LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
-        WATCHMAN_HOME = "/opt/watchman"
         ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
         AWS_ECR_PATH = "${AWS_ECR}/aerie"
         DOCKERFILE_PATH = "scripts/dockerfiles"
+        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
     }
 
     stages {
-        stage('Setup'){
+        stage ('Setup') {
             steps {
                 echo "Printing environment variables..."
                 sh "env | sort"
             }
         }
-
         stage ('Build') {
             steps {
+                script { setBuildStatus("Building", "pending", "jenkins/branch-check"); }
                 echo "Building $ARTIFACT_TAG..."
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    echo "Building all build targets"
-                    buck build //...
-                    """
-                    if (statusCode > 0) {
-                        error "Failure in Build stage."
-                    }
-                }
+                sh './gradlew classes'
             }
         }
-
         stage ('Test') {
             steps {
-                echo "TODO: Run tests via BUCK"
-                sh "buck test //..."
+                script { setBuildStatus("Testing", "pending", "jenkins/branch-check"); }
+                sh "./gradlew test"
+
+                // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
+                // Bump their last modified time to trick Jenkins.
+                sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
+
+                junit testResults: '*/build/test-results/test/*.xml'
             }
         }
-
-        stage ('Archive') {
-            when {
-                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-            }
+        stage ('Assemble') {
             steps {
                 // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
                 echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    echo ${BUILD_NUMBER}
+                sh """
+                echo ${BUILD_NUMBER}
 
-                    # For adaptations
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations && \
-                    find . -name "merlin-multimission-models.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\; && \
-                    find . -name "sample-adaptation.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\; && \
-                    find . -name "banananation.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/ \\;
+                ./gradlew assemble
 
-                    # For services
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services && \
-                    find . -name "plan-service.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/services/ \\; && \
-                    find . -name "adaptation-service.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/services/ \\;
+                # For adaptations
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
+                cp sample-adaptation/build/libs/*.jar \
+                   banananation/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
 
-                    # For merlin-sdk
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk && \
-                    find . -name "merlin-sdk.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/ \\;
+                # For services
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
+                cp plan-service/build/distributions/*.tar \
+                   adaptation-service/build/distributions/*.tar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
 
-                    # For merlin-cli
-                    mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli && \
-                    find . -name "merlin-cli.jar" -exec cp {} /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/ \\;
+                # For merlin-sdk
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
+                cp merlin-sdk/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
 
-                    tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
-                    """
+                # For merlin-cli
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
+                cp merlin-cli/build/distributions/*.tar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
 
-                    if (statusCode > 0) {
-                        error "Failure in Archive stage."
-                    }
-                }
+                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
+                tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
+                """
+            }
 
-                script {
-                    def statusCode = sh returnStatus: true, script:
-                    """
-                    tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-                    """
-
-                    if (statusCode > 0) {
-                        error "Failure in Archive stage."
-                    }
-                }
-
+        }
+        stage ('Release') {
+            when {
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+            }
+            steps {
                 script {
                     try {
                         def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
@@ -202,7 +207,6 @@ pipeline {
                 }
             }
         }
-
         stage ('Docker') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
@@ -218,13 +222,10 @@ pipeline {
                             buildImages.push(tag_name)
                         }
                     }
-
                 }
-
             }
         }
-
-        stage('Deploy') {
+        stage ('Deploy') {
             when {
                 expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
             }
@@ -264,8 +265,31 @@ pipeline {
                 }
             }
         }
-    }
+        stage ('Generate Javadoc for Merlin-SDK') {
+            when {
+                expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+            }
+            steps {
+                sh """
+                JAVADOC_PREP_DIR=\$(mktemp -d)
 
+                ./gradlew merlin-sdk:javadoc
+                cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+
+                git checkout gh-pages
+                rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc/ javadoc
+                rm -rf \${JAVADOC_PREP_DIR}
+
+                git config user.email "achong@jpl.nasa.gov"
+                git config user.name "Jenkins gh-pages sync"
+                git add javadoc/
+                git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
+                git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
+                git checkout ${GIT_BRANCH}
+                """
+            }
+        }
+    }
     post {
         always {
             script {
@@ -283,8 +307,9 @@ pipeline {
 
             echo 'Remove temp folder'
             sh 'rm -rf /tmp/aerie-jenkins'
-        }
 
+            setBuildStatus("Build ${currentBuild.currentResult}", "${currentBuild.currentResult}", "jenkins/branch-check")
+        }
         unstable {
             emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
             body: """
@@ -293,7 +318,6 @@ pipeline {
             mimeType: 'text/html',
             recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
         }
-
         failure {
             emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
             body: """
@@ -301,6 +325,10 @@ pipeline {
             """,
             mimeType: 'text/html',
             recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+        }
+        cleanup {
+            cleanWs()
+            deleteDir()
         }
     }
 }
