@@ -155,31 +155,35 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>static &lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulate</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulate</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;instanceList,
+        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
         <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;simulationDuration,
         <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>static &lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulate</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulate</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;schedule,
+        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
         <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;simulationDuration,
         <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static &lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulateToCompletion</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulateToCompletion</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;instanceList,
+                    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
                     <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>static &lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulateToCompletion</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">simulateToCompletion</a></span>&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;schedule,
+                    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
                     <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -207,7 +211,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -215,11 +219,12 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>simulate</h4>
 <pre class="methodSignature">public static&nbsp;&lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a>&nbsp;simulate&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
                                                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;schedule,
+                                                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
                                                  <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;simulationDuration,
                                                  <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</pre>
 </li>
 </ul>
-<a id="simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="simulate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -227,11 +232,12 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>simulate</h4>
 <pre class="methodSignature">public static&nbsp;&lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a>&nbsp;simulate&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
                                                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;instanceList,
+                                                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
                                                  <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;simulationDuration,
                                                  <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</pre>
 </li>
 </ul>
-<a id="simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.Map,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -239,10 +245,11 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>simulateToCompletion</h4>
 <pre class="methodSignature">public static&nbsp;&lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a>&nbsp;simulateToCompletion&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
                                                              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;schedule,
+                                                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
                                                              <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</pre>
 </li>
 </ul>
-<a id="simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="simulateToCompletion(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation,java.util.List,java.time.Instant,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -250,6 +257,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>simulateToCompletion</h4>
 <pre class="methodSignature">public static&nbsp;&lt;Event&gt;&nbsp;<a href="SimulationResults.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">SimulationResults</a>&nbsp;simulateToCompletion&#8203;(<a href="MerlinAdaptation.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation</a>&lt;Event&gt;&nbsp;adaptation,
                                                              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;org.apache.commons.lang3.tuple.Pair&lt;<a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;<a href="serialization/SerializedActivity.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedActivity</a>&gt;&gt;&nbsp;instanceList,
+                                                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html?is-external=true" title="class or interface in java.time" class="externalLink">Instant</a>&nbsp;startTime,
                                                              <a href="time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;samplingPeriod)</pre>
 </li>
 </ul>
