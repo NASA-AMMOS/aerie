@@ -367,66 +367,156 @@ public class ParameterTestActivityTest {
         // Map Parameters
         final var doubleMapEntries = entryArray(testValues.doubleMap);
         parameters.put("doubleMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(doubleMapEntries[0].getKey()), SerializedValue.of(doubleMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(doubleMapEntries[0].getValue()), SerializedValue.of(doubleMapEntries[1].getValue())))
+                List.of(
+                    SerializedValue.of(
+                        Map.of(
+                            "key", SerializedValue.of(doubleMapEntries[0].getKey()),
+                            "value", SerializedValue.of(doubleMapEntries[0].getValue())
+                        )
+                    ),
+                    SerializedValue.of(
+                        Map.of(
+                            "key", SerializedValue.of(doubleMapEntries[1].getKey()),
+                            "value", SerializedValue.of(doubleMapEntries[1].getValue())
+                        )
+                    )
                 )
         ));
         final var floatMapEntries = entryArray(testValues.floatMap);
         parameters.put("floatMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(floatMapEntries[0].getKey()), SerializedValue.of(floatMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(floatMapEntries[0].getValue()), SerializedValue.of(floatMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(floatMapEntries[0].getKey()),
+                        "value", SerializedValue.of(floatMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(floatMapEntries[1].getKey()),
+                        "value", SerializedValue.of(floatMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var byteMapEntries = entryArray(testValues.byteMap);
         parameters.put("byteMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(byteMapEntries[0].getKey()), SerializedValue.of(byteMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(byteMapEntries[0].getValue()), SerializedValue.of(byteMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(byteMapEntries[0].getKey()),
+                        "value", SerializedValue.of(byteMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(byteMapEntries[1].getKey()),
+                        "value", SerializedValue.of(byteMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var shortMapEntries = entryArray(testValues.shortMap);
         parameters.put("shortMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(shortMapEntries[0].getKey()), SerializedValue.of(shortMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(shortMapEntries[0].getValue()), SerializedValue.of(shortMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(shortMapEntries[0].getKey()),
+                        "value", SerializedValue.of(shortMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(shortMapEntries[1].getKey()),
+                        "value", SerializedValue.of(shortMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var intMapEntries = entryArray(testValues.intMap);
         parameters.put("intMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(intMapEntries[0].getKey()), SerializedValue.of(intMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(intMapEntries[0].getValue()), SerializedValue.of(intMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(intMapEntries[0].getKey()),
+                        "value", SerializedValue.of(intMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(intMapEntries[1].getKey()),
+                        "value", SerializedValue.of(intMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var longMapEntries = entryArray(testValues.longMap);
         parameters.put("longMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(longMapEntries[0].getKey()), SerializedValue.of(longMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(longMapEntries[0].getValue()), SerializedValue.of(longMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(longMapEntries[0].getKey()),
+                        "value", SerializedValue.of(longMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(longMapEntries[1].getKey()),
+                        "value", SerializedValue.of(longMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var charMapEntries = entryArray(testValues.charMap);
         parameters.put("charMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of("" + charMapEntries[0].getKey()), SerializedValue.of("" + charMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of("" + charMapEntries[0].getValue()), SerializedValue.of("" + charMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of("" + charMapEntries[0].getKey()),
+                        "value", SerializedValue.of("" + charMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of("" + charMapEntries[1].getKey()),
+                        "value", SerializedValue.of("" + charMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var booleanMapEntries = entryArray(testValues.booleanMap);
         parameters.put("booleanMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(booleanMapEntries[0].getKey()), SerializedValue.of(booleanMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(booleanMapEntries[0].getValue()), SerializedValue.of(booleanMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(booleanMapEntries[0].getKey()),
+                        "value", SerializedValue.of(booleanMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(booleanMapEntries[1].getKey()),
+                        "value", SerializedValue.of(booleanMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
         final var stringMapEntries = entryArray(testValues.stringMap);
         parameters.put("stringMap", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(List.of(SerializedValue.of(stringMapEntries[0].getKey()), SerializedValue.of(stringMapEntries[1].getKey()))),
-                        "values", SerializedValue.of(List.of(SerializedValue.of(stringMapEntries[0].getValue()), SerializedValue.of(stringMapEntries[1].getValue())))
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(stringMapEntries[0].getKey()),
+                        "value", SerializedValue.of(stringMapEntries[0].getValue())
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(stringMapEntries[1].getKey()),
+                        "value", SerializedValue.of(stringMapEntries[1].getValue())
+                    )
                 )
+            )
         ));
 
         // Enum Parameter
@@ -436,26 +526,30 @@ public class ParameterTestActivityTest {
 
         final var mappyBoiEntries = entryArray(testValues.mappyBoi);
         parameters.put("mappyBoi", SerializedValue.of(
-                Map.of(
-                        "keys", SerializedValue.of(
-                                List.of(
-                                        SerializedValue.of(mappyBoiEntries[0].getKey()),
-                                        SerializedValue.of(mappyBoiEntries[1].getKey())
-                                )
-                        ),
-                        "values", SerializedValue.of(
-                                List.of(
-                                        SerializedValue.of(List.of(
-                                                SerializedValue.of(mappyBoiEntries[0].getValue().get(0)),
-                                                SerializedValue.of(mappyBoiEntries[0].getValue().get(1))
-                                        )),
-                                        SerializedValue.of(List.of(
-                                                SerializedValue.of(mappyBoiEntries[1].getValue().get(0)),
-                                                SerializedValue.of(mappyBoiEntries[1].getValue().get(1))
-                                        ))
-                                )
+            List.of(
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(mappyBoiEntries[0].getKey()),
+                        "value", SerializedValue.of(
+                            List.of(
+                                SerializedValue.of(mappyBoiEntries[0].getValue().get(0)),
+                                SerializedValue.of(mappyBoiEntries[0].getValue().get(1))
+                            )
                         )
+                    )
+                ),
+                SerializedValue.of(
+                    Map.of(
+                        "key", SerializedValue.of(mappyBoiEntries[1].getKey()),
+                        "value", SerializedValue.of(
+                            List.of(
+                                SerializedValue.of(mappyBoiEntries[1].getValue().get(0)),
+                                SerializedValue.of(mappyBoiEntries[1].getValue().get(1))
+                            )
+                        )
+                    )
                 )
+            )
         ));
 
         parameters.put("doublePrimIntArray", SerializedValue.of(
@@ -497,168 +591,172 @@ public class ParameterTestActivityTest {
         ));
 
         // Because obnixous is so obnoxious, we'll just hardcode it twice :(
-        parameters.put("obnoxious", SerializedValue.of(
+        parameters.put("obnoxious",SerializedValue.of(
                 List.of(
+                    SerializedValue.of(List.of(
                         SerializedValue.of(Map.of(
-                                "keys", SerializedValue.of(List.of(
-                                        SerializedValue.of(List.of(
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("300"),
-                                                        SerializedValue.of("301")
-                                                )),
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("302"),
-                                                        SerializedValue.of("303")
-                                                ))
-                                        )),
-                                        SerializedValue.of(List.of(
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("304"),
-                                                        SerializedValue.of("305")
-                                                )),
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("306"),
-                                                        SerializedValue.of("307")
-                                                ))
-                                        )),
-                                        SerializedValue.of(List.of(
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("308"),
-                                                        SerializedValue.of("309")
-                                                )),
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("310"),
-                                                        SerializedValue.of("311")
-                                                ))
-                                        )),
-                                        SerializedValue.of(List.of(
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("312"),
-                                                        SerializedValue.of("313")
-                                                )),
-                                                SerializedValue.of(List.of(
-                                                        SerializedValue.of("314"),
-                                                        SerializedValue.of("315")
-                                                ))
-                                        ))
+                            "key", SerializedValue.of(List.of(
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("300"),
+                                    SerializedValue.of("301")
                                 )),
-                                "values", SerializedValue.of(List.of(
-                                        SerializedValue.of(Map.of(
-                                                "keys", SerializedValue.of(List.of(
-                                                        SerializedValue.of(500),
-                                                        SerializedValue.of(501)
-                                                )),
-                                                "values", SerializedValue.of(List.of(
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(400.0f),
-                                                                        SerializedValue.of(401.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(402.0f),
-                                                                        SerializedValue.of(403.0f)
-                                                                ))
-                                                        )),
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(404.0f),
-                                                                        SerializedValue.of(405.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(406.0f),
-                                                                        SerializedValue.of(407.0f)
-                                                                ))
-                                                        ))
-                                                ))
-                                        )),
-                                        SerializedValue.of(Map.of(
-                                                "keys", SerializedValue.of(List.of(
-                                                        SerializedValue.of(502),
-                                                        SerializedValue.of(503)
-                                                )),
-                                                "values", SerializedValue.of(List.of(
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(408.0f),
-                                                                        SerializedValue.of(409.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(410.0f),
-                                                                        SerializedValue.of(411.0f)
-                                                                ))
-                                                        )),
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(412.0f),
-                                                                        SerializedValue.of(413.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(414.0f),
-                                                                        SerializedValue.of(415.0f)
-                                                                ))
-                                                        ))
-                                                ))
-                                        )),
-                                        SerializedValue.of(Map.of(
-                                                "keys", SerializedValue.of(List.of(
-                                                        SerializedValue.of(504),
-                                                        SerializedValue.of(505)
-                                                )),
-                                                "values", SerializedValue.of(List.of(
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(416.0f),
-                                                                        SerializedValue.of(417.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(418.0f),
-                                                                        SerializedValue.of(419.0f)
-                                                                ))
-                                                        )),
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(420.0f),
-                                                                        SerializedValue.of(421.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(422.0f),
-                                                                        SerializedValue.of(423.0f)
-                                                                ))
-                                                        ))
-                                                ))
-                                        )),
-                                        SerializedValue.of(Map.of(
-                                                "keys", SerializedValue.of(List.of(
-                                                        SerializedValue.of(506),
-                                                        SerializedValue.of(507)
-                                                )),
-                                                "values", SerializedValue.of(List.of(
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(424.0f),
-                                                                        SerializedValue.of(425.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(426.0f),
-                                                                        SerializedValue.of(427.0f)
-                                                                ))
-                                                        )),
-                                                        SerializedValue.of(List.of(
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(428.0f),
-                                                                        SerializedValue.of(429.0f)
-                                                                )),
-                                                                SerializedValue.of(List.of(
-                                                                        SerializedValue.of(430.0f),
-                                                                        SerializedValue.of(431.0f)
-                                                                ))
-                                                        ))
-                                                ))
-                                        ))
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("302"),
+                                    SerializedValue.of("303")
                                 ))
+                            )),
+                            "value", SerializedValue.of(List.of(
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(500),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(400.0f),
+                                            SerializedValue.of(401.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(402.0f),
+                                            SerializedValue.of(403.0f)
+                                        ))
+                                    ))
+                                )),
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(501),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(404.0f),
+                                            SerializedValue.of(405.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(406.0f),
+                                            SerializedValue.of(407.0f)
+                                        ))
+                                    ))
+                                ))
+                            ))
+                        )),
+                        SerializedValue.of(Map.of(
+                            "key", SerializedValue.of(List.of(
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("304"),
+                                    SerializedValue.of("305")
+                                )),
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("306"),
+                                    SerializedValue.of("307")
+                                ))
+                            )),
+                            "value", SerializedValue.of(List.of(
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(502),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(408.0f),
+                                            SerializedValue.of(409.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(410.0f),
+                                            SerializedValue.of(411.0f)
+                                        ))
+                                    ))
+                                )),
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(503),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(412.0f),
+                                            SerializedValue.of(413.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(414.0f),
+                                            SerializedValue.of(415.0f)
+                                        ))
+                                    ))
+                                ))
+                            ))
+                        )),
+                        SerializedValue.of(Map.of(
+                            "key", SerializedValue.of(List.of(
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("308"),
+                                    SerializedValue.of("309")
+                                )),
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("310"),
+                                    SerializedValue.of("311")
+                                ))
+                            )),
+                            "value", SerializedValue.of(List.of(
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(504),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(416.0f),
+                                            SerializedValue.of(417.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(418.0f),
+                                            SerializedValue.of(419.0f)
+                                        ))
+                                    ))
+                                )),
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(505),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(420.0f),
+                                            SerializedValue.of(421.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(422.0f),
+                                            SerializedValue.of(423.0f)
+                                        ))
+                                    ))
+                                ))
+                            ))
+                        )),
+                        SerializedValue.of(Map.of(
+                            "key", SerializedValue.of(List.of(
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("312"),
+                                    SerializedValue.of("313")
+                                )),
+                                SerializedValue.of(List.of(
+                                    SerializedValue.of("314"),
+                                    SerializedValue.of("315")
+                                ))
+                            )),
+                            "value", SerializedValue.of(List.of(
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(506),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(424.0f),
+                                            SerializedValue.of(425.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(426.0f),
+                                            SerializedValue.of(427.0f)
+                                        ))
+                                    ))
+                                )),
+                                SerializedValue.of(Map.of(
+                                    "key", SerializedValue.of(507),
+                                    "value", SerializedValue.of(List.of(
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(428.0f),
+                                            SerializedValue.of(429.0f)
+                                        )),
+                                        SerializedValue.of(List.of(
+                                            SerializedValue.of(430.0f),
+                                            SerializedValue.of(431.0f)
+                                        ))
+                                    ))
+                                ))
+                            ))
                         ))
-                )
-        ));
+                    ))
+                ))
+        );
 
         return new SerializedActivity("ParameterTest", parameters);
     }
