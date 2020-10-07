@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
@@ -19,29 +20,40 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
 
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.ofStruct(Map.of(
-        "keys", ValueSchema.ofSequence(keyMapper.getValueSchema()),
-        "values", ValueSchema.ofSequence(elementMapper.getValueSchema())));
+    return ValueSchema.ofSequence(ValueSchema.ofStruct(Map.of(
+        "key", keyMapper.getValueSchema(),
+        "value", elementMapper.getValueSchema())));
   }
 
   @Override
   public Result<Map<K, V>, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
-        .asMap()
-        .map(Result::<Map<String, SerializedValue>, String>success)
+        .asList()
+        .map(Result::<List<SerializedValue>, String>success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
         .match(
-            serializedMap -> {
-              final var keys = new ListValueMapper<>(this.keyMapper)
-                  .deserializeValue(serializedMap.get("keys"))
-                  .getSuccessOrThrow();
-              final var values = new ListValueMapper<>(this.elementMapper)
-                  .deserializeValue(serializedMap.get("values"))
-                  .getSuccessOrThrow();
-
+            serializedList -> {
               final var map = new HashMap<K, V>();
-              for (var i = 0; i < keys.size(); i += 1) {
-                map.put(keys.get(i), values.get(i));
+              for (final SerializedValue element : serializedList) {
+                final var elementResult = element
+                    .asMap()
+                    .map(Result::<Map<String, SerializedValue>, String>success)
+                    .orElseGet(() -> Result.failure("Expected map, got " + element));
+
+                if (elementResult.getKind().equals(Result.Kind.Failure)) return Result.failure(elementResult.getFailureOrThrow());
+                final var elementSpec = elementResult.getSuccessOrThrow();
+
+                final var keyResult = keyMapper
+                    .deserializeValue(elementSpec.get("key"));
+                if (keyResult.getKind().equals(Result.Kind.Failure)) return Result.failure(keyResult.getFailureOrThrow());
+                final var key = keyResult.getSuccessOrThrow();
+
+                final var valueResult = elementMapper
+                    .deserializeValue(elementSpec.get("value"));
+                if (valueResult.getKind().equals(Result.Kind.Failure)) return Result.failure(valueResult.getFailureOrThrow());
+                final var value = valueResult.getSuccessOrThrow();
+
+                map.put(key, value);
               }
 
               return Result.success(map);
@@ -52,16 +64,13 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
 
   @Override
   public SerializedValue serializeValue(final Map<K, V> fields) {
-    final var keys = new ArrayList<K>();
-    final var values = new ArrayList<V>();
-    for (final var field : fields.entrySet()) {
-      keys.add(field.getKey());
-      values.add(field.getValue());
+    final List<SerializedValue> elementSpecs = new ArrayList<>(fields.size());
+    for (final var entry : fields.entrySet()) {
+      elementSpecs.add(SerializedValue.of(
+          Map.of(
+              "key", keyMapper.serializeValue(entry.getKey()),
+              "value", elementMapper.serializeValue(entry.getValue()))));
     }
-
-    return SerializedValue.of(Map.of(
-        "keys", new ListValueMapper<>(this.keyMapper).serializeValue(keys),
-        "values", new ListValueMapper<>(this.elementMapper).serializeValue(values)
-    ));
+    return SerializedValue.of(elementSpecs);
   }
 }
