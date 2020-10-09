@@ -4,6 +4,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
+import java.util.function.Function;
+
 public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> {
     private final Class<E> enumType;
 
@@ -20,7 +22,7 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
     public Result<E, String> deserializeValue(SerializedValue serializedValue) {
         return serializedValue
                 .asString()
-                .map(Result::<String, String>success)
+                .map((Function<String, Result<String, String>>) Result::success)
                 .orElseGet(() -> Result.failure("Expected string, got: "))
                 .match(this::deserializeEnumValue, Result::failure);
     }
