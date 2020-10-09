@@ -19,9 +19,6 @@ public abstract class BasicParsers {
   private BasicParsers() {}
 
 
-  public static final JsonParser<JsonValue> anyP = json ->
-      JsonParseResult.success(json);
-
   public static final JsonParser<Boolean> boolP = json -> {
     if (Objects.equals(json, JsonValue.TRUE)) return JsonParseResult.success(true);
     if (Objects.equals(json, JsonValue.FALSE)) return JsonParseResult.success(false);
@@ -86,51 +83,53 @@ public abstract class BasicParsers {
   }
 
   public static <T> JsonParser<List<T>> listP(final JsonParser<T> elementParser) {
-    return json -> {
+    final JsonParser<JsonArray> parser = json -> {
       if (!(json instanceof JsonArray)) return JsonParseResult.failure("expected list");
 
-      final var jsonArray = json.asJsonArray();
-      final var list = new ArrayList<T>(jsonArray.size());
-      for (int index=0; index < jsonArray.size(); index++) {
-        final var element = jsonArray.get(index);
-        final var result = elementParser.parse(element);
+      return JsonParseResult.success(json.asJsonArray());
+    };
 
-        if (result.isFailure()) {
-          return JsonParseResult.failure(
-              result
-              .failureReason()
-              .prependBreadcrumb(
-                  Breadcrumb.ofInteger(index)
-              ));
-        }
-        list.add(result.getSuccessOrThrow());
+    return parser.andThen(jsonArray -> {
+      var list$ = JsonParseResult.<List<T>>success(new ArrayList<>(jsonArray.size()));
+
+      for (int index=0; index < jsonArray.size(); index++) {
+        final var result$ = elementParser
+            .parse(jsonArray.get(index))
+            .prependBreadcrumb(Breadcrumb.ofInteger(index));
+
+        list$ = list$.parWith(result$, (list, result) -> {
+          list.add(result);
+          return list;
+        });
       }
 
-      return JsonParseResult.success(list);
-    };
+      return list$;
+    });
   }
 
   public static <S> JsonParser<Map<String, S>> mapP(final JsonParser<S> fieldParser) {
-    return json -> {
+    final JsonParser<JsonObject> parser = json -> {
       if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
 
-      final var map = new HashMap<String, S>(json.asJsonObject().size());
-      for (final var field : json.asJsonObject().entrySet()) {
-        final var result = fieldParser.parse(field.getValue());
+      return JsonParseResult.success(json.asJsonObject());
+    };
 
-        if (result.isFailure()) {
-          return JsonParseResult.failure(
-              result
-              .failureReason()
-              .prependBreadcrumb(
-                  Breadcrumb.ofString(field.getKey())
-              ));
-        }
-        map.put(field.getKey(), result.getSuccessOrThrow());
+    return parser.andThen(object -> {
+      var map$ = JsonParseResult.<Map<String, S>>success(new HashMap<>(object.size()));
+
+      for (final var field : object.entrySet()) {
+        final var result$ = fieldParser
+            .parse(field.getValue())
+            .prependBreadcrumb(Breadcrumb.ofString(field.getKey()));
+
+        map$ = map$.parWith(result$, (map, result) -> {
+          map.put(field.getKey(), result);
+          return map;
+        });
       }
 
-      return JsonParseResult.success(map);
-    };
+      return map$;
+    });
   }
 
   public static <S> JsonParser<S> recursiveP(final Function<JsonParser<S>, JsonParser<S>> scope) {
@@ -156,6 +155,7 @@ public abstract class BasicParsers {
         return result.mapSuccess(x -> (T) x);
       }
 
+      // TODO: Capture the failures under each option.
       return JsonParseResult.failure("not parsable into acceptable type");
     };
   }

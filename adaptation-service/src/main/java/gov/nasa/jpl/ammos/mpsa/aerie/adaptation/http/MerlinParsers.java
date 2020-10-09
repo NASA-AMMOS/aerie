@@ -9,7 +9,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.JsonString;
 import javax.json.JsonValue.ValueType;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -42,18 +41,18 @@ public abstract class MerlinParsers {
       new DateTimeFormatterBuilder().appendPattern("uuuu-DDD'T'HH:mm:ss")
                                     .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).toFormatter();
 
-  public static final JsonParser<Instant> instantP = json -> {
-    if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
-    try {
-      String timestamp = ((JsonString)json).getString();
-      return JsonParseResult.success(
-          LocalDateTime.parse(timestamp, timestampFormat)
-                       .atZone(ZoneOffset.UTC)
-                       .toInstant());
-    } catch (DateTimeParseException e) {
-      return JsonParseResult.failure("invalid timestamp format");
-    }
-  };
+  public static final JsonParser<Instant> instantP
+      = stringP
+      . andThen(timestamp -> {
+        try {
+          return JsonParseResult.success(
+              LocalDateTime.parse(timestamp, timestampFormat)
+                           .atZone(ZoneOffset.UTC)
+                           .toInstant());
+        } catch (final DateTimeParseException ex) {
+          return JsonParseResult.failure("invalid timestamp format");
+        }
+      });
 
   public static final JsonParser<Duration> durationP
       = longP

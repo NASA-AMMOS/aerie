@@ -34,7 +34,8 @@ public abstract class ProductParsers {
     }
   }
 
-  // CONTRACT: T must be of the form Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
+  // CONTRACT: T must be of the form Pair<...Pair<Pair<T1, T2>, T3>..., Tn>,
+  //   where `n == fields.size()`.
   public static final class VariadicProductParser<T> implements JsonParser<T> {
     private final ArrayList<FieldSpec<?>> fields;
 
@@ -62,80 +63,64 @@ public abstract class ProductParsers {
 
       // Extract all of the fields we want.
       final var iter = this.fields.iterator();
-      Object accumulator = null;
+
+      int acceptedFields = 0;
+      JsonParseResult<?> accumulator;
       {
+        // SAFETY: This iterator is not empty. If it was, we'd be in EmptyProductParser.parse().
         final var field = iter.next();
 
-        final JsonParseResult<?> result;
-        if (field.isOptional) {
-          if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.success(Optional.empty());
-          } else {
-            result = field.valueParser.map(Optional::of).parse(obj.get(field.name));
-          }
-        } else {
-          if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.failure("required field not present");
-          } else {
-            result = field.valueParser.parse(obj.get(field.name));
-          }
-        }
+        final var result = parseField(field, obj);
 
-        if (result.isFailure()) {
-          return JsonParseResult.failure(
-              result
-              .failureReason()
-              .prependBreadcrumb(
-                  Breadcrumb.ofString(field.name)
-              ));
-        }
-        accumulator = result.getSuccessOrThrow();
+        acceptedFields += result.getLeft();
+        accumulator = result.getRight().prependBreadcrumb(Breadcrumb.ofString(field.name));
       }
 
-      // PRECONDITION: accumulator is of type T1
-      // INVARIANT: accumulator is of type Pair<...Pair<T1, T2>..., Ti>
+      // PRECONDITION: accumulated type is T1
+      // INVARIANT: accumulated type is Pair<...Pair<T1, T2>..., Ti>
       // where `i` is the number of fields iterated through.
-      // POSTCONDITION: accumulator is of type T = Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
-      long defaultedFields = 0;
+      // POSTCONDITION: accumulated type is T = Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
       while (iter.hasNext()) {
         final var field = iter.next();
 
-        final JsonParseResult<?> result;
-        if (field.isOptional) {
-          if (!obj.containsKey(field.name)) {
-            defaultedFields += 1;
-            result = JsonParseResult.success(Optional.empty());
-          } else {
-            result = field.valueParser.map(Optional::of).parse(obj.get(field.name));
-          }
-        } else {
-          if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.failure("required field not present");
-          } else {
-            result = field.valueParser.parse(obj.get(field.name));
-          }
-        }
+        final var result = parseField(field, obj);
 
-        if (result.isFailure()) {
-          return JsonParseResult.failure(
-              result
-              .failureReason()
-              .prependBreadcrumb(
-                  Breadcrumb.ofString(field.name)
-              ));
-        }
-        accumulator = Pair.of(accumulator, result.getSuccessOrThrow());
+        acceptedFields += result.getLeft();
+        accumulator = accumulator.parWith(result.getRight().prependBreadcrumb(Breadcrumb.ofString(field.name)));
       }
 
       // Check that it contains only the fields we want.
-      // TODO: We should take note of what extra fields are present and report them
-      //       As a temporary workaround error if more than the total number of fields are present
-      if (obj.keySet().size() + defaultedFields > this.fields.size()) return JsonParseResult.failure("unexpected extra fields present");
+      // TODO: We should take note of what extra fields are present and report them.
+      if (acceptedFields != obj.keySet().size()) {
+        accumulator = accumulator.parWith(JsonParseResult.failure("unexpected extra fields present"), (acc, $) -> acc);
+      }
 
       // SAFETY: established by loop invariant.
       @SuppressWarnings("unchecked")
-      final var result = (T) accumulator;
-      return JsonParseResult.success(result);
+      final var typedAccumulator$ = (JsonParseResult<T>) accumulator;
+
+      return typedAccumulator$;
+    }
+
+    // Returns:
+    //   (1, success) if the field was present and could be parsed,
+    //   (1, failure) if the field was present and could not be parsed,
+    //   (1, success) if the field was not present but is optional,
+    //   (0, failure) if the field was not present and was not optional.
+    // Note that (0, success) is not a possible result.
+    private Pair<Integer, JsonParseResult<?>> parseField(final FieldSpec<?> field, final JsonObject obj) {
+      if (obj.containsKey(field.name)) {
+        final var parser = (field.isOptional)
+            ? field.valueParser.map(Optional::of)
+            : field.valueParser;
+        return Pair.of(1, parser.parse(obj.get(field.name)));
+      } else {
+        if (field.isOptional) {
+          return Pair.of(1, JsonParseResult.success(Optional.empty()));
+        } else {
+          return Pair.of(0, JsonParseResult.failure("required field not present"));
+        }
+      }
     }
 
     public <S> VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {

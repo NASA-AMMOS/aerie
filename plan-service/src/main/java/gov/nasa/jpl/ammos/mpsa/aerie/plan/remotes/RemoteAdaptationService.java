@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.anyP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.doubleP;
@@ -38,10 +37,8 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.nullP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.Uncurry.uncurry3;
 
 public final class RemoteAdaptationService implements AdaptationService {
   private final HttpRequester client;
