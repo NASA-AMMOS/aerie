@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class PrimitiveIntArrayValueMapper implements ValueMapper<int[]> {
     @Override
@@ -18,7 +19,7 @@ public class PrimitiveIntArrayValueMapper implements ValueMapper<int[]> {
         var elementMapper = new IntegerValueMapper();
         return serializedValue
                 .asList()
-                .map(Result::<List<SerializedValue>, String>success)
+                .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
                 .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
                 .match(
                         serializedElements -> {

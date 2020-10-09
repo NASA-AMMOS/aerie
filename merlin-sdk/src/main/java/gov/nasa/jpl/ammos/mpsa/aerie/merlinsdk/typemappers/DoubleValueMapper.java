@@ -4,6 +4,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
+import java.util.function.Function;
+
 public final class DoubleValueMapper implements ValueMapper<Double> {
   @Override
   public ValueSchema getValueSchema() {
@@ -14,7 +16,7 @@ public final class DoubleValueMapper implements ValueMapper<Double> {
   public Result<Double, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asReal()
-        .map(Result::<Double, String>success)
+        .map((Function<Double, Result<Double, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected real number, got " + serializedValue.toString()));
   }
 
