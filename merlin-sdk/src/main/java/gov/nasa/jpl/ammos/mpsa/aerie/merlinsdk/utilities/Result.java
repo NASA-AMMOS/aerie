@@ -1,6 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -74,7 +77,8 @@ public abstract class Result<Success, Failure> {
   Output match(
       final VisitorCase<Success, Output, Throws> onSuccess,
       final VisitorCase<Failure, Output, Throws> onFailure
-  ) throws Throws {
+  ) throws Throws
+  {
     return this.match(new Visitor<Success, Failure, Output, Throws>() {
       @Override
       public Output onSuccess(final Success value) throws Throws {
@@ -92,7 +96,8 @@ public abstract class Result<Success, Failure> {
   Result<OutputSuccess, OutputFailure> map(
       final VisitorCase<Success, OutputSuccess, Throws> onSuccess,
       final VisitorCase<Failure, OutputFailure, Throws> onFailure
-  ) throws Throws {
+  ) throws Throws
+  {
     return this.match(
         success -> Result.success(onSuccess.apply(success)),
         failure -> Result.failure(onFailure.apply(failure))
@@ -107,6 +112,51 @@ public abstract class Result<Success, Failure> {
   public <Output, Throws extends Throwable>
   Result<Success, Output> mapFailure(final VisitorCase<Failure, Output, Throws> onFailure) throws Throws {
     return this.map(success -> success, onFailure);
+  }
+
+  public <Output> Result<Output, Failure> andThen(final Function<Success, Result<Output, Failure>> step) {
+    return this.match(new Visitor<Success, Failure, Result<Output, Failure>, RuntimeException>() {
+      @Override
+      public Result<Output, Failure> onSuccess(final Success value) {
+        return step.apply(value);
+      }
+
+      @Override
+      public Result<Output, Failure> onFailure(final Failure value) {
+        return Result.failure(value);
+      }
+    });
+  }
+
+  public <Success2, Output> Result<Output, Failure> par(
+      final Result<Success2, Failure> other,
+      final BiFunction<Success, Success2, Output> step)
+  {
+    return this.match(new Visitor<Success, Failure, Result<Output, Failure>, RuntimeException>() {
+      @Override
+      public Result<Output, Failure> onFailure(final Failure value) {
+        return Result.failure(value);
+      }
+
+      @Override
+      public Result<Output, Failure> onSuccess(final Success value1) {
+        return other.match(new Visitor<Success2, Failure, Result<Output, Failure>, RuntimeException>() {
+          @Override
+          public Result<Output, Failure> onFailure(final Failure value) {
+            return Result.failure(value);
+          }
+
+          @Override
+          public Result<Output, Failure> onSuccess(final Success2 value2) {
+            return Result.success(step.apply(value1, value2));
+          }
+        });
+      }
+    });
+  }
+
+  public <Success2> Result<Pair<Success, Success2>, Failure> par(final Result<Success2, Failure> other) {
+    return this.par(other, Pair::of);
   }
 
   public <Throws extends Throwable> Success getSuccessOrThrow(final Function<Failure, Throws> factory) throws Throws {
@@ -142,7 +192,7 @@ public abstract class Result<Success, Failure> {
   @Override
   public boolean equals(final Object o) {
     if (!(o instanceof Result)) return false;
-    final Result<?, ?> other = (Result<?, ?>)o;
+    final Result<?, ?> other = (Result<?, ?>) o;
 
     return this.match(
         success1 -> other.match(

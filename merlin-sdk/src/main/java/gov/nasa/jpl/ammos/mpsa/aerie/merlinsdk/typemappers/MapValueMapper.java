@@ -3,11 +3,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   private final ValueMapper<K> keyMapper;
@@ -29,37 +31,30 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   public Result<Map<K, V>, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asList()
-        .map(Result::<List<SerializedValue>, String>success)
+        .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
-        .match(
-            serializedList -> {
-              final var map = new HashMap<K, V>();
-              for (final SerializedValue element : serializedList) {
-                final var elementResult = element
-                    .asMap()
-                    .map(Result::<Map<String, SerializedValue>, String>success)
-                    .orElseGet(() -> Result.failure("Expected map, got " + element));
+        .andThen(serializedList -> {
+          var map$ = Result.<Map<K, V>, String>success(new HashMap<>());
 
-                if (elementResult.getKind().equals(Result.Kind.Failure)) return Result.failure(elementResult.getFailureOrThrow());
-                final var elementSpec = elementResult.getSuccessOrThrow();
+          for (final SerializedValue element : serializedList) {
+            final var elementSpec$ = element
+                .asMap()
+                .map((Function<Map<String, SerializedValue>, Result<Map<String, SerializedValue>, String>>) Result::success)
+                .orElseGet(() -> Result.failure("Expected map, got " + element));
 
-                final var keyResult = keyMapper
-                    .deserializeValue(elementSpec.get("key"));
-                if (keyResult.getKind().equals(Result.Kind.Failure)) return Result.failure(keyResult.getFailureOrThrow());
-                final var key = keyResult.getSuccessOrThrow();
+            map$ = map$.par(elementSpec$).andThen(uncurry(map -> elementSpec -> {
+              final var key$ = keyMapper.deserializeValue(elementSpec.get("key"));
+              final var value$ = elementMapper.deserializeValue(elementSpec.get("value"));
 
-                final var valueResult = elementMapper
-                    .deserializeValue(elementSpec.get("value"));
-                if (valueResult.getKind().equals(Result.Kind.Failure)) return Result.failure(valueResult.getFailureOrThrow());
-                final var value = valueResult.getSuccessOrThrow();
-
+              return key$.par(value$).mapSuccess(uncurry((K key) -> (V value) -> {
                 map.put(key, value);
-              }
+                return map;
+              })::apply);
+            }));
+          }
 
-              return Result.success(map);
-            },
-            Result::failure
-        );
+          return map$;
+        });
   }
 
   @Override
@@ -72,5 +67,12 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
               "value", elementMapper.serializeValue(entry.getValue()))));
     }
     return SerializedValue.of(elementSpecs);
+  }
+
+
+  private static <Result, T1, T2>
+  Function<Pair<T1, T2>, Result>
+  uncurry(Function<T1, Function<T2, Result>> f) {
+    return p -> f.apply(p.getLeft()).apply(p.getRight());
   }
 }
