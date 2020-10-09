@@ -17,13 +17,13 @@ import java.util.function.Function;
 public abstract class Result<Success, Failure> {
   private Result() {}
 
-  public interface Visitor<Success, Failure, Output, Throws extends Throwable> {
-    Output onSuccess(final Success value) throws Throws;
-    Output onFailure(final Failure value) throws Throws;
+  public interface Visitor<Success, Failure, Output> {
+    Output onSuccess(final Success value);
+    Output onFailure(final Failure value);
   }
 
-  public abstract <Output, Throws extends Throwable>
-  Output match(final Visitor<Success, Failure, Output, Throws> visitor) throws Throws;
+  public abstract <Output>
+  Output match(final Visitor<Success, Failure, Output> visitor);
 
   /**
    * Factory method for the Left variant.
@@ -31,8 +31,8 @@ public abstract class Result<Success, Failure> {
   static public <Success, Failure> Result<Success, Failure> success(final Success value) {
     return new Result<>() {
       @Override
-      public <Output, Throws extends Throwable>
-      Output match(final Visitor<Success, Failure, Output, Throws> visitor) throws Throws {
+      public <Output>
+      Output match(final Visitor<Success, Failure, Output> visitor) {
         return visitor.onSuccess(value);
       }
     };
@@ -44,8 +44,8 @@ public abstract class Result<Success, Failure> {
   static public <Success, Failure> Result<Success, Failure> failure(final Failure value) {
     return new Result<>() {
       @Override
-      public <Output, Throws extends Throwable>
-      Output match(final Visitor<Success, Failure, Output, Throws> visitor) throws Throws {
+      public <Output>
+      Output match(final Visitor<Success, Failure, Output> visitor) {
         return visitor.onFailure(value);
       }
     };
@@ -65,57 +65,44 @@ public abstract class Result<Success, Failure> {
     }
   }
 
-  @FunctionalInterface
-  public interface VisitorCase<Input, Output, Throws extends Throwable> {
-    Output apply(Input input) throws Throws;
-  }
-
   /**
    * Convenience method for matching in a way syntactically similar to switch statements.
    */
-  public <Output, Throws extends Throwable>
-  Output match(
-      final VisitorCase<Success, Output, Throws> onSuccess,
-      final VisitorCase<Failure, Output, Throws> onFailure
-  ) throws Throws
-  {
-    return this.match(new Visitor<Success, Failure, Output, Throws>() {
+  public <Output> Output match(final Function<Success, Output> onSuccess, final Function<Failure, Output> onFailure) {
+    return this.match(new Visitor<>() {
       @Override
-      public Output onSuccess(final Success value) throws Throws {
+      public Output onSuccess(final Success value) {
         return onSuccess.apply(value);
       }
 
       @Override
-      public Output onFailure(final Failure value) throws Throws {
+      public Output onFailure(final Failure value) {
         return onFailure.apply(value);
       }
     });
   }
 
-  public <OutputSuccess, OutputFailure, Throws extends Throwable>
+  public <OutputSuccess, OutputFailure>
   Result<OutputSuccess, OutputFailure> map(
-      final VisitorCase<Success, OutputSuccess, Throws> onSuccess,
-      final VisitorCase<Failure, OutputFailure, Throws> onFailure
-  ) throws Throws
-  {
+      final Function<Success, OutputSuccess> onSuccess,
+      final Function<Failure, OutputFailure> onFailure
+  ) {
     return this.match(
         success -> Result.success(onSuccess.apply(success)),
         failure -> Result.failure(onFailure.apply(failure))
     );
   }
 
-  public <Output, Throws extends Throwable>
-  Result<Output, Failure> mapSuccess(final VisitorCase<Success, Output, Throws> onSuccess) throws Throws {
+  public <Output> Result<Output, Failure> mapSuccess(final Function<Success, Output> onSuccess) {
     return this.map(onSuccess, failure -> failure);
   }
 
-  public <Output, Throws extends Throwable>
-  Result<Success, Output> mapFailure(final VisitorCase<Failure, Output, Throws> onFailure) throws Throws {
+  public <Output> Result<Success, Output> mapFailure(final Function<Failure, Output> onFailure) {
     return this.map(success -> success, onFailure);
   }
 
   public <Output> Result<Output, Failure> andThen(final Function<Success, Result<Output, Failure>> step) {
-    return this.match(new Visitor<Success, Failure, Result<Output, Failure>, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public Result<Output, Failure> onSuccess(final Success value) {
         return step.apply(value);
@@ -132,7 +119,7 @@ public abstract class Result<Success, Failure> {
       final Result<Success2, Failure> other,
       final BiFunction<Success, Success2, Output> step)
   {
-    return this.match(new Visitor<Success, Failure, Result<Output, Failure>, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public Result<Output, Failure> onFailure(final Failure value) {
         return Result.failure(value);
@@ -140,7 +127,7 @@ public abstract class Result<Success, Failure> {
 
       @Override
       public Result<Output, Failure> onSuccess(final Success value1) {
-        return other.match(new Visitor<Success2, Failure, Result<Output, Failure>, RuntimeException>() {
+        return other.match(new Visitor<>() {
           @Override
           public Result<Output, Failure> onFailure(final Failure value) {
             return Result.failure(value);
@@ -159,14 +146,14 @@ public abstract class Result<Success, Failure> {
     return this.par(other, Pair::of);
   }
 
-  public <Throws extends Throwable> Success getSuccessOrThrow(final Function<Failure, Throws> factory) throws Throws {
+  public Success getSuccessOrThrow(final Function<Failure, ? extends RuntimeException> factory) {
     return this.match(
         success -> success,
         failure -> { throw factory.apply(failure); }
     );
   }
 
-  public <Throws extends Throwable> Failure getFailureOrThrow(final Function<Success, Throws> factory) throws Throws {
+  public Failure getFailureOrThrow(final Function<Success, ? extends RuntimeException> factory) {
     return this.match(
         success -> { throw factory.apply(success); },
         failure -> failure
