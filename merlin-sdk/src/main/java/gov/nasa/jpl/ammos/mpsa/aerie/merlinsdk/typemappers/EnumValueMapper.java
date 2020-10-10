@@ -21,7 +21,7 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
     @Override
     public Result<E, String> deserializeValue(SerializedValue serializedValue) {
         return Result
-            .from(serializedValue.asString(), () -> "Expected string, got: ")
+            .from(serializedValue.asString(), () -> "Expected string, got " + serializedValue.toString())
             .andThen(this::deserializeEnumValue);
     }
 
