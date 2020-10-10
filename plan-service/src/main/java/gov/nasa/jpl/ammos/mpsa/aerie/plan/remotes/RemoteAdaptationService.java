@@ -1,19 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
@@ -26,7 +24,6 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -285,6 +282,10 @@ public final class RemoteAdaptationService implements AdaptationService {
   }
 
   public static class InvalidServiceResponseException extends RuntimeException {
+    private InvalidServiceResponseException() {}
+    private InvalidServiceResponseException(final JsonParseResult.FailureReason reason) {
+      super(reason.reason);
+    }
   }
 
   private static class AdaptationAccessException extends RuntimeException {
