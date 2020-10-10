@@ -4,8 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
-import java.util.function.Function;
-
 public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> {
     private final Class<E> enumType;
 
