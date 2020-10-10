@@ -18,17 +18,14 @@ public final class ShortValueMapper implements ValueMapper<Short> {
         .asInt()
         .map((Function<Long, Result<Long, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedValue.toString()))
-        .match(
-            (Long x) -> {
-              final var y = x.shortValue();
-              if (x != y) {
-                return Result.failure("Invalid parameter; value outside range of `short`");
-              } else {
-                return Result.success(y);
-              }
-            },
-            Result::failure
-        );
+        .andThen(x -> {
+          final var y = x.shortValue();
+          if (x != y) {
+            return Result.failure("Invalid parameter; value outside range of `short`");
+          } else {
+            return Result.success(y);
+          }
+        });
   }
 
   @Override

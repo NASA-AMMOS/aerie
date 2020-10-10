@@ -18,17 +18,14 @@ public final class IntegerValueMapper implements ValueMapper<Integer> {
         .asInt()
         .map((Function<Long, Result<Long, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedValue.toString()))
-        .match(
-            (Long x) -> {
-              final var y = x.intValue();
-              if (x != y) {
-                return Result.failure("Invalid parameter; value outside range of `int`");
-              } else {
-                return Result.success(y);
-              }
-            },
-            Result::failure
-        );
+        .andThen(x -> {
+          final var y = x.intValue();
+          if (x != y) {
+            return Result.failure("Invalid parameter; value outside range of `int`");
+          } else {
+            return Result.success(y);
+          }
+        });
   }
 
   @Override

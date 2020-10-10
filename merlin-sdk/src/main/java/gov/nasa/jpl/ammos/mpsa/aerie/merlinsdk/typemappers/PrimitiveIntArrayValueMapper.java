@@ -21,21 +21,19 @@ public class PrimitiveIntArrayValueMapper implements ValueMapper<int[]> {
                 .asList()
                 .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
                 .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
-                .match(
-                        serializedElements -> {
-                            final int[] elements = new int[serializedElements.size()];
-                            int index = 0;
-                            for (final var serializedElement : serializedElements) {
-                                final var result = elementMapper.deserializeValue(serializedElement);
-                                if (result.getKind() == Result.Kind.Failure) return result.mapSuccess(_left -> null);
+                .andThen(serializedElements -> {
+                    var elements$ = Result.<int[], String>success(new int[serializedElements.size()]);
+                    for (int i = 0; i < serializedElements.size(); i += 1) {
+                        final var idx = i;
+                        final var result$ = elementMapper.deserializeValue(serializedElements.get(i));
 
-                                // SAFETY: `result` must be a Success variant.
-                                elements[index++] = result.getSuccessOrThrow();
-                            }
-                            return Result.success(elements);
-                        },
-                        Result::failure
-                );
+                        elements$ = elements$.par(result$, (components, result) -> {
+                            components[idx] = result;
+                            return components;
+                        });
+                    }
+                    return elements$;
+                });
     }
 
     @Override

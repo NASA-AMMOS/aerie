@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,20 +36,21 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
           var map$ = Result.<Map<K, V>, String>success(new HashMap<>());
 
           for (final SerializedValue element : serializedList) {
-            final var elementSpec$ = element
+            final var entry$ = element
                 .asMap()
                 .map((Function<Map<String, SerializedValue>, Result<Map<String, SerializedValue>, String>>) Result::success)
-                .orElseGet(() -> Result.failure("Expected map, got " + element));
+                .orElseGet(() -> Result.failure("Expected map, got " + element))
+                .andThen(elementSpec -> {
+                  final var key$ = keyMapper.deserializeValue(elementSpec.get("key"));
+                  final var value$ = elementMapper.deserializeValue(elementSpec.get("value"));
 
-            map$ = map$.par(elementSpec$).andThen(uncurry(map -> elementSpec -> {
-              final var key$ = keyMapper.deserializeValue(elementSpec.get("key"));
-              final var value$ = elementMapper.deserializeValue(elementSpec.get("value"));
+                  return key$.par(value$);
+                });
 
-              return key$.par(value$).mapSuccess(uncurry((K key) -> (V value) -> {
-                map.put(key, value);
-                return map;
-              })::apply);
-            }));
+            map$ = map$.par(entry$, (map, entry) -> {
+              map.put(entry.getKey(), entry.getValue());
+              return map;
+            });
           }
 
           return map$;
@@ -67,12 +67,5 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
               "value", elementMapper.serializeValue(entry.getValue()))));
     }
     return SerializedValue.of(elementSpecs);
-  }
-
-
-  private static <Result, T1, T2>
-  Function<Pair<T1, T2>, Result>
-  uncurry(Function<T1, Function<T2, Result>> f) {
-    return p -> f.apply(p.getLeft()).apply(p.getRight());
   }
 }

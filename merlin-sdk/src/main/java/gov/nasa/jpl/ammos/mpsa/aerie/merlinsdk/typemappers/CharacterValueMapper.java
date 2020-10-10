@@ -18,16 +18,13 @@ public final class CharacterValueMapper implements ValueMapper<Character> {
         .asString()
         .map((Function<String, Result<String, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected string, got " + serializedValue.toString()))
-        .match(
-            string -> {
-              if (string.length() != 1) {
-                return Result.failure("Expected single-character string");
-              } else {
-                return Result.success(string.charAt(0));
-              }
-            },
-            Result::failure
-        );
+        .andThen(string -> {
+          if (string.length() != 1) {
+            return Result.failure("Expected single-character string");
+          } else {
+            return Result.success(string.charAt(0));
+          }
+        });
   }
 
   @Override

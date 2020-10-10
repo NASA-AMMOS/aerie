@@ -6,6 +6,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 public class ArrayValueMapper<T> implements ValueMapper<T[]> {
     private final ValueMapper<T> elementMapper;
@@ -23,16 +25,26 @@ public class ArrayValueMapper<T> implements ValueMapper<T[]> {
 
     @Override
     public Result<T[], String> deserializeValue(SerializedValue serializedValue) {
-        final var list = serializedValue.asList().get(); // TODO: Could fail, should fix
+        return serializedValue
+            .asList()
+            .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
+            .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
+            .andThen(serializedElements -> {
+                @SuppressWarnings("unchecked")
+                var elements$ = Result.<T[], String>success((T[]) Array.newInstance(this.elementClass, serializedElements.size()));
 
-        @SuppressWarnings("unchecked")
-        final var arr = (T[]) Array.newInstance(this.elementClass, list.size());
+                for (int i = 0; i < serializedElements.size(); i += 1) {
+                    final var idx = i;
+                    final var element$ = this.elementMapper.deserializeValue(serializedElements.get(i));
 
-        for (int i=0; i<list.size(); i++) {
-            arr[i] = this.elementMapper.deserializeValue(list.get(i)).getSuccessOrThrow();
-        }
+                    elements$ = elements$.par(element$, (arr, element) -> {
+                        arr[idx] = element;
+                        return arr;
+                    });
+                }
 
-        return Result.success(arr);
+                return elements$;
+            });
     }
 
     @Override

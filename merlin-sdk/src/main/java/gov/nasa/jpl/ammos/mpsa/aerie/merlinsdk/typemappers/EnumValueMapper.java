@@ -24,7 +24,7 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
                 .asString()
                 .map((Function<String, Result<String, String>>) Result::success)
                 .orElseGet(() -> Result.failure("Expected string, got: "))
-                .match(this::deserializeEnumValue, Result::failure);
+                .andThen(this::deserializeEnumValue);
     }
 
     @Override

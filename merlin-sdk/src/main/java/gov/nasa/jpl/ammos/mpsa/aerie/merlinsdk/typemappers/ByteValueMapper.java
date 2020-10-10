@@ -18,17 +18,14 @@ public final class ByteValueMapper implements ValueMapper<Byte> {
         .asInt()
         .map((Function<Long, Result<Long, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedValue.toString()))
-        .match(
-            (Long x) -> {
-              final var y = x.byteValue();
-              if (x != y) {
-                return Result.failure("Invalid parameter; value outside range of `byte`");
-              } else {
-                return Result.success(y);
-              }
-            },
-            Result::failure
-        );
+        .andThen(x -> {
+          final var y = x.byteValue();
+          if (x != y) {
+            return Result.failure("Invalid parameter; value outside range of `byte`");
+          } else {
+            return Result.success(y);
+          }
+        });
   }
 
   @Override

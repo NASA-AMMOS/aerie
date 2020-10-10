@@ -26,20 +26,20 @@ public final class ListValueMapper<T> implements ValueMapper<List<T>> {
         .asList()
         .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
-        .match(
-            serializedElements -> {
-              final var elements = new ArrayList<T>();
-              for (final var serializedElement : serializedElements) {
-                final var result = this.elementMapper.deserializeValue(serializedElement);
-                if (result.getKind() == Result.Kind.Failure) return result.mapSuccess(_left -> null);
+        .andThen(serializedElements -> {
+          var elements$ = Result.<List<T>, String>success(new ArrayList<>(serializedElements.size()));
 
-                // SAFETY: `result` must be a Success variant.
-                elements.add(result.getSuccessOrThrow());
-              }
-              return Result.success(elements);
-            },
-            Result::failure
-        );
+          for (final var serializedElement : serializedElements) {
+            final var element$ = this.elementMapper.deserializeValue(serializedElement);
+
+            elements$ = elements$.par(element$, (elements, element) -> {
+              elements.add(element);
+              return elements;
+            });
+          }
+
+          return elements$;
+        });
   }
 
   @Override
