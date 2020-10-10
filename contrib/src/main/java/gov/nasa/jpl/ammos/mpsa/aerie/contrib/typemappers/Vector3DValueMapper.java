@@ -8,38 +8,35 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 public class Vector3DValueMapper implements ValueMapper<Vector3D> {
-
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.ofSequence(ValueSchema.REAL);
+    return ValueSchema.ofStruct(Map.of(
+        "x", ValueSchema.REAL,
+        "y", ValueSchema.REAL,
+        "z", ValueSchema.REAL));
   }
 
   @Override
   public Result<Vector3D, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
-        .asList()
-        .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
+        .asMap()
+        .map((Function<Map<String, SerializedValue>, Result<Map<String, SerializedValue>, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
-        .andThen(serializedElements -> {
-          if (serializedElements.size() != 3) return Result.failure("Expected 3 components, got " + serializedElements.size());
-
-          var components$ = Result.<double[], String>success(new double[3]);
-
+        .andThen(fields -> {
           final var mapper = new DoubleValueMapper();
-          for (int i = 0; i < 3; i += 1) {
-            final var idx = i;
-            final var result$ = mapper.deserializeValue(serializedElements.get(i));
 
-            components$ = components$.par(result$, (components, result) -> {
-              components[idx] = result;
-              return components;
-            });
-          }
+          final var x$ = mapper.deserializeValue(fields.get("x"));
+          final var y$ = mapper.deserializeValue(fields.get("y"));
+          final var z$ = mapper.deserializeValue(fields.get("z"));
 
-          return components$.mapSuccess(Vector3D::new);
+          return x$.par(y$).par(z$).mapSuccess(p -> new Vector3D(
+              p.getLeft().getLeft(),
+              p.getLeft().getRight(),
+              p.getRight()));
         });
   }
 
