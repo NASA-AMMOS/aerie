@@ -5,8 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
 
 public class PrimitiveShortArrayValueMapper implements ValueMapper<short[]> {
     @Override
@@ -17,10 +15,8 @@ public class PrimitiveShortArrayValueMapper implements ValueMapper<short[]> {
     @Override
     public Result<short[], String> deserializeValue(SerializedValue serializedValue) {
         var elementMapper = new ShortValueMapper();
-        return serializedValue
-                .asList()
-                .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
-                .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
+        return Result
+                .from(serializedValue.asList(), () -> "Expected list, got " + serializedValue.toString())
                 .andThen(serializedElements -> {
                     var elements$ = Result.<short[], String>success(new short[serializedElements.size()]);
                     for (int i = 0; i < serializedElements.size(); i += 1) {

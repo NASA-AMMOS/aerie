@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public final class ListValueMapper<T> implements ValueMapper<List<T>> {
   private final ValueMapper<T> elementMapper;
@@ -22,10 +21,8 @@ public final class ListValueMapper<T> implements ValueMapper<List<T>> {
 
   @Override
   public Result<List<T>, String> deserializeValue(final SerializedValue serializedValue) {
-    return serializedValue
-        .asList()
-        .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
-        .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
+    return Result
+        .from(serializedValue.asList(), () -> "Expected list, got " + serializedValue.toString())
         .andThen(serializedElements -> {
           var elements$ = Result.<List<T>, String>success(new ArrayList<>(serializedElements.size()));
 

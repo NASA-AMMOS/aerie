@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   private final ValueMapper<K> keyMapper;
@@ -28,18 +27,14 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
 
   @Override
   public Result<Map<K, V>, String> deserializeValue(final SerializedValue serializedValue) {
-    return serializedValue
-        .asList()
-        .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
-        .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
+    return Result
+        .from(serializedValue.asList(), () -> "Expected list, got " + serializedValue.toString())
         .andThen(serializedList -> {
           var map$ = Result.<Map<K, V>, String>success(new HashMap<>());
 
           for (final SerializedValue element : serializedList) {
-            final var entry$ = element
-                .asMap()
-                .map((Function<Map<String, SerializedValue>, Result<Map<String, SerializedValue>, String>>) Result::success)
-                .orElseGet(() -> Result.failure("Expected map, got " + element))
+            final var entry$ = Result
+                .from(element.asMap(), () -> "Expected map, got " + element)
                 .andThen(elementSpec -> {
                   final var key$ = keyMapper.deserializeValue(elementSpec.get("key"));
                   final var value$ = elementMapper.deserializeValue(elementSpec.get("value"));

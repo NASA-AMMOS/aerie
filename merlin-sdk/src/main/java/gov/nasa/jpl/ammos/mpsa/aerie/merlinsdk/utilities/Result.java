@@ -3,8 +3,10 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * This class is the equivalent of the type `Result L R = Success L | Failure R` in a language with algebraic data types,
@@ -49,6 +51,13 @@ public abstract class Result<Success, Failure> {
         return visitor.onFailure(value);
       }
     };
+  }
+
+  public static <Success, Failure>
+  Result<Success, Failure> from(final Optional<Success> value, final Supplier<Failure> onFailure) {
+    return value
+        .map((Function<Success, Result<Success, Failure>>) Result::success)
+        .orElseGet(() -> Result.failure(onFailure.get()));
   }
 
 

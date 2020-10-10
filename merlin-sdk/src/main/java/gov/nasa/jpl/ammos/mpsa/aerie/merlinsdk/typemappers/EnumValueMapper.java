@@ -20,11 +20,9 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
 
     @Override
     public Result<E, String> deserializeValue(SerializedValue serializedValue) {
-        return serializedValue
-                .asString()
-                .map((Function<String, Result<String, String>>) Result::success)
-                .orElseGet(() -> Result.failure("Expected string, got: "))
-                .andThen(this::deserializeEnumValue);
+        return Result
+            .from(serializedValue.asString(), () -> "Expected string, got: ")
+            .andThen(this::deserializeEnumValue);
     }
 
     @Override

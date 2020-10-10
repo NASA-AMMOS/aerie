@@ -25,10 +25,8 @@ public class ArrayValueMapper<T> implements ValueMapper<T[]> {
 
     @Override
     public Result<T[], String> deserializeValue(SerializedValue serializedValue) {
-        return serializedValue
-            .asList()
-            .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
-            .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
+        return Result
+            .from(serializedValue.asList(), () -> "Expected list, got " + serializedValue.toString())
             .andThen(serializedElements -> {
                 @SuppressWarnings("unchecked")
                 var elements$ = Result.<T[], String>success((T[]) Array.newInstance(this.elementClass, serializedElements.size()));

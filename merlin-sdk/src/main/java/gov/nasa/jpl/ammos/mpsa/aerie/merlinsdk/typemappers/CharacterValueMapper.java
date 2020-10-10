@@ -4,8 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
-import java.util.function.Function;
-
 public final class CharacterValueMapper implements ValueMapper<Character> {
   @Override
   public ValueSchema getValueSchema() {
@@ -14,10 +12,8 @@ public final class CharacterValueMapper implements ValueMapper<Character> {
 
   @Override
   public Result<Character, String> deserializeValue(final SerializedValue serializedValue) {
-    return serializedValue
-        .asString()
-        .map((Function<String, Result<String, String>>) Result::success)
-        .orElseGet(() -> Result.failure("Expected string, got " + serializedValue.toString()))
+    return Result
+        .from(serializedValue.asString(), () -> "Expected string, got " + serializedValue.toString())
         .andThen(string -> {
           if (string.length() != 1) {
             return Result.failure("Expected single-character string");

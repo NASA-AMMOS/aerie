@@ -4,8 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
-import java.util.function.Function;
-
 public final class BooleanValueMapper implements ValueMapper<Boolean> {
   @Override
   public ValueSchema getValueSchema() {
@@ -14,10 +12,7 @@ public final class BooleanValueMapper implements ValueMapper<Boolean> {
 
   @Override
   public Result<Boolean, String> deserializeValue(final SerializedValue serializedValue) {
-    return serializedValue
-        .asBoolean()
-        .map((Function<Boolean, Result<Boolean, String>>) Result::success)
-        .orElseGet(() -> Result.failure("Expected boolean, got " + serializedValue.toString()));
+    return Result.from(serializedValue.asBoolean(), () -> "Expected boolean, got " + serializedValue.toString());
   }
 
   @Override
