@@ -5,21 +5,22 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public interface JsonParseResult<T> {
-  <Value, Throws extends Throwable> Value match(Visitor<? super T, Value, Throws> visitor) throws Throws;
+  <Value> Value match(Visitor<? super T, Value> visitor);
 
-  interface Visitor<T, Result, Throws extends Throwable> {
-    Result onSuccess(T result) throws Throws;
-    Result onFailure(FailureReason failure) throws Throws;
+  interface Visitor<T, Result> {
+    Result onSuccess(T result);
+    Result onFailure(FailureReason failure);
   }
 
   static <T> JsonParseResult<T> success(final T value) {
     return new JsonParseResult<>() {
       @Override
-      public <Result, Throws extends Throwable> Result match(final Visitor<? super T, Result, Throws> visitor) throws Throws {
+      public <Result> Result match(final Visitor<? super T, Result> visitor) {
         return visitor.onSuccess(value);
       }
     };
@@ -28,7 +29,7 @@ public interface JsonParseResult<T> {
   static <T> JsonParseResult<T> failure(final FailureReason reason) {
     return new JsonParseResult<>() {
       @Override
-      public <Result, Throws extends Throwable> Result match(final Visitor<? super T, Result, Throws> visitor) throws Throws {
+      public <Result> Result match(final Visitor<? super T, Result> visitor) {
         return visitor.onFailure(reason);
       }
 
@@ -51,7 +52,7 @@ public interface JsonParseResult<T> {
   default <S> JsonParseResult<S> mapSuccess(final Function<T, S> transform) {
     Objects.requireNonNull(transform);
 
-    return this.match(new Visitor<T, JsonParseResult<S>, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public JsonParseResult<S> onSuccess(final T result) {
         return JsonParseResult.success(transform.apply(result));
@@ -69,7 +70,7 @@ public interface JsonParseResult<T> {
     Objects.requireNonNull(other);
     Objects.requireNonNull(combine);
 
-    return this.match(new Visitor<T, JsonParseResult<Result>, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public JsonParseResult<Result> onFailure(final FailureReason failure) {
         return JsonParseResult.failure(failure);
@@ -77,7 +78,7 @@ public interface JsonParseResult<T> {
 
       @Override
       public JsonParseResult<Result> onSuccess(final T result1) {
-        return other.match(new Visitor<S, JsonParseResult<Result>, RuntimeException>() {
+        return other.match(new Visitor<>() {
           @Override
           public JsonParseResult<Result> onFailure(final FailureReason failure) {
             return JsonParseResult.failure(failure);
@@ -99,7 +100,7 @@ public interface JsonParseResult<T> {
   default <S> JsonParseResult<S> andThen(final Function<T, JsonParseResult<S>> step) {
     Objects.requireNonNull(step);
 
-    return this.match(new Visitor<T, JsonParseResult<S>, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public JsonParseResult<S> onSuccess(final T result) {
         return step.apply(result);
@@ -115,7 +116,7 @@ public interface JsonParseResult<T> {
   default JsonParseResult<T> prependBreadcrumb(final Breadcrumb breadcrumb) {
     Objects.requireNonNull(breadcrumb);
 
-    return this.match(new Visitor<T, JsonParseResult<T>, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public JsonParseResult<T> onSuccess(final T result) {
         return JsonParseResult.success(result);
@@ -129,7 +130,7 @@ public interface JsonParseResult<T> {
   }
 
   default boolean isFailure() {
-    return this.match(new Visitor<T, Boolean, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public Boolean onFailure(final FailureReason reason) {
         return true;
@@ -142,18 +143,39 @@ public interface JsonParseResult<T> {
     });
   }
 
-  default <Throws extends Throwable> T getSuccessOrThrow(final Function<FailureReason, ? extends Throws> throwsSupplier) throws Throws {
-    return this.match(new Visitor<T, T, Throws>() {
+  default Optional<T> asSuccess() {
+    return this.match(new Visitor<>() {
       @Override
-      public T onFailure(final FailureReason reason) throws Throws {
-        throw throwsSupplier.apply(reason);
+      public Optional<T> onSuccess(final T result) {
+        return Optional.of(result);
       }
 
       @Override
-      public T onSuccess(final T result) {
-        return result;
+      public Optional<T> onFailure(final FailureReason failure) {
+        return Optional.empty();
       }
     });
+  }
+
+  default Optional<FailureReason> asFailure() {
+    return this.match(new Visitor<>() {
+      @Override
+      public Optional<FailureReason> onSuccess(final T result) {
+        return Optional.empty();
+      }
+
+      @Override
+      public Optional<FailureReason> onFailure(final FailureReason failure) {
+        return Optional.of(failure);
+      }
+    });
+  }
+
+  default <Throws extends Throwable>
+  T getSuccessOrThrow(final Function<FailureReason, ? extends Throws> throwsSupplier) throws Throws {
+    return this
+        .asSuccess()
+        .orElseThrow(() -> throwsSupplier.apply(this.asFailure().orElseThrow()));
   }
 
   default T getSuccessOrThrow() {
@@ -161,7 +183,7 @@ public interface JsonParseResult<T> {
   }
 
   default FailureReason getFailureOrThrow() {
-    return this.match(new Visitor<T, FailureReason, RuntimeException>() {
+    return this.match(new Visitor<>() {
       @Override
       public FailureReason onSuccess(final T result) {
         throw new RuntimeException("Called getFailureOrThrow on a Success case");
