@@ -16,7 +16,11 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-@Ignore
+// Note:
+// If the tests fail, please try to update the adaptation jar file.
+// The latest jar file is in banananatioin/build/libs/banananation-x.x.x.jar.
+// Please copy and rename the file to banananation.jar in
+// adaptation-service/src/test/resources/gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar
 public final class AdaptationTest {
     private final Fixtures fixtures = new Fixtures();
     private Adaptation<?> adaptation;
