@@ -16,7 +16,6 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class AdaptationParserTests {
     // TODO: Write more complex adaptations and tests
 
-    @Ignore
     @Test
     public void testLoadSimpleAdaptation() throws AdaptationParsingException {
         Path path = resourcePath("/simple/simple_adaptation.aaf");
