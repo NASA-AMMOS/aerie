@@ -45,7 +45,9 @@ public abstract class ProductParsers {
 
     private VariadicProductParser(final ArrayList<FieldSpec<?>> fields, final FieldSpec<?> fieldSpec) {
       for (final var field : fields) {
-        if (Objects.equals(field.name, fieldSpec.name)) throw new RuntimeException("Parser already defined for key `" + fieldSpec.name + "`");
+        if (Objects.equals(field.name, fieldSpec.name)) {
+          throw new RuntimeException("Parser already defined for key `" + fieldSpec.name + "`");
+        }
       }
 
       // It's pretty inefficient to copy the set of field specs every time.
@@ -60,89 +62,78 @@ public abstract class ProductParsers {
       if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
       final var obj = (JsonObject) json;
 
-      // Extract all of the fields we want.
+      // Detect unexpected fields in the json
+      // TODO: We should return all unexpected fields, but currently
+      //       we can only return one failure reason, with one set of
+      //       breadcrumbs. When we allow multiple failure reasons
+      //       this should be updated to build a failure reason for
+      //       each unexpected parameter provided
+      for (final var param : obj.entrySet()) {
+        final var name = param.getKey();
+
+        if (getFieldSpec(name).isEmpty()) {
+          return JsonParseResult
+              .<T>failure("Unexpected field present")
+              .prependBreadcrumb(
+                  Breadcrumb.ofString(name)
+              );
+        }
+      }
+
+      // Parse the fields
+      //
+      // PRECONDITION: accumulated result is of type T1
+      // INVARIANT: accumulated result is of type Pair<...Pair<T1, T2>..., Ti>
+      //   where `i` is the number of fields iterated through.
+      // POSTCONDITION: accumulated result is of type T = Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
       final var iter = this.fields.iterator();
-      Object accumulator = null;
-      {
-        final var field = iter.next();
-
-        final JsonParseResult<?> result;
-        if (field.isOptional) {
-          if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.success(Optional.empty());
-          } else {
-            result = field.valueParser.map(Optional::of).parse(obj.get(field.name));
-          }
-        } else {
-          if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.failure("required field not present");
-          } else {
-            result = field.valueParser.parse(obj.get(field.name));
-          }
-        }
-
-        if (result.isFailure()) {
-          return JsonParseResult.failure(
-              result
-              .failureReason()
-              .prependBreadcrumb(
-                  Breadcrumb.ofString(field.name)
-              ));
-        }
-        accumulator = result.getSuccessOrThrow();
-      }
-
-      // PRECONDITION: accumulator is of type T1
-      // INVARIANT: accumulator is of type Pair<...Pair<T1, T2>..., Ti>
-      // where `i` is the number of fields iterated through.
-      // POSTCONDITION: accumulator is of type T = Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
-      long defaultedFields = 0;
+      var accumulator = parseField(iter.next(), obj);
       while (iter.hasNext()) {
-        final var field = iter.next();
-
-        final JsonParseResult<?> result;
-        if (field.isOptional) {
-          if (!obj.containsKey(field.name)) {
-            defaultedFields += 1;
-            result = JsonParseResult.success(Optional.empty());
-          } else {
-            result = field.valueParser.map(Optional::of).parse(obj.get(field.name));
-          }
-        } else {
-          if (!obj.containsKey(field.name)) {
-            result = JsonParseResult.failure("required field not present");
-          } else {
-            result = field.valueParser.parse(obj.get(field.name));
-          }
-        }
-
-        if (result.isFailure()) {
-          return JsonParseResult.failure(
-              result
-              .failureReason()
-              .prependBreadcrumb(
-                  Breadcrumb.ofString(field.name)
-              ));
-        }
-        accumulator = Pair.of(accumulator, result.getSuccessOrThrow());
+        accumulator = accumulator.parWith(parseField(iter.next(), obj)).mapSuccess(x -> x);
       }
 
-      // Check that it contains only the fields we want.
-      // TODO: We should take note of what extra fields are present and report them
-      //       As a temporary workaround error if more than the total number of fields are present
-      if (obj.keySet().size() + defaultedFields > this.fields.size()) return JsonParseResult.failure("unexpected extra fields present");
+      return accumulator.mapSuccess(result -> {
+        // SAFETY: established by loop invariant.
+        @SuppressWarnings("unchecked")
+        final var tmp = (T) result;
+        return tmp;
+      });
+    }
 
-      // SAFETY: established by loop invariant.
-      @SuppressWarnings("unchecked")
-      final var result = (T) accumulator;
-      return JsonParseResult.success(result);
+    private Optional<FieldSpec<?>> getFieldSpec(final String name) {
+      for (final var field : this.fields) {
+        if (field.name.equals(name)) return Optional.of(field);
+      }
+      return Optional.empty();
+    }
+
+    private static JsonParseResult<?> parseField(final FieldSpec<?> field, final JsonObject obj) {
+      final JsonParseResult<?> result;
+      if (field.isOptional) {
+        if (!obj.containsKey(field.name)) {
+          result = JsonParseResult.success(Optional.empty());
+        } else {
+          result = field.valueParser.map(Optional::of).parse(obj.get(field.name));
+        }
+      } else {
+        if (!obj.containsKey(field.name)) {
+          result = JsonParseResult.failure("required field not present");
+        } else {
+          result = field.valueParser.parse(obj.get(field.name));
+        }
+      }
+
+      return result.prependBreadcrumb(Breadcrumb.ofString(field.name));
     }
 
     public <S> VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {
       return new VariadicProductParser<>(this.fields, new FieldSpec<>(key, valueParser, false));
     }
 
-    public <S> VariadicProductParser<Pair<T, Optional<S>>> optionalField(final String key, final JsonParser<S> valueParser) {
+    public <S> VariadicProductParser<Pair<T, Optional<S>>> optionalField(
+        final String key,
+        final JsonParser<S> valueParser)
+    {
       return new VariadicProductParser<>(this.fields, new FieldSpec<>(key, valueParser, true));
     }
   }
