@@ -162,6 +162,11 @@ pipeline {
                 cp merlin-sdk/build/libs/*.jar \
                    /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
 
+                # For contrib
+                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/contrib
+                cp contrib/build/libs/*.jar \
+                   /tmp/aerie-jenkins/${BUILD_NUMBER}/contrib/
+
                 # For merlin-cli
                 mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
                 cp merlin-cli/build/distributions/*.tar \
