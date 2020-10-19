@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.json;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -62,6 +65,37 @@ public interface JsonParseResult<T> {
         return new FailureReason("Unknown reason");
       }
     };
+  }
+
+  /** Combine two results together. If either is a failure, returns a failure. */
+  default <S, Result> JsonParseResult<Result> parWith(final JsonParseResult<S> other, final BiFunction<T, S, Result> step) {
+    final var self = this;
+
+    return this.match(new Visitor<T, JsonParseResult<Result>, RuntimeException>() {
+      @Override
+      public JsonParseResult<Result> onFailure() {
+        return JsonParseResult.failure(self.failureReason());
+      }
+
+      @Override
+      public JsonParseResult<Result> onSuccess(final T result1) {
+        return other.match(new Visitor<S, JsonParseResult<Result>, RuntimeException>() {
+          @Override
+          public JsonParseResult<Result> onFailure() {
+            return JsonParseResult.failure(other.failureReason());
+          }
+
+          @Override
+          public JsonParseResult<Result> onSuccess(final S result2) {
+            return JsonParseResult.success(step.apply(result1, result2));
+          }
+        });
+      }
+    });
+  }
+
+  default <S> JsonParseResult<Pair<T, S>> parWith(final JsonParseResult<S> other) {
+    return this.parWith(other, Pair::of);
   }
 
   /** Prepends the given breadcrumb if the result is a failure. */
