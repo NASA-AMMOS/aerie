@@ -64,6 +64,23 @@ public interface JsonParseResult<T> {
     };
   }
 
+  /** Prepends the given breadcrumb if the result is a failure. */
+  default JsonParseResult<T> prependBreadcrumb(final Breadcrumb breadcrumb) {
+    final var self = this;
+
+    return this.match(new Visitor<T, JsonParseResult<T>, RuntimeException>() {
+      @Override
+      public JsonParseResult<T> onSuccess(final T _result) {
+        return self;
+      }
+
+      @Override
+      public JsonParseResult<T> onFailure() {
+        return JsonParseResult.failure(self.failureReason().prependBreadcrumb(breadcrumb));
+      }
+    });
+  }
+
   default <S> JsonParseResult<S> mapSuccess(final Function<T, S> transform) {
     return this.match(new Visitor<T, JsonParseResult<S>, RuntimeException>() {
       @Override
