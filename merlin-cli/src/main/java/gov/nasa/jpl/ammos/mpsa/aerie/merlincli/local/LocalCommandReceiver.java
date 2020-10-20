@@ -185,8 +185,16 @@ public class LocalCommandReceiver implements MerlinCommandReceiver {
       scheduledActivities.add(Pair.of(activity.startTime.durationFrom(SimulationInstant.ORIGIN), activity.activity));
     }
 
-    final var results = SimpleSimulator.simulateToCompletion(adaptation, scheduledActivities, schedule.startTime, Duration.of(samplingPeriod, Duration.MICROSECONDS));
-    System.out.println(results.timelines);
+    try {
+      final var results = SimpleSimulator.simulateToCompletion(
+          adaptation,
+          scheduledActivities,
+          schedule.startTime,
+          Duration.of(samplingPeriod, Duration.MICROSECONDS));
+      System.out.println(results.timelines);
+    } catch (final SimpleSimulator.InvalidSerializedActivityException e) {
+      throw new RuntimeException("Invalid activity at index " + e.identifier);
+    }
   }
 
   @SuppressWarnings("rawtypes")

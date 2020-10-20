@@ -37,9 +37,13 @@ public final class Adaptation<Event> {
       final Duration simulationDuration,
       final Duration samplingPeriod,
       final Instant startTime
-  )
+  ) throws UnconstructableActivityInstanceException
   {
-    return SimpleSimulator.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
+    try {
+      return SimpleSimulator.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
+    } catch (SimpleSimulator.InvalidSerializedActivityException e) {
+      throw new Adaptation.UnconstructableActivityInstanceException("Invalid activity with id " + e.identifier + ".", e);
+    }
   }
 
   public List<ViolableConstraint> getConstraintTypes() throws AdaptationContractException {

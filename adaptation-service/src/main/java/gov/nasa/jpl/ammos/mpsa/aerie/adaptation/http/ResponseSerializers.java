@@ -373,6 +373,13 @@ public final class ResponseSerializers {
                .build();
   }
 
+  public static JsonValue serializeUnconstructableActivityInstanceException(final Adaptation.UnconstructableActivityInstanceException ex) {
+    // TODO: Improve diagnostic information?
+    return Json.createObjectBuilder()
+        .add("message", ex.getMessage())
+        .build();
+  }
+
   private static final class ValueSchemaSerializer implements ValueSchema.Visitor<JsonValue> {
     @Override
     public JsonValue onReal() {
