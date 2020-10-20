@@ -120,7 +120,7 @@ class MapperMaker {
       blockBuilder
           .add("default:\n")
           .indent()
-          .addStatement("throw new $T(\"Unknown key `\" + $L.getKey() + \"`\")", RuntimeException.class, entryVarName)
+          .addStatement("return Optional.empty()")
           .unindent()
           .endControlFlow()
           .endControlFlow();
