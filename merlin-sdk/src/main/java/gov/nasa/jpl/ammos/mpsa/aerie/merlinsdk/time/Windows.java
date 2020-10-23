@@ -43,8 +43,8 @@ public final class Windows implements Iterable<Window> {
     this.add(Window.between(start, end));
   }
 
-  public void add(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    this.add(Window.between(startQuantity, startUnit, endQuantity, endUnit));
+  public void add(final long start, final long end, final Duration unit) {
+    this.add(Window.between(start, end, unit));
   }
 
   public void addPoint(final long quantity, final Duration unit) {
@@ -90,8 +90,8 @@ public final class Windows implements Iterable<Window> {
     this.subtract(Window.between(start, end));
   }
 
-  public void subtract(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    this.subtract(Window.between(startQuantity, startUnit, endQuantity, endUnit));
+  public void subtract(final long start, final long end, final Duration unit) {
+    this.subtract(Window.between(start, end, unit));
   }
 
   public void subtractPoint(final long quantity, final Duration unit) {
@@ -149,8 +149,8 @@ public final class Windows implements Iterable<Window> {
     this.intersectWith(Window.between(start, end));
   }
 
-  public void intersectWith(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    this.intersectWith(Window.between(startQuantity, startUnit, endQuantity, endUnit));
+  public void intersectWith(final long start, final long end, final Duration unit) {
+    this.intersectWith(Window.between(start, end, unit));
   }
 
   public void intersectWith(final Windows other) {
@@ -202,8 +202,8 @@ public final class Windows implements Iterable<Window> {
     return new Windows().includes(this);
   }
 
-  public boolean includes(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    return this.includes(Window.between(startQuantity, startUnit, endQuantity, endUnit));
+  public boolean includes(final long start, final long end, final Duration unit) {
+    return this.includes(Window.between(start, end, unit));
   }
 
   public boolean includesPoint(final long quantity, final Duration unit) {

@@ -21,16 +21,16 @@ public final class Window {
     return new Window(start, end);
   }
 
-  public static Window between(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    return between(Duration.of(startQuantity, startUnit), Duration.of(endQuantity, endUnit));
+  public static Window between(final long start, final long end, final Duration unit) {
+    return between(Duration.of(start, unit), Duration.of(end, unit));
   }
 
   public static Window window(final Duration start, final Duration end) {
     return between(start, end);
   }
 
-  public static Window window(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    return between(startQuantity, startUnit, endQuantity, endUnit);
+  public static Window window(final long start, final long end, final Duration unit) {
+    return between(start, end, unit);
   }
 
   public static Window at(final Duration point) {

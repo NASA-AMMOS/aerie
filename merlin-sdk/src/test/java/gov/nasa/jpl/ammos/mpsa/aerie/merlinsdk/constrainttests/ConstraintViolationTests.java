@@ -25,8 +25,8 @@ public class ConstraintViolationTests {
 
     var windows = violation.violationWindows;
     Windows expected = new Windows();
-    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
-    expected.add(5, Duration.SECONDS, 8, Duration.SECONDS);
+    expected.add(0, 3, Duration.SECONDS);
+    expected.add(5, 8, Duration.SECONDS);
     assertEquals(windows, expected);
   }
 
