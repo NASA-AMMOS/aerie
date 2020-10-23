@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real;
 
 /**
  * A description of a dynamic behavior for real-valued resources that may vary continuously.

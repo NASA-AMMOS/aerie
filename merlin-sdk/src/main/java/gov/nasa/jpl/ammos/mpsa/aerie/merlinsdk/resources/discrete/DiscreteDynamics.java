@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete;
 
 import java.util.Objects;
 
