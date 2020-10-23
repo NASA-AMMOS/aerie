@@ -160,6 +160,36 @@ public final class Duration implements Comparable<Duration> {
   }
 
   /**
+   * Construct a duration in terms of a real quantity of some unit,
+   * rounding to the nearest representable value above.
+   */
+  public static Duration roundUpward(final double quantity, final Duration unit) {
+    return add(
+        unit.times((long) Math.floor(quantity)),
+        EPSILON.times((long) Math.ceil((quantity % 1) * unit.dividedBy(EPSILON))));
+  }
+
+  /**
+   * Construct a duration in terms of a real quantity of some unit,
+   * rounding to the nearest representable value below.
+   */
+  public static Duration roundDownward(final double quantity, final Duration unit) {
+    return add(
+        unit.times((long) Math.floor(quantity)),
+        EPSILON.times((long) Math.floor((quantity % 1) * unit.dividedBy(EPSILON))));
+  }
+
+  /**
+   * Construct a duration in terms of a real quantity of some unit,
+   * rounding to the nearest representable value.
+   */
+  public static Duration roundNearest(final double quantity, final Duration unit) {
+    return add(
+        unit.times((long) Math.floor(quantity)),
+        EPSILON.times((long) Math.rint((quantity % 1) * unit.dividedBy(EPSILON))));
+  }
+
+  /**
    * Flip the temporal direction of a duration. A duration into the past becomes one into the future, and vice versa.
    *
    * @param duration The duration to negate.
@@ -229,6 +259,24 @@ public final class Duration implements Comparable<Duration> {
     return new Duration(dividend.durationInMicroseconds % divisor.durationInMicroseconds);
   }
 
+  /**
+   * Get the ratio between two durations as a real quantity.
+   *
+   * @param dividend The numerator of the ratio.
+   * @param divisor The denominator of the ratio.
+   * @return The real-valued ratio between the given durations.
+   */
+  public static double ratio(final Duration dividend, final Duration divisor) {
+    // Avoid casting potentially very large quantities to double before division.
+    // We handle the integral part separately before casting.
+    final long integralPart = dividend.durationInMicroseconds / divisor.durationInMicroseconds;
+    final double fractionalPart =
+        ((double) (dividend.durationInMicroseconds % divisor.durationInMicroseconds))
+        / ((double) divisor.durationInMicroseconds);
+
+    return integralPart + fractionalPart;
+  }
+
   /** Obtain the smaller of two durations. */
   public static Duration min(final Duration x, final Duration y) {
     return Collections.min(List.of(x, y));
@@ -291,6 +339,11 @@ public final class Duration implements Comparable<Duration> {
   /** @see Duration#remainder(Duration, Duration) */
   public Duration remainderOf(final long quantity, final Duration unit) {
     return Duration.remainder(this, duration(quantity, unit));
+  }
+
+  /** @see Duration#ratio(Duration, Duration) */
+  public double ratioOver(final Duration unit) {
+    return Duration.ratio(this, unit);
   }
 
   /**

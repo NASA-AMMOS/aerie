@@ -41,6 +41,14 @@ public final class Window {
     return at(Duration.of(quantity, unit));
   }
 
+  public static Window roundOut(final double start, final double end, final Duration unit) {
+    return between(Duration.roundDownward(start, unit), Duration.roundUpward(end, unit));
+  }
+
+  public static Window roundIn(final double start, final double end, final Duration unit) {
+    return between(Duration.roundUpward(start, unit), Duration.roundDownward(end, unit));
+  }
+
   public static final Window EMPTY = new Window(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
   public static final Window FOREVER = new Window(Duration.MIN_VALUE, Duration.MAX_VALUE);
 
