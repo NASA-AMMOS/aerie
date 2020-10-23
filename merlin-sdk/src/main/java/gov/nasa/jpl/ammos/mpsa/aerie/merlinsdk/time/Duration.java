@@ -221,12 +221,12 @@ public final class Duration implements Comparable<Duration> {
   /**
    * Obtain the span of time remaining after dividing one duration by another.
    *
-   * @param divisor The duration to be broken into quantities of the divisor.
-   * @param dividend The duration to break the dividend into multiples of.
+   * @param dividend The duration to be broken into quantities of the divisor.
+   * @param divisor The duration to break the dividend into multiples of.
    * @return The span of time left over.
    */
-  public static Duration remainder(final Duration divisor, final Duration dividend) {
-    return new Duration(divisor.durationInMicroseconds % dividend.durationInMicroseconds);
+  public static Duration remainder(final Duration dividend, final Duration divisor) {
+    return new Duration(dividend.durationInMicroseconds % divisor.durationInMicroseconds);
   }
 
   /** Obtain the smaller of two durations. */
