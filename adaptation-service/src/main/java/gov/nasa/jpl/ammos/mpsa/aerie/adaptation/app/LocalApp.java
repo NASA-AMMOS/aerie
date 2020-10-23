@@ -13,14 +13,20 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import io.javalin.core.util.FileUtil;
+import org.apache.bcel.classfile.JavaClass;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.bcel.classfile.ClassParser;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.jar.JarFile;
 
 /**
  * Implements the plan service {@link App} interface on a set of local domain objects.
@@ -60,6 +66,26 @@ public final class LocalApp implements App {
       throw new Error(ex);
     }
     FileUtil.streamToFile(adaptation.jarSource, path.toString());
+
+    final String adClassStr;
+    try {
+      adClassStr = getImplementingClassName(path, MerlinAdaptation.class);
+    } catch (final IOException ex) {
+      throw new AdaptationRejectedException(ex);
+    }
+
+    try {
+      final var adClass = new ClassParser(path.toString(), getClasspathRelativePath(adClassStr));
+      final var javaAdClass = adClass.parse();
+
+      if (!isClassCompatibleWithThisVM(javaAdClass)) {
+        throw new AdaptationRejectedException(String.format(
+            "Adaptation was compiled with an older Java version. Please compile with Java %d.",
+            Runtime.version().feature()));
+      }
+    } catch (final IOException ex) {
+      throw new AdaptationRejectedException(ex);
+    }
 
     try {
       AdaptationLoader.loadAdaptationProvider(path, adaptation.name, adaptation.version);
@@ -185,6 +211,33 @@ public final class LocalApp implements App {
   public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
     return loadAdaptation(message.adaptationId)
         .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod, message.startTime);
+  }
+
+  private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)
+  throws IOException, AdaptationRejectedException {
+    final var jarFile = new JarFile(jarPath.toFile());
+    final var jarEntry = jarFile.getEntry("META-INF/services/" + javaClass.getCanonicalName());
+    final var inputStream = jarFile.getInputStream(jarEntry);
+
+    final var classPathList = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+        .lines()
+        .collect(Collectors.toList());
+
+    if (classPathList.size() != 1) {
+      throw new AdaptationRejectedException(
+          "Adaptation contains zero/multiple registered implementations of MerlinAdaptation.");
+    }
+
+    return classPathList.get(0);
+  }
+
+  private static String getClasspathRelativePath(final String className) {
+    return className.replaceAll("\\.", "/").concat(".class");
+  }
+
+  private static boolean isClassCompatibleWithThisVM(final JavaClass javaClass) {
+    // Refer to this link https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html
+    return Runtime.version().feature() + 44 >= javaClass.getMajor();
   }
 
   /**
