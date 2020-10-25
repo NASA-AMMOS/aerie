@@ -8,7 +8,8 @@
  *
  * <p>
  *   At any given time, a resource is in a given <b>state</b>, and its time-varying behavior -- its <b>dynamics</b> --
- *   depends only upon that state.
+ *   depends only upon that state. The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource} interface
+ *   defines this relationship between state and dynamics.
  * </p>
  *
  * <p>
@@ -21,6 +22,7 @@
  * <p>
  *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time. A resource, then,
  *   also gives the current extent of validity for its current dynamics.
+ *   The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics} class describes this mechanism.
  * </p>
  *
  * <p>
