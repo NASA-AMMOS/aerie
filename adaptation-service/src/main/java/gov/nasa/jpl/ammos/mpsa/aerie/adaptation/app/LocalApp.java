@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
@@ -208,7 +209,9 @@ public final class LocalApp implements App {
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
    */
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
+  public SimulationResults runSimulation(final CreateSimulationMessage message)
+  throws NoSuchAdaptationException, Adaptation.UnconstructableActivityInstanceException
+  {
     return loadAdaptation(message.adaptationId)
         .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod, message.startTime);
   }

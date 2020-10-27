@@ -13,7 +13,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 
 public final class Main {
-  public static void main(final String[] args) {
+  public static void main(final String[] args) throws SimpleSimulator.InvalidSerializedActivityException {
     final var schedule = List.of(
         Pair.of(duration(0, MILLISECONDS), new SerializedActivity("PeelBanana", Map.of("peelDirection", SerializedValue.of("fromStem")))),
         Pair.of(duration(500, MILLISECONDS), new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(0.5)))),

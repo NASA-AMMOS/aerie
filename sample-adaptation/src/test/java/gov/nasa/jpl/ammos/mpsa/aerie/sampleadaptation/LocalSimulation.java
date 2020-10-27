@@ -32,7 +32,7 @@ public class LocalSimulation {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SimpleSimulator.InvalidSerializedActivityException {
         final var schedule = List.of(
                 Pair.of(Duration.of(0, Duration.SECONDS), new SerializedActivity("RunInstrument",
                         Map.of("durationInSeconds", SerializedValue.of(300),

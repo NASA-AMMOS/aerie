@@ -66,7 +66,7 @@ public final class CapturePanoramaActivityMapper implements ActivityMapper {
                     activity.focusPoint = this.mapper_focusPoint.deserializeValue(entry.getValue()).getSuccessOrThrow();
                     break;
                 default:
-                    throw new RuntimeException("Unknown key `" + entry.getKey() + "`");
+                    return Optional.empty();
             }
         }
 

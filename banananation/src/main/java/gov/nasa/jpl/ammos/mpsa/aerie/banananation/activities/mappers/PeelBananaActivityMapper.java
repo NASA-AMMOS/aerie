@@ -46,7 +46,7 @@ public final class PeelBananaActivityMapper implements ActivityMapper {
           break;
         }
         default:
-          throw new RuntimeException("Unknown key `" + entry.getKey() + "`");
+          return Optional.empty();
       }
     }
 

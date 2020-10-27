@@ -236,7 +236,10 @@ public final class AdaptationBindings implements Plugin {
     } catch (final App.NoSuchAdaptationException ex) {
       // The requested adaptation does not exist.
       ctx.status(404);
-    } catch (final Adaptation.UnconstructableActivityInstanceException | Adaptation.NoSuchActivityTypeException e) {
+    } catch (final Adaptation.UnconstructableActivityInstanceException e) {
+      // The schedule contained an invalid activity instance
+      ctx.status(400).result(ResponseSerializers.serializeUnconstructableActivityInstanceException(e).toString());
+    } catch (final Adaptation.NoSuchActivityTypeException e) {
       // The adaptation could not instantiate the provided activities.
       // TODO: report these failures with a better response body
       ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-activities").build().toString());

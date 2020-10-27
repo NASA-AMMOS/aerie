@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -26,7 +25,7 @@ public final class SimpleSimulator {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     return simulate(adaptation, SimulationTimeline.create(), schedule, startTime, simulationDuration, samplingPeriod);
   }
@@ -40,7 +39,7 @@ public final class SimpleSimulator {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
@@ -59,7 +58,10 @@ public final class SimpleSimulator {
 
       simulator.defer(startDelta, factory.createReplayingTask(
           activityId,
-          mapper.deserializeActivity(serializedInstance).orElseThrow()));
+          mapper.deserializeActivity(serializedInstance)
+                .orElseThrow(
+                    () -> new InvalidSerializedActivityException(activityId, serializedInstance)
+                )));
     }
 
     return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory);
@@ -71,7 +73,7 @@ public final class SimpleSimulator {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     return simulate(
         adaptation,
@@ -91,7 +93,7 @@ public final class SimpleSimulator {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
@@ -103,13 +105,20 @@ public final class SimpleSimulator {
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
-    for (final var entry : instanceList) {
+    for (int i = 0; i < instanceList.size(); i++) {
+      final var identifier = i;
+      final var entry = instanceList.get(i);
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
       simulator.defer(
           startDelta,
-          factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
+          factory.createReplayingTask(
+              mapper
+                  .deserializeActivity(serializedInstance)
+                  .orElseThrow(
+                      () -> new InvalidSerializedActivityException(identifier, serializedInstance)
+                  )));
     }
 
     return simulate(querier, simulator, startTime, simulationDuration, samplingPeriod, factory);
@@ -187,7 +196,7 @@ public final class SimpleSimulator {
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     return simulateToCompletion(adaptation, SimulationTimeline.create(), schedule, startTime, samplingPeriod);
   }
@@ -200,7 +209,7 @@ public final class SimpleSimulator {
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
@@ -219,7 +228,11 @@ public final class SimpleSimulator {
 
       simulator.defer(
           startDelta,
-          factory.createReplayingTask(activityId, mapper.deserializeActivity(serializedInstance).orElseThrow()));
+          factory.createReplayingTask(activityId,
+                                      mapper.deserializeActivity(serializedInstance)
+                                            .orElseThrow(
+                                                () -> new InvalidSerializedActivityException(activityId, serializedInstance)
+                                            )));
     }
 
     return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory);
@@ -230,7 +243,7 @@ public final class SimpleSimulator {
       final List<Pair<Duration, SerializedActivity>> instanceList,
       final Instant startTime,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     return simulateToCompletion(adaptation, SimulationTimeline.create(), instanceList, startTime, samplingPeriod);
   }
@@ -243,7 +256,7 @@ public final class SimpleSimulator {
       final List<Pair<Duration, SerializedActivity>> instanceList,
       final Instant startTime,
       final Duration samplingPeriod
-  )
+  ) throws InvalidSerializedActivityException
   {
     final var mapper = adaptation.getActivityMapper();
     final var querier = adaptation.makeQuerier(database);
@@ -255,13 +268,20 @@ public final class SimpleSimulator {
     final var simulator = new SimulationEngine<>(database.origin());
 
     // Enqueue all scheduled activities
-    for (final var entry : instanceList) {
+    for (int i = 0; i < instanceList.size(); i++) {
+      final var identifier = i;
+      final var entry = instanceList.get(i);
       final var startDelta = entry.getLeft();
       final var serializedInstance = entry.getRight();
 
       simulator.defer(
           startDelta,
-          factory.createReplayingTask(mapper.deserializeActivity(serializedInstance).orElseThrow()));
+          factory.createReplayingTask(
+              mapper
+                  .deserializeActivity(serializedInstance)
+                  .orElseThrow(
+                      () -> new InvalidSerializedActivityException(identifier, serializedInstance)
+                  )));
     }
 
     return simulateToCompletion(querier, simulator, startTime, samplingPeriod, factory);
@@ -314,5 +334,20 @@ public final class SimpleSimulator {
     }
 
     return results;
+  }
+
+  public static final class InvalidSerializedActivityException extends Exception {
+    public final String identifier;
+    public final SerializedActivity serializedActivity;
+
+    public InvalidSerializedActivityException(final String identifier, final SerializedActivity serializedActivity) {
+      super(String.format("Invalid activity {} with identifier \"{}\"", serializedActivity.getTypeName(), identifier));
+      this.identifier = identifier;
+      this.serializedActivity = serializedActivity;
+    }
+
+    public InvalidSerializedActivityException(final int identifier, final SerializedActivity serializedActivity) {
+      this(identifier + "", serializedActivity);
+    }
   }
 }
