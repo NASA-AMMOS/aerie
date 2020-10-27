@@ -4,6 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.AbstractMerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events.SimulationEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -30,7 +31,7 @@ public class Banananation extends AbstractMerlinAdaptation<BananaEvent> {
   }
 
   @Override
-  public <T> Querier<T, BananaEvent> makeQuerier(final SimulationTimeline<T, BananaEvent> database) {
+  public <T> Querier<T, SimulationEvent<BananaEvent>> makeQuerier(final SimulationTimeline<T, SimulationEvent<BananaEvent>> database) {
     return new BananaQuerier<>(this.getActivityMapper(), database);
   }
 }
