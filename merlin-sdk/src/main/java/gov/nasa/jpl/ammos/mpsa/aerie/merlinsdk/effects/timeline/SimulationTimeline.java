@@ -60,7 +60,7 @@ public final class SimulationTimeline<T, Event> {
     return new History<>(this, null, START_INDEX);
   }
 
-  public <ModelType, Effect> Query<T, Event, ModelType> register(
+  public <ModelType, Effect> Query<T, ModelType> register(
       final Projection<Event, Effect> projection,
       final Applicator<Effect, ModelType> applicator)
   {
@@ -68,7 +68,7 @@ public final class SimulationTimeline<T, Event> {
   }
 
   public <Effect, ModelType extends Model<Effect, ModelType>>
-  Query<T, Event, ModelType> register(final ModelType initialState, final Function<Event, Effect> interpreter) {
+  Query<T, ModelType> register(final ModelType initialState, final Function<Event, Effect> interpreter) {
     return this.register(
         Projection.from(initialState.effectTrait(), interpreter),
         new ModelApplicator<>(initialState));

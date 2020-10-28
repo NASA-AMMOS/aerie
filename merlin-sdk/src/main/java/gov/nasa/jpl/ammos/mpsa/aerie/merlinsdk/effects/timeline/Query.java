@@ -17,14 +17,13 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Simulatio
  * </p>
  *
  * @param <Scope> The abstract type of the timeline owning the time points to step over.
- * @param <Event> The type of events that may occur over the timeline.
  * @param <Model> The type of entity produced by this query.
  */
-public final class Query<Scope, Event, Model> {
-  private final InnerQuery<Scope, Event, Model, ?> query;
+public final class Query<Scope, Model> {
+  private final InnerQuery<Scope, Model, ?, ?> query;
 
   /* package-local */
-  <Effect> Query(
+  <Event, Effect> Query(
       final SimulationTimeline<Scope, Event> database,
       final Projection<Event, Effect> projection,
       final Applicator<Effect, Model> applicator
@@ -38,11 +37,11 @@ public final class Query<Scope, Event, Model> {
    * @param history The time to perform the query at.
    * @return The value associated with this query at the given time.
    */
-  public Model getAt(final History<Scope, Event> history) {
+  public Model getAt(final History<Scope, ?> history) {
     return this.query.getAt(history);
   }
 
-  private static final class InnerQuery<Scope, Event, Model, Effect> {
+  private static final class InnerQuery<Scope, Model, Effect, Event> {
     private final SimulationTimeline<Scope, Event> database;
     private final Projection<Event, Effect> projection;
     private final Applicator<Effect, Model> applicator;
@@ -59,7 +58,7 @@ public final class Query<Scope, Event, Model> {
       this.applicator = applicator;
     }
 
-    public Model getAt(final History<Scope, Event> history) {
+    public Model getAt(final History<Scope, ?> history) {
       // If we already have a model cached for this time point, we can just bail now.
       if (history.getIndex() == START_INDEX) {
         return this.applicator.initial();

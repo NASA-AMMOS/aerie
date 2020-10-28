@@ -50,9 +50,9 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Simul
   private final ActivityMapper activityMapper;
 
   private final Set<String> stateNames = new HashSet<>();
-  private final Map<String, Query<T, SimulationEvent<BananaEvent>, RegisterState<SerializedValue>>> settables = new HashMap<>();
-  private final Map<String, Query<T, SimulationEvent<BananaEvent>, RegisterState<Double>>> cumulables = new HashMap<>();
-  private final Query<T, SimulationEvent<BananaEvent>, ActivityModel> activityModel;
+  private final Map<String, Query<T, RegisterState<SerializedValue>>> settables = new HashMap<>();
+  private final Map<String, Query<T, RegisterState<Double>>> cumulables = new HashMap<>();
+  private final Query<T, ActivityModel> activityModel;
 
   public BananaQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, SimulationEvent<BananaEvent>> timeline) {
     this.activityMapper = activityMapper;

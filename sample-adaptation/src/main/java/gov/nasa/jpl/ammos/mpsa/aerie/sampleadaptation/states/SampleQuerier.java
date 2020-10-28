@@ -58,12 +58,12 @@ public class SampleQuerier<T> implements MerlinAdaptation.Querier<T, SimulationE
     // Maintain a map of Query objects for each state (by name)
     // This allows queries on states to be tracked and cached for convenience
     private final Set<String> stateNames = new HashSet<>();
-    private final Map<String, Query<T, SimulationEvent<SampleEvent>, RegisterState<SerializedValue>>> settables = new HashMap<>();
-    private final Map<String, Query<T, SimulationEvent<SampleEvent>, RegisterState<Double>>> cumulables = new HashMap<>();
+    private final Map<String, Query<T, RegisterState<SerializedValue>>> settables = new HashMap<>();
+    private final Map<String, Query<T, RegisterState<Double>>> cumulables = new HashMap<>();
 
     // Model the durations of (and relationships between) activities.
     private final ActivityMapper activityMapper;
-    private final Query<T, SimulationEvent<SampleEvent>, ActivityModel> activityModel;
+    private final Query<T, ActivityModel> activityModel;
 
     public SampleQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, SimulationEvent<SampleEvent>> timeline) {
         this.activityMapper = activityMapper;
