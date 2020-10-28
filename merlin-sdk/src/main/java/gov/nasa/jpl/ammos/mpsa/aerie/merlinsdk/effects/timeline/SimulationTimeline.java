@@ -60,11 +60,18 @@ public final class SimulationTimeline<T, Event> {
     return new History<>(this, null, START_INDEX);
   }
 
-  public <Model, Effect> Query<T, Event, Model> register(
+  public <ModelType, Effect> Query<T, Event, ModelType> register(
       final Projection<Event, Effect> projection,
-      final Applicator<Effect, Model> applicator
-  ) {
+      final Applicator<Effect, ModelType> applicator)
+  {
     return new Query<>(this, projection, applicator);
+  }
+
+  public <Effect, ModelType extends Model<Effect, ModelType>>
+  Query<T, Event, ModelType> register(final ModelType initialState, final Function<Event, Effect> interpreter) {
+    return this.register(
+        Projection.from(initialState.effectTrait(), interpreter),
+        new ModelApplicator<>(initialState));
   }
 
   /* package-local */
@@ -100,8 +107,8 @@ public final class SimulationTimeline<T, Event> {
       final EffectTrait<Effect> trait,
       final Function<Event, Effect> substitution,
       final int startTime,
-      final int endTime
-  ) {
+      final int endTime)
+  {
     // NOTE: In principle, we can determine the maximum size of the path stack.
     //   Whenever two time points are joined, increment a counter on the resulting time point.
     //   This counter can then be used to allocate a stack of just the right size.
