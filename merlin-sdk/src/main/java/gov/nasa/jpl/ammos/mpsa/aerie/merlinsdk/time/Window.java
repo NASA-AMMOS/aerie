@@ -83,6 +83,38 @@ public final class Window {
     return new Window(Duration.min(x.start, y.start), Duration.max(x.end, y.end));
   }
 
+  /**
+   * Returns the largest window containing `self` but not `other`.
+   */
+  public static Window subtract(final Window self, final Window other) {
+    if (other.end.shorterThan(other.start)) {
+      // Trivial intersection: nothing to subtract.
+      return other;
+    } else if (self.end.shorterThan(self.start)) {
+      // Trivial intersection: subtract everything! (Of which there are no things.)
+      return self;
+    } else if (self.end.shorterThan(other.start) || other.end.shorterThan(self.start)) {
+      // Trivial intersections: no overlap.
+      return self;
+    } else {
+      // The intervals non-trivially intersect.
+      if (self.start.shorterThan(other.start) && other.end.shorterThan(self.end)) {
+        // This interval fully contains the other, splitting into two disjoint intervals.
+        // The largest interval containing these intervals is the empty interval.
+        return Window.EMPTY;
+      } else if (!other.start.longerThan(self.start) && !self.start.longerThan(other.end) && other.end.shorterThan(self.end)) {
+        // This interval is cut on the left by the other.
+        return Window.between(other.end.plus(Duration.EPSILON), self.end);
+      } else if (self.start.shorterThan(other.start) && !other.start.longerThan(self.end) && !self.end.longerThan(other.end)) {
+        // This interval is cut on the right by the other.
+        return Window.between(self.start, other.start.minus(Duration.EPSILON));
+      } else /* other.start <= self.start && this.end <= other.end */ {
+        // This interval is fully contained by the other.
+        return Window.EMPTY;
+      }
+    }
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (!(o instanceof Window)) return false;
