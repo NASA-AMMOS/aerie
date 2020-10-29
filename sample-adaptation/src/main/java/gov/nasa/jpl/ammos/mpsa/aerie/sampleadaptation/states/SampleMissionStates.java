@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.SettableState;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.typemappers.Vector3DValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events.SimulationEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityTypeStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.Constraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
@@ -23,7 +24,8 @@ public final class SampleMissionStates {
 
     // Create IndependentStateFactory to create states from
     // Second parameter tells the factory that events should be emitted as independent events, defined in our SampleEvent
-    public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(SampleEvent.independent(ev)));
+    public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(
+        SimulationEvent.ofAdaptationEvent(SampleEvent.independent(ev))));
 
     // TODO: Currently batteryCapacity is used, but never recharged
     public static final DoubleState batteryCapacity = factory.cumulative("batteryCapacity", Config.initialBatteryCapacity);
