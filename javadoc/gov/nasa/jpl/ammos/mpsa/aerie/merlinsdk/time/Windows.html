@@ -193,10 +193,9 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#add(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">add</a></span>&#8203;(long&nbsp;startQuantity,
-   <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-   long&nbsp;endQuantity,
-   <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#add(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">add</a></span>&#8203;(long&nbsp;start,
+   long&nbsp;end,
+   <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
@@ -233,10 +232,9 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#includes(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">includes</a></span>&#8203;(long&nbsp;startQuantity,
-        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-        long&nbsp;endQuantity,
-        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#includes(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">includes</a></span>&#8203;(long&nbsp;start,
+        long&nbsp;end,
+        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
@@ -263,10 +261,9 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 </tr>
 <tr id="i12" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersectWith(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">intersectWith</a></span>&#8203;(long&nbsp;startQuantity,
-             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-             long&nbsp;endQuantity,
-             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersectWith(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">intersectWith</a></span>&#8203;(long&nbsp;start,
+             long&nbsp;end,
+             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i13" class="rowColor">
@@ -303,10 +300,9 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 </tr>
 <tr id="i19" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">subtract</a></span>&#8203;(long&nbsp;startQuantity,
-        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-        long&nbsp;endQuantity,
-        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">subtract</a></span>&#8203;(long&nbsp;start,
+        long&nbsp;end,
+        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i20" class="altColor">
@@ -428,6 +424,15 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <pre class="methodSignature">public&nbsp;void&nbsp;add&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;window)</pre>
 </li>
 </ul>
+<a id="addAll(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>addAll</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;addAll&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
+</li>
+</ul>
 <a id="add(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
@@ -438,16 +443,15 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
                 <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
-<a id="add(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="add(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>add</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;add&#8203;(long&nbsp;startQuantity,
-                <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-                long&nbsp;endQuantity,
-                <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</pre>
+<pre class="methodSignature">public&nbsp;void&nbsp;add&#8203;(long&nbsp;start,
+                long&nbsp;end,
+                <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="addPoint(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
@@ -458,15 +462,6 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <h4>addPoint</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;addPoint&#8203;(long&nbsp;quantity,
                      <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
-</li>
-</ul>
-<a id="addAll(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>addAll</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;addAll&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
 </li>
 </ul>
 <a id="union(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
@@ -488,6 +483,15 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <pre class="methodSignature">public&nbsp;void&nbsp;subtract&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;window)</pre>
 </li>
 </ul>
+<a id="subtractAll(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>subtractAll</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;subtractAll&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
+</li>
+</ul>
 <a id="subtract(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
@@ -498,16 +502,15 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
                      <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
-<a id="subtract(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="subtract(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>subtract</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;subtract&#8203;(long&nbsp;startQuantity,
-                     <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-                     long&nbsp;endQuantity,
-                     <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</pre>
+<pre class="methodSignature">public&nbsp;void&nbsp;subtract&#8203;(long&nbsp;start,
+                     long&nbsp;end,
+                     <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="subtractPoint(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
@@ -518,15 +521,6 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <h4>subtractPoint</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;subtractPoint&#8203;(long&nbsp;quantity,
                           <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
-</li>
-</ul>
-<a id="subtractAll(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>subtractAll</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;subtractAll&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
 </li>
 </ul>
 <a id="minus(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
@@ -548,6 +542,15 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;window)</pre>
 </li>
 </ul>
+<a id="intersectWith(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>intersectWith</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
+</li>
+</ul>
 <a id="intersectWith(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
@@ -558,25 +561,15 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
                           <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
-<a id="intersectWith(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="intersectWith(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>intersectWith</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(long&nbsp;startQuantity,
-                          <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-                          long&nbsp;endQuantity,
-                          <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</pre>
-</li>
-</ul>
-<a id="intersectWith(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>intersectWith</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
+<pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(long&nbsp;start,
+                          long&nbsp;end,
+                          <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="intersection(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows)">
@@ -598,28 +591,6 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <pre class="methodSignature">public&nbsp;boolean&nbsp;isEmpty()</pre>
 </li>
 </ul>
-<a id="includes(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>includes</h4>
-<pre class="methodSignature">public&nbsp;boolean&nbsp;includes&#8203;(long&nbsp;startQuantity,
-                        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-                        long&nbsp;endQuantity,
-                        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</pre>
-</li>
-</ul>
-<a id="includesPoint(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>includesPoint</h4>
-<pre class="methodSignature">public&nbsp;boolean&nbsp;includesPoint&#8203;(long&nbsp;quantity,
-                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
-</li>
-</ul>
 <a id="includes(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window)">
 <!--   -->
 </a>
@@ -636,6 +607,27 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <li class="blockList">
 <h4>includes</h4>
 <pre class="methodSignature">public&nbsp;boolean&nbsp;includes&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Windows</a>&nbsp;other)</pre>
+</li>
+</ul>
+<a id="includes(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>includes</h4>
+<pre class="methodSignature">public&nbsp;boolean&nbsp;includes&#8203;(long&nbsp;start,
+                        long&nbsp;end,
+                        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+</li>
+</ul>
+<a id="includesPoint(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>includesPoint</h4>
+<pre class="methodSignature">public&nbsp;boolean&nbsp;includesPoint&#8203;(long&nbsp;quantity,
+                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="iterator()">

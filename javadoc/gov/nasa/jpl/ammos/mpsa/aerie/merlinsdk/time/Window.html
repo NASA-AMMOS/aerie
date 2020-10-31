@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":10,"i5":10,"i6":10,"i7":9,"i8":10,"i9":10,"i10":9,"i11":10,"i12":10,"i13":9,"i14":9};
+var data = {"i0":9,"i1":9,"i2":9,"i3":9,"i4":10,"i5":10,"i6":10,"i7":9,"i8":10,"i9":10,"i10":9,"i11":10,"i12":9,"i13":9,"i14":9,"i15":10,"i16":9,"i17":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -204,10 +204,9 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#between(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">between</a></span>&#8203;(long&nbsp;startQuantity,
-       <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-       long&nbsp;endQuantity,
-       <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#between(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">between</a></span>&#8203;(long&nbsp;start,
+       long&nbsp;end,
+       <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
@@ -263,19 +262,40 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i12" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#toString()">toString</a></span>()</code></th>
+<td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#roundIn(double,double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">roundIn</a></span>&#8203;(double&nbsp;start,
+       double&nbsp;end,
+       <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i13" class="rowColor">
 <td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#window(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">window</a></span>&#8203;(long&nbsp;startQuantity,
-      <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-      long&nbsp;endQuantity,
-      <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#roundOut(double,double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">roundOut</a></span>&#8203;(double&nbsp;start,
+        double&nbsp;end,
+        <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i14" class="altColor">
+<td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window)">subtract</a></span>&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;self,
+        <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;other)</code></th>
+<td class="colLast">
+<div class="block">Returns the largest window containing `self` but not `other`.</div>
+</td>
+</tr>
+<tr id="i15" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#toString()">toString</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i16" class="altColor">
+<td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#window(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">window</a></span>&#8203;(long&nbsp;start,
+      long&nbsp;end,
+      <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#window(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">window</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;start,
       <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;end)</code></th>
@@ -361,16 +381,15 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
                              <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
-<a id="between(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="between(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>between</h4>
-<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;between&#8203;(long&nbsp;startQuantity,
-                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-                             long&nbsp;endQuantity,
-                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</pre>
+<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;between&#8203;(long&nbsp;start,
+                             long&nbsp;end,
+                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="window(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
@@ -383,16 +402,15 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
-<a id="window(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="window(long,long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>window</h4>
-<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;window&#8203;(long&nbsp;startQuantity,
-                            <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;startUnit,
-                            long&nbsp;endQuantity,
-                            <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;endUnit)</pre>
+<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;window&#8203;(long&nbsp;start,
+                            long&nbsp;end,
+                            <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="at(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
@@ -412,6 +430,28 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>at</h4>
 <pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;at&#8203;(long&nbsp;quantity,
                         <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+</li>
+</ul>
+<a id="roundOut(double,double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>roundOut</h4>
+<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;roundOut&#8203;(double&nbsp;start,
+                              double&nbsp;end,
+                              <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+</li>
+</ul>
+<a id="roundIn(double,double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>roundIn</h4>
+<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;roundIn&#8203;(double&nbsp;start,
+                             double&nbsp;end,
+                             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="isEmpty()">
@@ -470,6 +510,17 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;leastUpperBound&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;x,
                                      <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;y)</pre>
 <div class="block">Returns the smallest window containing both `x` and `y`.</div>
+</li>
+</ul>
+<a id="subtract(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>subtract</h4>
+<pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;subtract&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;self,
+                              <a href="Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&nbsp;other)</pre>
+<div class="block">Returns the largest window containing `self` but not `other`.</div>
 </li>
 </ul>
 <a id="equals(java.lang.Object)">

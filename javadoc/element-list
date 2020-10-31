@@ -9,6 +9,9 @@ gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities
+gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources
+gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete
+gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time

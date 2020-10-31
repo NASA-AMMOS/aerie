@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":9,"i1":9,"i2":10,"i3":9,"i4":10,"i5":10,"i6":9,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":9,"i14":9,"i15":10,"i16":10,"i17":9,"i18":9,"i19":9,"i20":10,"i21":10,"i22":9,"i23":10,"i24":10,"i25":10,"i26":9,"i27":10,"i28":10};
+var data = {"i0":9,"i1":9,"i2":10,"i3":9,"i4":10,"i5":10,"i6":9,"i7":10,"i8":10,"i9":10,"i10":10,"i11":10,"i12":10,"i13":9,"i14":9,"i15":10,"i16":10,"i17":9,"i18":9,"i19":9,"i20":10,"i21":10,"i22":9,"i23":10,"i24":9,"i25":10,"i26":10,"i27":9,"i28":9,"i29":9,"i30":10,"i31":9,"i32":10,"i33":10};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -519,32 +519,72 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i22" class="altColor">
+<td class="colFirst"><code>static double</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ratio(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">ratio</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;dividend,
+     <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;divisor)</code></th>
+<td class="colLast">
+<div class="block">Get the ratio between two durations as a real quantity.</div>
+</td>
+</tr>
+<tr id="i23" class="rowColor">
+<td class="colFirst"><code>double</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ratioOver(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">ratioOver</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i24" class="altColor">
 <td class="colFirst"><code>static <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#remainder(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">remainder</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;divisor,
-         <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;dividend)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#remainder(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">remainder</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;dividend,
+         <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;divisor)</code></th>
 <td class="colLast">
 <div class="block">Obtain the span of time remaining after dividing one duration by another.</div>
 </td>
 </tr>
-<tr id="i23" class="rowColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code><a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#remainderOf(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">remainderOf</a></span>&#8203;(long&nbsp;quantity,
            <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i24" class="altColor">
+<tr id="i26" class="altColor">
 <td class="colFirst"><code><a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#remainderOf(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">remainderOf</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i25" class="rowColor">
+<tr id="i27" class="rowColor">
+<td class="colFirst"><code>static <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#roundDownward(double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">roundDownward</a></span>&#8203;(double&nbsp;quantity,
+             <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<td class="colLast">
+<div class="block">Construct a duration in terms of a real quantity of some unit,
+ rounding to the nearest representable value below.</div>
+</td>
+</tr>
+<tr id="i28" class="altColor">
+<td class="colFirst"><code>static <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#roundNearest(double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">roundNearest</a></span>&#8203;(double&nbsp;quantity,
+            <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<td class="colLast">
+<div class="block">Construct a duration in terms of a real quantity of some unit,
+ rounding to the nearest representable value.</div>
+</td>
+</tr>
+<tr id="i29" class="rowColor">
+<td class="colFirst"><code>static <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#roundUpward(double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">roundUpward</a></span>&#8203;(double&nbsp;quantity,
+           <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<td class="colLast">
+<div class="block">Construct a duration in terms of a real quantity of some unit,
+ rounding to the nearest representable value above.</div>
+</td>
+</tr>
+<tr id="i30" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#shorterThan(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">shorterThan</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;other)</code></th>
 <td class="colLast">
 <div class="block">Determine whether this duration is shorter than another.</div>
 </td>
 </tr>
-<tr id="i26" class="altColor">
+<tr id="i31" class="rowColor">
 <td class="colFirst"><code>static <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">subtract</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;left,
         <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;right)</code></th>
@@ -552,12 +592,12 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <div class="block">Subtract one duration from another.</div>
 </td>
 </tr>
-<tr id="i27" class="rowColor">
+<tr id="i32" class="altColor">
 <td class="colFirst"><code><a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#times(long)">times</a></span>&#8203;(long&nbsp;scalar)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i28" class="altColor">
+<tr id="i33" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#toString()">toString</a></span>()</code></th>
 <td class="colLast">
@@ -780,6 +820,42 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
  </p></div>
 </li>
 </ul>
+<a id="roundUpward(double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>roundUpward</h4>
+<pre class="methodSignature">public static&nbsp;<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;roundUpward&#8203;(double&nbsp;quantity,
+                                   <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+<div class="block">Construct a duration in terms of a real quantity of some unit,
+ rounding to the nearest representable value above.</div>
+</li>
+</ul>
+<a id="roundDownward(double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>roundDownward</h4>
+<pre class="methodSignature">public static&nbsp;<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;roundDownward&#8203;(double&nbsp;quantity,
+                                     <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+<div class="block">Construct a duration in terms of a real quantity of some unit,
+ rounding to the nearest representable value below.</div>
+</li>
+</ul>
+<a id="roundNearest(double,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>roundNearest</h4>
+<pre class="methodSignature">public static&nbsp;<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;roundNearest&#8203;(double&nbsp;quantity,
+                                    <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+<div class="block">Construct a duration in terms of a real quantity of some unit,
+ rounding to the nearest representable value.</div>
+</li>
+</ul>
 <a id="negate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
@@ -886,15 +962,33 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <ul class="blockList">
 <li class="blockList">
 <h4>remainder</h4>
-<pre class="methodSignature">public static&nbsp;<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;remainder&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;divisor,
-                                 <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;dividend)</pre>
+<pre class="methodSignature">public static&nbsp;<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;remainder&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;dividend,
+                                 <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;divisor)</pre>
 <div class="block">Obtain the span of time remaining after dividing one duration by another.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>divisor</code> - The duration to be broken into quantities of the divisor.</dd>
-<dd><code>dividend</code> - The duration to break the dividend into multiples of.</dd>
+<dd><code>dividend</code> - The duration to be broken into quantities of the divisor.</dd>
+<dd><code>divisor</code> - The duration to break the dividend into multiples of.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>The span of time left over.</dd>
+</dl>
+</li>
+</ul>
+<a id="ratio(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ratio</h4>
+<pre class="methodSignature">public static&nbsp;double&nbsp;ratio&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;dividend,
+                           <a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;divisor)</pre>
+<div class="block">Get the ratio between two durations as a real quantity.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>dividend</code> - The numerator of the ratio.</dd>
+<dd><code>divisor</code> - The denominator of the ratio.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The real-valued ratio between the given durations.</dd>
 </dl>
 </li>
 </ul>
@@ -1064,6 +1158,19 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <dl>
 <dt><span class="seeLabel">See Also:</span></dt>
 <dd><a href="#remainder(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)"><code>remainder(Duration, Duration)</code></a></dd>
+</dl>
+</li>
+</ul>
+<a id="ratioOver(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>ratioOver</h4>
+<pre class="methodSignature">public&nbsp;double&nbsp;ratioOver&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+<dl>
+<dt><span class="seeLabel">See Also:</span></dt>
+<dd><a href="#ratio(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)"><code>ratio(Duration, Duration)</code></a></dd>
 </dl>
 </li>
 </ul>
