@@ -83,30 +83,41 @@ public class IntervalSet<Alg, I> {
   private void subtractAll(final Iterable<I> other) {
     int index = 0;
 
+    // We'll notate each `window` by <> and `this.intervals.get(index)` by [].
     for (final var window : other) {
       // Look for the first window ending at or after this one starts.
+      // Skip these cases: --[---]---<--->--
       while (index < this.intervals.size() && this.alg.endsBefore(this.intervals.get(index), window)) {
         index += 1;
       }
 
       // Clip the window at the start of this range.
+      // Handle these cases: --[---<---]--->-- and --[---<--->---]--
+      // Replace them with:  --[--]----------- and --[--]-----[--]--
       if (index < this.intervals.size() && this.alg.startsBefore(this.intervals.get(index), window)) {
         final var prefix = this.alg.intersect(this.intervals.get(index), this.alg.lowerBoundsOf(window));
         final var suffix = this.alg.intersect(this.intervals.get(index), this.alg.upperBoundsOf(window));
 
         this.intervals.set(index, prefix);
         index += 1;
+
         if (!this.alg.isEmpty(suffix)) this.intervals.add(index, suffix);
+        // The suffix might also be clipped by the next window.
       }
 
       // Remove any windows contained by this window.
+      // Handle these cases: --<---[---]--->--
+      // Replace them with:  -----------------
       while (index < this.intervals.size() && !this.alg.endsAfter(this.intervals.get(index), window)) {
         this.intervals.remove(index);
       }
 
       // Clip the window at the end of this range.
+      // Handle these cases: --<---[--->---]--
+      // Replace them with:  -----------[--]--
       if (index < this.intervals.size() && !this.alg.startsAfter(this.intervals.get(index), window)) {
         this.intervals.set(index, this.alg.intersect(this.intervals.get(index), this.alg.upperBoundsOf(window)));
+        // This interval might also be clipped by the next window.
       }
     }
   }
