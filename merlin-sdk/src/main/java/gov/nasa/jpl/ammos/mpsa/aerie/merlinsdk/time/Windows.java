@@ -163,11 +163,6 @@ public final class Windows implements Iterable<Window> {
     }
 
     @Override
-    public Window subtract(final Window x, final Window y) {
-      return Window.subtract(x, y);
-    }
-
-    @Override
     public Window lowerBoundsOf(final Window x) {
       return Window.between(
           Duration.MIN_VALUE,

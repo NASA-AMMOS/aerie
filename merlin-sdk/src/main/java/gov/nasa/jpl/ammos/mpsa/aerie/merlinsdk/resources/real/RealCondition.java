@@ -117,12 +117,6 @@ public final class RealCondition {
   }
 
   private static class ClosedIntervalAlgebra implements IntervalAlgebra<ClosedIntervalAlgebra, ClosedInterval> {
-    private ClosedIntervalAlgebra() {}
-
-    public ClosedIntervalAlgebra create() {
-      return new ClosedIntervalAlgebra();
-    }
-
     @Override
     public boolean isEmpty(final ClosedInterval x) {
       return x.isEmpty();
@@ -136,11 +130,6 @@ public final class RealCondition {
     @Override
     public ClosedInterval intersect(final ClosedInterval x, final ClosedInterval y) {
       return ClosedInterval.greatestLowerBound(x, y);
-    }
-
-    @Override
-    public ClosedInterval subtract(final ClosedInterval x, final ClosedInterval y) {
-      return x.minus(y);
     }
 
     @Override
@@ -199,26 +188,6 @@ public final class RealCondition {
       if (y.min < x.min) return Relation.RightOverhang;
 
       return Relation.Contains;
-    }
-
-    @Override
-    public boolean overlaps(final ClosedInterval x, final ClosedInterval y) {
-      return x.overlaps(y);
-    }
-
-    @Override
-    public boolean contains(final ClosedInterval outer, final ClosedInterval inner) {
-      return outer.contains(inner);
-    }
-
-    @Override
-    public boolean startsBefore(final ClosedInterval x, final ClosedInterval y) {
-      return x.min < y.min;
-    }
-
-    @Override
-    public boolean endsBefore(final ClosedInterval x, final ClosedInterval y) {
-      return x.max < y.min;
     }
   }
 }

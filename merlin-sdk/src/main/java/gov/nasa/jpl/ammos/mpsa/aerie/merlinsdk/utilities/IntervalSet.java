@@ -106,7 +106,7 @@ public class IntervalSet<Alg, I> {
 
       // Clip the window at the end of this range.
       if (index < this.intervals.size() && !this.alg.startsAfter(this.intervals.get(index), window)) {
-        this.intervals.set(index, this.alg.subtract(this.intervals.get(index), window));
+        this.intervals.set(index, this.alg.intersect(this.intervals.get(index), this.alg.upperBoundsOf(window)));
       }
     }
   }
