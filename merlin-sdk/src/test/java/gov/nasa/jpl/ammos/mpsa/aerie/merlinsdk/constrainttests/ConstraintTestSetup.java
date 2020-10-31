@@ -13,16 +13,16 @@ import static org.junit.Assert.assertTrue;
 
 public class ConstraintTestSetup {
 
-  public static Window a = window(0, Duration.SECONDS, 3, Duration.SECONDS);
-  public static Window b = window(5, Duration.SECONDS, 8, Duration.SECONDS);
-  public static Window c = window(11, Duration.SECONDS, 15, Duration.SECONDS);
-  public static Window d = window(20, Duration.SECONDS, 25, Duration.SECONDS);
-  public static Window e = window(27, Duration.SECONDS, 29, Duration.SECONDS);
+  public static Window a = window(0, 3, Duration.SECONDS);
+  public static Window b = window(5, 8, Duration.SECONDS);
+  public static Window c = window(11, 15, Duration.SECONDS);
+  public static Window d = window(20, 25, Duration.SECONDS);
+  public static Window e = window(27, 29, Duration.SECONDS);
 
-  public static Window alpha = window(6, Duration.SECONDS, 10, Duration.SECONDS);
-  public static Window beta = window(11, Duration.SECONDS, 15, Duration.SECONDS);
-  public static Window gamma = window(17, Duration.SECONDS, 18, Duration.SECONDS);
-  public static Window delta = window(21, Duration.SECONDS, 27, Duration.SECONDS);
+  public static Window alpha = window(6, 10, Duration.SECONDS);
+  public static Window beta = window(11, 15, Duration.SECONDS);
+  public static Window gamma = window(17, 18, Duration.SECONDS);
+  public static Window delta = window(21, 27, Duration.SECONDS);
 
   public static String actA = "actA";
   public static String actB = "actB";

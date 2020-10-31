@@ -21,16 +21,16 @@ public final class Window {
     return new Window(start, end);
   }
 
-  public static Window between(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    return between(Duration.of(startQuantity, startUnit), Duration.of(endQuantity, endUnit));
+  public static Window between(final long start, final long end, final Duration unit) {
+    return between(Duration.of(start, unit), Duration.of(end, unit));
   }
 
   public static Window window(final Duration start, final Duration end) {
     return between(start, end);
   }
 
-  public static Window window(final long startQuantity, final Duration startUnit, final long endQuantity, final Duration endUnit) {
-    return between(startQuantity, startUnit, endQuantity, endUnit);
+  public static Window window(final long start, final long end, final Duration unit) {
+    return between(start, end, unit);
   }
 
   public static Window at(final Duration point) {
@@ -39,6 +39,14 @@ public final class Window {
 
   public static Window at(final long quantity, final Duration unit) {
     return at(Duration.of(quantity, unit));
+  }
+
+  public static Window roundOut(final double start, final double end, final Duration unit) {
+    return between(Duration.roundDownward(start, unit), Duration.roundUpward(end, unit));
+  }
+
+  public static Window roundIn(final double start, final double end, final Duration unit) {
+    return between(Duration.roundUpward(start, unit), Duration.roundDownward(end, unit));
   }
 
   public static final Window EMPTY = new Window(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
@@ -73,6 +81,38 @@ public final class Window {
    */
   public static Window leastUpperBound(final Window x, final Window y) {
     return new Window(Duration.min(x.start, y.start), Duration.max(x.end, y.end));
+  }
+
+  /**
+   * Returns the largest window containing `self` but not `other`.
+   */
+  public static Window subtract(final Window self, final Window other) {
+    if (other.end.shorterThan(other.start)) {
+      // Trivial intersection: nothing to subtract.
+      return other;
+    } else if (self.end.shorterThan(self.start)) {
+      // Trivial intersection: subtract everything! (Of which there are no things.)
+      return self;
+    } else if (self.end.shorterThan(other.start) || other.end.shorterThan(self.start)) {
+      // Trivial intersections: no overlap.
+      return self;
+    } else {
+      // The intervals non-trivially intersect.
+      if (self.start.shorterThan(other.start) && other.end.shorterThan(self.end)) {
+        // This interval fully contains the other, splitting into two disjoint intervals.
+        // The largest interval containing these intervals is the empty interval.
+        return Window.EMPTY;
+      } else if (!other.start.longerThan(self.start) && !self.start.longerThan(other.end) && other.end.shorterThan(self.end)) {
+        // This interval is cut on the left by the other.
+        return Window.between(other.end.plus(Duration.EPSILON), self.end);
+      } else if (self.start.shorterThan(other.start) && !other.start.longerThan(self.end) && !self.end.longerThan(other.end)) {
+        // This interval is cut on the right by the other.
+        return Window.between(self.start, other.start.minus(Duration.EPSILON));
+      } else /* other.start <= self.start && this.end <= other.end */ {
+        // This interval is fully contained by the other.
+        return Window.EMPTY;
+      }
+    }
   }
 
   @Override

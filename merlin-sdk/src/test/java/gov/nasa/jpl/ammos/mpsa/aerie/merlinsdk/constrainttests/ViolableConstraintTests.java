@@ -15,7 +15,7 @@ public class ViolableConstraintTests {
 
     var windows = ConstraintTestSetup.violableConstraint.getWindows();
     Windows expected = new Windows();
-    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
+    expected.add(0, 3, Duration.SECONDS);
     assertEquals(windows, expected);
 
     assertEquals(ConstraintTestSetup.violableConstraint.id, ConstraintTestSetup.constraintID);

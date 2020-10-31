@@ -1,9 +1,5 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
-
-import java.util.Objects;
-
 /**
- * A description of a time-dependent behavior for resources which do not vary continuously.
+ * Definitions for simulating and solving over resources which do not vary continuously.
  *
  * <p>
  *   In general, a dynamics gives an embedding of an interval of time into a space of values.
@@ -18,7 +14,7 @@ import java.util.Objects;
  * </p>
  *
  * <p>
- *   For an arbitrary type {@link T}, we want our conditions to be finite sets.
+ *   For an arbitrary type {@code T}, we want our conditions to be finite sets.
  *   The appropriate space for such a type is the <i>discrete</i> space,
  *     where all sets are closed (and all finite sets are compact).
  *   The only continuous embeddings of a time interval are the constant functions.
@@ -32,31 +28,4 @@ import java.util.Objects;
  *   i.e. a space with no degrees of freedom around each point.
  * </p>
  */
-public final class DiscreteDynamics<T> {
-  private final T value;
-
-  private DiscreteDynamics(final T value) {
-    this.value = value;
-  }
-
-  public T value() {
-    return this.value;
-  }
-
-  public static <T> DiscreteDynamics<T> constant(final T value) {
-    return new DiscreteDynamics<>(Objects.requireNonNull(value));
-  }
-
-  @Override
-  public String toString() {
-    return "λt. " + this.value;
-  }
-
-  @Override
-  public boolean equals(final Object o) {
-    if (!(o instanceof DiscreteDynamics)) return false;
-    final var other = (DiscreteDynamics<?>) o;
-
-    return Objects.equals(this.value, other.value);
-  }
-}
+package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete;

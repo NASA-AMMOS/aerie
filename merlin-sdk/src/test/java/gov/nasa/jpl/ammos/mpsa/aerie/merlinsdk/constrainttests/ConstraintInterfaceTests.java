@@ -23,22 +23,22 @@ public class ConstraintInterfaceTests {
     Windows windows = res.getWindows();
 
     //check that non-overlapping instances are removed (before and after overlapping windows)
-    assertFalse(windows.includes(0, Duration.SECONDS, 3, Duration.SECONDS));
-    assertFalse(windows.includes(27, Duration.SECONDS, 29, Duration.SECONDS));
+    assertFalse(windows.includes(0, 3, Duration.SECONDS));
+    assertFalse(windows.includes(27, 29, Duration.SECONDS));
 
     //check that windows that overlap are clipped (before and after overlap)
-    assertTrue(windows.includes(6, Duration.SECONDS, 8, Duration.SECONDS));
-    assertFalse(windows.includes(5, Duration.SECONDS, 8, Duration.SECONDS));
-    assertTrue(windows.includes(21, Duration.SECONDS, 25, Duration.SECONDS));
-    assertTrue(windows.includes(27, Duration.SECONDS, 27, Duration.SECONDS));
+    assertTrue(windows.includes(6, 8, Duration.SECONDS));
+    assertFalse(windows.includes(5, 8, Duration.SECONDS));
+    assertTrue(windows.includes(21, 25, Duration.SECONDS));
+    assertTrue(windows.includes(27, 27, Duration.SECONDS));
 
     //check that duplicate windows are captured and windows contain only expected results
-    assertTrue(windows.includes(11, Duration.SECONDS, 15, Duration.SECONDS));
+    assertTrue(windows.includes(11, 15, Duration.SECONDS));
     Windows expected = new Windows();
-    expected.add(6, Duration.SECONDS, 8, Duration.SECONDS);
-    expected.add(11, Duration.SECONDS, 15, Duration.SECONDS);
-    expected.add(21, Duration.SECONDS, 25, Duration.SECONDS);
-    expected.add(27, Duration.SECONDS, 27, Duration.SECONDS);
+    expected.add(6, 8, Duration.SECONDS);
+    expected.add(11, 15, Duration.SECONDS);
+    expected.add(21, 25, Duration.SECONDS);
+    expected.add(27, 27, Duration.SECONDS);
     assertEquals(windows, expected);
   }
 
@@ -51,22 +51,22 @@ public class ConstraintInterfaceTests {
     var windows = res.getWindows();
 
     //check that non-overlapping windows remain intact
-    assertTrue(windows.includes(0, Duration.SECONDS, 3, Duration.SECONDS));
-    assertTrue(windows.includes(17, Duration.SECONDS, 18, Duration.SECONDS));
+    assertTrue(windows.includes(0, 3, Duration.SECONDS));
+    assertTrue(windows.includes(17, 18, Duration.SECONDS));
 
     //check that overlapping windows collapsed
-    assertTrue(windows.includes(5, Duration.SECONDS, 10, Duration.SECONDS));
-    assertTrue(windows.includes(11, Duration.SECONDS, 15, Duration.SECONDS));
-    assertTrue(windows.includes(20, Duration.SECONDS, 29, Duration.SECONDS));
+    assertTrue(windows.includes(5, 10, Duration.SECONDS));
+    assertTrue(windows.includes(11, 15, Duration.SECONDS));
+    assertTrue(windows.includes(20, 29, Duration.SECONDS));
 
     //check that windows contain only expected results
     Windows expected = new Windows();
-    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
-    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
-    expected.add(5, Duration.SECONDS, 10, Duration.SECONDS);
-    expected.add(11, Duration.SECONDS, 15, Duration.SECONDS);
-    expected.add(17, Duration.SECONDS, 18, Duration.SECONDS);
-    expected.add(20, Duration.SECONDS, 29, Duration.SECONDS);
+    expected.add(0, 3, Duration.SECONDS);
+    expected.add(0, 3, Duration.SECONDS);
+    expected.add(5, 10, Duration.SECONDS);
+    expected.add(11, 15, Duration.SECONDS);
+    expected.add(17, 18, Duration.SECONDS);
+    expected.add(20, 29, Duration.SECONDS);
     assertEquals(windows, expected);
   }
 
@@ -81,26 +81,26 @@ public class ConstraintInterfaceTests {
     var windows = res.getWindows();
 
     //check that windows not overlapped by or contained by windows in constraint subtracted from this constraint remain
-    assertTrue(windows.includes(0, Duration.SECONDS, 3, Duration.SECONDS));
+    assertTrue(windows.includes(0, 3, Duration.SECONDS));
 
-    //check that windows overlapped or contained by windows in constraint subctracted from this constraint are removed
-    assertTrue(windows.includes(5, Duration.SECONDS, 5999999, Duration.MICROSECONDS));
-    assertTrue(windows.includes(20, Duration.SECONDS, 20999999, Duration.MICROSECONDS));
-    assertTrue(windows.includes(27000001, Duration.MICROSECONDS, 29, Duration.SECONDS));
+    //check that windows overlapped or contained by windows in constraint subtracted from this constraint are removed
+    assertTrue(windows.includes(5_000_000, 5_999_999, Duration.MICROSECONDS));
+    assertTrue(windows.includes(20_000_000, 20_999_999, Duration.MICROSECONDS));
+    assertTrue(windows.includes(27_000_001, 29_000_000, Duration.MICROSECONDS));
 
     //check that windows contain only expected results
     Windows expected = new Windows();
-    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
-    expected.add(5, Duration.SECONDS, 5999999, Duration.MICROSECONDS);
-    expected.add(20, Duration.SECONDS, 20999999, Duration.MICROSECONDS);
-    expected.add(27000001, Duration.MICROSECONDS, 29, Duration.SECONDS);
+    expected.add(0, 3_000_000, Duration.MICROSECONDS);
+    expected.add(5_000_000, 5_999_999, Duration.MICROSECONDS);
+    expected.add(20_000_000, 20999999, Duration.MICROSECONDS);
+    expected.add(27_000_001, 29_000_000, Duration.MICROSECONDS);
     assertEquals(windows, expected);
   }
 
   public void basicWindowsATest(Windows windows) {
-    assertTrue(windows.includes(0, Duration.SECONDS, 3, Duration.SECONDS));
+    assertTrue(windows.includes(0, 3, Duration.SECONDS));
     Windows expected = new Windows();
-    expected.add(0, Duration.SECONDS, 3, Duration.SECONDS);
+    expected.add(0, 3, Duration.SECONDS);
     assertEquals(windows, expected);
   }
 
