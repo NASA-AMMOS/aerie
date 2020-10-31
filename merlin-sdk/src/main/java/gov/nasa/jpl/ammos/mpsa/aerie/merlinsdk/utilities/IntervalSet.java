@@ -210,7 +210,7 @@ public class IntervalSet<Alg, I> {
 
       @Override
       public boolean hasNext() {
-        return this.iter.hasNext();
+        return this.iter.hasPrevious();
       }
 
       @Override
