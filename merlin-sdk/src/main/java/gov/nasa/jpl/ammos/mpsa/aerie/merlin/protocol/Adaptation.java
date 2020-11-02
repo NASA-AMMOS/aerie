@@ -11,7 +11,7 @@ public interface Adaptation<$Schema, Event, Activity extends ActivityInstance> {
   /* Produce */ Map<String, ActivityType<Activity>>
   /* Given   */ getActivityTypes();
 
-  /* For all */ <TaskId>
-  /* Produce */ Task<$Schema, TaskId, Event, Activity>
+  /* For all */ <$Timeline extends $Schema>
+  /* Produce */ Task<$Timeline, Event, Activity>
   /* Given   */ createActivityTask(Activity activity);
 }

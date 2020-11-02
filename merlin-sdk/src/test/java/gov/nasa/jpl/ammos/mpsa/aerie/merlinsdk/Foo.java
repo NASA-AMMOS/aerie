@@ -67,9 +67,9 @@ public final class Foo {
         .get("foo")
         .instantiate(Map.of());
 
-    final var task = adaptation.<String>createActivityTask(activity);
+    final var task = adaptation.<$Timeline>createActivityTask(activity);
 
-    final var scheduler = new Scheduler<$Timeline, String, Event, Activity>() {
+    final var scheduler = new Scheduler<$Timeline, Event, Activity>() {
       // TODO: Track and reduce candelabras of spawned tasks
       public History<$Timeline, Event> now = timeline.origin();
 
@@ -119,7 +119,6 @@ public final class Foo {
           return true;
         }
       });
-
     }
 
     final var resources = adaptation.getResources();
@@ -254,29 +253,29 @@ final class FooAdaptation<$Schema> implements Adaptation<$Schema, Double, FooAct
   }
 
   public @Override
-  <TaskId>
-  FooTask<$Schema, TaskId>
+  <$Timeline extends $Schema>
+  FooTask<$Timeline>
   createActivityTask(FooActivity activity) {
     return new FooTask<>(resources, activity);
   }
 }
 
-final class FooTask<$Schema, $ActivityId>
-    implements Task<$Schema, $ActivityId, Double, FooActivity>
+final class FooTask<$Timeline>
+    implements Task<$Timeline, Double, FooActivity>
 {
-  private final FooResources<$Schema> resources;
+  private final FooResources<? super $Timeline> resources;
   private final FooActivity activity;
   private int state;
 
-  public FooTask(final FooResources<$Schema> resources, final FooActivity activity) {
+  public FooTask(final FooResources<? super $Timeline> resources, final FooActivity activity) {
     this.resources = resources;
     this.activity = activity;
     this.state = 0;
   }
 
   public @Override
-  ActivityStatus<$ActivityId>
-  step(final Scheduler<? extends $Schema, $ActivityId, Double, FooActivity> scheduler) {
+  ActivityStatus
+  step(final Scheduler<$Timeline, Double, FooActivity> scheduler) {
     switch (this.state) {
       case 0:
         scheduler.emit(1.0);
