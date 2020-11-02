@@ -250,22 +250,7 @@ final class FooAdaptation<$Schema> implements Adaptation<$Schema, Double, FooAct
   public @Override
   Map<String, ActivityType<FooActivity>>
   getActivityTypes() {
-    return Map.of("foo", new ActivityType<>() {
-      @Override
-      public String getName() {
-        return "foo";
-      }
-
-      @Override
-      public Map<String, ValueSchema> getParameters() {
-        return Map.of();
-      }
-
-      @Override
-      public FooActivity instantiate(final Map<String, SerializedValue> arguments) {
-        return new FooActivity();
-      }
-    });
+    return FooActivity.getActivityTypes();
   }
 
   public @Override
@@ -283,18 +268,10 @@ final class FooTask<$Schema, $ActivityId>
   private final FooActivity activity;
   private int state;
 
-  public FooTask(final FooResources<$Schema> resources, final FooActivity activity, final int state) {
+  public FooTask(final FooResources<$Schema> resources, final FooActivity activity) {
     this.resources = resources;
     this.activity = activity;
-    this.state = state;
-  }
-
-  public FooTask(final FooTask<$Schema, $ActivityId> other) {
-    this(other.resources, other.activity, other.state);
-  }
-
-  public FooTask(final FooResources<$Schema> resources, final FooActivity activity) {
-    this(resources, activity, 0);
+    this.state = 0;
   }
 
   public @Override
@@ -328,5 +305,26 @@ final class FooActivity implements ActivityInstance {
   SerializedActivity
   serialize() {
     return new SerializedActivity("foo", Map.of());
+  }
+
+  public static
+  Map<String, ActivityType<FooActivity>>
+  getActivityTypes() {
+    return Map.of("foo", new ActivityType<>() {
+      @Override
+      public String getName() {
+        return "foo";
+      }
+
+      @Override
+      public Map<String, ValueSchema> getParameters() {
+        return Map.of();
+      }
+
+      @Override
+      public FooActivity instantiate(final Map<String, SerializedValue> arguments) {
+        return new FooActivity();
+      }
+    });
   }
 }
