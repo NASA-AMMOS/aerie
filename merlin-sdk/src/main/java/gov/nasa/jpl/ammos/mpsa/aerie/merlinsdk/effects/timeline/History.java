@@ -76,6 +76,11 @@ public final class History<Scope, Event> {
     return this.lastBranchBase;
   }
 
+  /* package-local */
+  SimulationTimeline<Scope, Event> getTimeline() {
+    return this.database;
+  }
+
   /**
    * Append a new event to the timeline.
    *
