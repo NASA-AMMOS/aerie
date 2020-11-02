@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Resources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.DataModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.DurativeRealModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.RegisterModel;
@@ -9,8 +10,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -20,6 +22,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -37,28 +41,33 @@ public final class Foo {
 
     if (true) {
       try {
-        bar(SimulationTimeline.create(), new FooAdaptation());
+        bar(FooAdaptation.create());
       } catch (final ActivityType.UnconstructableActivityException ex) {
         ex.printStackTrace();
       }
     }
   }
 
-  private static <$Timeline, Event, Activity extends ActivityInstance>
-  void
-  bar(
-      final SimulationTimeline<$Timeline, Event> timeline,
-      final Adaptation<Event, Activity> adaptation)
+  private static <$Schema, Event, Activity extends ActivityInstance>
+  void bar(final Adaptation<$Schema, Event, Activity> adaptation)
   throws ActivityType.UnconstructableActivityException
   {
-    final var context = adaptation.<$Timeline, String>initializeSimulation(timeline);
+    baz(SimulationTimeline.create(adaptation.getResources().getSchema()), adaptation);
+  }
 
+  private static <$Schema, $Timeline extends $Schema, Event, Activity extends ActivityInstance>
+  void
+  baz(
+      final SimulationTimeline<$Timeline, Event> timeline,
+      final Adaptation<$Schema, Event, Activity> adaptation)
+  throws ActivityType.UnconstructableActivityException
+  {
     final var activity = adaptation
         .getActivityTypes()
         .get("foo")
         .instantiate(Map.of());
 
-    final var task = context.constructActivityTask(activity);
+    final var task = adaptation.<String>createActivityTask(activity);
 
     final var scheduler = new Scheduler<$Timeline, String, Event, Activity>() {
       // TODO: Track and reduce candelabras of spawned tasks
@@ -113,11 +122,12 @@ public final class Foo {
 
     }
 
+    final var resources = adaptation.getResources();
     System.out.print(scheduler.now.getDebugTrace());
-    context.getRealResources().forEach((name, resource) -> {
+    resources.getRealResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getDynamics(scheduler.now()));
     });
-    context.getDiscreteResources().forEach((name, resource) -> {
+    resources.getDiscreteResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
     });
   }
@@ -192,11 +202,54 @@ public final class Foo {
   }
 }
 
-final class FooAdaptation implements Adaptation<Double, FooActivity> {
+final class FooResources<$Schema> extends Resources<$Schema, Double> {
+  // Need a clear story for how to logically group resource questions and event emissions together.
+  // Need a clear story for how these logical groups are made available to an activity.
+  // Need a way to produce a condition for a resource.
+  // Need a way to assemble conditions into an overall constraint.
+  // Need a way to extract constraints from an adaptation.
+
+  public FooResources(final Schema.Builder<$Schema, Double> builder) {
+    super(builder);
+  }
+
+  private final Query<$Schema, DataModel>
+      dataModel = model(new DataModel(0.0, 0.0), ev -> ev);
+  private final Query<$Schema, RegisterModel<Double>>
+      fooModel = model(new RegisterModel<>(0.0), ev -> Pair.of(Optional.of(ev), Set.of(ev)));
+
+  public final RealResource<History<? extends $Schema, ?>>
+      dataVolume = resource("volume", dataModel, DataModel.volume);
+  public final RealResource<History<? extends $Schema, ?>>
+      dataRate = resource("rate", dataModel, DataModel.rate);
+  public final RealResource<History<? extends $Schema, ?>>
+      combo = resource("combo", dataVolume.plus(dataRate));
+
+  public final DiscreteResource<History<? extends $Schema, ?>, Double>
+      foo = resource("foo", fooModel, RegisterModel.value(), new DoubleValueMapper());
+  public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
+      bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
+}
+
+final class FooAdaptation<$Schema> implements Adaptation<$Schema, Double, FooActivity> {
+  private final FooResources<$Schema> resources;
+
+  private FooAdaptation(final FooResources<$Schema> resources) {
+    this.resources = resources;
+  }
+
+  public static FooAdaptation<?> create() {
+    return new FooAdaptation<>(new FooResources<>(Schema.builder()));
+  }
+
+  @Override
+  public FooResources<$Schema> getResources() {
+    return this.resources;
+  }
+
   public @Override
   Map<String, ActivityType<FooActivity>>
-  getActivityTypes()
-  {
+  getActivityTypes() {
     return Map.of("foo", new ActivityType<>() {
       @Override
       public String getName() {
@@ -216,103 +269,37 @@ final class FooAdaptation implements Adaptation<Double, FooActivity> {
   }
 
   public @Override
-  <$Timeline, ActivityId>
-  FooSimulationContext<$Timeline, ActivityId>
-  initializeSimulation(final SimulationTimeline<$Timeline, Double> timeline)
-  {
-    return new FooSimulationContext<>(timeline);
+  <TaskId>
+  FooTask<$Schema, TaskId>
+  createActivityTask(FooActivity activity) {
+    return new FooTask<>(resources, activity);
   }
 }
 
-final class FooSimulationContext<$Timeline, $ActivityId>
-    implements SimulationContext<$Timeline, FooActivity, FooTask<$Timeline, $ActivityId>>
+final class FooTask<$Schema, $ActivityId>
+    implements Task<$Schema, $ActivityId, Double, FooActivity>
 {
-  // Framework should provide a way to easily allow resources to be declared.
-  // See here for a useful trick: use superclass methods from instance field initializers.
-  //   https://stackoverflow.com/questions/15682457/initialize-field-before-super-constructor-runs
-  public final RealResource<History<$Timeline, ?>> dataVolume;
-  public final RealResource<History<$Timeline, ?>> dataRate;
-  public final RealResource<History<$Timeline, ?>> combo;
-  public final DiscreteResource<History<$Timeline, ?>, Double> foo;
-  public final DiscreteResource<History<$Timeline, ?>, Boolean> bar;
-
-  // Need a clear story for how to logically group resource questions and event emissions together.
-  // Need a clear story for how these logical groups are made available to an activity.
-  // Need a way to produce a condition for a resource.
-  // Need a way to assemble conditions into an overall constraint.
-  // Need a way to extract constraints from an adaptation.
-
-  public FooSimulationContext(final SimulationTimeline<$Timeline, Double> timeline) {
-    final var dataModel = timeline.register(new DataModel(0.0, 0.0), ev -> ev);
-    final var fooModel = timeline.register(new RegisterModel<>(0.0), ev -> Pair.of(Optional.of(ev), Set.of(ev)));
-
-    this.dataVolume = DataModel.volume.connect(dataModel);
-    this.dataRate = DataModel.rate.connect(dataModel);
-    this.combo = dataVolume.plus(dataRate);
-
-    this.foo = RegisterModel.<Double>value().connect(fooModel);
-    this.bar = RegisterModel.conflicted.connect(fooModel);
-  }
-
-  public @Override
-  FooTask<$Timeline, $ActivityId>
-  constructActivityTask(final FooActivity activity)
-  {
-    return new FooTask<>(this, activity);
-  }
-
-  public @Override
-  FooTask<$Timeline, $ActivityId>
-  duplicateActivityTask(final FooTask<$Timeline, $ActivityId> task)
-  {
-    return new FooTask<>(task);
-  }
-
-  public @Override
-  Map<String, Pair<ValueSchema, DiscreteResource<History<$Timeline, ?>, SerializedValue>>>
-  getDiscreteResources()
-  {
-    return Map.of(
-        "foo", Pair.of(ValueSchema.REAL, this.foo.map(SerializedValue::of)),
-        "bar", Pair.of(ValueSchema.BOOLEAN, this.bar.map(SerializedValue::of)));
-  }
-
-  public @Override
-  Map<String, RealResource<History<$Timeline, ?>>>
-  getRealResources()
-  {
-    return Map.of(
-        "dataVolume", this.dataVolume,
-        "dataRate", this.dataRate,
-        "combo", this.combo);
-  }
-}
-
-final class FooTask<$Timeline, $ActivityId>
-    implements Task<$Timeline, $ActivityId, Double, FooActivity>
-{
-  private final FooSimulationContext<$Timeline, ?> resources;
+  private final FooResources<$Schema> resources;
   private final FooActivity activity;
   private int state;
 
-  public FooTask(final FooSimulationContext<$Timeline, ?> resources, final FooActivity activity, final int state) {
+  public FooTask(final FooResources<$Schema> resources, final FooActivity activity, final int state) {
     this.resources = resources;
     this.activity = activity;
     this.state = state;
   }
 
-  public FooTask(final FooTask<$Timeline, $ActivityId> other) {
+  public FooTask(final FooTask<$Schema, $ActivityId> other) {
     this(other.resources, other.activity, other.state);
   }
 
-  public FooTask(final FooSimulationContext<$Timeline, ?> resources, final FooActivity activity) {
+  public FooTask(final FooResources<$Schema> resources, final FooActivity activity) {
     this(resources, activity, 0);
   }
 
   public @Override
   ActivityStatus<$ActivityId>
-  step(final Scheduler<$Timeline, $ActivityId, Double, FooActivity> scheduler)
-  {
+  step(final Scheduler<? extends $Schema, $ActivityId, Double, FooActivity> scheduler) {
     switch (this.state) {
       case 0:
         scheduler.emit(1.0);
@@ -339,8 +326,7 @@ final class FooTask<$Timeline, $ActivityId>
 final class FooActivity implements ActivityInstance {
   public @Override
   SerializedActivity
-  serialize()
-  {
+  serialize() {
     return new SerializedActivity("foo", Map.of());
   }
 }

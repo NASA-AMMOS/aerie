@@ -13,7 +13,7 @@ public interface DiscreteResource<Model, T> extends Resource<Model, T> {
   }
 
   @Override
-  default <$> DiscreteResource<History<$, ?>, T> connect(final Query<$, ? extends Model> query) {
+  default <$> DiscreteResource<History<? extends $, ?>, T> connect(final Query<$, ? extends Model> query) {
     return (history) -> this.getDynamics(query.getAt(history));
   }
 }

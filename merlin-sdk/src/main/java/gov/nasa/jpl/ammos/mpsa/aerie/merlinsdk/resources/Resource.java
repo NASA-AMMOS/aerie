@@ -26,7 +26,7 @@ public interface Resource<Model, Dynamics> {
    * @param <$> The scope/lifetime of the event timeline.
    * @return A resource defined against the new model type.
    */
-  default <$> Resource<History<$, ?>, Dynamics> connect(final Query<$, ? extends Model> query) {
+  default <$> Resource<History<? extends $, ?>, Dynamics> connect(final Query<$, ? extends Model> query) {
     return (history) -> this.getDynamics(query.getAt(history));
   }
 }

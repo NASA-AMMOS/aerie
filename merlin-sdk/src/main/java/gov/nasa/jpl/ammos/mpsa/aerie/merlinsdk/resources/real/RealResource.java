@@ -19,7 +19,7 @@ public interface RealResource<Model> extends Resource<Model, RealDynamics> {
   }
 
   @Override
-  default <$> RealResource<History<$, ?>> connect(final Query<$, ? extends Model> query) {
+  default <$> RealResource<History<? extends $, ?>> connect(final Query<$, ? extends Model> query) {
     return (history) -> this.getDynamics(query.getAt(history));
   }
 }
