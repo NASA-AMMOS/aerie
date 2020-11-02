@@ -3,6 +3,7 @@ gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects
+gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.projections
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits
