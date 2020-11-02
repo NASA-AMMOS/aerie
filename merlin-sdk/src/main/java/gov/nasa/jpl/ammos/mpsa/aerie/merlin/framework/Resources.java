@@ -4,12 +4,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Schema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -36,6 +38,34 @@ public abstract class Resources<$Schema, Event>
   model(final ModelType initialState, final Function<Event, Effect> interpreter)
   {
     return this.builder.register(initialState, interpreter);
+  }
+
+  protected <ModelType, E extends Enum<E>>
+  DiscreteResource<History<? extends $Schema, ?>, E>
+  resource(final String name,
+           final Query<$Schema, ? extends ModelType> model,
+           final DiscreteResource<ModelType, E> resource)
+  {
+    return resource(name, resource.connect(model));
+  }
+
+  protected <E extends Enum<E>>
+  DiscreteResource<History<? extends $Schema, ?>, E>
+  resource(final String name,
+           final DiscreteResource<History<? extends $Schema, ?>, E> resource)
+  {
+    // Get the initial value of this resource.
+    // Yeah... yikes. Amazing that this works though.
+    final E x = resource
+        .getDynamics(SimulationTimeline.create(this.builder.duplicate().build()).origin())
+        .getDynamics();
+
+    // SAFETY: Enums are implicitly final, and the only way to define one is to use the `enum` syntax,
+    //   so `Class<? extends Enum<E>> == Class<E>`.
+    @SuppressWarnings("unchecked")
+    final var enumClass = (Class<E>) x.getClass();
+
+    return resource(name, resource, new EnumValueMapper<>(enumClass));
   }
 
   protected <ModelType, ResourceType>
