@@ -1,12 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events.SimulationEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.models.activities.ActivityTypeStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.DoubleState;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.IndependentStateFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.independent.SettableState;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes.StateComparator;
 
 import java.util.List;
 
@@ -17,7 +17,10 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaQuerier.que
 public final class BananaStates {
   private static final ActivityTypeStateFactory activities = new ActivityTypeStateFactory(activityQuery);
 
-  public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(BananaEvent.independent(ev)));
+  public static final IndependentStateFactory factory = new IndependentStateFactory(query, (ev) -> ctx.emit(
+      SimulationEvent.ofAdaptationEvent(
+          BananaEvent.independent(ev)
+      )));
 
   public static final DoubleState fruit = factory.cumulative("fruit", 4.0);
   public static final DoubleState peel = factory.cumulative("peel", 4.0);

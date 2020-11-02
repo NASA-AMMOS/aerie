@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.state;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.events.BananaEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events.SimulationEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -38,26 +39,26 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.setDynamic;
 
-public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, BananaEvent> {
-  private static final DynamicCell<ReactionContext<?, BananaEvent, Activity>> reactionContext = DynamicCell.create();
+public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, SimulationEvent<BananaEvent>> {
+  private static final DynamicCell<ReactionContext<?, SimulationEvent<BananaEvent>, Activity>> reactionContext = DynamicCell.create();
   private static final DynamicCell<BananaQuerier<?>.InnerQuerier> queryContext = DynamicCell.create();
 
-  public static final ReactionContext<?, BananaEvent, Activity> ctx = new DynamicReactionContext<>(reactionContext::get);
+  public static final ReactionContext<?, SimulationEvent<BananaEvent>, Activity> ctx = new DynamicReactionContext<>(reactionContext::get);
   public static final Function<String, StateQuery<SerializedValue>> query = (name) -> new DynamicStateQuery<>(() -> queryContext.get().getRegisterQuery(name));
   public static final ActivityModelQuerier activityQuery = new DynamicActivityModelQuerier(() -> queryContext.get().getActivityQuery());
 
   private final ActivityMapper activityMapper;
 
   private final Set<String> stateNames = new HashSet<>();
-  private final Map<String, Query<T, BananaEvent, RegisterState<SerializedValue>>> settables = new HashMap<>();
-  private final Map<String, Query<T, BananaEvent, RegisterState<Double>>> cumulables = new HashMap<>();
-  private final Query<T, BananaEvent, ActivityModel> activityModel;
+  private final Map<String, Query<T, SimulationEvent<BananaEvent>, RegisterState<SerializedValue>>> settables = new HashMap<>();
+  private final Map<String, Query<T, SimulationEvent<BananaEvent>, RegisterState<Double>>> cumulables = new HashMap<>();
+  private final Query<T, SimulationEvent<BananaEvent>, ActivityModel> activityModel;
 
-  public BananaQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, BananaEvent> timeline) {
+  public BananaQuerier(final ActivityMapper activityMapper, final SimulationTimeline<T, SimulationEvent<BananaEvent>> timeline) {
     this.activityMapper = activityMapper;
 
     this.activityModel = timeline.register(
-        new ActivityEffectEvaluator().filterContramap(BananaEvent::asActivity),
+        new ActivityEffectEvaluator().filterContramap(BananaEvent::asActivity).filterContramap(SimulationEvent::asAdaptationEvent),
         new ActivityModelApplicator());
 
     for (final var entry : BananaStates.factory.getSettableStates().entrySet()) {
@@ -68,7 +69,7 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
       this.stateNames.add(name);
 
       this.settables.put(name, timeline.register(
-        new SettableEffectEvaluator(name).filterContramap(BananaEvent::asIndependent),
+        new SettableEffectEvaluator(name).filterContramap(BananaEvent::asIndependent).filterContramap(SimulationEvent::asAdaptationEvent),
         new SettableStateApplicator(initialValue)));
     }
 
@@ -80,19 +81,19 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
       this.stateNames.add(name);
 
       this.cumulables.put(name, timeline.register(
-        new CumulableEffectEvaluator(name).filterContramap(BananaEvent::asIndependent),
+        new CumulableEffectEvaluator(name).filterContramap(BananaEvent::asIndependent).filterContramap(SimulationEvent::asAdaptationEvent),
         new CumulableStateApplicator(initialValue)));
     }
   }
 
   @Override
-  public void runActivity(final ReactionContext<T, BananaEvent, Activity> ctx, final String activityId, final Activity activity) {
+  public void runActivity(final ReactionContext<T, SimulationEvent<BananaEvent>, Activity> ctx, final String activityId, final Activity activity) {
     setDynamic(queryContext, new InnerQuerier(ctx::now), () ->
         setDynamic(reactionContext, ctx, () -> {
-          ctx.emit(BananaEvent.activity(ActivityEvent.startActivity(activityId, this.activityMapper.serializeActivity(activity).get())));
+          ctx.emit(SimulationEvent.ofAdaptationEvent(BananaEvent.activity(ActivityEvent.startActivity(activityId, this.activityMapper.serializeActivity(activity).get()))));
           activity.modelEffects();
           ctx.waitForChildren();
-          ctx.emit(BananaEvent.activity(ActivityEvent.endActivity(activityId)));
+          ctx.emit(SimulationEvent.ofAdaptationEvent(BananaEvent.activity(ActivityEvent.endActivity(activityId))));
         }));
   }
 
@@ -102,18 +103,18 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   }
 
   @Override
-  public SerializedValue getSerializedStateAt(final String name, final History<T, BananaEvent> history) {
+  public SerializedValue getSerializedStateAt(final String name, final History<T, SimulationEvent<BananaEvent>> history) {
     return this.getRegisterQueryAt(name, history).get();
   }
 
-  public StateQuery<SerializedValue> getRegisterQueryAt(final String name, final History<T, BananaEvent> history) {
+  public StateQuery<SerializedValue> getRegisterQueryAt(final String name, final History<T, SimulationEvent<BananaEvent>> history) {
     if (this.settables.containsKey(name)) return this.settables.get(name).getAt(history);
     else if (this.cumulables.containsKey(name)) return StateQuery.from(this.cumulables.get(name).getAt(history), SerializedValue::of);
     else throw new RuntimeException("State \"" + name + "\" is not defined");
   }
 
   @Override
-  public List<ConstraintViolation> getConstraintViolationsAt(final History<T, BananaEvent> history) {
+  public List<ConstraintViolation> getConstraintViolationsAt(final History<T, SimulationEvent<BananaEvent>> history) {
     return setDynamic(queryContext, new InnerQuerier(() -> history), () -> {
       final var violations = new ArrayList<ConstraintViolation>();
 
@@ -129,9 +130,9 @@ public final class BananaQuerier<T> implements MerlinAdaptation.Querier<T, Banan
   }
 
   private final class InnerQuerier {
-    private final Supplier<History<T, BananaEvent>> currentHistory;
+    private final Supplier<History<T, SimulationEvent<BananaEvent>>> currentHistory;
 
-    private InnerQuerier(final Supplier<History<T, BananaEvent>> currentHistory) {
+    private InnerQuerier(final Supplier<History<T, SimulationEvent<BananaEvent>>> currentHistory) {
       this.currentHistory = currentHistory;
     }
 

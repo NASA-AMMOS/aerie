@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.sampleadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.AbstractMerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events.SimulationEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -25,7 +26,7 @@ public class SampleAdaptation extends AbstractMerlinAdaptation<SampleEvent> {
     }
 
     @Override
-    public <T> Querier<T, SampleEvent> makeQuerier(final SimulationTimeline<T, SampleEvent> database) {
+    public <T> Querier<T, SimulationEvent<SampleEvent>> makeQuerier(final SimulationTimeline<T, SimulationEvent<SampleEvent>> database) {
         return new SampleQuerier<>(this.getActivityMapper(), database);
     }
 }

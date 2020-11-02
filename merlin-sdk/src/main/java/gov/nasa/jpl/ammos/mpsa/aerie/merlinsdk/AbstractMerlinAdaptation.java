@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.events.SimulationEvent;
 
 /**
  * An abstract base class for defining implementations of {@link MerlinAdaptation}.
@@ -13,7 +14,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapperLoader;
  *
  * @param <Event> The simulation event type produced by this adaptation.
  */
-public abstract class AbstractMerlinAdaptation<Event> implements MerlinAdaptation<Event> {
+public abstract class AbstractMerlinAdaptation<Event> implements MerlinAdaptation<SimulationEvent<Event>> {
   /**
    * Invokes {@link ActivityMapperLoader#loadActivityMapper(Class)} with this class.
    *
