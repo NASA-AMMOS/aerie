@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.function.Function;
 
 public final class Schema<$Schema, Event> {
-  /*package-local*/ final List<Query<$Schema, ?>> queries;
+  /*package-local*/ final List<Query<? super $Schema, ?>> queries;
 
-  private Schema(final List<Query<$Schema, ?>> queries) {
+  private Schema(final List<Query<? super $Schema, ?>> queries) {
     this.queries = queries;
   }
 
@@ -17,11 +17,15 @@ public final class Schema<$Schema, Event> {
     return new Builder<>();
   }
 
+  public Builder<? extends $Schema, Event> extend() {
+    return new Builder<>(this);
+  }
+
   public static final class Builder<$Schema, Event> {
     private BuilderState<$Schema, Event> state = new UnbuiltState();
-    private final List<Query<$Schema, ?>> queries;
+    private final List<Query<? super $Schema, ?>> queries;
 
-    private Builder(final List<Query<$Schema, ?>> queries) {
+    private Builder(final List<Query<? super $Schema, ?>> queries) {
       this.queries = queries;
     }
 
@@ -29,19 +33,24 @@ public final class Schema<$Schema, Event> {
       this(new ArrayList<>());
     }
 
-    public Builder<? extends $Schema, Event> duplicate() {
-      return new Builder<>(this.queries);
+    private Builder(final Schema<? super $Schema, Event> schema) {
+      this(new ArrayList<>(schema.queries));
     }
 
     public <Effect, ModelType extends Model<Effect, ModelType>>
     Query<$Schema, ModelType>
-    register(final ModelType initialState, final Function<Event, Effect> interpreter) {
+    register(
+        final ModelType initialState,
+        final Function<Event, Effect> interpreter)
+    {
       return this.register(
           Projection.from(initialState.effectTrait(), interpreter),
           new ModelApplicator<>(initialState));
     }
 
-    public <Effect, ModelType> Query<$Schema, ModelType> register(
+    public <Effect, ModelType>
+    Query<$Schema, ModelType>
+    register(
         final Projection<Event, Effect> projection,
         final Applicator<Effect, ModelType> applicator)
     {
@@ -101,7 +110,8 @@ public final class Schema<$Schema, Event> {
           final Applicator<Effect, ModelType> applicator)
       {
         throw new IllegalStateException(
-            "A schema has already been built from this builder. Use duplicate() to get a fresh builder.");
+            "A schema has already been built from this builder."
+            + " Call Schema#extend() to derive a new schema from the built one.");
       }
 
       @Override
