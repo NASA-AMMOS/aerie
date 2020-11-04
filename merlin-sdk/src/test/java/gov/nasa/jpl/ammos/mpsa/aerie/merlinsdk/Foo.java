@@ -203,36 +203,49 @@ public final class Foo {
   }
 }
 
-final class FooResources<$Schema> extends Resources<$Schema, Double> {
+final class FooEvent {
+  public final double d;
+
+  public FooEvent(double d) {
+    this.d = d;
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toString(this.d);
+  }
+}
+
+final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
   // Need a clear story for how to logically group resource questions and event emissions together.
   // Need a clear story for how these logical groups are made available to an activity.
   // Need a way to produce a condition for a resource.
   // Need a way to assemble conditions into an overall constraint.
   // Need a way to extract constraints from an adaptation.
 
-  public FooResources(final Schema.Builder<$Schema, Double> builder) {
+  public FooResources(final Schema.Builder<$Schema, FooEvent> builder) {
     super(builder);
   }
 
   private final Query<$Schema, DataModel>
-      dataModel = model(new DataModel(0.0, 0.0), ev -> ev);
-  private final Query<$Schema, RegisterModel<Double>>
-      fooModel = model(new RegisterModel<>(0.0), ev -> Pair.of(Optional.of(ev), Set.of(ev)));
-
+      dataModel = model(new DataModel(0.0, 0.0), ev -> ev.d);
   public final RealResource<History<? extends $Schema, ?>>
       dataVolume = resource("volume", dataModel, DataModel.volume);
   public final RealResource<History<? extends $Schema, ?>>
       dataRate = resource("rate", dataModel, DataModel.rate);
+
   public final RealResource<History<? extends $Schema, ?>>
       combo = resource("combo", dataVolume.plus(dataRate));
 
+  private final Query<$Schema, RegisterModel<Double>>
+      fooModel = model(new RegisterModel<>(0.0), ev -> Pair.of(Optional.of(ev.d), Set.of(ev.d)));
   public final DiscreteResource<History<? extends $Schema, ?>, Double>
       foo = resource("foo", fooModel, RegisterModel.value(), new DoubleValueMapper());
   public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
 }
 
-final class FooAdaptation<$Schema> implements Adaptation<$Schema, Double, FooActivity> {
+final class FooAdaptation<$Schema> implements Adaptation<$Schema, FooEvent, FooActivity> {
   private final FooResources<$Schema> resources;
 
   private FooAdaptation(final FooResources<$Schema> resources) {
@@ -262,8 +275,9 @@ final class FooAdaptation<$Schema> implements Adaptation<$Schema, Double, FooAct
   }
 }
 
+// Generic framework code
 final class FooTask<$Timeline>
-    implements Task<$Timeline, Double, FooActivity>
+    implements Task<$Timeline, FooEvent, FooActivity>
 {
   private final FooResources<? super $Timeline> resources;
   private final FooActivity activity;
@@ -277,19 +291,19 @@ final class FooTask<$Timeline>
 
   public @Override
   ActivityStatus
-  step(final Scheduler<$Timeline, Double, FooActivity> scheduler) {
+  step(final Scheduler<$Timeline, FooEvent, FooActivity> scheduler) {
     switch (this.state) {
       case 0:
-        scheduler.emit(1.0);
+        scheduler.emit(new FooEvent(1.0));
         this.state = 1;
         return ActivityStatus.delayed(1, Duration.SECOND);
 
       case 1:
-        scheduler.emit(2.0);
+        scheduler.emit(new FooEvent(2.0));
 
         final var delimitedDynamics = this.resources.dataRate.getDynamics(scheduler.now());
         final var rate = new RealSolver().valueAt(delimitedDynamics.getDynamics(), Duration.ZERO);
-        scheduler.emit(rate);
+        scheduler.emit(new FooEvent(rate));
 
         this.state = 2;
         return ActivityStatus.delayed(200, Duration.MILLISECONDS);
