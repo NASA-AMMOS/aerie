@@ -7,18 +7,18 @@ import java.util.Objects;
 public abstract class ActivityStatus {
   private ActivityStatus() {}
 
-  public abstract <$Result> $Result match(final Visitor<$Result> visitor);
+  public abstract <Result> Result match(final Visitor<Result> visitor);
 
-  public interface Visitor<$Result> {
-    $Result completed();
-    $Result awaiting(String id);
-    $Result delayed(Duration delay);
+  public interface Visitor<Result> {
+    Result completed();
+    Result awaiting(String id);
+    Result delayed(Duration delay);
   }
 
   public static ActivityStatus completed() {
     return new ActivityStatus() {
       @Override
-      public <$Result> $Result match(final Visitor<$Result> visitor) {
+      public <Result> Result match(final Visitor<Result> visitor) {
         return visitor.completed();
       }
     };
@@ -29,7 +29,7 @@ public abstract class ActivityStatus {
 
     return new ActivityStatus() {
       @Override
-      public <$Result> $Result match(final Visitor<$Result> visitor) {
+      public <Result> Result match(final Visitor<Result> visitor) {
         return visitor.awaiting(id);
       }
     };
@@ -40,7 +40,7 @@ public abstract class ActivityStatus {
 
     return new ActivityStatus() {
       @Override
-      public <$Result> $Result match(final Visitor<$Result> visitor) {
+      public <Result> Result match(final Visitor<Result> visitor) {
         return visitor.delayed(delay);
       }
     };
