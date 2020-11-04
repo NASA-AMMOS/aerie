@@ -17,16 +17,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities;
  * @param <I> The type on which this algebra supports interval operations.
  */
 public interface IntervalAlgebra<Alg, I> {
+  boolean isEmpty(I x);
+
   I unify(I x, I y);
   I intersect(I x, I y);
-  I subtract(I x, I y);
 
   I lowerBoundsOf(I x);
   I upperBoundsOf(I x);
 
   IntervalAlgebra.Relation relationBetween(I x, I y);
-
-  boolean isEmpty(I x);
 
   default boolean overlaps(I x, I y) {
     switch (relationBetween(x, y)) {
