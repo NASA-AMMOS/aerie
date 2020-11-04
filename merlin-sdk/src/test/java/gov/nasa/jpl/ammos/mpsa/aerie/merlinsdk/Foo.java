@@ -219,10 +219,18 @@ final class FooEvent {
 
 final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
   // Need a clear story for how to logically group resource questions and event emissions together.
-  // Need a clear story for how these logical groups are made available to an activity.
   // Need a way to produce a condition for a resource.
   // Need a way to assemble conditions into an overall constraint.
   // Need a way to extract constraints from an adaptation.
+  // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
+  // Need to support waitUntil(condition) (which ought to subsume waitFor(activity)).
+  // Need to port the breadcrumb-based replaying tasks to this framework, so that activities can be written
+  //   in direct style (rather than continuation-passing or state-machine style).
+  // Need a clear story for external models.
+  // Need to collect profiles from published resources as simulation proceeds.
+  // Need to generalize RealDynamics to nonlinear polynomials.
+  // Need to use a more representative event type for the sample.
+  // Need to implement compile-time code generation for various aspects of the Framework.
 
   public FooResources(final ResourcesBuilder<$Schema, FooEvent> builder) {
     super(builder);
@@ -332,12 +340,18 @@ final class FooTask<$Timeline>
   }
 }
 
+
+// TODO: Automatically generate at compile time.
 final class FooActivity implements ActivityInstance {
   public @Override
   SerializedActivity
   serialize() {
     return new SerializedActivity("foo", Map.of());
   }
+
+//  @Override
+//  public List<String> getValidationFailures() {
+//  }
 
   public static
   Map<String, ActivityType<FooActivity>>
