@@ -29,6 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -252,6 +253,34 @@ final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
       foo = resource("foo", fooModel, RegisterModel.value(), new DoubleValueMapper());
   public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
+
+  public final CumulableState<$Schema> rate = new CumulableState<>(dataRate);
+}
+
+final class CumulableState<$Schema> {
+  private final RealResource<History<? extends $Schema, ?>> resource;
+
+  public CumulableState(final RealResource<History<? extends $Schema, ?>> resource) {
+    this.resource = Objects.requireNonNull(resource);
+  }
+
+  public void add(final Context<? extends $Schema> ctx, final double delta) {
+    ctx.emit(new FooEvent(delta));
+  }
+
+  public double get(final Context<? extends $Schema> ctx) {
+    return new RealSolver().valueAt(ctx.ask(this.resource), Duration.ZERO);
+  }
+}
+
+final class BarActivity<$Timeline> extends Activity<$Timeline> {
+  @Override
+  public void modelEffects(final Context<$Timeline> ctx, final FooResources<? super $Timeline> resources) {
+    resources.rate.add(ctx, 1.0);
+    ctx.delay(1, Duration.SECOND);
+    resources.rate.add(ctx, 2.0);
+    resources.rate.add(ctx, resources.rate.get(ctx));
+  }
 }
 
 
@@ -374,3 +403,19 @@ final class FooActivity implements ActivityInstance {
     });
   }
 }
+
+// TODO: Automatically generate at compile time.
+final class Context<$Timeline>
+    extends gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context
+    <$Timeline, FooEvent, BarActivity<$Timeline>>
+{
+  public Context(final Scheduler<$Timeline, FooEvent, BarActivity<$Timeline>> scheduler) {
+    super(scheduler);
+  }
+}
+
+// TODO: Automatically generate at compile time.
+abstract class Activity<$Timeline>
+    implements gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Activity
+    <Context<$Timeline>, FooResources<? super $Timeline>>
+{}
