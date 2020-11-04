@@ -55,11 +55,11 @@ public final class Foo {
     baz(SimulationTimeline.create(adaptation.getResources().getSchema()), adaptation);
   }
 
-  private static <$Schema, $Timeline extends $Schema, Event, Activity extends ActivityInstance>
+  private static <$Timeline, Event, Activity extends ActivityInstance>
   void
   baz(
       final SimulationTimeline<$Timeline, Event> timeline,
-      final Adaptation<$Schema, Event, Activity> adaptation)
+      final Adaptation<? super $Timeline, Event, Activity> adaptation)
   throws ActivityType.UnconstructableActivityException
   {
     final var activity = adaptation
@@ -96,29 +96,31 @@ public final class Foo {
       }
     };
 
+    final var visitor = new ActivityStatus.Visitor<Boolean>() {
+      @Override
+      public Boolean completed() {
+        // TODO: Emit an "activity end" event.
+        return false;
+      }
+
+      @Override
+      public Boolean awaiting(final String s) {
+        // TODO: Yield this task if the awaited activity is not yet complete.
+        return true;
+      }
+
+      @Override
+      public Boolean delayed(final Duration delay) {
+        // TODO: Yield this task and perform any other tasks between now and the resumption point.
+        scheduler.now = scheduler.now.wait(delay);
+        return true;
+      }
+    };
+
     boolean running = true;
     while (running) {
       // TODO: Emit an "activity start" event.
-      running = task.step(scheduler).match(new ActivityStatus.Visitor<>() {
-        @Override
-        public Boolean completed() {
-          // TODO: Emit an "activity end" event.
-          return false;
-        }
-
-        @Override
-        public Boolean awaiting(final String s) {
-          // TODO: Yield this task if the awaited activity is not yet complete.
-          return true;
-        }
-
-        @Override
-        public Boolean delayed(final Duration delay) {
-          // TODO: Yield this task and perform any other tasks between now and the resumption point.
-          scheduler.now = scheduler.now.wait(delay);
-          return true;
-        }
-      });
+      running = task.step(scheduler).match(visitor);
     }
 
     final var resources = adaptation.getResources();
