@@ -284,6 +284,47 @@ final class BarActivity<$Timeline> extends Activity<$Timeline> {
 }
 
 
+// Generic framework code
+final class FooTask<$Timeline>
+    implements Task<$Timeline, FooEvent, FooActivity>
+{
+  private final FooResources<? super $Timeline> resources;
+  private final FooActivity activity;
+  private int state;
+
+  public FooTask(final FooResources<? super $Timeline> resources, final FooActivity activity) {
+    this.resources = resources;
+    this.activity = activity;
+    this.state = 0;
+  }
+
+  public @Override
+  ActivityStatus
+  step(final Scheduler<$Timeline, FooEvent, FooActivity> scheduler) {
+    switch (this.state) {
+      case 0:
+        scheduler.emit(new FooEvent(1.0));
+        this.state = 1;
+        return ActivityStatus.delayed(1, Duration.SECOND);
+
+      case 1:
+        scheduler.emit(new FooEvent(2.0));
+
+        final var delimitedDynamics = this.resources.dataRate.getDynamics(scheduler.now());
+        final var rate = new RealSolver().valueAt(delimitedDynamics.getDynamics(), Duration.ZERO);
+        scheduler.emit(new FooEvent(rate));
+
+        this.state = 2;
+        return ActivityStatus.delayed(200, Duration.MILLISECONDS);
+
+      case 2:
+      default:
+        return ActivityStatus.completed();
+    }
+  }
+}
+
+
 // TODO: Automatically generate at compile time.
 final class FooAdaptation<$Schema>
     implements Adaptation<$Schema, FooEvent, FooActivity>
@@ -328,47 +369,6 @@ final class FooAdaptation<$Schema>
     return new FooTask<>(this.container, activity);
   }
 }
-
-// Generic framework code
-final class FooTask<$Timeline>
-    implements Task<$Timeline, FooEvent, FooActivity>
-{
-  private final FooResources<? super $Timeline> resources;
-  private final FooActivity activity;
-  private int state;
-
-  public FooTask(final FooResources<? super $Timeline> resources, final FooActivity activity) {
-    this.resources = resources;
-    this.activity = activity;
-    this.state = 0;
-  }
-
-  public @Override
-  ActivityStatus
-  step(final Scheduler<$Timeline, FooEvent, FooActivity> scheduler) {
-    switch (this.state) {
-      case 0:
-        scheduler.emit(new FooEvent(1.0));
-        this.state = 1;
-        return ActivityStatus.delayed(1, Duration.SECOND);
-
-      case 1:
-        scheduler.emit(new FooEvent(2.0));
-
-        final var delimitedDynamics = this.resources.dataRate.getDynamics(scheduler.now());
-        final var rate = new RealSolver().valueAt(delimitedDynamics.getDynamics(), Duration.ZERO);
-        scheduler.emit(new FooEvent(rate));
-
-        this.state = 2;
-        return ActivityStatus.delayed(200, Duration.MILLISECONDS);
-
-      case 2:
-      default:
-        return ActivityStatus.completed();
-    }
-  }
-}
-
 
 // TODO: Automatically generate at compile time.
 final class FooActivity implements ActivityInstance {
