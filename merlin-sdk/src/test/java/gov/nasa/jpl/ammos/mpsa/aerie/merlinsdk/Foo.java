@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Resources;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.DataModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.DurativeRealModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.RegisterModel;
@@ -223,7 +224,7 @@ final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
   // Need a way to assemble conditions into an overall constraint.
   // Need a way to extract constraints from an adaptation.
 
-  public FooResources(final Schema.Builder<$Schema, FooEvent> builder) {
+  public FooResources(final ResourcesBuilder<$Schema, FooEvent> builder) {
     super(builder);
   }
 
@@ -245,19 +246,35 @@ final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
 }
 
-final class FooAdaptation<$Schema> implements Adaptation<$Schema, FooEvent, FooActivity> {
-  private final FooResources<$Schema> resources;
 
-  private FooAdaptation(final FooResources<$Schema> resources) {
+// TODO: Automatically generate at compile time.
+final class FooAdaptation<$Schema>
+    implements Adaptation<$Schema, FooEvent, FooActivity>
+{
+  private final FooResources<$Schema> container;
+  private final gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, FooEvent> resources;
+
+  private FooAdaptation(
+      final FooResources<$Schema> container,
+      final gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, FooEvent> resources)
+  {
+    this.container = container;
     this.resources = resources;
   }
 
   public static FooAdaptation<?> create() {
-    return new FooAdaptation<>(new FooResources<>(Schema.builder()));
+    return create(Schema.<FooEvent>builder());
   }
 
-  @Override
-  public FooResources<$Schema> getResources() {
+  private static <$Schema> FooAdaptation<$Schema> create(final Schema.Builder<$Schema, FooEvent> builder) {
+    final ResourcesBuilder<$Schema, FooEvent> resourcesBuilder = new ResourcesBuilder<>(builder);
+    final var container = new FooResources<>(resourcesBuilder);
+    return new FooAdaptation<>(container, resourcesBuilder.build());
+  }
+
+  public @Override
+  gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, FooEvent>
+  getResources() {
     return this.resources;
   }
 
@@ -271,7 +288,7 @@ final class FooAdaptation<$Schema> implements Adaptation<$Schema, FooEvent, FooA
   <$Timeline extends $Schema>
   FooTask<$Timeline>
   createActivityTask(FooActivity activity) {
-    return new FooTask<>(resources, activity);
+    return new FooTask<>(this.container, activity);
   }
 }
 

@@ -3,42 +3,27 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Schema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
-public abstract class Resources<$Schema, Event>
-    implements gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, Event>
-{
-  private final Schema.Builder<$Schema, Event> builder;
-  private final Map<String, RealResource<History<? extends $Schema, ?>>> realResources;
-  private final Map<String, Pair<ValueSchema, Resource<History<? extends $Schema, ?>, SerializedValue>>> discreteResources;
+public abstract class Resources<$Schema, Event> {
+  private final ResourcesBuilder<$Schema, Event> builder;
 
-  public Resources(final Schema.Builder<$Schema, Event> builder) {
+  public Resources(final ResourcesBuilder<$Schema, Event> builder) {
     this.builder = builder;
-    this.realResources = new HashMap<>();
-    this.discreteResources = new HashMap<>();
   }
 
   protected <Effect, ModelType extends Model<Effect, ModelType>>
   Query<$Schema, ModelType>
-  model(final ModelType initialState, final Function<Event, Effect> interpreter)
+  model(final ModelType initialState,
+        final Function<Event, Effect> interpreter)
   {
-    return this.builder.register(initialState, interpreter);
+    return this.builder.model(initialState, interpreter);
   }
+
 
   protected <ModelType, E extends Enum<E>>
   DiscreteResource<History<? extends $Schema, ?>, E>
@@ -46,7 +31,7 @@ public abstract class Resources<$Schema, Event>
            final Query<$Schema, ? extends ModelType> model,
            final DiscreteResource<ModelType, E> resource)
   {
-    return resource(name, resource.connect(model));
+    return this.builder.enumerated(name, resource.connect(model))::getDynamics;
   }
 
   protected <E extends Enum<E>>
@@ -54,19 +39,9 @@ public abstract class Resources<$Schema, Event>
   resource(final String name,
            final DiscreteResource<History<? extends $Schema, ?>, E> resource)
   {
-    // Get the initial value of this resource.
-    // Yeah... yikes. Amazing that this works though.
-    final E x = resource
-        .getDynamics(SimulationTimeline.create(this.builder.duplicate().build()).origin())
-        .getDynamics();
-
-    // SAFETY: Enums are implicitly final, and the only way to define one is to use the `enum` syntax,
-    //   so `Class<? extends Enum<E>> == Class<E>`.
-    @SuppressWarnings("unchecked")
-    final var enumClass = (Class<E>) x.getClass();
-
-    return resource(name, resource, new EnumValueMapper<>(enumClass));
+    return this.builder.enumerated(name, resource)::getDynamics;
   }
+
 
   protected <ModelType, ResourceType>
   DiscreteResource<History<? extends $Schema, ?>, ResourceType>
@@ -75,7 +50,7 @@ public abstract class Resources<$Schema, Event>
            final DiscreteResource<ModelType, ResourceType> resource,
            final ValueMapper<ResourceType> mapper)
   {
-    return resource(name, resource.connect(model), mapper);
+    return this.builder.discrete(name, resource.connect(model), mapper)::getDynamics;
   }
 
   protected <ResourceType>
@@ -84,9 +59,9 @@ public abstract class Resources<$Schema, Event>
            final DiscreteResource<History<? extends $Schema, ?>, ResourceType> resource,
            final ValueMapper<ResourceType> mapper)
   {
-    this.discreteResources.put(name, Pair.of(mapper.getValueSchema(), resource.map(mapper::serializeValue)));
-    return resource;
+    return this.builder.discrete(name, resource, mapper)::getDynamics;
   }
+
 
   protected <ModelType>
   RealResource<History<? extends $Schema, ?>>
@@ -94,7 +69,7 @@ public abstract class Resources<$Schema, Event>
            final Query<$Schema, ModelType> model,
            final RealResource<ModelType> resource)
   {
-    return resource(name, resource.connect(model));
+    return this.builder.real(name, resource.connect(model))::getDynamics;
   }
 
   protected
@@ -102,21 +77,6 @@ public abstract class Resources<$Schema, Event>
   resource(final String name,
            final RealResource<History<? extends $Schema, ?>> resource)
   {
-    this.realResources.put(name, resource);
-    return resource;
-  }
-
-  public Schema<$Schema, Event> getSchema() {
-    return this.builder.build();
-  }
-
-  @Override
-  public Map<String, ? extends Resource<History<? extends $Schema, ?>, RealDynamics>> getRealResources() {
-    return Collections.unmodifiableMap(this.realResources);
-  }
-
-  @Override
-  public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema, ?>, SerializedValue>>> getDiscreteResources() {
-    return Collections.unmodifiableMap(this.discreteResources);
+    return this.builder.real(name, resource)::getDynamics;
   }
 }
