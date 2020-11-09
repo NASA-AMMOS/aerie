@@ -40,8 +40,60 @@ public abstract class RealDynamics {
     };
   }
 
+  public final RealDynamics scaledBy(final double scalar) {
+    return this.match(new Visitor<>() {
+      @Override
+      public RealDynamics constant(final double value) {
+        return RealDynamics.constant(scalar * value);
+      }
+
+      @Override
+      public RealDynamics linear(final double intercept, final double slope) {
+        return RealDynamics.linear(scalar * intercept, scalar * slope);
+      }
+    });
+  }
+
+  public final RealDynamics plus(final RealDynamics other) {
+    return this.match(new Visitor<>() {
+      @Override
+      public RealDynamics constant(final double value1) {
+        return other.match(new Visitor<>() {
+          @Override
+          public RealDynamics constant(final double value2) {
+            return RealDynamics.constant(value1 + value2);
+          }
+
+          @Override
+          public RealDynamics linear(final double intercept2, final double slope2) {
+            return RealDynamics.linear(value1 + intercept2, 0.0 + slope2);
+          }
+        });
+      }
+
+      @Override
+      public RealDynamics linear(final double intercept1, final double slope1) {
+        return other.match(new Visitor<>() {
+          @Override
+          public RealDynamics constant(final double value2) {
+            return RealDynamics.linear(intercept1 + value2, slope1 + 0.0);
+          }
+
+          @Override
+          public RealDynamics linear(final double intercept2, final double slope2) {
+            return RealDynamics.linear(intercept1 + intercept2, slope1 + slope2);
+          }
+        });
+      }
+    });
+  }
+
+  public final RealDynamics minus(final RealDynamics other) {
+    return this.plus(other.scaledBy(-1.0));
+  }
+
   @Override
-  public String toString() {
+  public final String toString() {
     return this.match(new Visitor<>() {
       @Override
       public String constant(final double value) {
@@ -56,7 +108,7 @@ public abstract class RealDynamics {
   }
 
   @Override
-  public boolean equals(final Object o) {
+  public final boolean equals(final Object o) {
     if (!(o instanceof RealDynamics)) return false;
     final var other = (RealDynamics) o;
 

@@ -76,6 +76,11 @@ public final class History<Scope, Event> {
     return this.lastBranchBase;
   }
 
+  /* package-local */
+  SimulationTimeline<Scope, Event> getTimeline() {
+    return this.database;
+  }
+
   /**
    * Append a new event to the timeline.
    *
@@ -93,6 +98,24 @@ public final class History<Scope, Event> {
    */
   public History<Scope, Event> fork() {
     return new History<>(this.database, this, this.index);
+  }
+
+  /**
+   * Fork and join two divergent branches in one fell swoop.
+   *
+   * <p>
+   *   This method is equivalent to <code>left.apply(history.fork()).join(right.apply(history.fork()))</code>.
+   * </p>
+   *
+   * @param left A function drawing out one branch of the timeline.
+   * @param right A function drawing out the other branch of the timeline.
+   * @return A time point observing both generated branches in its past.
+   */
+  public History<Scope, Event> branching(
+      final Function<History<Scope, Event>, History<Scope, Event>> left,
+      final Function<History<Scope, Event>, History<Scope, Event>> right)
+  {
+    return left.apply(this.fork()).join(right.apply(this.fork()));
   }
 
   /**
@@ -141,6 +164,17 @@ public final class History<Scope, Event> {
     }
 
     return new History<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.dividedBy(Duration.MICROSECOND)));
+  }
+
+  /**
+   * Wait a span of time.
+   *
+   * @param quantity The number of units of time to wait.
+   * @param unit The unit of time to measure out.
+   * @return A time point observing this time point followed by a span of time.
+   */
+  public History<Scope, Event> wait(final long quantity, final Duration unit) {
+    return this.wait(Duration.of(quantity, unit));
   }
 
   public String getDebugTrace() {
