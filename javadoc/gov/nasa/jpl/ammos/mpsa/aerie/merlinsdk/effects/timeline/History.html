@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -183,42 +183,58 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#branching(java.util.function.Function,java.util.function.Function)">branching</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;,&#8203;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&gt;&nbsp;left,
+         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;,&#8203;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&gt;&nbsp;right)</code></th>
+<td class="colLast">
+<div class="block">Fork and join two divergent branches in one fell swoop.</div>
+</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event)">emit</a></span>&#8203;(<a href="History.html" title="type parameter in History">Event</a>&nbsp;event)</code></th>
 <td class="colLast">
 <div class="block">Append a new event to the timeline.</div>
 </td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>&lt;Effect&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Collection.html?is-external=true" title="class or interface in java.util" class="externalLink">Collection</a>&lt;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;Effect&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#evaluate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait,java.util.function.Function)">evaluate</a></span>&#8203;(<a href="../EffectTrait.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects">EffectTrait</a>&lt;Effect&gt;&nbsp;trait,
         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="History.html" title="type parameter in History">Event</a>,&#8203;Effect&gt;&nbsp;substitution)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>&lt;Effect&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Collection.html?is-external=true" title="class or interface in java.util" class="externalLink">Collection</a>&lt;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>,&#8203;Effect&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#evaluate(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection)">evaluate</a></span>&#8203;(<a href="../Projection.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects">Projection</a>&lt;<a href="History.html" title="type parameter in History">Event</a>,&#8203;Effect&gt;&nbsp;projection)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#fork()">fork</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Create a time point from which two divergent branches may be drawn and later <a href="#join(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History)"><code>join(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History&lt;Scope, Event&gt;)</code></a>ed.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDebugTrace()">getDebugTrace</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#join(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History)">join</a></span>&#8203;(<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&nbsp;other)</code></th>
 <td class="colLast">
 <div class="block">Create a time point by joining this time point with a sibling <a href="#fork()"><code>fork()</code></a>ed from the same base.</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#wait(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">wait</a></span>&#8203;(long&nbsp;quantity,
+    <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<td class="colLast">
+<div class="block">Wait a span of time.</div>
+</td>
+</tr>
+<tr id="i8" class="altColor">
 <td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#wait(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">wait</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">
@@ -281,6 +297,28 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
+<a id="branching(java.util.function.Function,java.util.function.Function)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>branching</h4>
+<pre class="methodSignature">public&nbsp;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&nbsp;branching&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;,&#8203;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&gt;&nbsp;left,
+                                            <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;,&#8203;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&gt;&nbsp;right)</pre>
+<div class="block">Fork and join two divergent branches in one fell swoop.
+
+ <p>
+   This method is equivalent to <code>left.apply(history.fork()).join(right.apply(history.fork()))</code>.
+ </p></div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>left</code> - A function drawing out one branch of the timeline.</dd>
+<dd><code>right</code> - A function drawing out the other branch of the timeline.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A time point observing both generated branches in its past.</dd>
+</dl>
+</li>
+</ul>
 <a id="join(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History)">
 <!--   -->
 </a>
@@ -331,6 +369,24 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>duration</code> - The amount of time to wait.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A time point observing this time point followed by a span of time.</dd>
+</dl>
+</li>
+</ul>
+<a id="wait(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>wait</h4>
+<pre class="methodSignature">public&nbsp;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">Scope</a>,&#8203;<a href="History.html" title="type parameter in History">Event</a>&gt;&nbsp;wait&#8203;(long&nbsp;quantity,
+                                       <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+<div class="block">Wait a span of time.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>quantity</code> - The number of units of time to wait.</dd>
+<dd><code>unit</code> - The unit of time to measure out.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A time point observing this time point followed by a span of time.</dd>
 </dl>
