@@ -9,7 +9,7 @@ import java.util.Map;
 
 // TODO: Automatically generate at compile time.
 public final class FooAdaptation<$Schema>
-    implements Adaptation<$Schema, FooEvent, FooActivityInstance>
+    implements Adaptation<$Schema, FooEvent, FooActivityInstance<$Schema>>
 {
   private final FooResources<$Schema> container;
   private final gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, FooEvent> resources;
@@ -40,7 +40,7 @@ public final class FooAdaptation<$Schema>
   }
 
   public @Override
-  Map<String, ActivityType<FooActivityInstance>>
+  Map<String, ActivityType<FooActivityInstance<$Schema>>>
   getActivityTypes()
   {
     return FooActivityInstance.getActivityTypes();
@@ -48,8 +48,8 @@ public final class FooAdaptation<$Schema>
 
   public @Override
   <$Timeline extends $Schema>
-  FooTask<$Timeline>
-  createActivityTask(FooActivityInstance activity)
+  FooTask<$Schema, $Timeline>
+  createActivityTask(FooActivityInstance<$Schema> activity)
   {
     return new FooTask<>(this.container, activity);
   }

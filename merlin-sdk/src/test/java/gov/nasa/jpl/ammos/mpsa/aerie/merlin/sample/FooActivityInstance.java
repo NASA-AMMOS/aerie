@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -9,7 +10,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import java.util.Map;
 
 // TODO: Automatically generate at compile time.
-public final class FooActivityInstance implements ActivityInstance {
+public final class FooActivityInstance<$Schema> implements ActivityInstance {
+  private final FooActivity<$Schema> activity = new FooActivity<>();
+
   @Override
   public SerializedActivity serialize() {
     return new SerializedActivity("foo", Map.of());
@@ -19,7 +22,7 @@ public final class FooActivityInstance implements ActivityInstance {
 //  public List<String> getValidationFailures() {
 //  }
 
-  public static Map<String, ActivityType<FooActivityInstance>> getActivityTypes() {
+  public static <$Schema> Map<String, ActivityType<FooActivityInstance<$Schema>>> getActivityTypes() {
     return Map.of("foo", new ActivityType<>() {
       @Override
       public String getName() {
@@ -32,8 +35,8 @@ public final class FooActivityInstance implements ActivityInstance {
       }
 
       @Override
-      public FooActivityInstance instantiate(final Map<String, SerializedValue> arguments) {
-        return new FooActivityInstance();
+      public FooActivityInstance<$Schema> instantiate(final Map<String, SerializedValue> arguments) {
+        return new FooActivityInstance<>();
       }
     });
   }
