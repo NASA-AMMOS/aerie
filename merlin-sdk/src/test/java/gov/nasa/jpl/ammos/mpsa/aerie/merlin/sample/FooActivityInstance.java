@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
@@ -16,6 +17,13 @@ public final class FooActivityInstance<$Schema> implements ActivityInstance {
   @Override
   public SerializedActivity serialize() {
     return new SerializedActivity("foo", Map.of());
+  }
+
+  public void run(
+      final Context<? extends $Schema, FooEvent, FooActivityInstance<$Schema>> ctx,
+      final FooResources<$Schema> resources)
+  {
+    this.activity.modelEffects(ctx, resources);
   }
 
 //  @Override

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
@@ -46,6 +47,6 @@ public final class FooAdaptation<$Schema>
   Task<$Timeline, FooEvent, FooActivityInstance<$Schema>>
   createActivityTask(final FooActivityInstance<$Schema> activity)
   {
-    return new FooTask<>(this.container, activity);
+    return new ReplayingTask<>(this.container, activity::run);
   }
 }
