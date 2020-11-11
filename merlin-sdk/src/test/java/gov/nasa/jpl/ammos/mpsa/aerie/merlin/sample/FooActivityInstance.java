@@ -9,7 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import java.util.Map;
 
 // TODO: Automatically generate at compile time.
-public final class FooActivity implements ActivityInstance {
+public final class FooActivityInstance implements ActivityInstance {
   @Override
   public SerializedActivity serialize() {
     return new SerializedActivity("foo", Map.of());
@@ -19,7 +19,7 @@ public final class FooActivity implements ActivityInstance {
 //  public List<String> getValidationFailures() {
 //  }
 
-  public static Map<String, ActivityType<FooActivity>> getActivityTypes() {
+  public static Map<String, ActivityType<FooActivityInstance>> getActivityTypes() {
     return Map.of("foo", new ActivityType<>() {
       @Override
       public String getName() {
@@ -32,8 +32,8 @@ public final class FooActivity implements ActivityInstance {
       }
 
       @Override
-      public FooActivity instantiate(final Map<String, SerializedValue> arguments) {
-        return new FooActivity();
+      public FooActivityInstance instantiate(final Map<String, SerializedValue> arguments) {
+        return new FooActivityInstance();
       }
     });
   }

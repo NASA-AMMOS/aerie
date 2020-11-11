@@ -8,13 +8,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 // TODO: Port the ReplayingTask machinery here, and move this into the framework module.
 public final class FooTask<$Timeline>
-    implements Task<$Timeline, FooEvent, FooActivity>
+    implements Task<$Timeline, FooEvent, FooActivityInstance>
 {
   private final FooResources<? super $Timeline> resources;
-  private final FooActivity activity;
+  private final FooActivityInstance activity;
   private int state;
 
-  public FooTask(final FooResources<? super $Timeline> resources, final FooActivity activity) {
+  public FooTask(final FooResources<? super $Timeline> resources, final FooActivityInstance activity) {
     this.resources = resources;
     this.activity = activity;
     this.state = 0;
@@ -22,7 +22,7 @@ public final class FooTask<$Timeline>
 
   public @Override
   ActivityStatus
-  step(final Scheduler<$Timeline, FooEvent, FooActivity> scheduler)
+  step(final Scheduler<$Timeline, FooEvent, FooActivityInstance> scheduler)
   {
     switch (this.state) {
       case 0:
