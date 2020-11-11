@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-public final class BarActivity<$Timeline> extends Activity<$Timeline> {
+public final class FooActivity<$Timeline> extends Activity<$Timeline> {
   @Override
   public void modelEffects(final Context<$Timeline> ctx, final FooResources<? super $Timeline> resources) {
     resources.rate.add(ctx, 1.0);
