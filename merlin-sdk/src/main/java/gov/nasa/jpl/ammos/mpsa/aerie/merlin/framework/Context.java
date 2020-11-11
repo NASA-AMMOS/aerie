@@ -1,14 +1,16 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface Context<$Timeline, Event, Activity> {
-  History<? extends $Timeline, ?> now();
+  History<$Timeline, ?> now();
 
   void emit(Event event);
-  <T> T ask(Resource<? super History<? extends $Timeline, ?>, T> resource);
+  double ask(RealResource<? super History<$Timeline, ?>> resource);
+  <T> T ask(DiscreteResource<? super History<$Timeline, ?>, T> resource);
 
   String spawn(Activity activity);
   String defer(Duration duration, Activity activity);
