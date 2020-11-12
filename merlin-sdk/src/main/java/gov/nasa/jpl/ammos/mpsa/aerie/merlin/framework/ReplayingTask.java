@@ -7,12 +7,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ActivityBreadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
@@ -188,6 +190,60 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
       if (this.history.isEmpty()) {
         // We're running normally.
         this.status = ActivityStatus.awaiting(id);
+        throw Yield;
+      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
+        // We've just now caught up.
+        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
+        this.nextBreadcrumbIndex += 1;
+
+        this.history = Optional.empty();
+      } else {
+        // We're still behind -- jump to the next breadcrumb.
+        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
+        this.nextBreadcrumbIndex += 1;
+
+        if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
+          throw new Error("Unexpected breadcrumb on waitFor(): " + breadcrumb.getClass().getName());
+        }
+
+        this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
+      }
+    }
+
+    @Override
+    public void waitFor(final RealResource<? super History<$Timeline, ?>> resource, final RealCondition condition) {
+      if (this.history.isEmpty()) {
+        // We're running normally.
+        this.status = ActivityStatus.awaiting(
+            (now) -> resource.getDynamics(now).<SolvableDynamics<Double, RealCondition>>map(SolvableDynamics::real),
+            condition);
+        throw Yield;
+      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
+        // We've just now caught up.
+        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
+        this.nextBreadcrumbIndex += 1;
+
+        this.history = Optional.empty();
+      } else {
+        // We're still behind -- jump to the next breadcrumb.
+        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
+        this.nextBreadcrumbIndex += 1;
+
+        if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
+          throw new Error("Unexpected breadcrumb on waitFor(): " + breadcrumb.getClass().getName());
+        }
+
+        this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
+      }
+    }
+
+    @Override
+    public <T> void waitFor(final DiscreteResource<? super History<$Timeline, ?>, T> resource, final Set<T> condition) {
+      if (this.history.isEmpty()) {
+        // We're running normally.
+        this.status = ActivityStatus.awaiting(
+            (now) -> resource.getDynamics(now).map(SolvableDynamics::discrete),
+            condition);
         throw Yield;
       } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
         // We've just now caught up.
