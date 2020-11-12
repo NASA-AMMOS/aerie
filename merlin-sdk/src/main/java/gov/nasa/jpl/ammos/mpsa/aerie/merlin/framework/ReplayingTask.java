@@ -2,12 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.ActivityBreadcrumb;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.ArrayList;
@@ -81,12 +81,16 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
 
     @Override
     public double ask(final RealResource<? super History<$Timeline, ?>> resource) {
-      return new RealSolver().valueAt(resource.getDynamics(now()).getDynamics(), Duration.ZERO);
+      final var dynamics = SolvableDynamics.real(resource.getDynamics(now()).getDynamics());
+
+      return this.scheduler.ask(dynamics, Duration.ZERO);
     }
 
     @Override
     public <T> T ask(final DiscreteResource<? super History<$Timeline, ?>, T> resource) {
-      return resource.getDynamics(now()).getDynamics();
+      final var dynamics = SolvableDynamics.discrete(resource.getDynamics(now()).getDynamics());
+
+      return this.scheduler.ask(dynamics, Duration.ZERO);
     }
 
     @Override

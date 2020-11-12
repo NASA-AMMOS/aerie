@@ -5,9 +5,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
@@ -64,6 +67,21 @@ public final class SimulationDriver {
       @Override
       public History<$Timeline, Event> now() {
         return this.now;
+      }
+
+      @Override
+      public <Solution> Solution ask(final SolvableDynamics<Solution> resource, final Duration offset) {
+        return resource.solve(new SolvableDynamics.Visitor() {
+          @Override
+          public Double real(final RealDynamics dynamics) {
+            return new RealSolver().valueAt(dynamics, offset);
+          }
+
+          @Override
+          public <ResourceType> ResourceType discrete(final ResourceType fact) {
+            return fact;
+          }
+        });
       }
     };
 
