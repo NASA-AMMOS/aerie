@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface Scheduler<$Timeline, $Event, $Activity> {
   History<$Timeline, $Event> now();
-  <Solution> Solution ask(SolvableDynamics<Solution> resource, Duration offset);
+  <Solution> Solution ask(SolvableDynamics<Solution, ?> resource, Duration offset);
 
   void emit($Event event);
   String spawn($Activity activity);

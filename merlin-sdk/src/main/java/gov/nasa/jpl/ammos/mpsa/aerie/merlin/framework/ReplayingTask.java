@@ -30,7 +30,7 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
   }
 
   public @Override
-  ActivityStatus
+  ActivityStatus<$Timeline>
   step(final Scheduler<$Timeline, Event, ActivityType> scheduler)
   {
     final var context = this.new ReplayingReactionContext(this.initialTime, scheduler);

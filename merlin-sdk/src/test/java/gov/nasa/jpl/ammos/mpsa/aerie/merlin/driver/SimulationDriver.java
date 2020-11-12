@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -70,7 +71,7 @@ public final class SimulationDriver {
       }
 
       @Override
-      public <Solution> Solution ask(final SolvableDynamics<Solution> resource, final Duration offset) {
+      public <Solution> Solution ask(final SolvableDynamics<Solution, ?> resource, final Duration offset) {
         return resource.solve(new SolvableDynamics.Visitor() {
           @Override
           public Double real(final RealDynamics dynamics) {
@@ -85,7 +86,7 @@ public final class SimulationDriver {
       }
     };
 
-    final var visitor = new ActivityStatus.Visitor<Boolean>() {
+    final var visitor = new ActivityStatus.Visitor<$Timeline, Boolean>() {
       @Override
       public Boolean completed() {
         // TODO: Emit an "activity end" event.
@@ -94,7 +95,7 @@ public final class SimulationDriver {
 
       @Override
       public Boolean awaiting(final String s) {
-        // TODO: Yield this task if the awaited activity is not yet complete.
+        // TODO: Yield this task until the awaited activity is complete.
         return true;
       }
 
@@ -102,6 +103,15 @@ public final class SimulationDriver {
       public Boolean delayed(final Duration delay) {
         // TODO: Yield this task and perform any other tasks between now and the resumption point.
         scheduler.now = scheduler.now.wait(delay);
+        return true;
+      }
+
+      @Override
+      public <ResourceType, ConditionType> Boolean awaiting(
+          final Resource<History<$Timeline, ?>, SolvableDynamics<ResourceType, ConditionType>> resource,
+          final ConditionType condition)
+      {
+        // TODO: Yield this task until the awaited condition is met.
         return true;
       }
     };
