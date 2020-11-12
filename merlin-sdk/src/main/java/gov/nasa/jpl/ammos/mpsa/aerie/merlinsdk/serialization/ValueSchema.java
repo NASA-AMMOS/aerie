@@ -237,6 +237,11 @@ public abstract class ValueSchema {
     public T onStruct(final Map<String, ValueSchema> value) {
       return this.onDefault();
     }
+
+    @Override
+    public T onVariant(final Class<? extends Enum<?>> enumeration) {
+      return this.onDefault();
+    }
   }
 
   /**
