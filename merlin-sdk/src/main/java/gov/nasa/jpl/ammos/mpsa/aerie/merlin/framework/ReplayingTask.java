@@ -41,16 +41,25 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
 
     try {
       this.activity.accept(context, this.resources);
-      return ActivityStatus.completed();
-    } catch (final Defer request) {
-      return ActivityStatus.delayed(request.duration);
-    } catch (final Await request) {
-      return ActivityStatus.awaiting(request.activityId);
+
+      // If we get here, the activity has completed normally.
+    } catch (final Yield ignored) {
+      // If we get here, the activity has suspended.
     }
+
+    return context.getStatus();
   }
+
+  // Since this exception is just used to transfer control out of an activity,
+  //   we can pre-allocate a single instance as a unique token
+  //   to avoid some of the overhead of exceptions
+  //   (most notably the call stack snapshotting).
+  private static final class Yield extends RuntimeException {}
+  private static final Yield Yield = new Yield();
 
   private final class ReplayingReactionContext implements Context<$Timeline, Event, ActivityType> {
     private final Scheduler<$Timeline, Event, ActivityType> scheduler;
+    private ActivityStatus<$Timeline> status = ActivityStatus.completed();
 
     private Optional<History<$Timeline, Event>> history;
     private int nextBreadcrumbIndex = 0;
@@ -61,6 +70,10 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     {
       this.history = initialTime;
       this.scheduler = scheduler;
+    }
+
+    private ActivityStatus<$Timeline> getStatus() {
+      return this.status;
     }
 
     @Override
@@ -149,7 +162,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     public void delay(final Duration duration) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        throw new Defer(duration);
+        this.status = ActivityStatus.delayed(duration);
+        throw Yield;
       } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
         // We've just now caught up.
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
@@ -173,7 +187,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     public void waitFor(final String id) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        throw new Await(id);
+        this.status = ActivityStatus.awaiting(id);
+        throw Yield;
       } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
         // We've just now caught up.
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
@@ -191,22 +206,6 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
 
         this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
       }
-    }
-  }
-
-  private static final class Defer extends RuntimeException {
-    public final Duration duration;
-
-    private Defer(final Duration duration) {
-      this.duration = duration;
-    }
-  }
-
-  private static final class Await extends RuntimeException {
-    public final String activityId;
-
-    private Await(final String activityId) {
-      this.activityId = activityId;
     }
   }
 }
