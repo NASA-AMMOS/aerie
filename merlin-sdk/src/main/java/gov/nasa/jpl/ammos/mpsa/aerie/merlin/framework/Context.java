@@ -1,56 +1,31 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.NotImplementedException;
 
-public abstract class Context<$Timeline, Event, Activity> {
-  private final Scheduler<$Timeline, Event, Activity> scheduler;
+public interface Context<$Timeline, Event, Activity> {
+  History<$Timeline, ?> now();
 
-  public Context(final Scheduler<$Timeline, Event, Activity> scheduler) {
-    this.scheduler = scheduler;
-  }
+  void emit(Event event);
+  double ask(RealResource<? super History<$Timeline, ?>> resource);
+  <T> T ask(DiscreteResource<? super History<$Timeline, ?>, T> resource);
 
-  public final History<? extends $Timeline, ?> now() {
-    return this.scheduler.now();
-  }
+  String spawn(Activity activity);
+  String defer(Duration duration, Activity activity);
+  void delay(Duration duration);
+  void waitFor(String id);
 
-  public final void emit(final Event event) {
-    this.scheduler.emit(event);
-  }
-
-  public final String spawn(final Activity activity) {
-    return this.scheduler.spawn(activity);
-  }
-
-  public final String defer(final Duration duration, final Activity activity) {
-    return this.scheduler.defer(duration, activity);
-  }
-
-  public final void delay(final Duration duration) {
-    throw new NotImplementedException("");
-  }
-
-  public final void waitFor(final String id) {
-    throw new NotImplementedException("");
-  }
-
-
-  public final void call(final Activity activity) {
+  default void call(final Activity activity) {
     this.waitFor(this.spawn(activity));
   }
 
-  public final String defer(final long quantity, final Duration unit, final Activity activity) {
-    return this.defer(Duration.of(quantity, unit), activity);
+  default String defer(final long quantity, final Duration unit, final Activity activity) {
+    return this.defer(unit.times(quantity), activity);
   }
 
-  public final void delay(final long quantity, final Duration unit) {
-    this.delay(Duration.of(quantity, unit));
-  }
-
-  public final <T> T ask(final Resource<? super History<? extends $Timeline, ?>, T> resource) {
-    return resource.getDynamics(this.now()).getDynamics();
+  default void delay(long quantity, Duration unit) {
+    this.delay(unit.times(quantity));
   }
 }

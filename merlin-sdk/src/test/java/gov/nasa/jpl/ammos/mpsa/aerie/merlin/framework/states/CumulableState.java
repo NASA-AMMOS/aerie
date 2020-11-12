@@ -2,8 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -28,6 +26,6 @@ public final class CumulableState<$Schema, Event> {
   }
 
   public double get(final gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context<? extends $Schema, Event, ?> ctx) {
-    return new RealSolver().valueAt(ctx.ask(this.resource), Duration.ZERO);
+    return ctx.ask(this.resource);
   }
 }
