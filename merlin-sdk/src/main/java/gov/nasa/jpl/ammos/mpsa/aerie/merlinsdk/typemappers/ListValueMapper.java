@@ -16,7 +16,7 @@ public final class ListValueMapper<T> implements ValueMapper<List<T>> {
 
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.ofSequence(elementMapper.getValueSchema());
+    return ValueSchema.ofSeries(elementMapper.getValueSchema());
   }
 
   @Override

@@ -422,7 +422,7 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onSequence(final ValueSchema itemSchema) {
+    public JsonValue onSeries(final ValueSchema itemSchema) {
       return Json
           .createObjectBuilder()
           .add("type", "sequence")
@@ -440,7 +440,7 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onEnum(Class<? extends Enum<?>> enumeration) {
+    public JsonValue onVariant(Class<? extends Enum<?>> enumeration) {
       var enumValues = Arrays.asList(enumeration.getEnumConstants());
       return Json
           .createObjectBuilder()

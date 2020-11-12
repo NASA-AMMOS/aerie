@@ -20,7 +20,7 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
 
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.ofSequence(ValueSchema.ofStruct(Map.of(
+    return ValueSchema.ofSeries(ValueSchema.ofStruct(Map.of(
         "key", keyMapper.getValueSchema(),
         "value", elementMapper.getValueSchema())));
   }

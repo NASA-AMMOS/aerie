@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveBooleanArrayValueMapper implements ValueMapper<boolean[]> {
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSequence(ValueSchema.BOOLEAN);
+        return ValueSchema.ofSeries(ValueSchema.BOOLEAN);
     }
 
     @Override

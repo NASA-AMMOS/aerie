@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveCharArrayValueMapper implements ValueMapper<char[]> {
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSequence(ValueSchema.STRING);
+        return ValueSchema.ofSeries(ValueSchema.STRING);
     }
 
     @Override

@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveLongArrayValueMapper implements ValueMapper<long[]> {
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSequence(ValueSchema.INT);
+        return ValueSchema.ofSeries(ValueSchema.INT);
     }
 
     @Override

@@ -13,7 +13,7 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
 
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofEnum(enumType);
+        return ValueSchema.ofVariant(enumType);
     }
 
     @Override
