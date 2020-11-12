@@ -118,19 +118,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
         this.nextBreadcrumbIndex += 1;
 
         return id;
-      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
-        // We've just now caught up.
-        throw new Error("Expected a Spawn breadcrumb while replaying; found none.");
       } else {
-        // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
-        this.nextBreadcrumbIndex += 1;
-
-        if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
-          throw new Error("Unexpected breadcrumb on spawn(): " + breadcrumb.getClass().getName());
-        }
-
-        return ((ActivityBreadcrumb.Spawn<$Timeline, Event>) breadcrumb).activityId;
+        return respawn();
       }
     }
 
@@ -144,19 +133,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
         this.nextBreadcrumbIndex += 1;
 
         return id;
-      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
-        // We've just now caught up.
-        throw new Error("Expected a Spawn breadcrumb while replaying; found none.");
       } else {
-        // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
-        this.nextBreadcrumbIndex += 1;
-
-        if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
-          throw new Error("Unexpected breadcrumb on spawn(): " + breadcrumb.getClass().getName());
-        }
-
-        return ((ActivityBreadcrumb.Spawn<$Timeline, Event>) breadcrumb).activityId;
+        return respawn();
       }
     }
 
@@ -166,22 +144,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
         // We're running normally.
         this.status = ActivityStatus.delayed(duration);
         throw Yield;
-      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
-        // We've just now caught up.
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
-        this.nextBreadcrumbIndex += 1;
-
-        this.history = Optional.empty();
       } else {
-        // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
-        this.nextBreadcrumbIndex += 1;
-
-        if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
-          throw new Error("Unexpected breadcrumb on delay(): " + breadcrumb.getClass().getName());
-        }
-
-        this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
+        readvance();
       }
     }
 
@@ -191,22 +155,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
         // We're running normally.
         this.status = ActivityStatus.awaiting(id);
         throw Yield;
-      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
-        // We've just now caught up.
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
-        this.nextBreadcrumbIndex += 1;
-
-        this.history = Optional.empty();
       } else {
-        // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
-        this.nextBreadcrumbIndex += 1;
-
-        if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
-          throw new Error("Unexpected breadcrumb on waitFor(): " + breadcrumb.getClass().getName());
-        }
-
-        this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
+        readvance();
       }
     }
 
@@ -218,22 +168,8 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
             (now) -> resource.getDynamics(now).<SolvableDynamics<Double, RealCondition>>map(SolvableDynamics::real),
             condition);
         throw Yield;
-      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
-        // We've just now caught up.
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
-        this.nextBreadcrumbIndex += 1;
-
-        this.history = Optional.empty();
       } else {
-        // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
-        this.nextBreadcrumbIndex += 1;
-
-        if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
-          throw new Error("Unexpected breadcrumb on waitFor(): " + breadcrumb.getClass().getName());
-        }
-
-        this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
+        readvance();
       }
     }
 
@@ -245,7 +181,13 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
             (now) -> resource.getDynamics(now).map(SolvableDynamics::discrete),
             condition);
         throw Yield;
-      } else if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
+      } else {
+        readvance();
+      }
+    }
+
+    private void readvance() {
+      if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
         // We've just now caught up.
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
         this.nextBreadcrumbIndex += 1;
@@ -257,10 +199,27 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
         this.nextBreadcrumbIndex += 1;
 
         if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
-          throw new Error("Unexpected breadcrumb on waitFor(): " + breadcrumb.getClass().getName());
+          throw new Error("Expected Advance breadcrumb; got " + breadcrumb.getClass().getName());
         }
 
         this.history = Optional.of(((ActivityBreadcrumb.Advance<$Timeline, Event>) breadcrumb).next);
+      }
+    }
+
+    private String respawn() {
+      if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
+        // We've just now caught up.
+        throw new Error("Expected a Spawn breadcrumb while replaying; found none.");
+      } else {
+        // We're still behind -- jump to the next breadcrumb.
+        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
+        this.nextBreadcrumbIndex += 1;
+
+        if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
+          throw new Error("Expected Spawn breadcrumb; got " + breadcrumb.getClass().getName());
+        }
+
+        return ((ActivityBreadcrumb.Spawn<$Timeline, Event>) breadcrumb).activityId;
       }
     }
   }
