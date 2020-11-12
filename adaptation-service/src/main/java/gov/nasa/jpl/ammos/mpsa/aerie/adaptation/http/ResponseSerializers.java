@@ -385,7 +385,7 @@ public final class ResponseSerializers {
     public JsonValue onReal() {
       return Json
           .createObjectBuilder()
-          .add("type", "double")
+          .add("type", "real")
           .build();
     }
 
@@ -401,7 +401,7 @@ public final class ResponseSerializers {
     public JsonValue onBoolean() {
       return Json
           .createObjectBuilder()
-          .add("type", "bool")
+          .add("type", "boolean")
           .build();
     }
 
@@ -425,7 +425,7 @@ public final class ResponseSerializers {
     public JsonValue onSeries(final ValueSchema itemSchema) {
       return Json
           .createObjectBuilder()
-          .add("type", "sequence")
+          .add("type", "series")
           .add("items", itemSchema.match(this))
           .build();
     }
@@ -444,11 +444,11 @@ public final class ResponseSerializers {
       var enumValues = Arrays.asList(enumeration.getEnumConstants());
       return Json
           .createObjectBuilder()
-          .add("type", "enumerated")
-          .add("items", serializeIterable(v -> Json.createObjectBuilder()
-                                                   .add("key", v.name())
-                                                   .add("label", v.toString())
-                                                   .build(), enumValues))
+          .add("type", "variant")
+          .add("variants", serializeIterable(v -> Json.createObjectBuilder()
+                                                      .add("key", v.name())
+                                                      .add("label", v.toString())
+                                                      .build(), enumValues))
           .build();
     }
   }
