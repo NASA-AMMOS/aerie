@@ -5,6 +5,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.ClosedInterval;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public final class FooActivity<$Schema> extends Activity<$Schema> {
@@ -15,6 +17,7 @@ public final class FooActivity<$Schema> extends Activity<$Schema> {
   {
     resources.rate.add(ctx, 1.0);
     ctx.delay(1, Duration.SECOND);
+    ctx.waitFor(resources.dataVolume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
     resources.rate.add(ctx, 2.0);
     resources.rate.add(ctx, resources.rate.get(ctx));
   }
