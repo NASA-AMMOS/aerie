@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6};
+var data = {"i0":6,"i1":6,"i2":6,"i3":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -116,7 +116,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol</a></div>
-<h2 title="Interface ActivityStatus.Visitor" class="title">Interface ActivityStatus.Visitor&lt;Result&gt;</h2>
+<h2 title="Interface ActivityStatus.Visitor" class="title">Interface ActivityStatus.Visitor&lt;$Timeline,&#8203;Result&gt;</h2>
 </div>
 <div class="contentContainer">
 <div class="description">
@@ -124,10 +124,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <dl>
 <dt>Enclosing class:</dt>
-<dd><a href="ActivityStatus.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">ActivityStatus</a></dd>
+<dd><a href="ActivityStatus.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">ActivityStatus</a>&lt;<a href="ActivityStatus.html" title="type parameter in ActivityStatus">$Timeline</a>&gt;</dd>
 </dl>
 <hr>
-<pre>public static interface <span class="typeNameLabel">ActivityStatus.Visitor&lt;Result&gt;</span></pre>
+<pre>public static interface <span class="typeNameLabel">ActivityStatus.Visitor&lt;$Timeline,&#8203;Result&gt;</span></pre>
 </li>
 </ul>
 </div>
@@ -149,16 +149,22 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#awaiting(java.lang.String)">awaiting</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id)</code></th>
+<td class="colFirst"><code>&lt;ResourceType,&#8203;ConditionType&gt;<br><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource,ConditionType)">awaiting</a></span>&#8203;(<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">$Timeline</a>,&#8203;?&gt;,&#8203;<a href="SolvableDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SolvableDynamics</a>&lt;ResourceType,&#8203;ConditionType&gt;&gt;&nbsp;resource,
+        ConditionType&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completed()">completed</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#awaiting(java.lang.String)">awaiting</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;activityId)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#completed()">completed</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delayed(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delayed</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -195,16 +201,28 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>awaiting</h4>
-<pre class="methodSignature"><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a>&nbsp;awaiting&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id)</pre>
+<pre class="methodSignature"><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a>&nbsp;awaiting&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;activityId)</pre>
 </li>
 </ul>
 <a id="delayed(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>delayed</h4>
 <pre class="methodSignature"><a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a>&nbsp;delayed&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay)</pre>
+</li>
+</ul>
+<a id="awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource,java.lang.Object)">
+<!--   -->
+</a><a id="awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource,ConditionType)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>awaiting</h4>
+<pre class="methodSignature">&lt;ResourceType,&#8203;ConditionType&gt;&nbsp;<a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">Result</a>&nbsp;awaiting&#8203;(<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;<a href="ActivityStatus.Visitor.html" title="type parameter in ActivityStatus.Visitor">$Timeline</a>,&#8203;?&gt;,&#8203;<a href="SolvableDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SolvableDynamics</a>&lt;ResourceType,&#8203;ConditionType&gt;&gt;&nbsp;resource,
+                                                   ConditionType&nbsp;condition)</pre>
 </li>
 </ul>
 </li>
