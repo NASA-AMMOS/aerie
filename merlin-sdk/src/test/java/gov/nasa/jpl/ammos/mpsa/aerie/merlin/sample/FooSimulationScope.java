@@ -57,6 +57,7 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
   Task<$Timeline, FooEvent, FooActivityInstance>
   createActivityTask(final FooActivityInstance activity)
   {
-    return new ReplayingTask<>(this.container, activity::run);
+    return new ReplayingTask<$Schema, $Timeline, FooEvent, FooActivityInstance, FooResources<$Schema>>(
+        this.container, activity::run);
   }
 }

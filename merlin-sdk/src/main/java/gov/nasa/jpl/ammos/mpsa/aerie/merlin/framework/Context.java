@@ -8,10 +8,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Set;
 
-public interface Context<$Timeline, Event, Activity> {
-  History<$Timeline, ?> now();
-  double ask(RealResource<? super History<$Timeline, ?>> resource);
-  <T> T ask(DiscreteResource<? super History<$Timeline, ?>, T> resource);
+public interface Context<$Schema, Event, Activity> {
+  History<? extends $Schema, Event> now();
+  double ask(RealResource<? super History<? extends $Schema, ?>> resource);
+  <T> T ask(DiscreteResource<? super History<? extends $Schema, ?>, T> resource);
 
   void emit(Event event);
   String spawn(Activity activity);
@@ -19,18 +19,6 @@ public interface Context<$Timeline, Event, Activity> {
 
   void delay(Duration duration);
   void waitFor(String id);
-  void waitFor(RealResource<? super History<$Timeline, ?>> resource, RealCondition condition);
-  <T> void waitFor(DiscreteResource<? super History<$Timeline, ?>, T> resource, Set<T> condition);
-
-  default void call(final Activity activity) {
-    this.waitFor(this.spawn(activity));
-  }
-
-  default String defer(final long quantity, final Duration unit, final Activity activity) {
-    return this.defer(unit.times(quantity), activity);
-  }
-
-  default void delay(long quantity, Duration unit) {
-    this.delay(unit.times(quantity));
-  }
+  void waitFor(RealResource<? super History<? extends $Schema, ?>> resource, RealCondition condition);
+  <T> void waitFor(DiscreteResource<? super History<? extends $Schema, ?>, T> resource, Set<T> condition);
 }

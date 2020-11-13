@@ -17,16 +17,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
+public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, ActivityType, Resources>
     implements Task<$Timeline, Event, ActivityType>
 {
   private final Resources resources;
-  private final BiConsumer<Context<$Timeline, Event, ActivityType>, Resources> activity;
+  private final BiConsumer<Context<$Schema, Event, ActivityType>, Resources> activity;
 
   private Optional<History<$Timeline, Event>> initialTime = Optional.empty();
   private final List<ActivityBreadcrumb<$Timeline, Event>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final Resources resources, final BiConsumer<Context<$Timeline, Event, ActivityType>, Resources> activity) {
+  public ReplayingTask(final Resources resources, final BiConsumer<Context<$Schema, Event, ActivityType>, Resources> activity) {
     this.resources = resources;
     this.activity = activity;
   }
@@ -59,7 +59,7 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
   private static final class Yield extends RuntimeException {}
   private static final Yield Yield = new Yield();
 
-  private final class ReplayingReactionContext implements Context<$Timeline, Event, ActivityType> {
+  private final class ReplayingReactionContext implements Context<$Schema, Event, ActivityType> {
     private final Scheduler<$Timeline, Event, ActivityType> scheduler;
     private ActivityStatus<$Timeline> status = ActivityStatus.completed();
 
@@ -79,7 +79,7 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     }
 
     @Override
-    public History<$Timeline, ?> now() {
+    public History<$Timeline, Event> now() {
       return this.history.orElseGet(this.scheduler::now);
     }
 
@@ -95,14 +95,14 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     }
 
     @Override
-    public double ask(final RealResource<? super History<$Timeline, ?>> resource) {
+    public double ask(final RealResource<? super History<? extends $Schema, ?>> resource) {
       final var dynamics = SolvableDynamics.real(resource.getDynamics(now()).getDynamics());
 
       return this.scheduler.ask(dynamics, Duration.ZERO);
     }
 
     @Override
-    public <T> T ask(final DiscreteResource<? super History<$Timeline, ?>, T> resource) {
+    public <T> T ask(final DiscreteResource<? super History<? extends $Schema, ?>, T> resource) {
       final var dynamics = SolvableDynamics.discrete(resource.getDynamics(now()).getDynamics());
 
       return this.scheduler.ask(dynamics, Duration.ZERO);
@@ -161,7 +161,7 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     }
 
     @Override
-    public void waitFor(final RealResource<? super History<$Timeline, ?>> resource, final RealCondition condition) {
+    public void waitFor(final RealResource<? super History<? extends $Schema, ?>> resource, final RealCondition condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
         this.status = ActivityStatus.awaiting(
@@ -174,7 +174,7 @@ public final class ReplayingTask<$Timeline, Event, ActivityType, Resources>
     }
 
     @Override
-    public <T> void waitFor(final DiscreteResource<? super History<$Timeline, ?>, T> resource, final Set<T> condition) {
+    public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema, ?>, T> resource, final Set<T> condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
         this.status = ActivityStatus.awaiting(

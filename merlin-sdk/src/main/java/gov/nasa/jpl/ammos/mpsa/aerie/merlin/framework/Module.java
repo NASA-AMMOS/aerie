@@ -12,7 +12,7 @@ public abstract class Module<$Schema, Event, Activity> {
   private Context<? extends $Schema, Event, Activity> context = null;
 
   /* package-local */
-  final void setContext(final Context<? extends $Schema, Event, Activity> context) {
+  final void setContext(final Context<$Schema, Event, Activity> context) {
     this.context = context;
   }
 

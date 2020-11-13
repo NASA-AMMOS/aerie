@@ -20,7 +20,7 @@ public final class FooActivityInstance implements ActivityInstance {
   }
 
   public <$Schema> void run(
-      final Context<? extends $Schema, FooEvent, FooActivityInstance> ctx,
+      final Context<$Schema, FooEvent, FooActivityInstance> ctx,
       final FooResources<$Schema> resources)
   {
     this.activity.new EffectModel<$Schema>().run(ctx, resources);
