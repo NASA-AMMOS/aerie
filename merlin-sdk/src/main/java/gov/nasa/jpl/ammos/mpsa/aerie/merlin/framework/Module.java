@@ -9,11 +9,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import java.util.Set;
 
 public abstract class Module<$Schema, Event, Activity> {
-  private Context<? extends $Schema, Event, Activity> context = null;
+  private final ProxyContext<$Schema, Event, Activity> context = new ProxyContext<>();
 
   /* package-local */
-  final void setContext(final Context<$Schema, Event, Activity> context) {
-    this.context = context;
+  final Context<$Schema, Event, Activity> setContext(final Context<$Schema, Event, Activity> context) {
+    final var old = this.context.getTarget();
+    this.context.setTarget(context);
+    return old;
+  }
+
+  protected final <Submodule extends Module<$Schema, Event, Activity>>
+  Submodule submodule(final Submodule submodule) {
+    submodule.setContext(this.context);
+    return submodule;
   }
 
 
