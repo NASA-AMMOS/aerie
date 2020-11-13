@@ -13,7 +13,7 @@ public class Vector3DValueMapper implements ValueMapper<Vector3D> {
 
   @Override
   public ValueSchema getValueSchema() {
-    return ValueSchema.ofSequence(ValueSchema.REAL);
+    return ValueSchema.ofSeries(ValueSchema.REAL);
   }
 
   @Override

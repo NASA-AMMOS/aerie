@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveShortArrayValueMapper implements ValueMapper<short[]> {
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSequence(ValueSchema.INT);
+        return ValueSchema.ofSeries(ValueSchema.INT);
     }
 
     @Override

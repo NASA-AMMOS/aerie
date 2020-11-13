@@ -10,7 +10,7 @@ import java.util.List;
 public class PrimitiveFloatArrayValueMapper implements ValueMapper<float[]> {
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSequence(ValueSchema.REAL);
+        return ValueSchema.ofSeries(ValueSchema.REAL);
     }
 
     @Override

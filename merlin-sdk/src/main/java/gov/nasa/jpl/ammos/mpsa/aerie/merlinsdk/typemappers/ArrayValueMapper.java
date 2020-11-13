@@ -18,7 +18,7 @@ public class ArrayValueMapper<T> implements ValueMapper<T[]> {
 
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSequence(elementMapper.getValueSchema());
+        return ValueSchema.ofSeries(elementMapper.getValueSchema());
     }
 
     @Override

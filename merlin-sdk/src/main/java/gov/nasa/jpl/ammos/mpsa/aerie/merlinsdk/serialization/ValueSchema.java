@@ -16,8 +16,8 @@ import java.util.Optional;
  * is an adaptation-agnostic representation of the serialized structure of a parameter.
  *
  * For instance, if an activity accepts two parameters, each of which is a 3D point in space,
- * then the schema for each point will be a sequence of three real number primitives. The schema
- * for the activity itself will be a sequence of two instances of the schema for points.
+ * then the schema for each point will be a series of three real number primitives. The schema
+ * for the activity itself will be a series of two instances of the schema for points.
  *
  * This is useful for providing information to mission-agnostic front-end applications, which
  * may (for instance) present a specialized UI for each primitive type, or a specialized means
@@ -62,9 +62,9 @@ public abstract class ValueSchema {
     T onBoolean();
     T onString();
     T onDuration();
-    T onSequence(ValueSchema value);
+    T onSeries(ValueSchema value);
     T onStruct(Map<String, ValueSchema> value);
-    T onEnum(Class<? extends Enum<?>> enumeration);
+    T onVariant(Class<? extends Enum<?>> enumeration);
   }
 
   /**
@@ -144,12 +144,12 @@ public abstract class ValueSchema {
    * @param value A {@link ValueSchema}.
    * @return A new {@link ValueSchema} representing a homogeneous list of elements.
    */
-  public static ValueSchema ofSequence(final ValueSchema value) {
+  public static ValueSchema ofSeries(final ValueSchema value) {
     Objects.requireNonNull(value);
     return new ValueSchema() {
       @Override
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onSequence(value);
+        return visitor.onSeries(value);
       }
     };
   }
@@ -177,11 +177,11 @@ public abstract class ValueSchema {
    *
    * @return A new {@link ValueSchema} representing an {@link Enum} type.
    */
-  public static ValueSchema ofEnum(final Class<? extends Enum<?>> enumeration) {
+  public static ValueSchema ofVariant(final Class<? extends Enum<?>> enumeration) {
     Objects.requireNonNull(enumeration);
     return new ValueSchema() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onEnum(enumeration);
+        return visitor.onVariant(enumeration);
       }
     };
   }
@@ -229,12 +229,17 @@ public abstract class ValueSchema {
     }
 
     @Override
-    public T onSequence(final ValueSchema value) {
+    public T onSeries(final ValueSchema value) {
       return this.onDefault();
     }
 
     @Override
     public T onStruct(final Map<String, ValueSchema> value) {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onVariant(final Class<? extends Enum<?>> enumeration) {
       return this.onDefault();
     }
   }
@@ -251,7 +256,7 @@ public abstract class ValueSchema {
     }
 
     @Override
-    public Optional<T> onEnum(Class<? extends Enum<?>> enumeration) {
+    public Optional<T> onVariant(Class<? extends Enum<?>> enumeration) {
       return onDefault();
     }
   }
@@ -337,12 +342,12 @@ public abstract class ValueSchema {
    * Attempts to access this schema as a list of {@code ValueSchema}s.
    *
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
-   *   object represents a sequence. Otherwise, returns an empty {@link Optional}.
+   *   object represents a series. Otherwise, returns an empty {@link Optional}.
    */
-  public Optional<ValueSchema> asSequence() {
+  public Optional<ValueSchema> asSeries() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<ValueSchema> onSequence(final ValueSchema value) {
+      public Optional<ValueSchema> onSeries(final ValueSchema value) {
         return Optional.of(value);
       }
     });
@@ -369,10 +374,10 @@ public abstract class ValueSchema {
    * @return An {@link Optional} containing an enum if this object represents an enumeration.
    *   Otherwise, returns an empty {@link Optional}
    */
-  public Optional<Class<? extends Enum<?>>> asEnum() {
+  public Optional<Class<? extends Enum<?>>> asVariant() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Class<? extends Enum<?>>> onEnum(final Class<? extends Enum<?>> enumeration) {
+      public Optional<Class<? extends Enum<?>>> onVariant(final Class<? extends Enum<?>> enumeration) {
         return Optional.of(enumeration);
       }
     });
@@ -407,7 +412,7 @@ public abstract class ValueSchema {
       }
 
       @Override
-      public String onSequence(final ValueSchema value) {
+      public String onSeries(final ValueSchema value) {
         return "[" + value + "]";
       }
 
@@ -417,8 +422,8 @@ public abstract class ValueSchema {
       }
 
       @Override
-      public String onEnum(Class<? extends Enum<?>> enumeration) {
-        return "ValueSchema.ENUM(" + enumeration.getName() + ")";
+      public String onVariant(Class<? extends Enum<?>> enumeration) {
+        return "ValueSchema.VARIANT(enum=" + enumeration.getName() + ")";
       }
     });
   }
@@ -455,8 +460,8 @@ public abstract class ValueSchema {
       }
 
       @Override
-      public Boolean onSequence(final ValueSchema value) {
-        return other.asSequence().map(x -> x.equals(value)).orElse(false);
+      public Boolean onSeries(final ValueSchema value) {
+        return other.asSeries().map(x -> x.equals(value)).orElse(false);
       }
 
       @Override
@@ -465,8 +470,8 @@ public abstract class ValueSchema {
       }
 
       @Override
-      public Boolean onEnum(Class<? extends Enum<?>> enumeration) {
-        return other.asEnum().map(x -> x.equals(enumeration)).orElse(false);
+      public Boolean onVariant(Class<? extends Enum<?>> enumeration) {
+        return other.asVariant().map(x -> x.equals(enumeration)).orElse(false);
       }
     });
   }
