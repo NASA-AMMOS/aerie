@@ -17,14 +17,14 @@ public final class FooActivity {
     @Override
     protected void run(final FooResources<$Schema> resources) {
       if (y.equals("test")) {
-        resources.addDataRate(x);
+        resources.rate.add(x);
       }
 
-      resources.addDataRate(1.0);
+      resources.rate.add(1.0);
       delay(1, SECOND);
       waitFor(resources.dataVolume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
-      resources.addDataRate(2.0);
-      resources.addDataRate(ask(resources.dataRate));
+      resources.rate.add(2.0);
+      resources.rate.add(resources.rate.get());
     }
   }
 }

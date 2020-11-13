@@ -52,9 +52,5 @@ public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, Fo
   public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
 
-  public final CumulableState<$Schema, FooEvent> rate = new CumulableState<>(dataRate, FooEvent::new);
-
-  public final void addDataRate(final double rate) {
-    emit(new FooEvent(rate));
-  }
+  public final CumulableState<$Schema, ?, ?> rate = submodule(new CumulableState<>(dataRate, FooEvent::new));
 }
