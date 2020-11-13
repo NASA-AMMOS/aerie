@@ -9,7 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 
 import java.util.function.Function;
 
-public abstract class Resources<$Schema, Event> {
+public abstract class Resources<$Schema, Event, Activity> extends Module<$Schema, Event, Activity> {
   private final ResourcesBuilder<$Schema, Event> builder;
 
   public Resources(final ResourcesBuilder<$Schema, Event> builder) {

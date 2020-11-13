@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.ClosedInterval;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
@@ -18,14 +17,14 @@ public final class FooActivity {
     @Override
     protected void run(final FooResources<$Schema> resources) {
       if (y.equals("test")) {
-        emit(new FooEvent(x));
+        resources.addDataRate(x);
       }
 
-      emit(new FooEvent(1.0));
+      resources.addDataRate(1.0);
       delay(1, SECOND);
       waitFor(resources.dataVolume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
-      emit(new FooEvent(2.0));
-      emit(new FooEvent(ask(resources.dataRate)));
+      resources.addDataRate(2.0);
+      resources.addDataRate(ask(resources.dataRate));
     }
   }
 }
