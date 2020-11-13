@@ -23,7 +23,7 @@ public final class FooActivityInstance implements ActivityInstance {
       final Context<? extends $Schema, FooEvent, FooActivityInstance> ctx,
       final FooResources<$Schema> resources)
   {
-    this.activity.new EffectModel<$Schema>().modelEffects(ctx, resources);
+    this.activity.new EffectModel<$Schema>().run(ctx, resources);
   }
 
 //  @Override
