@@ -16,7 +16,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Optional;
 import java.util.Set;
 
-public final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
+public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, FooActivityInstance> {
   // Need a clear story for how to logically group resource questions and event emissions together.
   // Need a way to produce a condition for a resource.
   // Need a way to assemble conditions into an overall constraint.
@@ -52,5 +52,5 @@ public final class FooResources<$Schema> extends Resources<$Schema, FooEvent> {
   public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
 
-  public final CumulableState<$Schema, FooEvent> rate = new CumulableState<>(dataRate, FooEvent::new);
+  public final CumulableState<$Schema, ?, ?> rate = submodule(new CumulableState<>(dataRate, FooEvent::new));
 }

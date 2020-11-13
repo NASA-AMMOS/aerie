@@ -1,13 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooActivityInstance;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.ClosedInterval;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
 
 public final class FooActivity {
   // These aren't activity parameters, since they aren't annotated with @Parameter.
@@ -15,20 +13,18 @@ public final class FooActivity {
   public int x = 0;
   public String y = "test";
 
-  public final class EffectModel<$Schema> extends Activity<$Schema> {
-    public void modelEffects(
-        final Context<? extends $Schema, FooEvent, FooActivityInstance> ctx,
-        final FooResources<$Schema> resources)
-    {
+  public final class EffectModel<$Schema> extends Task<$Schema> {
+    @Override
+    protected void run(final FooResources<$Schema> resources) {
       if (y.equals("test")) {
-        resources.rate.add(ctx, x);
+        resources.rate.add(x);
       }
 
-      resources.rate.add(ctx, 1.0);
-      ctx.delay(1, Duration.SECOND);
-      ctx.waitFor(resources.dataVolume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
-      resources.rate.add(ctx, 2.0);
-      resources.rate.add(ctx, resources.rate.get(ctx));
+      resources.rate.add(1.0);
+      delay(1, SECOND);
+      waitFor(resources.dataVolume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
+      resources.rate.add(2.0);
+      resources.rate.add(resources.rate.get());
     }
   }
 }
