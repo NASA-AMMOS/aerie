@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public interface Resources<$Schema, Event> {
+public interface SimulationScope<$Schema, Event, Activity extends ActivityInstance> {
   /* Produce */ Schema<$Schema, Event>
   /* Given   */ getSchema();
 
@@ -19,4 +19,8 @@ public interface Resources<$Schema, Event> {
 
   /* Produce */ Map<String, ? extends Resource<History<? extends $Schema, ?>, RealDynamics>>
   /* Given   */ getRealResources();
+
+  /* For all */ <$Timeline extends $Schema>
+  /* Produce */ Task<$Timeline, Event, Activity>
+  /* Given   */ createActivityTask(Activity activity);
 }

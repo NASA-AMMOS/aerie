@@ -13,9 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /* package-local */
-final class BuiltResources<$Schema, Event>
-    implements gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, Event>
-{
+public final class BuiltResources<$Schema, Event> {
   private final Schema<$Schema, Event> schema;
   private final Map<String, Resource<History<? extends $Schema, ?>, RealDynamics>> realResources;
   private final Map<String, Pair<ValueSchema, Resource<History<? extends $Schema, ?>, SerializedValue>>>
@@ -31,17 +29,14 @@ final class BuiltResources<$Schema, Event>
     this.discreteResources = Objects.requireNonNull(discreteResources);
   }
 
-  @Override
   public Schema<$Schema, Event> getSchema() {
     return this.schema;
   }
 
-  @Override
   public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema, ?>, SerializedValue>>> getDiscreteResources() {
     return Collections.unmodifiableMap(this.discreteResources);
   }
 
-  @Override
   public Map<String, ? extends Resource<History<? extends $Schema, ?>, RealDynamics>> getRealResources() {
     return Collections.unmodifiableMap(this.realResources);
   }

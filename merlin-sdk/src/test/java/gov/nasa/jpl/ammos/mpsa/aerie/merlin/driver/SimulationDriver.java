@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
@@ -19,30 +20,36 @@ import java.util.Map;
 public final class SimulationDriver {
   public static void main(final String[] args) {
     try {
-      bar(FooAdaptation.create());
+      foo(new FooAdaptation());
     } catch (final ActivityType.UnconstructableActivityException ex) {
       ex.printStackTrace();
     }
   }
 
-  private static <$Schema, Event, Activity extends ActivityInstance>
-  void bar(final Adaptation<$Schema, Event, Activity> adaptation)
+  private static <Activity extends ActivityInstance>
+  void foo(final Adaptation<Activity> adaptation)
   throws ActivityType.UnconstructableActivityException
   {
-    baz(SimulationTimeline.create(adaptation.getResources().getSchema()), adaptation);
+    bar(adaptation.getActivityTypes(), adaptation.createSimulationScope());
+  }
+
+  private static <$Schema, Event, Activity extends ActivityInstance>
+  void bar(
+      final Map<String, ActivityType<Activity>> activityTypes,
+      final SimulationScope<$Schema, Event, Activity> scope)
+  throws ActivityType.UnconstructableActivityException
+  {
+    baz(activityTypes, scope, SimulationTimeline.create(scope.getSchema()));
   }
 
   private static <$Timeline, Event, Activity extends ActivityInstance>
-  void
-  baz(
-      final SimulationTimeline<$Timeline, Event> timeline,
-      final Adaptation<? super $Timeline, Event, Activity> adaptation)
+  void baz(
+      final Map<String, ActivityType<Activity>> activityTypes,
+      final SimulationScope<? super $Timeline, Event, Activity> scope,
+      final SimulationTimeline<$Timeline, Event> timeline)
   throws ActivityType.UnconstructableActivityException
   {
-    final var activity = adaptation
-        .getActivityTypes()
-        .get("foo")
-        .instantiate(Map.of());
+    final var activity = activityTypes.get("foo").instantiate(Map.of());
 
     final var scheduler = new Scheduler<$Timeline, Event, Activity>() {
       // TODO: Track and reduce candelabras of spawned tasks
@@ -116,7 +123,7 @@ public final class SimulationDriver {
       }
     };
 
-    final var task = adaptation.<$Timeline>createActivityTask(activity);
+    final var task = scope.<$Timeline>createActivityTask(activity);
 
     boolean running = true;
     while (running) {
@@ -124,12 +131,11 @@ public final class SimulationDriver {
       running = task.step(scheduler).match(visitor);
     }
 
-    final var resources = adaptation.getResources();
     System.out.print(scheduler.now.getDebugTrace());
-    resources.getRealResources().forEach((name, resource) -> {
+    scope.getRealResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getDynamics(scheduler.now()));
     });
-    resources.getDiscreteResources().forEach((name, resource) -> {
+    scope.getDiscreteResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
     });
   }
