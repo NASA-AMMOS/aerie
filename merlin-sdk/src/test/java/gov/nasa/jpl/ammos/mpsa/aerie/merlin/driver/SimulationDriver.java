@@ -39,7 +39,7 @@ public final class SimulationDriver {
       final SimulationScope<$Schema, Event, Activity> scope)
   throws ActivityType.UnconstructableActivityException
   {
-    baz(activityTypes, scope, SimulationTimeline.create(scope.getResources().getSchema()));
+    baz(activityTypes, scope, SimulationTimeline.create(scope.getSchema()));
   }
 
   private static <$Timeline, Event, Activity extends ActivityInstance>
@@ -131,12 +131,11 @@ public final class SimulationDriver {
       running = task.step(scheduler).match(visitor);
     }
 
-    final var resources = scope.getResources();
     System.out.print(scheduler.now.getDebugTrace());
-    resources.getRealResources().forEach((name, resource) -> {
+    scope.getRealResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getDynamics(scheduler.now()));
     });
-    resources.getDiscreteResources().forEach((name, resource) -> {
+    scope.getDiscreteResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
     });
   }

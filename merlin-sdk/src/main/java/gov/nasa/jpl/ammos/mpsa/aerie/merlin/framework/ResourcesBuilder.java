@@ -28,7 +28,7 @@ public final class ResourcesBuilder<$Schema, Event> {
   }
 
   public
-  gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, Event>
+  BuiltResources<$Schema, Event>
   build() {
     return this.state.build(this.schemaBuilder.build());
   }
@@ -84,7 +84,7 @@ public final class ResourcesBuilder<$Schema, Event> {
     real(String name,
          Resource<History<? extends $Schema, ?>, RealDynamics> resource);
 
-    gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resources<$Schema, Event>
+    BuiltResources<$Schema, Event>
     build(Schema<$Schema, Event> schema);
   }
 
