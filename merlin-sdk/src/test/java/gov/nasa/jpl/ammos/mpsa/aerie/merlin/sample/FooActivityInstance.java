@@ -11,26 +11,26 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import java.util.Map;
 
 // TODO: Automatically generate at compile time.
-public final class FooActivityInstance<$Schema> implements ActivityInstance {
-  private final FooActivity<$Schema> activity = new FooActivity<>();
+public final class FooActivityInstance implements ActivityInstance {
+  private final FooActivity activity = new FooActivity();
 
   @Override
   public SerializedActivity serialize() {
     return new SerializedActivity("foo", Map.of());
   }
 
-  public void run(
-      final Context<? extends $Schema, FooEvent, FooActivityInstance<$Schema>> ctx,
+  public <$Schema> void run(
+      final Context<? extends $Schema, FooEvent, FooActivityInstance> ctx,
       final FooResources<$Schema> resources)
   {
-    this.activity.modelEffects(ctx, resources);
+    this.activity.new EffectModel<$Schema>().modelEffects(ctx, resources);
   }
 
 //  @Override
 //  public List<String> getValidationFailures() {
 //  }
 
-  public static <$Schema> Map<String, ActivityType<FooActivityInstance<$Schema>>> getActivityTypes() {
+  public static Map<String, ActivityType<FooActivityInstance>> getActivityTypes() {
     return Map.of("foo", new ActivityType<>() {
       @Override
       public String getName() {
@@ -43,8 +43,8 @@ public final class FooActivityInstance<$Schema> implements ActivityInstance {
       }
 
       @Override
-      public FooActivityInstance<$Schema> instantiate(final Map<String, SerializedValue> arguments) {
-        return new FooActivityInstance<>();
+      public FooActivityInstance instantiate(final Map<String, SerializedValue> arguments) {
+        return new FooActivityInstance();
       }
     });
   }
