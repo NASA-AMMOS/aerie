@@ -197,7 +197,7 @@ extends <a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.a
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.OptionalVisitor.html" title="type parameter in ValueSchema.OptionalVisitor">T</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onEnum(java.lang.Class)">onEnum</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#onVariant(java.lang.Class)">onVariant</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -206,7 +206,7 @@ extends <a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.a
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.<a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema.DefaultVisitor</a></h3>
-<code><a href="ValueSchema.DefaultVisitor.html#onBoolean()">onBoolean</a>, <a href="ValueSchema.DefaultVisitor.html#onDuration()">onDuration</a>, <a href="ValueSchema.DefaultVisitor.html#onInt()">onInt</a>, <a href="ValueSchema.DefaultVisitor.html#onReal()">onReal</a>, <a href="ValueSchema.DefaultVisitor.html#onSequence(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema)">onSequence</a>, <a href="ValueSchema.DefaultVisitor.html#onString()">onString</a>, <a href="ValueSchema.DefaultVisitor.html#onStruct(java.util.Map)">onStruct</a></code></li>
+<code><a href="ValueSchema.DefaultVisitor.html#onBoolean()">onBoolean</a>, <a href="ValueSchema.DefaultVisitor.html#onDuration()">onDuration</a>, <a href="ValueSchema.DefaultVisitor.html#onInt()">onInt</a>, <a href="ValueSchema.DefaultVisitor.html#onReal()">onReal</a>, <a href="ValueSchema.DefaultVisitor.html#onSeries(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema)">onSeries</a>, <a href="ValueSchema.DefaultVisitor.html#onString()">onString</a>, <a href="ValueSchema.DefaultVisitor.html#onStruct(java.util.Map)">onStruct</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
@@ -263,13 +263,19 @@ extends <a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.a
 </dl>
 </li>
 </ul>
-<a id="onEnum(java.lang.Class)">
+<a id="onVariant(java.lang.Class)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>onEnum</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.OptionalVisitor.html" title="type parameter in ValueSchema.OptionalVisitor">T</a>&gt;&nbsp;onEnum&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</pre>
+<h4>onVariant</h4>
+<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.OptionalVisitor.html" title="type parameter in ValueSchema.OptionalVisitor">T</a>&gt;&nbsp;onVariant&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</pre>
+<dl>
+<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
+<dd><code><a href="ValueSchema.Visitor.html#onVariant(java.lang.Class)">onVariant</a></code>&nbsp;in interface&nbsp;<code><a href="ValueSchema.Visitor.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema.Visitor</a>&lt;<a href="ValueSchema.OptionalVisitor.html" title="type parameter in ValueSchema.OptionalVisitor">T</a>&gt;</code></dd>
+<dt><span class="overrideSpecifyLabel">Overrides:</span></dt>
+<dd><code><a href="ValueSchema.DefaultVisitor.html#onVariant(java.lang.Class)">onVariant</a></code>&nbsp;in class&nbsp;<code><a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema.DefaultVisitor</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.OptionalVisitor.html" title="type parameter in ValueSchema.OptionalVisitor">T</a>&gt;&gt;</code></dd>
+</dl>
 </li>
 </ul>
 </li>

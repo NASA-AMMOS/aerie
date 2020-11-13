@@ -140,8 +140,8 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
  is an adaptation-agnostic representation of the serialized structure of a parameter.
 
  For instance, if an activity accepts two parameters, each of which is a 3D point in space,
- then the schema for each point will be a sequence of three real number primitives. The schema
- for the activity itself will be a sequence of two instances of the schema for points.
+ then the schema for each point will be a series of three real number primitives. The schema
+ for the activity itself will be a series of two instances of the schema for points.
 
  This is useful for providing information to mission-agnostic front-end applications, which
  may (for instance) present a specialized UI for each primitive type, or a specialized means
@@ -271,45 +271,45 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asEnum()">asEnum</a></span>()</code></th>
-<td class="colLast">
-<div class="block">Asserts that this object represents an enumeration.</div>
-</td>
-</tr>
-<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.Unit.html" title="enum in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema.Unit</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asInt()">asInt</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Asserts that this object represents an integer.</div>
 </td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.Unit.html" title="enum in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema.Unit</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asReal()">asReal</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Asserts that this object represents a real number.</div>
 </td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asSequence()">asSequence</a></span>()</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asSeries()">asSeries</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Attempts to access this schema as a list of <code>ValueSchema</code>s.</div>
 </td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.Unit.html" title="enum in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema.Unit</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asString()">asString</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Asserts that this object represents a String.</div>
 </td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asStruct()">asStruct</a></span>()</code></th>
 <td class="colLast">
 <div class="block">Attempts to access this schema as a map of named <code>ValueSchema</code>s.</div>
+</td>
+</tr>
+<tr id="i7" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#asVariant()">asVariant</a></span>()</code></th>
+<td class="colLast">
+<div class="block">Asserts that this object represents an enumeration.</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
@@ -327,25 +327,25 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>static <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ofEnum(java.lang.Class)">ofEnum</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</code></th>
-<td class="colLast">
-<div class="block">Creates a <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a> representing an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink"><code>Enum</code></a> type.</div>
-</td>
-</tr>
-<tr id="i11" class="rowColor">
-<td class="colFirst"><code>static <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ofSequence(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema)">ofSequence</a></span>&#8203;(<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;value)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ofSeries(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema)">ofSeries</a></span>&#8203;(<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;value)</code></th>
 <td class="colLast">
 <div class="block">Creates a <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a> representing a homogeneous list of elements matching
    the provided <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a>s.</div>
 </td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ofStruct(java.util.Map)">ofStruct</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;&nbsp;map)</code></th>
 <td class="colLast">
 <div class="block">Creates a <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a> representing a heterogeneous set of named elements matching
    the associated <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a>s.</div>
+</td>
+</tr>
+<tr id="i12" class="altColor">
+<td class="colFirst"><code>static <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ofVariant(java.lang.Class)">ofVariant</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</code></th>
+<td class="colLast">
+<div class="block">Creates a <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a> representing an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink"><code>Enum</code></a> type.</div>
 </td>
 </tr>
 <tr id="i13" class="rowColor">
@@ -452,13 +452,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
-<a id="ofSequence(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema)">
+<a id="ofSeries(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>ofSequence</h4>
-<pre class="methodSignature">public static&nbsp;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;ofSequence&#8203;(<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;value)</pre>
+<h4>ofSeries</h4>
+<pre class="methodSignature">public static&nbsp;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;ofSeries&#8203;(<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;value)</pre>
 <div class="block">Creates a <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a> representing a homogeneous list of elements matching
    the provided <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a>s.</div>
 <dl>
@@ -486,13 +486,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
-<a id="ofEnum(java.lang.Class)">
+<a id="ofVariant(java.lang.Class)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>ofEnum</h4>
-<pre class="methodSignature">public static&nbsp;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;ofEnum&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</pre>
+<h4>ofVariant</h4>
+<pre class="methodSignature">public static&nbsp;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&nbsp;ofVariant&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&nbsp;enumeration)</pre>
 <div class="block">Creates a <a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization"><code>ValueSchema</code></a> representing an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink"><code>Enum</code></a> type.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -575,18 +575,18 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
-<a id="asSequence()">
+<a id="asSeries()">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>asSequence</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;&nbsp;asSequence()</pre>
+<h4>asSeries</h4>
+<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;&nbsp;asSeries()</pre>
 <div class="block">Attempts to access this schema as a list of <code>ValueSchema</code>s.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>An <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink"><code>Optional</code></a> containing a schema for elements of a homogeneous list if this
-   object represents a sequence. Otherwise, returns an empty <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink"><code>Optional</code></a>.</dd>
+   object represents a series. Otherwise, returns an empty <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink"><code>Optional</code></a>.</dd>
 </dl>
 </li>
 </ul>
@@ -605,13 +605,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
-<a id="asEnum()">
+<a id="asVariant()">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>asEnum</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&gt;&nbsp;asEnum()</pre>
+<h4>asVariant</h4>
+<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Class.html?is-external=true" title="class or interface in java.lang" class="externalLink">Class</a>&lt;? extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html?is-external=true" title="class or interface in java.lang" class="externalLink">Enum</a>&lt;?&gt;&gt;&gt;&nbsp;asVariant()</pre>
 <div class="block">Asserts that this object represents an enumeration.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
