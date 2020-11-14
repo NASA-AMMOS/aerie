@@ -10,6 +10,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.IntegerValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.StringValueMapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -35,9 +37,14 @@ public final class FooActivityInstance implements ActivityInstance {
     this.activity.new EffectModel<$Schema>().run(ctx, resources);
   }
 
-//  @Override
-//  public List<String> getValidationFailures() {
-//  }
+  @Override
+  public List<String> getValidationFailures() {
+    // TODO: Extract validation messages from @Validation annotation at compile time.
+    final var failures = new ArrayList<String>();
+    if (!this.activity.validateX()) failures.add("x cannot be exactly 99");
+    if (!this.activity.validateY()) failures.add("y cannot be 'bad'");
+    return failures;
+  }
 
   public static Map<String, ActivityType<FooActivityInstance>> getActivityTypes() {
     return Map.of("foo", new ActivityType<>() {
