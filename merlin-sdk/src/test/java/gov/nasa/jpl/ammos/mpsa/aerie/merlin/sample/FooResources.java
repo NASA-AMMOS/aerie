@@ -53,5 +53,11 @@ public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, Ac
   public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
 
-  public final CumulableState<$Schema, ?, ?> rate = submodule(new CumulableState<>(dataRate, FooEvent::new));
+  public final CumulableState<$Schema, ?, ?> rate = submodule("data", new CumulableState<>(dataRate, FooEvent::new));
+
+  // TODO: automatically perform this for each @Daemon annotation
+  { daemon("test", this::test); }
+  public void test() {
+    rate.add(42.0);
+  }
 }

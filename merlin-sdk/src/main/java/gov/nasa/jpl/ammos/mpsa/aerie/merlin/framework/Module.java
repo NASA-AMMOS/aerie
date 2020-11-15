@@ -6,10 +6,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 public abstract class Module<$Schema, Event, Activity> {
   private final ProxyContext<$Schema, Event, Activity> context = new ProxyContext<>();
+  private final Map<String, Module<$Schema, Event, Activity>> submodules = new HashMap<>();
+  private final Map<String, Runnable> daemons = new HashMap<>();
 
   public final Context<$Schema, Event, Activity> setContext(final Context<$Schema, Event, Activity> context) {
     final var old = this.context.getTarget();
@@ -18,9 +23,31 @@ public abstract class Module<$Schema, Event, Activity> {
   }
 
   protected final <Submodule extends Module<$Schema, Event, Activity>>
-  Submodule submodule(final Submodule submodule) {
+  Submodule submodule(final String name, final Submodule submodule) {
+    if (this.submodules.containsKey(name)) {
+      throw new RuntimeException(String.format("Attempt to register submodule with id already in use: %s", submodule));
+    }
+
     submodule.setContext(this.context);
+    this.submodules.put(name, submodule);
+
     return submodule;
+  }
+
+  protected final void daemon(final String id, final Runnable task) {
+    if (this.daemons.containsKey(id)) {
+      throw new RuntimeException(String.format("Attempt to register daemon with id already in use: %s", id));
+    }
+
+    this.daemons.put(id, task);
+  }
+
+  public final Map<String, Runnable> getDaemons() {
+    return Collections.unmodifiableMap(this.daemons);
+  }
+
+  public final Map<String, Module<$Schema, Event, Activity>> getSubmodules() {
+    return Collections.unmodifiableMap(this.submodules);
   }
 
 

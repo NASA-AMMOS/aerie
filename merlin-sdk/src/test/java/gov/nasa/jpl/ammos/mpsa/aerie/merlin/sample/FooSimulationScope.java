@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
@@ -37,6 +38,10 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
 
   public static FooSimulationScope<?> create() {
     return create(new ResourcesBuilder<>(Schema.builder()));
+  }
+
+  public Module<$Schema, FooEvent, ActivityInstance> getRootModule() {
+    return this.container;
   }
 
   @Override
