@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
@@ -16,12 +17,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Map;
 
 public final class FooSimulationScope<$Schema> implements SimulationScope<$Schema, FooEvent, FooActivityInstance> {
+  private final ProxyContext<$Schema, FooEvent, FooActivityInstance> rootContext = new ProxyContext<>();
+
   private final FooResources<$Schema> container;
   private final BuiltResources<$Schema, FooEvent> resources;
 
   private FooSimulationScope(final FooResources<$Schema> container, final BuiltResources<$Schema, FooEvent> resources) {
     this.container = container;
     this.resources = resources;
+
+    container.setContext(this.rootContext);
   }
 
   private static <$Schema> FooSimulationScope<$Schema> create(final ResourcesBuilder<$Schema, FooEvent> builder) {
@@ -57,7 +62,8 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
   Task<$Timeline, FooEvent, FooActivityInstance>
   createActivityTask(final FooActivityInstance activity)
   {
-    return new ReplayingTask<$Schema, $Timeline, FooEvent, FooActivityInstance, FooResources<$Schema>>(
-        this.container, activity::run);
+    final var task = activity.<$Schema>createTask();
+    task.setContext(this.rootContext);
+    return new ReplayingTask<>(this.rootContext, () -> task.run(this.container));
   }
 }

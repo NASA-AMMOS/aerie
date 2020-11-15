@@ -11,8 +11,7 @@ import java.util.Set;
 public abstract class Module<$Schema, Event, Activity> {
   private final ProxyContext<$Schema, Event, Activity> context = new ProxyContext<>();
 
-  /* package-local */
-  final Context<$Schema, Event, Activity> setContext(final Context<$Schema, Event, Activity> context) {
+  public final Context<$Schema, Event, Activity> setContext(final Context<$Schema, Event, Activity> context) {
     final var old = this.context.getTarget();
     this.context.setTarget(context);
     return old;

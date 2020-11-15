@@ -27,8 +27,7 @@ public final class FooActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    @Override
-    protected void run(final FooResources<$Schema> resources) {
+    public void run(final FooResources<$Schema> resources) {
       if (y.equals("test")) {
         resources.rate.add(x);
       }

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
@@ -30,11 +30,8 @@ public final class FooActivityInstance implements ActivityInstance {
         "y", new StringValueMapper().serializeValue(this.activity.y)));
   }
 
-  public <$Schema> void run(
-      final Context<$Schema, FooEvent, FooActivityInstance> ctx,
-      final FooResources<$Schema> resources)
-  {
-    this.activity.new EffectModel<$Schema>().run(ctx, resources);
+  public <$Schema> Task<$Schema, FooEvent, FooActivityInstance, FooResources<$Schema>> createTask() {
+    return this.activity.new EffectModel<>();
   }
 
   @Override
