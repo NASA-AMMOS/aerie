@@ -51,6 +51,9 @@ public final class SimulationDriver {
   {
     final var activity = activityTypes.get("foo").instantiate(Map.of());
 
+    final var validationFailures = activity.getValidationFailures();
+    validationFailures.forEach(System.out::println);
+
     final var scheduler = new Scheduler<$Timeline, Event, Activity>() {
       // TODO: Track and reduce candelabras of spawned tasks
       public History<$Timeline, Event> now = timeline.origin();
