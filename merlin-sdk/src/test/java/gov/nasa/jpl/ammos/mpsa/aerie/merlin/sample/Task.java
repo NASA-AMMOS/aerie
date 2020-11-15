@@ -1,7 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.ActivityInstance;
+
 // TODO: Automatically generate at compile time.
 public abstract class Task<$Schema>
     extends gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task
-    <$Schema, FooEvent, FooActivityInstance, FooResources<$Schema>>
+    <$Schema, FooEvent, ActivityInstance, FooResources<$Schema>>
 {}

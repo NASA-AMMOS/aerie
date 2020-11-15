@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.DataModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.RegisterModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.CumulableState;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
@@ -16,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Optional;
 import java.util.Set;
 
-public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, FooActivityInstance> {
+public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, ActivityInstance> {
   // Need a clear story for how to logically group resource questions and event emissions together.
   // Need a way to produce a condition for a resource.
   // Need a way to assemble conditions into an overall constraint.
