@@ -60,6 +60,11 @@ final class FooActivityInstance extends ActivityInstance {
     }
 
     @Override
+    public ActivityInstance instantiateDefault() {
+      return new FooActivityInstance(new FooActivity());
+    }
+
+    @Override
     public ActivityInstance instantiate(final Map<String, SerializedValue> arguments)
     throws UnconstructableActivityException
     {
