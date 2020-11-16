@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework</a></div>
-<h2 title="Class Module" class="title">Class Module&lt;$Schema,&#8203;Event,&#8203;Activity&gt;</h2>
+<h2 title="Class Module" class="title">Class Module&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module&lt;$Schema,&#8203;Event,&#8203;Activity&gt;</li>
+<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</li>
 </ul>
 </li>
 </ul>
@@ -135,7 +135,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd><code><a href="Resources.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Resources</a></code>, <code><a href="Task.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Task</a></code></dd>
 </dl>
 <hr>
-<pre>public abstract class <span class="typeNameLabel">Module&lt;$Schema,&#8203;Event,&#8203;Activity&gt;</span>
+<pre>public abstract class <span class="typeNameLabel">Module&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></pre>
 </li>
 </ul>
@@ -190,7 +190,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#call(Activity)">call</a></span>&#8203;(<a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#call(TaskSpec)">call</a></span>&#8203;(<a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
@@ -201,15 +201,15 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Activity)">defer</a></span>&#8203;(long&nbsp;quantity,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a></span>&#8203;(long&nbsp;quantity,
      <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit,
-     <a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</code></th>
+     <a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Activity)">defer</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
-     <a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
+     <a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i6" class="altColor">
@@ -234,7 +234,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&gt;</code></td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getSubmodules()">getSubmodules</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -244,17 +244,17 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i12" class="altColor">
-<td class="colFirst"><code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setContext(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context)">setContext</a></span>&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&nbsp;context)</code></th>
+<td class="colFirst"><code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setContext(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context)">setContext</a></span>&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&nbsp;context)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i13" class="rowColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#spawn(Activity)">spawn</a></span>&#8203;(<a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#spawn(TaskSpec)">spawn</a></span>&#8203;(<a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i14" class="altColor">
-<td class="colFirst"><code>protected &lt;Submodule extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&gt;<br>Submodule</code></td>
+<td class="colFirst"><code>protected &lt;Submodule extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&gt;<br>Submodule</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#submodule(java.lang.String,Submodule)">submodule</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
          Submodule&nbsp;submodule)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -325,7 +325,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>setContext</h4>
-<pre class="methodSignature">public final&nbsp;<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&nbsp;setContext&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&nbsp;context)</pre>
+<pre class="methodSignature">public final&nbsp;<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&nbsp;setContext&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&nbsp;context)</pre>
 </li>
 </ul>
 <a id="submodule(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module)">
@@ -336,7 +336,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>submodule</h4>
-<pre class="methodSignature">protected final&nbsp;&lt;Submodule extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&gt;&nbsp;Submodule&nbsp;submodule&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
+<pre class="methodSignature">protected final&nbsp;&lt;Submodule extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&gt;&nbsp;Submodule&nbsp;submodule&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
                                                                                                    Submodule&nbsp;submodule)</pre>
 </li>
 </ul>
@@ -365,7 +365,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>getSubmodules</h4>
-<pre class="methodSignature">public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">Activity</a>&gt;&gt;&nbsp;getSubmodules()</pre>
+<pre class="methodSignature">public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;<a href="Module.html" title="type parameter in Module">$Schema</a>,&#8203;<a href="Module.html" title="type parameter in Module">Event</a>,&#8203;<a href="Module.html" title="type parameter in Module">TaskSpec</a>&gt;&gt;&nbsp;getSubmodules()</pre>
 </li>
 </ul>
 <a id="now()">
@@ -408,41 +408,41 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </ul>
 <a id="spawn(java.lang.Object)">
 <!--   -->
-</a><a id="spawn(Activity)">
+</a><a id="spawn(TaskSpec)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>spawn</h4>
-<pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;spawn&#8203;(<a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</pre>
+<pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;spawn&#8203;(<a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</pre>
 </li>
 </ul>
 <a id="call(java.lang.Object)">
 <!--   -->
-</a><a id="call(Activity)">
+</a><a id="call(TaskSpec)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>call</h4>
-<pre class="methodSignature">protected final&nbsp;void&nbsp;call&#8203;(<a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</pre>
+<pre class="methodSignature">protected final&nbsp;void&nbsp;call&#8203;(<a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</pre>
 </li>
 </ul>
 <a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.Object)">
 <!--   -->
-</a><a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Activity)">
+</a><a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>defer</h4>
 <pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
-                             <a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</pre>
+                             <a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</pre>
 </li>
 </ul>
 <a id="defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.Object)">
 <!--   -->
-</a><a id="defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Activity)">
+</a><a id="defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -450,7 +450,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>defer</h4>
 <pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(long&nbsp;quantity,
                              <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit,
-                             <a href="Module.html" title="type parameter in Module">Activity</a>&nbsp;activity)</pre>
+                             <a href="Module.html" title="type parameter in Module">TaskSpec</a>&nbsp;taskSpec)</pre>
 </li>
 </ul>
 <a id="delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
