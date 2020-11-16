@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   private final ValueMapper<K> keyMapper;
@@ -29,7 +30,7 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
   public Result<Map<K, V>, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asList()
-        .map(Result::<List<SerializedValue>, String>success)
+        .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
         .match(
             serializedList -> {
@@ -37,7 +38,7 @@ public final class MapValueMapper<K, V> implements ValueMapper<Map<K, V>> {
               for (final SerializedValue element : serializedList) {
                 final var elementResult = element
                     .asMap()
-                    .map(Result::<Map<String, SerializedValue>, String>success)
+                    .map((Function<Map<String, SerializedValue>, Result<Map<String, SerializedValue>, String>>) Result::success)
                     .orElseGet(() -> Result.failure("Expected map, got " + element));
 
                 if (elementResult.getKind().equals(Result.Kind.Failure)) return Result.failure(elementResult.getFailureOrThrow());

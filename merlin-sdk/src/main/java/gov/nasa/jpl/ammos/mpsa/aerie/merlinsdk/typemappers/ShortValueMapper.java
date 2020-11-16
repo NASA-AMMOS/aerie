@@ -4,6 +4,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
+import java.util.function.Function;
+
 public final class ShortValueMapper implements ValueMapper<Short> {
   @Override
   public ValueSchema getValueSchema() {
@@ -14,7 +16,7 @@ public final class ShortValueMapper implements ValueMapper<Short> {
   public Result<Short, String> deserializeValue(final SerializedValue serializedValue) {
     return serializedValue
         .asInt()
-        .map(Result::<Long, String>success)
+        .map((Function<Long, Result<Long, String>>) Result::success)
         .orElseGet(() -> Result.failure("Expected integral number, got " + serializedValue.toString()))
         .match(
             (Long x) -> {
