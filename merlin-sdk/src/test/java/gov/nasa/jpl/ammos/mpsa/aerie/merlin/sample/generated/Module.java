@@ -1,5 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.TaskSpec;
 
 // TODO: Automatically generate at compile time.

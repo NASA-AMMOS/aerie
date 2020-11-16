@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.Task;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.ClosedInterval;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
