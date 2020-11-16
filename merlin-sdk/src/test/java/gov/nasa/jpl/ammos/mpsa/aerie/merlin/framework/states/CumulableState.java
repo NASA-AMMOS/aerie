@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import java.util.Objects;
 import java.util.function.Function;
 
-public final class CumulableState<$Schema, Event, Activity> extends Module<$Schema, Event, Activity> {
+public final class CumulableState<$Schema, Event, TaskSpec> extends Module<$Schema, Event, TaskSpec> {
   private final RealResource<History<? extends $Schema, ?>> resource;
   private final Function<Double, Event> emitter;
 

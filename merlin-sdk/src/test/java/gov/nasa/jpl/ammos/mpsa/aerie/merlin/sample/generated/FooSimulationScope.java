@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
@@ -7,7 +7,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.ActivityInstance;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.TaskSpec;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
@@ -18,8 +20,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public final class FooSimulationScope<$Schema> implements SimulationScope<$Schema, FooEvent, ActivityInstance> {
-  private final ProxyContext<$Schema, FooEvent, ActivityInstance> rootContext = new ProxyContext<>();
+public final class FooSimulationScope<$Schema> implements SimulationScope<$Schema, FooEvent, TaskSpec> {
+  private final ProxyContext<$Schema, FooEvent, TaskSpec> rootContext = new ProxyContext<>();
 
   private final FooResources<$Schema> container;
   private final BuiltResources<$Schema, FooEvent> resources;
@@ -40,7 +42,7 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
     return create(new ResourcesBuilder<>(Schema.builder()));
   }
 
-  public Module<$Schema, FooEvent, ActivityInstance> getRootModule() {
+  public Module<$Schema, FooEvent, TaskSpec> getRootModule() {
     return this.container;
   }
 
@@ -65,10 +67,10 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
 
   public @Override
   <$Timeline extends $Schema>
-  Task<$Timeline, FooEvent, ActivityInstance>
-  createActivityTask(final ActivityInstance activity)
+  Task<$Timeline, FooEvent, TaskSpec>
+  createTask(final TaskSpec taskSpec)
   {
-    final var task = activity.<$Schema>createTask();
+    final var task = taskSpec.<$Schema>createTask();
     task.setContext(this.rootContext);
     return new ReplayingTask<>(this.rootContext, () -> task.run(this.container));
   }

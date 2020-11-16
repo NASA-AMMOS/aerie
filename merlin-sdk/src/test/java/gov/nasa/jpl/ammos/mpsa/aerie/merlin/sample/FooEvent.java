@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
 
 import java.util.Objects;
 
+// TODO: Generate this class from a hand-written EventHandler interface.
 public final class FooEvent {
   public final double d;
 
