@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework</a></div>
-<h2 title="Class ReplayingTask" class="title">Class ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema,&#8203;Event,&#8203;ActivityType,&#8203;Resources&gt;</h2>
+<h2 title="Class ReplayingTask" class="title">Class ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema,&#8203;Event,&#8203;ActivityType&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask&lt;$Schema,&#8203;$Timeline,&#8203;Event,&#8203;ActivityType,&#8203;Resources&gt;</li>
+<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask&lt;$Schema,&#8203;$Timeline,&#8203;Event,&#8203;ActivityType&gt;</li>
 </ul>
 </li>
 </ul>
@@ -135,7 +135,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd><code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;$Timeline,&#8203;Event,&#8203;ActivityType&gt;</code></dd>
 </dl>
 <hr>
-<pre>public final class <span class="typeNameLabel">ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema,&#8203;Event,&#8203;ActivityType,&#8203;Resources&gt;</span>
+<pre>public final class <span class="typeNameLabel">ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema,&#8203;Event,&#8203;ActivityType&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>
 implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;$Timeline,&#8203;Event,&#8203;ActivityType&gt;</pre>
 </li>
@@ -158,8 +158,8 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammo
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(Resources,java.util.function.BiConsumer)">ReplayingTask</a></span>&#8203;(<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Resources</a>&nbsp;resources,
-             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiConsumer.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiConsumer</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Event</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">ActivityType</a>&gt;,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Resources</a>&gt;&nbsp;activity)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext,java.lang.Runnable)">ReplayingTask</a></span>&#8203;(<a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Event</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">ActivityType</a>&gt;&nbsp;rootContext,
+             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -209,16 +209,14 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammo
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(java.lang.Object,java.util.function.BiConsumer)">
-<!--   -->
-</a><a id="&lt;init&gt;(Resources,java.util.function.BiConsumer)">
+<a id="&lt;init&gt;(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext,java.lang.Runnable)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>ReplayingTask</h4>
-<pre>public&nbsp;ReplayingTask&#8203;(<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Resources</a>&nbsp;resources,
-                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiConsumer.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiConsumer</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Event</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">ActivityType</a>&gt;,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Resources</a>&gt;&nbsp;activity)</pre>
+<pre>public&nbsp;ReplayingTask&#8203;(<a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">Event</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">ActivityType</a>&gt;&nbsp;rootContext,
+                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</pre>
 </li>
 </ul>
 </li>
