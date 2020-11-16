@@ -2,13 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
 import java.util.Map;
 
-public interface Adaptation<Activity extends ActivityInstance> {
-  /* Produce */ Map<String, ActivityType<Activity>>
-  /* Given   */ getActivityTypes();
+public interface Adaptation<AdaptationTaskSpec extends TaskSpec> {
+  /* Produce */ Map<String, TaskSpecType<AdaptationTaskSpec>>
+  /* Given   */ getTaskSpecificationTypes();
 
-  /* Produce */ Iterable<Activity>
+  /* Produce */ Iterable<AdaptationTaskSpec>
   /* Given   */ getDaemons();
 
-  /* Produce */ SimulationScope<?, ?, Activity>
+  /* Produce */ SimulationScope<?, ?, AdaptationTaskSpec>
   /* Given   */ createSimulationScope();
 }

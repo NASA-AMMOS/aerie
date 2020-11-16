@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.IntegerValueMapper;
@@ -18,22 +17,27 @@ import java.util.Objects;
 
 // TODO: Automatically generate at compile time.
 /* package-local */
-final class FooActivityInstance extends ActivityInstance {
+final class FooActivityTaskSpec extends TaskSpec {
   private final FooActivity activity;
 
-  private FooActivityInstance(final FooActivity activity) {
+  private FooActivityTaskSpec(final FooActivity activity) {
     this.activity = Objects.requireNonNull(activity);
   }
 
   @Override
-  public SerializedActivity serialize() {
-    return new SerializedActivity("foo", Map.of(
-        "x", new IntegerValueMapper().serializeValue(this.activity.x),
-        "y", new StringValueMapper().serializeValue(this.activity.y)));
+  public String getTypeName() {
+    return "foo";
   }
 
   @Override
-  public <$Schema> Task<$Schema, FooEvent, ActivityInstance, FooResources<$Schema>> createTask() {
+  public Map<String, SerializedValue> getArguments() {
+    return Map.of(
+        "x", new IntegerValueMapper().serializeValue(this.activity.x),
+        "y", new StringValueMapper().serializeValue(this.activity.y));
+  }
+
+  @Override
+  public <$Schema> Task<$Schema, FooEvent, TaskSpec, FooResources<$Schema>> createTask() {
     return this.activity.new EffectModel<>();
   }
 
@@ -46,7 +50,7 @@ final class FooActivityInstance extends ActivityInstance {
     return failures;
   }
 
-  public static final ActivityType<ActivityInstance> descriptor = new ActivityType<>() {
+  public static final TaskSpecType<TaskSpec> descriptor = new TaskSpecType<>() {
     @Override
     public String getName() {
       return "foo";
@@ -60,13 +64,13 @@ final class FooActivityInstance extends ActivityInstance {
     }
 
     @Override
-    public ActivityInstance instantiateDefault() {
-      return new FooActivityInstance(new FooActivity());
+    public TaskSpec instantiateDefault() {
+      return new FooActivityTaskSpec(new FooActivity());
     }
 
     @Override
-    public ActivityInstance instantiate(final Map<String, SerializedValue> arguments)
-    throws UnconstructableActivityException
+    public TaskSpec instantiate(final Map<String, SerializedValue> arguments)
+    throws UnconstructableTaskSpecException
     {
       final var activity = new FooActivity();
 
@@ -75,21 +79,21 @@ final class FooActivityInstance extends ActivityInstance {
           case "x":
             activity.x = new IntegerValueMapper()
                 .deserializeValue(entry.getValue())
-                .getSuccessOrThrow($ -> new UnconstructableActivityException());
+                .getSuccessOrThrow($ -> new UnconstructableTaskSpecException());
             break;
 
           case "y":
             activity.y = new StringValueMapper()
                 .deserializeValue(entry.getValue())
-                .getSuccessOrThrow($ -> new UnconstructableActivityException());
+                .getSuccessOrThrow($ -> new UnconstructableTaskSpecException());
             break;
 
           default:
-            throw new UnconstructableActivityException();
+            throw new UnconstructableTaskSpecException();
         }
       }
 
-      return new FooActivityInstance(activity);
+      return new FooActivityTaskSpec(activity);
     }
   };
 }

@@ -11,18 +11,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Module<$Schema, Event, Activity> {
-  private final ProxyContext<$Schema, Event, Activity> context = new ProxyContext<>();
-  private final Map<String, Module<$Schema, Event, Activity>> submodules = new HashMap<>();
+public abstract class Module<$Schema, Event, TaskSpec> {
+  private final ProxyContext<$Schema, Event, TaskSpec> context = new ProxyContext<>();
+  private final Map<String, Module<$Schema, Event, TaskSpec>> submodules = new HashMap<>();
   private final Map<String, Runnable> daemons = new HashMap<>();
 
-  public final Context<$Schema, Event, Activity> setContext(final Context<$Schema, Event, Activity> context) {
+  public final Context<$Schema, Event, TaskSpec> setContext(final Context<$Schema, Event, TaskSpec> context) {
     final var old = this.context.getTarget();
     this.context.setTarget(context);
     return old;
   }
 
-  protected final <Submodule extends Module<$Schema, Event, Activity>>
+  protected final <Submodule extends Module<$Schema, Event, TaskSpec>>
   Submodule submodule(final String name, final Submodule submodule) {
     if (this.submodules.containsKey(name)) {
       throw new RuntimeException(String.format("Attempt to register submodule with id already in use: %s", submodule));
@@ -46,7 +46,7 @@ public abstract class Module<$Schema, Event, Activity> {
     return Collections.unmodifiableMap(this.daemons);
   }
 
-  public final Map<String, Module<$Schema, Event, Activity>> getSubmodules() {
+  public final Map<String, Module<$Schema, Event, TaskSpec>> getSubmodules() {
     return Collections.unmodifiableMap(this.submodules);
   }
 
@@ -68,20 +68,20 @@ public abstract class Module<$Schema, Event, Activity> {
     this.context.emit(event);
   }
 
-  protected final String spawn(final Activity activity) {
-    return this.context.spawn(activity);
+  protected final String spawn(final TaskSpec taskSpec) {
+    return this.context.spawn(taskSpec);
   }
 
-  protected final void call(final Activity activity) {
-    this.waitFor(this.spawn(activity));
+  protected final void call(final TaskSpec taskSpec) {
+    this.waitFor(this.spawn(taskSpec));
   }
 
-  protected final String defer(final Duration duration, final Activity activity) {
-    return this.context.defer(duration, activity);
+  protected final String defer(final Duration duration, final TaskSpec taskSpec) {
+    return this.context.defer(duration, taskSpec);
   }
 
-  protected final String defer(final long quantity, final Duration unit, final Activity activity) {
-    return this.defer(unit.times(quantity), activity);
+  protected final String defer(final long quantity, final Duration unit, final TaskSpec taskSpec) {
+    return this.defer(unit.times(quantity), taskSpec);
   }
 
 

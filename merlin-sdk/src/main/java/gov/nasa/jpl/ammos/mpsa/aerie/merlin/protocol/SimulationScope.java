@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public interface SimulationScope<$Schema, Event, Activity extends ActivityInstance> {
+public interface SimulationScope<$Schema, Event, AdaptationTaskSpec extends TaskSpec> {
   /* Produce */ Schema<$Schema, Event>
   /* Given   */ getSchema();
 
@@ -21,6 +21,6 @@ public interface SimulationScope<$Schema, Event, Activity extends ActivityInstan
   /* Given   */ getRealResources();
 
   /* For all */ <$Timeline extends $Schema>
-  /* Produce */ Task<$Timeline, Event, Activity>
-  /* Given   */ createActivityTask(Activity activity);
+  /* Produce */ Task<$Timeline, Event, AdaptationTaskSpec>
+  /* Given   */ createTask(AdaptationTaskSpec taskSpec);
 }

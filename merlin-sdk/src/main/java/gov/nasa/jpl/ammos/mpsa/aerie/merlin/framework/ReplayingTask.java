@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ActivityStatus;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
@@ -16,22 +16,22 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, ActivityType>
-    implements Task<$Timeline, Event, ActivityType>
+public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, TaskSpec>
+    implements Task<$Timeline, Event, TaskSpec>
 {
-  private final ProxyContext<$Schema, Event, ActivityType> rootContext;
+  private final ProxyContext<$Schema, Event, TaskSpec> rootContext;
   private final Runnable task;
 
   private Optional<History<$Timeline, Event>> initialTime = Optional.empty();
   private final List<ActivityBreadcrumb<$Timeline, Event>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final ProxyContext<$Schema, Event, ActivityType> rootContext, final Runnable task) {
+  public ReplayingTask(final ProxyContext<$Schema, Event, TaskSpec> rootContext, final Runnable task) {
     this.rootContext = rootContext;
     this.task = task;
   }
 
   @Override
-  public ActivityStatus<$Timeline> step(final Scheduler<$Timeline, Event, ActivityType> scheduler) {
+  public TaskStatus<$Timeline> step(final Scheduler<$Timeline, Event, TaskSpec> scheduler) {
     final var context = this.new ReplayingReactionContext(this.initialTime, scheduler);
 
     if (this.initialTime.isEmpty()) {
@@ -62,22 +62,22 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
   private static final class Yield extends RuntimeException {}
   private static final Yield Yield = new Yield();
 
-  private final class ReplayingReactionContext implements Context<$Schema, Event, ActivityType> {
-    private final Scheduler<$Timeline, Event, ActivityType> scheduler;
-    private ActivityStatus<$Timeline> status = ActivityStatus.completed();
+  private final class ReplayingReactionContext implements Context<$Schema, Event, TaskSpec> {
+    private final Scheduler<$Timeline, Event, TaskSpec> scheduler;
+    private TaskStatus<$Timeline> status = TaskStatus.completed();
 
     private Optional<History<$Timeline, Event>> history;
     private int nextBreadcrumbIndex = 0;
 
     public ReplayingReactionContext(
         final Optional<History<$Timeline, Event>> initialTime,
-        final Scheduler<$Timeline, Event, ActivityType> scheduler)
+        final Scheduler<$Timeline, Event, TaskSpec> scheduler)
     {
       this.history = initialTime;
       this.scheduler = scheduler;
     }
 
-    private ActivityStatus<$Timeline> getStatus() {
+    private TaskStatus<$Timeline> getStatus() {
       return this.status;
     }
 
@@ -112,10 +112,10 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
     }
 
     @Override
-    public String spawn(final ActivityType activity) {
+    public String spawn(final TaskSpec taskSpec) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        final var id = this.scheduler.spawn(activity);
+        final var id = this.scheduler.spawn(taskSpec);
 
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
@@ -127,10 +127,10 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
     }
 
     @Override
-    public String defer(final Duration duration, final ActivityType activity) {
+    public String defer(final Duration duration, final TaskSpec taskSpec) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        final var id = this.scheduler.defer(duration, activity);
+        final var id = this.scheduler.defer(duration, taskSpec);
 
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
@@ -145,7 +145,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
     public void delay(final Duration duration) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = ActivityStatus.delayed(duration);
+        this.status = TaskStatus.delayed(duration);
         throw Yield;
       } else {
         readvance();
@@ -156,7 +156,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
     public void waitFor(final String id) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = ActivityStatus.awaiting(id);
+        this.status = TaskStatus.awaiting(id);
         throw Yield;
       } else {
         readvance();
@@ -167,7 +167,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
     public void waitFor(final RealResource<? super History<? extends $Schema, ?>> resource, final RealCondition condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = ActivityStatus.awaiting(
+        this.status = TaskStatus.awaiting(
             (now) -> resource.getDynamics(now).<SolvableDynamics<Double, RealCondition>>map(SolvableDynamics::real),
             condition);
         throw Yield;
@@ -180,7 +180,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Acti
     public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema, ?>, T> resource, final Set<T> condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = ActivityStatus.awaiting(
+        this.status = TaskStatus.awaiting(
             (now) -> resource.getDynamics(now).map(SolvableDynamics::discrete),
             condition);
         throw Yield;

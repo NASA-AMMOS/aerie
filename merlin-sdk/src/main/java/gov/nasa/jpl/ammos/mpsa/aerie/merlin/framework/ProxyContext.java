@@ -8,16 +8,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Set;
 
-public final class ProxyContext<$Schema, Event, Activity>
-    implements Context<$Schema, Event, Activity>
+public final class ProxyContext<$Schema, Event, TaskSpec>
+    implements Context<$Schema, Event, TaskSpec>
 {
-  private Context<$Schema, Event, Activity> context = null;
+  private Context<$Schema, Event, TaskSpec> context = null;
 
-  public void setTarget(final Context<$Schema, Event, Activity> context) {
+  public void setTarget(final Context<$Schema, Event, TaskSpec> context) {
     this.context = context;
   }
 
-  public Context<$Schema, Event, Activity> getTarget() {
+  public Context<$Schema, Event, TaskSpec> getTarget() {
     return this.context;
   }
 
@@ -43,13 +43,13 @@ public final class ProxyContext<$Schema, Event, Activity>
   }
 
   @Override
-  public final String spawn(final Activity activity) {
-    return this.context.spawn(activity);
+  public final String spawn(final TaskSpec taskSpec) {
+    return this.context.spawn(taskSpec);
   }
 
   @Override
-  public final String defer(final Duration duration, final Activity activity) {
-    return this.context.defer(duration, activity);
+  public final String defer(final Duration duration, final TaskSpec taskSpec) {
+    return this.context.defer(duration, taskSpec);
   }
 
   @Override

@@ -5,14 +5,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 
 import java.util.Map;
 
-public interface ActivityType<Activity extends ActivityInstance> {
+public interface TaskSpecType<AdaptationTaskSpec extends TaskSpec> {
   String getName();
   Map<String, ValueSchema> getParameters();
 
-  Activity instantiateDefault();
+  AdaptationTaskSpec instantiateDefault();
 
-  Activity instantiate(Map<String, SerializedValue> arguments)
-  throws UnconstructableActivityException;
+  AdaptationTaskSpec instantiate(Map<String, SerializedValue> arguments)
+  throws UnconstructableTaskSpecException;
 
-  class UnconstructableActivityException extends Exception {}
+  class UnconstructableTaskSpecException extends Exception {}
 }
