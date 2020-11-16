@@ -9,6 +9,8 @@ public interface ActivityType<Activity extends ActivityInstance> {
   String getName();
   Map<String, ValueSchema> getParameters();
 
+  Activity instantiateDefault();
+
   Activity instantiate(Map<String, SerializedValue> arguments)
   throws UnconstructableActivityException;
 

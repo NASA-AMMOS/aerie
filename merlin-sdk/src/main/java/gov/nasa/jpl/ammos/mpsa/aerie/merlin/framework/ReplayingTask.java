@@ -15,38 +15,41 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 
-public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, ActivityType, Resources>
+public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, ActivityType>
     implements Task<$Timeline, Event, ActivityType>
 {
-  private final Resources resources;
-  private final BiConsumer<Context<$Schema, Event, ActivityType>, Resources> activity;
+  private final ProxyContext<$Schema, Event, ActivityType> rootContext;
+  private final Runnable task;
 
   private Optional<History<$Timeline, Event>> initialTime = Optional.empty();
   private final List<ActivityBreadcrumb<$Timeline, Event>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final Resources resources, final BiConsumer<Context<$Schema, Event, ActivityType>, Resources> activity) {
-    this.resources = resources;
-    this.activity = activity;
+  public ReplayingTask(final ProxyContext<$Schema, Event, ActivityType> rootContext, final Runnable task) {
+    this.rootContext = rootContext;
+    this.task = task;
   }
 
-  public @Override
-  ActivityStatus<$Timeline>
-  step(final Scheduler<$Timeline, Event, ActivityType> scheduler)
-  {
+  @Override
+  public ActivityStatus<$Timeline> step(final Scheduler<$Timeline, Event, ActivityType> scheduler) {
     final var context = this.new ReplayingReactionContext(this.initialTime, scheduler);
 
     if (this.initialTime.isEmpty()) {
       this.initialTime = Optional.of(scheduler.now());
     }
 
-    try {
-      this.activity.accept(context, this.resources);
+    {
+      final var oldContext = this.rootContext.getTarget();
+      this.rootContext.setTarget(context);
 
-      // If we get here, the activity has completed normally.
-    } catch (final Yield ignored) {
-      // If we get here, the activity has suspended.
+      try {
+        this.task.run();
+        // If we get here, the activity has completed normally.
+      } catch (final Yield ignored) {
+        // If we get here, the activity has suspended.
+      } finally {
+        this.rootContext.setTarget(oldContext);
+      }
     }
 
     return context.getStatus();

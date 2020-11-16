@@ -15,6 +15,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public final class SimulationDriver {
@@ -30,30 +32,34 @@ public final class SimulationDriver {
   void foo(final Adaptation<Activity> adaptation)
   throws ActivityType.UnconstructableActivityException
   {
-    bar(adaptation.getActivityTypes(), adaptation.createSimulationScope());
+    final var activityTypes = adaptation.getActivityTypes();
+
+    final var activities = new ArrayList<Activity>();
+    adaptation.getDaemons().forEach(activities::add);
+    activities.add(activityTypes.get("foo").instantiate(Map.of()));
+
+    for (final var activity : activities) {
+      final var validationFailures = activity.getValidationFailures();
+      validationFailures.forEach(System.out::println);
+    }
+
+    bar(activities, adaptation.createSimulationScope());
   }
 
   private static <$Schema, Event, Activity extends ActivityInstance>
   void bar(
-      final Map<String, ActivityType<Activity>> activityTypes,
+      final List<Activity> activities,
       final SimulationScope<$Schema, Event, Activity> scope)
-  throws ActivityType.UnconstructableActivityException
   {
-    baz(activityTypes, scope, SimulationTimeline.create(scope.getSchema()));
+    baz(activities, scope, SimulationTimeline.create(scope.getSchema()));
   }
 
   private static <$Timeline, Event, Activity extends ActivityInstance>
   void baz(
-      final Map<String, ActivityType<Activity>> activityTypes,
+      final List<Activity> activities,
       final SimulationScope<? super $Timeline, Event, Activity> scope,
       final SimulationTimeline<$Timeline, Event> timeline)
-  throws ActivityType.UnconstructableActivityException
   {
-    final var activity = activityTypes.get("foo").instantiate(Map.of());
-
-    final var validationFailures = activity.getValidationFailures();
-    validationFailures.forEach(System.out::println);
-
     final var scheduler = new Scheduler<$Timeline, Event, Activity>() {
       // TODO: Track and reduce candelabras of spawned tasks
       public History<$Timeline, Event> now = timeline.origin();
@@ -126,12 +132,15 @@ public final class SimulationDriver {
       }
     };
 
-    final var task = scope.<$Timeline>createActivityTask(activity);
+    for (final var activity : activities) {
+      System.out.println("Performing: " + activity.serialize());
+      final var task = scope.<$Timeline>createActivityTask(activity);
 
-    boolean running = true;
-    while (running) {
-      // TODO: Emit an "activity start" event.
-      running = task.step(scheduler).match(visitor);
+      boolean running = true;
+      while (running) {
+        // TODO: Emit an "activity start" event.
+        running = task.step(scheduler).match(visitor);
+      }
     }
 
     System.out.print(scheduler.now.getDebugTrace());

@@ -6,6 +6,9 @@ public interface Adaptation<Activity extends ActivityInstance> {
   /* Produce */ Map<String, ActivityType<Activity>>
   /* Given   */ getActivityTypes();
 
+  /* Produce */ Iterable<Activity>
+  /* Given   */ getDaemons();
+
   /* Produce */ SimulationScope<?, ?, Activity>
   /* Given   */ createSimulationScope();
 }
