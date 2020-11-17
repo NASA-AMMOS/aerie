@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -86,13 +87,13 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, Event, Task
     }
 
     @Override
-    public void emit(final Event event) {
+    public void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
       if (this.history.isEmpty()) {
-        this.scheduler.emit(event);
+        this.scheduler.emit(event, query);
       } else {
         // TODO: Avoid leaving garbage behind -- find some way to remove regenerated events
         //   on dead-end branches when references to it disappear.
-        this.history = this.history.map(now -> now.emit(event));
+        this.history = this.history.map(now -> now.emit(event, query));
       }
     }
 

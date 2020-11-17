@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
@@ -65,8 +66,8 @@ public final class SimulationDriver {
       public History<$Timeline, Event> now = timeline.origin();
 
       @Override
-      public void emit(final Event event) {
-        now = now.emit(event);
+      public void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+        now = now.emit(event, query);
       }
 
       @Override

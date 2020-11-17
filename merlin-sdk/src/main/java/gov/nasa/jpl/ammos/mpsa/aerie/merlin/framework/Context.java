@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -13,7 +14,7 @@ public interface Context<$Schema, Event, TaskSpec> {
   double ask(RealResource<? super History<? extends $Schema, ?>> resource);
   <T> T ask(DiscreteResource<? super History<? extends $Schema, ?>, T> resource);
 
-  void emit(Event event);
+  void emit(Event event, Query<? super $Schema, Event, ?> query);
   String spawn(TaskSpec taskSpec);
   String defer(Duration duration, TaskSpec taskSpec);
 

@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,21 +14,35 @@ final class Table<$Timeline, Event, Effect, Model> {
   private final SimulationTimeline<$Timeline, Event> database;
   private final Projection<Event, Effect> projection;
   private final Applicator<Effect, Model> applicator;
+  private final int tableIndex;
 
   private final Map<Integer, Model> cache = new HashMap<>();
+  private final ArrayList<Event> events = new ArrayList<>();
 
   public Table(
       final SimulationTimeline<$Timeline, Event> database,
       final Projection<Event, Effect> projection,
-      final Applicator<Effect, Model> applicator)
+      final Applicator<Effect, Model> applicator,
+      final int tableIndex)
   {
     this.database = database;
     this.projection = projection;
     this.applicator = applicator;
+    this.tableIndex = tableIndex;
   }
 
   public void clearCache() {
     this.cache.clear();
+  }
+
+  public int emit(final Event event) {
+    final var eventIndex = this.events.size();
+    this.events.add(event);
+    return eventIndex;
+  }
+
+  public Event getEvent(int index) {
+    return this.events.get(index);
   }
 
   public Model getAt(final History<$Timeline, Event> history) {
@@ -42,7 +57,7 @@ final class Table<$Timeline, Event, Effect, Model> {
     final var baseIndex = (history.getLastBranchBase() != null) ? history.getLastBranchBase().getIndex() : START_INDEX;
     var previousIndex = history.getIndex();
     while (previousIndex != baseIndex && !this.cache.containsKey(previousIndex)) {
-      previousIndex = database.get(previousIndex).getPrevious();
+      previousIndex = this.database.get(previousIndex).getPrevious();
     }
 
     final Model model;

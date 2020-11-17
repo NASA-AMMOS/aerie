@@ -2,28 +2,26 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline;
 
 /**
  * The class of points in time and their observable past.
- *
- * @param <Event> The type of events that may be observed.
  */
 /* package-local */
-abstract class EventPoint<Event> {
+abstract class EventPoint {
   private EventPoint() {}
 
   abstract int getPrevious();
 
   /**
    * A time point advancing from a prior time point by a discontinuous event.
-   *
-   * @param <Event> The type of event.
    */
   /* package-local */
-  static final class Advancing<Event> extends EventPoint<Event> {
+  static final class Advancing extends EventPoint {
     public final int previous;
-    public final Event event;
+    public final int tableIndex;
+    public final int eventIndex;
 
-    public Advancing(final int previous, final Event event) {
+    public Advancing(final int previous, final int tableIndex, final int eventIndex) {
       this.previous = previous;
-      this.event = event;
+      this.tableIndex = tableIndex;
+      this.eventIndex = eventIndex;
     }
 
     @Override
@@ -34,11 +32,9 @@ abstract class EventPoint<Event> {
 
   /**
    * A time point advancing from a prior time point by waiting for a duration of time.
-   *
-   * @param <Event> The type of event observable in the past.
    */
   /* package-local */
-  public static final class Waiting<Event> extends EventPoint<Event> {
+  public static final class Waiting extends EventPoint {
     public final int previous;
     public final long microseconds;
 
@@ -55,11 +51,9 @@ abstract class EventPoint<Event> {
 
   /**
    * A time point that observes two parallel timelines forked from a common base point.
-   *
-   * @param <Event> The type of event observable in the past.
    */
   /* package-local */
-  public static final class Joining<Event> extends EventPoint<Event> {
+  public static final class Joining extends EventPoint {
     public final int base;
     public final int left;
     public final int right;

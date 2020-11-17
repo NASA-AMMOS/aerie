@@ -44,7 +44,7 @@ public final class SimulationTimeline<$Timeline, Event> {
   // SAFETY: -1 is not a legal index for a time point.
   /*package-local*/ static final int START_INDEX = -1;
 
-  private final List<EventPoint<Event>> times;
+  private final List<EventPoint> times;
 
   private int nextTime;
 
@@ -93,38 +93,41 @@ public final class SimulationTimeline<$Timeline, Event> {
   }
 
   /* package-local */
-  int advancing(final int previous, final Event event) {
+  int advancing(final int previous, final Query<? super $Timeline, Event, ?> query, final Event event) {
+    final var tableIndex = query.getTableIndex();
+    final var eventIndex = this.getTable(tableIndex).emit(event);
+
     final var nextTime = this.nextTime++;
-    this.times.add(nextTime, new EventPoint.Advancing<>(previous, event));
+    this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex));
     return nextTime;
   }
 
   /* package-local */
   int joining(final int base, final int left, final int right) {
     final var nextTime = this.nextTime++;
-    this.times.add(nextTime, new EventPoint.Joining<>(base, left, right));
+    this.times.add(nextTime, new EventPoint.Joining(base, left, right));
     return nextTime;
   }
 
   /* package-local */
   int waiting(final int previous, final long microseconds) {
     final var nextTime = this.nextTime++;
-    this.times.add(nextTime, new EventPoint.Waiting<>(previous, microseconds));
+    this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds));
     return nextTime;
   }
 
   /* package-local */
-  EventPoint<Event> get(final int index) {
+  EventPoint get(final int index) {
     return this.times.get(index);
   }
 
   /* package-local */
-  <Effect, ModelType>
-  Table<$Timeline, Event, Effect, ModelType>
+  <ModelType>
+  Table<$Timeline, Event, ?, ModelType>
   getTable(final int index) {
     // SAFETY: The index is provided by the query from which this cache was built.
     @SuppressWarnings("unchecked")
-    final var table = (Table<$Timeline, Event, Effect, ModelType>) this.tables.get(index);
+    final var table = (Table<$Timeline, Event, ?, ModelType>) this.tables.get(index);
     return table;
   }
 
@@ -153,13 +156,14 @@ public final class SimulationTimeline<$Timeline, Event> {
         final var point = this.times.get(pointIndex);
         if (point instanceof EventPoint.Advancing) {
           // Accumulate the event into the currently open path.
-          final var step = (EventPoint.Advancing<Event>) point;
-          currentPath.accumulate(next -> projection.sequentially(projection.atom(step.event), next));
+          final var step = (EventPoint.Advancing) point;
+          final var event = this.getTable(step.tableIndex).getEvent(step.eventIndex);
+          currentPath.accumulate(next -> projection.sequentially(projection.atom(event), next));
           pointIndex = step.previous;
         } else if (point instanceof EventPoint.Joining) {
           // We've walked backwards into a join point between two branches.
           // Walk down the left side first, and stash the base and right side for later evaluation.
-          final var join = (EventPoint.Joining<Event>) point;
+          final var join = (EventPoint.Joining) point;
           pathStack.push(currentPath);
           currentPath = new ActivePath.Left<>(join.base, projection.empty(), join.right);
           pointIndex = join.left;
@@ -168,7 +172,7 @@ public final class SimulationTimeline<$Timeline, Event> {
           // SAFETY: Delays can only occur at the top-level.
           assert currentPath instanceof ActivePath.TopLevel;
           final var path = (ActivePath.TopLevel<Effect>) currentPath;
-          final var wait = (EventPoint.Waiting<Event>) point;
+          final var wait = (EventPoint.Waiting) point;
 
           path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, Duration.MICROSECONDS), path.effect));
           path.effect = projection.empty();

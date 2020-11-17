@@ -31,7 +31,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
            final Query<$Schema, Event, ? extends ModelType> model,
            final DiscreteResource<ModelType, E> resource)
   {
-    return this.builder.enumerated(name, (history) -> resource.getDynamics(model.getAt(history)))::getDynamics;
+    return this.builder.enumerated(name, (history) -> resource.getDynamics(history.ask(model)))::getDynamics;
   }
 
   protected <E extends Enum<E>>
@@ -50,7 +50,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
            final DiscreteResource<ModelType, ResourceType> resource,
            final ValueMapper<ResourceType> mapper)
   {
-    return this.builder.discrete(name, (history) -> resource.getDynamics(model.getAt(history)), mapper)::getDynamics;
+    return this.builder.discrete(name, (history) -> resource.getDynamics(history.ask(model)), mapper)::getDynamics;
   }
 
   protected <ResourceType>
@@ -69,7 +69,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
            final Query<$Schema, Event, ModelType> model,
            final RealResource<ModelType> resource)
   {
-    return this.builder.real(name, (history) -> resource.getDynamics(model.getAt(history)))::getDynamics;
+    return this.builder.real(name, (history) -> resource.getDynamics(history.ask(model)))::getDynamics;
   }
 
   protected

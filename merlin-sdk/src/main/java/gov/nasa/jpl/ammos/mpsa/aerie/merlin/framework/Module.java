@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -64,8 +65,8 @@ public abstract class Module<$Schema, Event, TaskSpec> {
   }
 
 
-  protected final void emit(final Event event) {
-    this.context.emit(event);
+  protected final void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
+    this.context.emit(event, query);
   }
 
   protected final String spawn(final TaskSpec taskSpec) {

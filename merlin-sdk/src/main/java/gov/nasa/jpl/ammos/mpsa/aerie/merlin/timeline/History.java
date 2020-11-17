@@ -82,8 +82,8 @@ public final class History<$Timeline, Event> {
    * @param event The event to perform after the current time point.
    * @return The time point when the event occurs.
    */
-  public History<$Timeline, Event> emit(final Event event) {
-    return new History<>(this.database, this.lastBranchBase, database.advancing(this.index, event));
+  public History<$Timeline, Event> emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+    return new History<>(this.database, this.lastBranchBase, this.database.advancing(this.index, query, event));
   }
 
   /**
@@ -93,6 +93,10 @@ public final class History<$Timeline, Event> {
    */
   public History<$Timeline, Event> fork() {
     return new History<>(this.database, this, this.index);
+  }
+
+  public <Model> Model ask(final Query<? super $Timeline, ?, Model> query) {
+    return this.database.<Model>getTable(query.getTableIndex()).getAt(this);
   }
 
   /**

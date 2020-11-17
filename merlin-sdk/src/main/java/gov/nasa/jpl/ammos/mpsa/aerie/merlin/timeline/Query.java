@@ -33,14 +33,9 @@ public final class Query<$Schema, Event, Model> {
     return this.inner.createTable(database);
   }
 
-  /**
-   * Get the value associated with this query at the given point in time.
-   *
-   * @param history The time to perform the query at.
-   * @return The value associated with this query at the given time.
-   */
-  public Model getAt(final History<? extends $Schema, ?> history) {
-    return this.inner.getAt(history);
+  /* package-local */
+  int getTableIndex() {
+    return this.inner.getTableIndex();
   }
 
   /**
@@ -51,43 +46,31 @@ public final class Query<$Schema, Event, Model> {
    * </p>
    */
   public void clearCache(final SimulationTimeline<? extends $Schema, ?> database) {
-    this.inner.clearCache(database);
+    database.getTable(this.inner.getTableIndex()).clearCache();
   }
 
   private static final class Inner<$Schema, Event, Effect, ModelType> {
     private final Projection<Event, Effect> projection;
     private final Applicator<Effect, ModelType> applicator;
-    private final int index;
+    private final int tableIndex;
 
     private Inner(
         final Projection<Event, Effect> projection,
         final Applicator<Effect, ModelType> applicator,
-        final int index)
+        final int tableIndex)
     {
       this.projection = projection;
       this.applicator = applicator;
-      this.index = index;
+      this.tableIndex = tableIndex;
     }
 
     public <$Timeline extends $Schema>
-    Table<$Timeline, Event, ?, ?> createTable(final SimulationTimeline<$Timeline, Event> database) {
-      return new Table<>(database, this.projection, this.applicator);
+    Table<$Timeline, Event, ?, ModelType> createTable(final SimulationTimeline<$Timeline, Event> database) {
+      return new Table<>(database, this.projection, this.applicator, this.tableIndex);
     }
 
-    public <$Timeline extends $Schema> ModelType getAt(final History<$Timeline, ?> history) {
-      // SAFETY: This database is based on $Schema, which is tied to this Event type.
-      @SuppressWarnings("unchecked")
-      final var now = (History<$Timeline, Event>) history;
-
-      final var table = now.getTimeline().<Effect, ModelType>getTable(this.index);
-
-      return table.getAt(now);
-    }
-
-    public void clearCache(final SimulationTimeline<? extends $Schema, ?> database) {
-      final var table = database.<Effect, ModelType>getTable(this.index);
-
-      table.clearCache();
+    public int getTableIndex() {
+      return this.tableIndex;
     }
   }
 }
