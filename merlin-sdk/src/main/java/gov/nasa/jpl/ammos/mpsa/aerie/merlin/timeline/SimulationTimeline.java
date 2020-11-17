@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectExpression;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EventGraph;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -12,7 +11,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * A persistent representation of {@link EffectExpression}s.
@@ -134,8 +132,7 @@ public final class SimulationTimeline<$Timeline, Event> {
   //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
-      final EffectTrait<Effect> trait,
-      final Function<? super Event, Effect> substitution,
+      final Projection<? super Event, Effect> projection,
       final int startTime,
       final int endTime)
   {
@@ -143,7 +140,7 @@ public final class SimulationTimeline<$Timeline, Event> {
     //   Whenever two time points are joined, increment a counter on the resulting time point.
     //   This counter can then be used to allocate a stack of just the right size.
     final var pathStack = new ArrayDeque<ActivePath<Effect>>();
-    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, trait.empty());
+    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, projection.empty());
     var pointIndex = endTime;
 
     // TERMINATION: In principle, we can bound this loop by determining the maximum number
@@ -157,14 +154,14 @@ public final class SimulationTimeline<$Timeline, Event> {
         if (point instanceof EventPoint.Advancing) {
           // Accumulate the event into the currently open path.
           final var step = (EventPoint.Advancing<Event>) point;
-          currentPath.accumulate(next -> trait.sequentially(substitution.apply(step.event), next));
+          currentPath.accumulate(next -> projection.sequentially(projection.atom(step.event), next));
           pointIndex = step.previous;
         } else if (point instanceof EventPoint.Joining) {
           // We've walked backwards into a join point between two branches.
           // Walk down the left side first, and stash the base and right side for later evaluation.
           final var join = (EventPoint.Joining<Event>) point;
           pathStack.push(currentPath);
-          currentPath = new ActivePath.Left<>(join.base, trait.empty(), join.right);
+          currentPath = new ActivePath.Left<>(join.base, projection.empty(), join.right);
           pointIndex = join.left;
         } else if (point instanceof EventPoint.Waiting) {
           // We've walked backwards into a delay.
@@ -174,14 +171,14 @@ public final class SimulationTimeline<$Timeline, Event> {
           final var wait = (EventPoint.Waiting<Event>) point;
 
           path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, Duration.MICROSECONDS), path.effect));
-          path.effect = trait.empty();
+          path.effect = projection.empty();
           pointIndex = wait.previous;
         }
       } else if (currentPath instanceof ActivePath.Left) {
         // We've just finished evaluating the left side of a concurrence.
         // Stash the result and switch to the right side.
         final var path = (ActivePath.Left<Effect>) currentPath;
-        currentPath = new ActivePath.Right<>(path.base, path.left, trait.empty());
+        currentPath = new ActivePath.Right<>(path.base, path.left, projection.empty());
         pointIndex = path.right;
       } else if (currentPath instanceof ActivePath.Right) {
         // We've just finished evaluating the right side of a concurrence.
@@ -189,7 +186,7 @@ public final class SimulationTimeline<$Timeline, Event> {
         //   into the open path one level up. We'll continue from the given base point.
         final var path = (ActivePath.Right<Effect>) currentPath;
         currentPath = pathStack.pop();
-        currentPath.accumulate(next -> trait.sequentially(trait.concurrently(path.left, path.right), next));
+        currentPath.accumulate(next -> projection.sequentially(projection.concurrently(path.left, path.right), next));
         pointIndex = path.base;
       } else if (currentPath instanceof ActivePath.TopLevel) {
         // We've just finished the top-level path -- we're done!

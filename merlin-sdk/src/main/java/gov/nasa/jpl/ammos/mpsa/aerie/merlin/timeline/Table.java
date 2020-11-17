@@ -61,7 +61,7 @@ final class Table<$Timeline, Event, Effect, Model> {
     }
 
     // Compute the effects that have occurred since our last update on this branch.
-    final var effects = this.database.evaluate(this.projection, this.projection::atom, previousIndex, history.getIndex());
+    final var effects = this.database.evaluate(this.projection, previousIndex, history.getIndex());
 
     // Step this model up to the current point in time.
     for (final var effect : effects) {

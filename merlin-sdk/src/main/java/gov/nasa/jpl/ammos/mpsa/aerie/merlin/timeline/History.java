@@ -166,10 +166,9 @@ public final class History<$Timeline, Event> {
 
   public String getDebugTrace() {
     final var builder = new StringBuilder();
-    final var projection = new EventGraphProjection<>();
 
     var durationFromStart = Duration.ZERO;
-    for (final var point : this.database.evaluate(projection, projection::atom, START_INDEX, this.index)) {
+    for (final var point : this.database.evaluate(new EventGraphProjection<>(), START_INDEX, this.index)) {
       durationFromStart = durationFromStart.plus(point.getKey());
       builder.append(String.format("%10s: %s\n", durationFromStart, point.getValue()));
     }
