@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
@@ -31,7 +31,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
            final Query<$Schema, ? extends ModelType> model,
            final DiscreteResource<ModelType, E> resource)
   {
-    return this.builder.enumerated(name, resource.connect(model))::getDynamics;
+    return this.builder.enumerated(name, (history) -> resource.getDynamics(model.getAt(history)))::getDynamics;
   }
 
   protected <E extends Enum<E>>
@@ -50,7 +50,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
            final DiscreteResource<ModelType, ResourceType> resource,
            final ValueMapper<ResourceType> mapper)
   {
-    return this.builder.discrete(name, resource.connect(model), mapper)::getDynamics;
+    return this.builder.discrete(name, (history) -> resource.getDynamics(model.getAt(history)), mapper)::getDynamics;
   }
 
   protected <ResourceType>
@@ -69,7 +69,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
            final Query<$Schema, ModelType> model,
            final RealResource<ModelType> resource)
   {
-    return this.builder.real(name, resource.connect(model))::getDynamics;
+    return this.builder.real(name, (history) -> resource.getDynamics(model.getAt(history)))::getDynamics;
   }
 
   protected

@@ -1,6 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 
 public abstract class ActivityBreadcrumb<T, Event> {
   private ActivityBreadcrumb() {}

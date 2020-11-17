@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.CollectingEffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;

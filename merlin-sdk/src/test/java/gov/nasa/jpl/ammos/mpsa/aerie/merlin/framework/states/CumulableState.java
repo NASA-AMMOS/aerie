@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 
 import java.util.Objects;

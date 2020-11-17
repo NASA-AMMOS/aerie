@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 public interface Model<Effect, Self extends Model<Effect, Self>> {
