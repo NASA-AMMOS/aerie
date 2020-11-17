@@ -13,15 +13,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
  * </p>
  *
  * @param <$Schema> The unique type of the schema against which this query has been defined.
- * @param <ModelType> The type of entity produced by this query.
+ * @param <Model> The type of entity produced by this query.
  */
-public final class Query<$Schema, ModelType> {
-  private final Inner<$Schema, ?, ?, ModelType> inner;
+public final class Query<$Schema, Event, Model> {
+  private final Inner<$Schema, Event, ?, Model> inner;
 
   /* package-local */
-  <Event, Effect> Query(
+  <Effect> Query(
       final Projection<Event, Effect> projection,
-      final Applicator<Effect, ModelType> applicator,
+      final Applicator<Effect, Model> applicator,
       final int index)
   {
     this.inner = new Inner<>(projection, applicator, index);
@@ -29,7 +29,7 @@ public final class Query<$Schema, ModelType> {
 
   /* package-local */
   <$Timeline extends $Schema>
-  Table<$Timeline, ?, ?, ?> createTable(final SimulationTimeline<$Timeline, ?> database) {
+  Table<$Timeline, Event, ?, ?> createTable(final SimulationTimeline<$Timeline, Event> database) {
     return this.inner.createTable(database);
   }
 
@@ -39,7 +39,7 @@ public final class Query<$Schema, ModelType> {
    * @param history The time to perform the query at.
    * @return The value associated with this query at the given time.
    */
-  public ModelType getAt(final History<? extends $Schema, ?> history) {
+  public Model getAt(final History<? extends $Schema, ?> history) {
     return this.inner.getAt(history);
   }
 
@@ -70,12 +70,8 @@ public final class Query<$Schema, ModelType> {
     }
 
     public <$Timeline extends $Schema>
-    Table<$Timeline, Event, ?, ?> createTable(final SimulationTimeline<$Timeline, ?> database) {
-      // SAFETY: This database is based on $Schema, which is tied to this Event type.
-      @SuppressWarnings("unchecked")
-      final var typedDatabase = (SimulationTimeline<$Timeline, Event>) database;
-
-      return new Table<>(typedDatabase, this.projection, this.applicator);
+    Table<$Timeline, Event, ?, ?> createTable(final SimulationTimeline<$Timeline, Event> database) {
+      return new Table<>(database, this.projection, this.applicator);
     }
 
     public <$Timeline extends $Schema> ModelType getAt(final History<$Timeline, ?> history) {

@@ -36,7 +36,7 @@ public final class ResourcesBuilder<$Schema, Event> {
   }
 
   public <Effect, ModelType extends Model<Effect, ModelType>>
-  Query<$Schema, ModelType>
+  Query<$Schema, Event, ModelType>
   model(final ModelType initialState, final Function<Event, Effect> interpreter)
   {
     return this.schemaBuilder.register(

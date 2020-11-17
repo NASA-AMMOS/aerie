@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class Schema<$Schema, Event> {
-  /*package-local*/ final List<Query<? super $Schema, ?>> queries;
+  /*package-local*/ final List<Query<? super $Schema, Event, ?>> queries;
 
-  private Schema(final List<Query<? super $Schema, ?>> queries) {
+  private Schema(final List<Query<? super $Schema, Event, ?>> queries) {
     this.queries = queries;
   }
 
@@ -23,9 +23,9 @@ public final class Schema<$Schema, Event> {
 
   public static final class Builder<$Schema, Event> {
     private BuilderState<$Schema, Event> state = new UnbuiltState();
-    private final List<Query<? super $Schema, ?>> queries;
+    private final List<Query<? super $Schema, Event, ?>> queries;
 
-    private Builder(final List<Query<? super $Schema, ?>> queries) {
+    private Builder(final List<Query<? super $Schema, Event, ?>> queries) {
       this.queries = queries;
     }
 
@@ -38,7 +38,7 @@ public final class Schema<$Schema, Event> {
     }
 
     public <Effect, ModelType>
-    Query<$Schema, ModelType>
+    Query<$Schema, Event, ModelType>
     register(
         final Projection<Event, Effect> projection,
         final Applicator<Effect, ModelType> applicator)
@@ -53,7 +53,7 @@ public final class Schema<$Schema, Event> {
 
     private interface BuilderState<$Schema, Event> {
       <Effect, ModelType>
-      Query<$Schema, ModelType>
+      Query<$Schema, Event, ModelType>
       register(
           Builder<$Schema, Event> builder,
           Projection<Event, Effect> projection,
@@ -65,13 +65,13 @@ public final class Schema<$Schema, Event> {
 
     private final class UnbuiltState implements BuilderState<$Schema, Event> {
       @Override
-      public <Effect, ModelType> Query<$Schema, ModelType> register(
+      public <Effect, ModelType> Query<$Schema, Event, ModelType> register(
           final Builder<$Schema, Event> builder,
           final Projection<Event, Effect> projection,
           final Applicator<Effect, ModelType> applicator)
       {
         final var index = builder.queries.size();
-        final var query = new Query<$Schema, ModelType>(projection, applicator, index);
+        final var query = new Query<$Schema, Event, ModelType>(projection, applicator, index);
         builder.queries.add(query);
 
         return query;
@@ -79,7 +79,7 @@ public final class Schema<$Schema, Event> {
 
       @Override
       public Schema<$Schema, Event> build(final Builder<$Schema, Event> builder) {
-        final var schema = new Schema<$Schema, Event>(builder.queries);
+        final var schema = new Schema<>(builder.queries);
         builder.state = new BuiltState(schema);
         return schema;
       }
@@ -93,7 +93,7 @@ public final class Schema<$Schema, Event> {
       }
 
       @Override
-      public <Effect, ModelType> Query<$Schema, ModelType> register(
+      public <Effect, ModelType> Query<$Schema, Event, ModelType> register(
           final Builder<$Schema, Event> builder,
           final Projection<Event, Effect> projection,
           final Applicator<Effect, ModelType> applicator)

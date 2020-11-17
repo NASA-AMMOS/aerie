@@ -17,7 +17,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
   }
 
   protected <Effect, ModelType extends Model<Effect, ModelType>>
-  Query<$Schema, ModelType>
+  Query<$Schema, Event, ModelType>
   model(final ModelType initialState,
         final Function<Event, Effect> interpreter)
   {
@@ -28,7 +28,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
   protected <ModelType, E extends Enum<E>>
   DiscreteResource<History<? extends $Schema, ?>, E>
   resource(final String name,
-           final Query<$Schema, ? extends ModelType> model,
+           final Query<$Schema, Event, ? extends ModelType> model,
            final DiscreteResource<ModelType, E> resource)
   {
     return this.builder.enumerated(name, (history) -> resource.getDynamics(model.getAt(history)))::getDynamics;
@@ -46,7 +46,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
   protected <ModelType, ResourceType>
   DiscreteResource<History<? extends $Schema, ?>, ResourceType>
   resource(final String name,
-           final Query<$Schema, ? extends ModelType> model,
+           final Query<$Schema, Event, ? extends ModelType> model,
            final DiscreteResource<ModelType, ResourceType> resource,
            final ValueMapper<ResourceType> mapper)
   {
@@ -66,7 +66,7 @@ public abstract class Resources<$Schema, Event, TaskSpec> extends Module<$Schema
   protected <ModelType>
   RealResource<History<? extends $Schema, ?>>
   resource(final String name,
-           final Query<$Schema, ModelType> model,
+           final Query<$Schema, Event, ModelType> model,
            final RealResource<ModelType> resource)
   {
     return this.builder.real(name, (history) -> resource.getDynamics(model.getAt(history)))::getDynamics;

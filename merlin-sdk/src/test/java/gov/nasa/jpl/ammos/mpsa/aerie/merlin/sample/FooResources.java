@@ -36,7 +36,7 @@ public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, Ta
     super(builder);
   }
 
-  private final Query<$Schema, DataModel>
+  private final Query<$Schema, FooEvent, DataModel>
       dataModel = model(new DataModel(0.0, 0.0), ev -> ev.d);
   public final RealResource<History<? extends $Schema, ?>>
       dataVolume = resource("volume", dataModel, DataModel.volume);
@@ -46,7 +46,7 @@ public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, Ta
   public final RealResource<History<? extends $Schema, ?>>
       combo = resource("combo", dataVolume.plus(dataRate));
 
-  private final Query<$Schema, RegisterModel<Double>>
+  private final Query<$Schema, FooEvent, RegisterModel<Double>>
       fooModel = model(new RegisterModel<>(0.0), ev -> Pair.of(Optional.of(ev.d), Set.of(ev.d)));
   public final DiscreteResource<History<? extends $Schema, ?>, Double>
       foo = resource("foo", fooModel, RegisterModel.value(), new DoubleValueMapper());
