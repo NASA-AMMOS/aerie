@@ -71,11 +71,6 @@ public final class History<$Timeline, Event> {
     return this.lastBranchBase;
   }
 
-  /* package-local */
-  SimulationTimeline<$Timeline, Event> getTimeline() {
-    return this.database;
-  }
-
   /**
    * Append a new event to the timeline.
    *

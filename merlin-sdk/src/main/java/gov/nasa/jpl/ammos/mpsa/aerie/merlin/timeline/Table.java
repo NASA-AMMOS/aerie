@@ -2,8 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,7 +80,7 @@ final class Table<$Timeline, Event, Effect, Model> {
     }
 
     // Compute the effects that have occurred since our last update on this branch.
-    final var effects = this.database.evaluate(this.projection, previousIndex, history.getIndex());
+    final var effects = this.evaluate(previousIndex, history.getIndex());
 
     // Step this model up to the current point in time.
     for (final var effect : effects) {
@@ -88,5 +92,73 @@ final class Table<$Timeline, Event, Effect, Model> {
     this.cache.put(history.getIndex(), model);
 
     return model;
+  }
+
+  // PRECONDITION: `startTime` occurs-before `endTime`.
+  //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
+  /* package-local */
+  private Collection<Pair<Duration, Effect>> evaluate(final int startTime, final int endTime) {
+    // NOTE: In principle, we can determine the maximum size of the path stack.
+    //   Whenever two time points are joined, increment a counter on the resulting time point.
+    //   This counter can then be used to allocate a stack of just the right size.
+    final var pathStack = new ArrayDeque<ActivePath<Effect>>();
+    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, this.projection.empty());
+    var pointIndex = endTime;
+
+    // TERMINATION: In principle, we can bound this loop by determining the maximum number
+    //   of time points we will visit. Whenever a new time point is generated from an old one,
+    //   its count would be updated appropriately. (Emitting an event adds one; joining two branches
+    //   adds the branches and subtracts the base.)
+    while (true) {
+      if (currentPath.basePoint() != pointIndex) {
+        // There's still more path to follow!
+        final var point = this.database.get(pointIndex);
+        if (point instanceof EventPoint.Advancing) {
+          // Accumulate the event into the currently open path.
+          final var step = (EventPoint.Advancing) point;
+          if (step.tableIndex == this.tableIndex) {
+            final var event = this.getEvent(step.eventIndex);
+            currentPath.accumulate(next -> this.projection.sequentially(this.projection.atom(event), next));
+          }
+          pointIndex = step.previous;
+        } else if (point instanceof EventPoint.Joining) {
+          // We've walked backwards into a join point between two branches.
+          // Walk down the left side first, and stash the base and right side for later evaluation.
+          final var join = (EventPoint.Joining) point;
+          pathStack.push(currentPath);
+          currentPath = new ActivePath.Left<>(join.base, this.projection.empty(), join.right);
+          pointIndex = join.left;
+        } else if (point instanceof EventPoint.Waiting) {
+          // We've walked backwards into a delay.
+          // SAFETY: Delays can only occur at the top-level.
+          assert currentPath instanceof ActivePath.TopLevel;
+          final var path = (ActivePath.TopLevel<Effect>) currentPath;
+          final var wait = (EventPoint.Waiting) point;
+
+          path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, Duration.MICROSECONDS), path.effect));
+          path.effect = this.projection.empty();
+          pointIndex = wait.previous;
+        }
+      } else if (currentPath instanceof ActivePath.Left) {
+        // We've just finished evaluating the left side of a concurrence.
+        // Stash the result and switch to the right side.
+        final var path = (ActivePath.Left<Effect>) currentPath;
+        currentPath = new ActivePath.Right<>(path.base, path.left, this.projection.empty());
+        pointIndex = path.right;
+      } else if (currentPath instanceof ActivePath.Right) {
+        // We've just finished evaluating the right side of a concurrence.
+        // We already evaluated the left side, so bind them together and accumulate the result
+        //   into the open path one level up. We'll continue from the given base point.
+        final var path = (ActivePath.Right<Effect>) currentPath;
+        currentPath = pathStack.pop();
+        currentPath.accumulate(next -> this.projection.sequentially(this.projection.concurrently(path.left, path.right), next));
+        pointIndex = path.base;
+      } else if (currentPath instanceof ActivePath.TopLevel) {
+        // We've just finished the top-level path -- we're done!
+        final var path = (ActivePath.TopLevel<Effect>) currentPath;
+        path.effects.addFirst(Pair.of(Duration.ZERO, path.effect));
+        return path.effects;
+      }
+    }
   }
 }
