@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;

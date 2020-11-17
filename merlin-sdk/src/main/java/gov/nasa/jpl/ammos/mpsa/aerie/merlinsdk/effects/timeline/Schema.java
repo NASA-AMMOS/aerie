@@ -4,7 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public final class Schema<$Schema, Event> {
   /*package-local*/ final List<Query<? super $Schema, ?>> queries;
@@ -35,17 +34,6 @@ public final class Schema<$Schema, Event> {
 
     private Builder(final Schema<? super $Schema, Event> schema) {
       this(new ArrayList<>(schema.queries));
-    }
-
-    public <Effect, ModelType extends Model<Effect, ModelType>>
-    Query<$Schema, ModelType>
-    register(
-        final ModelType initialState,
-        final Function<Event, Effect> interpreter)
-    {
-      return this.register(
-          Projection.from(initialState.effectTrait(), interpreter),
-          new ModelApplicator<>(initialState));
     }
 
     public <Effect, ModelType>

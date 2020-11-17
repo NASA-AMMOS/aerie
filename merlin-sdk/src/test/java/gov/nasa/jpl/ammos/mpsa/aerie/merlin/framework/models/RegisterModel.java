@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.traits.ConcurrentUpdateTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import org.apache.commons.lang3.tuple.Pair;

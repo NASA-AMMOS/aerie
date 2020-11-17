@@ -1,7 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
@@ -37,7 +39,9 @@ public final class ResourcesBuilder<$Schema, Event> {
   Query<$Schema, ModelType>
   model(final ModelType initialState, final Function<Event, Effect> interpreter)
   {
-    return this.schemaBuilder.register(initialState, interpreter);
+    return this.schemaBuilder.register(
+        Projection.from(initialState.effectTrait(), interpreter),
+        new ModelApplicator<>(initialState));
   }
 
   public <E extends Enum<E>>

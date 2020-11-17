@@ -94,13 +94,6 @@ public final class SimulationTimeline<T, Event> {
     return query;
   }
 
-  public <Effect, ModelType extends Model<Effect, ModelType>>
-  Query<T, ModelType> register(final ModelType initialState, final Function<Event, Effect> interpreter) {
-    return this.register(
-        Projection.from(initialState.effectTrait(), interpreter),
-        new ModelApplicator<>(initialState));
-  }
-
   /* package-local */
   int advancing(final int previous, final Event event) {
     final var nextTime = this.nextTime++;

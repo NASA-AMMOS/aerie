@@ -1,5 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Objects;
