@@ -12,18 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Module<$Schema, Event, TaskSpec> {
-  private final ProxyContext<$Schema, Event, TaskSpec> context = new ProxyContext<>();
-  private final Map<String, Module<$Schema, Event, TaskSpec>> submodules = new HashMap<>();
+public abstract class Module<$Schema, TaskSpec> {
+  private final ProxyContext<$Schema, TaskSpec> context = new ProxyContext<>();
+  private final Map<String, Module<$Schema, TaskSpec>> submodules = new HashMap<>();
   private final Map<String, Runnable> daemons = new HashMap<>();
 
-  public final Context<$Schema, Event, TaskSpec> setContext(final Context<$Schema, Event, TaskSpec> context) {
+  public final Context<$Schema, TaskSpec> setContext(final Context<$Schema, TaskSpec> context) {
     final var old = this.context.getTarget();
     this.context.setTarget(context);
     return old;
   }
 
-  protected final <Submodule extends Module<$Schema, Event, TaskSpec>>
+  protected final <Submodule extends Module<$Schema, TaskSpec>>
   Submodule submodule(final String name, final Submodule submodule) {
     if (this.submodules.containsKey(name)) {
       throw new RuntimeException(String.format("Attempt to register submodule with id already in use: %s", submodule));
@@ -47,25 +47,25 @@ public abstract class Module<$Schema, Event, TaskSpec> {
     return Collections.unmodifiableMap(this.daemons);
   }
 
-  public final Map<String, Module<$Schema, Event, TaskSpec>> getSubmodules() {
+  public final Map<String, Module<$Schema, TaskSpec>> getSubmodules() {
     return Collections.unmodifiableMap(this.submodules);
   }
 
 
-  protected final History<? extends $Schema, ?> now() {
+  protected final History<? extends $Schema> now() {
     return this.context.now();
   }
 
-  protected final double ask(final RealResource<? super History<? extends $Schema, ?>> resource) {
+  protected final double ask(final RealResource<? super History<? extends $Schema>> resource) {
     return this.context.ask(resource);
   }
 
-  protected final <T> T ask(final DiscreteResource<? super History<? extends $Schema, ?>, T> resource) {
+  protected final <T> T ask(final DiscreteResource<? super History<? extends $Schema>, T> resource) {
     return this.context.ask(resource);
   }
 
 
-  protected final void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
+  protected final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
     this.context.emit(event, query);
   }
 
@@ -99,14 +99,14 @@ public abstract class Module<$Schema, Event, TaskSpec> {
   }
 
   protected final void waitFor(
-      final RealResource<? super History<? extends $Schema, ?>> resource,
+      final RealResource<? super History<? extends $Schema>> resource,
       final RealCondition condition)
   {
     this.context.waitFor(resource, condition);
   }
 
   protected final <T> void waitFor(
-      final DiscreteResource<? super History<? extends $Schema, ?>, T> resource,
+      final DiscreteResource<? super History<? extends $Schema>, T> resource,
       final Set<T> condition)
   {
     this.context.waitFor(resource, condition);

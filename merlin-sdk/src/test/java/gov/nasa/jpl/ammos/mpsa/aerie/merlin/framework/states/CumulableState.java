@@ -8,14 +8,14 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import java.util.Objects;
 import java.util.function.Function;
 
-public final class CumulableState<$Schema, Event, TaskSpec> extends Module<$Schema, Event, TaskSpec> {
+public final class CumulableState<$Schema, Event, TaskSpec> extends Module<$Schema, TaskSpec> {
   private final Query<$Schema, Event, ?> query;
-  private final RealResource<History<? extends $Schema, ?>> resource;
+  private final RealResource<History<? extends $Schema>> resource;
   private final Function<Double, Event> emitter;
 
   public CumulableState(
       final Query<$Schema, Event, ?> query,
-      final RealResource<History<? extends $Schema, ?>> resource,
+      final RealResource<History<? extends $Schema>> resource,
       final Function<Double, Event> emitter)
   {
     this.query = Objects.requireNonNull(query);

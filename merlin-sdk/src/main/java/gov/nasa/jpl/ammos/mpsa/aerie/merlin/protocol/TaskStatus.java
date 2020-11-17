@@ -20,7 +20,7 @@ public abstract class TaskStatus<$Timeline> {
 
     <ResourceType, ConditionType>
     Result awaiting(
-        Resource<History<$Timeline, ?>, SolvableDynamics<ResourceType, ConditionType>> resource,
+        Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
         ConditionType condition);
   }
 
@@ -58,7 +58,7 @@ public abstract class TaskStatus<$Timeline> {
   public static <$Timeline, ResourceType, ConditionType>
   TaskStatus<$Timeline>
   awaiting(
-      final Resource<History<$Timeline, ?>, SolvableDynamics<ResourceType, ConditionType>> resource,
+      final Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
       final ConditionType condition)
   {
     Objects.requireNonNull(resource);

@@ -10,17 +10,17 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public interface SimulationScope<$Schema, Event, AdaptationTaskSpec extends TaskSpec> {
-  /* Produce */ Schema<$Schema, Event>
+public interface SimulationScope<$Schema, AdaptationTaskSpec extends TaskSpec> {
+  /* Produce */ Schema<$Schema>
   /* Given   */ getSchema();
 
-  /* Produce */ Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema, ?>, SerializedValue>>>
+  /* Produce */ Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>>
   /* Given   */ getDiscreteResources();
 
-  /* Produce */ Map<String, ? extends Resource<History<? extends $Schema, ?>, RealDynamics>>
+  /* Produce */ Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>>
   /* Given   */ getRealResources();
 
   /* For all */ <$Timeline extends $Schema>
-  /* Produce */ Task<$Timeline, Event, AdaptationTaskSpec>
+  /* Produce */ Task<$Timeline, AdaptationTaskSpec>
   /* Given   */ createTask(AdaptationTaskSpec taskSpec);
 }

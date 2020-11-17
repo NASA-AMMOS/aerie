@@ -6,26 +6,26 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class Schema<$Schema, Event> {
-  /*package-local*/ final List<Query<? super $Schema, Event, ?>> queries;
+public final class Schema<$Schema> {
+  /*package-local*/ final List<Query<? super $Schema, ?, ?>> queries;
 
-  private Schema(final List<Query<? super $Schema, Event, ?>> queries) {
+  private Schema(final List<Query<? super $Schema, ?, ?>> queries) {
     this.queries = queries;
   }
 
-  public static <Event> Builder<?, Event> builder() {
+  public static Builder<?> builder() {
     return new Builder<>();
   }
 
-  public Builder<? extends $Schema, Event> extend() {
+  public Builder<? extends $Schema> extend() {
     return new Builder<>(this);
   }
 
-  public static final class Builder<$Schema, Event> {
-    private BuilderState<$Schema, Event> state = new UnbuiltState();
-    private final List<Query<? super $Schema, Event, ?>> queries;
+  public static final class Builder<$Schema> {
+    private BuilderState<$Schema> state = new UnbuiltState();
+    private final List<Query<? super $Schema, ?, ?>> queries;
 
-    private Builder(final List<Query<? super $Schema, Event, ?>> queries) {
+    private Builder(final List<Query<? super $Schema, ?, ?>> queries) {
       this.queries = queries;
     }
 
@@ -33,11 +33,11 @@ public final class Schema<$Schema, Event> {
       this(new ArrayList<>());
     }
 
-    private Builder(final Schema<? super $Schema, Event> schema) {
+    private Builder(final Schema<? super $Schema> schema) {
       this(new ArrayList<>(schema.queries));
     }
 
-    public <Effect, ModelType>
+    public <Event, Effect, ModelType>
     Query<$Schema, Event, ModelType>
     register(
         final Projection<Event, Effect> projection,
@@ -46,27 +46,27 @@ public final class Schema<$Schema, Event> {
       return this.state.register(this, projection, applicator);
     }
 
-    public Schema<$Schema, Event> build() {
+    public Schema<$Schema> build() {
       return this.state.build(this);
     }
 
 
-    private interface BuilderState<$Schema, Event> {
-      <Effect, ModelType>
+    private interface BuilderState<$Schema> {
+      <Event, Effect, ModelType>
       Query<$Schema, Event, ModelType>
       register(
-          Builder<$Schema, Event> builder,
+          Builder<$Schema> builder,
           Projection<Event, Effect> projection,
           Applicator<Effect, ModelType> applicator);
 
-      Schema<$Schema, Event>
-      build(Builder<$Schema, Event> builder);
+      Schema<$Schema>
+      build(Builder<$Schema> builder);
     }
 
-    private final class UnbuiltState implements BuilderState<$Schema, Event> {
+    private final class UnbuiltState implements BuilderState<$Schema> {
       @Override
-      public <Effect, ModelType> Query<$Schema, Event, ModelType> register(
-          final Builder<$Schema, Event> builder,
+      public <Event, Effect, ModelType> Query<$Schema, Event, ModelType> register(
+          final Builder<$Schema> builder,
           final Projection<Event, Effect> projection,
           final Applicator<Effect, ModelType> applicator)
       {
@@ -78,23 +78,23 @@ public final class Schema<$Schema, Event> {
       }
 
       @Override
-      public Schema<$Schema, Event> build(final Builder<$Schema, Event> builder) {
+      public Schema<$Schema> build(final Builder<$Schema> builder) {
         final var schema = new Schema<>(builder.queries);
         builder.state = new BuiltState(schema);
         return schema;
       }
     }
 
-    private final class BuiltState implements BuilderState<$Schema, Event> {
-      private final Schema<$Schema, Event> schema;
+    private final class BuiltState implements BuilderState<$Schema> {
+      private final Schema<$Schema> schema;
 
-      public BuiltState(final Schema<$Schema, Event> schema) {
+      public BuiltState(final Schema<$Schema> schema) {
         this.schema = schema;
       }
 
       @Override
-      public <Effect, ModelType> Query<$Schema, Event, ModelType> register(
-          final Builder<$Schema, Event> builder,
+      public <Event, Effect, ModelType> Query<$Schema, Event, ModelType> register(
+          final Builder<$Schema> builder,
           final Projection<Event, Effect> projection,
           final Applicator<Effect, ModelType> applicator)
       {
@@ -104,7 +104,7 @@ public final class Schema<$Schema, Event> {
       }
 
       @Override
-      public Schema<$Schema, Event> build(final Builder<$Schema, Event> builder) {
+      public Schema<$Schema> build(final Builder<$Schema> builder) {
         return this.schema;
       }
     }

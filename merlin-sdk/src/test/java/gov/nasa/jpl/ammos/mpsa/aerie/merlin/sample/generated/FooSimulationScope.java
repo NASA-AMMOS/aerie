@@ -20,20 +20,20 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public final class FooSimulationScope<$Schema> implements SimulationScope<$Schema, FooEvent, TaskSpec> {
-  private final ProxyContext<$Schema, FooEvent, TaskSpec> rootContext = new ProxyContext<>();
+public final class FooSimulationScope<$Schema> implements SimulationScope<$Schema, TaskSpec> {
+  private final ProxyContext<$Schema, TaskSpec> rootContext = new ProxyContext<>();
 
   private final FooResources<$Schema> container;
-  private final BuiltResources<$Schema, FooEvent> resources;
+  private final BuiltResources<$Schema> resources;
 
-  private FooSimulationScope(final FooResources<$Schema> container, final BuiltResources<$Schema, FooEvent> resources) {
+  private FooSimulationScope(final FooResources<$Schema> container, final BuiltResources<$Schema> resources) {
     this.container = container;
     this.resources = resources;
 
     container.setContext(this.rootContext);
   }
 
-  private static <$Schema> FooSimulationScope<$Schema> create(final ResourcesBuilder<$Schema, FooEvent> builder) {
+  private static <$Schema> FooSimulationScope<$Schema> create(final ResourcesBuilder<$Schema> builder) {
     final var container = new FooResources<>(builder);
     return new FooSimulationScope<>(container, builder.build());
   }
@@ -42,24 +42,24 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
     return create(new ResourcesBuilder<>(Schema.builder()));
   }
 
-  public Module<$Schema, FooEvent, TaskSpec> getRootModule() {
+  public Module<$Schema, TaskSpec> getRootModule() {
     return this.container;
   }
 
   @Override
-  public Schema<$Schema, FooEvent> getSchema() {
+  public Schema<$Schema> getSchema() {
     return this.resources.getSchema();
   }
 
   @Override
-  public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema, ?>, SerializedValue>>>
+  public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>>
   getDiscreteResources()
   {
     return this.resources.getDiscreteResources();
   }
 
   @Override
-  public Map<String, ? extends Resource<History<? extends $Schema, ?>, RealDynamics>>
+  public Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>>
   getRealResources()
   {
     return this.resources.getRealResources();
@@ -67,7 +67,7 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
 
   public @Override
   <$Timeline extends $Schema>
-  Task<$Timeline, FooEvent, TaskSpec>
+  Task<$Timeline, TaskSpec>
   createTask(final TaskSpec taskSpec)
   {
     final var task = taskSpec.<$Schema>createTask();

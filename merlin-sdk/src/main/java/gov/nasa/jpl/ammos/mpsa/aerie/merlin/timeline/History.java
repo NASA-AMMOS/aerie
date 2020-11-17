@@ -27,15 +27,14 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline.S
  * </p>
  *
  * @param <$Timeline> The abstract type of the timeline owning this time point.
- * @param <Event> The type of events that may occur over the timeline.
  * @see SimulationTimeline
  * @see Query
  */
-public final class History<$Timeline, Event> {
+public final class History<$Timeline> {
   /**
    * The database governing this time point.
    */
-  private final SimulationTimeline<$Timeline, Event> database;
+  private final SimulationTimeline<$Timeline> database;
 
   /**
    * The index of the current point in time in the SimulationTimeline database.
@@ -47,10 +46,10 @@ public final class History<$Timeline, Event> {
    *
    * Only points in time sharing this scope point may be joined together.
    */
-  private final History<$Timeline, Event> lastBranchBase;
+  private final History<$Timeline> lastBranchBase;
 
   /* package-local */
-  History(final SimulationTimeline<$Timeline, Event> database, final History<$Timeline, Event> lastBranchBase, final int index) {
+  History(final SimulationTimeline<$Timeline> database, final History<$Timeline> lastBranchBase, final int index) {
     this.database = database;
     this.lastBranchBase = lastBranchBase;
     this.index = index;
@@ -67,7 +66,7 @@ public final class History<$Timeline, Event> {
   }
 
   /* package-local */
-  History<$Timeline, Event> getLastBranchBase() {
+  History<$Timeline> getLastBranchBase() {
     return this.lastBranchBase;
   }
 
@@ -77,7 +76,7 @@ public final class History<$Timeline, Event> {
    * @param event The event to perform after the current time point.
    * @return The time point when the event occurs.
    */
-  public History<$Timeline, Event> emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+  public <Event> History<$Timeline> emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
     return new History<>(this.database, this.lastBranchBase, this.database.advancing(this.index, query, event));
   }
 
@@ -86,12 +85,12 @@ public final class History<$Timeline, Event> {
    *
    * @return The base time point from which two branches may be drawn.
    */
-  public History<$Timeline, Event> fork() {
+  public History<$Timeline> fork() {
     return new History<>(this.database, this, this.index);
   }
 
-  public <Model> Model ask(final Query<? super $Timeline, ?, Model> query) {
-    return this.database.<Model>getTable(query.getTableIndex()).getAt(this);
+  public <Event, Model> Model ask(final Query<? super $Timeline, Event, Model> query) {
+    return this.database.<Event, Model>getTable(query.getTableIndex()).getAt(this);
   }
 
   /**
@@ -105,9 +104,9 @@ public final class History<$Timeline, Event> {
    * @param right A function drawing out the other branch of the timeline.
    * @return A time point observing both generated branches in its past.
    */
-  public History<$Timeline, Event> branching(
-      final Function<History<$Timeline, Event>, History<$Timeline, Event>> left,
-      final Function<History<$Timeline, Event>, History<$Timeline, Event>> right)
+  public History<$Timeline> branching(
+      final Function<History<$Timeline>, History<$Timeline>> left,
+      final Function<History<$Timeline>, History<$Timeline>> right)
   {
     return left.apply(this.fork()).join(right.apply(this.fork()));
   }
@@ -122,7 +121,7 @@ public final class History<$Timeline, Event> {
    * @param other The sibling branch of time to join with this branch.
    * @return A time point observing both branches in its past.
    */
-  public History<$Timeline, Event> join(final History<$Timeline, Event> other) {
+  public History<$Timeline> join(final History<$Timeline> other) {
     if (this.lastBranchBase == null || this.lastBranchBase != other.lastBranchBase) {
       throw new RuntimeException("Cannot join branches that did not fork from the same point");
     } else if (this.index == this.lastBranchBase.index) {
@@ -140,7 +139,7 @@ public final class History<$Timeline, Event> {
    * @param duration The amount of time to wait.
    * @return A time point observing this time point followed by a span of time.
    */
-  public History<$Timeline, Event> wait(final Duration duration) {
+  public History<$Timeline> wait(final Duration duration) {
     if (this.lastBranchBase != null) {
       throw new RuntimeException("Cannot wait on an unmerged branch");
     } else if (duration.isNegative()) {
@@ -159,7 +158,7 @@ public final class History<$Timeline, Event> {
    * @param unit The unit of time to measure out.
    * @return A time point observing this time point followed by a span of time.
    */
-  public History<$Timeline, Event> wait(final long quantity, final Duration unit) {
+  public History<$Timeline> wait(final long quantity, final Duration unit) {
     return this.wait(Duration.of(quantity, unit));
   }
 

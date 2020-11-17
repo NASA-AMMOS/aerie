@@ -34,13 +34,12 @@ import java.util.List;
  * </p>
  *
  * @param <$Timeline> A phantom type parameter that distinguishes individual timeline instances.
- * @param <Event> The type of events that may occur over the timeline.
  * @see <a href="https://en.wikipedia.org/wiki/Persistent_data_structure">Wikipedia: Persistent data structure</a>
  * @see History
  * @see Query
  * @see EventGraph
  */
-public final class SimulationTimeline<$Timeline, Event> {
+public final class SimulationTimeline<$Timeline> {
   // SAFETY: -1 is not a legal index for a time point.
   /*package-local*/ static final int START_INDEX = -1;
 
@@ -50,7 +49,7 @@ public final class SimulationTimeline<$Timeline, Event> {
 
   private final List<Table<$Timeline, ?, ?, ?>> tables;
 
-  private SimulationTimeline(final Schema<? super $Timeline, Event> schema) {
+  private SimulationTimeline(final Schema<? super $Timeline> schema) {
     this.times = new ArrayList<>();
     this.nextTime = 0;
 
@@ -67,21 +66,21 @@ public final class SimulationTimeline<$Timeline, Event> {
   //   Java cannot deduce that.
   // The effect is that every simulation timeline has a unique type hidden by a wildcard.
   public static
-  <$Schema, Event>
-  SimulationTimeline<? extends $Schema, Event>
-  create(final Schema<$Schema, Event> schema) {
+  <$Schema>
+  SimulationTimeline<? extends $Schema>
+  create(final Schema<$Schema> schema) {
     return new SimulationTimeline<>(schema);
   }
 
-  public static <Event> SimulationTimeline<?, Event> create() {
+  public static <Event> SimulationTimeline<?> create() {
     return create(Schema.<Event>builder().build());
   }
 
-  public History<$Timeline, Event> origin() {
+  public History<$Timeline> origin() {
     return new History<>(this, null, START_INDEX);
   }
 
-  public <ModelType, Effect> Query<$Timeline, Event, ModelType> register(
+  public <Event, ModelType, Effect> Query<$Timeline, Event, ModelType> register(
       final Projection<Event, Effect> projection,
       final Applicator<Effect, ModelType> applicator)
   {
@@ -93,7 +92,7 @@ public final class SimulationTimeline<$Timeline, Event> {
   }
 
   /* package-local */
-  int advancing(final int previous, final Query<? super $Timeline, Event, ?> query, final Event event) {
+  <Event> int advancing(final int previous, final Query<? super $Timeline, Event, ?> query, final Event event) {
     final var tableIndex = query.getTableIndex();
     final var eventIndex = this.getTable(tableIndex).emit(event);
 
@@ -122,7 +121,7 @@ public final class SimulationTimeline<$Timeline, Event> {
   }
 
   /* package-local */
-  <ModelType>
+  <Event, ModelType>
   Table<$Timeline, Event, ?, ModelType>
   getTable(final int index) {
     // SAFETY: The index is provided by the query from which this cache was built.
@@ -135,7 +134,7 @@ public final class SimulationTimeline<$Timeline, Event> {
   //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
-      final Projection<? super Event, Effect> projection,
+      final Projection<Object, Effect> projection,
       final int startTime,
       final int endTime)
   {

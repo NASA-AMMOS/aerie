@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 
 import java.util.HashMap;
@@ -15,7 +14,7 @@ public abstract class TaskSpec
   /* package-local */
   TaskSpec() {}
 
-  public abstract <$Schema> Task<$Schema, FooEvent, TaskSpec, FooResources<$Schema>> createTask();
+  public abstract <$Schema> Task<$Schema, TaskSpec, FooResources<$Schema>> createTask();
 
   public static Map<String, TaskSpecType<TaskSpec>> getTaskSpecTypes() {
     final var types = new HashMap<String, TaskSpecType<TaskSpec>>();

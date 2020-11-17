@@ -17,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Optional;
 import java.util.Set;
 
-public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, TaskSpec> {
+public final class FooResources<$Schema> extends Resources<$Schema, TaskSpec> {
   // Need a clear story for how to logically group resource questions and event emissions together.
   // Need a way to produce a condition for a resource.
   // Need a way to assemble conditions into an overall constraint.
@@ -32,25 +32,25 @@ public final class FooResources<$Schema> extends Resources<$Schema, FooEvent, Ta
   // Need to use a more representative event type for the sample.
   // Need to implement compile-time code generation for various aspects of the Framework.
 
-  public FooResources(final ResourcesBuilder<$Schema, FooEvent> builder) {
+  public FooResources(final ResourcesBuilder<$Schema> builder) {
     super(builder);
   }
 
   private final Query<$Schema, FooEvent, DataModel>
       dataModel = model(new DataModel(0.0, 0.0), ev -> ev.d);
-  public final RealResource<History<? extends $Schema, ?>>
+  public final RealResource<History<? extends $Schema>>
       dataVolume = resource("volume", dataModel, DataModel.volume);
-  public final RealResource<History<? extends $Schema, ?>>
+  public final RealResource<History<? extends $Schema>>
       dataRate = resource("rate", dataModel, DataModel.rate);
 
-  public final RealResource<History<? extends $Schema, ?>>
+  public final RealResource<History<? extends $Schema>>
       combo = resource("combo", dataVolume.plus(dataRate));
 
   private final Query<$Schema, FooEvent, RegisterModel<Double>>
       fooModel = model(new RegisterModel<>(0.0), ev -> Pair.of(Optional.of(ev.d), Set.of(ev.d)));
-  public final DiscreteResource<History<? extends $Schema, ?>, Double>
+  public final DiscreteResource<History<? extends $Schema>, Double>
       foo = resource("foo", fooModel, RegisterModel.value(), new DoubleValueMapper());
-  public final DiscreteResource<History<? extends $Schema, ?>, Boolean>
+  public final DiscreteResource<History<? extends $Schema>, Boolean>
       bar = resource("bar", fooModel, RegisterModel.conflicted, new BooleanValueMapper());
 
   public final CumulableState<$Schema, ?, ?>

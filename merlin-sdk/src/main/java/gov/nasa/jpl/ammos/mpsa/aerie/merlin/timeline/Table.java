@@ -15,7 +15,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline.S
 
 /* package-local */
 final class Table<$Timeline, Event, Effect, Model> {
-  private final SimulationTimeline<$Timeline, Event> database;
+  private final SimulationTimeline<$Timeline> database;
   private final Projection<Event, Effect> projection;
   private final Applicator<Effect, Model> applicator;
   private final int tableIndex;
@@ -24,7 +24,7 @@ final class Table<$Timeline, Event, Effect, Model> {
   private final ArrayList<Event> events = new ArrayList<>();
 
   public Table(
-      final SimulationTimeline<$Timeline, Event> database,
+      final SimulationTimeline<$Timeline> database,
       final Projection<Event, Effect> projection,
       final Applicator<Effect, Model> applicator,
       final int tableIndex)
@@ -49,7 +49,7 @@ final class Table<$Timeline, Event, Effect, Model> {
     return this.events.get(index);
   }
 
-  public Model getAt(final History<$Timeline, Event> history) {
+  public Model getAt(final History<$Timeline> history) {
     // If we already have a model cached for this time point, we can just bail now.
     if (history.getIndex() == START_INDEX) {
       return this.applicator.initial();

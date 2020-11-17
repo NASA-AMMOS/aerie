@@ -29,7 +29,7 @@ public final class Query<$Schema, Event, Model> {
 
   /* package-local */
   <$Timeline extends $Schema>
-  Table<$Timeline, Event, ?, ?> createTable(final SimulationTimeline<$Timeline, Event> database) {
+  Table<$Timeline, Event, ?, ?> createTable(final SimulationTimeline<$Timeline> database) {
     return this.inner.createTable(database);
   }
 
@@ -45,7 +45,7 @@ public final class Query<$Schema, Event, Model> {
    * Calling this may make `getAt` take longer, but it should not affect correctness.
    * </p>
    */
-  public void clearCache(final SimulationTimeline<? extends $Schema, ?> database) {
+  public void clearCache(final SimulationTimeline<? extends $Schema> database) {
     database.getTable(this.inner.getTableIndex()).clearCache();
   }
 
@@ -65,7 +65,7 @@ public final class Query<$Schema, Event, Model> {
     }
 
     public <$Timeline extends $Schema>
-    Table<$Timeline, Event, ?, ModelType> createTable(final SimulationTimeline<$Timeline, Event> database) {
+    Table<$Timeline, Event, ?, ModelType> createTable(final SimulationTimeline<$Timeline> database) {
       return new Table<>(database, this.projection, this.applicator, this.tableIndex);
     }
 
