@@ -11,9 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -49,17 +47,18 @@ public final class SimulationTimeline<$Timeline, Event> {
   /*package-local*/ static final int START_INDEX = -1;
 
   private final List<EventPoint<Event>> times;
+
   private int nextTime;
 
-  private final List<Map<Integer, ?>> caches;
+  private final List<Table<$Timeline, ?, ?, ?>> tables;
 
   private SimulationTimeline(final Schema<? super $Timeline, Event> schema) {
     this.times = new ArrayList<>();
     this.nextTime = 0;
 
-    this.caches = new ArrayList<>(schema.queries.size());
+    this.tables = new ArrayList<>(schema.queries.size());
     for (final var query : schema.queries) {
-      this.caches.add(new HashMap<>());
+      this.tables.add(query.createTable(this));
     }
   }
 
@@ -88,9 +87,9 @@ public final class SimulationTimeline<$Timeline, Event> {
       final Projection<Event, Effect> projection,
       final Applicator<Effect, ModelType> applicator)
   {
-    final var index = this.caches.size();
+    final var index = this.tables.size();
     final var query = new Query<$Timeline, ModelType>(projection, applicator, index);
-    this.caches.add(new HashMap<>());
+    this.tables.add(query.createTable(this));
 
     return query;
   }
@@ -122,13 +121,13 @@ public final class SimulationTimeline<$Timeline, Event> {
   }
 
   /* package-local */
-  <ModelType>
-  Map<Integer, ModelType>
-  getQueryCache(final int index) {
+  <Effect, ModelType>
+  Table<$Timeline, Event, Effect, ModelType>
+  getTable(final int index) {
     // SAFETY: The index is provided by the query from which this cache was built.
     @SuppressWarnings("unchecked")
-    final var cache = (Map<Integer, ModelType>) this.caches.get(index);
-    return cache;
+    final var table = (Table<$Timeline, Event, Effect, ModelType>) this.tables.get(index);
+    return table;
   }
 
   // PRECONDITION: `startTime` occurs-before `endTime`.
@@ -136,7 +135,7 @@ public final class SimulationTimeline<$Timeline, Event> {
   /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
       final EffectTrait<Effect> trait,
-      final Function<Event, Effect> substitution,
+      final Function<? super Event, Effect> substitution,
       final int startTime,
       final int endTime)
   {
