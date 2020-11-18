@@ -29,14 +29,14 @@ public final class FooActivity {
   public final class EffectModel<$Schema> extends Task<$Schema> {
     public void run(final FooResources<$Schema> resources) {
       if (y.equals("test")) {
-        resources.rate.add(x);
+        resources.data.addRate(x);
       }
 
-      resources.rate.add(1.0);
+      resources.data.addRate(1.0);
       delay(1, SECOND);
-      waitFor(resources.dataVolume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
-      resources.rate.add(2.0);
-      resources.rate.add(resources.rate.get());
+      waitFor(resources.data.volume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
+      resources.data.addRate(2.0);
+      resources.data.addRate(resources.data.getRate());
     }
   }
 }
