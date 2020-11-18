@@ -116,7 +116,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework</a></div>
-<h2 title="Interface Context" class="title">Interface Context&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</h2>
+<h2 title="Interface Context" class="title">Interface Context&lt;$Schema,&#8203;TaskSpec&gt;</h2>
 </div>
 <div class="contentContainer">
 <div class="description">
@@ -127,7 +127,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd><code><a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a></code></dd>
 </dl>
 <hr>
-<pre>public interface <span class="typeNameLabel">Context&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</span></pre>
+<pre>public interface <span class="typeNameLabel">Context&lt;$Schema,&#8203;TaskSpec&gt;</span></pre>
 </li>
 </ul>
 </div>
@@ -150,12 +150,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>double</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;&gt;&nbsp;resource)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
@@ -170,12 +170,13 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event)">emit</a></span>&#8203;(<a href="Context.html" title="type parameter in Context">Event</a>&nbsp;event)</code></th>
+<td class="colFirst"><code>&lt;Event&gt;&nbsp;void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">emit</a></span>&#8203;(Event&nbsp;event,
+    <a href="../timeline/Query.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Query</a>&lt;? super <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code><a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;<a href="Context.html" title="type parameter in Context">Event</a>&gt;</code></td>
+<td class="colFirst"><code><a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#now()">now</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -186,13 +187,13 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource,
        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;T&gt;&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;&gt;&nbsp;resource,
        <a href="../../merlinsdk/resources/real/RealCondition.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealCondition</a>&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -224,7 +225,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>now</h4>
-<pre class="methodSignature"><a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;<a href="Context.html" title="type parameter in Context">Event</a>&gt;&nbsp;now()</pre>
+<pre class="methodSignature"><a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;&nbsp;now()</pre>
 </li>
 </ul>
 <a id="ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">
@@ -233,7 +234,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>ask</h4>
-<pre class="methodSignature">double&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource)</pre>
+<pre class="methodSignature">double&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;&gt;&nbsp;resource)</pre>
 </li>
 </ul>
 <a id="ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">
@@ -242,18 +243,19 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>ask</h4>
-<pre class="methodSignature">&lt;T&gt;&nbsp;T&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource)</pre>
+<pre class="methodSignature">&lt;T&gt;&nbsp;T&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource)</pre>
 </li>
 </ul>
-<a id="emit(java.lang.Object)">
+<a id="emit(java.lang.Object,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">
 <!--   -->
-</a><a id="emit(Event)">
+</a><a id="emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>emit</h4>
-<pre class="methodSignature">void&nbsp;emit&#8203;(<a href="Context.html" title="type parameter in Context">Event</a>&nbsp;event)</pre>
+<pre class="methodSignature">&lt;Event&gt;&nbsp;void&nbsp;emit&#8203;(Event&nbsp;event,
+                  <a href="../timeline/Query.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Query</a>&lt;? super <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</pre>
 </li>
 </ul>
 <a id="spawn(java.lang.Object)">
@@ -303,7 +305,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>waitFor</h4>
-<pre class="methodSignature">void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource,
+<pre class="methodSignature">void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;&gt;&nbsp;resource,
              <a href="../../merlinsdk/resources/real/RealCondition.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealCondition</a>&nbsp;condition)</pre>
 </li>
 </ul>
@@ -313,7 +315,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockListLast">
 <li class="blockList">
 <h4>waitFor</h4>
-<pre class="methodSignature">&lt;T&gt;&nbsp;void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource,
+<pre class="methodSignature">&lt;T&gt;&nbsp;void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Context.html" title="type parameter in Context">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource,
                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;T&gt;&nbsp;condition)</pre>
 </li>
 </ul>

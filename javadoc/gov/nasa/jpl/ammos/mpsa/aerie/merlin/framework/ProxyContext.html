@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework</a></div>
-<h2 title="Class ProxyContext" class="title">Class ProxyContext&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</h2>
+<h2 title="Class ProxyContext" class="title">Class ProxyContext&lt;$Schema,&#8203;TaskSpec&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</li>
+<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext&lt;$Schema,&#8203;TaskSpec&gt;</li>
 </ul>
 </li>
 </ul>
@@ -132,12 +132,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</code></dd>
+<dd><code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;$Schema,&#8203;TaskSpec&gt;</code></dd>
 </dl>
 <hr>
-<pre>public final class <span class="typeNameLabel">ProxyContext&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</span>
+<pre>public final class <span class="typeNameLabel">ProxyContext&lt;$Schema,&#8203;TaskSpec&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>
-implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</pre>
+implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;$Schema,&#8203;TaskSpec&gt;</pre>
 </li>
 </ul>
 </div>
@@ -181,12 +181,12 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;T</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>double</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;&gt;&nbsp;resource)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
@@ -201,23 +201,24 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event)">emit</a></span>&#8203;(<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>&nbsp;event)</code></th>
+<td class="colFirst"><code>&lt;Event&gt;&nbsp;void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">emit</a></span>&#8203;(Event&nbsp;event,
+    <a href="../timeline/Query.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Query</a>&lt;? super <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></td>
+<td class="colFirst"><code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTarget()">getTarget</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i6" class="altColor">
-<td class="colFirst"><code><a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>&gt;</code></td>
+<td class="colFirst"><code><a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#now()">now</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setTarget(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context)">setTarget</a></span>&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;&nbsp;context)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#setTarget(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context)">setTarget</a></span>&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;&nbsp;context)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
@@ -227,13 +228,13 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 </tr>
 <tr id="i9" class="rowColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource,
        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;T&gt;&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i10" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a></span>&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;&gt;&nbsp;resource,
        <a href="../../merlinsdk/resources/real/RealCondition.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealCondition</a>&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -291,7 +292,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockList">
 <li class="blockList">
 <h4>setTarget</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;setTarget&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;&nbsp;context)</pre>
+<pre class="methodSignature">public&nbsp;void&nbsp;setTarget&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;&nbsp;context)</pre>
 </li>
 </ul>
 <a id="getTarget()">
@@ -300,7 +301,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockList">
 <li class="blockList">
 <h4>getTarget</h4>
-<pre class="methodSignature">public&nbsp;<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;&nbsp;getTarget()</pre>
+<pre class="methodSignature">public&nbsp;<a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;&nbsp;getTarget()</pre>
 </li>
 </ul>
 <a id="now()">
@@ -309,10 +310,10 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockList">
 <li class="blockList">
 <h4>now</h4>
-<pre class="methodSignature">public&nbsp;<a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>&gt;&nbsp;now()</pre>
+<pre class="methodSignature">public&nbsp;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;&nbsp;now()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#now()">now</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#now()">now</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -322,10 +323,10 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockList">
 <li class="blockList">
 <h4>ask</h4>
-<pre class="methodSignature">public&nbsp;double&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource)</pre>
+<pre class="methodSignature">public&nbsp;double&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;&gt;&nbsp;resource)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -335,25 +336,26 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockList">
 <li class="blockList">
 <h4>ask</h4>
-<pre class="methodSignature">public&nbsp;&lt;T&gt;&nbsp;T&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource)</pre>
+<pre class="methodSignature">public&nbsp;&lt;T&gt;&nbsp;T&nbsp;ask&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
-<a id="emit(java.lang.Object)">
+<a id="emit(java.lang.Object,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">
 <!--   -->
-</a><a id="emit(Event)">
+</a><a id="emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>emit</h4>
-<pre class="methodSignature">public final&nbsp;void&nbsp;emit&#8203;(<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>&nbsp;event)</pre>
+<pre class="methodSignature">public final&nbsp;&lt;Event&gt;&nbsp;void&nbsp;emit&#8203;(Event&nbsp;event,
+                               <a href="../timeline/Query.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Query</a>&lt;? super <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#emit(Event)">emit</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">emit</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -368,7 +370,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <pre class="methodSignature">public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;spawn&#8203;(<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&nbsp;taskSpec)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#spawn(TaskSpec)">spawn</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#spawn(TaskSpec)">spawn</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -384,7 +386,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
                           <a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&nbsp;taskSpec)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -397,7 +399,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <pre class="methodSignature">public final&nbsp;void&nbsp;delay&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -410,7 +412,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <pre class="methodSignature">public final&nbsp;void&nbsp;waitFor&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#waitFor(java.lang.String)">waitFor</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#waitFor(java.lang.String)">waitFor</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -420,11 +422,11 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockList">
 <li class="blockList">
 <h4>waitFor</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resource,
+<pre class="methodSignature">public&nbsp;void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;&gt;&nbsp;resource,
                     <a href="../../merlinsdk/resources/real/RealCondition.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealCondition</a>&nbsp;condition)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -434,11 +436,11 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <ul class="blockListLast">
 <li class="blockList">
 <h4>waitFor</h4>
-<pre class="methodSignature">public&nbsp;&lt;T&gt;&nbsp;void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../../merlinsdk/effects/timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;?&gt;,&#8203;T&gt;&nbsp;resource,
+<pre class="methodSignature">public&nbsp;&lt;T&gt;&nbsp;void&nbsp;waitFor&#8203;(<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;? super <a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;,&#8203;T&gt;&nbsp;resource,
                         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;T&gt;&nbsp;condition)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">Event</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
+<dd><code><a href="Context.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;<a href="ProxyContext.html" title="type parameter in ProxyContext">TaskSpec</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>

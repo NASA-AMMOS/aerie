@@ -1,6 +1,9 @@
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations
+gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol
+gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline
+gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities
 gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations

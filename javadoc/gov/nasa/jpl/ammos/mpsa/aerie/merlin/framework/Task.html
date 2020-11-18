@@ -116,17 +116,17 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework</a></div>
-<h2 title="Class Task" class="title">Class Task&lt;$Schema,&#8203;Event,&#8203;TaskSpec,&#8203;Resources&gt;</h2>
+<h2 title="Class Task" class="title">Class Task&lt;$Schema,&#8203;TaskSpec,&#8203;Resources&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li><a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module</a>&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</li>
+<li><a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module</a>&lt;$Schema,&#8203;TaskSpec&gt;</li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task&lt;$Schema,&#8203;Event,&#8203;TaskSpec,&#8203;Resources&gt;</li>
+<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task&lt;$Schema,&#8203;TaskSpec,&#8203;Resources&gt;</li>
 </ul>
 </li>
 </ul>
@@ -136,8 +136,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <hr>
-<pre>public abstract class <span class="typeNameLabel">Task&lt;$Schema,&#8203;Event,&#8203;TaskSpec,&#8203;Resources&gt;</span>
-extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;$Schema,&#8203;Event,&#8203;TaskSpec&gt;</pre>
+<pre>public abstract class <span class="typeNameLabel">Task&lt;$Schema,&#8203;TaskSpec,&#8203;Resources&gt;</span>
+extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a>&lt;$Schema,&#8203;TaskSpec&gt;</pre>
 </li>
 </ul>
 </div>
@@ -190,7 +190,7 @@ extends <a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merl
 <!--   -->
 </a>
 <h3>Methods inherited from class&nbsp;gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.<a href="Module.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Module</a></h3>
-<code><a href="Module.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a>, <a href="Module.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a>, <a href="Module.html#call(TaskSpec)">call</a>, <a href="Module.html#daemon(java.lang.String,java.lang.Runnable)">daemon</a>, <a href="Module.html#defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a>, <a href="Module.html#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a>, <a href="Module.html#delay(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a>, <a href="Module.html#delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a>, <a href="Module.html#emit(Event)">emit</a>, <a href="Module.html#getDaemons()">getDaemons</a>, <a href="Module.html#getSubmodules()">getSubmodules</a>, <a href="Module.html#now()">now</a>, <a href="Module.html#setContext(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context)">setContext</a>, <a href="Module.html#spawn(TaskSpec)">spawn</a>, <a href="Module.html#submodule(java.lang.String,Submodule)">submodule</a>, <a href="Module.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a>, <a href="Module.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a>, <a href="Module.html#waitFor(java.lang.String)">waitFor</a></code></li>
+<code><a href="Module.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource)">ask</a>, <a href="Module.html#ask(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource)">ask</a>, <a href="Module.html#call(TaskSpec)">call</a>, <a href="Module.html#daemon(java.lang.String,java.lang.Runnable)">daemon</a>, <a href="Module.html#defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a>, <a href="Module.html#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,TaskSpec)">defer</a>, <a href="Module.html#delay(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a>, <a href="Module.html#delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a>, <a href="Module.html#emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)">emit</a>, <a href="Module.html#getDaemons()">getDaemons</a>, <a href="Module.html#getSubmodules()">getSubmodules</a>, <a href="Module.html#now()">now</a>, <a href="Module.html#setContext(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context)">setContext</a>, <a href="Module.html#spawn(TaskSpec)">spawn</a>, <a href="Module.html#submodule(java.lang.String,Submodule)">submodule</a>, <a href="Module.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource,java.util.Set)">waitFor</a>, <a href="Module.html#waitFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition)">waitFor</a>, <a href="Module.html#waitFor(java.lang.String)">waitFor</a></code></li>
 </ul>
 <ul class="blockList">
 <li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
