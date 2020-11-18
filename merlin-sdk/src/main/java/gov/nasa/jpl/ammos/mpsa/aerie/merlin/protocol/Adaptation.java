@@ -9,6 +9,6 @@ public interface Adaptation<AdaptationTaskSpec extends TaskSpec> {
   /* Produce */ Iterable<AdaptationTaskSpec>
   /* Given   */ getDaemons();
 
-  /* Produce */ SimulationScope<?, ?, AdaptationTaskSpec>
+  /* Produce */ SimulationScope<?, AdaptationTaskSpec>
   /* Given   */ createSimulationScope();
 }

@@ -1,19 +1,16 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectExpression;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EffectTrait;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.Projection;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectExpression;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EventGraph;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 /**
  * A persistent representation of {@link EffectExpression}s.
@@ -36,29 +33,29 @@ import java.util.function.Function;
  * for this type parameter, represented by the wildcard symbol {@code <?>}.
  * </p>
  *
- * @param <T> A phantom type parameter that distinguishes individual timeline instances.
- * @param <Event> The type of events that may occur over the timeline.
+ * @param <$Timeline> A phantom type parameter that distinguishes individual timeline instances.
  * @see <a href="https://en.wikipedia.org/wiki/Persistent_data_structure">Wikipedia: Persistent data structure</a>
  * @see History
  * @see Query
  * @see EventGraph
  */
-public final class SimulationTimeline<T, Event> {
+public final class SimulationTimeline<$Timeline> {
   // SAFETY: -1 is not a legal index for a time point.
   /*package-local*/ static final int START_INDEX = -1;
 
-  private final List<EventPoint<Event>> times;
+  private final List<EventPoint> times;
+
   private int nextTime;
 
-  private final List<Map<Integer, ?>> caches;
+  private final List<Table<$Timeline, ?, ?, ?>> tables;
 
-  private SimulationTimeline(final Schema<? super T, Event> schema) {
+  private SimulationTimeline(final Schema<? super $Timeline> schema) {
     this.times = new ArrayList<>();
     this.nextTime = 0;
 
-    this.caches = new ArrayList<>(schema.queries.size());
+    this.tables = new ArrayList<>(schema.queries.size());
     for (final var query : schema.queries) {
-      this.caches.add(new HashMap<>());
+      this.tables.add(query.createTable(this));
     }
   }
 
@@ -69,73 +66,75 @@ public final class SimulationTimeline<T, Event> {
   //   Java cannot deduce that.
   // The effect is that every simulation timeline has a unique type hidden by a wildcard.
   public static
-  <$Schema, Event>
-  SimulationTimeline<? extends $Schema, Event>
-  create(final Schema<$Schema, Event> schema) {
+  <$Schema>
+  SimulationTimeline<? extends $Schema>
+  create(final Schema<$Schema> schema) {
     return new SimulationTimeline<>(schema);
   }
 
-  public static <Event> SimulationTimeline<?, Event> create() {
+  public static <Event> SimulationTimeline<?> create() {
     return create(Schema.<Event>builder().build());
   }
 
-  public History<T, Event> origin() {
+  public History<$Timeline> origin() {
     return new History<>(this, null, START_INDEX);
   }
 
-  public <ModelType, Effect> Query<T, ModelType> register(
+  public <Event, ModelType, Effect> Query<$Timeline, Event, ModelType> register(
       final Projection<Event, Effect> projection,
       final Applicator<Effect, ModelType> applicator)
   {
-    final var index = this.caches.size();
-    final var query = new Query<T, ModelType>(projection, applicator, index);
-    this.caches.add(new HashMap<>());
+    final var index = this.tables.size();
+    final var query = new Query<$Timeline, Event, ModelType>(projection, applicator, index);
+    this.tables.add(query.createTable(this));
 
     return query;
   }
 
   /* package-local */
-  int advancing(final int previous, final Event event) {
+  <Event> int advancing(final int previous, final Query<? super $Timeline, Event, ?> query, final Event event) {
+    final var tableIndex = query.getTableIndex();
+    final var eventIndex = this.getTable(tableIndex).emit(event);
+
     final var nextTime = this.nextTime++;
-    this.times.add(nextTime, new EventPoint.Advancing<>(previous, event));
+    this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex));
     return nextTime;
   }
 
   /* package-local */
   int joining(final int base, final int left, final int right) {
     final var nextTime = this.nextTime++;
-    this.times.add(nextTime, new EventPoint.Joining<>(base, left, right));
+    this.times.add(nextTime, new EventPoint.Joining(base, left, right));
     return nextTime;
   }
 
   /* package-local */
   int waiting(final int previous, final long microseconds) {
     final var nextTime = this.nextTime++;
-    this.times.add(nextTime, new EventPoint.Waiting<>(previous, microseconds));
+    this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds));
     return nextTime;
   }
 
   /* package-local */
-  EventPoint<Event> get(final int index) {
+  EventPoint get(final int index) {
     return this.times.get(index);
   }
 
   /* package-local */
-  <ModelType>
-  Map<Integer, ModelType>
-  getQueryCache(final int index) {
+  <Event, ModelType>
+  Table<$Timeline, Event, ?, ModelType>
+  getTable(final int index) {
     // SAFETY: The index is provided by the query from which this cache was built.
     @SuppressWarnings("unchecked")
-    final var cache = (Map<Integer, ModelType>) this.caches.get(index);
-    return cache;
+    final var table = (Table<$Timeline, Event, ?, ModelType>) this.tables.get(index);
+    return table;
   }
 
   // PRECONDITION: `startTime` occurs-before `endTime`.
   //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */
   <Effect> Collection<Pair<Duration, Effect>> evaluate(
-      final EffectTrait<Effect> trait,
-      final Function<Event, Effect> substitution,
+      final Projection<Object, Effect> projection,
       final int startTime,
       final int endTime)
   {
@@ -143,7 +142,7 @@ public final class SimulationTimeline<T, Event> {
     //   Whenever two time points are joined, increment a counter on the resulting time point.
     //   This counter can then be used to allocate a stack of just the right size.
     final var pathStack = new ArrayDeque<ActivePath<Effect>>();
-    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, trait.empty());
+    var currentPath = (ActivePath<Effect>) new ActivePath.TopLevel<>(startTime, projection.empty());
     var pointIndex = endTime;
 
     // TERMINATION: In principle, we can bound this loop by determining the maximum number
@@ -156,32 +155,33 @@ public final class SimulationTimeline<T, Event> {
         final var point = this.times.get(pointIndex);
         if (point instanceof EventPoint.Advancing) {
           // Accumulate the event into the currently open path.
-          final var step = (EventPoint.Advancing<Event>) point;
-          currentPath.accumulate(next -> trait.sequentially(substitution.apply(step.event), next));
+          final var step = (EventPoint.Advancing) point;
+          final var event = this.getTable(step.tableIndex).getEvent(step.eventIndex);
+          currentPath.accumulate(next -> projection.sequentially(projection.atom(event), next));
           pointIndex = step.previous;
         } else if (point instanceof EventPoint.Joining) {
           // We've walked backwards into a join point between two branches.
           // Walk down the left side first, and stash the base and right side for later evaluation.
-          final var join = (EventPoint.Joining<Event>) point;
+          final var join = (EventPoint.Joining) point;
           pathStack.push(currentPath);
-          currentPath = new ActivePath.Left<>(join.base, trait.empty(), join.right);
+          currentPath = new ActivePath.Left<>(join.base, projection.empty(), join.right);
           pointIndex = join.left;
         } else if (point instanceof EventPoint.Waiting) {
           // We've walked backwards into a delay.
           // SAFETY: Delays can only occur at the top-level.
           assert currentPath instanceof ActivePath.TopLevel;
           final var path = (ActivePath.TopLevel<Effect>) currentPath;
-          final var wait = (EventPoint.Waiting<Event>) point;
+          final var wait = (EventPoint.Waiting) point;
 
           path.effects.addFirst(Pair.of(Duration.of(wait.microseconds, Duration.MICROSECONDS), path.effect));
-          path.effect = trait.empty();
+          path.effect = projection.empty();
           pointIndex = wait.previous;
         }
       } else if (currentPath instanceof ActivePath.Left) {
         // We've just finished evaluating the left side of a concurrence.
         // Stash the result and switch to the right side.
         final var path = (ActivePath.Left<Effect>) currentPath;
-        currentPath = new ActivePath.Right<>(path.base, path.left, trait.empty());
+        currentPath = new ActivePath.Right<>(path.base, path.left, projection.empty());
         pointIndex = path.right;
       } else if (currentPath instanceof ActivePath.Right) {
         // We've just finished evaluating the right side of a concurrence.
@@ -189,7 +189,7 @@ public final class SimulationTimeline<T, Event> {
         //   into the open path one level up. We'll continue from the given base point.
         final var path = (ActivePath.Right<Effect>) currentPath;
         currentPath = pathStack.pop();
-        currentPath.accumulate(next -> trait.sequentially(trait.concurrently(path.left, path.right), next));
+        currentPath.accumulate(next -> projection.sequentially(projection.concurrently(path.left, path.right), next));
         pointIndex = path.base;
       } else if (currentPath instanceof ActivePath.TopLevel) {
         // We've just finished the top-level path -- we're done!

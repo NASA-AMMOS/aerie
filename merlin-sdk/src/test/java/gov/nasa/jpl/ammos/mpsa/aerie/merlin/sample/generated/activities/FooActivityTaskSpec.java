@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooEvent;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -37,7 +36,7 @@ final class FooActivityTaskSpec extends TaskSpec {
   }
 
   @Override
-  public <$Schema> Task<$Schema, FooEvent, TaskSpec, FooResources<$Schema>> createTask() {
+  public <$Schema> Task<$Schema, TaskSpec, FooResources<$Schema>> createTask() {
     return this.activity.new EffectModel<>();
   }
 

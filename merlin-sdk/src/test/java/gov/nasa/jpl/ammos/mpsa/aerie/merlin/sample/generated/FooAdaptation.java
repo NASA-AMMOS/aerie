@@ -35,7 +35,7 @@ public final class FooAdaptation implements Adaptation<TaskSpec> {
 
   private static void getDaemons(
       final String namespace,
-      final Module<?, ?, ?> module,
+      final Module<?, ?> module,
       final BiConsumer<String, Runnable> receiver)
   {
     for (final var daemon : module.getDaemons().entrySet()) {
@@ -62,7 +62,7 @@ public final class FooAdaptation implements Adaptation<TaskSpec> {
   }
 
   @Override
-  public SimulationScope<?, ?, TaskSpec> createSimulationScope() {
+  public SimulationScope<?, TaskSpec> createSimulationScope() {
     return this.scope;
   }
 }

@@ -8,8 +8,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
@@ -46,27 +47,27 @@ public final class SimulationDriver {
     bar(taskSpecs, adaptation.createSimulationScope());
   }
 
-  private static <$Schema, Event, AdaptationTaskSpec extends TaskSpec>
+  private static <$Schema, AdaptationTaskSpec extends TaskSpec>
   void bar(
       final List<AdaptationTaskSpec> taskSpecs,
-      final SimulationScope<$Schema, Event, AdaptationTaskSpec> scope)
+      final SimulationScope<$Schema, AdaptationTaskSpec> scope)
   {
     baz(taskSpecs, scope, SimulationTimeline.create(scope.getSchema()));
   }
 
-  private static <$Timeline, Event, AdaptationTaskSpec extends TaskSpec>
+  private static <$Timeline, AdaptationTaskSpec extends TaskSpec>
   void baz(
       final List<AdaptationTaskSpec> taskSpecs,
-      final SimulationScope<? super $Timeline, Event, AdaptationTaskSpec> scope,
-      final SimulationTimeline<$Timeline, Event> timeline)
+      final SimulationScope<? super $Timeline, AdaptationTaskSpec> scope,
+      final SimulationTimeline<$Timeline> timeline)
   {
-    final var scheduler = new Scheduler<$Timeline, Event, AdaptationTaskSpec>() {
+    final var scheduler = new Scheduler<$Timeline, AdaptationTaskSpec>() {
       // TODO: Track and reduce candelabras of spawned tasks
-      public History<$Timeline, Event> now = timeline.origin();
+      public History<$Timeline> now = timeline.origin();
 
       @Override
-      public void emit(final Event event) {
-        now = now.emit(event);
+      public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+        now = now.emit(event, query);
       }
 
       @Override
@@ -82,7 +83,7 @@ public final class SimulationDriver {
       }
 
       @Override
-      public History<$Timeline, Event> now() {
+      public History<$Timeline> now() {
         return this.now;
       }
 
@@ -124,7 +125,7 @@ public final class SimulationDriver {
 
       @Override
       public <ResourceType, ConditionType> Boolean awaiting(
-          final Resource<History<$Timeline, ?>, SolvableDynamics<ResourceType, ConditionType>> resource,
+          final Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
           final ConditionType condition)
       {
         // TODO: Yield this task until the awaited condition is met.

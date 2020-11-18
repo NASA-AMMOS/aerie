@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -8,38 +9,38 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Set;
 
-public final class ProxyContext<$Schema, Event, TaskSpec>
-    implements Context<$Schema, Event, TaskSpec>
+public final class ProxyContext<$Schema, TaskSpec>
+    implements Context<$Schema, TaskSpec>
 {
-  private Context<$Schema, Event, TaskSpec> context = null;
+  private Context<$Schema, TaskSpec> context = null;
 
-  public void setTarget(final Context<$Schema, Event, TaskSpec> context) {
+  public void setTarget(final Context<$Schema, TaskSpec> context) {
     this.context = context;
   }
 
-  public Context<$Schema, Event, TaskSpec> getTarget() {
+  public Context<$Schema, TaskSpec> getTarget() {
     return this.context;
   }
 
 
   @Override
-  public History<? extends $Schema, Event> now() {
+  public History<? extends $Schema> now() {
     return this.context.now();
   }
 
   @Override
-  public double ask(final RealResource<? super History<? extends $Schema, ?>> resource) {
+  public double ask(final RealResource<? super History<? extends $Schema>> resource) {
     return this.context.ask(resource);
   }
 
   @Override
-  public <T> T ask(final DiscreteResource<? super History<? extends $Schema, ?>, T> resource) {
+  public <T> T ask(final DiscreteResource<? super History<? extends $Schema>, T> resource) {
     return this.context.ask(resource);
   }
 
   @Override
-  public final void emit(final Event event) {
-    this.context.emit(event);
+  public final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
+    this.context.emit(event, query);
   }
 
   @Override
@@ -63,12 +64,12 @@ public final class ProxyContext<$Schema, Event, TaskSpec>
   }
 
   @Override
-  public void waitFor(final RealResource<? super History<? extends $Schema, ?>> resource, final RealCondition condition) {
+  public void waitFor(final RealResource<? super History<? extends $Schema>> resource, final RealCondition condition) {
     this.context.waitFor(resource, condition);
   }
 
   @Override
-  public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema, ?>, T> resource, final Set<T> condition) {
+  public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema>, T> resource, final Set<T> condition) {
     this.context.waitFor(resource, condition);
   }
 }
