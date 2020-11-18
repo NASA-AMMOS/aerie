@@ -7,13 +7,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline;
 abstract class EventPoint {
   private EventPoint() {}
 
-  abstract int getPrevious();
+  public abstract int getPrevious();
 
   /**
    * A time point advancing from a prior time point by a discontinuous event.
    */
-  /* package-local */
-  static final class Advancing extends EventPoint {
+  public static final class Advancing extends EventPoint {
     public final int previous;
     public final int tableIndex;
     public final int eventIndex;
@@ -25,7 +24,7 @@ abstract class EventPoint {
     }
 
     @Override
-    int getPrevious() {
+    public int getPrevious() {
       return this.previous;
     }
   }
@@ -33,7 +32,6 @@ abstract class EventPoint {
   /**
    * A time point advancing from a prior time point by waiting for a duration of time.
    */
-  /* package-local */
   public static final class Waiting extends EventPoint {
     public final int previous;
     public final long microseconds;
@@ -44,7 +42,7 @@ abstract class EventPoint {
     }
 
     @Override
-    int getPrevious() {
+    public int getPrevious() {
       return this.previous;
     }
   }
@@ -52,7 +50,6 @@ abstract class EventPoint {
   /**
    * A time point that observes two parallel timelines forked from a common base point.
    */
-  /* package-local */
   public static final class Joining extends EventPoint {
     public final int base;
     public final int left;
@@ -65,7 +62,7 @@ abstract class EventPoint {
     }
 
     @Override
-    int getPrevious() {
+    public int getPrevious() {
       return this.base;
     }
   }
