@@ -10,8 +10,7 @@ allprojects {
     flatDir { dirs "$rootDir/third-party" }
     jcenter()
   }
-}
 
-subprojects {
-  version = '0.5.0'
+  group = 'gov.nasa.jpl.aerie'
+  version = '0.6.0-SNAPSHOT'
 }
