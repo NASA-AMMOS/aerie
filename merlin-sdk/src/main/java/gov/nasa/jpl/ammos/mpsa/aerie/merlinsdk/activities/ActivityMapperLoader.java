@@ -53,7 +53,7 @@ public class ActivityMapperLoader {
         return new CompositeActivityMapper(activityMappers);
     }
 
-    public static ActivityMapper loadActivityMapper(Class<? extends MerlinAdaptation> adaptationClass) throws ActivityMapperLoadException {
+    public static ActivityMapper loadActivityMapper(Class<? extends MerlinAdaptation<?>> adaptationClass) throws ActivityMapperLoadException {
         try {
             //TODO: Ensure we are getting all mapper files, as there may be more than one
             //      especially if we load multiple JAR files

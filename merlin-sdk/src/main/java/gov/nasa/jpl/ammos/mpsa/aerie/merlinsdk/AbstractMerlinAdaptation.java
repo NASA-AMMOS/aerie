@@ -28,7 +28,11 @@ public abstract class AbstractMerlinAdaptation<Event> implements MerlinAdaptatio
   @Override
   public final ActivityMapper getActivityMapper() {
     try {
-      return ActivityMapperLoader.loadActivityMapper(this.getClass());
+      // SAFETY: `this` is, indeed, an instance of `AbstractMerlinAdaptation`. We're just adding the missing wilcard.
+      @SuppressWarnings("unchecked")
+      final var klass = (Class<? extends AbstractMerlinAdaptation<?>>) this.getClass();
+
+      return ActivityMapperLoader.loadActivityMapper(klass);
     } catch (final ActivityMapperLoader.ActivityMapperLoadException ex) {
       throw new Error(ex);
     }

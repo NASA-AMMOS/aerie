@@ -45,13 +45,10 @@ public final class SimulationTimeline<$Timeline> {
 
   private final List<EventPoint> times;
 
-  private int nextTime;
-
   private final List<Table<$Timeline, ?, ?, ?>> tables;
 
   private SimulationTimeline(final Schema<? super $Timeline> schema) {
     this.times = new ArrayList<>();
-    this.nextTime = 0;
 
     this.tables = new ArrayList<>(schema.queries.size());
     for (final var query : schema.queries) {
@@ -96,21 +93,21 @@ public final class SimulationTimeline<$Timeline> {
     final var tableIndex = query.getTableIndex();
     final var eventIndex = this.getTable(tableIndex).emit(event);
 
-    final var nextTime = this.nextTime++;
+    final var nextTime = this.times.size();
     this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex));
     return nextTime;
   }
 
   /* package-local */
   int joining(final int base, final int left, final int right) {
-    final var nextTime = this.nextTime++;
+    final var nextTime = this.times.size();
     this.times.add(nextTime, new EventPoint.Joining(base, left, right));
     return nextTime;
   }
 
   /* package-local */
   int waiting(final int previous, final long microseconds) {
-    final var nextTime = this.nextTime++;
+    final var nextTime = this.times.size();
     this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds));
     return nextTime;
   }

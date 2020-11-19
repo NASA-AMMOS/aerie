@@ -36,7 +36,6 @@ import java.util.HashMap;
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter",
     "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivitiesMapped",
-    "gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.MerlinAdaptation",
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_11)
 public final class ActivityProcessor extends AbstractProcessor {
