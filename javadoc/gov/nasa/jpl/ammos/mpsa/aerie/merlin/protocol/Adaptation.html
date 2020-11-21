@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6};
+var data = {"i0":6,"i1":6,"i2":6,"i3":6,"i4":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol</a></div>
-<h2 title="Interface Adaptation" class="title">Interface Adaptation&lt;AdaptationTaskSpec extends <a href="TaskSpec.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpec</a>&gt;</h2>
+<h2 title="Interface Adaptation" class="title">Interface Adaptation&lt;$Schema&gt;</h2>
 </div>
 <div class="contentContainer">
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
 <hr>
-<pre>public interface <span class="typeNameLabel">Adaptation&lt;AdaptationTaskSpec extends <a href="TaskSpec.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpec</a>&gt;</span></pre>
+<pre>public interface <span class="typeNameLabel">Adaptation&lt;$Schema&gt;</span></pre>
 </li>
 </ul>
 </div>
@@ -145,17 +145,27 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="SimulationScope.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SimulationScope</a>&lt;?,&#8203;<a href="Adaptation.html" title="type parameter in Adaptation">AdaptationTaskSpec</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#createSimulationScope()">createSimulationScope</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">AdaptationTaskSpec</a>&gt;</code></td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDaemons()">getDaemons</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDiscreteResources()">getDiscreteResources</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">AdaptationTaskSpec</a>&gt;&gt;</code></td>
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getRealResources()">getRealResources</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code><a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getSchema()">getSchema</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>,&#8203;?&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTaskSpecificationTypes()">getTaskSpecificationTypes</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -182,7 +192,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>getTaskSpecificationTypes</h4>
-<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">AdaptationTaskSpec</a>&gt;&gt;&nbsp;getTaskSpecificationTypes()</pre>
+<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>,&#8203;?&gt;&gt;&nbsp;getTaskSpecificationTypes()</pre>
 </li>
 </ul>
 <a id="getDaemons()">
@@ -191,16 +201,34 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <h4>getDaemons</h4>
-<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">AdaptationTaskSpec</a>&gt;&nbsp;getDaemons()</pre>
+<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;getDaemons()</pre>
 </li>
 </ul>
-<a id="createSimulationScope()">
+<a id="getDiscreteResources()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getDiscreteResources</h4>
+<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;getDiscreteResources()</pre>
+</li>
+</ul>
+<a id="getRealResources()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getRealResources</h4>
+<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;&nbsp;getRealResources()</pre>
+</li>
+</ul>
+<a id="getSchema()">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>createSimulationScope</h4>
-<pre class="methodSignature"><a href="SimulationScope.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SimulationScope</a>&lt;?,&#8203;<a href="Adaptation.html" title="type parameter in Adaptation">AdaptationTaskSpec</a>&gt;&nbsp;createSimulationScope()</pre>
+<h4>getSchema</h4>
+<pre class="methodSignature"><a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="Adaptation.html" title="type parameter in Adaptation">$Schema</a>&gt;&nbsp;getSchema()</pre>
 </li>
 </ul>
 </li>

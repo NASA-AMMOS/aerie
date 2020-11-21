@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework</a></div>
-<h2 title="Class ReplayingTask" class="title">Class ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema,&#8203;TaskSpec&gt;</h2>
+<h2 title="Class ReplayingTask" class="title">Class ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask&lt;$Schema,&#8203;$Timeline,&#8203;TaskSpec&gt;</li>
+<li>gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask&lt;$Schema,&#8203;$Timeline&gt;</li>
 </ul>
 </li>
 </ul>
@@ -132,12 +132,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;$Timeline,&#8203;TaskSpec&gt;</code></dd>
+<dd><code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;</code></dd>
 </dl>
 <hr>
-<pre>public final class <span class="typeNameLabel">ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema,&#8203;TaskSpec&gt;</span>
+<pre>public final class <span class="typeNameLabel">ReplayingTask&lt;$Schema,&#8203;$Timeline extends $Schema&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>
-implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;$Timeline,&#8203;TaskSpec&gt;</pre>
+implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;</pre>
 </li>
 </ul>
 </div>
@@ -158,7 +158,7 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammo
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext,java.lang.Runnable)">ReplayingTask</a></span>&#8203;(<a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">TaskSpec</a>&gt;&nbsp;rootContext,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext,java.lang.Runnable)">ReplayingTask</a></span>&#8203;(<a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>&gt;&nbsp;rootContext,
              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -182,7 +182,7 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammo
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code><a href="../protocol/TaskStatus.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskStatus</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#step(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler)">step</a></span>&#8203;(<a href="../protocol/Scheduler.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Scheduler</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">TaskSpec</a>&gt;&nbsp;scheduler)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#step(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler)">step</a></span>&#8203;(<a href="../protocol/Scheduler.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Scheduler</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt;&nbsp;scheduler)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -215,7 +215,7 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammo
 <ul class="blockListLast">
 <li class="blockList">
 <h4>ReplayingTask</h4>
-<pre>public&nbsp;ReplayingTask&#8203;(<a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">TaskSpec</a>&gt;&nbsp;rootContext,
+<pre>public&nbsp;ReplayingTask&#8203;(<a href="ProxyContext.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ProxyContext</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>&gt;&nbsp;rootContext,
                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</pre>
 </li>
 </ul>
@@ -235,10 +235,10 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammo
 <ul class="blockListLast">
 <li class="blockList">
 <h4>step</h4>
-<pre class="methodSignature">public&nbsp;<a href="../protocol/TaskStatus.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskStatus</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt;&nbsp;step&#8203;(<a href="../protocol/Scheduler.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Scheduler</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">TaskSpec</a>&gt;&nbsp;scheduler)</pre>
+<pre class="methodSignature">public&nbsp;<a href="../protocol/TaskStatus.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskStatus</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt;&nbsp;step&#8203;(<a href="../protocol/Scheduler.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Scheduler</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt;&nbsp;scheduler)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../protocol/Task.html#step(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler)">step</a></code>&nbsp;in interface&nbsp;<code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>,&#8203;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a> extends <a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>&gt;</code></dd>
+<dd><code><a href="../protocol/Task.html#step(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler)">step</a></code>&nbsp;in interface&nbsp;<code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="ReplayingTask.html" title="type parameter in ReplayingTask">$Schema</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
