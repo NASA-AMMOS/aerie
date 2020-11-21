@@ -9,10 +9,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -112,10 +114,10 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, TaskSpec>
     }
 
     @Override
-    public String spawn(final TaskSpec taskSpec) {
+    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        final var id = this.scheduler.spawn(taskSpec);
+        final var id = this.scheduler.spawn(type, arguments);
 
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
@@ -127,10 +129,10 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, TaskSpec>
     }
 
     @Override
-    public String defer(final Duration duration, final TaskSpec taskSpec) {
+    public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        final var id = this.scheduler.defer(duration, taskSpec);
+        final var id = this.scheduler.defer(duration, type, arguments);
 
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;

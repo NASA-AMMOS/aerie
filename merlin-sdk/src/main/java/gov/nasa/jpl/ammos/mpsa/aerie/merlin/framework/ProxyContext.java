@@ -5,8 +5,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import java.util.Map;
 import java.util.Set;
 
 public final class ProxyContext<$Schema, TaskSpec>
@@ -44,13 +46,13 @@ public final class ProxyContext<$Schema, TaskSpec>
   }
 
   @Override
-  public final String spawn(final TaskSpec taskSpec) {
-    return this.context.spawn(taskSpec);
+  public final String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.spawn(type, arguments);
   }
 
   @Override
-  public final String defer(final Duration duration, final TaskSpec taskSpec) {
-    return this.context.defer(duration, taskSpec);
+  public final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.defer(duration, type, arguments);
   }
 
   @Override

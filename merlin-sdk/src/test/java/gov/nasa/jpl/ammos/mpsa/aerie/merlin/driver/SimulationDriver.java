@@ -13,6 +13,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.ArrayList;
@@ -62,13 +63,13 @@ public final class SimulationDriver {
       }
 
       @Override
-      public String spawn(final AdaptationTaskSpec taskSpec) {
+      public String spawn(final String type, final Map<String, SerializedValue> arguments) {
         // TODO: Register the spawned activity and give it a name.
         return "";
       }
 
       @Override
-      public String defer(final Duration delay, final AdaptationTaskSpec taskSpec) {
+      public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
         // TODO: Register the spawned activity and give it a name.
         return "";
       }
