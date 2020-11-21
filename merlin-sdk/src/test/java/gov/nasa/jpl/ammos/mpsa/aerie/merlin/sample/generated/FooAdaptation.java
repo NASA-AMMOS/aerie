@@ -30,19 +30,19 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpe
 
   private final FooResources<$Schema> container;
   private final BuiltResources<$Schema> resources;
-  private final Map<String, TaskSpecType<TaskSpec>> daemonTypes;
-  private final Map<String, TaskSpecType<TaskSpec>> allTaskSpecTypes;
+  private final Map<String, TaskSpecType<$Schema, TaskSpec>> daemonTypes;
+  private final Map<String, TaskSpecType<$Schema, TaskSpec>> allTaskSpecTypes;
 
   public FooAdaptation(final Schema.Builder<$Schema> schemaBuilder) {
     final var builder = new ResourcesBuilder<>(schemaBuilder);
     final var container = new FooResources<>(builder);
     container.setContext(this.rootContext);
 
-    final var allTaskSpecTypes = new HashMap<>(TaskSpec.getTaskSpecTypes());
-    final var daemonTypes = new HashMap<String, TaskSpecType<TaskSpec>>();
+    final var allTaskSpecTypes = new HashMap<>(TaskSpec.<$Schema>getTaskSpecTypes());
+    final var daemonTypes = new HashMap<String, TaskSpecType<$Schema, TaskSpec>>();
 
     getDaemons("/daemons", container, (name, daemon) -> {
-      final var daemonType = TaskSpec.createDaemonType(name, daemon);
+      final var daemonType = TaskSpec.<$Schema>createDaemonType(name, daemon);
 
       daemonTypes.put(daemonType.getName(), daemonType);
       allTaskSpecTypes.put(daemonType.getName(), daemonType);
@@ -69,7 +69,7 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpe
   }
 
   @Override
-  public Map<String, TaskSpecType<TaskSpec>> getTaskSpecificationTypes() {
+  public Map<String, TaskSpecType<$Schema, TaskSpec>> getTaskSpecificationTypes() {
     return this.allTaskSpecTypes;
   }
 

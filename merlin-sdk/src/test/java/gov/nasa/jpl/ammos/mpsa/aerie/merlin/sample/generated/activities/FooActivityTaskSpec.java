@@ -44,60 +44,62 @@ final class FooActivityTaskSpec extends TaskSpec {
     return failures;
   }
 
-  public static final TaskSpecType<TaskSpec> descriptor = new TaskSpecType<>() {
-    @Override
-    public String getName() {
-      return "foo";
-    }
-
-    @Override
-    public Map<String, ValueSchema> getParameters() {
-      return Map.of(
-          "x", new IntegerValueMapper().getValueSchema(),
-          "y", new StringValueMapper().getValueSchema());
-    }
-
-    @Override
-    public TaskSpec instantiateDefault() {
-      return new FooActivityTaskSpec(new FooActivity());
-    }
-
-    @Override
-    public TaskSpec instantiate(final Map<String, SerializedValue> arguments)
-    throws UnconstructableTaskSpecException
-    {
-      final var activity = new FooActivity();
-
-      for (final var entry : arguments.entrySet()) {
-        switch (entry.getKey()) {
-          case "x":
-            activity.x = new IntegerValueMapper()
-                .deserializeValue(entry.getValue())
-                .getSuccessOrThrow($ -> new UnconstructableTaskSpecException());
-            break;
-
-          case "y":
-            activity.y = new StringValueMapper()
-                .deserializeValue(entry.getValue())
-                .getSuccessOrThrow($ -> new UnconstructableTaskSpecException());
-            break;
-
-          default:
-            throw new UnconstructableTaskSpecException();
-        }
+  public static <$Schema> TaskSpecType<$Schema, TaskSpec> getDescriptor() {
+    return new TaskSpecType<>() {
+      @Override
+      public String getName() {
+        return "foo";
       }
 
-      return new FooActivityTaskSpec(activity);
-    }
+      @Override
+      public Map<String, ValueSchema> getParameters() {
+        return Map.of(
+            "x", new IntegerValueMapper().getValueSchema(),
+            "y", new StringValueMapper().getValueSchema());
+      }
 
-    @Override
-    public Map<String, SerializedValue> getArguments(final TaskSpec taskSpec) {
-      return taskSpec.getArguments();
-    }
+      @Override
+      public TaskSpec instantiateDefault() {
+        return new FooActivityTaskSpec(new FooActivity());
+      }
 
-    @Override
-    public List<String> getValidationFailures(final TaskSpec taskSpec) {
-      return taskSpec.getValidationFailures();
-    }
-  };
+      @Override
+      public TaskSpec instantiate(final Map<String, SerializedValue> arguments)
+      throws UnconstructableTaskSpecException
+      {
+        final var activity = new FooActivity();
+
+        for (final var entry : arguments.entrySet()) {
+          switch (entry.getKey()) {
+            case "x":
+              activity.x = new IntegerValueMapper()
+                  .deserializeValue(entry.getValue())
+                  .getSuccessOrThrow($ -> new UnconstructableTaskSpecException());
+              break;
+
+            case "y":
+              activity.y = new StringValueMapper()
+                  .deserializeValue(entry.getValue())
+                  .getSuccessOrThrow($ -> new UnconstructableTaskSpecException());
+              break;
+
+            default:
+              throw new UnconstructableTaskSpecException();
+          }
+        }
+
+        return new FooActivityTaskSpec(activity);
+      }
+
+      @Override
+      public Map<String, SerializedValue> getArguments(final TaskSpec taskSpec) {
+        return taskSpec.getArguments();
+      }
+
+      @Override
+      public List<String> getValidationFailures(final TaskSpec taskSpec) {
+        return taskSpec.getValidationFailures();
+      }
+    };
+  }
 }

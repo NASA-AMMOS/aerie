@@ -33,7 +33,7 @@ final class DaemonTaskSpec extends TaskSpec {
     return Map.of();
   }
 
-  public static TaskSpecType<TaskSpec> getDescriptor(final String name, final Runnable runnable) {
+  public static <$Schema> TaskSpecType<$Schema, TaskSpec> getDescriptor(final String name, final Runnable runnable) {
     final var instance = new DaemonTaskSpec(runnable);
 
     return new TaskSpecType<>() {

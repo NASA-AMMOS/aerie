@@ -11,7 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Map;
 
 public interface Adaptation<$Schema, AdaptationTaskSpec> {
-  /* Produce */ Map<String, TaskSpecType<AdaptationTaskSpec>>
+  /* Produce */ Map<String, TaskSpecType<$Schema, AdaptationTaskSpec>>
   /* Given   */ getTaskSpecificationTypes();
 
   /* Produce */ Iterable<Pair<String, Map<String, SerializedValue>>>

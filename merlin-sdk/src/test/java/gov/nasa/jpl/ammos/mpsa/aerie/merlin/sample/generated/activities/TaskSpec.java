@@ -21,13 +21,14 @@ public abstract class TaskSpec {
     return List.of();
   }
 
-  public static Map<String, TaskSpecType<TaskSpec>> getTaskSpecTypes() {
-    final var types = new HashMap<String, TaskSpecType<TaskSpec>>();
-    types.put(FooActivityTaskSpec.descriptor.getName(), FooActivityTaskSpec.descriptor);
+  public static <$Schema> Map<String, TaskSpecType<$Schema, TaskSpec>> getTaskSpecTypes() {
+    final var types = new HashMap<String, TaskSpecType<$Schema, TaskSpec>>();
+    final var descriptor = FooActivityTaskSpec.<$Schema>getDescriptor();
+    types.put(descriptor.getName(), descriptor);
     return types;
   }
 
-  public static TaskSpecType<TaskSpec> createDaemonType(final String name, final Runnable daemon) {
+  public static <$Schema> TaskSpecType<$Schema, TaskSpec> createDaemonType(final String name, final Runnable daemon) {
     return DaemonTaskSpec.getDescriptor(name, daemon);
   }
 }

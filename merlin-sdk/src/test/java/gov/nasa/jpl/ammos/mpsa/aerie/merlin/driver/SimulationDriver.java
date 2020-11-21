@@ -35,7 +35,7 @@ public final class SimulationDriver {
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
 
-    final var taskSpecs = new ArrayList<Pair<AdaptationTaskSpec, TaskSpecType<AdaptationTaskSpec>>>();
+    final var taskSpecs = new ArrayList<Pair<AdaptationTaskSpec, TaskSpecType<$Schema, AdaptationTaskSpec>>>();
     for (final var x : adaptation.getDaemons()) {
       final var type = activityTypes.get(x.getKey());
       taskSpecs.add(Pair.of(type.instantiate(x.getValue()), type));
@@ -53,10 +53,10 @@ public final class SimulationDriver {
     bar(taskSpecs, adaptation, SimulationTimeline.create(adaptation.getSchema()));
   }
 
-  private static <$Timeline, AdaptationTaskSpec>
+  private static <$Schema, $Timeline extends $Schema, AdaptationTaskSpec>
   void bar(
-      final List<Pair<AdaptationTaskSpec, TaskSpecType<AdaptationTaskSpec>>> taskSpecs,
-      final Adaptation<? super $Timeline, AdaptationTaskSpec> adaptation,
+      final List<Pair<AdaptationTaskSpec, TaskSpecType<$Schema, AdaptationTaskSpec>>> taskSpecs,
+      final Adaptation<$Schema, AdaptationTaskSpec> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
     final var scheduler = new Scheduler<$Timeline>() {

@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import java.util.List;
 import java.util.Map;
 
-public interface TaskSpecType<AdaptationTaskSpec> {
+public interface TaskSpecType<$Schema, AdaptationTaskSpec> {
   String getName();
   Map<String, ValueSchema> getParameters();
 
