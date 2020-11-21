@@ -6,18 +6,18 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import java.util.List;
 import java.util.Map;
 
-public interface TaskSpecType<$Schema, AdaptationTaskSpec> {
+public interface TaskSpecType<$Schema, Specification> {
   String getName();
   Map<String, ValueSchema> getParameters();
 
-  AdaptationTaskSpec instantiateDefault();
-  AdaptationTaskSpec instantiate(Map<String, SerializedValue> arguments)
+  Specification instantiateDefault();
+  Specification instantiate(Map<String, SerializedValue> arguments)
   throws UnconstructableTaskSpecException;
 
-  Map<String, SerializedValue> getArguments(AdaptationTaskSpec taskSpec);
-  List<String> getValidationFailures(AdaptationTaskSpec taskSpec);
+  Map<String, SerializedValue> getArguments(Specification taskSpec);
+  List<String> getValidationFailures(Specification taskSpec);
 
-  <$Timeline extends $Schema> Task<$Timeline> createTask(AdaptationTaskSpec taskSpec);
+  <$Timeline extends $Schema> Task<$Timeline> createTask(Specification taskSpec);
 
   class UnconstructableTaskSpecException extends Exception {}
 }

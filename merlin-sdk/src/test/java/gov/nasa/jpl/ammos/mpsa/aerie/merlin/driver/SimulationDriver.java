@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
@@ -14,11 +15,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
@@ -35,18 +36,14 @@ public final class SimulationDriver {
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
 
-    final var taskSpecs = new ArrayList<Pair<AdaptationTaskSpec, TaskSpecType<$Schema, AdaptationTaskSpec>>>();
+    final var taskSpecs = new ArrayList<TaskSpec<$Schema, ?>>();
     for (final var x : adaptation.getDaemons()) {
-      final var type = activityTypes.get(x.getKey());
-      taskSpecs.add(Pair.of(type.instantiate(x.getValue()), type));
+      taskSpecs.add(TaskSpec.instantiate(activityTypes.get(x.getKey()), x.getValue()));
     }
-    {
-      final var type = activityTypes.get("foo");
-      taskSpecs.add(Pair.of(type.instantiate(Map.of()), type));
-    }
+    taskSpecs.add(TaskSpec.instantiate(activityTypes.get("foo"), Map.of()));
 
     for (final var taskSpec : taskSpecs) {
-      final var validationFailures = taskSpec.getRight().getValidationFailures(taskSpec.getLeft());
+      final var validationFailures = taskSpec.getValidationFailures();
       validationFailures.forEach(System.out::println);
     }
 
@@ -55,7 +52,7 @@ public final class SimulationDriver {
 
   private static <$Schema, $Timeline extends $Schema, AdaptationTaskSpec>
   void bar(
-      final List<Pair<AdaptationTaskSpec, TaskSpecType<$Schema, AdaptationTaskSpec>>> taskSpecs,
+      final List<TaskSpec<$Schema, ?>> taskSpecs,
       final Adaptation<$Schema, AdaptationTaskSpec> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
@@ -132,9 +129,9 @@ public final class SimulationDriver {
     };
 
     for (final var taskSpec : taskSpecs) {
-      System.out.println("Performing " + taskSpec.getRight().getName()
-                         + " with arguments " + taskSpec.getRight().getArguments(taskSpec.getLeft()));
-      final var task = taskSpec.getRight().<$Timeline>createTask(taskSpec.getLeft());
+      System.out.println("Performing " + taskSpec.getTypeName()
+                         + " with arguments " + taskSpec.getArguments());
+      final var task = taskSpec.<$Timeline>createTask();
 
       boolean running = true;
       while (running) {
@@ -150,5 +147,43 @@ public final class SimulationDriver {
     adaptation.getDiscreteResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
     });
+  }
+
+  private static final class TaskSpec<$Schema, Spec> {
+    private final Spec spec;
+    private final TaskSpecType<$Schema, Spec> specType;
+
+    private TaskSpec(
+        final Spec spec,
+        final TaskSpecType<$Schema, Spec> specType)
+    {
+      this.spec = Objects.requireNonNull(spec);
+      this.specType = Objects.requireNonNull(specType);
+    }
+
+    public static <$Schema, Spec>
+    TaskSpec<$Schema, Spec> instantiate(
+        final TaskSpecType<$Schema, Spec> specType,
+        final Map<String, SerializedValue> arguments)
+    throws TaskSpecType.UnconstructableTaskSpecException
+    {
+      return new TaskSpec<>(specType.instantiate(arguments), specType);
+    }
+
+    public String getTypeName() {
+      return this.specType.getName();
+    }
+
+    public Map<String, SerializedValue> getArguments() {
+      return this.specType.getArguments(this.spec);
+    }
+
+    public List<String> getValidationFailures() {
+      return this.specType.getValidationFailures(this.spec);
+    }
+
+    public <$Timeline extends $Schema> Task<$Timeline> createTask() {
+      return this.specType.createTask(this.spec);
+    }
   }
 }
