@@ -2,47 +2,23 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /* package-local */
-final class DaemonTaskSpec extends TaskSpec {
-  private final Runnable runnable;
+final class DaemonTaskSpec {
+  private DaemonTaskSpec() {}
 
-  private DaemonTaskSpec(final Runnable runnable) {
-    this.runnable = Objects.requireNonNull(runnable);
-  }
-
-  @Override
-  public <$Schema> Task<$Schema, FooResources<$Schema>> createTask() {
-    return new Task<>() {
-      @Override
-      public void run(final FooResources<$Schema> resources) {
-        DaemonTaskSpec.this.runnable.run();
-      }
-    };
-  }
-
-  @Override
-  public Map<String, SerializedValue> getArguments() {
-    return Map.of();
-  }
-
-  public static <$Schema> TaskSpecType<$Schema, TaskSpec> getDescriptor(
+  public static <$Schema> TaskSpecType<$Schema, ?> getDescriptor(
       final String name,
       final Runnable runnable,
       final ProxyContext<$Schema> rootContext)
   {
-    final var instance = new DaemonTaskSpec(runnable);
-
-    return new TaskSpecType<>() {
+    return new TaskSpecType<$Schema, Runnable>() {
       @Override
       public String getName() {
         return name;
@@ -54,35 +30,35 @@ final class DaemonTaskSpec extends TaskSpec {
       }
 
       @Override
-      public TaskSpec instantiateDefault() {
-        return instance;
+      public Runnable instantiateDefault() {
+        return runnable;
       }
 
       @Override
-      public TaskSpec instantiate(final Map<String, SerializedValue> arguments)
+      public Runnable instantiate(final Map<String, SerializedValue> arguments)
       throws UnconstructableTaskSpecException
       {
         for (final var ignored : arguments.entrySet()) {
           throw new UnconstructableTaskSpecException();
         }
 
-        return instance;
+        return runnable;
       }
 
       @Override
-      public Map<String, SerializedValue> getArguments(final TaskSpec taskSpec) {
-        return taskSpec.getArguments();
+      public Map<String, SerializedValue> getArguments(final Runnable runnable) {
+        return Map.of();
       }
 
       @Override
-      public List<String> getValidationFailures(final TaskSpec taskSpec) {
-        return taskSpec.getValidationFailures();
+      public List<String> getValidationFailures(final Runnable runnable) {
+        return List.of();
       }
 
       @Override
       public <$Timeline extends $Schema>
       gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task<$Timeline>
-      createTask(final TaskSpec taskSpec) {
+      createTask(final Runnable runnable) {
         return new ReplayingTask<>(rootContext, runnable);
       }
     };

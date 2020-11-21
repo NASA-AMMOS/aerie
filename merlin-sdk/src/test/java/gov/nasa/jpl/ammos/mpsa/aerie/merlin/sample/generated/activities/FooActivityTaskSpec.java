@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
@@ -14,39 +13,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.StringValueMapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 // TODO: Automatically generate at compile time.
 /* package-local */
-final class FooActivityTaskSpec extends TaskSpec {
-  private final FooActivity activity;
+final class FooActivityTaskSpec {
+  private FooActivityTaskSpec() {}
 
-  private FooActivityTaskSpec(final FooActivity activity) {
-    this.activity = Objects.requireNonNull(activity);
-  }
-
-  @Override
-  public Map<String, SerializedValue> getArguments() {
-    return Map.of(
-        "x", new IntegerValueMapper().serializeValue(this.activity.x),
-        "y", new StringValueMapper().serializeValue(this.activity.y));
-  }
-
-  @Override
-  public <$Schema> Task<$Schema, FooResources<$Schema>> createTask() {
-    return this.activity.new EffectModel<>();
-  }
-
-  @Override
-  public List<String> getValidationFailures() {
-    // TODO: Extract validation messages from @Validation annotation at compile time.
-    final var failures = new ArrayList<String>();
-    if (!this.activity.validateX()) failures.add("x cannot be exactly 99");
-    if (!this.activity.validateY()) failures.add("y cannot be 'bad'");
-    return failures;
-  }
-
-  public static <$Schema> TaskSpecType<$Schema, TaskSpec> getDescriptor(
+  public static <$Schema> TaskSpecType<$Schema, FooActivity> getDescriptor(
       final ProxyContext<$Schema> rootContext,
       final FooResources<$Schema> container)
   {
@@ -64,12 +37,12 @@ final class FooActivityTaskSpec extends TaskSpec {
       }
 
       @Override
-      public TaskSpec instantiateDefault() {
-        return new FooActivityTaskSpec(new FooActivity());
+      public FooActivity instantiateDefault() {
+        return new FooActivity();
       }
 
       @Override
-      public TaskSpec instantiate(final Map<String, SerializedValue> arguments)
+      public FooActivity instantiate(final Map<String, SerializedValue> arguments)
       throws UnconstructableTaskSpecException
       {
         final var activity = new FooActivity();
@@ -93,24 +66,30 @@ final class FooActivityTaskSpec extends TaskSpec {
           }
         }
 
-        return new FooActivityTaskSpec(activity);
+        return activity;
       }
 
       @Override
-      public Map<String, SerializedValue> getArguments(final TaskSpec taskSpec) {
-        return taskSpec.getArguments();
+      public Map<String, SerializedValue> getArguments(final FooActivity activity) {
+        return Map.of(
+            "x", new IntegerValueMapper().serializeValue(activity.x),
+            "y", new StringValueMapper().serializeValue(activity.y));
       }
 
       @Override
-      public List<String> getValidationFailures(final TaskSpec taskSpec) {
-        return taskSpec.getValidationFailures();
+      public List<String> getValidationFailures(final FooActivity activity) {
+        // TODO: Extract validation messages from @Validation annotation at compile time.
+        final var failures = new ArrayList<String>();
+        if (!activity.validateX()) failures.add("x cannot be exactly 99");
+        if (!activity.validateY()) failures.add("y cannot be 'bad'");
+        return failures;
       }
 
       @Override
       public <$Timeline extends $Schema>
       gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task<$Timeline>
-      createTask(final TaskSpec taskSpec) {
-        final var task = taskSpec.<$Schema>createTask();
+      createTask(final FooActivity activity) {
+        final var task = activity.new EffectModel<$Schema>();
         task.setContext(rootContext);
         return new ReplayingTask<>(rootContext, () -> task.run(container));
       }
