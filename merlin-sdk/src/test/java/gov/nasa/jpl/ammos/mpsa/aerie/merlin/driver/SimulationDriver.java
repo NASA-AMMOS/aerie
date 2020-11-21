@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
@@ -23,17 +23,18 @@ import java.util.Map;
 public final class SimulationDriver {
   public static void main(final String[] args) {
     try {
-      foo(new FooAdaptation());
+      foo(new FooAdaptationFactory().instantiate());
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
       ex.printStackTrace();
     }
   }
 
-  private static <AdaptationTaskSpec extends TaskSpec>
-  void foo(final Adaptation<AdaptationTaskSpec> adaptation)
+  private static <$Schema, AdaptationTaskSpec extends TaskSpec>
+  void foo(final Adaptation<$Schema, AdaptationTaskSpec> adaptation)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
+    final var scope = adaptation.createSimulationScope();
 
     final var taskSpecs = new ArrayList<AdaptationTaskSpec>();
     adaptation.getDaemons().forEach(taskSpecs::add);
@@ -44,19 +45,11 @@ public final class SimulationDriver {
       validationFailures.forEach(System.out::println);
     }
 
-    bar(taskSpecs, adaptation.createSimulationScope());
-  }
-
-  private static <$Schema, AdaptationTaskSpec extends TaskSpec>
-  void bar(
-      final List<AdaptationTaskSpec> taskSpecs,
-      final SimulationScope<$Schema, AdaptationTaskSpec> scope)
-  {
-    baz(taskSpecs, scope, SimulationTimeline.create(scope.getSchema()));
+    bar(taskSpecs, scope, SimulationTimeline.create(scope.getSchema()));
   }
 
   private static <$Timeline, AdaptationTaskSpec extends TaskSpec>
-  void baz(
+  void bar(
       final List<AdaptationTaskSpec> taskSpecs,
       final SimulationScope<? super $Timeline, AdaptationTaskSpec> scope,
       final SimulationTimeline<$Timeline> timeline)

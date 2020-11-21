@@ -32,13 +32,10 @@ public final class FooSimulationScope<$Schema> implements SimulationScope<$Schem
     container.setContext(this.rootContext);
   }
 
-  private static <$Schema> FooSimulationScope<$Schema> create(final ResourcesBuilder<$Schema> builder) {
+  public static <$Schema> FooSimulationScope<$Schema> create(final Schema.Builder<$Schema> schemaBuilder) {
+    final var builder = new ResourcesBuilder<>(schemaBuilder);
     final var container = new FooResources<>(builder);
     return new FooSimulationScope<>(container, builder.build());
-  }
-
-  public static FooSimulationScope<?> create() {
-    return create(new ResourcesBuilder<>(Schema.builder()));
   }
 
   public Module<$Schema, TaskSpec> getRootModule() {
