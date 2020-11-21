@@ -14,7 +14,7 @@ public abstract class TaskSpec
   /* package-local */
   TaskSpec() {}
 
-  public abstract <$Schema> Task<$Schema, TaskSpec, FooResources<$Schema>> createTask();
+  public abstract <$Schema> Task<$Schema, FooResources<$Schema>> createTask();
 
   public static Map<String, TaskSpecType<TaskSpec>> getTaskSpecTypes() {
     final var types = new HashMap<String, TaskSpecType<TaskSpec>>();

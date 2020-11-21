@@ -18,22 +18,22 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public final class ReplayingTask<$Schema, $Timeline extends $Schema, TaskSpec>
-    implements Task<$Timeline, TaskSpec>
+public final class ReplayingTask<$Schema, $Timeline extends $Schema>
+    implements Task<$Timeline>
 {
-  private final ProxyContext<$Schema, TaskSpec> rootContext;
+  private final ProxyContext<$Schema> rootContext;
   private final Runnable task;
 
   private Optional<History<$Timeline>> initialTime = Optional.empty();
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final ProxyContext<$Schema, TaskSpec> rootContext, final Runnable task) {
+  public ReplayingTask(final ProxyContext<$Schema> rootContext, final Runnable task) {
     this.rootContext = rootContext;
     this.task = task;
   }
 
   @Override
-  public TaskStatus<$Timeline> step(final Scheduler<$Timeline, TaskSpec> scheduler) {
+  public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
     final var context = this.new ReplayingReactionContext(this.initialTime, scheduler);
 
     if (this.initialTime.isEmpty()) {
@@ -64,8 +64,8 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, TaskSpec>
   private static final class Yield extends RuntimeException {}
   private static final Yield Yield = new Yield();
 
-  private final class ReplayingReactionContext implements Context<$Schema, TaskSpec> {
-    private final Scheduler<$Timeline, TaskSpec> scheduler;
+  private final class ReplayingReactionContext implements Context<$Schema> {
+    private final Scheduler<$Timeline> scheduler;
     private TaskStatus<$Timeline> status = TaskStatus.completed();
 
     private Optional<History<$Timeline>> history;
@@ -73,7 +73,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema, TaskSpec>
 
     public ReplayingReactionContext(
         final Optional<History<$Timeline>> initialTime,
-        final Scheduler<$Timeline, TaskSpec> scheduler)
+        final Scheduler<$Timeline> scheduler)
     {
       this.history = initialTime;
       this.scheduler = scheduler;

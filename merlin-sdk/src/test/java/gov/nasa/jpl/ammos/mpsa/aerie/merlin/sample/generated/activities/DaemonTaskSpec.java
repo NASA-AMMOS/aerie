@@ -20,7 +20,7 @@ final class DaemonTaskSpec extends TaskSpec {
   }
 
   @Override
-  public <$Schema> Task<$Schema, TaskSpec, FooResources<$Schema>> createTask() {
+  public <$Schema> Task<$Schema, FooResources<$Schema>> createTask() {
     return new Task<>() {
       @Override
       public void run(final FooResources<$Schema> resources) {

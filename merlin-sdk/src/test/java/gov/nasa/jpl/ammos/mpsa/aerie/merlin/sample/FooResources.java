@@ -23,8 +23,8 @@ public final class FooResources<$Schema> extends Module<$Schema> {
   // Need to use a more representative event type for the sample.
   // Need to implement compile-time code generation for various aspects of the Framework.
 
-  public final RegisterModule<$Schema, Double, ?> foo;
-  public final LinearIntegrationModule<$Schema, ?> data;
+  public final RegisterModule<$Schema, Double> foo;
+  public final LinearIntegrationModule<$Schema> data;
 
   public final RealResource<History<? extends $Schema>> combo;
 

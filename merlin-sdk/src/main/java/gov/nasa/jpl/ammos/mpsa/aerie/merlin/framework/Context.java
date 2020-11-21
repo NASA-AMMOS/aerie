@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import java.util.Map;
 import java.util.Set;
 
-public interface Context<$Schema, TaskSpec> {
+public interface Context<$Schema> {
   History<? extends $Schema> now();
   double ask(RealResource<? super History<? extends $Schema>> resource);
   <T> T ask(DiscreteResource<? super History<? extends $Schema>, T> resource);

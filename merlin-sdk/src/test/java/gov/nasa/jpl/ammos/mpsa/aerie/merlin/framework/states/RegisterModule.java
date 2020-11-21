@@ -13,7 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Optional;
 import java.util.Set;
 
-public final class RegisterModule<$Schema, Value, TaskSpec> extends Module<$Schema, TaskSpec> {
+public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   private final Query<$Schema, Value, RegisterModel<Value>> query;
   public final DiscreteResource<History<? extends $Schema>, Value> value;
   public final DiscreteResource<History<? extends $Schema>, Boolean> conflicted;

@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
 
-public interface Scheduler<$Timeline, TaskSpec> {
+public interface Scheduler<$Timeline> {
   History<$Timeline> now();
   <Solution> Solution ask(SolvableDynamics<Solution, ?> resource, Duration offset);
 

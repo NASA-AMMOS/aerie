@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 // TODO: Automatically generate at compile time.
 public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpec> {
-  private final ProxyContext<$Schema, TaskSpec> rootContext = new ProxyContext<>();
+  private final ProxyContext<$Schema> rootContext = new ProxyContext<>();
 
   private final FooResources<$Schema> container;
   private final BuiltResources<$Schema> resources;
@@ -56,7 +56,7 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpe
 
   private static void getDaemons(
       final String namespace,
-      final Module<?, ?> module,
+      final Module<?> module,
       final BiConsumer<String, Runnable> receiver)
   {
     for (final var daemon : module.getDaemons().entrySet()) {
@@ -98,7 +98,7 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpe
   }
 
   @Override
-  public <$Timeline extends $Schema> Task<$Timeline, TaskSpec> createTask(final TaskSpec taskSpec) {
+  public <$Timeline extends $Schema> Task<$Timeline> createTask(final TaskSpec taskSpec) {
     final var task = taskSpec.<$Schema>createTask();
     task.setContext(this.rootContext);
     return new ReplayingTask<>(this.rootContext, () -> task.run(this.container));

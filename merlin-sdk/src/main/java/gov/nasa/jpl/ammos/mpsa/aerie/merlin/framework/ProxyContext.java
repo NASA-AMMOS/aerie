@@ -11,16 +11,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import java.util.Map;
 import java.util.Set;
 
-public final class ProxyContext<$Schema, TaskSpec>
-    implements Context<$Schema, TaskSpec>
+public final class ProxyContext<$Schema>
+    implements Context<$Schema>
 {
-  private Context<$Schema, TaskSpec> context = null;
+  private Context<$Schema> context = null;
 
-  public void setTarget(final Context<$Schema, TaskSpec> context) {
+  public void setTarget(final Context<$Schema> context) {
     this.context = context;
   }
 
-  public Context<$Schema, TaskSpec> getTarget() {
+  public Context<$Schema> getTarget() {
     return this.context;
   }
 

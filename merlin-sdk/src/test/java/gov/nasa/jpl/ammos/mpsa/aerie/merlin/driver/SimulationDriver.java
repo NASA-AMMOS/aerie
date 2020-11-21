@@ -53,7 +53,7 @@ public final class SimulationDriver {
       final Adaptation<? super $Timeline, AdaptationTaskSpec> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
-    final var scheduler = new Scheduler<$Timeline, AdaptationTaskSpec>() {
+    final var scheduler = new Scheduler<$Timeline>() {
       // TODO: Track and reduce candelabras of spawned tasks
       public History<$Timeline> now = timeline.origin();
 

@@ -27,6 +27,6 @@ public interface Adaptation<$Schema, AdaptationTaskSpec extends TaskSpec> {
   /* Given   */ getSchema();
 
   /* For all */ <$Timeline extends $Schema>
-  /* Produce */ Task<$Timeline, AdaptationTaskSpec>
+  /* Produce */ Task<$Timeline>
   /* Given   */ createTask(AdaptationTaskSpec taskSpec);
 }
