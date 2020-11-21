@@ -16,7 +16,7 @@ public final class TaskSpec {
       final FooResources<$Schema> container)
   {
     final var types = new HashMap<String, TaskSpecType<$Schema, ?>>();
-    final var descriptor = FooActivityTaskSpec.getDescriptor(rootContext, container);
+    final var descriptor = new FooActivityType<>(rootContext, container);
     types.put(descriptor.getName(), descriptor);
     return types;
   }
@@ -25,6 +25,6 @@ public final class TaskSpec {
       final String name,
       final Runnable daemon,
       final ProxyContext<$Schema> rootContext) {
-    return DaemonTaskSpec.getDescriptor(name, daemon, rootContext);
+    return new DaemonTaskType<>(name, daemon, rootContext);
   }
 }
