@@ -24,11 +24,6 @@ final class FooActivityTaskSpec extends TaskSpec {
   }
 
   @Override
-  public String getTypeName() {
-    return "foo";
-  }
-
-  @Override
   public Map<String, SerializedValue> getArguments() {
     return Map.of(
         "x", new IntegerValueMapper().serializeValue(this.activity.x),
@@ -93,6 +88,16 @@ final class FooActivityTaskSpec extends TaskSpec {
       }
 
       return new FooActivityTaskSpec(activity);
+    }
+
+    @Override
+    public Map<String, SerializedValue> getArguments(final TaskSpec taskSpec) {
+      return taskSpec.getArguments();
+    }
+
+    @Override
+    public List<String> getValidationFailures(final TaskSpec taskSpec) {
+      return taskSpec.getValidationFailures();
     }
   };
 }

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpec;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
@@ -15,6 +14,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,29 +29,33 @@ public final class SimulationDriver {
     }
   }
 
-  private static <$Schema, AdaptationTaskSpec extends TaskSpec>
+  private static <$Schema, AdaptationTaskSpec>
   void foo(final Adaptation<$Schema, AdaptationTaskSpec> adaptation)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
 
-    final var taskSpecs = new ArrayList<AdaptationTaskSpec>();
+    final var taskSpecs = new ArrayList<Pair<AdaptationTaskSpec, TaskSpecType<AdaptationTaskSpec>>>();
     for (final var x : adaptation.getDaemons()) {
-      taskSpecs.add(activityTypes.get(x.getKey()).instantiate(x.getValue()));
+      final var type = activityTypes.get(x.getKey());
+      taskSpecs.add(Pair.of(type.instantiate(x.getValue()), type));
     }
-    taskSpecs.add(activityTypes.get("foo").instantiate(Map.of()));
+    {
+      final var type = activityTypes.get("foo");
+      taskSpecs.add(Pair.of(type.instantiate(Map.of()), type));
+    }
 
     for (final var taskSpec : taskSpecs) {
-      final var validationFailures = taskSpec.getValidationFailures();
+      final var validationFailures = taskSpec.getRight().getValidationFailures(taskSpec.getLeft());
       validationFailures.forEach(System.out::println);
     }
 
     bar(taskSpecs, adaptation, SimulationTimeline.create(adaptation.getSchema()));
   }
 
-  private static <$Timeline, AdaptationTaskSpec extends TaskSpec>
+  private static <$Timeline, AdaptationTaskSpec>
   void bar(
-      final List<AdaptationTaskSpec> taskSpecs,
+      final List<Pair<AdaptationTaskSpec, TaskSpecType<AdaptationTaskSpec>>> taskSpecs,
       final Adaptation<? super $Timeline, AdaptationTaskSpec> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
@@ -128,8 +132,9 @@ public final class SimulationDriver {
     };
 
     for (final var taskSpec : taskSpecs) {
-      System.out.println("Performing " + taskSpec.getTypeName() + " with arguments " + taskSpec.getArguments());
-      final var task = adaptation.<$Timeline>createTask(taskSpec);
+      System.out.println("Performing " + taskSpec.getRight().getName()
+                         + " with arguments " + taskSpec.getRight().getArguments(taskSpec.getLeft()));
+      final var task = adaptation.<$Timeline>createTask(taskSpec.getLeft());
 
       boolean running = true;
       while (running) {

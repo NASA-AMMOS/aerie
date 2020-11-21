@@ -6,16 +6,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 /* package-local */
 final class DaemonTaskSpec extends TaskSpec {
-  private final String name;
   private final Runnable runnable;
 
-  private DaemonTaskSpec(final String name, final Runnable runnable) {
-    this.name = Objects.requireNonNull(name);
+  private DaemonTaskSpec(final Runnable runnable) {
     this.runnable = Objects.requireNonNull(runnable);
   }
 
@@ -30,17 +29,12 @@ final class DaemonTaskSpec extends TaskSpec {
   }
 
   @Override
-  public String getTypeName() {
-    return this.name;
-  }
-
-  @Override
   public Map<String, SerializedValue> getArguments() {
     return Map.of();
   }
 
   public static TaskSpecType<TaskSpec> getDescriptor(final String name, final Runnable runnable) {
-    final var instance = new DaemonTaskSpec(name, runnable);
+    final var instance = new DaemonTaskSpec(runnable);
 
     return new TaskSpecType<>() {
       @Override
@@ -67,6 +61,16 @@ final class DaemonTaskSpec extends TaskSpec {
         }
 
         return instance;
+      }
+
+      @Override
+      public Map<String, SerializedValue> getArguments(final TaskSpec taskSpec) {
+        return taskSpec.getArguments();
+      }
+
+      @Override
+      public List<String> getValidationFailures(final TaskSpec taskSpec) {
+        return taskSpec.getValidationFailures();
       }
     };
   }
