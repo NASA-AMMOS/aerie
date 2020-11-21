@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
@@ -34,7 +33,6 @@ public final class SimulationDriver {
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
-    final var scope = adaptation.createSimulationScope();
 
     final var taskSpecs = new ArrayList<AdaptationTaskSpec>();
     adaptation.getDaemons().forEach(taskSpecs::add);
@@ -45,13 +43,13 @@ public final class SimulationDriver {
       validationFailures.forEach(System.out::println);
     }
 
-    bar(taskSpecs, scope, SimulationTimeline.create(scope.getSchema()));
+    bar(taskSpecs, adaptation, SimulationTimeline.create(adaptation.getSchema()));
   }
 
   private static <$Timeline, AdaptationTaskSpec extends TaskSpec>
   void bar(
       final List<AdaptationTaskSpec> taskSpecs,
-      final SimulationScope<? super $Timeline, AdaptationTaskSpec> scope,
+      final Adaptation<? super $Timeline, AdaptationTaskSpec> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
     final var scheduler = new Scheduler<$Timeline, AdaptationTaskSpec>() {
@@ -128,7 +126,7 @@ public final class SimulationDriver {
 
     for (final var taskSpec : taskSpecs) {
       System.out.println("Performing " + taskSpec.getTypeName() + " with arguments " + taskSpec.getArguments());
-      final var task = scope.<$Timeline>createTask(taskSpec);
+      final var task = adaptation.<$Timeline>createTask(taskSpec);
 
       boolean running = true;
       while (running) {
@@ -138,10 +136,10 @@ public final class SimulationDriver {
     }
 
     System.out.print(scheduler.now.getDebugTrace());
-    scope.getRealResources().forEach((name, resource) -> {
+    adaptation.getRealResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getDynamics(scheduler.now()));
     });
-    scope.getDiscreteResources().forEach((name, resource) -> {
+    adaptation.getDiscreteResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
     });
   }
