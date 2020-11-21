@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 // TODO: Automatically generate at compile time.
 public final class FooAdaptationFactory implements AdaptationFactory {
   @Override
-  public Adaptation<?, ?> instantiate() {
+  public Adaptation<?> instantiate() {
     return new FooAdaptation<>(Schema.builder());
   }
 }

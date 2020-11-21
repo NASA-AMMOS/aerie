@@ -10,7 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-public interface Adaptation<$Schema, AdaptationTaskSpec> {
+public interface Adaptation<$Schema> {
   /* Produce */ Map<String, TaskSpecType<$Schema, ?>>
   /* Given   */ getTaskSpecificationTypes();
 

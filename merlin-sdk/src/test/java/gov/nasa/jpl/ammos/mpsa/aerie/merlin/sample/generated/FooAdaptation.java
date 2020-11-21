@@ -23,7 +23,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 // TODO: Automatically generate at compile time.
-public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpec> {
+public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   private final ProxyContext<$Schema> rootContext = new ProxyContext<>();
 
   private final FooResources<$Schema> container;

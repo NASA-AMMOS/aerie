@@ -30,8 +30,8 @@ public final class SimulationDriver {
     }
   }
 
-  private static <$Schema, AdaptationTaskSpec>
-  void foo(final Adaptation<$Schema, AdaptationTaskSpec> adaptation)
+  private static <$Schema>
+  void foo(final Adaptation<$Schema> adaptation)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
@@ -50,10 +50,10 @@ public final class SimulationDriver {
     bar(taskSpecs, adaptation, SimulationTimeline.create(adaptation.getSchema()));
   }
 
-  private static <$Schema, $Timeline extends $Schema, AdaptationTaskSpec>
+  private static <$Schema, $Timeline extends $Schema>
   void bar(
       final List<TaskSpec<$Schema, ?>> taskSpecs,
-      final Adaptation<$Schema, AdaptationTaskSpec> adaptation,
+      final Adaptation<$Schema> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
     final var scheduler = new Scheduler<$Timeline>() {
