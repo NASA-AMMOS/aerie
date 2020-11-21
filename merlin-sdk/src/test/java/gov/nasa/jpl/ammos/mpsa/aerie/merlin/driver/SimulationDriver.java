@@ -36,7 +36,9 @@ public final class SimulationDriver {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
 
     final var taskSpecs = new ArrayList<AdaptationTaskSpec>();
-    adaptation.getDaemons().forEach(taskSpecs::add);
+    for (final var x : adaptation.getDaemons()) {
+      taskSpecs.add(activityTypes.get(x.getKey()).instantiate(x.getValue()));
+    }
     taskSpecs.add(activityTypes.get("foo").instantiate(Map.of()));
 
     for (final var taskSpec : taskSpecs) {

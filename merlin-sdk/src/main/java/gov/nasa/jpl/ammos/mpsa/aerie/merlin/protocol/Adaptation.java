@@ -14,7 +14,7 @@ public interface Adaptation<$Schema, AdaptationTaskSpec extends TaskSpec> {
   /* Produce */ Map<String, TaskSpecType<AdaptationTaskSpec>>
   /* Given   */ getTaskSpecificationTypes();
 
-  /* Produce */ Iterable<AdaptationTaskSpec>
+  /* Produce */ Iterable<Pair<String, Map<String, SerializedValue>>>
   /* Given   */ getDaemons();
 
   /* Produce */ Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>>

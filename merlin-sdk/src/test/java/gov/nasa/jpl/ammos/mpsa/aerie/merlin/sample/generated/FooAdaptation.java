@@ -74,11 +74,11 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema, TaskSpe
   }
 
   @Override
-  public Iterable<TaskSpec> getDaemons() {
+  public Iterable<Pair<String, Map<String, SerializedValue>>> getDaemons() {
     return this.daemonTypes
         .values()
         .stream()
-        .map(TaskSpecType::instantiateDefault)
+        .map(x -> Pair.of(x.getName(), Map.<String, SerializedValue>of()))
         .collect(Collectors.toList());
   }
 
