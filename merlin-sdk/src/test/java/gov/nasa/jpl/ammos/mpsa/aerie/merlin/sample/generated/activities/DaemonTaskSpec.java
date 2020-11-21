@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
@@ -33,7 +35,11 @@ final class DaemonTaskSpec extends TaskSpec {
     return Map.of();
   }
 
-  public static <$Schema> TaskSpecType<$Schema, TaskSpec> getDescriptor(final String name, final Runnable runnable) {
+  public static <$Schema> TaskSpecType<$Schema, TaskSpec> getDescriptor(
+      final String name,
+      final Runnable runnable,
+      final ProxyContext<$Schema> rootContext)
+  {
     final var instance = new DaemonTaskSpec(runnable);
 
     return new TaskSpecType<>() {
@@ -71,6 +77,13 @@ final class DaemonTaskSpec extends TaskSpec {
       @Override
       public List<String> getValidationFailures(final TaskSpec taskSpec) {
         return taskSpec.getValidationFailures();
+      }
+
+      @Override
+      public <$Timeline extends $Schema>
+      gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task<$Timeline>
+      createTask(final TaskSpec taskSpec) {
+        return new ReplayingTask<>(rootContext, runnable);
       }
     };
   }

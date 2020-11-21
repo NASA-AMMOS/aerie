@@ -17,5 +17,7 @@ public interface TaskSpecType<$Schema, AdaptationTaskSpec> {
   Map<String, SerializedValue> getArguments(AdaptationTaskSpec taskSpec);
   List<String> getValidationFailures(AdaptationTaskSpec taskSpec);
 
+  <$Timeline extends $Schema> Task<$Timeline> createTask(AdaptationTaskSpec taskSpec);
+
   class UnconstructableTaskSpecException extends Exception {}
 }

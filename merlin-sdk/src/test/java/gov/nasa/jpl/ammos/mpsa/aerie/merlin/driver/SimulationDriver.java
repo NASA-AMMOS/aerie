@@ -134,7 +134,7 @@ public final class SimulationDriver {
     for (final var taskSpec : taskSpecs) {
       System.out.println("Performing " + taskSpec.getRight().getName()
                          + " with arguments " + taskSpec.getRight().getArguments(taskSpec.getLeft()));
-      final var task = adaptation.<$Timeline>createTask(taskSpec.getLeft());
+      final var task = taskSpec.getRight().<$Timeline>createTask(taskSpec.getLeft());
 
       boolean running = true;
       while (running) {

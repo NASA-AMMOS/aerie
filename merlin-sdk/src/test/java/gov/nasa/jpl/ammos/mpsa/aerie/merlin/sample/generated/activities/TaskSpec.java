@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
@@ -21,14 +22,20 @@ public abstract class TaskSpec {
     return List.of();
   }
 
-  public static <$Schema> Map<String, TaskSpecType<$Schema, TaskSpec>> getTaskSpecTypes() {
+  public static <$Schema> Map<String, TaskSpecType<$Schema, TaskSpec>> getTaskSpecTypes(
+      final ProxyContext<$Schema> rootContext,
+      final FooResources<$Schema> container)
+  {
     final var types = new HashMap<String, TaskSpecType<$Schema, TaskSpec>>();
-    final var descriptor = FooActivityTaskSpec.<$Schema>getDescriptor();
+    final var descriptor = FooActivityTaskSpec.<$Schema>getDescriptor(rootContext, container);
     types.put(descriptor.getName(), descriptor);
     return types;
   }
 
-  public static <$Schema> TaskSpecType<$Schema, TaskSpec> createDaemonType(final String name, final Runnable daemon) {
-    return DaemonTaskSpec.getDescriptor(name, daemon);
+  public static <$Schema> TaskSpecType<$Schema, TaskSpec> createDaemonType(
+      final String name,
+      final Runnable daemon,
+      final ProxyContext<$Schema> rootContext) {
+    return DaemonTaskSpec.getDescriptor(name, daemon, rootContext);
   }
 }
