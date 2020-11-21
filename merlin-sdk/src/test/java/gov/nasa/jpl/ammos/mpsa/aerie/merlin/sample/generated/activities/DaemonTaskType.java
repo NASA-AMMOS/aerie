@@ -10,8 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import java.util.List;
 import java.util.Map;
 
-/* package-local */
-final class DaemonTaskType<$Schema> implements TaskSpecType<$Schema, Runnable> {
+public final class DaemonTaskType<$Schema> implements TaskSpecType<$Schema, Runnable> {
   private final String name;
   private final Runnable runnable;
   private final ProxyContext<$Schema> rootContext;

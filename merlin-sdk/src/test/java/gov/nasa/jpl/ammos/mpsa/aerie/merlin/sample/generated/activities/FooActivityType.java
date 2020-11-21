@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 // TODO: Automatically generate at compile time.
-/* package-local */
-final class FooActivityType<$Schema> implements TaskSpecType<$Schema, FooActivity> {
+public final class FooActivityType<$Schema> implements TaskSpecType<$Schema, FooActivity> {
   private final ProxyContext<$Schema> rootContext;
   private final FooResources<$Schema> container;
 

@@ -7,7 +7,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.TaskSpec;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.DaemonTaskType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.FooActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
@@ -36,11 +37,16 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
     final var container = new FooResources<>(builder);
     container.setContext(this.rootContext);
 
-    final var allTaskSpecTypes = new HashMap<>(TaskSpec.getTaskSpecTypes(this.rootContext, container));
+    final var allTaskSpecTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
+    {
+      final var activityType = new FooActivityType<>(this.rootContext, container);
+      allTaskSpecTypes.put(activityType.getName(), activityType);
+    }
+
     final var daemonTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
 
     getDaemons("/daemons", container, (name, daemon) -> {
-      final var daemonType = TaskSpec.createDaemonType(name, daemon, this.rootContext);
+      final var daemonType = new DaemonTaskType<>(name, daemon, this.rootContext);
 
       daemonTypes.put(daemonType.getName(), daemonType);
       allTaskSpecTypes.put(daemonType.getName(), daemonType);
