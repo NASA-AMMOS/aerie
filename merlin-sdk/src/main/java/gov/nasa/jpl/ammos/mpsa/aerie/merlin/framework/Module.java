@@ -5,6 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Collections;
@@ -12,18 +13,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class Module<$Schema, TaskSpec> {
-  private final ProxyContext<$Schema, TaskSpec> context = new ProxyContext<>();
-  private final Map<String, Module<$Schema, TaskSpec>> submodules = new HashMap<>();
+public abstract class Module<$Schema> {
+  private final ProxyContext<$Schema> context = new ProxyContext<>();
+  private final Map<String, Module<$Schema>> submodules = new HashMap<>();
   private final Map<String, Runnable> daemons = new HashMap<>();
 
-  public final Context<$Schema, TaskSpec> setContext(final Context<$Schema, TaskSpec> context) {
+  public final Context<$Schema> setContext(final Context<$Schema> context) {
     final var old = this.context.getTarget();
     this.context.setTarget(context);
     return old;
   }
 
-  protected final <Submodule extends Module<$Schema, TaskSpec>>
+  protected final <Submodule extends Module<$Schema>>
   Submodule submodule(final String name, final Submodule submodule) {
     if (this.submodules.containsKey(name)) {
       throw new RuntimeException(String.format("Attempt to register submodule with id already in use: %s", submodule));
@@ -47,7 +48,7 @@ public abstract class Module<$Schema, TaskSpec> {
     return Collections.unmodifiableMap(this.daemons);
   }
 
-  public final Map<String, Module<$Schema, TaskSpec>> getSubmodules() {
+  public final Map<String, Module<$Schema>> getSubmodules() {
     return Collections.unmodifiableMap(this.submodules);
   }
 
@@ -69,20 +70,20 @@ public abstract class Module<$Schema, TaskSpec> {
     this.context.emit(event, query);
   }
 
-  protected final String spawn(final TaskSpec taskSpec) {
-    return this.context.spawn(taskSpec);
+  protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.spawn(type, arguments);
   }
 
-  protected final void call(final TaskSpec taskSpec) {
-    this.waitFor(this.spawn(taskSpec));
+  protected final void call(final String type, final Map<String, SerializedValue> arguments) {
+    this.waitFor(this.spawn(type, arguments));
   }
 
-  protected final String defer(final Duration duration, final TaskSpec taskSpec) {
-    return this.context.defer(duration, taskSpec);
+  protected final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.defer(duration, type, arguments);
   }
 
-  protected final String defer(final long quantity, final Duration unit, final TaskSpec taskSpec) {
-    return this.defer(unit.times(quantity), taskSpec);
+  protected final String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
+    return this.defer(unit.times(quantity), type, arguments);
   }
 
 

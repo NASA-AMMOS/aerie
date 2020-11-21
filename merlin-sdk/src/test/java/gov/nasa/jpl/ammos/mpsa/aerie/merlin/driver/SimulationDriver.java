@@ -1,67 +1,62 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpec;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SimulationScope;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
     try {
-      foo(new FooAdaptation());
+      foo(new FooAdaptationFactory().instantiate());
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
       ex.printStackTrace();
     }
   }
 
-  private static <AdaptationTaskSpec extends TaskSpec>
-  void foo(final Adaptation<AdaptationTaskSpec> adaptation)
+  private static <$Schema>
+  void foo(final Adaptation<$Schema> adaptation)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
 
-    final var taskSpecs = new ArrayList<AdaptationTaskSpec>();
-    adaptation.getDaemons().forEach(taskSpecs::add);
-    taskSpecs.add(activityTypes.get("foo").instantiate(Map.of()));
+    final var taskSpecs = new ArrayList<TaskSpec<$Schema, ?>>();
+    for (final var x : adaptation.getDaemons()) {
+      taskSpecs.add(TaskSpec.instantiate(activityTypes.get(x.getKey()), x.getValue()));
+    }
+    taskSpecs.add(TaskSpec.instantiate(activityTypes.get("foo"), Map.of()));
 
     for (final var taskSpec : taskSpecs) {
       final var validationFailures = taskSpec.getValidationFailures();
       validationFailures.forEach(System.out::println);
     }
 
-    bar(taskSpecs, adaptation.createSimulationScope());
+    bar(taskSpecs, adaptation, SimulationTimeline.create(adaptation.getSchema()));
   }
 
-  private static <$Schema, AdaptationTaskSpec extends TaskSpec>
+  private static <$Schema, $Timeline extends $Schema>
   void bar(
-      final List<AdaptationTaskSpec> taskSpecs,
-      final SimulationScope<$Schema, AdaptationTaskSpec> scope)
-  {
-    baz(taskSpecs, scope, SimulationTimeline.create(scope.getSchema()));
-  }
-
-  private static <$Timeline, AdaptationTaskSpec extends TaskSpec>
-  void baz(
-      final List<AdaptationTaskSpec> taskSpecs,
-      final SimulationScope<? super $Timeline, AdaptationTaskSpec> scope,
+      final List<TaskSpec<$Schema, ?>> taskSpecs,
+      final Adaptation<$Schema> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
-    final var scheduler = new Scheduler<$Timeline, AdaptationTaskSpec>() {
+    final var scheduler = new Scheduler<$Timeline>() {
       // TODO: Track and reduce candelabras of spawned tasks
       public History<$Timeline> now = timeline.origin();
 
@@ -71,13 +66,13 @@ public final class SimulationDriver {
       }
 
       @Override
-      public String spawn(final AdaptationTaskSpec taskSpec) {
+      public String spawn(final String type, final Map<String, SerializedValue> arguments) {
         // TODO: Register the spawned activity and give it a name.
         return "";
       }
 
       @Override
-      public String defer(final Duration delay, final AdaptationTaskSpec taskSpec) {
+      public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
         // TODO: Register the spawned activity and give it a name.
         return "";
       }
@@ -134,8 +129,9 @@ public final class SimulationDriver {
     };
 
     for (final var taskSpec : taskSpecs) {
-      System.out.println("Performing " + taskSpec.getTypeName() + " with arguments " + taskSpec.getArguments());
-      final var task = scope.<$Timeline>createTask(taskSpec);
+      System.out.println("Performing " + taskSpec.getTypeName()
+                         + " with arguments " + taskSpec.getArguments());
+      final var task = taskSpec.<$Timeline>createTask();
 
       boolean running = true;
       while (running) {
@@ -145,11 +141,49 @@ public final class SimulationDriver {
     }
 
     System.out.print(scheduler.now.getDebugTrace());
-    scope.getRealResources().forEach((name, resource) -> {
+    adaptation.getRealResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getDynamics(scheduler.now()));
     });
-    scope.getDiscreteResources().forEach((name, resource) -> {
+    adaptation.getDiscreteResources().forEach((name, resource) -> {
       System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
     });
+  }
+
+  private static final class TaskSpec<$Schema, Spec> {
+    private final Spec spec;
+    private final TaskSpecType<$Schema, Spec> specType;
+
+    private TaskSpec(
+        final Spec spec,
+        final TaskSpecType<$Schema, Spec> specType)
+    {
+      this.spec = Objects.requireNonNull(spec);
+      this.specType = Objects.requireNonNull(specType);
+    }
+
+    public static <$Schema, Spec>
+    TaskSpec<$Schema, Spec> instantiate(
+        final TaskSpecType<$Schema, Spec> specType,
+        final Map<String, SerializedValue> arguments)
+    throws TaskSpecType.UnconstructableTaskSpecException
+    {
+      return new TaskSpec<>(specType.instantiate(arguments), specType);
+    }
+
+    public String getTypeName() {
+      return this.specType.getName();
+    }
+
+    public Map<String, SerializedValue> getArguments() {
+      return this.specType.getArguments(this.spec);
+    }
+
+    public List<String> getValidationFailures() {
+      return this.specType.getValidationFailures(this.spec);
+    }
+
+    public <$Timeline extends $Schema> Task<$Timeline> createTask() {
+      return this.specType.createTask(this.spec);
+    }
   }
 }

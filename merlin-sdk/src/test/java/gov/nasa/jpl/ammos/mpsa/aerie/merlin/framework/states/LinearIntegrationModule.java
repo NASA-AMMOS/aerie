@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 
-public final class LinearIntegrationModule<$Schema, TaskSpec> extends Module<$Schema, TaskSpec> {
+public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   private final Query<$Schema, Double, LinearIntegrationModel> query;
   public final RealResource<History<? extends $Schema>> volume;
   public final RealResource<History<? extends $Schema>> rate;
