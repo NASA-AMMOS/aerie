@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-/* package-local */
 public final class BuiltResources<$Schema> {
   private final Schema<$Schema> schema;
   private final Map<String, Resource<History<? extends $Schema>, RealDynamics>> realResources;
