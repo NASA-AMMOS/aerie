@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Objects;
@@ -18,9 +19,10 @@ public abstract class TaskStatus<$Timeline> {
 
     Result delayed(Duration delay);
 
-    <ResourceType, ConditionType>
+    <DynamicsType, ConditionType>
     Result awaiting(
-        Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
+        Solver<?, DynamicsType, ConditionType> solver,
+        Resource<History<$Timeline>, DynamicsType> resource,
         ConditionType condition);
   }
 
@@ -55,19 +57,21 @@ public abstract class TaskStatus<$Timeline> {
     };
   }
 
-  public static <$Timeline, ResourceType, ConditionType>
+  public static <$Timeline, DynamicsType, ConditionType>
   TaskStatus<$Timeline>
   awaiting(
-      final Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
+      final Solver<?, DynamicsType, ConditionType> solver,
+      final Resource<History<$Timeline>, DynamicsType> resource,
       final ConditionType condition)
   {
+    Objects.requireNonNull(solver);
     Objects.requireNonNull(resource);
     Objects.requireNonNull(condition);
 
     return new TaskStatus<>() {
       @Override
       public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.awaiting(resource, condition);
+        return visitor.awaiting(solver, resource, condition);
       }
     };
   }
