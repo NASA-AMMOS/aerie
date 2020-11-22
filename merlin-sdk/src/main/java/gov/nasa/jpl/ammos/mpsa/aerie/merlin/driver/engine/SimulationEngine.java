@@ -8,8 +8,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
@@ -244,21 +242,6 @@ public final class SimulationEngine<$Timeline> {
     @Override
     public History<$Timeline> now() {
       return this.now;
-    }
-
-    @Override
-    public <Solution> Solution ask(final SolvableDynamics<Solution, ?> resource, final Duration offset) {
-      return resource.solve(new SolvableDynamics.Visitor() {
-        @Override
-        public Double real(final RealDynamics dynamics) {
-          return new RealSolver().valueAt(dynamics, offset);
-        }
-
-        @Override
-        public <ResourceType> ResourceType discrete(final ResourceType fact) {
-          return fact;
-        }
-      });
     }
 
     @Override
