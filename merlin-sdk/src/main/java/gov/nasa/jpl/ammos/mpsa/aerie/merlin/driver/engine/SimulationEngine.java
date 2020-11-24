@@ -264,7 +264,9 @@ public final class SimulationEngine<$Timeline> {
   private final class StatusVisitor implements TaskStatus.Visitor<$Timeline, Object> {
     private final Task<$Timeline> task;
 
-    public StatusVisitor(final Task<$Timeline> task) {this.task = task;}
+    public StatusVisitor(final Task<$Timeline> task) {
+      this.task = task;
+    }
 
     @Override
     public Object completed() {

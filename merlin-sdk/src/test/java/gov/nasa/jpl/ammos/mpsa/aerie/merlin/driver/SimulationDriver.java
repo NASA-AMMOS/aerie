@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
@@ -56,98 +58,24 @@ public final class SimulationDriver {
       final Adaptation<$Schema> adaptation,
       final SimulationTimeline<$Timeline> timeline)
   {
-    final var scheduler = new Scheduler<$Timeline>() {
-      // TODO: Track and reduce candelabras of spawned tasks
-      public History<$Timeline> now = timeline.origin();
-
-      @Override
-      public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
-        now = now.emit(event, query);
-      }
-
-      @Override
-      public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
-        return null;
-      }
-
-      @Override
-      public <Spec> String defer(
-          final Duration delay,
-          final Spec spec,
-          final TaskSpecType<? super $Timeline, Spec> type)
-      {
-        return null;
-      }
-
-      @Override
-      public History<$Timeline> now() {
-        return this.now;
-      }
-
-      @Override
-      public <Solution> Solution ask(final SolvableDynamics<Solution, ?> resource, final Duration offset) {
-        return resource.solve(new SolvableDynamics.Visitor() {
-          @Override
-          public Double real(final RealDynamics dynamics) {
-            return new RealSolver().valueAt(dynamics, offset);
-          }
-
-          @Override
-          public <ResourceType> ResourceType discrete(final ResourceType fact) {
-            return fact;
-          }
-        });
-      }
-    };
-
-    final var visitor = new TaskStatus.Visitor<$Timeline, Boolean>() {
-      @Override
-      public Boolean completed() {
-        // TODO: Emit an "activity end" event.
-        return false;
-      }
-
-      @Override
-      public Boolean awaiting(final String s) {
-        // TODO: Yield this task until the awaited activity is complete.
-        return true;
-      }
-
-      @Override
-      public Boolean delayed(final Duration delay) {
-        // TODO: Yield this task and perform any other tasks between now and the resumption point.
-        scheduler.now = scheduler.now.wait(delay);
-        return true;
-      }
-
-      @Override
-      public <ResourceType, ConditionType> Boolean awaiting(
-          final Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
-          final ConditionType condition)
-      {
-        // TODO: Yield this task until the awaited condition is met.
-        return true;
-      }
-    };
+    final var simulator = new SimulationEngine<>(timeline.origin());
 
     for (final var taskSpec : taskSpecs) {
       System.out.println("Performing " + taskSpec.getTypeName()
                          + " with arguments " + taskSpec.getArguments());
       final var task = taskSpec.<$Timeline>createTask();
 
-      boolean running = true;
-      while (running) {
-        // TODO: Emit a "task start" event.
-        running = task.step(scheduler).match(visitor);
-      }
+      simulator.defer(Duration.ZERO, task);
     }
 
-    System.out.print(scheduler.now.getDebugTrace());
+    while (simulator.hasMoreTasks()) simulator.step();
+
+    System.out.print(simulator.getCurrentHistory().getDebugTrace());
     adaptation.getRealResources().forEach((name, resource) -> {
-      System.out.printf("%-12s%s%n", name, resource.getDynamics(scheduler.now()));
+      System.out.printf("%-12s%s%n", name, resource.getDynamics(simulator.getCurrentHistory()));
     });
     adaptation.getDiscreteResources().forEach((name, resource) -> {
-      System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(scheduler.now()));
+      System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(simulator.getCurrentHistory()));
     });
   }
 
