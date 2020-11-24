@@ -2,26 +2,22 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptationFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
+
+import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
@@ -36,36 +32,51 @@ public final class SimulationDriver {
   void foo(final Adaptation<$Schema> adaptation)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
-    final var activityTypes = adaptation.getTaskSpecificationTypes();
+    final List<Pair<Duration, SerializedActivity>> schedule = List.of(
+        Pair.of(duration(0, MILLISECONDS),
+                new SerializedActivity("foo", Map.of("x", SerializedValue.of(1), "y", SerializedValue.of("test_1")))),
+        Pair.of(duration(50, MILLISECONDS),
+                new SerializedActivity("foo", Map.of("x", SerializedValue.of(2), "y", SerializedValue.of("test_2")))),
+        Pair.of(duration(100, MILLISECONDS),
+                new SerializedActivity("foo", Map.of("x", SerializedValue.of(3), "y", SerializedValue.of("test_3"))))
+    );
 
-    final var taskSpecs = new ArrayList<TaskSpec<$Schema, ?>>();
-    for (final var x : adaptation.getDaemons()) {
-      taskSpecs.add(TaskSpec.instantiate(activityTypes.get(x.getKey()), x.getValue()));
-    }
-    taskSpecs.add(TaskSpec.instantiate(activityTypes.get("foo"), Map.of()));
-
-    for (final var taskSpec : taskSpecs) {
-      final var validationFailures = taskSpec.getValidationFailures();
-      validationFailures.forEach(System.out::println);
-    }
-
-    bar(taskSpecs, adaptation, SimulationTimeline.create(adaptation.getSchema()));
+    bar(schedule, adaptation, SimulationTimeline.create(adaptation.getSchema()));
   }
 
   private static <$Schema, $Timeline extends $Schema>
   void bar(
-      final List<TaskSpec<$Schema, ?>> taskSpecs,
+      final List<Pair<Duration, SerializedActivity>> schedule,
       final Adaptation<$Schema> adaptation,
       final SimulationTimeline<$Timeline> timeline)
+  throws TaskSpecType.UnconstructableTaskSpecException
   {
+    final var activityTypes = adaptation.getTaskSpecificationTypes();
+    final var taskSpecs = new ArrayList<Pair<Duration, TaskSpec<$Schema, ?>>>();
+
+    for (final var x : adaptation.getDaemons()) {
+      taskSpecs.add(Pair.of(Duration.ZERO, TaskSpec.instantiate(activityTypes.get(x.getKey()), x.getValue())));
+    }
+
+    for (final var entry : schedule) {
+      final var startTime = entry.getLeft();
+      final var type = entry.getRight().getTypeName();
+      final var arguments = entry.getRight().getParameters();
+
+      final var taskSpec = TaskSpec.instantiate(activityTypes.get(type), arguments);
+      final var validationFailures = taskSpec.getValidationFailures();
+
+      validationFailures.forEach(System.out::println);
+      taskSpecs.add(Pair.of(startTime, taskSpec));
+    }
+
     final var simulator = new SimulationEngine<>(timeline.origin());
+    for (final var entry : taskSpecs) {
+      final var startTime = entry.getLeft();
+      final var taskSpec = entry.getRight();
 
-    for (final var taskSpec : taskSpecs) {
-      System.out.println("Performing " + taskSpec.getTypeName()
-                         + " with arguments " + taskSpec.getArguments());
-      final var task = taskSpec.<$Timeline>createTask();
 
-      simulator.defer(Duration.ZERO, task);
+      simulator.defer(startTime, taskSpec.createTask());
     }
 
     while (simulator.hasMoreTasks()) simulator.step();
