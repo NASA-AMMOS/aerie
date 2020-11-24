@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
@@ -46,13 +47,13 @@ public final class ProxyContext<$Schema>
   }
 
   @Override
-  public final String spawn(final String type, final Map<String, SerializedValue> arguments) {
-    return this.context.spawn(type, arguments);
+  public final <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
+    return this.context.spawn(spec, type);
   }
 
   @Override
-  public final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.context.defer(duration, type, arguments);
+  public final <Spec> String defer(final Duration duration, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
+    return this.context.defer(duration, spec, type);
   }
 
   @Override

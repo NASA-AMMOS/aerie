@@ -66,15 +66,17 @@ public final class SimulationDriver {
       }
 
       @Override
-      public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-        // TODO: Register the spawned activity and give it a name.
-        return "";
+      public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
+        return null;
       }
 
       @Override
-      public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
-        // TODO: Register the spawned activity and give it a name.
-        return "";
+      public <Spec> String defer(
+          final Duration delay,
+          final Spec spec,
+          final TaskSpecType<? super $Timeline, Spec> type)
+      {
+        return null;
       }
 
       @Override
