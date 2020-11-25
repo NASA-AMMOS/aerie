@@ -190,10 +190,10 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+<td class="colFirst"><code>&lt;Spec&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">defer</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
+     Spec&nbsp;spec,
+     <a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;Spec&gt;&nbsp;type)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
@@ -223,9 +223,9 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#spawn(java.lang.String,java.util.Map)">spawn</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+<td class="colFirst"><code>&lt;Spec&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#spawn(Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">spawn</a></span>&#8203;(Spec&nbsp;spec,
+     <a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;Spec&gt;&nbsp;type)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i9" class="rowColor">
@@ -361,32 +361,36 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.ae
 </dl>
 </li>
 </ul>
-<a id="spawn(java.lang.String,java.util.Map)">
+<a id="spawn(java.lang.Object,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">
+<!--   -->
+</a><a id="spawn(Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>spawn</h4>
-<pre class="methodSignature">public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;spawn&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+<pre class="methodSignature">public final&nbsp;&lt;Spec&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;spawn&#8203;(Spec&nbsp;spec,
+                                 <a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;Spec&gt;&nbsp;type)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#spawn(java.lang.String,java.util.Map)">spawn</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;</code></dd>
+<dd><code><a href="Context.html#spawn(Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">spawn</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
-<a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">
+<a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.Object,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">
+<!--   -->
+</a><a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>defer</h4>
-<pre class="methodSignature">public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
-                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+<pre class="methodSignature">public final&nbsp;&lt;Spec&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
+                                 Spec&nbsp;spec,
+                                 <a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>,&#8203;Spec&gt;&nbsp;type)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">defer</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;</code></dd>
+<dd><code><a href="Context.html#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">defer</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Context</a>&lt;<a href="ProxyContext.html" title="type parameter in ProxyContext">$Schema</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
