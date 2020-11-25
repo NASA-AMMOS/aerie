@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
@@ -114,10 +115,10 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     }
 
     @Override
-    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        final var id = this.scheduler.spawn(type, arguments);
+        final var id = this.scheduler.spawn(spec, type);
 
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
@@ -129,10 +130,10 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     }
 
     @Override
-    public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    public <Spec> String defer(final Duration duration, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        final var id = this.scheduler.defer(duration, type, arguments);
+        final var id = this.scheduler.defer(duration, spec, type);
 
         ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;

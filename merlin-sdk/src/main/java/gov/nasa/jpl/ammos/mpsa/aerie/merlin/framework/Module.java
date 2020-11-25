@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
@@ -70,20 +71,20 @@ public abstract class Module<$Schema> {
     this.context.emit(event, query);
   }
 
-  protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
-    return this.context.spawn(type, arguments);
+  protected final <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
+    return this.context.spawn(spec, type);
   }
 
-  protected final void call(final String type, final Map<String, SerializedValue> arguments) {
-    this.waitFor(this.spawn(type, arguments));
+  protected final <Spec> void call(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
+    this.waitFor(this.spawn(spec, type));
   }
 
-  protected final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.context.defer(duration, type, arguments);
+  protected final <Spec> String defer(final Duration duration, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
+    return this.context.defer(duration, spec, type);
   }
 
-  protected final String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
-    return this.defer(unit.times(quantity), type, arguments);
+  protected final <Spec> String defer(final long quantity, final Duration unit, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
+    return this.defer(unit.times(quantity), spec, type);
   }
 
 
