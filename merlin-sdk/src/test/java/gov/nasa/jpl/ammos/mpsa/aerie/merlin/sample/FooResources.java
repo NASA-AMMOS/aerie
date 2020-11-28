@@ -31,10 +31,11 @@ public final class FooResources<$Schema> extends Module<$Schema> {
     this.foo = submodule("foo", RegisterModule.create("foo", builder, 0.0));
     this.data = submodule("data", new LinearIntegrationModule<>("data", builder));
     this.combo = this.data.volume.plus(this.data.rate);
+
+    // TODO: automatically perform this for each @Daemon annotation
+    builder.daemon("test", this::test);
   }
 
-  // TODO: automatically perform this for each @Daemon annotation
-  { daemon("test", this::test); }
   public void test() {
     foo.set(21.0);
     data.addRate(42.0);

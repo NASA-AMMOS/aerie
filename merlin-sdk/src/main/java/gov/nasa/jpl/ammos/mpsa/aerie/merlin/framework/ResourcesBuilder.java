@@ -61,6 +61,10 @@ public final class ResourcesBuilder<$Schema> {
     return resource;
   }
 
+  public void daemon(final String id, final Runnable task) {
+    this.state.daemon(id, task);
+  }
+
   private interface ResourcesBuilderState<$Schema> {
     <ResourceType>
     void
@@ -72,6 +76,10 @@ public final class ResourcesBuilder<$Schema> {
     real(String name,
          Resource<History<? extends $Schema>, RealDynamics> resource);
 
+    void
+    daemon(String id,
+           Runnable task);
+
     BuiltResources<$Schema>
     build(Schema<$Schema> schema);
   }
@@ -79,6 +87,7 @@ public final class ResourcesBuilder<$Schema> {
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
     private final Map<String, Resource<History<? extends $Schema>, RealDynamics>> realResources = new HashMap<>();
     private final Map<String, Pair<ValueSchema, Resource<History<? extends $Schema>, SerializedValue>>> discreteResources = new HashMap<>();
+    private final Map<String, Runnable> daemons = new HashMap<>();
 
     @Override
     public <ResourceType>
@@ -101,8 +110,13 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     @Override
+    public void daemon(final String id, final Runnable task) {
+      this.daemons.put(id, task);
+    }
+
+    @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
-      final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources);
+      final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources, this.daemons);
 
       ResourcesBuilder.this.state = new BuiltResourcesBuilderState(resources);
       return resources;
@@ -131,6 +145,11 @@ public final class ResourcesBuilder<$Schema> {
         final Resource<History<? extends $Schema>, RealDynamics> resource)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
+    }
+
+    @Override
+    public void daemon(final String id, final Runnable task) {
+      throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 
     @Override

@@ -17,7 +17,6 @@ import java.util.Set;
 public abstract class Module<$Schema> {
   private final ProxyContext<$Schema> context = new ProxyContext<>();
   private final Map<String, Module<$Schema>> submodules = new HashMap<>();
-  private final Map<String, Runnable> daemons = new HashMap<>();
 
   public final Context<$Schema> setContext(final Context<$Schema> context) {
     final var old = this.context.getTarget();
@@ -35,18 +34,6 @@ public abstract class Module<$Schema> {
     this.submodules.put(name, submodule);
 
     return submodule;
-  }
-
-  protected final void daemon(final String id, final Runnable task) {
-    if (this.daemons.containsKey(id)) {
-      throw new RuntimeException(String.format("Attempt to register daemon with id already in use: %s", id));
-    }
-
-    this.daemons.put(id, task);
-  }
-
-  public final Map<String, Runnable> getDaemons() {
-    return Collections.unmodifiableMap(this.daemons);
   }
 
   public final Map<String, Module<$Schema>> getSubmodules() {
