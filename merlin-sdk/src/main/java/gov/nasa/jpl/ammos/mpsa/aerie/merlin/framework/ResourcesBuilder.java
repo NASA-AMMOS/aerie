@@ -7,7 +7,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
@@ -65,22 +67,21 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     public <ResourceType>
-    Resource<History<? extends $Schema>, ResourceType>
+    DiscreteResource<History<? extends $Schema>, ResourceType>
     discrete(final String name,
-             final Resource<History<? extends $Schema>, ResourceType> resource,
+             final Property<History<? extends $Schema>, ResourceType> resource,
              final ValueMapper<ResourceType> mapper)
     {
       this.builder.state.discrete(this.namespace + "/" + name, resource, mapper);
-      return resource;
+      return resource::ask;
     }
 
-    public
-    Resource<History<? extends $Schema>, RealDynamics>
+    public RealResource<History<? extends $Schema>>
     real(final String name,
-         final Resource<History<? extends $Schema>, RealDynamics> resource)
+         final Property<History<? extends $Schema>, RealDynamics> resource)
     {
       this.builder.state.real(this.namespace + "/" + name, resource);
-      return resource;
+      return resource::ask;
     }
 
     public void daemon(final String id, final Runnable task) {
@@ -92,12 +93,12 @@ public final class ResourcesBuilder<$Schema> {
     <ResourceType>
     void
     discrete(String name,
-             Resource<History<? extends $Schema>, ResourceType> resource,
+             Property<History<? extends $Schema>, ResourceType> resource,
              ValueMapper<ResourceType> mapper);
 
     void
     real(String name,
-         Resource<History<? extends $Schema>, RealDynamics> resource);
+         Property<History<? extends $Schema>, RealDynamics> resource);
 
     void
     daemon(String id,
@@ -116,20 +117,20 @@ public final class ResourcesBuilder<$Schema> {
     public <ResourceType>
     void discrete(
         final String name,
-        final Resource<History<? extends $Schema>, ResourceType> resource,
+        final Property<History<? extends $Schema>, ResourceType> resource,
         final ValueMapper<ResourceType> mapper)
     {
       this.discreteResources.put(name, Pair.of(
           mapper.getValueSchema(),
-          (time) -> resource.getDynamics(time).map(mapper::serializeValue)));
+          (time) -> resource.ask(time).map(mapper::serializeValue)));
     }
 
     @Override
     public void real(
         final String name,
-        final Resource<History<? extends $Schema>, RealDynamics> resource)
+        final Property<History<? extends $Schema>, RealDynamics> resource)
     {
-      this.realResources.put(name, resource);
+      this.realResources.put(name, resource::ask);
     }
 
     @Override
@@ -156,7 +157,7 @@ public final class ResourcesBuilder<$Schema> {
     @Override
     public <ResourceType> void discrete(
         final String name,
-        final Resource<History<? extends $Schema>, ResourceType> resource,
+        final Property<History<? extends $Schema>, ResourceType> resource,
         final ValueMapper<ResourceType> mapper)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
@@ -165,7 +166,7 @@ public final class ResourcesBuilder<$Schema> {
     @Override
     public void real(
         final String name,
-        final Resource<History<? extends $Schema>, RealDynamics> resource)
+        final Property<History<? extends $Schema>, RealDynamics> resource)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }

@@ -31,19 +31,15 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
         new RegisterModel<>(initialValue),
         (value) -> Pair.of(Optional.of(value), Set.of(value)));
 
-    this.value = builder
-        .discrete(
-            "value",
-            now -> now.ask(this.query).getValue(),
-            mapper)
-        ::getDynamics;
+    this.value = builder.discrete(
+        "value",
+        now -> now.ask(this.query).getValue(),
+        mapper);
 
-    this.conflicted = builder
-        .discrete(
-            "conflicted",
-            now -> now.ask(this.query).isConflicted(),
-            new BooleanValueMapper())
-        ::getDynamics;
+    this.conflicted = builder.discrete(
+        "conflicted",
+        now -> now.ask(this.query).isConflicted(),
+        new BooleanValueMapper());
   }
 
   public static <$Schema>

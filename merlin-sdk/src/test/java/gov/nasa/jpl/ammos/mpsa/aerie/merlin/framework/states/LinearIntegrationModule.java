@@ -16,13 +16,8 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
     super(builder);
 
     this.query = builder.model(new LinearIntegrationModel(0.0, 0.0), ev -> ev);
-    this.volume = builder
-        .real("volume", now -> now.ask(this.query).getVolume())
-        ::getDynamics;
-
-    this.rate = builder
-        .real("rate", now -> now.ask(this.query).getRate())
-        ::getDynamics;
+    this.volume = builder.real("volume", now -> now.ask(this.query).getVolume());
+    this.rate = builder.real("rate", now -> now.ask(this.query).getRate());
   }
 
   public void addRate(final double delta) {
