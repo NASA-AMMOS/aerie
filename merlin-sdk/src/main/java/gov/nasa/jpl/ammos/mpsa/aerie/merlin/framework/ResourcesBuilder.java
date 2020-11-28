@@ -2,11 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -109,8 +109,8 @@ public final class ResourcesBuilder<$Schema> {
   }
 
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
-    private final Map<String, Resource<History<? extends $Schema>, RealDynamics>> realResources = new HashMap<>();
-    private final Map<String, Pair<ValueSchema, Resource<History<? extends $Schema>, SerializedValue>>> discreteResources = new HashMap<>();
+    private final Map<String, Resource<$Schema, RealDynamics>> realResources = new HashMap<>();
+    private final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources = new HashMap<>();
     private final Map<String, Runnable> daemons = new HashMap<>();
 
     @Override

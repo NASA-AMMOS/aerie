@@ -9,6 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -182,7 +183,8 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     public void waitFor(final RealResource<? super History<? extends $Schema>> resource, final RealCondition condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = TaskStatus.awaiting(new RealSolver(), resource::getDynamics, condition);
+        this.status = TaskStatus.<$Timeline, RealDynamics, RealCondition>awaiting(
+            new RealSolver(), resource::getDynamics, condition);
         throw Yield;
       } else {
         readvance();
@@ -193,7 +195,8 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema>, T> resource, final Set<T> condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = TaskStatus.awaiting(new DiscreteSolver<>(), resource::getDynamics, condition);
+        this.status = TaskStatus.<$Timeline, T, Set<T>>awaiting(
+            new DiscreteSolver<>(), resource::getDynamics, condition);
         throw Yield;
       } else {
         readvance();

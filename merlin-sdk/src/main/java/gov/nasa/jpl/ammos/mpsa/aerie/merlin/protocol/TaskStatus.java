@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
@@ -22,7 +20,7 @@ public abstract class TaskStatus<$Timeline> {
     <DynamicsType, ConditionType>
     Result awaiting(
         Solver<?, DynamicsType, ConditionType> solver,
-        Resource<History<$Timeline>, DynamicsType> resource,
+        Resource<? super $Timeline, DynamicsType> resource,
         ConditionType condition);
   }
 
@@ -61,7 +59,7 @@ public abstract class TaskStatus<$Timeline> {
   TaskStatus<$Timeline>
   awaiting(
       final Solver<?, DynamicsType, ConditionType> solver,
-      final Resource<History<$Timeline>, DynamicsType> resource,
+      final Resource<? super $Timeline, DynamicsType> resource,
       final ConditionType condition)
   {
     Objects.requireNonNull(solver);

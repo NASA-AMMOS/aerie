@@ -4,13 +4,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.DaemonTaskType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.FooActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -69,12 +68,12 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   }
 
   @Override
-  public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>> getDiscreteResources() {
+  public Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> getDiscreteResources() {
     return this.resources.discreteResources;
   }
 
   @Override
-  public Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>> getRealResources() {
+  public Map<String, Resource<$Schema, RealDynamics>> getRealResources() {
     return this.resources.realResources;
   }
 

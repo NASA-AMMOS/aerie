@@ -2,13 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.TaskRecord;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
@@ -31,7 +30,6 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 
 public final class SimulationDriver {
-
   public static <$Schema> SimulationResults simulate(
       final Adaptation<$Schema> adaptation,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
@@ -193,8 +191,8 @@ public final class SimulationDriver {
       final SimulationEngine<$Timeline> simulator,
       final ArrayList<Duration> timestamps,
       final HashMap<String, List<SerializedValue>> timelines,
-      final Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>> discreteResources,
-      final Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>> realResources)
+      final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources,
+      final Map<String, Resource<$Schema, RealDynamics>> realResources)
   {
     timestamps.add(simulator.getElapsedTime());
     discreteResources.forEach((name, resource) -> {
