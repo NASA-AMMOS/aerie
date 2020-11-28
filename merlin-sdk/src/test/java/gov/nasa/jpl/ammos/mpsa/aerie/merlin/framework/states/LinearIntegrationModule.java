@@ -17,11 +17,11 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
 
     this.query = builder.model(new LinearIntegrationModel(0.0, 0.0), ev -> ev);
     this.volume = builder
-        .real("volume", now -> LinearIntegrationModel.volume.getDynamics(now.ask(this.query)))
+        .real("volume", now -> now.ask(this.query).getVolume())
         ::getDynamics;
 
     this.rate = builder
-        .real("rate", now -> LinearIntegrationModel.rate.getDynamics(now.ask(this.query)))
+        .real("rate", now -> now.ask(this.query).getRate())
         ::getDynamics;
   }
 

@@ -3,7 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,12 +63,12 @@ public final class DurativeRealModel implements Model<Collection<DelimitedDynami
     }
   }
 
-  public static final RealResource<DurativeRealModel> value = (model) -> {
+  public DelimitedDynamics<RealDynamics> getValue() {
     var acc = persistent(RealDynamics.constant(0.0));
 
-    for (final var entry : model.activeEffects) {
+    for (final var entry : this.activeEffects) {
       final var x = delimited(
-          entry.getLeft().end.minus(model.elapsedTime),
+          entry.getLeft().end.minus(this.elapsedTime),
           entry.getRight());
       acc = acc.parWith(x, RealDynamics::plus);
     }

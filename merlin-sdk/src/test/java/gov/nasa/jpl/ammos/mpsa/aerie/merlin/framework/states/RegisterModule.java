@@ -34,14 +34,14 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
     this.value = builder
         .discrete(
             "value",
-            now -> RegisterModel.<Value>value().getDynamics(now.ask(this.query)),
+            now -> now.ask(this.query).getValue(),
             mapper)
         ::getDynamics;
 
     this.conflicted = builder
         .discrete(
             "conflicted",
-            now -> RegisterModel.conflicted.getDynamics(now.ask(this.query)),
+            now -> now.ask(this.query).isConflicted(),
             new BooleanValueMapper())
         ::getDynamics;
   }
