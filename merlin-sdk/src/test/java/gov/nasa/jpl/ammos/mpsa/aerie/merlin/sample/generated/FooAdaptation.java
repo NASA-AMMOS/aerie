@@ -42,7 +42,7 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
 
     final var daemonTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
 
-    resources.getDaemons().forEach((name, daemon) -> {
+    resources.daemons.forEach((name, daemon) -> {
       final var daemonType = new DaemonTaskType<>("/daemons/" + name, daemon, this.rootContext);
 
       daemonTypes.put(daemonType.getName(), daemonType);
@@ -70,16 +70,16 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
 
   @Override
   public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>> getDiscreteResources() {
-    return this.resources.getDiscreteResources();
+    return this.resources.discreteResources;
   }
 
   @Override
   public Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>> getRealResources() {
-    return this.resources.getRealResources();
+    return this.resources.realResources;
   }
 
   @Override
   public Schema<$Schema> getSchema() {
-    return this.resources.getSchema();
+    return this.resources.schema;
   }
 }
