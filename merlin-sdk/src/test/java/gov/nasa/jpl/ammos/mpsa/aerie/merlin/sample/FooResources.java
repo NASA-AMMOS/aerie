@@ -28,8 +28,8 @@ public final class FooResources<$Schema> extends Module<$Schema> {
   public final RealResource<History<? extends $Schema>> combo;
 
   public FooResources(final ResourcesBuilder<$Schema> builder) {
-    this.foo = submodule("foo", RegisterModule.create("foo", builder, 0.0));
-    this.data = submodule("data", new LinearIntegrationModule<>("data", builder));
+    this.foo = submodule(RegisterModule.create("foo", builder, 0.0));
+    this.data = submodule(new LinearIntegrationModule<>("data", builder));
     this.combo = this.data.volume.plus(this.data.rate);
 
     // TODO: automatically perform this for each @Daemon annotation

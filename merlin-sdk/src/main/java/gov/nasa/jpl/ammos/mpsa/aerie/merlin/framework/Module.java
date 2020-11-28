@@ -9,14 +9,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 public abstract class Module<$Schema> {
   private final ProxyContext<$Schema> context = new ProxyContext<>();
-  private final Map<String, Module<$Schema>> submodules = new HashMap<>();
 
   public final Context<$Schema> setContext(final Context<$Schema> context) {
     final var old = this.context.getTarget();
@@ -25,19 +22,9 @@ public abstract class Module<$Schema> {
   }
 
   protected final <Submodule extends Module<$Schema>>
-  Submodule submodule(final String name, final Submodule submodule) {
-    if (this.submodules.containsKey(name)) {
-      throw new RuntimeException(String.format("Attempt to register submodule with id already in use: %s", submodule));
-    }
-
+  Submodule submodule(final Submodule submodule) {
     submodule.setContext(this.context);
-    this.submodules.put(name, submodule);
-
     return submodule;
-  }
-
-  public final Map<String, Module<$Schema>> getSubmodules() {
-    return Collections.unmodifiableMap(this.submodules);
   }
 
 
