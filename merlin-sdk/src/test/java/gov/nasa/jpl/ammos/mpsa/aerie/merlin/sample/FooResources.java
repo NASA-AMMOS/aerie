@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 
 public final class FooResources<$Schema> extends Module<$Schema> {
   // Need a clear story for how to logically group resource questions and event emissions together.
@@ -29,7 +28,7 @@ public final class FooResources<$Schema> extends Module<$Schema> {
   public final RealResource<History<? extends $Schema>> combo;
 
   public FooResources(final ResourcesBuilder<$Schema> builder) {
-    this.foo = submodule("foo", new RegisterModule<>("foo", builder, 0.0, new DoubleValueMapper()));
+    this.foo = submodule("foo", RegisterModule.create("foo", builder, 0.0));
     this.data = submodule("data", new LinearIntegrationModule<>("data", builder));
     this.combo = this.data.volume.plus(this.data.rate);
   }

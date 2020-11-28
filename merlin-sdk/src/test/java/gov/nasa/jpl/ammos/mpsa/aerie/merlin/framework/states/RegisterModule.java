@@ -7,6 +7,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -39,6 +41,30 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
             namespace + ".conflicted",
             now -> RegisterModel.conflicted.getDynamics(now.ask(this.query)), new BooleanValueMapper())
         ::getDynamics;
+  }
+
+  public static <$Schema>
+  RegisterModule<$Schema, Double>
+  create(
+      final String namespace,
+      final ResourcesBuilder<$Schema> builder,
+      final double initialValue)
+  {
+    return new RegisterModule<>(namespace, builder, initialValue, new DoubleValueMapper());
+  }
+
+  public static <$Schema, E extends Enum<E>>
+  RegisterModule<$Schema, E>
+  create(
+      final String namespace,
+      final ResourcesBuilder<$Schema> builder,
+      final E initialValue)
+  {
+    // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.
+    @SuppressWarnings("unchecked")
+    final var klass = (Class<E>) initialValue.getClass();
+
+    return new RegisterModule<>(namespace, builder, initialValue, new EnumValueMapper<>(klass));
   }
 
   public void set(final Value value) {
