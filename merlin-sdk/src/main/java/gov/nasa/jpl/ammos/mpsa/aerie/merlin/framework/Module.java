@@ -10,21 +10,18 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class Module<$Schema> {
-  private final ProxyContext<$Schema> context = new ProxyContext<>();
+  private final Context<$Schema> context;
 
-  public final Context<$Schema> setContext(final Context<$Schema> context) {
-    final var old = this.context.getTarget();
-    this.context.setTarget(context);
-    return old;
+  protected Module(final Context<$Schema> context) {
+    this.context = Objects.requireNonNull(context);
   }
 
-  protected final <Submodule extends Module<$Schema>>
-  Submodule submodule(final Submodule submodule) {
-    submodule.setContext(this.context);
-    return submodule;
+  protected Module(final ResourcesBuilder<$Schema> builder) {
+    this(builder.getRootContext());
   }
 
 

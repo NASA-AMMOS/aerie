@@ -19,12 +19,19 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public final class ResourcesBuilder<$Schema> {
+  private final Context<$Schema> rootContext;
   private final Schema.Builder<$Schema> schemaBuilder;
   private ResourcesBuilderState<$Schema> state;
 
-  public ResourcesBuilder(final Schema.Builder<$Schema> schemaBuilder) {
+  public ResourcesBuilder(final Context<$Schema> rootContext, final Schema.Builder<$Schema> schemaBuilder) {
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
     this.state = new UnbuiltResourcesBuilderState();
+  }
+
+  /*package-local*/
+  Context<$Schema> getRootContext() {
+    return this.rootContext;
   }
 
   public

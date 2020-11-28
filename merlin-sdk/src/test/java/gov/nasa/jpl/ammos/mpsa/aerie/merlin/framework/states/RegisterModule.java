@@ -26,6 +26,8 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
       final Value initialValue,
       final ValueMapper<Value> mapper)
   {
+    super(builder);
+
     this.query = builder.model(
         new RegisterModel<>(initialValue),
         (value) -> Pair.of(Optional.of(value), Set.of(value)));

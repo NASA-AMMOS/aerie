@@ -30,10 +30,9 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   private final Map<String, TaskSpecType<$Schema, ?>> allTaskSpecTypes;
 
   public FooAdaptation(final Schema.Builder<$Schema> schemaBuilder) {
-    final var builder = new ResourcesBuilder<>(schemaBuilder);
+    final var builder = new ResourcesBuilder<>(this.rootContext, schemaBuilder);
     final var container = new FooResources<>(builder);
     final var resources = builder.build();
-    container.setContext(this.rootContext);
 
     final var allTaskSpecTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
     {

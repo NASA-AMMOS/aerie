@@ -16,6 +16,8 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
       final String namespace,
       final ResourcesBuilder<$Schema> builder)
   {
+    super(builder);
+
     this.query = builder.model(new LinearIntegrationModel(0.0, 0.0), ev -> ev);
     this.volume = builder
         .real(
