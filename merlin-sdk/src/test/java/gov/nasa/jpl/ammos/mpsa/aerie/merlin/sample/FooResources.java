@@ -30,8 +30,8 @@ public final class FooResources<$Schema> extends Module<$Schema> {
   public FooResources(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
-    this.foo = RegisterModule.create("foo", builder, 0.0);
-    this.data = new LinearIntegrationModule<>("data", builder);
+    this.foo = RegisterModule.create(builder.descend("foo"), 0.0);
+    this.data = new LinearIntegrationModule<>(builder.descend("data"));
     this.combo = this.data.volume.plus(this.data.rate);
 
     // TODO: automatically perform this for each @Daemon annotation

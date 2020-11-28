@@ -21,7 +21,6 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   public final DiscreteResource<History<? extends $Schema>, Boolean> conflicted;
 
   public RegisterModule(
-      final String namespace,
       final ResourcesBuilder.Cursor<$Schema> builder,
       final Value initialValue,
       final ValueMapper<Value> mapper)
@@ -34,39 +33,33 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
 
     this.value = builder
         .discrete(
-            namespace + ".value",
-            now -> RegisterModel.<Value>value().getDynamics(now.ask(this.query)), mapper)
+            "value",
+            now -> RegisterModel.<Value>value().getDynamics(now.ask(this.query)),
+            mapper)
         ::getDynamics;
 
     this.conflicted = builder
         .discrete(
-            namespace + ".conflicted",
-            now -> RegisterModel.conflicted.getDynamics(now.ask(this.query)), new BooleanValueMapper())
+            "conflicted",
+            now -> RegisterModel.conflicted.getDynamics(now.ask(this.query)),
+            new BooleanValueMapper())
         ::getDynamics;
   }
 
   public static <$Schema>
   RegisterModule<$Schema, Double>
-  create(
-      final String namespace,
-      final ResourcesBuilder.Cursor<$Schema> builder,
-      final double initialValue)
-  {
-    return new RegisterModule<>(namespace, builder, initialValue, new DoubleValueMapper());
+  create(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
+    return new RegisterModule<>(builder, initialValue, new DoubleValueMapper());
   }
 
   public static <$Schema, E extends Enum<E>>
   RegisterModule<$Schema, E>
-  create(
-      final String namespace,
-      final ResourcesBuilder.Cursor<$Schema> builder,
-      final E initialValue)
-  {
+  create(final ResourcesBuilder.Cursor<$Schema> builder, final E initialValue) {
     // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.
     @SuppressWarnings("unchecked")
     final var klass = (Class<E>) initialValue.getClass();
 
-    return new RegisterModule<>(namespace, builder, initialValue, new EnumValueMapper<>(klass));
+    return new RegisterModule<>(builder, initialValue, new EnumValueMapper<>(klass));
   }
 
   public void set(final Value value) {

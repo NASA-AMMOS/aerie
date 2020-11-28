@@ -12,23 +12,16 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   public final RealResource<History<? extends $Schema>> volume;
   public final RealResource<History<? extends $Schema>> rate;
 
-  public LinearIntegrationModule(
-      final String namespace,
-      final ResourcesBuilder.Cursor<$Schema> builder)
-  {
+  public LinearIntegrationModule(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.query = builder.model(new LinearIntegrationModel(0.0, 0.0), ev -> ev);
     this.volume = builder
-        .real(
-            namespace + ".volume",
-            now -> LinearIntegrationModel.volume.getDynamics(now.ask(this.query)))
+        .real("volume", now -> LinearIntegrationModel.volume.getDynamics(now.ask(this.query)))
         ::getDynamics;
 
     this.rate = builder
-        .real(
-            namespace + ".rate",
-            now -> LinearIntegrationModel.rate.getDynamics(now.ask(this.query)))
+        .real("rate", now -> LinearIntegrationModel.rate.getDynamics(now.ask(this.query)))
         ::getDynamics;
   }
 

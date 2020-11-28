@@ -30,7 +30,7 @@ public final class ResourcesBuilder<$Schema> {
   }
 
   public Cursor<$Schema> getCursor() {
-    return new Cursor<>(this);
+    return new Cursor<>(this, "");
   }
 
   public BuiltResources<$Schema> build() {
@@ -39,14 +39,20 @@ public final class ResourcesBuilder<$Schema> {
 
   public static final class Cursor<$Schema> {
     private final ResourcesBuilder<$Schema> builder;
+    private final String namespace;
 
-    private Cursor(final ResourcesBuilder<$Schema> builder) {
+    private Cursor(final ResourcesBuilder<$Schema> builder, final String namespace) {
       this.builder = Objects.requireNonNull(builder);
+      this.namespace = Objects.requireNonNull(namespace);
     }
 
     /*package-local*/
     Context<$Schema> getRootContext() {
       return this.builder.rootContext;
+    }
+
+    public Cursor<$Schema> descend(final String namespace) {
+      return new Cursor<>(this.builder, this.namespace + "/" + namespace);
     }
 
     public <Event, Effect, ModelType extends Model<Effect, ModelType>>
@@ -64,7 +70,7 @@ public final class ResourcesBuilder<$Schema> {
              final Resource<History<? extends $Schema>, ResourceType> resource,
              final ValueMapper<ResourceType> mapper)
     {
-      this.builder.state.discrete(name, resource, mapper);
+      this.builder.state.discrete(this.namespace + "/" + name, resource, mapper);
       return resource;
     }
 
@@ -73,12 +79,12 @@ public final class ResourcesBuilder<$Schema> {
     real(final String name,
          final Resource<History<? extends $Schema>, RealDynamics> resource)
     {
-      this.builder.state.real(name, resource);
+      this.builder.state.real(this.namespace + "/" + name, resource);
       return resource;
     }
 
     public void daemon(final String id, final Runnable task) {
-      this.builder.state.daemon(id, task);
+      this.builder.state.daemon(this.namespace + "/" + id, task);
     }
   }
 
