@@ -31,7 +31,7 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
 
   public FooAdaptation(final Schema.Builder<$Schema> schemaBuilder) {
     final var builder = new ResourcesBuilder<>(this.rootContext, schemaBuilder);
-    final var container = new FooResources<>(builder);
+    final var container = new FooResources<>(builder.getCursor());
     final var resources = builder.build();
 
     final var allTaskSpecTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();

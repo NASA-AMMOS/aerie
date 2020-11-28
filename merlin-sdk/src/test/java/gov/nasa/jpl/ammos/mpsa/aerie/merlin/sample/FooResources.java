@@ -27,7 +27,7 @@ public final class FooResources<$Schema> extends Module<$Schema> {
 
   public final RealResource<History<? extends $Schema>> combo;
 
-  public FooResources(final ResourcesBuilder<$Schema> builder) {
+  public FooResources(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.foo = RegisterModule.create("foo", builder, 0.0);

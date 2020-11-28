@@ -15,7 +15,7 @@ public abstract class Module<$Schema>
     super(context);
   }
 
-  protected Module(final ResourcesBuilder<$Schema> builder) {
+  protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
   }
 

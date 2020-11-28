@@ -22,7 +22,7 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
 
   public RegisterModule(
       final String namespace,
-      final ResourcesBuilder<$Schema> builder,
+      final ResourcesBuilder.Cursor<$Schema> builder,
       final Value initialValue,
       final ValueMapper<Value> mapper)
   {
@@ -49,7 +49,7 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   RegisterModule<$Schema, Double>
   create(
       final String namespace,
-      final ResourcesBuilder<$Schema> builder,
+      final ResourcesBuilder.Cursor<$Schema> builder,
       final double initialValue)
   {
     return new RegisterModule<>(namespace, builder, initialValue, new DoubleValueMapper());
@@ -59,7 +59,7 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   RegisterModule<$Schema, E>
   create(
       final String namespace,
-      final ResourcesBuilder<$Schema> builder,
+      final ResourcesBuilder.Cursor<$Schema> builder,
       final E initialValue)
   {
     // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.

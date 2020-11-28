@@ -29,47 +29,57 @@ public final class ResourcesBuilder<$Schema> {
     this.state = new UnbuiltResourcesBuilderState();
   }
 
-  /*package-local*/
-  Context<$Schema> getRootContext() {
-    return this.rootContext;
+  public Cursor<$Schema> getCursor() {
+    return new Cursor<>(this);
   }
 
-  public
-  BuiltResources<$Schema>
-  build() {
+  public BuiltResources<$Schema> build() {
     return this.state.build(this.schemaBuilder.build());
   }
 
-  public <Event, Effect, ModelType extends Model<Effect, ModelType>>
-  Query<$Schema, Event, ModelType>
-  model(final ModelType initialState, final Function<Event, Effect> interpreter)
-  {
-    return this.schemaBuilder.register(
-        Projection.from(initialState.effectTrait(), interpreter),
-        new ModelApplicator<>(initialState));
-  }
+  public static final class Cursor<$Schema> {
+    private final ResourcesBuilder<$Schema> builder;
 
-  public <ResourceType>
-  Resource<History<? extends $Schema>, ResourceType>
-  discrete(final String name,
-           final Resource<History<? extends $Schema>, ResourceType> resource,
-           final ValueMapper<ResourceType> mapper)
-  {
-    this.state.discrete(name, resource, mapper);
-    return resource;
-  }
+    private Cursor(final ResourcesBuilder<$Schema> builder) {
+      this.builder = Objects.requireNonNull(builder);
+    }
 
-  public
-  Resource<History<? extends $Schema>, RealDynamics>
-  real(final String name,
-       final Resource<History<? extends $Schema>, RealDynamics> resource)
-  {
-    this.state.real(name, resource);
-    return resource;
-  }
+    /*package-local*/
+    Context<$Schema> getRootContext() {
+      return this.builder.rootContext;
+    }
 
-  public void daemon(final String id, final Runnable task) {
-    this.state.daemon(id, task);
+    public <Event, Effect, ModelType extends Model<Effect, ModelType>>
+    Query<$Schema, Event, ModelType>
+    model(final ModelType initialState, final Function<Event, Effect> interpreter)
+    {
+      return this.builder.schemaBuilder.register(
+          Projection.from(initialState.effectTrait(), interpreter),
+          new ModelApplicator<>(initialState));
+    }
+
+    public <ResourceType>
+    Resource<History<? extends $Schema>, ResourceType>
+    discrete(final String name,
+             final Resource<History<? extends $Schema>, ResourceType> resource,
+             final ValueMapper<ResourceType> mapper)
+    {
+      this.builder.state.discrete(name, resource, mapper);
+      return resource;
+    }
+
+    public
+    Resource<History<? extends $Schema>, RealDynamics>
+    real(final String name,
+         final Resource<History<? extends $Schema>, RealDynamics> resource)
+    {
+      this.builder.state.real(name, resource);
+      return resource;
+    }
+
+    public void daemon(final String id, final Runnable task) {
+      this.builder.state.daemon(id, task);
+    }
   }
 
   private interface ResourcesBuilderState<$Schema> {

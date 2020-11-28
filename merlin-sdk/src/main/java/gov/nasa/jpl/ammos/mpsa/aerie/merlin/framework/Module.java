@@ -20,7 +20,7 @@ public abstract class Module<$Schema> {
     this.context = Objects.requireNonNull(context);
   }
 
-  protected Module(final ResourcesBuilder<$Schema> builder) {
+  protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
     this(builder.getRootContext());
   }
 

@@ -14,7 +14,7 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
 
   public LinearIntegrationModule(
       final String namespace,
-      final ResourcesBuilder<$Schema> builder)
+      final ResourcesBuilder.Cursor<$Schema> builder)
   {
     super(builder);
 
