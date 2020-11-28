@@ -5,13 +5,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -44,15 +42,6 @@ public final class ResourcesBuilder<$Schema> {
         new ModelApplicator<>(initialState));
   }
 
-  public <E extends Enum<E>>
-  Resource<History<? extends $Schema>, E>
-  enumerated(final String name,
-             final Resource<History<? extends $Schema>, E> resource)
-  {
-    this.state.enumerated(name, resource);
-    return resource;
-  }
-
   public <ResourceType>
   Resource<History<? extends $Schema>, ResourceType>
   discrete(final String name,
@@ -73,11 +62,6 @@ public final class ResourcesBuilder<$Schema> {
   }
 
   private interface ResourcesBuilderState<$Schema> {
-    <E extends Enum<E>>
-    void
-    enumerated(String name,
-               Resource<History<? extends $Schema>, E> resource);
-
     <ResourceType>
     void
     discrete(String name,
@@ -95,15 +79,6 @@ public final class ResourcesBuilder<$Schema> {
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
     private final Map<String, Resource<History<? extends $Schema>, RealDynamics>> realResources = new HashMap<>();
     private final Map<String, Pair<ValueSchema, Resource<History<? extends $Schema>, SerializedValue>>> discreteResources = new HashMap<>();
-    private final Map<String, EnumResource<$Schema, ?>> enumResources = new HashMap<>();
-
-    @Override
-    public <E extends Enum<E>>
-    void enumerated(final String name,
-        final Resource<History<? extends $Schema>, E> resource)
-    {
-      this.enumResources.put(name, new EnumResource<>(resource));
-    }
 
     @Override
     public <ResourceType>
@@ -127,10 +102,6 @@ public final class ResourcesBuilder<$Schema> {
 
     @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
-      for (final var entry : this.enumResources.entrySet()) {
-        this.discreteResources.put(entry.getKey(), entry.getValue().getBinding(schema));
-      }
-
       final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources);
 
       ResourcesBuilder.this.state = new BuiltResourcesBuilderState(resources);
@@ -143,14 +114,6 @@ public final class ResourcesBuilder<$Schema> {
 
     public BuiltResourcesBuilderState(final BuiltResources<$Schema> resources) {
       this.resources = resources;
-    }
-
-    @Override
-    public <E extends Enum<E>> void enumerated(
-        final String name,
-        final Resource<History<? extends $Schema>, E> resource)
-    {
-      throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
@@ -173,31 +136,6 @@ public final class ResourcesBuilder<$Schema> {
     @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
       return this.resources;
-    }
-  }
-
-  private static final class EnumResource<$Schema, E extends Enum<E>> {
-    private final Resource<History<? extends $Schema>, E> resource;
-
-    public EnumResource(final Resource<History<? extends $Schema>, E> resource) {
-      this.resource = resource;
-    }
-
-    public
-    Pair<ValueSchema, Resource<History<? extends $Schema>, SerializedValue>>
-    getBinding(final Schema<$Schema> schema) {
-      // Get the initial value of this resource.
-      // Yeah... yikes. Amazing that this works though.
-      final var startTime = SimulationTimeline.create(schema).origin();
-      final var initialValue = this.resource.getDynamics(startTime).getDynamics();
-
-      // SAFETY: Enums are implicitly final, and the only way to define one is to use the `enum` syntax,
-      //   so `Class<? extends Enum<E>> == Class<E>`.
-      @SuppressWarnings("unchecked")
-      final var enumClass = (Class<E>) initialValue.getClass();
-      final var mapper = new EnumValueMapper<>(enumClass);
-
-      return Pair.of(mapper.getValueSchema(), (time) -> resource.getDynamics(time).map(mapper::serializeValue));
     }
   }
 }
