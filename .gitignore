@@ -20,6 +20,7 @@
 *.ipr
 *.iws
 **/target/*
+.*.swp
 
 ### Build ###
 .m2
