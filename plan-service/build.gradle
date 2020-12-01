@@ -9,7 +9,7 @@ java {
 }
 
 application {
-  mainClassName = 'gov.nasa.jpl.ammos.mpsa.aerie.plan.AerieAppDriver'
+  mainClass = 'gov.nasa.jpl.ammos.mpsa.aerie.plan.AerieAppDriver'
 }
 
 dependencies {
