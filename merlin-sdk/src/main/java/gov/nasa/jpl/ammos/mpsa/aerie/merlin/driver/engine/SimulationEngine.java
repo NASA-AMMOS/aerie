@@ -21,6 +21,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -40,6 +41,8 @@ public final class SimulationEngine<$Timeline> {
   private final Map<String, Duration> taskEndTimes = new HashMap<>();
   // For each task, a set of tasks awaiting its completion.
   private final Map<String, Set<Pair<String, Task<$Timeline>>>> conditioned = new HashMap<>();
+  // For each task, a record of its type, arguments and parent task id.
+  private final Map<String, TaskRecord> taskRecords = new HashMap<>();
 
   // The history of events produced by tasks.
   private History<$Timeline> currentHistory;
@@ -119,7 +122,7 @@ public final class SimulationEngine<$Timeline> {
     frames.push(this.extractNextRootFrame());
     this.currentHistory = this.processFrameStack(frames);
   }
-
+  
   // A "root frame" is the set of all tasks scheduled for a given time.
   // The "next" root frame is the earliest of these.
   private TaskFrame<$Timeline> extractNextRootFrame() {
@@ -155,7 +158,7 @@ public final class SimulationEngine<$Timeline> {
         final var taskId = branch.getMiddle();
         final var task = branch.getRight();
 
-        final var scheduler = new EngineScheduler(branchTip);
+        final var scheduler = new EngineScheduler(branchTip, taskId);
         final var status = task.step(scheduler);
 
         SimulationEngine.this.taskStartTimes.putIfAbsent(taskId, SimulationEngine.this.elapsedTime);
@@ -217,9 +220,11 @@ public final class SimulationEngine<$Timeline> {
   private final class EngineScheduler implements Scheduler<$Timeline> {
     public History<$Timeline> now;
     public final Deque<Triple<History<$Timeline>, String, Task<$Timeline>>> branches = new ArrayDeque<>();
+    private final String parentTaskId;
 
-    public EngineScheduler(final History<$Timeline> now) {
+    public EngineScheduler(final History<$Timeline> now, final String parentTaskId) {
       this.now = now;
+      this.parentTaskId = parentTaskId;
     }
 
     @Override
@@ -250,21 +255,25 @@ public final class SimulationEngine<$Timeline> {
     @Override
     public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
       final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
       final var task = type.<$Timeline>createTask(spec);
 
       this.now = this.now.fork();
       this.branches.push(Triple.of(this.now, id, task));
 
+      SimulationEngine.this.taskRecords.put(id, record);
       return id;
     }
 
     @Override
     public <Spec> String defer(final Duration delay, final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
       final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
       final var task = type.<$Timeline>createTask(spec);
 
       SimulationEngine.this.enqueue(id, delay, task);
 
+      SimulationEngine.this.taskRecords.put(id, record);
       return id;
     }
   }
