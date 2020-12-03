@@ -30,6 +30,8 @@ public final class FooActivity {
     public void run(final FooResources<$Schema> resources) {
       if (y.equals("test")) {
         resources.data.addRate(x);
+      } else if (y.equals("spawn")) {
+        call(new FooActivity());
       }
 
       resources.data.addRate(1.0);

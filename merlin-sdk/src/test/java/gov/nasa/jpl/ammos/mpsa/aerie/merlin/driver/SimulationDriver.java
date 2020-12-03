@@ -9,15 +9,16 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
-
 import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
@@ -33,12 +34,36 @@ public final class SimulationDriver {
   throws TaskSpecType.UnconstructableTaskSpecException
   {
     final List<Pair<Duration, SerializedActivity>> schedule = List.of(
-        Pair.of(duration(0, MILLISECONDS),
-                new SerializedActivity("foo", Map.of("x", SerializedValue.of(1), "y", SerializedValue.of("test_1")))),
-        Pair.of(duration(50, MILLISECONDS),
-                new SerializedActivity("foo", Map.of("x", SerializedValue.of(2), "y", SerializedValue.of("test_2")))),
-        Pair.of(duration(100, MILLISECONDS),
-                new SerializedActivity("foo", Map.of("x", SerializedValue.of(3), "y", SerializedValue.of("test_3"))))
+        Pair.of(
+            duration(0, MILLISECONDS),
+            new SerializedActivity(
+                "foo",
+                Map.of("x", SerializedValue.of(1),
+                       "y", SerializedValue.of("test_1")))),
+        Pair.of(
+            duration(50, MILLISECONDS),
+            new SerializedActivity(
+                "foo",
+                Map.of("x", SerializedValue.of(2),
+                       "y", SerializedValue.of("spawn")))),
+        Pair.of(
+            duration(50, MILLISECONDS),
+            new SerializedActivity(
+                "foo",
+                Map.of("x", SerializedValue.of(2),
+                       "y", SerializedValue.of("test")))),
+        Pair.of(
+            duration(150, MILLISECONDS),
+            new SerializedActivity(
+                "foo",
+                Map.of("x", SerializedValue.of(2),
+                       "y", SerializedValue.of("test_2")))),
+        Pair.of(
+            duration(150, MILLISECONDS),
+            new SerializedActivity(
+                "foo",
+                Map.of("x", SerializedValue.of(3),
+                       "y", SerializedValue.of("test_3"))))
     );
 
     bar(schedule, adaptation, SimulationTimeline.create(adaptation.getSchema()));
@@ -59,24 +84,33 @@ public final class SimulationDriver {
     }
 
     for (final var entry : schedule) {
-      final var startTime = entry.getLeft();
-      final var type = entry.getRight().getTypeName();
-      final var arguments = entry.getRight().getParameters();
+      final var startDelta = entry.getKey();
+      final var serializedActivity = entry.getValue();
+      final var type = serializedActivity.getTypeName();
+      final var arguments = serializedActivity.getParameters();
 
       final var taskSpec = TaskSpec.instantiate(activityTypes.get(type), arguments);
       final var validationFailures = taskSpec.getValidationFailures();
 
       validationFailures.forEach(System.out::println);
-      taskSpecs.add(Pair.of(startTime, taskSpec));
+      taskSpecs.add(Pair.of(startDelta, taskSpec));
     }
 
-    final var simulator = new SimulationEngine<>(timeline.origin());
+    final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask = (type, arguments) -> {
+      final var taskSpecType = activityTypes.get(type);
+      try {
+        return TaskSpec.instantiate(taskSpecType, arguments).createTask();
+      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+        throw new RuntimeException(e);
+      }
+    };
+
+    final var simulator = new SimulationEngine<>(timeline.origin(), createTask);
     for (final var entry : taskSpecs) {
-      final var startTime = entry.getLeft();
+      final var startDelta = entry.getLeft();
       final var taskSpec = entry.getRight();
 
-
-      simulator.defer(startTime, taskSpec.createTask());
+      taskSpec.enqueueTask(startDelta, simulator);
     }
 
     while (simulator.hasMoreTasks()) simulator.step();
@@ -125,6 +159,10 @@ public final class SimulationDriver {
 
     public <$Timeline extends $Schema> Task<$Timeline> createTask() {
       return this.specType.createTask(this.spec);
+    }
+
+    public <$Timeline extends $Schema> void enqueueTask(final Duration delay, final SimulationEngine<$Timeline> engine) {
+      engine.defer(delay, this.spec, this.specType);
     }
   }
 }

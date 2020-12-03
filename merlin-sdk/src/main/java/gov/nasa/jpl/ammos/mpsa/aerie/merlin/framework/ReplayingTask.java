@@ -145,6 +145,21 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     }
 
     @Override
+    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+      if (this.history.isEmpty()) {
+        // We're running normally.
+        final var id = this.scheduler.spawn(type, arguments);
+
+        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+        this.nextBreadcrumbIndex += 1;
+
+        return id;
+      } else {
+        return respawn();
+      }
+    }
+
+    @Override
     public void delay(final Duration duration) {
       if (this.history.isEmpty()) {
         // We're running normally.

@@ -10,9 +10,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
 import java.util.Comparator;
@@ -20,64 +22,66 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 /**
  * An engine for driving scheduled simulation tasks over time.
  */
 public final class SimulationEngine<$Timeline> {
   // A time-ordered queue of all scheduled tasks.
-  private final PriorityQueue<Pair<Duration, Task<$Timeline>>> queue =
-      new PriorityQueue<>(Comparator.comparing(Pair::getKey));
+  private final PriorityQueue<Triple<Duration, String, Task<$Timeline>>> queue =
+      new PriorityQueue<>(Comparator.comparing(Triple::getLeft));
   // The set of all tasks that have completed.
   private final Set<String> completed = new HashSet<>();
-  // For each task, a set of tasks awaiting its completion.
-  private final Map<String, Set<Task<$Timeline>>> conditioned = new HashMap<>();
 
   // The elapsed time when a task was first resumed.
   private final Map<String, Duration> taskStartTimes = new HashMap<>();
   // The elapsed time when a task reported completion.
   private final Map<String, Duration> taskEndTimes = new HashMap<>();
+  // For each task, a set of tasks awaiting its completion.
+  private final Map<String, Set<Pair<String, Task<$Timeline>>>> conditioned = new HashMap<>();
+  // For each task, a record of its type, arguments and parent task id.
+  private final Map<String, TaskRecord> taskRecords = new HashMap<>();
 
   // The history of events produced by tasks.
   private History<$Timeline> currentHistory;
   // The elapsed simulation time since creating this engine.
   private Duration elapsedTime = Duration.ZERO;
-
-  public SimulationEngine(final History<$Timeline> initialHistory) {
+  // The next available task id.
+  private Integer nextTaskId = 0;
+  private final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask;
+  
+  public SimulationEngine(
+      final History<$Timeline> initialHistory,
+      final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask) {
     this.currentHistory = initialHistory;
+    this.createTask = createTask;
+  }
+
+  private String generateId() {
+    final var id = this.nextTaskId.toString();
+    this.nextTaskId++;
+    return id;
+  }
+
+  private void enqueue(final String id, final Duration delay, final Task<$Timeline> task) {
+    this.queue.add(Triple.of(this.elapsedTime.plus(delay), id, task));
   }
 
   /**
    * Schedule a task to be run after a given duration of simulated time.
    *
    * @param delay The amount of time to wait before performing the task
-   * @param task The task to perform.
+   * @param spec The task specification
+   * @param specType The type of task specification
    */
-  public void defer(final Duration delay, final Task<$Timeline> task) {
-    this.queue.add(Pair.of(this.elapsedTime.plus(delay), task));
-  }
+  public <Spec> void defer(Duration delay, Spec spec, TaskSpecType<? super $Timeline, Spec> specType) {
+    final var id = this.generateId();
 
-  public void await(final String taskToAwait, final Task<$Timeline> task) {
-    if (this.completed.contains(taskToAwait)) {
-      this.defer(Duration.ZERO, task);
-    } else {
-      this.conditioned.computeIfAbsent(taskToAwait, k -> new HashSet<>()).add(task);
-    }
-  }
-
-  /*package-local*/
-  void markCompleted(final String taskId) {
-    this.completed.add(taskId);
-    this.taskEndTimes.put(taskId, this.elapsedTime);
-
-    final var conditionedActivities = this.conditioned.remove(taskId);
-    if (conditionedActivities == null) return;
-
-    for (final var conditionedTask : conditionedActivities) {
-      this.defer(Duration.ZERO, conditionedTask);
-    }
+    this.enqueue(id, delay, specType.createTask(spec));
   }
 
   /** @see #runFor(Duration) */
@@ -96,7 +100,7 @@ public final class SimulationEngine<$Timeline> {
     final var endTime = this.elapsedTime.plus(duration);
     while (!endTime.shorterThan(this.elapsedTime)) {
       // If there are no jobs remaining, or the next job is after the end time, simply step up to the end time.
-      if (this.queue.isEmpty() || endTime.shorterThan(this.queue.peek().getKey())) {
+      if (this.queue.isEmpty() || endTime.shorterThan(this.queue.peek().getLeft())) {
         this.currentHistory = this.currentHistory.wait(endTime.minus(this.elapsedTime));
         this.elapsedTime = endTime;
         break;
@@ -114,7 +118,7 @@ public final class SimulationEngine<$Timeline> {
     if (this.queue.isEmpty()) return;
 
     // Step up to the next job time.
-    final var nextJobTime = this.queue.peek().getKey();
+    final var nextJobTime = this.queue.peek().getLeft();
     this.currentHistory = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
     this.elapsedTime = nextJobTime;
 
@@ -128,15 +132,16 @@ public final class SimulationEngine<$Timeline> {
   // The "next" root frame is the earliest of these.
   private TaskFrame<$Timeline> extractNextRootFrame() {
     assert !this.queue.isEmpty();
-    final var nextJobTime = this.queue.peek().getKey();
+    final var nextJobTime = this.queue.peek().getMiddle();
 
     var tip = this.currentHistory;
-    var spawns = new ArrayDeque<Pair<History<$Timeline>, Task<$Timeline>>>();
-    while (!this.queue.isEmpty() && this.queue.peek().getKey().equals(nextJobTime)) {
-      tip = tip.fork();
-      spawns.push(Pair.of(tip, this.queue.poll().getValue()));
-    }
+    var spawns = new ArrayDeque<Triple<History<$Timeline>, String, Task<$Timeline>>>();
 
+    while (!this.queue.isEmpty() && this.queue.peek().getMiddle().equals(nextJobTime)) {
+      tip = tip.fork();
+      final var entry = this.queue.poll();
+      spawns.push(Triple.of(tip, entry.getMiddle(), entry.getRight()));
+    }
     return new TaskFrame<>(tip, spawns);
   }
 
@@ -154,13 +159,15 @@ public final class SimulationEngine<$Timeline> {
         // Execute the next sub-task.
         final var frame = stack.peek();
         final var branch = frame.popBranch();
-        final var branchTip = branch.getKey();
-        final var task = branch.getValue();
+        final var branchTip = branch.getLeft();
+        final var taskId = branch.getMiddle();
+        final var task = branch.getRight();
 
-        final var scheduler = new EngineScheduler(branchTip);
+        final var scheduler = new EngineScheduler(branchTip, taskId);
         final var status = task.step(scheduler);
 
-        status.match(new StatusVisitor(task));
+        SimulationEngine.this.taskStartTimes.putIfAbsent(taskId, SimulationEngine.this.elapsedTime);
+        status.match(new StatusVisitor(task, taskId));
         stack.push(new TaskFrame<>(scheduler.now, scheduler.branches));
       } else {
         // Join this completed sub-task with its parent.
@@ -191,6 +198,9 @@ public final class SimulationEngine<$Timeline> {
 
       final var startTime = this.taskStartTimes.get(taskId);
 
+      // TODO: handle the case in which a task never ends.
+      //  This could be to provide an end time based on the initial plan
+      //  end time
       windows.put(taskId, Window.between(startTime, endTime));
     }
 
@@ -206,7 +216,7 @@ public final class SimulationEngine<$Timeline> {
 
     builder.append(this.currentHistory.getDebugTrace());
     for (final var point : this.queue) {
-      builder.append(String.format("%10s: %s\n", point.getKey(), point.getValue()));
+      builder.append(String.format("%10s: %s\n", point.getMiddle(), point.getRight()));
     }
 
     return builder.toString();
@@ -214,10 +224,12 @@ public final class SimulationEngine<$Timeline> {
 
   private final class EngineScheduler implements Scheduler<$Timeline> {
     public History<$Timeline> now;
-    public final Deque<Pair<History<$Timeline>, Task<$Timeline>>> branches = new ArrayDeque<>();
+    public final Deque<Triple<History<$Timeline>, String, Task<$Timeline>>> branches = new ArrayDeque<>();
+    private final String parentTaskId;
 
-    public EngineScheduler(final History<$Timeline> now) {
+    public EngineScheduler(final History<$Timeline> now, final String parentTaskId) {
       this.now = now;
+      this.parentTaskId = parentTaskId;
     }
 
     @Override
@@ -247,42 +259,79 @@ public final class SimulationEngine<$Timeline> {
 
     @Override
     public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
+      final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
+      final var task = type.<$Timeline>createTask(spec);
+
       this.now = this.now.fork();
-      this.branches.push(Pair.of(this.now, type.createTask(spec)));
-      // TODO: return a real task ID. This should be accounted for with [AERIE-1010]
-      return "";
+      this.branches.push(Triple.of(this.now, id, task));
+
+      SimulationEngine.this.taskRecords.put(id, record);
+      return id;
+    }
+
+    @Override
+    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+      final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type, arguments, Optional.of(this.parentTaskId));
+      final var task = SimulationEngine.this.createTask.apply(type, arguments);
+
+      this.now = this.now.fork();
+      this.branches.push(Triple.of(this.now, id, task));
+
+      SimulationEngine.this.taskRecords.put(id, record);
+      return id;
     }
 
     @Override
     public <Spec> String defer(final Duration delay, final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
-      SimulationEngine.this.defer(delay, type.createTask(spec));
-      // TODO: return a real task ID. This should be accounted for with [AERIE-1010]
-      return "";
+      final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
+      final var task = type.<$Timeline>createTask(spec);
+
+      SimulationEngine.this.enqueue(id, delay, task);
+
+      SimulationEngine.this.taskRecords.put(id, record);
+      return id;
     }
   }
 
   private final class StatusVisitor implements TaskStatus.Visitor<$Timeline, Object> {
     private final Task<$Timeline> task;
+    private final String taskId;
 
-    public StatusVisitor(final Task<$Timeline> task) {
+    public StatusVisitor(final Task<$Timeline> task, final String taskId) {
       this.task = task;
+      this.taskId = taskId;
     }
 
     @Override
     public Object completed() {
-      // TODO: add task id to completed list
+      SimulationEngine.this.completed.add(this.taskId);
+      SimulationEngine.this.taskEndTimes.put(this.taskId, SimulationEngine.this.elapsedTime);
+
+      final var conditionedActivities = SimulationEngine.this.conditioned.remove(this.taskId);
+      if (conditionedActivities != null) {
+        for (final var conditionedTask : conditionedActivities) {
+          SimulationEngine.this.enqueue(conditionedTask.getLeft(), Duration.ZERO, conditionedTask.getRight());
+        }
+      }
       return null;
     }
 
     @Override
     public Object awaiting(final String activityId) {
-      // TODO: figure out how to wait on other tasks
+      if (SimulationEngine.this.completed.contains(activityId)) {
+        SimulationEngine.this.enqueue(taskId, Duration.ZERO, task);
+      } else {
+        SimulationEngine.this.conditioned.computeIfAbsent(activityId, k -> new HashSet<>()).add(Pair.of(taskId, task));
+      }
       return null;
     }
 
     @Override
     public Object delayed(final Duration delay) {
-      SimulationEngine.this.defer(delay, this.task);
+      SimulationEngine.this.enqueue(this.taskId, delay, this.task);
       return null;
     }
 
