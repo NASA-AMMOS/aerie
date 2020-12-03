@@ -10,14 +10,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
-
 import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
+
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
@@ -72,11 +73,10 @@ public final class SimulationDriver {
 
     final var simulator = new SimulationEngine<>(timeline.origin());
     for (final var entry : taskSpecs) {
-      final var startTime = entry.getLeft();
+      final var startDelta = entry.getLeft();
       final var taskSpec = entry.getRight();
 
-
-      simulator.defer(startTime, taskSpec.createTask());
+      taskSpec.enqueueTask(startDelta, simulator);
     }
 
     while (simulator.hasMoreTasks()) simulator.step();
@@ -125,6 +125,10 @@ public final class SimulationDriver {
 
     public <$Timeline extends $Schema> Task<$Timeline> createTask() {
       return this.specType.createTask(this.spec);
+    }
+
+    public <$Timeline extends $Schema> void enqueueTask(final Duration delay, final SimulationEngine<$Timeline> engine) {
+      engine.defer(delay, this.spec, this.specType);
     }
   }
 }
