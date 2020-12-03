@@ -57,6 +57,11 @@ public final class ProxyContext<$Schema>
   }
 
   @Override
+  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.spawn(type, arguments);
+  }
+
+  @Override
   public final void delay(final Duration duration) {
     this.context.delay(duration);
   }

@@ -75,6 +75,11 @@ public abstract class Module<$Schema> {
     return this.context.spawn(spec, type);
   }
 
+  @Deprecated
+  protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.spawn(type, arguments);
+  }
+
   protected final <Spec> void call(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
     this.waitFor(this.spawn(spec, type));
   }

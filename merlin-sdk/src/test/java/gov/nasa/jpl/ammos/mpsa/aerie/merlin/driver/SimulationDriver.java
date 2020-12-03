@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
@@ -71,7 +72,16 @@ public final class SimulationDriver {
       taskSpecs.add(Pair.of(startTime, taskSpec));
     }
 
-    final var simulator = new SimulationEngine<>(timeline.origin());
+    final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask = (type, arguments) -> {
+      final var taskSpecType = activityTypes.get(type);
+      try {
+        return TaskSpec.instantiate(taskSpecType, arguments).createTask();
+      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+        throw new RuntimeException(e);
+      }
+    };
+
+    final var simulator = new SimulationEngine<>(timeline.origin(), createTask);
     for (final var entry : taskSpecs) {
       final var startDelta = entry.getLeft();
       final var taskSpec = entry.getRight();

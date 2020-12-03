@@ -10,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 /**
  * An engine for driving scheduled simulation tasks over time.
@@ -50,10 +52,13 @@ public final class SimulationEngine<$Timeline> {
   private Duration elapsedTime = Duration.ZERO;
   // The next available task id.
   private Integer nextTaskId = 0;
-
+  private final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask;
+  
   public SimulationEngine(
-      final History<$Timeline> initialHistory) {
+      final History<$Timeline> initialHistory,
+      final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask) {
     this.currentHistory = initialHistory;
+    this.createTask = createTask;
   }
 
   private String generateId() {
@@ -122,7 +127,7 @@ public final class SimulationEngine<$Timeline> {
     frames.push(this.extractNextRootFrame());
     this.currentHistory = this.processFrameStack(frames);
   }
-  
+
   // A "root frame" is the set of all tasks scheduled for a given time.
   // The "next" root frame is the earliest of these.
   private TaskFrame<$Timeline> extractNextRootFrame() {
@@ -257,6 +262,19 @@ public final class SimulationEngine<$Timeline> {
       final var id = SimulationEngine.this.generateId();
       final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
       final var task = type.<$Timeline>createTask(spec);
+
+      this.now = this.now.fork();
+      this.branches.push(Triple.of(this.now, id, task));
+
+      SimulationEngine.this.taskRecords.put(id, record);
+      return id;
+    }
+
+    @Override
+    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+      final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type, arguments, Optional.of(this.parentTaskId));
+      final var task = SimulationEngine.this.createTask.apply(type, arguments);
 
       this.now = this.now.fork();
       this.branches.push(Triple.of(this.now, id, task));
