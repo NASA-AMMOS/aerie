@@ -12,6 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
@@ -37,6 +38,8 @@ public final class SimulationEngine<$Timeline> {
   private final Map<String, Duration> taskStartTimes = new HashMap<>();
   // The elapsed time when a task reported completion.
   private final Map<String, Duration> taskEndTimes = new HashMap<>();
+  // For each task, a set of tasks awaiting its completion.
+  private final Map<String, Set<Pair<String, Task<$Timeline>>>> conditioned = new HashMap<>();
 
   // The history of events produced by tasks.
   private History<$Timeline> currentHistory;
@@ -155,6 +158,7 @@ public final class SimulationEngine<$Timeline> {
         final var scheduler = new EngineScheduler(branchTip);
         final var status = task.step(scheduler);
 
+        SimulationEngine.this.taskStartTimes.putIfAbsent(taskId, SimulationEngine.this.elapsedTime);
         status.match(new StatusVisitor(task, taskId));
         stack.push(new TaskFrame<>(scheduler.now, scheduler.branches));
       } else {
@@ -186,6 +190,9 @@ public final class SimulationEngine<$Timeline> {
 
       final var startTime = this.taskStartTimes.get(taskId);
 
+      // TODO: handle the case in which a task never ends.
+      //  This could be to provide an end time based on the initial plan
+      //  end time
       windows.put(taskId, Window.between(startTime, endTime));
     }
 
@@ -273,13 +280,25 @@ public final class SimulationEngine<$Timeline> {
 
     @Override
     public Object completed() {
-      // TODO: add task id to completed list
+      SimulationEngine.this.completed.add(this.taskId);
+      SimulationEngine.this.taskEndTimes.put(this.taskId, SimulationEngine.this.elapsedTime);
+
+      final var conditionedActivities = SimulationEngine.this.conditioned.remove(this.taskId);
+      if (conditionedActivities != null) {
+        for (final var conditionedTask : conditionedActivities) {
+          SimulationEngine.this.enqueue(conditionedTask.getLeft(), Duration.ZERO, conditionedTask.getRight());
+        }
+      }
       return null;
     }
 
     @Override
     public Object awaiting(final String activityId) {
-      // TODO: figure out how to wait on other tasks
+      if (SimulationEngine.this.completed.contains(activityId)) {
+        SimulationEngine.this.enqueue(taskId, Duration.ZERO, task);
+      } else {
+        SimulationEngine.this.conditioned.computeIfAbsent(activityId, k -> new HashSet<>()).add(Pair.of(taskId, task));
+      }
       return null;
     }
 
