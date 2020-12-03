@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -154,7 +154,8 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History)">SimulationEngine</a></span>&#8203;(<a href="../../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;initialHistory)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History,java.util.function.BiFunction)">SimulationEngine</a></span>&#8203;(<a href="../../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;initialHistory,
+                <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiFunction.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiFunction</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;,&#8203;<a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&gt;&nbsp;createTask)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -176,58 +177,53 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#await(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task)">await</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;taskToAwait,
-     <a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;task)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task)">defer</a></span>&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
-     <a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;task)</code></th>
+<td class="colFirst"><code>&lt;Spec&gt;&nbsp;void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">defer</a></span>&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
+     Spec&nbsp;spec,
+     <a href="../../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>,&#8203;Spec&gt;&nbsp;specType)</code></th>
 <td class="colLast">
 <div class="block">Schedule a task to be run after a given duration of simulated time.</div>
 </td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="../../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getCurrentHistory()">getCurrentHistory</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDebugTrace()">getDebugTrace</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getElapsedTime()">getElapsedTime</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../../merlinsdk/time/Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTaskWindows()">getTaskWindows</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#hasMoreTasks()">hasMoreTasks</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#runFor(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">runFor</a></span>&#8203;(long&nbsp;quantity,
       <a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#runFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">runFor</a></span>&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">
 <div class="block">Run the simulation for the given duration of simulated time.</div>
 </td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#step()">step</a></span>()</code></th>
 <td class="colLast">
@@ -258,13 +254,14 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History)">
+<a id="&lt;init&gt;(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History,java.util.function.BiFunction)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>SimulationEngine</h4>
-<pre>public&nbsp;SimulationEngine&#8203;(<a href="../../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;initialHistory)</pre>
+<pre>public&nbsp;SimulationEngine&#8203;(<a href="../../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;initialHistory,
+                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BiFunction.html?is-external=true" title="class or interface in java.util.function" class="externalLink">BiFunction</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;,&#8203;<a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&gt;&nbsp;createTask)</pre>
 </li>
 </ul>
 </li>
@@ -277,30 +274,24 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task)">
+<a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.Object,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">
+<!--   -->
+</a><a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>defer</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;defer&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
-                  <a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;task)</pre>
+<pre class="methodSignature">public&nbsp;&lt;Spec&gt;&nbsp;void&nbsp;defer&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
+                         Spec&nbsp;spec,
+                         <a href="../../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>,&#8203;Spec&gt;&nbsp;specType)</pre>
 <div class="block">Schedule a task to be run after a given duration of simulated time.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>delay</code> - The amount of time to wait before performing the task</dd>
-<dd><code>task</code> - The task to perform.</dd>
+<dd><code>spec</code> - The task specification</dd>
+<dd><code>specType</code> - The type of task specification</dd>
 </dl>
-</li>
-</ul>
-<a id="await(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>await</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;await&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;taskToAwait,
-                  <a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Task</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;task)</pre>
 </li>
 </ul>
 <a id="runFor(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
