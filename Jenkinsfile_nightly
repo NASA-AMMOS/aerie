@@ -67,6 +67,7 @@ pipeline {
         JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
         LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
         TESTRAIL_API_KEY = credentials('testrail-api-key')
+        TESTRAIL_URL = "https://cae-testrail.jpl.nasa.gov/testrail/"
         TESTRAIL_SUITE_ID = 4115
         TESTRAIL_USERNAME = credentials('testrail-username')
     }
@@ -88,16 +89,17 @@ pipeline {
 
         stage ('Test') {
             steps {
-                sh './gradlew test'
-
-                // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
-                // Bump their last modified time to trick Jenkins.
-                sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
-                junit testResults: '*/build/test-results/test/*.xml'
-
-                // TODO: Fix this script to work with the JUnit XML files produced by Gradle.
-                //echo "Uploading tests to test rail."
-                //sh "scripts/testrail.sh ${env.WORKSPACE}/testOutput.xml $TESTRAIL_SUITE_ID"
+                script {
+                    temp_dir = sh(returnStdout: true, script: "mktemp -d -p ${WORKSPACE}").toString().trim()
+                    sh """
+                    ./gradlew test
+                    mkdir -p ${temp_dir}/test-results
+                    find . -name "TEST-*.xml" -exec cp {} ${temp_dir}/test-results \\;
+                    scripts/testrail.sh ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
+                    """
+                    junit testResults: "*/test-results/*.xml"
+                    sh "rm -rf ${temp_dir}"
+                }
             }
         }
     }
