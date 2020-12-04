@@ -76,12 +76,14 @@ public final class SimulationEngine<$Timeline> {
    *
    * @param delay The amount of time to wait before performing the task
    * @param spec The task specification
-   * @param specType The type of task specification
+   * @param type The type of task specification
    */
-  public <Spec> void defer(Duration delay, Spec spec, TaskSpecType<? super $Timeline, Spec> specType) {
+  public <Spec> void defer(Duration delay, Spec spec, TaskSpecType<? super $Timeline, Spec> type) {
     final var id = this.generateId();
+    final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.empty());
 
-    this.enqueue(id, delay, specType.createTask(spec));
+    SimulationEngine.this.taskRecords.put(id, record);
+    this.enqueue(id, delay, type.createTask(spec));
   }
 
   /** @see #runFor(Duration) */
