@@ -1,99 +1,143 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptationFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.BiFunction;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 
 public final class SimulationDriver {
   public static void main(final String[] args) {
     try {
-      foo(new FooAdaptationFactory().instantiate());
+      simulateWithMapSchedule();
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
       ex.printStackTrace();
     }
   }
 
-  private static <$Schema>
-  void foo(final Adaptation<$Schema> adaptation)
+  private static
+  void simulateWithMapSchedule()
   throws TaskSpecType.UnconstructableTaskSpecException
   {
-    final List<Pair<Duration, SerializedActivity>> schedule = List.of(
-        Pair.of(
+    final var adaptation = new FooAdaptationFactory().instantiate();
+    final var schedule = Map.of(
+        UUID.randomUUID().toString(), Pair.of(
             duration(0, MILLISECONDS),
             new SerializedActivity(
                 "foo",
                 Map.of("x", SerializedValue.of(1),
                        "y", SerializedValue.of("test_1")))),
-        Pair.of(
+        UUID.randomUUID().toString(), Pair.of(
             duration(50, MILLISECONDS),
             new SerializedActivity(
                 "foo",
                 Map.of("x", SerializedValue.of(2),
                        "y", SerializedValue.of("spawn")))),
-        Pair.of(
+        UUID.randomUUID().toString(), Pair.of(
             duration(50, MILLISECONDS),
             new SerializedActivity(
                 "foo",
                 Map.of("x", SerializedValue.of(2),
                        "y", SerializedValue.of("test")))),
-        Pair.of(
+        UUID.randomUUID().toString(), Pair.of(
             duration(150, MILLISECONDS),
             new SerializedActivity(
                 "foo",
                 Map.of("x", SerializedValue.of(2),
                        "y", SerializedValue.of("test_2")))),
-        Pair.of(
+        UUID.randomUUID().toString(), Pair.of(
             duration(150, MILLISECONDS),
             new SerializedActivity(
                 "foo",
                 Map.of("x", SerializedValue.of(3),
                        "y", SerializedValue.of("test_3"))))
     );
+    final var startTime = Instant.now();
+    final var simulationDuration = duration(5, SECONDS);
+    final var samplingPeriod = duration(1, SECOND);
 
-    bar(schedule, adaptation, SimulationTimeline.create(adaptation.getSchema()));
+    final var simulationResults = simulate(adaptation,
+             schedule,
+             startTime,
+             simulationDuration,
+             samplingPeriod);
+
+    simulationResults.timelines.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
   }
 
-  private static <$Schema, $Timeline extends $Schema>
-  void bar(
-      final List<Pair<Duration, SerializedActivity>> schedule,
+  public static <$Schema> SimulationResults simulate(
       final Adaptation<$Schema> adaptation,
-      final SimulationTimeline<$Timeline> timeline)
-  throws TaskSpecType.UnconstructableTaskSpecException
+      final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
+      final Duration simulationDuration,
+      final Duration samplingPeriod
+  ) throws TaskSpecType.UnconstructableTaskSpecException
+  {
+    return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration, samplingPeriod);
+  }
+
+  // The need for this helper is documented in the standard Java tutorials.
+  // https://docs.oracle.com/javase/tutorial/java/generics/capture.html
+  private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
+      final Adaptation<$Schema> adaptation,
+      final SimulationTimeline<$Timeline> database,
+      final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Instant startTime,
+      final Duration simulationDuration,
+      final Duration samplingPeriod
+  ) throws TaskSpecType.UnconstructableTaskSpecException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
-    final var taskSpecs = new ArrayList<Pair<Duration, TaskSpec<$Schema, ?>>>();
+    final var taskSpecs = new ArrayList<Triple<Duration, String, TaskSpec<$Schema, ?>>>();
 
-    for (final var x : adaptation.getDaemons()) {
-      taskSpecs.add(Pair.of(Duration.ZERO, TaskSpec.instantiate(activityTypes.get(x.getKey()), x.getValue())));
+    for (final var daemon : adaptation.getDaemons()) {
+      taskSpecs.add(Triple.of(Duration.ZERO,
+                              UUID.randomUUID().toString(),
+                              TaskSpec.instantiate(activityTypes.get(daemon.getKey()), daemon.getValue())));
     }
 
-    for (final var entry : schedule) {
-      final var startDelta = entry.getKey();
-      final var serializedActivity = entry.getValue();
-      final var type = serializedActivity.getTypeName();
-      final var arguments = serializedActivity.getParameters();
+    for (final var entry : schedule.entrySet()) {
+      final var activityId = entry.getKey();
+      final var startDelta = entry.getValue().getLeft();
+      final var serializedInstance = entry.getValue().getRight();
+      final var type = serializedInstance.getTypeName();
+      final var arguments = serializedInstance.getParameters();
 
       final var taskSpec = TaskSpec.instantiate(activityTypes.get(type), arguments);
       final var validationFailures = taskSpec.getValidationFailures();
 
       validationFailures.forEach(System.out::println);
-      taskSpecs.add(Pair.of(startDelta, taskSpec));
+      taskSpecs.add(Triple.of(startDelta, activityId, taskSpec));
     }
 
     final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask = (type, arguments) -> {
@@ -101,26 +145,130 @@ public final class SimulationDriver {
       try {
         return TaskSpec.instantiate(taskSpecType, arguments).createTask();
       } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
-        throw new RuntimeException(e);
+        throw new Error(String.format("Could not instantiate task of type %s with arguments %s",
+                                      taskSpecType.getName(),
+                                      arguments));
       }
     };
 
-    final var simulator = new SimulationEngine<>(timeline.origin(), createTask);
+    final var simulator = new SimulationEngine<>(database.origin(), createTask);
+    final var taskIdToActivityId = new HashMap<String, String>();
     for (final var entry : taskSpecs) {
+      final var activityId = entry.getMiddle();
       final var startDelta = entry.getLeft();
       final var taskSpec = entry.getRight();
 
-      taskSpec.enqueueTask(startDelta, simulator);
+      final var taskId = taskSpec.enqueueTask(startDelta, simulator);
+      taskIdToActivityId.put(taskId, activityId);
     }
 
-    while (simulator.hasMoreTasks()) simulator.step();
+    return simulate(adaptation, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId);
+  }
 
-    System.out.print(simulator.getCurrentHistory().getDebugTrace());
-    adaptation.getRealResources().forEach((name, resource) -> {
-      System.out.printf("%-12s%s%n", name, resource.getDynamics(simulator.getCurrentHistory()));
+  private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
+      final Adaptation<$Schema> adaptation,
+      final SimulationEngine<$Timeline> simulator,
+      final Instant startTime,
+      final Duration simulationDuration,
+      final Duration samplingPeriod,
+      final Map<String, String> taskIdToActivityId
+  )
+  {
+    final var timestamps = new ArrayList<Duration>();
+    final var timelines = new HashMap<String, List<SerializedValue>>();
+    final var discreteResources = adaptation.getDiscreteResources();
+    final var realResources = adaptation.getRealResources();
+
+    discreteResources.forEach((name, resource) -> timelines.put(name, new ArrayList<>()));
+    realResources.forEach((name, resource) -> timelines.put(name, new ArrayList<>()));
+
+    // Run simulation to completion, sampling states at periodic intervals.
+    {
+      // Get an initial sample.
+      sampleResources(simulator, timestamps, timelines, discreteResources, realResources);
+
+      // Sample periodically until the sampling duration expires.
+      final var remainder = simulationDuration.remainderOf(samplingPeriod);
+      for (long i = 0; i < simulationDuration.dividedBy(samplingPeriod); ++i) {
+        simulator.runFor(samplingPeriod);
+        sampleResources(simulator, timestamps, timelines, discreteResources, realResources);
+      }
+
+      // Take one last sample if the period doesn't evenly divide the duration.
+      if (!remainder.isZero()) {
+        simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
+        sampleResources(simulator, timestamps, timelines, discreteResources, realResources);
+      }
+
+      adaptation.getRealResources().forEach((name, resource) -> {
+        System.out.printf("%-12s%s%n", name, resource.getDynamics(simulator.getCurrentHistory()));
+      });
+      adaptation.getDiscreteResources().forEach((name, resource) -> {
+        System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(simulator.getCurrentHistory()));
+      });
+
+      // TODO: implement constraint checking when we have a developed solution
+      // for relating conditions, resources, and constraints in the driver. For
+      // now we'll return an empty List.
+      final var constraintViolations = Collections.<ConstraintViolation>emptyList();
+
+      // Use the map of task id to activity id to replace task ids with the corresponding
+      // activity id for use by the front end.
+      final Map<String, Window> mappedTaskWindows;
+      final Map<String, TaskRecord> mappedTaskRecords;
+      {
+        final var taskRecords = simulator.getTaskRecords();
+        final var taskWindows = simulator.getTaskWindows();
+
+        // Generate activity ids for all tasks
+        taskRecords.forEach((id, record) -> taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString()));
+
+        mappedTaskWindows = new HashMap<>();
+        taskWindows.forEach((id, window) -> mappedTaskWindows.put(taskIdToActivityId.get(id), window));
+
+        mappedTaskRecords = new HashMap<>();
+        taskRecords.forEach((id, record) -> {
+          final var activityId = taskIdToActivityId.get(id);
+          final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
+
+          mappedTaskRecords.put(activityId, new TaskRecord(record.type, record.arguments, mappedParentId));
+        });
+      }
+
+      final var results = new SimulationResults(
+          timestamps,
+          timelines,
+          constraintViolations,
+          mappedTaskRecords,
+          mappedTaskWindows,
+          startTime);
+
+      if (!results.unfinishedActivities.isEmpty()) {
+        throw new Error("There should be no unfinished activities when simulating to completion.");
+      }
+
+      return results;
+    }
+  }
+
+  private static <$Schema, $Timeline extends $Schema>
+  void sampleResources(
+      final SimulationEngine<$Timeline> simulator,
+      final ArrayList<Duration> timestamps,
+      final HashMap<String, List<SerializedValue>> timelines,
+      final Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>> discreteResources,
+      final Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>> realResources)
+  {
+    timestamps.add(simulator.getElapsedTime());
+    discreteResources.forEach((name, resource) -> {
+      final var dynamics = resource.getRight().getDynamics(simulator.getCurrentHistory());
+      final var solver = new DiscreteSolver<SerializedValue>();
+      timelines.get(name).add(solver.valueAt(dynamics.getDynamics(), Duration.ZERO));
     });
-    adaptation.getDiscreteResources().forEach((name, resource) -> {
-      System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(simulator.getCurrentHistory()));
+    realResources.forEach((name, resource) -> {
+      final var dynamics = resource.getDynamics(simulator.getCurrentHistory());
+      final var solver = new RealSolver();
+      timelines.get(name).add(SerializedValue.of(solver.valueAt(dynamics.getDynamics(), Duration.ZERO)));
     });
   }
 
@@ -161,8 +309,11 @@ public final class SimulationDriver {
       return this.specType.createTask(this.spec);
     }
 
-    public <$Timeline extends $Schema> void enqueueTask(final Duration delay, final SimulationEngine<$Timeline> engine) {
-      engine.defer(delay, this.spec, this.specType);
+    public <$Timeline extends $Schema> String enqueueTask(
+        final Duration delay,
+        final SimulationEngine<$Timeline> engine)
+    {
+      return engine.defer(delay, this.spec, this.specType);
     }
   }
 }

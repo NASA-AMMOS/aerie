@@ -17,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ public final class SimulationEngine<$Timeline> {
   // The next available task id.
   private Integer nextTaskId = 0;
   private final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask;
-  
+
   public SimulationEngine(
       final History<$Timeline> initialHistory,
       final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask) {
@@ -77,13 +78,15 @@ public final class SimulationEngine<$Timeline> {
    * @param delay The amount of time to wait before performing the task
    * @param spec The task specification
    * @param type The type of task specification
+   * @return The unique identifier assigned to the created task
    */
-  public <Spec> void defer(Duration delay, Spec spec, TaskSpecType<? super $Timeline, Spec> type) {
+  public <Spec> String defer(Duration delay, Spec spec, TaskSpecType<? super $Timeline, Spec> type) {
     final var id = this.generateId();
     final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.empty());
 
-    SimulationEngine.this.taskRecords.put(id, record);
+    this.taskRecords.put(id, record);
     this.enqueue(id, delay, type.createTask(spec));
+    return id;
   }
 
   /** @see #runFor(Duration) */
@@ -168,7 +171,7 @@ public final class SimulationEngine<$Timeline> {
         final var scheduler = new EngineScheduler(branchTip, taskId);
         final var status = task.step(scheduler);
 
-        SimulationEngine.this.taskStartTimes.putIfAbsent(taskId, SimulationEngine.this.elapsedTime);
+        this.taskStartTimes.putIfAbsent(taskId, this.elapsedTime);
         status.match(new StatusVisitor(task, taskId));
         stack.push(new TaskFrame<>(scheduler.now, scheduler.branches));
       } else {
@@ -189,6 +192,10 @@ public final class SimulationEngine<$Timeline> {
 
   public History<$Timeline> getCurrentHistory() {
     return this.currentHistory;
+  }
+
+  public Map<String, TaskRecord> getTaskRecords() {
+    return Collections.unmodifiableMap(this.taskRecords);
   }
 
   public Map<String, Window> getTaskWindows() {
