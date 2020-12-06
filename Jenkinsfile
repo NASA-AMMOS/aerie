@@ -137,44 +137,34 @@ pipeline {
         }
         stage ('Assemble') {
             steps {
-                // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
                 echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-                sh """
-                echo ${BUILD_NUMBER}
+                sh '''
+                ASSEMBLE_PREP_DIR=$(mktemp -d)
 
                 ./gradlew assemble
 
                 # For adaptations
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
+                mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
                 cp sample-adaptation/build/libs/*.jar \
                    banananation/build/libs/*.jar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
+                   ${ASSEMBLE_PREP_DIR}/adaptations/
 
                 # For services
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
+                mkdir -p ${ASSEMBLE_PREP_DIR}/services
                 cp plan-service/build/distributions/*.tar \
                    adaptation-service/build/distributions/*.tar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
-
-                # For merlin-sdk
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
-                cp merlin-sdk/build/libs/*.jar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
-
-                # For contrib
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/contrib
-                cp contrib/build/libs/*.jar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/contrib/
+                   ${ASSEMBLE_PREP_DIR}/services/
 
                 # For merlin-cli
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
+                mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-cli
                 cp merlin-cli/build/distributions/*.tar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
+                   ${ASSEMBLE_PREP_DIR}/merlin-cli/
 
-                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
+                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C ${ASSEMBLE_PREP_DIR}/ .
                 tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-                """
+                rm -rfv ${ASSEMBLE_PREP_DIR}
+                '''
             }
 
         }
@@ -309,9 +299,6 @@ pipeline {
 
             echo 'Logging out docker'
             sh 'docker logout || true'
-
-            echo 'Remove temp folder'
-            sh 'rm -rf /tmp/aerie-jenkins'
 
             setBuildStatus("Build ${currentBuild.currentResult}", "${currentBuild.currentResult}", "jenkins/branch-check")
         }

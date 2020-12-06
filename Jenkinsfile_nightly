@@ -55,6 +55,10 @@ pipeline {
         ARTIFACTORY_URL = "${getArtifactoryUrl()}"
         ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/ammos/mpsa/aerie"
         ARTIFACT_TAG = "${GIT_BRANCH}"
+        // Please refer to the below document for Jenkins credentials
+        // It automatically sets ARTIFACT_CREDENTIAL_USR and ARTIFACT_CREDENTIAL_PSW
+        // https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#usernames-and-passwords
+        ARTIFACTORY_CREDENTIALS = credentials('Artifactory-credential')
         AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
         AWS_DEFAULT_REGION = 'us-gov-west-1'
         AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
@@ -100,6 +104,15 @@ pipeline {
                     junit testResults: "*/test-results/*.xml"
                     sh "rm -rf ${temp_dir}"
                 }
+            }
+        }
+
+        stage ('Publish Snapshot') {
+            steps{
+                sh "./gradlew publish \
+                        -PjplArtifactoryUsername=${env.ARTIFACTORY_CREDENTIALS_USR}\
+                        -PjplArtifactoryPassword=${env.ARTIFACTORY_CREDENTIALS_PSW}\
+                        --info"
             }
         }
     }
