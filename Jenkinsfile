@@ -156,16 +156,6 @@ pipeline {
                    adaptation-service/build/distributions/*.tar \
                    ${ASSEMBLE_PREP_DIR}/services/
 
-                # For merlin-sdk
-                mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-sdk
-                cp merlin-sdk/build/libs/*.jar \
-                   ${ASSEMBLE_PREP_DIR}/merlin-sdk/
-
-                # For contrib
-                mkdir -p ${ASSEMBLE_PREP_DIR}/contrib
-                cp contrib/build/libs/*.jar \
-                   ${ASSEMBLE_PREP_DIR}/contrib/
-
                 # For merlin-cli
                 mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-cli
                 cp merlin-cli/build/distributions/*.tar \
