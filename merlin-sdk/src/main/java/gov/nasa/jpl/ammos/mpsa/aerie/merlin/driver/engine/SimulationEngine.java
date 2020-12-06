@@ -343,6 +343,9 @@ public final class SimulationEngine<$Timeline> {
         final ConditionType condition)
     {
       // TODO: work out how to await a task on conditions
+      // this is a hack which will be removed when awaiting on a condition
+      // has an implementation path.
+      SimulationEngine.this.enqueue(this.taskId, Duration.ZERO, this.task);
       return null;
     }
   }
