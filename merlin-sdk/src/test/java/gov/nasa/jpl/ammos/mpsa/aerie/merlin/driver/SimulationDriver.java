@@ -5,7 +5,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.FooAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
@@ -31,69 +30,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
-
 public final class SimulationDriver {
-  public static void main(final String[] args) {
-    try {
-      simulateWithMapSchedule();
-    } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
-      ex.printStackTrace();
-    }
-  }
-
-  private static
-  void simulateWithMapSchedule()
-  throws TaskSpecType.UnconstructableTaskSpecException
-  {
-    final var adaptation = new FooAdaptationFactory().instantiate();
-    final var schedule = Map.of(
-        UUID.randomUUID().toString(), Pair.of(
-            duration(0, MILLISECONDS),
-            new SerializedActivity(
-                "foo",
-                Map.of("x", SerializedValue.of(1),
-                       "y", SerializedValue.of("test_1")))),
-        UUID.randomUUID().toString(), Pair.of(
-            duration(50, MILLISECONDS),
-            new SerializedActivity(
-                "foo",
-                Map.of("x", SerializedValue.of(2),
-                       "y", SerializedValue.of("spawn")))),
-        UUID.randomUUID().toString(), Pair.of(
-            duration(50, MILLISECONDS),
-            new SerializedActivity(
-                "foo",
-                Map.of("x", SerializedValue.of(2),
-                       "y", SerializedValue.of("test")))),
-        UUID.randomUUID().toString(), Pair.of(
-            duration(150, MILLISECONDS),
-            new SerializedActivity(
-                "foo",
-                Map.of("x", SerializedValue.of(2),
-                       "y", SerializedValue.of("test_2")))),
-        UUID.randomUUID().toString(), Pair.of(
-            duration(150, MILLISECONDS),
-            new SerializedActivity(
-                "foo",
-                Map.of("x", SerializedValue.of(3),
-                       "y", SerializedValue.of("test_3"))))
-    );
-    final var startTime = Instant.now();
-    final var simulationDuration = duration(5, SECONDS);
-    final var samplingPeriod = duration(1, SECOND);
-
-    final var simulationResults = simulate(adaptation,
-             schedule,
-             startTime,
-             simulationDuration,
-             samplingPeriod);
-
-    simulationResults.timelines.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
-  }
 
   public static <$Schema> SimulationResults simulate(
       final Adaptation<$Schema> adaptation,
