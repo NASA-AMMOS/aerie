@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -177,10 +177,10 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>&lt;Spec&gt;&nbsp;void</code></td>
+<td class="colFirst"><code>&lt;Spec&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,Spec,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType)">defer</a></span>&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
      Spec&nbsp;spec,
-     <a href="../../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>,&#8203;Spec&gt;&nbsp;specType)</code></th>
+     <a href="../../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>,&#8203;Spec&gt;&nbsp;type)</code></th>
 <td class="colLast">
 <div class="block">Schedule a task to be run after a given duration of simulated time.</div>
 </td>
@@ -201,29 +201,34 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="TaskRecord.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine">TaskRecord</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTaskRecords()">getTaskRecords</a></span>()</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../../merlinsdk/time/Window.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Window</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTaskWindows()">getTaskWindows</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#hasMoreTasks()">hasMoreTasks</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#runFor(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">runFor</a></span>&#8203;(long&nbsp;quantity,
       <a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#runFor(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">runFor</a></span>&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">
 <div class="block">Run the simulation for the given duration of simulated time.</div>
 </td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#step()">step</a></span>()</code></th>
 <td class="colLast">
@@ -282,15 +287,17 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>defer</h4>
-<pre class="methodSignature">public&nbsp;&lt;Spec&gt;&nbsp;void&nbsp;defer&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
-                         Spec&nbsp;spec,
-                         <a href="../../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>,&#8203;Spec&gt;&nbsp;specType)</pre>
+<pre class="methodSignature">public&nbsp;&lt;Spec&gt;&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(<a href="../../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay,
+                           Spec&nbsp;spec,
+                           <a href="../../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">TaskSpecType</a>&lt;? super <a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>,&#8203;Spec&gt;&nbsp;type)</pre>
 <div class="block">Schedule a task to be run after a given duration of simulated time.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>delay</code> - The amount of time to wait before performing the task</dd>
 <dd><code>spec</code> - The task specification</dd>
-<dd><code>specType</code> - The type of task specification</dd>
+<dd><code>type</code> - The type of task specification</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>The unique identifier assigned to the created task</dd>
 </dl>
 </li>
 </ul>
@@ -350,6 +357,15 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li class="blockList">
 <h4>getCurrentHistory</h4>
 <pre class="methodSignature">public&nbsp;<a href="../../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="SimulationEngine.html" title="type parameter in SimulationEngine">$Timeline</a>&gt;&nbsp;getCurrentHistory()</pre>
+</li>
+</ul>
+<a id="getTaskRecords()">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>getTaskRecords</h4>
+<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="TaskRecord.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine">TaskRecord</a>&gt;&nbsp;getTaskRecords()</pre>
 </li>
 </ul>
 <a id="getTaskWindows()">
