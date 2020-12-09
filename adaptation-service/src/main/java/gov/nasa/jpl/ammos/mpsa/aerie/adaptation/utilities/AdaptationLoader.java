@@ -1,16 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Adaptation;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
-import java.util.function.Predicate;
 
 public final class AdaptationLoader {
     // The Class object representing the MerlinAdaptation interface type.
@@ -34,21 +31,13 @@ public final class AdaptationLoader {
         final var parentClassLoader = Thread.currentThread().getContextClassLoader();
         final var classLoader = new URLClassLoader(new URL[] {adaptationPathToUrl(path)}, parentClassLoader);
 
-        // Look for MerlinAdaptation implementors in the adaptation, and get the first one matching the given metadata.
-        // (For correctness, we're assuming there's only one matching MerlinAdaptation in any given adaptation.)
+        // Look for MerlinAdaptation implementor in the adaptation. For correctness, we're assuming there's
+        // only one matching MerlinAdaptation in any given adaptation.
         return ServiceLoader
             .load(adaptationClass, classLoader)
             .stream()
-            .filter(byMetadata(name, version))
             .findFirst()
             .orElseThrow(() -> new AdaptationLoadException(path, name, version));
-    }
-
-    private static Predicate<Provider<MerlinAdaptation<?>>> byMetadata(final String name, final String version) {
-        return (provider) -> {
-            final var metadata = provider.type().getAnnotation(Adaptation.class);
-            return Objects.equals(name, metadata.name()) && Objects.equals(version, metadata.version());
-        };
     }
 
     private static URL adaptationPathToUrl(final Path path) {
