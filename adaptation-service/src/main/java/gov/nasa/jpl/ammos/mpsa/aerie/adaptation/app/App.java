@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
@@ -35,8 +35,8 @@ public interface App {
   throws NoSuchAdaptationException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
-  throws NoSuchAdaptationException, Adaptation.UnconstructableActivityInstanceException,
-         Adaptation.NoSuchActivityTypeException;
+  throws NoSuchAdaptationException, AdaptationFacade.UnconstructableActivityInstanceException,
+         AdaptationFacade.NoSuchActivityTypeException;
 
   class AdaptationRejectedException extends Exception {
     public AdaptationRejectedException(final String message) { super(message); }

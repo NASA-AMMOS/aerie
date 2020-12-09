@@ -18,7 +18,7 @@ public final class AdaptationLoader {
         (Class<MerlinAdaptation<?>>) (Object)
             MerlinAdaptation.class;
 
-    public static MerlinAdaptation<?> loadAdaptation(final Path path, final String name, final String version)
+    public static Adaptation<?> loadAdaptation(final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         return loadAdaptationProvider(path, name, version).get();

@@ -18,11 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class Adaptation<Event> {
+public final class AdaptationFacade<Event> {
   private final MerlinAdaptation<Event> adaptation;
   private final ActivityMapper activityMapper;
 
-  public Adaptation(final MerlinAdaptation<Event> adaptation) throws AdaptationContractException {
+  public AdaptationFacade(final MerlinAdaptation<Event> adaptation) throws AdaptationContractException {
     this.adaptation = adaptation;
     this.activityMapper = this.adaptation.getActivityMapper();
 
@@ -42,7 +42,7 @@ public final class Adaptation<Event> {
     try {
       return SimpleSimulator.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
     } catch (SimpleSimulator.InvalidSerializedActivityException e) {
-      throw new Adaptation.UnconstructableActivityInstanceException("Invalid activity with id " + e.identifier + ".", e);
+      throw new AdaptationFacade.UnconstructableActivityInstanceException("Invalid activity with id " + e.identifier + ".", e);
     }
   }
 

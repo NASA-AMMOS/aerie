@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
@@ -236,10 +236,10 @@ public final class AdaptationBindings implements Plugin {
     } catch (final App.NoSuchAdaptationException ex) {
       // The requested adaptation does not exist.
       ctx.status(404);
-    } catch (final Adaptation.UnconstructableActivityInstanceException e) {
+    } catch (final AdaptationFacade.UnconstructableActivityInstanceException e) {
       // The schedule contained an invalid activity instance
       ctx.status(400).result(ResponseSerializers.serializeUnconstructableActivityInstanceException(e).toString());
-    } catch (final Adaptation.NoSuchActivityTypeException e) {
+    } catch (final AdaptationFacade.NoSuchActivityTypeException e) {
       // The adaptation could not instantiate the provided activities.
       // TODO: report these failures with a better response body
       ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-activities").build().toString());
