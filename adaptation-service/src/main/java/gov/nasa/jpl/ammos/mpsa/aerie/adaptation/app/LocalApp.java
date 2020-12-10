@@ -4,19 +4,18 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import io.javalin.core.util.FileUtil;
+import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.bcel.classfile.ClassParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,8 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 /**
  * Implements the plan service {@link App} interface on a set of local domain objects.
@@ -181,24 +180,14 @@ public final class LocalApp implements App {
   public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
   throws NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoadException
   {
-    final Activity activity;
     try {
-      activity = this.loadAdaptation(adaptationId).instantiateActivity(activityParameters);
+      return this.loadAdaptation(adaptationId)
+                 .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
     } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
     } catch (final AdaptationFacade.UnconstructableActivityInstanceException ex) {
       return List.of(ex.getMessage());
     }
-
-    final List<String> failures = activity.validateParameters();
-    if (failures == null) {
-      // TODO: The top-level application layer is a poor place to put knowledge about the adaptation contract.
-      //   Move this logic somewhere better.
-      throw new AdaptationFacade.AdaptationContractException(activity.getClass().getName()
-                                                             + ".validateParameters() returned null");
-    }
-
-    return failures;
   }
 
   /**
@@ -210,7 +199,8 @@ public final class LocalApp implements App {
    */
   @Override
   public SimulationResults runSimulation(final CreateSimulationMessage message)
-  throws NoSuchAdaptationException, AdaptationFacade.UnconstructableActivityInstanceException
+  throws NoSuchAdaptationException,
+         SimulationDriver.TaskSpecInstantiationException
   {
     return loadAdaptation(message.adaptationId)
         .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod, message.startTime);
@@ -256,8 +246,8 @@ public final class LocalApp implements App {
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {
-      final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-      final MerlinAdaptation<?> adaptation =
+      final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+      final var adaptation =
           AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
       return new AdaptationFacade<>(adaptation);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {

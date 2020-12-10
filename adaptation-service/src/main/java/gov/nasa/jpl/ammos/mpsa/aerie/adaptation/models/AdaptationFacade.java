@@ -1,13 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.ActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -18,18 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class AdaptationFacade<Event> {
-  private final MerlinAdaptation<Event> adaptation;
-  private final ActivityMapper activityMapper;
+public final class AdaptationFacade<$Schema> {
+  private final Adaptation<$Schema> adaptation;
 
-  public AdaptationFacade(final MerlinAdaptation<Event> adaptation) throws AdaptationContractException {
+  public AdaptationFacade(final Adaptation<$Schema> adaptation) throws AdaptationContractException {
     this.adaptation = adaptation;
-    this.activityMapper = this.adaptation.getActivityMapper();
-
-    if (this.activityMapper == null) {
-      throw new AdaptationContractException(this.adaptation.getClass().getCanonicalName()
-                                            + ".getActivityMapper() returned null");
-    }
   }
 
   public SimulationResults simulate(
@@ -37,122 +30,72 @@ public final class AdaptationFacade<Event> {
       final Duration simulationDuration,
       final Duration samplingPeriod,
       final Instant startTime
-  ) throws UnconstructableActivityInstanceException
+  ) throws SimulationDriver.TaskSpecInstantiationException
   {
-    try {
-      return SimpleSimulator.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
-    } catch (SimpleSimulator.InvalidSerializedActivityException e) {
-      throw new AdaptationFacade.UnconstructableActivityInstanceException("Invalid activity with id " + e.identifier + ".", e);
-    }
+    return SimulationDriver.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
   }
 
   public List<ViolableConstraint> getConstraintTypes() throws AdaptationContractException {
-    return this.adaptation.getViolableConstraints();
+    return Collections.emptyList();
   }
 
   public Map<String, ValueSchema> getStateSchemas() {
-    return this.adaptation.getStateSchemas();
+    final var schemas = new HashMap<String, ValueSchema>();
+
+    this.adaptation.getRealResources().forEach((name, resource) -> {
+      schemas.put(name, ValueSchema.REAL);
+    });
+    this.adaptation.getDiscreteResources().forEach((name, pair) -> {
+      schemas.put(name, pair.getLeft());
+    });
+
+    return schemas;
   }
 
   public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {
-    final Map<String, Map<String, ValueSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
-    if (activitySchemas == null) {
-      throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName()
-                                            + ".getActivitySchemas() returned null");
-    }
-
-    final Map<String, ActivityType> activityTypes = new HashMap<>();
-    for (final var schema : activitySchemas.entrySet()) {
-      final Activity activity;
-      try {
-        activity = instantiateActivity(new SerializedActivity(schema.getKey(), Collections.emptyMap()));
-      } catch (final NoSuchActivityTypeException ex) {
-        throw new AdaptationContractException(
-            this.activityMapper.getClass().getCanonicalName()
-            + ".deserializeActivity() returned an empty Optional for an activity type it has a schema for",
-            ex);
-      } catch (final UnconstructableActivityInstanceException ex) {
-        throw new AdaptationContractException(
-            this.activityMapper.getClass().getCanonicalName()
-            + ".deserializeActivity() could not instantiate an activity with only default parameters",
-            ex);
-      }
-
-      final Optional<SerializedActivity> defaultActivity = this.activityMapper.serializeActivity(activity);
-      if (defaultActivity.isEmpty()) {
-        throw new AdaptationContractException(this.activityMapper
-                                                  .getClass()
-                                                  .getCanonicalName()
-                                              + ".serializeActivity() returned an empty Optional for an activity type it previously deserialized");
-      }
-
-      activityTypes.put(
-          schema.getKey(),
-          new ActivityType(schema.getKey(), schema.getValue(), defaultActivity.get().getParameters()));
-    }
-
+    final var activityTypes = new HashMap<String, ActivityType>();
+    this.adaptation.getTaskSpecificationTypes().forEach((name, specType) -> {
+      activityTypes.put(name, new ActivityType(name, specType.getParameters(), getDefaultArguments(specType)));
+    });
     return activityTypes;
   }
 
-  public ActivityType getActivityType(final String activityTypeId)
+  public ActivityType getActivityType(final String typeName)
   throws NoSuchActivityTypeException, AdaptationContractException
   {
-    final Map<String, Map<String, ValueSchema>> activitySchemas = this.activityMapper.getActivitySchemas();
-    if (activitySchemas == null) {
-      throw new AdaptationContractException(this.activityMapper.getClass().getCanonicalName()
-                                            + ".getActivitySchemas() returned null");
-    }
+    final var specType = Optional
+        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
+        .orElseThrow(NoSuchActivityTypeException::new);
 
-    final Map<String, ValueSchema> activitySchema = activitySchemas.getOrDefault(activityTypeId, null);
-    if (activitySchema == null) throw new NoSuchActivityTypeException();
-
-    final Activity activity;
-    try {
-      activity = instantiateActivity(new SerializedActivity(activityTypeId, Collections.emptyMap()));
-    } catch (final NoSuchActivityTypeException ex) {
-      throw new AdaptationContractException(
-          this.activityMapper.getClass().getCanonicalName()
-          + ".deserializeActivity() returned an empty Optional for an activity type it has a schema for",
-          ex);
-    } catch (final UnconstructableActivityInstanceException ex) {
-      throw new AdaptationContractException(
-          this.activityMapper.getClass().getCanonicalName()
-          + ".deserializeActivity() could not instantiate an activity with only default parameters",
-          ex);
-    }
-
-    final Optional<SerializedActivity> defaultActivity = this.activityMapper.serializeActivity(activity);
-    if (defaultActivity.isEmpty()) {
-      throw new AdaptationContractException(this.activityMapper
-                                                .getClass()
-                                                .getCanonicalName()
-                                            + ".serializeActivity() returned an empty Optional for an activity type it previously deserialized");
-    }
-
-    return new ActivityType(activityTypeId, activitySchemas.get(activityTypeId), defaultActivity.get().getParameters());
+    return new ActivityType(typeName, specType.getParameters(), getDefaultArguments(specType));
   }
 
-  public Activity instantiateActivity(final SerializedActivity activityParameters)
-  throws AdaptationContractException, NoSuchActivityTypeException, UnconstructableActivityInstanceException
+  public List<String> validateActivity(final String typeName, final Map<String, SerializedValue> arguments)
+  throws NoSuchActivityTypeException, UnconstructableActivityInstanceException
   {
-    Optional<Activity> mapperResult;
+    final var specType = Optional
+        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
+        .orElseThrow(NoSuchActivityTypeException::new);
+
+    return getValidationFailures(specType, arguments);
+  }
+
+  private <Specification> Map<String, SerializedValue> getDefaultArguments(final TaskSpecType<$Schema, Specification> specType) {
+    return specType.getArguments(specType.instantiateDefault());
+  }
+
+  private <Specification> List<String> getValidationFailures(
+      final TaskSpecType<$Schema, Specification> specType,
+      final Map<String, SerializedValue> arguments)
+  throws UnconstructableActivityInstanceException
+  {
     try {
-      mapperResult = this.activityMapper.deserializeActivity(activityParameters);
-    } catch (final RuntimeException ex) {
-      // It's a serious code smell that failures of `deserializeActivity`
-      // have no outlet other than as unchecked exceptions.
+      return specType.getValidationFailures(specType.instantiate(arguments));
+    } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
       throw new UnconstructableActivityInstanceException(
           "Unknown failure when deserializing activity -- do the parameters match the schema?",
-          ex);
+          e);
     }
-
-    if (mapperResult == null) {
-      throw new AdaptationContractException(this.activityMapper.getClass().getName()
-                                            + ".deserializeActivity() returned null");
-    }
-
-    return mapperResult
-        .orElseThrow(NoSuchActivityTypeException::new);
   }
 
   public static class AdaptationContractException extends RuntimeException {

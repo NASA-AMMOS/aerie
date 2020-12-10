@@ -7,8 +7,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure.ConstraintStructureVisitor;
@@ -373,10 +374,11 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeUnconstructableActivityInstanceException(final AdaptationFacade.UnconstructableActivityInstanceException ex) {
+  public static JsonValue serializeTaskSpecInstantiationException(final SimulationDriver.TaskSpecInstantiationException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
         .add("message", ex.getMessage())
+        .add("activityId", ex.id)
         .build();
   }
 

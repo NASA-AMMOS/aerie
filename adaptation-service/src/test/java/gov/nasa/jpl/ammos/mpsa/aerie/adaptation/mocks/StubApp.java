@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
@@ -181,7 +181,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
+  public gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
     if (!Objects.equals(message.adaptationId, EXISTENT_ADAPTATION_ID)) {
       throw new NoSuchAdaptationException(message.adaptationId);
     }

@@ -3,13 +3,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +25,7 @@ public final class AdaptationTest {
     @Before
     public void initialize() throws AdaptationRepository.NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
         final AdaptationJar adaptationJar = fixtures.adaptationRepository.getAdaptation(fixtures.EXISTENT_ADAPTATION_ID);
-        final MerlinAdaptation<?> rawAdaptation =
+        final var rawAdaptation =
             AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
 
         this.adaptation = new AdaptationFacade<>(rawAdaptation);
@@ -75,26 +73,24 @@ public final class AdaptationTest {
         throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException, AdaptationFacade.UnconstructableActivityInstanceException
     {
         // GIVEN
-        final SerializedActivity serializedActivity = new SerializedActivity(
-            "BiteBanana",
-            Map.of("biteSize", SerializedValue.of(1.0)));
+        final var typeName = "BiteBanana";
+        final var parameters = new HashMap<>(Map.of("biteSize", SerializedValue.of(1.0)));
 
         // WHEN
-        final Activity activityInstance = adaptation.instantiateActivity(serializedActivity);
+        final var failures = adaptation.validateActivity(typeName, parameters);
 
         // THEN
-        assertThat(activityInstance).isNotNull();
+        assertThat(failures).isEmpty();
     }
 
     @Test
     public void shouldNotInstantiateActivityInstanceWithIncorrectParameterType() {
         // GIVEN
-        final SerializedActivity serializedActivity = new SerializedActivity(
-            "BiteBanana",
-            Map.of("biteSize", SerializedValue.of("a string!?")));
+        final var typeName = "BiteBanana";
+        final var parameters = new HashMap<>(Map.of("biteSize", SerializedValue.of("a string!?")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> adaptation.instantiateActivity(serializedActivity));
+        final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
 
         // THEN
         assertThat(thrown).isInstanceOf(AdaptationFacade.UnconstructableActivityInstanceException.class);
@@ -103,12 +99,11 @@ public final class AdaptationTest {
     @Test
     public void shouldNotInstantiateActivityInstanceWithExtraParameter() {
         // GIVEN
-        final SerializedActivity serializedActivity = new SerializedActivity(
-            "BiteBanana",
-            Map.of("Nonexistent", SerializedValue.of("")));
+        final var typeName = "BiteBanana";
+        final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> adaptation.instantiateActivity(serializedActivity));
+        final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
 
         // THEN
         assertThat(thrown).isInstanceOf(AdaptationFacade.UnconstructableActivityInstanceException.class);
