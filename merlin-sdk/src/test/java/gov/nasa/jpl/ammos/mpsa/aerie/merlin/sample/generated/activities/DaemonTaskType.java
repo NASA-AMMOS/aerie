@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -59,6 +59,6 @@ public final class DaemonTaskType<$Schema> implements TaskSpecType<$Schema, Runn
 
   @Override
   public <$Timeline extends $Schema> Task<$Timeline> createTask(final Runnable runnable) {
-    return new ReplayingTask<>(this.rootContext, runnable);
+    return new ThreadedTask<>(this.rootContext, runnable);
   }
 }
