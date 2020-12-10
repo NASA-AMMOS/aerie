@@ -16,18 +16,18 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 
-public class SimulateMapSchedule {
+public class  SimulateMapSchedule {
   public static void main(final String[] args) {
     try {
       simulateWithMapSchedule();
-    } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
+    } catch (final SimulationDriver.TaskSpecInstantiationException ex) {
       ex.printStackTrace();
     }
   }
 
   private static
   void simulateWithMapSchedule()
-  throws TaskSpecType.UnconstructableTaskSpecException
+  throws SimulationDriver.TaskSpecInstantiationException
   {
     final var adaptation = new FooAdaptationFactory().instantiate();
     final var schedule = Map.of(

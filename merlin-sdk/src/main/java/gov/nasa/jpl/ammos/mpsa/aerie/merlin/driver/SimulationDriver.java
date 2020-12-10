@@ -36,7 +36,7 @@ public final class SimulationDriver {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  ) throws TaskSpecType.UnconstructableTaskSpecException
+  ) throws TaskSpecInstantiationException
   {
     return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration, samplingPeriod);
   }
@@ -50,15 +50,20 @@ public final class SimulationDriver {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod
-  ) throws TaskSpecType.UnconstructableTaskSpecException
+  ) throws TaskSpecInstantiationException
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
     final var taskSpecs = new ArrayList<Triple<Duration, String, TaskSpec<$Schema, ?>>>();
 
     for (final var daemon : adaptation.getDaemons()) {
-      taskSpecs.add(Triple.of(Duration.ZERO,
-                              UUID.randomUUID().toString(),
-                              TaskSpec.instantiate(activityTypes.get(daemon.getKey()), daemon.getValue())));
+      final var activityId = UUID.randomUUID().toString();
+      try {
+        taskSpecs.add(Triple.of(Duration.ZERO,
+                                activityId,
+                                TaskSpec.instantiate(activityTypes.get(daemon.getKey()), daemon.getValue())));
+      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+        throw new TaskSpecInstantiationException(activityId, e);
+      }
     }
 
     for (final var entry : schedule.entrySet()) {
@@ -68,11 +73,13 @@ public final class SimulationDriver {
       final var type = serializedInstance.getTypeName();
       final var arguments = serializedInstance.getParameters();
 
-      final var taskSpec = TaskSpec.instantiate(activityTypes.get(type), arguments);
-      final var validationFailures = taskSpec.getValidationFailures();
-
-      validationFailures.forEach(System.out::println);
-      taskSpecs.add(Triple.of(startDelta, activityId, taskSpec));
+      try {
+        taskSpecs.add(Triple.of(startDelta,
+                                activityId,
+                                TaskSpec.instantiate(activityTypes.get(type), arguments)));
+      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+        throw new TaskSpecInstantiationException(activityId, e);
+      }
     }
 
     final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask = (type, arguments) -> {
@@ -249,6 +256,15 @@ public final class SimulationDriver {
         final SimulationEngine<$Timeline> engine)
     {
       return engine.defer(delay, this.spec, this.specType);
+    }
+  }
+
+  public static class TaskSpecInstantiationException extends Exception {
+    public final String id;
+
+    public TaskSpecInstantiationException(final String id, final Throwable cause) {
+      super(cause);
+      this.id = id;
     }
   }
 }
