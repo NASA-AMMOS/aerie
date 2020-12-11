@@ -7,6 +7,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -19,26 +21,41 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   public final DiscreteResource<History<? extends $Schema>, Boolean> conflicted;
 
   public RegisterModule(
-      final String namespace,
-      final ResourcesBuilder<$Schema> builder,
+      final ResourcesBuilder.Cursor<$Schema> builder,
       final Value initialValue,
       final ValueMapper<Value> mapper)
   {
+    super(builder);
+
     this.query = builder.model(
         new RegisterModel<>(initialValue),
         (value) -> Pair.of(Optional.of(value), Set.of(value)));
 
-    this.value = builder
-        .discrete(
-            namespace + ".value",
-            now -> RegisterModel.<Value>value().getDynamics(now.ask(this.query)), mapper)
-        ::getDynamics;
+    this.value = builder.discrete(
+        "value",
+        now -> now.ask(this.query).getValue(),
+        mapper);
 
-    this.conflicted = builder
-        .discrete(
-            namespace + ".conflicted",
-            now -> RegisterModel.conflicted.getDynamics(now.ask(this.query)), new BooleanValueMapper())
-        ::getDynamics;
+    this.conflicted = builder.discrete(
+        "conflicted",
+        now -> now.ask(this.query).isConflicted(),
+        new BooleanValueMapper());
+  }
+
+  public static <$Schema>
+  RegisterModule<$Schema, Double>
+  create(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
+    return new RegisterModule<>(builder, initialValue, new DoubleValueMapper());
+  }
+
+  public static <$Schema, E extends Enum<E>>
+  RegisterModule<$Schema, E>
+  create(final ResourcesBuilder.Cursor<$Schema> builder, final E initialValue) {
+    // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.
+    @SuppressWarnings("unchecked")
+    final var klass = (Class<E>) initialValue.getClass();
+
+    return new RegisterModule<>(builder, initialValue, new EnumValueMapper<>(klass));
   }
 
   public void set(final Value value) {

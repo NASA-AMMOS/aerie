@@ -6,7 +6,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 
 public final class FooResources<$Schema> extends Module<$Schema> {
   // Need a clear story for how to logically group resource questions and event emissions together.
@@ -28,14 +27,17 @@ public final class FooResources<$Schema> extends Module<$Schema> {
 
   public final RealResource<History<? extends $Schema>> combo;
 
-  public FooResources(final ResourcesBuilder<$Schema> builder) {
-    this.foo = submodule("foo", new RegisterModule<>("foo", builder, 0.0, new DoubleValueMapper()));
-    this.data = submodule("data", new LinearIntegrationModule<>("data", builder));
+  public FooResources(final ResourcesBuilder.Cursor<$Schema> builder) {
+    super(builder);
+
+    this.foo = RegisterModule.create(builder.descend("foo"), 0.0);
+    this.data = new LinearIntegrationModule<>(builder.descend("data"));
     this.combo = this.data.volume.plus(this.data.rate);
+
+    // TODO: automatically perform this for each @Daemon annotation
+    builder.daemon("test", this::test);
   }
 
-  // TODO: automatically perform this for each @Daemon annotation
-  { daemon("test", this::test); }
   public void test() {
     foo.set(21.0);
     data.addRate(42.0);

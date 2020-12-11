@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 
@@ -9,6 +11,14 @@ import java.util.Map;
 public abstract class Module<$Schema>
     extends gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module<$Schema>
 {
+  protected Module(final Context<$Schema> context) {
+    super(context);
+  }
+
+  protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
+    super(builder);
+  }
+
   protected final String spawn(final FooActivity activity) {
     // TODO: we should provide spec and TaskSpecType to this spawn.
     //  This hack allows for exercising spawn mechanics in the engine.

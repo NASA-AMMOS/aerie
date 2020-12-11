@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics.persistent;
@@ -39,9 +39,11 @@ public final class LinearIntegrationModel implements Model<Double, LinearIntegra
 
 
   /// Resources
-  public static final RealResource<LinearIntegrationModel> volume =
-      (model) -> persistent(RealDynamics.linear(model._volume, model._rate));
+  public DelimitedDynamics<RealDynamics> getVolume() {
+    return persistent(RealDynamics.linear(this._volume, this._rate));
+  }
 
-  public static final RealResource<LinearIntegrationModel> rate =
-      (model) -> persistent(RealDynamics.constant(model._rate));
+  public DelimitedDynamics<RealDynamics> getRate() {
+    return persistent(RealDynamics.constant(this._rate));
+  }
 }

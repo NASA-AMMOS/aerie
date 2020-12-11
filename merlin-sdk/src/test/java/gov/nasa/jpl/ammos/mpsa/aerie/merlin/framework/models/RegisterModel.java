@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
@@ -39,10 +39,11 @@ public final class RegisterModel<T> implements Model<Pair<Optional<T>, Set<T>>, 
 
 
   /// Resources
-  public static <T> DiscreteResource<RegisterModel<T>, T> value() {
-    return (model) -> persistent(model._value);
+  public DelimitedDynamics<T> getValue() {
+    return persistent(this._value);
   }
 
-  public static DiscreteResource<RegisterModel<?>, Boolean> conflicted =
-      (model) -> persistent(model._conflicted);
+  public DelimitedDynamics<Boolean> isConflicted() {
+    return persistent(this._conflicted);
+  }
 }

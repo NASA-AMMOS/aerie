@@ -2,16 +2,16 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -21,117 +21,126 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public final class ResourcesBuilder<$Schema> {
+  private final Context<$Schema> rootContext;
   private final Schema.Builder<$Schema> schemaBuilder;
   private ResourcesBuilderState<$Schema> state;
 
-  public ResourcesBuilder(final Schema.Builder<$Schema> schemaBuilder) {
+  public ResourcesBuilder(final Context<$Schema> rootContext, final Schema.Builder<$Schema> schemaBuilder) {
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
     this.state = new UnbuiltResourcesBuilderState();
   }
 
-  public
-  BuiltResources<$Schema>
-  build() {
+  public Cursor<$Schema> getCursor() {
+    return new Cursor<>(this, "");
+  }
+
+  public BuiltResources<$Schema> build() {
     return this.state.build(this.schemaBuilder.build());
   }
 
-  public <Event, Effect, ModelType extends Model<Effect, ModelType>>
-  Query<$Schema, Event, ModelType>
-  model(final ModelType initialState, final Function<Event, Effect> interpreter)
-  {
-    return this.schemaBuilder.register(
-        Projection.from(initialState.effectTrait(), interpreter),
-        new ModelApplicator<>(initialState));
-  }
+  public static final class Cursor<$Schema> {
+    private final ResourcesBuilder<$Schema> builder;
+    private final String namespace;
 
-  public <E extends Enum<E>>
-  Resource<History<? extends $Schema>, E>
-  enumerated(final String name,
-             final Resource<History<? extends $Schema>, E> resource)
-  {
-    this.state.enumerated(name, resource);
-    return resource;
-  }
+    private Cursor(final ResourcesBuilder<$Schema> builder, final String namespace) {
+      this.builder = Objects.requireNonNull(builder);
+      this.namespace = Objects.requireNonNull(namespace);
+    }
 
-  public <ResourceType>
-  Resource<History<? extends $Schema>, ResourceType>
-  discrete(final String name,
-           final Resource<History<? extends $Schema>, ResourceType> resource,
-           final ValueMapper<ResourceType> mapper)
-  {
-    this.state.discrete(name, resource, mapper);
-    return resource;
-  }
+    /*package-local*/
+    Context<$Schema> getRootContext() {
+      return this.builder.rootContext;
+    }
 
-  public
-  Resource<History<? extends $Schema>, RealDynamics>
-  real(final String name,
-       final Resource<History<? extends $Schema>, RealDynamics> resource)
-  {
-    this.state.real(name, resource);
-    return resource;
+    public Cursor<$Schema> descend(final String namespace) {
+      return new Cursor<>(this.builder, this.namespace + "/" + namespace);
+    }
+
+    public <Event, Effect, ModelType extends Model<Effect, ModelType>>
+    Query<$Schema, Event, ModelType>
+    model(final ModelType initialState, final Function<Event, Effect> interpreter)
+    {
+      return this.builder.schemaBuilder.register(
+          Projection.from(initialState.effectTrait(), interpreter),
+          new ModelApplicator<>(initialState));
+    }
+
+    public <ResourceType>
+    DiscreteResource<History<? extends $Schema>, ResourceType>
+    discrete(final String name,
+             final Property<History<? extends $Schema>, ResourceType> resource,
+             final ValueMapper<ResourceType> mapper)
+    {
+      this.builder.state.discrete(this.namespace + "/" + name, resource, mapper);
+      return resource::ask;
+    }
+
+    public RealResource<History<? extends $Schema>>
+    real(final String name,
+         final Property<History<? extends $Schema>, RealDynamics> resource)
+    {
+      this.builder.state.real(this.namespace + "/" + name, resource);
+      return resource::ask;
+    }
+
+    public void daemon(final String id, final Runnable task) {
+      this.builder.state.daemon(this.namespace + "/" + id, task);
+    }
   }
 
   private interface ResourcesBuilderState<$Schema> {
-    <E extends Enum<E>>
-    void
-    enumerated(String name,
-               Resource<History<? extends $Schema>, E> resource);
-
     <ResourceType>
     void
     discrete(String name,
-             Resource<History<? extends $Schema>, ResourceType> resource,
+             Property<History<? extends $Schema>, ResourceType> resource,
              ValueMapper<ResourceType> mapper);
 
     void
     real(String name,
-         Resource<History<? extends $Schema>, RealDynamics> resource);
+         Property<History<? extends $Schema>, RealDynamics> resource);
+
+    void
+    daemon(String id,
+           Runnable task);
 
     BuiltResources<$Schema>
     build(Schema<$Schema> schema);
   }
 
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
-    private final Map<String, Resource<History<? extends $Schema>, RealDynamics>> realResources = new HashMap<>();
-    private final Map<String, Pair<ValueSchema, Resource<History<? extends $Schema>, SerializedValue>>> discreteResources = new HashMap<>();
-    private final Map<String, EnumResource<$Schema, ?>> enumResources = new HashMap<>();
-
-    @Override
-    public <E extends Enum<E>>
-    void enumerated(final String name,
-        final Resource<History<? extends $Schema>, E> resource)
-    {
-      this.enumResources.put(name, new EnumResource<>(resource));
-    }
+    private final Map<String, Resource<$Schema, RealDynamics>> realResources = new HashMap<>();
+    private final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources = new HashMap<>();
+    private final Map<String, Runnable> daemons = new HashMap<>();
 
     @Override
     public <ResourceType>
     void discrete(
         final String name,
-        final Resource<History<? extends $Schema>, ResourceType> resource,
+        final Property<History<? extends $Schema>, ResourceType> resource,
         final ValueMapper<ResourceType> mapper)
     {
       this.discreteResources.put(name, Pair.of(
           mapper.getValueSchema(),
-          (time) -> resource.getDynamics(time).map(mapper::serializeValue)));
+          (time) -> resource.ask(time).map(mapper::serializeValue)));
     }
 
     @Override
     public void real(
         final String name,
-        final Resource<History<? extends $Schema>, RealDynamics> resource)
+        final Property<History<? extends $Schema>, RealDynamics> resource)
     {
-      this.realResources.put(name, resource);
+      this.realResources.put(name, resource::ask);
+    }
+
+    @Override
+    public void daemon(final String id, final Runnable task) {
+      this.daemons.put(id, task);
     }
 
     @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
-      for (final var entry : this.enumResources.entrySet()) {
-        this.discreteResources.put(entry.getKey(), entry.getValue().getBinding(schema));
-      }
-
-      final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources);
+      final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources, this.daemons);
 
       ResourcesBuilder.this.state = new BuiltResourcesBuilderState(resources);
       return resources;
@@ -146,17 +155,9 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     @Override
-    public <E extends Enum<E>> void enumerated(
-        final String name,
-        final Resource<History<? extends $Schema>, E> resource)
-    {
-      throw new IllegalStateException("Resources cannot be added after the schema is built");
-    }
-
-    @Override
     public <ResourceType> void discrete(
         final String name,
-        final Resource<History<? extends $Schema>, ResourceType> resource,
+        final Property<History<? extends $Schema>, ResourceType> resource,
         final ValueMapper<ResourceType> mapper)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
@@ -165,39 +166,19 @@ public final class ResourcesBuilder<$Schema> {
     @Override
     public void real(
         final String name,
-        final Resource<History<? extends $Schema>, RealDynamics> resource)
+        final Property<History<? extends $Schema>, RealDynamics> resource)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
+    public void daemon(final String id, final Runnable task) {
+      throw new IllegalStateException("Daemons cannot be added after the schema is built");
+    }
+
+    @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
       return this.resources;
-    }
-  }
-
-  private static final class EnumResource<$Schema, E extends Enum<E>> {
-    private final Resource<History<? extends $Schema>, E> resource;
-
-    public EnumResource(final Resource<History<? extends $Schema>, E> resource) {
-      this.resource = resource;
-    }
-
-    public
-    Pair<ValueSchema, Resource<History<? extends $Schema>, SerializedValue>>
-    getBinding(final Schema<$Schema> schema) {
-      // Get the initial value of this resource.
-      // Yeah... yikes. Amazing that this works though.
-      final var startTime = SimulationTimeline.create(schema).origin();
-      final var initialValue = this.resource.getDynamics(startTime).getDynamics();
-
-      // SAFETY: Enums are implicitly final, and the only way to define one is to use the `enum` syntax,
-      //   so `Class<? extends Enum<E>> == Class<E>`.
-      @SuppressWarnings("unchecked")
-      final var enumClass = (Class<E>) initialValue.getClass();
-      final var mapper = new EnumValueMapper<>(enumClass);
-
-      return Pair.of(mapper.getValueSchema(), (time) -> resource.getDynamics(time).map(mapper::serializeValue));
     }
   }
 }

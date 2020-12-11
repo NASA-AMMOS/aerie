@@ -1,15 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
@@ -247,21 +245,6 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
-    public <Solution> Solution ask(final SolvableDynamics<Solution, ?> resource, final Duration offset) {
-      return resource.solve(new SolvableDynamics.Visitor() {
-        @Override
-        public Double real(final RealDynamics dynamics) {
-          return new RealSolver().valueAt(dynamics, offset);
-        }
-
-        @Override
-        public <ResourceType> ResourceType discrete(final ResourceType fact) {
-          return fact;
-        }
-      });
-    }
-
-    @Override
     public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
       this.now = this.now.emit(event, query);
     }
@@ -345,8 +328,9 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
-    public <ResourceType, ConditionType> Object awaiting(
-        final Resource<History<$Timeline>, SolvableDynamics<ResourceType, ConditionType>> resource,
+    public <DynamicsType, ConditionType> Object awaiting(
+        final Solver<?, DynamicsType, ConditionType> solver,
+        final Resource<? super $Timeline, DynamicsType> resource,
         final ConditionType condition)
     {
       // TODO: work out how to await a task on conditions

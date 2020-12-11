@@ -9,48 +9,19 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public abstract class Module<$Schema> {
-  private final ProxyContext<$Schema> context = new ProxyContext<>();
-  private final Map<String, Module<$Schema>> submodules = new HashMap<>();
-  private final Map<String, Runnable> daemons = new HashMap<>();
+  private final Context<$Schema> context;
 
-  public final Context<$Schema> setContext(final Context<$Schema> context) {
-    final var old = this.context.getTarget();
-    this.context.setTarget(context);
-    return old;
+  protected Module(final Context<$Schema> context) {
+    this.context = Objects.requireNonNull(context);
   }
 
-  protected final <Submodule extends Module<$Schema>>
-  Submodule submodule(final String name, final Submodule submodule) {
-    if (this.submodules.containsKey(name)) {
-      throw new RuntimeException(String.format("Attempt to register submodule with id already in use: %s", submodule));
-    }
-
-    submodule.setContext(this.context);
-    this.submodules.put(name, submodule);
-
-    return submodule;
-  }
-
-  protected final void daemon(final String id, final Runnable task) {
-    if (this.daemons.containsKey(id)) {
-      throw new RuntimeException(String.format("Attempt to register daemon with id already in use: %s", id));
-    }
-
-    this.daemons.put(id, task);
-  }
-
-  public final Map<String, Runnable> getDaemons() {
-    return Collections.unmodifiableMap(this.daemons);
-  }
-
-  public final Map<String, Module<$Schema>> getSubmodules() {
-    return Collections.unmodifiableMap(this.submodules);
+  protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
+    this(builder.getRootContext());
   }
 
 

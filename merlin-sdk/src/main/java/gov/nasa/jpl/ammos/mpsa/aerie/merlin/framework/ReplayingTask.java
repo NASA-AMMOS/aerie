@@ -3,13 +3,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SolvableDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
@@ -102,16 +104,12 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
 
     @Override
     public double ask(final RealResource<? super History<? extends $Schema>> resource) {
-      final var dynamics = SolvableDynamics.real(resource.getDynamics(now()).getDynamics());
-
-      return this.scheduler.ask(dynamics, Duration.ZERO);
+      return new RealSolver().valueAt(resource.getDynamics(now()).getDynamics(), Duration.ZERO);
     }
 
     @Override
     public <T> T ask(final DiscreteResource<? super History<? extends $Schema>, T> resource) {
-      final var dynamics = SolvableDynamics.discrete(resource.getDynamics(now()).getDynamics());
-
-      return this.scheduler.ask(dynamics, Duration.ZERO);
+      return new DiscreteSolver<T>().valueAt(resource.getDynamics(now()).getDynamics(), Duration.ZERO);
     }
 
     @Override
@@ -185,9 +183,8 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     public void waitFor(final RealResource<? super History<? extends $Schema>> resource, final RealCondition condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = TaskStatus.awaiting(
-            (now) -> resource.getDynamics(now).<SolvableDynamics<Double, RealCondition>>map(SolvableDynamics::real),
-            condition);
+        this.status = TaskStatus.<$Timeline, RealDynamics, RealCondition>awaiting(
+            new RealSolver(), resource::getDynamics, condition);
         throw Yield;
       } else {
         readvance();
@@ -198,9 +195,8 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema>, T> resource, final Set<T> condition) {
       if (this.history.isEmpty()) {
         // We're running normally.
-        this.status = TaskStatus.awaiting(
-            (now) -> resource.getDynamics(now).map(SolvableDynamics::discrete),
-            condition);
+        this.status = TaskStatus.<$Timeline, T, Set<T>>awaiting(
+            new DiscreteSolver<>(), resource::getDynamics, condition);
         throw Yield;
       } else {
         readvance();

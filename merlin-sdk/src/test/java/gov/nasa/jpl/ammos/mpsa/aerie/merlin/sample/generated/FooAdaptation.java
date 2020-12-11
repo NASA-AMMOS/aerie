@@ -1,17 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.DaemonTaskType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.FooActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -20,22 +18,20 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 // TODO: Automatically generate at compile time.
 public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   private final ProxyContext<$Schema> rootContext = new ProxyContext<>();
 
-  private final FooResources<$Schema> container;
   private final BuiltResources<$Schema> resources;
   private final Map<String, TaskSpecType<$Schema, ?>> daemonTypes;
   private final Map<String, TaskSpecType<$Schema, ?>> allTaskSpecTypes;
 
   public FooAdaptation(final Schema.Builder<$Schema> schemaBuilder) {
-    final var builder = new ResourcesBuilder<>(schemaBuilder);
-    final var container = new FooResources<>(builder);
-    container.setContext(this.rootContext);
+    final var builder = new ResourcesBuilder<>(this.rootContext, schemaBuilder);
+    final var container = new FooResources<>(builder.getCursor());
+    final var resources = builder.build();
 
     final var allTaskSpecTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
     {
@@ -45,31 +41,16 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
 
     final var daemonTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
 
-    getDaemons("/daemons", container, (name, daemon) -> {
-      final var daemonType = new DaemonTaskType<>(name, daemon, this.rootContext);
+    resources.daemons.forEach((name, daemon) -> {
+      final var daemonType = new DaemonTaskType<>("/daemons/" + name, daemon, this.rootContext);
 
       daemonTypes.put(daemonType.getName(), daemonType);
       allTaskSpecTypes.put(daemonType.getName(), daemonType);
     });
 
-    this.container = container;
-    this.resources = builder.build();
+    this.resources = resources;
     this.daemonTypes = Collections.unmodifiableMap(daemonTypes);
     this.allTaskSpecTypes = Collections.unmodifiableMap(allTaskSpecTypes);
-  }
-
-  private static void getDaemons(
-      final String namespace,
-      final Module<?> module,
-      final BiConsumer<String, Runnable> receiver)
-  {
-    for (final var daemon : module.getDaemons().entrySet()) {
-      receiver.accept(namespace + "/" + daemon.getKey(), daemon.getValue());
-    }
-
-    for (final var submodule : module.getSubmodules().entrySet()) {
-      getDaemons(namespace + "/" + submodule.getKey(), submodule.getValue(), receiver);
-    }
   }
 
   @Override
@@ -87,17 +68,17 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   }
 
   @Override
-  public Map<String, ? extends Pair<ValueSchema, ? extends Resource<History<? extends $Schema>, SerializedValue>>> getDiscreteResources() {
-    return this.resources.getDiscreteResources();
+  public Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> getDiscreteResources() {
+    return this.resources.discreteResources;
   }
 
   @Override
-  public Map<String, ? extends Resource<History<? extends $Schema>, RealDynamics>> getRealResources() {
-    return this.resources.getRealResources();
+  public Map<String, Resource<$Schema, RealDynamics>> getRealResources() {
+    return this.resources.realResources;
   }
 
   @Override
   public Schema<$Schema> getSchema() {
-    return this.resources.getSchema();
+    return this.resources.schema;
   }
 }
