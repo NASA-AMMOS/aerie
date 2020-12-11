@@ -27,12 +27,6 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
-var altColor = "altColor";
-var rowColor = "rowColor";
-var tableTab = "tableTab";
-var activeTableTab = "activeTableTab";
 var pathtoroot = "../../../../../../../../";
 var useModuleDirectories = true;
 loadScripts(document, 'script');</script>
@@ -89,15 +83,15 @@ loadScripts(document, 'script');</script>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.detail">Method</a></li>
+<li>Method</li>
 </ul>
 </div>
 <a id="skip.navbar.top">
@@ -139,6 +133,44 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- =========== FIELD SUMMARY =========== -->
+<section role="region">
+<ul class="blockList">
+<li class="blockList"><a id="field.summary">
+<!--   -->
+</a>
+<h3>Field Summary</h3>
+<table class="memberSummary">
+<caption><span>Fields</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colSecond" scope="col">Field</th>
+<th class="colLast" scope="col">Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#daemons">daemons</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#discreteResources">discreteResources</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#realResources">realResources</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="rowColor">
+<td class="colFirst"><code><a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#schema">schema</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
+</section>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <section role="region">
 <ul class="blockList">
@@ -153,9 +185,10 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema,java.util.Map,java.util.Map)">BuiltResources</a></span>&#8203;(<a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;&nbsp;schema,
-              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;&nbsp;realResources,
-              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;discreteResources)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema,java.util.Map,java.util.Map,java.util.Map)">BuiltResources</a></span>&#8203;(<a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;&nbsp;schema,
+              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;&nbsp;realResources,
+              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;discreteResources,
+              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&gt;&nbsp;daemons)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -169,29 +202,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Method Summary</h3>
-<table class="memberSummary">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
-<tr>
-<th class="colFirst" scope="col">Modifier and Type</th>
-<th class="colSecond" scope="col">Method</th>
-<th class="colLast" scope="col">Description</th>
-</tr>
-<tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDiscreteResources()">getDiscreteResources</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getRealResources()">getRealResources</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getSchema()">getSchema</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-</table>
 <ul class="blockList">
 <li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
 <!--   -->
@@ -208,6 +218,52 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
+<!-- ============ FIELD DETAIL =========== -->
+<section role="region">
+<ul class="blockList">
+<li class="blockList"><a id="field.detail">
+<!--   -->
+</a>
+<h3>Field Detail</h3>
+<a id="schema">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>schema</h4>
+<pre>public final&nbsp;<a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt; schema</pre>
+</li>
+</ul>
+<a id="realResources">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>realResources</h4>
+<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt; realResources</pre>
+</li>
+</ul>
+<a id="discreteResources">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>discreteResources</h4>
+<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt; discreteResources</pre>
+</li>
+</ul>
+<a id="daemons">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>daemons</h4>
+<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&gt; daemons</pre>
+</li>
+</ul>
+</li>
+</ul>
+</section>
 <!-- ========= CONSTRUCTOR DETAIL ======== -->
 <section role="region">
 <ul class="blockList">
@@ -215,52 +271,16 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema,java.util.Map,java.util.Map)">
+<a id="&lt;init&gt;(gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema,java.util.Map,java.util.Map,java.util.Map)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>BuiltResources</h4>
 <pre>public&nbsp;BuiltResources&#8203;(<a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;&nbsp;schema,
-                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;&nbsp;realResources,
-                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;discreteResources)</pre>
-</li>
-</ul>
-</li>
-</ul>
-</section>
-<!-- ============ METHOD DETAIL ========== -->
-<section role="region">
-<ul class="blockList">
-<li class="blockList"><a id="method.detail">
-<!--   -->
-</a>
-<h3>Method Detail</h3>
-<a id="getSchema()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getSchema</h4>
-<pre class="methodSignature">public&nbsp;<a href="../timeline/Schema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;&nbsp;getSchema()</pre>
-</li>
-</ul>
-<a id="getDiscreteResources()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getDiscreteResources</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;getDiscreteResources()</pre>
-</li>
-</ul>
-<a id="getRealResources()">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>getRealResources</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;? extends <a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;&nbsp;getRealResources()</pre>
+                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&gt;&nbsp;realResources,
+                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html?is-external=true" title="class or interface in org.apache.commons.lang3.tuple" class="externalLink">Pair</a>&lt;<a href="../../merlinsdk/serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>,&#8203;<a href="../protocol/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;<a href="BuiltResources.html" title="type parameter in BuiltResources">$Schema</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&gt;&gt;&nbsp;discreteResources,
+                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&gt;&nbsp;daemons)</pre>
 </li>
 </ul>
 </li>
@@ -315,15 +335,15 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.summary">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
-<li>Field&nbsp;|&nbsp;</li>
+<li><a href="#field.detail">Field</a>&nbsp;|&nbsp;</li>
 <li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
-<li><a href="#method.detail">Method</a></li>
+<li>Method</li>
 </ul>
 </div>
 <a id="skip.navbar.bottom">

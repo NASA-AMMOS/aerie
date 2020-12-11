@@ -149,8 +149,9 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>&lt;ResourceType,&#8203;ConditionType&gt;<br><a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">Result</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource,ConditionType)">awaiting</a></span>&#8203;(<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">$Timeline</a>&gt;,&#8203;<a href="SolvableDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SolvableDynamics</a>&lt;ResourceType,&#8203;ConditionType&gt;&gt;&nbsp;resource,
+<td class="colFirst"><code>&lt;DynamicsType,&#8203;ConditionType&gt;<br><a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">Result</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource,ConditionType)">awaiting</a></span>&#8203;(<a href="../../merlinsdk/resources/Solver.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Solver</a>&lt;?,&#8203;DynamicsType,&#8203;ConditionType&gt;&nbsp;solver,
+        <a href="Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;? super <a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">$Timeline</a>,&#8203;DynamicsType&gt;&nbsp;resource,
         ConditionType&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -213,15 +214,16 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <pre class="methodSignature"><a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">Result</a>&nbsp;delayed&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;delay)</pre>
 </li>
 </ul>
-<a id="awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource,java.lang.Object)">
+<a id="awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource,java.lang.Object)">
 <!--   -->
-</a><a id="awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource,ConditionType)">
+</a><a id="awaiting(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource,ConditionType)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>awaiting</h4>
-<pre class="methodSignature">&lt;ResourceType,&#8203;ConditionType&gt;&nbsp;<a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">Result</a>&nbsp;awaiting&#8203;(<a href="../../merlinsdk/resources/Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Resource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">$Timeline</a>&gt;,&#8203;<a href="SolvableDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SolvableDynamics</a>&lt;ResourceType,&#8203;ConditionType&gt;&gt;&nbsp;resource,
+<pre class="methodSignature">&lt;DynamicsType,&#8203;ConditionType&gt;&nbsp;<a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">Result</a>&nbsp;awaiting&#8203;(<a href="../../merlinsdk/resources/Solver.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources">Solver</a>&lt;?,&#8203;DynamicsType,&#8203;ConditionType&gt;&nbsp;solver,
+                                                   <a href="Resource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Resource</a>&lt;? super <a href="TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">$Timeline</a>,&#8203;DynamicsType&gt;&nbsp;resource,
                                                    ConditionType&nbsp;condition)</pre>
 </li>
 </ul>
