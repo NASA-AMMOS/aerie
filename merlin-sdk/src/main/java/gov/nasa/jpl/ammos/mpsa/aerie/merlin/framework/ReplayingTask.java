@@ -37,7 +37,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
 
   @Override
   public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
-    final var context = this.new ReplayingReactionContext(this.initialTime, scheduler);
+    final var context = new ReplayingReactionContext<$Schema, $Timeline>(this.initialTime, this.breadcrumbs, scheduler);
 
     if (this.initialTime.isEmpty()) {
       this.initialTime = Optional.of(scheduler.now());
@@ -67,18 +67,23 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
   private static final class Yield extends RuntimeException {}
   private static final Yield Yield = new Yield();
 
-  private final class ReplayingReactionContext implements Context<$Schema> {
+  private static final class ReplayingReactionContext<$Schema, $Timeline extends $Schema>
+      implements Context<$Schema>
+  {
     private final Scheduler<$Timeline> scheduler;
     private TaskStatus<$Timeline> status = TaskStatus.completed();
 
     private Optional<History<$Timeline>> history;
+    private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs;
     private int nextBreadcrumbIndex = 0;
 
     public ReplayingReactionContext(
         final Optional<History<$Timeline>> initialTime,
+        final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
         final Scheduler<$Timeline> scheduler)
     {
       this.history = initialTime;
+      this.breadcrumbs = breadcrumbs;
       this.scheduler = scheduler;
     }
 
@@ -118,7 +123,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
         // We're running normally.
         final var id = this.scheduler.spawn(spec, type);
 
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+        this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
 
         return id;
@@ -133,7 +138,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
         // We're running normally.
         final var id = this.scheduler.defer(duration, spec, type);
 
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+        this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
 
         return id;
@@ -148,7 +153,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
         // We're running normally.
         final var id = this.scheduler.spawn(type, arguments);
 
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+        this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
         this.nextBreadcrumbIndex += 1;
 
         return id;
@@ -204,15 +209,15 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     }
 
     private void readvance() {
-      if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
+      if (this.nextBreadcrumbIndex >= this.breadcrumbs.size()) {
         // We've just now caught up.
-        ReplayingTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
+        this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
         this.nextBreadcrumbIndex += 1;
 
         this.history = Optional.empty();
       } else {
         // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
+        final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex);
         this.nextBreadcrumbIndex += 1;
 
         if (!(breadcrumb instanceof ActivityBreadcrumb.Advance)) {
@@ -224,12 +229,12 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     }
 
     private String respawn() {
-      if (this.nextBreadcrumbIndex >= ReplayingTask.this.breadcrumbs.size()) {
+      if (this.nextBreadcrumbIndex >= this.breadcrumbs.size()) {
         // We've just now caught up.
         throw new Error("Expected a Spawn breadcrumb while replaying; found none.");
       } else {
         // We're still behind -- jump to the next breadcrumb.
-        final var breadcrumb = ReplayingTask.this.breadcrumbs.get(this.nextBreadcrumbIndex);
+        final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex);
         this.nextBreadcrumbIndex += 1;
 
         if (!(breadcrumb instanceof ActivityBreadcrumb.Spawn)) {
