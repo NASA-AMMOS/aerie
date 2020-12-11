@@ -28,16 +28,19 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
 
   private Optional<History<$Timeline>> history;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs;
-  private int nextBreadcrumbIndex = 0;
+  private int nextBreadcrumbIndex;
 
   public ReactionContext(
-      final Optional<History<$Timeline>> initialTime,
+      final int initialBreadcrumbIndex,
       final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
       final Scheduler<$Timeline> scheduler)
   {
-    this.history = initialTime;
+    this.nextBreadcrumbIndex = initialBreadcrumbIndex;
+    this.history = Optional.empty();
     this.breadcrumbs = breadcrumbs;
     this.scheduler = scheduler;
+
+    readvance();
   }
 
   /* package-local */
@@ -121,6 +124,8 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
     if (this.history.isEmpty()) {
       // We're running normally.
       this.status = TaskStatus.delayed(duration);
+
+      this.nextBreadcrumbIndex += 1;
       throw ReplayingTask.Yield;
     } else {
       readvance();
@@ -132,6 +137,8 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
     if (this.history.isEmpty()) {
       // We're running normally.
       this.status = TaskStatus.awaiting(id);
+
+      this.nextBreadcrumbIndex += 1;
       throw ReplayingTask.Yield;
     } else {
       readvance();
@@ -144,6 +151,8 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
       // We're running normally.
       this.status = TaskStatus.<$Timeline, RealDynamics, RealCondition>awaiting(
           new RealSolver(), resource::getDynamics, condition);
+
+      this.nextBreadcrumbIndex += 1;
       throw ReplayingTask.Yield;
     } else {
       readvance();
@@ -156,6 +165,8 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
       // We're running normally.
       this.status = TaskStatus.<$Timeline, T, Set<T>>awaiting(
           new DiscreteSolver<>(), resource::getDynamics, condition);
+
+      this.nextBreadcrumbIndex += 1;
       throw ReplayingTask.Yield;
     } else {
       readvance();
@@ -163,12 +174,10 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   private void readvance() {
-    if (this.nextBreadcrumbIndex >= this.breadcrumbs.size()) {
+    if (this.nextBreadcrumbIndex >= this.breadcrumbs.size() - 1) {
       // We've just now caught up.
-      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
-      this.nextBreadcrumbIndex += 1;
-
       this.history = Optional.empty();
+      this.nextBreadcrumbIndex += 1;
     } else {
       // We're still behind -- jump to the next breadcrumb.
       final var breadcrumb = this.breadcrumbs.get(this.nextBreadcrumbIndex);
@@ -183,7 +192,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   private String respawn() {
-    if (this.nextBreadcrumbIndex >= this.breadcrumbs.size()) {
+    if (this.nextBreadcrumbIndex >= this.breadcrumbs.size() - 1) {
       // We've just now caught up.
       throw new Error("Expected a Spawn breadcrumb while replaying; found none.");
     } else {

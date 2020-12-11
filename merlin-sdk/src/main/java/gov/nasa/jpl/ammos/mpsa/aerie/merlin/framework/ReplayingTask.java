@@ -3,19 +3,15 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     implements Task<$Timeline>
 {
   private final ProxyContext<$Schema> rootContext;
   private final Runnable task;
-
-  private Optional<History<$Timeline>> initialTime = Optional.empty();
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
   public ReplayingTask(final ProxyContext<$Schema> rootContext, final Runnable task) {
@@ -25,11 +21,9 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
 
   @Override
   public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
-    final var context = new ReactionContext<$Schema, $Timeline>(this.initialTime, this.breadcrumbs, scheduler);
+    this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
 
-    if (this.initialTime.isEmpty()) {
-      this.initialTime = Optional.of(scheduler.now());
-    }
+    final var context = new ReactionContext<$Schema, $Timeline>(0, this.breadcrumbs, scheduler);
 
     {
       final var oldContext = this.rootContext.getTarget();
