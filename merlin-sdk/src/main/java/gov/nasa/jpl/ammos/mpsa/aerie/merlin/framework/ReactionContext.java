@@ -23,6 +23,7 @@ import java.util.Set;
 final class ReactionContext<$Schema, $Timeline extends $Schema>
     implements Context<$Schema>
 {
+  private final TaskHandle handle;
   private final Scheduler<$Timeline> scheduler;
   private TaskStatus<$Timeline> status = TaskStatus.completed();
 
@@ -33,12 +34,14 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   public ReactionContext(
       final int initialBreadcrumbIndex,
       final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
-      final Scheduler<$Timeline> scheduler)
+      final Scheduler<$Timeline> scheduler,
+      final TaskHandle handle)
   {
     this.nextBreadcrumbIndex = initialBreadcrumbIndex;
     this.history = Optional.empty();
     this.breadcrumbs = breadcrumbs;
     this.scheduler = scheduler;
+    this.handle = handle;
 
     readvance();
   }
@@ -126,7 +129,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
       this.status = TaskStatus.delayed(duration);
 
       this.nextBreadcrumbIndex += 1;
-      throw ReplayingTask.Yield;
+      this.handle.yieldTask();
     } else {
       readvance();
     }
@@ -139,7 +142,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
       this.status = TaskStatus.awaiting(id);
 
       this.nextBreadcrumbIndex += 1;
-      throw ReplayingTask.Yield;
+      this.handle.yieldTask();
     } else {
       readvance();
     }
@@ -153,7 +156,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
           new RealSolver(), resource::getDynamics, condition);
 
       this.nextBreadcrumbIndex += 1;
-      throw ReplayingTask.Yield;
+      this.handle.yieldTask();
     } else {
       readvance();
     }
@@ -167,7 +170,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
           new DiscreteSolver<>(), resource::getDynamics, condition);
 
       this.nextBreadcrumbIndex += 1;
-      throw ReplayingTask.Yield;
+      this.handle.yieldTask();
     } else {
       readvance();
     }
