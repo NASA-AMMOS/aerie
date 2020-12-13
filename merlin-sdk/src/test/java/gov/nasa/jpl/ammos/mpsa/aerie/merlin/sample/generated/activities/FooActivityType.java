@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
@@ -90,6 +90,6 @@ public final class FooActivityType<$Schema> implements TaskSpecType<$Schema, Foo
   public <$Timeline extends $Schema> Task<$Timeline> createTask(final FooActivity activity) {
     final var task = activity.new EffectModel<$Schema>();
     task.setContext(this.rootContext);
-    return new ReplayingTask<>(this.rootContext, () -> task.run(this.container));
+    return new ThreadedTask<>(this.rootContext, () -> task.run(this.container));
   }
 }
