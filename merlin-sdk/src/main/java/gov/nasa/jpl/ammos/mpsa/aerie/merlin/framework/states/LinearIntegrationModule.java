@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.LinearIntegrationModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
@@ -31,6 +32,11 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
     public double get() {
       return this.resource.getDynamics(now()).getDynamics().initial;
     }
+
+    public Condition<$Schema> isBetween(final double lower, final double upper) {
+      // TODO
+      return null;
+    }
   }
 
   public final class Rate {
@@ -46,6 +52,11 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
 
     public void add(final double delta) {
       emit(delta, query);
+    }
+
+    public Condition<$Schema> isBetween(final double lower, final double upper) {
+      // TODO
+      return null;
     }
   }
 }

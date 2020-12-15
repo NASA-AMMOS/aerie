@@ -1,6 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Objects;
@@ -17,11 +16,7 @@ public abstract class TaskStatus<$Timeline> {
 
     Result awaiting(String activityId);
 
-    <DynamicsType, ConditionType>
-    Result awaiting(
-        Solver<?, DynamicsType, ConditionType> solver,
-        Resource<? super $Timeline, DynamicsType> resource,
-        ConditionType condition);
+    Result awaiting(Condition<? super $Timeline> condition);
   }
 
   public static <$Timeline> TaskStatus<$Timeline> completed() {
@@ -55,21 +50,13 @@ public abstract class TaskStatus<$Timeline> {
     };
   }
 
-  public static <$Timeline, DynamicsType, ConditionType>
-  TaskStatus<$Timeline>
-  awaiting(
-      final Solver<?, DynamicsType, ConditionType> solver,
-      final Resource<? super $Timeline, DynamicsType> resource,
-      final ConditionType condition)
-  {
-    Objects.requireNonNull(solver);
-    Objects.requireNonNull(resource);
+  public static <$Timeline> TaskStatus<$Timeline> awaiting(final Condition<? super $Timeline> condition) {
     Objects.requireNonNull(condition);
 
     return new TaskStatus<>() {
       @Override
       public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.awaiting(solver, resource, condition);
+        return visitor.awaiting(condition);
       }
     };
   }

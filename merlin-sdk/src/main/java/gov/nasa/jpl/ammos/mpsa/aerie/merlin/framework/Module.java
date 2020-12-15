@@ -1,17 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public abstract class Module<$Schema> {
   private final Context<$Schema> context;
@@ -68,17 +65,7 @@ public abstract class Module<$Schema> {
     this.context.waitFor(id);
   }
 
-  protected final void waitFor(
-      final RealResource<? super History<? extends $Schema>> resource,
-      final RealCondition condition)
-  {
-    this.context.waitFor(resource, condition);
-  }
-
-  protected final <T> void waitFor(
-      final DiscreteResource<? super History<? extends $Schema>, T> resource,
-      final Set<T> condition)
-  {
-    this.context.waitFor(resource, condition);
+  protected final void waitUntil(final Condition<$Schema> condition) {
+    this.context.waitUntil(condition);
   }
 }

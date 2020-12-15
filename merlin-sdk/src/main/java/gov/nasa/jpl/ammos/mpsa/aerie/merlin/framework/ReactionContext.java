@@ -1,23 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /* package-local */
 final class ReactionContext<$Schema, $Timeline extends $Schema>
@@ -139,25 +133,10 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public void waitFor(final RealResource<? super History<? extends $Schema>> resource, final RealCondition condition) {
+  public void waitUntil(final Condition<$Schema> condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.status = TaskStatus.<$Timeline, RealDynamics, RealCondition>awaiting(
-          new RealSolver(), resource::getDynamics, condition);
-
-      this.nextBreadcrumbIndex += 1;
-      this.handle.yieldTask();
-    } else {
-      readvance();
-    }
-  }
-
-  @Override
-  public <T> void waitFor(final DiscreteResource<? super History<? extends $Schema>, T> resource, final Set<T> condition) {
-    if (this.history.isEmpty()) {
-      // We're running normally.
-      this.status = TaskStatus.<$Timeline, T, Set<T>>awaiting(
-          new DiscreteSolver<>(), resource::getDynamics, condition);
+      this.status = TaskStatus.awaiting(condition);
 
       this.nextBreadcrumbIndex += 1;
       this.handle.yieldTask();

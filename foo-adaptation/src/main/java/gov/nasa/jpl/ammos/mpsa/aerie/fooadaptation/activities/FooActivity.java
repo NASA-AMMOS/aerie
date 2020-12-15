@@ -4,8 +4,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.ClosedInterval;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
 
@@ -38,7 +36,7 @@ public final class FooActivity {
 
       data.rate.add(1.0);
       delay(1, SECOND);
-      waitFor(data.volume.resource, new RealCondition(ClosedInterval.between(5.0, 10.0)));
+      waitUntil(data.volume.isBetween(5.0, 10.0));
       data.rate.add(2.0);
       data.rate.add(data.rate.get());
     }
