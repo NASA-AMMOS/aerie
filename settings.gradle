@@ -8,6 +8,7 @@ include 'contrib'
 // Adaptations
 include 'banananation'
 include 'sample-adaptation'
+include 'foo-adaptation'
 
 // Service support
 include 'parsing-utilities'
