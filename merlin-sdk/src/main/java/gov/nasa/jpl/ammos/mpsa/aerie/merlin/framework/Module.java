@@ -29,14 +29,6 @@ public abstract class Module<$Schema> {
     return this.context.now();
   }
 
-  protected final double ask(final RealResource<? super History<? extends $Schema>> resource) {
-    return this.context.ask(resource);
-  }
-
-  protected final <T> T ask(final DiscreteResource<? super History<? extends $Schema>, T> resource) {
-    return this.context.ask(resource);
-  }
-
 
   protected final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
     this.context.emit(event, query);

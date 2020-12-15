@@ -25,10 +25,10 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   }
 
   public double getVolume() {
-    return ask(this.volume);
+    return this.volume.getDynamics(now()).getDynamics().initial;
   }
 
   public double getRate() {
-    return ask(this.rate);
+    return this.rate.getDynamics(now()).getDynamics().initial;
   }
 }

@@ -63,10 +63,10 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   }
 
   public Value get() {
-    return ask(this.value);
+    return this.value.getDynamics(now()).getDynamics();
   }
 
   public boolean isConflicted() {
-    return ask(this.conflicted);
+    return this.conflicted.getDynamics(now()).getDynamics();
   }
 }

@@ -14,8 +14,6 @@ import java.util.Set;
 
 public interface Context<$Schema> {
   History<? extends $Schema> now();
-  double ask(RealResource<? super History<? extends $Schema>> resource);
-  <T> T ask(DiscreteResource<? super History<? extends $Schema>, T> resource);
 
   <Event> void emit(Event event, Query<? super $Schema, Event, ?> query);
   <Spec> String spawn(Spec spec, TaskSpecType<? super $Schema, Spec> type);

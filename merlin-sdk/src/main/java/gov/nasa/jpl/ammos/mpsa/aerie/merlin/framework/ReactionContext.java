@@ -68,16 +68,6 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public double ask(final RealResource<? super History<? extends $Schema>> resource) {
-    return new RealSolver().valueAt(resource.getDynamics(now()).getDynamics(), Duration.ZERO);
-  }
-
-  @Override
-  public <T> T ask(final DiscreteResource<? super History<? extends $Schema>, T> resource) {
-    return new DiscreteSolver<T>().valueAt(resource.getDynamics(now()).getDynamics(), Duration.ZERO);
-  }
-
-  @Override
   public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
     if (this.history.isEmpty()) {
       // We're running normally.

@@ -32,16 +32,6 @@ public final class ProxyContext<$Schema>
   }
 
   @Override
-  public double ask(final RealResource<? super History<? extends $Schema>> resource) {
-    return this.context.ask(resource);
-  }
-
-  @Override
-  public <T> T ask(final DiscreteResource<? super History<? extends $Schema>, T> resource) {
-    return this.context.ask(resource);
-  }
-
-  @Override
   public final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
     this.context.emit(event, query);
   }
