@@ -28,17 +28,19 @@ public final class FooActivity {
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
     public void run(final FooResources<$Schema> resources) {
+      final var data = resources.data;
+
       if (y.equals("test")) {
-        resources.data.addRate(x);
+        data.rate.add(x);
       } else if (y.equals("spawn")) {
         call(new FooActivity());
       }
 
-      resources.data.addRate(1.0);
+      data.rate.add(1.0);
       delay(1, SECOND);
-      waitFor(resources.data.volume, new RealCondition(ClosedInterval.between(5.0, 10.0)));
-      resources.data.addRate(2.0);
-      resources.data.addRate(resources.data.getRate());
+      waitFor(data.volume.resource, new RealCondition(ClosedInterval.between(5.0, 10.0)));
+      data.rate.add(2.0);
+      data.rate.add(data.rate.get());
     }
   }
 }

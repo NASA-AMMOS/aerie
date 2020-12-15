@@ -32,7 +32,7 @@ public final class FooResources<$Schema> extends Module<$Schema> {
 
     this.foo = RegisterModule.create(builder.descend("foo"), 0.0);
     this.data = new LinearIntegrationModule<>(builder.descend("data"));
-    this.combo = this.data.volume.plus(this.data.rate);
+    this.combo = this.data.volume.resource.plus(this.data.rate.resource);
 
     // TODO: automatically perform this for each @Daemon annotation
     builder.daemon("test", this::test);
@@ -40,6 +40,6 @@ public final class FooResources<$Schema> extends Module<$Schema> {
 
   public void test() {
     foo.set(21.0);
-    data.addRate(42.0);
+    data.rate.add(42.0);
   }
 }
