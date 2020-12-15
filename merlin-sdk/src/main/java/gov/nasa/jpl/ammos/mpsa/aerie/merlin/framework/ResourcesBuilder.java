@@ -2,6 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
@@ -83,6 +84,10 @@ public final class ResourcesBuilder<$Schema> {
       return resource;
     }
 
+    public void constraint(final String id, final Condition<$Schema> condition) {
+      this.builder.state.constraint(this.namespace + "/" + id, condition);
+    }
+
     public void daemon(final String id, final Runnable task) {
       this.builder.state.daemon(this.namespace + "/" + id, task);
     }
@@ -100,6 +105,10 @@ public final class ResourcesBuilder<$Schema> {
          RealResource<$Schema> resource);
 
     void
+    constraint(String id,
+               Condition<$Schema> condition);
+
+    void
     daemon(String id,
            Runnable task);
 
@@ -110,6 +119,7 @@ public final class ResourcesBuilder<$Schema> {
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
     private final Map<String, RealResource<$Schema>> realResources = new HashMap<>();
     private final Map<String, Pair<ValueSchema, DiscreteResource<$Schema, SerializedValue>>> discreteResources = new HashMap<>();
+    private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, Runnable> daemons = new HashMap<>();
 
     @Override
@@ -130,13 +140,23 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     @Override
+    public void constraint(final String id, final Condition<$Schema> condition) {
+      this.constraints.put(id, condition);
+    }
+
+    @Override
     public void daemon(final String id, final Runnable task) {
       this.daemons.put(id, task);
     }
 
     @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
-      final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources, this.daemons);
+      final var resources = new BuiltResources<>(
+          schema,
+          this.realResources,
+          this.discreteResources,
+          this.constraints,
+          this.daemons);
 
       ResourcesBuilder.this.state = new BuiltResourcesBuilderState(resources);
       return resources;
@@ -162,6 +182,11 @@ public final class ResourcesBuilder<$Schema> {
     @Override
     public void real(final String name, final RealResource<$Schema> resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
+    }
+
+    @Override
+    public void constraint(final String id, final Condition<$Schema> condition) {
+      throw new IllegalStateException("Constraints cannot be added after the schema is built");
     }
 
     @Override

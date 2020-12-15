@@ -22,6 +22,9 @@ public interface Adaptation<$Schema> {
   /* Produce */ Map<String, RealResource<$Schema>>
   /* Given   */ getRealResources();
 
+  /* Produce */ Map<String, Condition<$Schema>>
+  /* Given   */ getConstraints();
+
   /* Produce */ Schema<$Schema>
   /* Given   */ getSchema();
 }

@@ -6,6 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.DaemonTaskType;
@@ -75,6 +76,11 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   @Override
   public Map<String, RealResource<$Schema>> getRealResources() {
     return this.resources.realResources;
+  }
+
+  @Override
+  public Map<String, Condition<$Schema>> getConstraints() {
+    return this.resources.constraints;
   }
 
   @Override
