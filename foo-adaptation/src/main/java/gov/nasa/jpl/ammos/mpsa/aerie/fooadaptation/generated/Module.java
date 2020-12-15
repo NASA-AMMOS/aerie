@@ -1,8 +1,8 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
+package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.activities.FooActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.activities.FooActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 
 import java.util.Map;

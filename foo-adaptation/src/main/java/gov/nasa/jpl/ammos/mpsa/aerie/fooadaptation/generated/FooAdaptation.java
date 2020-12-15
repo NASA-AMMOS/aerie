@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
+package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
@@ -6,9 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.FooResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.DaemonTaskType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities.FooActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.DaemonTaskType;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.FooActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;

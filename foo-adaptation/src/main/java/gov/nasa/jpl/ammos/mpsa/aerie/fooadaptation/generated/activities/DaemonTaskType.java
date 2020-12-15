@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask;

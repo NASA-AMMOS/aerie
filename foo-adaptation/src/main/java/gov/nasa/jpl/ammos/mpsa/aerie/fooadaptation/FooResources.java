@@ -1,9 +1,9 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample;
+package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.LinearIntegrationModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 

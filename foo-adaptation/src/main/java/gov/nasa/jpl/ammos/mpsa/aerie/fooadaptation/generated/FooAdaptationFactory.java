@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.sample.generated;
+package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.AdaptationFactory;
