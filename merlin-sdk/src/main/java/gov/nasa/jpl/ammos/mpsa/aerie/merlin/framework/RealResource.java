@@ -1,7 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.ClosedInterval;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
@@ -83,5 +86,12 @@ public abstract class RealResource<$Schema> {
 
   public final double ask(final History<? extends $Schema> now) {
     return new RealSolver().valueAt(this.getDynamics(now).getDynamics(), Duration.ZERO);
+  }
+
+  public Condition<$Schema> isBetween(final double lower, final double upper) {
+    return Condition.atom(
+          new RealResourceSolver<>(),
+          this,
+          new RealCondition(ClosedInterval.between(lower, upper)));
   }
 }

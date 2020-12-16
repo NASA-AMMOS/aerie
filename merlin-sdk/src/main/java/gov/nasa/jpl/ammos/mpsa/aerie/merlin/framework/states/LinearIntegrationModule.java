@@ -33,8 +33,7 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
     }
 
     public Condition<$Schema> isBetween(final double lower, final double upper) {
-      // TODO
-      return null;
+      return this.resource.isBetween(lower, upper);
     }
   }
 
@@ -54,8 +53,7 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
     }
 
     public Condition<$Schema> isBetween(final double lower, final double upper) {
-      // TODO
-      return null;
+      return this.resource.isBetween(lower, upper);
     }
   }
 }

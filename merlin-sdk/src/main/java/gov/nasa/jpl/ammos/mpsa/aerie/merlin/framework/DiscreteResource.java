@@ -1,11 +1,14 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 public abstract class DiscreteResource<$Schema, T> {
@@ -45,5 +48,12 @@ public abstract class DiscreteResource<$Schema, T> {
 
   public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {
     return DiscreteResource.mapped(this, transform);
+  }
+
+  public Condition<$Schema> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
+    return Condition.atom(
+        new DiscreteResourceSolver<>(mapper),
+        this,
+        Set.copyOf(values));
   }
 }
