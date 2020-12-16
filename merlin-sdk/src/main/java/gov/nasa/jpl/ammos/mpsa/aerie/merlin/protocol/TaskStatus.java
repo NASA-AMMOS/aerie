@@ -73,8 +73,4 @@ public abstract class TaskStatus<$Timeline> {
       }
     };
   }
-
-  public static <$Timeline> TaskStatus<$Timeline> delayed(final long quantity, final Duration unit) {
-    return delayed(Duration.of(quantity, unit));
-  }
 }
