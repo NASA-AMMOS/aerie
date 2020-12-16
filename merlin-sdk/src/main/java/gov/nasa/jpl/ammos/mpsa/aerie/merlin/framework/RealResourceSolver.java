@@ -1,5 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
@@ -9,6 +10,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
 
+import java.util.List;
 import java.util.Optional;
 
 public final class RealResourceSolver<$Schema>
@@ -20,6 +22,11 @@ public final class RealResourceSolver<$Schema>
       final History<? extends $Schema> now)
   {
     return resource.getDynamics(now);
+  }
+
+  @Override
+  public Approximator<RealDynamics> getApproximator() {
+    return Approximator.real(dynamics -> List.of(DelimitedDynamics.persistent(dynamics)));
   }
 
   @Override

@@ -9,6 +9,7 @@ import java.util.Optional;
 
 public interface ResourceSolver<$Schema, Resource,  /*->*/ Dynamics, Condition> {
   DelimitedDynamics<Dynamics> getDynamics(Resource resource, History<? extends $Schema> now);
+  Approximator<Dynamics> getApproximator();
 
   Optional<Duration> firstSatisfied(Dynamics dynamics, Condition condition, Window selection);
 }
