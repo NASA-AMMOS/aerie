@@ -2,14 +2,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
@@ -67,21 +64,23 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     public <ResourceType>
-    DiscreteResource<History<? extends $Schema>, ResourceType>
+    DiscreteResource<$Schema, ResourceType>
     discrete(final String name,
-             final Property<History<? extends $Schema>, ResourceType> resource,
+             final Property<History<? extends $Schema>, ResourceType> property,
              final ValueMapper<ResourceType> mapper)
     {
+      final var resource = DiscreteResource.atom(property);
       this.builder.state.discrete(this.namespace + "/" + name, resource, mapper);
-      return resource::ask;
+      return resource;
     }
 
-    public RealResource<History<? extends $Schema>>
+    public RealResource<$Schema>
     real(final String name,
-         final Property<History<? extends $Schema>, RealDynamics> resource)
+         final Property<History<? extends $Schema>, RealDynamics> property)
     {
+      final var resource = RealResource.atom(property);
       this.builder.state.real(this.namespace + "/" + name, resource);
-      return resource::ask;
+      return resource;
     }
 
     public void daemon(final String id, final Runnable task) {
@@ -93,12 +92,12 @@ public final class ResourcesBuilder<$Schema> {
     <ResourceType>
     void
     discrete(String name,
-             Property<History<? extends $Schema>, ResourceType> resource,
+             DiscreteResource<$Schema, ResourceType> resource,
              ValueMapper<ResourceType> mapper);
 
     void
     real(String name,
-         Property<History<? extends $Schema>, RealDynamics> resource);
+         RealResource<$Schema> resource);
 
     void
     daemon(String id,
@@ -109,28 +108,25 @@ public final class ResourcesBuilder<$Schema> {
   }
 
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
-    private final Map<String, Resource<$Schema, RealDynamics>> realResources = new HashMap<>();
-    private final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources = new HashMap<>();
+    private final Map<String, RealResource<$Schema>> realResources = new HashMap<>();
+    private final Map<String, Pair<ValueSchema, DiscreteResource<$Schema, SerializedValue>>> discreteResources = new HashMap<>();
     private final Map<String, Runnable> daemons = new HashMap<>();
 
     @Override
-    public <ResourceType>
+    public <Resource>
     void discrete(
         final String name,
-        final Property<History<? extends $Schema>, ResourceType> resource,
-        final ValueMapper<ResourceType> mapper)
+        final DiscreteResource<$Schema, Resource> resource,
+        final ValueMapper<Resource> mapper)
     {
       this.discreteResources.put(name, Pair.of(
           mapper.getValueSchema(),
-          (time) -> resource.ask(time).map(mapper::serializeValue)));
+          resource.map(mapper::serializeValue)));
     }
 
     @Override
-    public void real(
-        final String name,
-        final Property<History<? extends $Schema>, RealDynamics> resource)
-    {
-      this.realResources.put(name, resource::ask);
+    public void real(final String name, final RealResource<$Schema> resource) {
+      this.realResources.put(name, resource);
     }
 
     @Override
@@ -157,17 +153,14 @@ public final class ResourcesBuilder<$Schema> {
     @Override
     public <ResourceType> void discrete(
         final String name,
-        final Property<History<? extends $Schema>, ResourceType> resource,
+        final DiscreteResource<$Schema, ResourceType> resource,
         final ValueMapper<ResourceType> mapper)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
-    public void real(
-        final String name,
-        final Property<History<? extends $Schema>, RealDynamics> resource)
-    {
+    public void real(final String name, final RealResource<$Schema> resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 

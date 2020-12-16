@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.RegisterModel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
@@ -17,8 +16,8 @@ import java.util.Set;
 
 public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   private final Query<$Schema, Value, RegisterModel<Value>> query;
-  public final DiscreteResource<History<? extends $Schema>, Value> value;
-  public final DiscreteResource<History<? extends $Schema>, Boolean> conflicted;
+  public final DiscreteResource<$Schema, Value> value;
+  public final DiscreteResource<$Schema, Boolean> conflicted;
 
   public RegisterModule(
       final ResourcesBuilder.Cursor<$Schema> builder,
@@ -63,10 +62,10 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   }
 
   public Value get() {
-    return this.value.getDynamics(now()).getDynamics();
+    return this.value.ask(now());
   }
 
   public boolean isConflicted() {
-    return this.conflicted.getDynamics(now()).getDynamics();
+    return this.conflicted.ask(now());
   }
 }

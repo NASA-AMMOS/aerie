@@ -1,12 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.LinearIntegrationModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 
 public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   private final Query<$Schema, Double, LinearIntegrationModel> query;
@@ -23,14 +22,14 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   }
 
   public final class Volume {
-    public final RealResource<History<? extends $Schema>> resource;
+    public final RealResource<$Schema> resource;
 
-    private Volume(final RealResource<History<? extends $Schema>> resource) {
+    private Volume(final RealResource<$Schema> resource) {
       this.resource = resource;
     }
 
     public double get() {
-      return this.resource.getDynamics(now()).getDynamics().initial;
+      return this.resource.ask(now());
     }
 
     public Condition<$Schema> isBetween(final double lower, final double upper) {
@@ -40,14 +39,14 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   }
 
   public final class Rate {
-    public final RealResource<History<? extends $Schema>> resource;
+    public final RealResource<$Schema> resource;
 
-    private Rate(final RealResource<History<? extends $Schema>> resource) {
+    private Rate(final RealResource<$Schema> resource) {
       this.resource = resource;
     }
 
     public double get() {
-      return this.resource.getDynamics(now()).getDynamics().initial;
+      return this.resource.ask(now());
     }
 
     public void add(final double delta) {

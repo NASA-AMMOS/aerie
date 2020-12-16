@@ -2,14 +2,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.TaskRecord;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -198,8 +198,8 @@ public final class SimulationDriver {
       final SimulationEngine<$Timeline> simulator,
       final ArrayList<Duration> timestamps,
       final HashMap<String, List<SerializedValue>> timelines,
-      final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources,
-      final Map<String, Resource<$Schema, RealDynamics>> realResources)
+      final Map<String, Pair<ValueSchema, DiscreteResource<$Schema, SerializedValue>>> discreteResources,
+      final Map<String, RealResource<$Schema>> realResources)
   {
     timestamps.add(simulator.getElapsedTime());
     discreteResources.forEach((name, resource) -> {
