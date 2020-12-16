@@ -1,10 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.LinearIntegrationModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
 
 public final class FooResources<$Schema> extends Module<$Schema> {
   // Need a clear story for how to logically group resource questions and event emissions together.

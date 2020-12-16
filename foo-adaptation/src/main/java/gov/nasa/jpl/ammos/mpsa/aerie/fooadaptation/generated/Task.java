@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 
 // TODO: Automatically generate at compile time.
 public abstract class Task<$Schema> extends Module<$Schema> {

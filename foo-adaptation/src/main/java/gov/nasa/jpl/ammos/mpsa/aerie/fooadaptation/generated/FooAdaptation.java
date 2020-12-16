@@ -1,19 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DiscreteResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.DaemonTaskType;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.FooActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
@@ -69,13 +67,8 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   }
 
   @Override
-  public Map<String, Pair<ValueSchema, DiscreteResource<$Schema, SerializedValue>>> getDiscreteResources() {
-    return this.resources.discreteResources;
-  }
-
-  @Override
-  public Map<String, RealResource<$Schema>> getRealResources() {
-    return this.resources.realResources;
+  public Iterable<ResourceFamily<$Schema, ?, ?>> getResourceFamilies() {
+    return this.resources.resourceFamilies;
   }
 
   @Override
