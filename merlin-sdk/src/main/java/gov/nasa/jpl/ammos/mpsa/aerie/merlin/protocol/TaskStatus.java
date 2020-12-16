@@ -13,9 +13,9 @@ public abstract class TaskStatus<$Timeline> {
   public interface Visitor<$Timeline, Result> {
     Result completed();
 
-    Result awaiting(String activityId);
-
     Result delayed(Duration delay);
+
+    Result awaiting(String activityId);
 
     <DynamicsType, ConditionType>
     Result awaiting(
@@ -33,17 +33,6 @@ public abstract class TaskStatus<$Timeline> {
     };
   }
 
-  public static <$Timeline> TaskStatus<$Timeline> awaiting(final String id) {
-    Objects.requireNonNull(id);
-
-    return new TaskStatus<>() {
-      @Override
-      public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.awaiting(id);
-      }
-    };
-  }
-
   public static <$Timeline> TaskStatus<$Timeline> delayed(final Duration delay) {
     Objects.requireNonNull(delay);
 
@@ -51,6 +40,17 @@ public abstract class TaskStatus<$Timeline> {
       @Override
       public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
         return visitor.delayed(delay);
+      }
+    };
+  }
+
+  public static <$Timeline> TaskStatus<$Timeline> awaiting(final String id) {
+    Objects.requireNonNull(id);
+
+    return new TaskStatus<>() {
+      @Override
+      public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
+        return visitor.awaiting(id);
       }
     };
   }

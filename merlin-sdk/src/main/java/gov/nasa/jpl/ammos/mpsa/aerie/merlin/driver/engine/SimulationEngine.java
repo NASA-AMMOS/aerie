@@ -312,18 +312,18 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
+    public Object delayed(final Duration delay) {
+      SimulationEngine.this.enqueue(this.taskId, delay, this.task);
+      return null;
+    }
+
+    @Override
     public Object awaiting(final String activityId) {
       if (SimulationEngine.this.completed.contains(activityId)) {
         SimulationEngine.this.enqueue(taskId, Duration.ZERO, task);
       } else {
         SimulationEngine.this.conditioned.computeIfAbsent(activityId, k -> new HashSet<>()).add(Pair.of(taskId, task));
       }
-      return null;
-    }
-
-    @Override
-    public Object delayed(final Duration delay) {
-      SimulationEngine.this.enqueue(this.taskId, delay, this.task);
       return null;
     }
 
