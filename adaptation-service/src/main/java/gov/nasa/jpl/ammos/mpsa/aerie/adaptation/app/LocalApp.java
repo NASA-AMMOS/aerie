@@ -1,22 +1,21 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimpleSimulator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import io.javalin.core.util.FileUtil;
+import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.bcel.classfile.ClassParser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,8 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 
 /**
  * Implements the plan service {@link App} interface on a set of local domain objects.
@@ -161,7 +160,7 @@ public final class LocalApp implements App {
   {
     try {
       return loadAdaptation(adaptationId).getActivityType(activityTypeId);
-    } catch (final Adaptation.NoSuchActivityTypeException ex) {
+    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activityTypeId, ex);
     }
   }
@@ -173,32 +172,22 @@ public final class LocalApp implements App {
    * @param activityParameters The serialized activity to validate against the named adaptation.
    * @return A list of validation errors that is empty if validation succeeds.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
-   * @throws Adaptation.AdaptationContractException If the named adaptation does not abide by the expected contract.
+   * @throws AdaptationFacade.AdaptationContractException If the named adaptation does not abide by the expected contract.
    * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
    * it contains may not abide by the expected contract at load time.
    */
   @Override
   public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-  throws NoSuchAdaptationException, Adaptation.AdaptationContractException, AdaptationLoadException
+  throws NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoadException
   {
-    final Activity activity;
     try {
-      activity = this.loadAdaptation(adaptationId).instantiateActivity(activityParameters);
-    } catch (final Adaptation.NoSuchActivityTypeException ex) {
+      return this.loadAdaptation(adaptationId)
+                 .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
+    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
-    } catch (final Adaptation.UnconstructableActivityInstanceException ex) {
+    } catch (final AdaptationFacade.UnconstructableActivityInstanceException ex) {
       return List.of(ex.getMessage());
     }
-
-    final List<String> failures = activity.validateParameters();
-    if (failures == null) {
-      // TODO: The top-level application layer is a poor place to put knowledge about the adaptation contract.
-      //   Move this logic somewhere better.
-      throw new Adaptation.AdaptationContractException(activity.getClass().getName()
-                                                       + ".validateParameters() returned null");
-    }
-
-    return failures;
   }
 
   /**
@@ -210,7 +199,8 @@ public final class LocalApp implements App {
    */
   @Override
   public SimulationResults runSimulation(final CreateSimulationMessage message)
-  throws NoSuchAdaptationException, Adaptation.UnconstructableActivityInstanceException
+  throws NoSuchAdaptationException,
+         SimulationDriver.TaskSpecInstantiationException
   {
     return loadAdaptation(message.adaptationId)
         .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod, message.startTime);
@@ -244,22 +234,22 @@ public final class LocalApp implements App {
   }
 
   /**
-   * Load a {@link MerlinAdaptation} from the adaptation repository, and wrap it in an {@link Adaptation} domain object.
+   * Load a {@link MerlinAdaptation} from the adaptation repository, and wrap it in an {@link AdaptationFacade} domain object.
    *
    * @param adaptationId The ID of the adaptation in the adaptation repository to load.
-   * @return An {@link Adaptation} domain object allowing use of the loaded adaptation.
+   * @return An {@link AdaptationFacade} domain object allowing use of the loaded adaptation.
    * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
    */
-  private Adaptation<?> loadAdaptation(final String adaptationId)
+  private AdaptationFacade<?> loadAdaptation(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {
-      final AdaptationJar adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-      final MerlinAdaptation<?> adaptation =
+      final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+      final var adaptation =
           AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
-      return new Adaptation<>(adaptation);
+      return new AdaptationFacade<>(adaptation);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     } catch (final AdaptationLoader.AdaptationLoadException ex) {
