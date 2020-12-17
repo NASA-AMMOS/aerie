@@ -249,19 +249,6 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
-    public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
-      final var id = SimulationEngine.this.generateId();
-      final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
-      final var task = type.<$Timeline>createTask(spec);
-
-      this.now = this.now.fork();
-      this.branches.push(Triple.of(this.now, id, task));
-
-      SimulationEngine.this.taskRecords.put(id, record);
-      return id;
-    }
-
-    @Override
     public String spawn(final String type, final Map<String, SerializedValue> arguments) {
       final var id = SimulationEngine.this.generateId();
       final var record = new TaskRecord(type, arguments, Optional.of(this.parentTaskId));
@@ -286,17 +273,6 @@ public final class SimulationEngine<$Timeline> {
       return id;
     }
 
-    @Override
-    public <Spec> String defer(final Duration delay, final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
-      final var id = SimulationEngine.this.generateId();
-      final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
-      final var task = type.<$Timeline>createTask(spec);
-
-      SimulationEngine.this.enqueue(id, delay, task);
-
-      SimulationEngine.this.taskRecords.put(id, record);
-      return id;
-    }
   }
 
   private final class StatusVisitor implements TaskStatus.Visitor<$Timeline, Object> {

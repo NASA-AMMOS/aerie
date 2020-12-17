@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
@@ -58,36 +57,6 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
       // TODO: Avoid leaving garbage behind -- find some way to remove regenerated events
       //   on dead-end branches when references to it disappear.
       this.history = this.history.map(now -> now.emit(event, query));
-    }
-  }
-
-  @Override
-  public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
-    if (this.history.isEmpty()) {
-      // We're running normally.
-      final var id = this.scheduler.spawn(spec, type);
-
-      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
-      this.nextBreadcrumbIndex += 1;
-
-      return id;
-    } else {
-      return respawn();
-    }
-  }
-
-  @Override
-  public <Spec> String defer(final Duration duration, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
-    if (this.history.isEmpty()) {
-      // We're running normally.
-      final var id = this.scheduler.defer(duration, spec, type);
-
-      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
-      this.nextBreadcrumbIndex += 1;
-
-      return id;
-    } else {
-      return respawn();
     }
   }
 

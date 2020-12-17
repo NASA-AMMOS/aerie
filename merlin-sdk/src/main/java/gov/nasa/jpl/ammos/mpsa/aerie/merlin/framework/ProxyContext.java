@@ -1,7 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -31,16 +30,6 @@ public final class ProxyContext<$Schema>
   @Override
   public final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
     this.context.emit(event, query);
-  }
-
-  @Override
-  public final <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
-    return this.context.spawn(spec, type);
-  }
-
-  @Override
-  public final <Spec> String defer(final Duration duration, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
-    return this.context.defer(duration, spec, type);
   }
 
   @Override
