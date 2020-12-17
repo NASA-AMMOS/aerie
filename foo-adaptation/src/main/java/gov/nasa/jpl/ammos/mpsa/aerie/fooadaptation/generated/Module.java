@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.activities.FooActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.mappers.FooActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-
-import java.util.Map;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 // TODO: Automatically generate at compile time.
 public abstract class Module<$Schema>
@@ -19,12 +18,13 @@ public abstract class Module<$Schema>
     super(builder);
   }
 
+
   protected final String spawn(final FooActivity activity) {
-    // TODO: we should provide spec and TaskSpecType to this spawn.
-    //  This hack allows for exercising spawn mechanics in the engine.
-    return spawn("foo", Map.of(
-        "x", SerializedValue.of(activity.x),
-        "y", SerializedValue.of(activity.y)));
+    return spawn(new FooActivityMapper().getName(), new FooActivityMapper().getArguments(activity));
+  }
+
+  protected final String defer(final Duration duration, final FooActivity activity) {
+    return defer(duration, new FooActivityMapper().getName(), new FooActivityMapper().getArguments(activity));
   }
 
   protected void call(final FooActivity activity) {
