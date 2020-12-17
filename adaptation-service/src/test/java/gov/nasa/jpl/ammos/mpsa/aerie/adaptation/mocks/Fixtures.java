@@ -11,10 +11,12 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public final class Fixtures {
-    public static final URI bananationUri;
+    public static final URI fooAdaptationUri;
     static {
         try {
-            bananationUri = Fixtures.class.getResource("/gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar").toURI();
+            fooAdaptationUri = Fixtures.class
+                .getResource("/gov/nasa/jpl/ammos/mpsa/aerie/foo-adaptation-0.6.0-SNAPSHOT.jar")
+                .toURI();
         } catch (URISyntaxException e) {
             throw new Error(e);
         }
@@ -23,20 +25,17 @@ public final class Fixtures {
     public final MockAdaptationRepository adaptationRepository;
 
     public final String EXISTENT_ADAPTATION_ID;
-    public static final String EXISTENT_ACTIVITY_TYPE_ID = "PeelBanana";
+    public static final String EXISTENT_ACTIVITY_TYPE_ID = "foo";
     public static final String NONEXISTENT_ADAPTATION_ID = "nonexistent adaptation";
     public static final String NONEXISTENT_ACTIVITY_TYPE_ID = "nonexistent activity type";
 
     public final Map<String, ActivityType> ACTIVITY_TYPES = Map.of(
-        "BiteBanana", new ActivityType("BiteBanana", Map.of(
-            "biteSize", ValueSchema.REAL
+        "foo", new ActivityType("foo", Map.of(
+            "x", ValueSchema.INT,
+            "y", ValueSchema.STRING
         ), Map.of(
-            "biteSize", SerializedValue.of(1.0)
-        )),
-        "PeelBanana", new ActivityType("PeelBanana", Map.of(
-            "peelDirection", ValueSchema.STRING
-        ), Map.of(
-            "peelDirection", SerializedValue.of("fromStem")
+            "x", SerializedValue.of(0),
+            "y", SerializedValue.of("test")
         ))
     );
 
@@ -44,22 +43,22 @@ public final class Fixtures {
         this.adaptationRepository = new MockAdaptationRepository();
 
         final AdaptationJar adaptationJar = new AdaptationJar();
-        adaptationJar.name = "Banananation";
+        adaptationJar.name = "foo-adaptation-0.6.0-SNAPSHOT";
         adaptationJar.version = "0.0.1";
         adaptationJar.mission = "Motherland";
         adaptationJar.owner = "Deris";
-        adaptationJar.path = Path.of(bananationUri);
+        adaptationJar.path = Path.of(fooAdaptationUri);
 
         this.EXISTENT_ADAPTATION_ID = adaptationRepository.createAdaptation(adaptationJar);
     }
 
     public static AdaptationJar createValidAdaptationJar(final String mission) {
         final AdaptationJar adaptation = new AdaptationJar();
-        adaptation.name = "Banananation";
+        adaptation.name = "foo-adaptation-0.6.0-SNAPSHOT";
         adaptation.version = "0.0.1";
         adaptation.mission = mission;
         adaptation.owner = "Arthur";
-        adaptation.path = Path.of(bananationUri);
+        adaptation.path = Path.of(fooAdaptationUri);
         return adaptation;
     }
 }

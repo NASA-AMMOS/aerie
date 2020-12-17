@@ -73,8 +73,9 @@ public final class AdaptationTest {
         throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException, AdaptationFacade.UnconstructableActivityInstanceException
     {
         // GIVEN
-        final var typeName = "BiteBanana";
-        final var parameters = new HashMap<>(Map.of("biteSize", SerializedValue.of(1.0)));
+        final var typeName = "foo";
+        final var parameters = new HashMap<>(Map.of("x", SerializedValue.of(0),
+                                                    "y", SerializedValue.of("test")));
 
         // WHEN
         final var failures = adaptation.validateActivity(typeName, parameters);
@@ -86,8 +87,9 @@ public final class AdaptationTest {
     @Test
     public void shouldNotInstantiateActivityInstanceWithIncorrectParameterType() {
         // GIVEN
-        final var typeName = "BiteBanana";
-        final var parameters = new HashMap<>(Map.of("biteSize", SerializedValue.of("a string!?")));
+        final var typeName = "foo";
+        final var parameters = new HashMap<>(Map.of("x", SerializedValue.of(0),
+                                                    "y", SerializedValue.of(1.0)));
 
         // WHEN
         final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
@@ -99,7 +101,7 @@ public final class AdaptationTest {
     @Test
     public void shouldNotInstantiateActivityInstanceWithExtraParameter() {
         // GIVEN
-        final var typeName = "BiteBanana";
+        final var typeName = "foo";
         final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN

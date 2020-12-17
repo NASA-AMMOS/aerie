@@ -181,7 +181,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
+  public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
     if (!Objects.equals(message.adaptationId, EXISTENT_ADAPTATION_ID)) {
       throw new NoSuchAdaptationException(message.adaptationId);
     }
