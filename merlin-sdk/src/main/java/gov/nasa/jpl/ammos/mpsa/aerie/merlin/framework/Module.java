@@ -35,7 +35,6 @@ public abstract class Module<$Schema> {
     return this.context.spawn(spec, type);
   }
 
-  @Deprecated
   protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
     return this.context.spawn(type, arguments);
   }
