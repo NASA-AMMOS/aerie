@@ -51,6 +51,18 @@ public abstract class Module<$Schema> {
     return this.defer(unit.times(quantity), spec, type);
   }
 
+  protected final void call(final String type, final Map<String, SerializedValue> arguments) {
+    this.waitFor(this.spawn(type, arguments));
+  }
+
+  protected final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.defer(duration, type, arguments);
+  }
+
+  protected final String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
+    return this.defer(unit.times(quantity), type, arguments);
+  }
+
 
   protected final void delay(final Duration duration) {
     this.context.delay(duration);

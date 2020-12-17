@@ -49,6 +49,11 @@ public final class ProxyContext<$Schema>
   }
 
   @Override
+  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    return this.context.defer(duration, type, arguments);
+  }
+
+  @Override
   public final void delay(final Duration duration) {
     this.context.delay(duration);
   }

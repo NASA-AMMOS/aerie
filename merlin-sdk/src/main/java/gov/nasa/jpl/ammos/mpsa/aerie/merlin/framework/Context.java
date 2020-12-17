@@ -17,6 +17,7 @@ public interface Context<$Schema> {
   <Spec> String defer(Duration duration, Spec spec, TaskSpecType<? super $Schema, Spec> type);
 
   String spawn(String type, Map<String, SerializedValue> arguments);
+  String defer(Duration duration, String type, Map<String, SerializedValue> arguments);
 
   void delay(Duration duration);
   void waitFor(String id);

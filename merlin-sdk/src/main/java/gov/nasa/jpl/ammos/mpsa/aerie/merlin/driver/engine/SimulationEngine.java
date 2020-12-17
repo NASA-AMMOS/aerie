@@ -275,6 +275,18 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
+    public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
+      final var id = SimulationEngine.this.generateId();
+      final var record = new TaskRecord(type, arguments, Optional.of(this.parentTaskId));
+      final var task = SimulationEngine.this.createTask.apply(type, arguments);
+
+      SimulationEngine.this.enqueue(id, delay, task);
+
+      SimulationEngine.this.taskRecords.put(id, record);
+      return id;
+    }
+
+    @Override
     public <Spec> String defer(final Duration delay, final Spec spec, final TaskSpecType<? super $Timeline, Spec> type) {
       final var id = SimulationEngine.this.generateId();
       final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.of(this.parentTaskId));
