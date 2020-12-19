@@ -44,6 +44,7 @@ import java.util.Set;
  *
  * @see AbstractMerlinAdaptation
  */
+@Deprecated
 public interface MerlinAdaptation<Event> {
   /**
    * Provides a mission-agnostic representation of the activity types provided by this adaptation.
