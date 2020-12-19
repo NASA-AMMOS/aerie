@@ -8,7 +8,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.MerlinAdaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -69,7 +70,7 @@ public final class LocalApp implements App {
 
     final String adClassStr;
     try {
-      adClassStr = getImplementingClassName(path, MerlinAdaptation.class);
+      adClassStr = getImplementingClassName(path, AdaptationFactory.class);
     } catch (final IOException ex) {
       throw new AdaptationRejectedException(ex);
     }
@@ -218,7 +219,7 @@ public final class LocalApp implements App {
 
     if (classPathList.size() != 1) {
       throw new AdaptationRejectedException(
-          "Adaptation contains zero/multiple registered implementations of MerlinAdaptation.");
+          "Adaptation contains zero/multiple registered implementations of AdaptationFactory.");
     }
 
     return classPathList.get(0);
@@ -234,7 +235,7 @@ public final class LocalApp implements App {
   }
 
   /**
-   * Load a {@link MerlinAdaptation} from the adaptation repository, and wrap it in an {@link AdaptationFacade} domain object.
+   * Load an {@link Adaptation} from the adaptation repository, and wrap it in an {@link AdaptationFacade} domain object.
    *
    * @param adaptationId The ID of the adaptation in the adaptation repository to load.
    * @return An {@link AdaptationFacade} domain object allowing use of the loaded adaptation.
