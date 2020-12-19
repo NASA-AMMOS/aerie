@@ -27,8 +27,8 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6,"i3":6};
-var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
+var data = {"i0":38,"i1":38,"i2":38,"i3":38};
+var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],32:["t6","Deprecated Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -127,7 +127,9 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd><code><a href="AbstractMerlinAdaptation.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">AbstractMerlinAdaptation</a></code></dd>
 </dl>
 <hr>
-<pre>public interface <span class="typeNameLabel">MerlinAdaptation&lt;Event&gt;</span></pre>
+<pre><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Deprecated.html?is-external=true" title="class or interface in java.lang" class="externalLink">@Deprecated</a>
+public interface <span class="typeNameLabel">MerlinAdaptation&lt;Event&gt;</span></pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">A mission-agnostic interface to the capabilities provided by a mission-specific adaptation.
 
  <p>
@@ -180,7 +182,9 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <tr class="altColor">
 <td class="colFirst"><code>static interface&nbsp;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="MerlinAdaptation.Querier.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation.Querier</a>&lt;<a href="MerlinAdaptation.Querier.html" title="type parameter in MerlinAdaptation.Querier">T</a>,&#8203;<a href="MerlinAdaptation.Querier.html" title="type parameter in MerlinAdaptation.Querier">Event</a>&gt;</span></code></th>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -194,7 +198,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t6" class="tableTab"><span><a href="javascript:show(32);">Deprecated Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colSecond" scope="col">Method</th>
@@ -204,23 +208,30 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <td class="colFirst"><code><a href="activities/ActivityMapper.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities">ActivityMapper</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getActivityMapper()">getActivityMapper</a></span>()</code></th>
 <td class="colLast">
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Provides a mission-agnostic representation of the activity types provided by this adaptation.</div>
 </td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getStateSchemas()">getStateSchemas</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="constraints/ViolableConstraint.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ViolableConstraint</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getViolableConstraints()">getViolableConstraints</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>&lt;T&gt;&nbsp;<a href="MerlinAdaptation.Querier.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation.Querier</a>&lt;T,&#8203;<a href="MerlinAdaptation.html" title="type parameter in MerlinAdaptation">Event</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#makeQuerier(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline)">makeQuerier</a></span>&#8203;(<a href="effects/timeline/SimulationTimeline.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">SimulationTimeline</a>&lt;T,&#8203;<a href="MerlinAdaptation.html" title="type parameter in MerlinAdaptation">Event</a>&gt;&nbsp;database)</code></th>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block"><span class="deprecatedLabel">Deprecated.</span></div>
+&nbsp;</td>
 </tr>
 </table>
 </li>
@@ -246,6 +257,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <h4>getActivityMapper</h4>
 <pre class="methodSignature"><a href="activities/ActivityMapper.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities">ActivityMapper</a>&nbsp;getActivityMapper()</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span></div>
 <div class="block">Provides a mission-agnostic representation of the activity types provided by this adaptation.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
@@ -260,6 +272,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <h4>getViolableConstraints</h4>
 <pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="constraints/ViolableConstraint.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints">ViolableConstraint</a>&gt;&nbsp;getViolableConstraints()</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span></div>
 </li>
 </ul>
 <a id="getStateSchemas()">
@@ -269,6 +282,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <h4>getStateSchemas</h4>
 <pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="serialization/ValueSchema.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">ValueSchema</a>&gt;&nbsp;getStateSchemas()</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span></div>
 </li>
 </ul>
 <a id="makeQuerier(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline.SimulationTimeline)">
@@ -278,6 +292,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <h4>makeQuerier</h4>
 <pre class="methodSignature">&lt;T&gt;&nbsp;<a href="MerlinAdaptation.Querier.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk">MerlinAdaptation.Querier</a>&lt;T,&#8203;<a href="MerlinAdaptation.html" title="type parameter in MerlinAdaptation">Event</a>&gt;&nbsp;makeQuerier&#8203;(<a href="effects/timeline/SimulationTimeline.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.timeline">SimulationTimeline</a>&lt;T,&#8203;<a href="MerlinAdaptation.html" title="type parameter in MerlinAdaptation">Event</a>&gt;&nbsp;database)</pre>
+<div class="deprecationBlock"><span class="deprecatedLabel">Deprecated.</span></div>
 </li>
 </ul>
 </li>
