@@ -1,11 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.LinearIntegrationModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 
 public final class FooResources<$Schema> extends Module<$Schema> {
   // Need a clear story for how to logically group resource questions and event emissions together.
@@ -25,14 +24,14 @@ public final class FooResources<$Schema> extends Module<$Schema> {
   public final RegisterModule<$Schema, Double> foo;
   public final LinearIntegrationModule<$Schema> data;
 
-  public final RealResource<History<? extends $Schema>> combo;
+  public final RealResource<$Schema> combo;
 
   public FooResources(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.foo = RegisterModule.create(builder.descend("foo"), 0.0);
     this.data = new LinearIntegrationModule<>(builder.descend("data"));
-    this.combo = this.data.volume.plus(this.data.rate);
+    this.combo = this.data.volume.resource.plus(this.data.rate.resource);
 
     // TODO: automatically perform this for each @Daemon annotation
     builder.daemon("test", this::test);
@@ -40,6 +39,6 @@ public final class FooResources<$Schema> extends Module<$Schema> {
 
   public void test() {
     foo.set(21.0);
-    data.addRate(42.0);
+    data.rate.add(42.0);
   }
 }

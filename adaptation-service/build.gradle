@@ -24,6 +24,7 @@ dependencies {
   implementation 'org.slf4j:slf4j-simple:1.7.26'
   implementation 'org.apache.bcel:bcel:6.5.0'
 
+  testImplementation project(':foo-adaptation')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
   testImplementation 'org.assertj:assertj-core:3.13.2'
   testImplementation 'junit:junit:4.12'

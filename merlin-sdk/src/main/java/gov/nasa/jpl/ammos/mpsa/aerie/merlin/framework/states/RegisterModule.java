@@ -1,24 +1,27 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.RegisterModel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
+  private final ValueMapper<Value> mapper;
+
   private final Query<$Schema, Value, RegisterModel<Value>> query;
-  public final DiscreteResource<History<? extends $Schema>, Value> value;
-  public final DiscreteResource<History<? extends $Schema>, Boolean> conflicted;
+  public final DiscreteResource<$Schema, Value> value;
+  public final DiscreteResource<$Schema, Boolean> conflicted;
 
   public RegisterModule(
       final ResourcesBuilder.Cursor<$Schema> builder,
@@ -26,6 +29,8 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
       final ValueMapper<Value> mapper)
   {
     super(builder);
+
+    this.mapper = Objects.requireNonNull(mapper);
 
     this.query = builder.model(
         new RegisterModel<>(initialValue),
@@ -63,10 +68,23 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   }
 
   public Value get() {
-    return ask(this.value);
+    return this.value.ask(now());
   }
 
   public boolean isConflicted() {
-    return ask(this.conflicted);
+    return this.conflicted.ask(now());
+  }
+
+  public Condition<$Schema> isOneOf(final Set<Value> values) {
+    return this.value.isOneOf(values, this.mapper);
+  }
+
+  @SafeVarargs
+  public final Condition<$Schema> isOneOf(final Value... values) {
+    return this.isOneOf(Set.of(values));
+  }
+
+  public Condition<$Schema> is(final Value value) {
+    return this.isOneOf(value);
   }
 }

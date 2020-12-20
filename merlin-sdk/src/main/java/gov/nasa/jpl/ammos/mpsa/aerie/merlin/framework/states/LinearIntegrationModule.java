@@ -1,34 +1,59 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.LinearIntegrationModel;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
 
 public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   private final Query<$Schema, Double, LinearIntegrationModel> query;
-  public final RealResource<History<? extends $Schema>> volume;
-  public final RealResource<History<? extends $Schema>> rate;
+
+  public final Volume volume;
+  public final Rate rate;
 
   public LinearIntegrationModule(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.query = builder.model(new LinearIntegrationModel(0.0, 0.0), ev -> ev);
-    this.volume = builder.real("volume", now -> now.ask(this.query).getVolume());
-    this.rate = builder.real("rate", now -> now.ask(this.query).getRate());
+    this.volume = new Volume(builder.real("volume", now -> now.ask(this.query).getVolume()));
+    this.rate = new Rate(builder.real("rate", now -> now.ask(this.query).getRate()));
   }
 
-  public void addRate(final double delta) {
-    emit(delta, this.query);
+  public final class Volume {
+    public final RealResource<$Schema> resource;
+
+    private Volume(final RealResource<$Schema> resource) {
+      this.resource = resource;
+    }
+
+    public double get() {
+      return this.resource.ask(now());
+    }
+
+    public Condition<$Schema> isBetween(final double lower, final double upper) {
+      return this.resource.isBetween(lower, upper);
+    }
   }
 
-  public double getVolume() {
-    return ask(this.volume);
-  }
+  public final class Rate {
+    public final RealResource<$Schema> resource;
 
-  public double getRate() {
-    return ask(this.rate);
+    private Rate(final RealResource<$Schema> resource) {
+      this.resource = resource;
+    }
+
+    public double get() {
+      return this.resource.ask(now());
+    }
+
+    public void add(final double delta) {
+      emit(delta, query);
+    }
+
+    public Condition<$Schema> isBetween(final double lower, final double upper) {
+      return this.resource.isBetween(lower, upper);
+    }
   }
 }

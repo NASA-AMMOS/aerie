@@ -1,18 +1,17 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.DaemonTaskType;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.FooActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.DaemonTaskType;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.FooActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
@@ -68,13 +67,13 @@ public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
   }
 
   @Override
-  public Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> getDiscreteResources() {
-    return this.resources.discreteResources;
+  public Iterable<ResourceFamily<$Schema, ?, ?>> getResourceFamilies() {
+    return this.resources.resourceFamilies;
   }
 
   @Override
-  public Map<String, Resource<$Schema, RealDynamics>> getRealResources() {
-    return this.resources.realResources;
+  public Map<String, Condition<$Schema>> getConstraints() {
+    return this.resources.constraints;
   }
 
   @Override

@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http.LocalAppExceptionBindings;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
+import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.MockAdaptationRepository;
 import io.javalin.Javalin;
 
 public final class DevAppDriver {
@@ -14,8 +14,7 @@ public final class DevAppDriver {
 
     public static void main(final String[] args) {
         // Assemble the core non-web object graph.
-        final Fixtures fixtures = new Fixtures();
-        final App app = new LocalApp(fixtures.adaptationRepository);
+        final App app = new LocalApp(new MockAdaptationRepository());
 
         // Configure an HTTP server.
         final Javalin javalin = Javalin.create(config -> config

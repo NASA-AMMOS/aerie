@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.FooAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;

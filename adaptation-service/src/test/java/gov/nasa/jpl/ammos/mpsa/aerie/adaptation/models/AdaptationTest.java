@@ -1,9 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.AdaptationRepository;
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.utilities.AdaptationLoader;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.FooAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,28 +12,26 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-// Note:
-// If the tests fail, please try to update the adaptation jar file.
-// The latest jar file is in banananatioin/build/libs/banananation-x.x.x.jar.
-// Please copy and rename the file to banananation.jar in
-// adaptation-service/src/test/resources/gov/nasa/jpl/ammos/mpsa/aerie/banananation.jar
 public final class AdaptationTest {
-    private final Fixtures fixtures = new Fixtures();
     private AdaptationFacade<?> adaptation;
 
     @Before
-    public void initialize() throws AdaptationRepository.NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoader.AdaptationLoadException {
-        final AdaptationJar adaptationJar = fixtures.adaptationRepository.getAdaptation(fixtures.EXISTENT_ADAPTATION_ID);
-        final var rawAdaptation =
-            AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
-
-        this.adaptation = new AdaptationFacade<>(rawAdaptation);
+    public void initialize() throws AdaptationFacade.AdaptationContractException {
+        this.adaptation = new AdaptationFacade<>(new FooAdaptationFactory().instantiate());
     }
 
     @Test
     public void shouldGetActivityTypeList() throws AdaptationFacade.AdaptationContractException {
         // GIVEN
-        final Map<String, ActivityType> expectedTypes = fixtures.ACTIVITY_TYPES;
+        final Map<String, ActivityType> expectedTypes = Map.of(
+            "foo", new ActivityType(
+                "foo",
+                Map.of(
+                    "x", ValueSchema.INT,
+                    "y", ValueSchema.STRING),
+                Map.of(
+                    "x", SerializedValue.of(0),
+                    "y", SerializedValue.of("test"))));
 
         // WHEN
         final Map<String, ActivityType> typeList = adaptation.getActivityTypes();
@@ -46,11 +43,17 @@ public final class AdaptationTest {
     @Test
     public void shouldGetActivityType() throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException {
         // GIVEN
-        final String activityId = Fixtures.EXISTENT_ACTIVITY_TYPE_ID;
-        final ActivityType expectedType = fixtures.ACTIVITY_TYPES.get(activityId);
+        final ActivityType expectedType = new ActivityType(
+            "foo",
+            Map.of(
+                "x", ValueSchema.INT,
+                "y", ValueSchema.STRING),
+            Map.of(
+                "x", SerializedValue.of(0),
+                "y", SerializedValue.of("test")));
 
         // WHEN
-        final ActivityType type = adaptation.getActivityType(activityId);
+        final ActivityType type = adaptation.getActivityType(expectedType.name);
 
         // THEN
         assertThat(type).isEqualTo(expectedType);
@@ -59,7 +62,7 @@ public final class AdaptationTest {
     @Test
     public void shouldNotGetActivityTypeForNonexistentActivityType() {
         // GIVEN
-        final String activityId = Fixtures.NONEXISTENT_ACTIVITY_TYPE_ID;
+        final String activityId = "nonexistent activity type";
 
         // WHEN
         final Throwable thrown = catchThrowable(() -> adaptation.getActivityType(activityId));

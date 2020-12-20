@@ -3,17 +3,18 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Approximator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DiscreteApproximator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealApproximator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
@@ -118,35 +119,32 @@ public final class SimulationDriver {
   {
     final var timestamps = new ArrayList<Duration>();
     final var timelines = new HashMap<String, List<SerializedValue>>();
-    final var discreteResources = adaptation.getDiscreteResources();
-    final var realResources = adaptation.getRealResources();
+    final var resourceTypes = adaptation.getResourceFamilies();
 
-    discreteResources.forEach((name, resource) -> timelines.put(name, new ArrayList<>()));
-    realResources.forEach((name, resource) -> timelines.put(name, new ArrayList<>()));
+    resourceTypes.forEach(group -> {
+      group.getResources().forEach((name, resource) -> timelines.put(name, new ArrayList<>()));
+    });
 
     // Run simulation to completion, sampling states at periodic intervals.
     {
       // Get an initial sample.
-      sampleResources(simulator, timestamps, timelines, discreteResources, realResources);
+      sampleResources(simulator, resourceTypes, timestamps, timelines);
 
       // Sample periodically until the sampling duration expires.
       final var remainder = simulationDuration.remainderOf(samplingPeriod);
       for (long i = 0; i < simulationDuration.dividedBy(samplingPeriod); ++i) {
         simulator.runFor(samplingPeriod);
-        sampleResources(simulator, timestamps, timelines, discreteResources, realResources);
+        sampleResources(simulator, resourceTypes, timestamps, timelines);
       }
 
       // Take one last sample if the period doesn't evenly divide the duration.
       if (!remainder.isZero()) {
         simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
-        sampleResources(simulator, timestamps, timelines, discreteResources, realResources);
+        sampleResources(simulator, resourceTypes, timestamps, timelines);
       }
 
-      adaptation.getRealResources().forEach((name, resource) -> {
-        System.out.printf("%-12s%s%n", name, resource.getDynamics(simulator.getCurrentHistory()));
-      });
-      adaptation.getDiscreteResources().forEach((name, resource) -> {
-        System.out.printf("%-12s%s%n", name, resource.getRight().getDynamics(simulator.getCurrentHistory()));
+      resourceTypes.forEach(group -> {
+        displayResources(simulator.getCurrentHistory(), group);
       });
 
       // TODO: implement constraint checking when we have a developed solution
@@ -196,23 +194,83 @@ public final class SimulationDriver {
   private static <$Schema, $Timeline extends $Schema>
   void sampleResources(
       final SimulationEngine<$Timeline> simulator,
+      final Iterable<ResourceFamily<$Schema, ?, ?>> resourceGroups,
       final ArrayList<Duration> timestamps,
-      final HashMap<String, List<SerializedValue>> timelines,
-      final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources,
-      final Map<String, Resource<$Schema, RealDynamics>> realResources)
+      final HashMap<String, List<SerializedValue>> timelines)
   {
     timestamps.add(simulator.getElapsedTime());
-    discreteResources.forEach((name, resource) -> {
-      final var dynamics = resource.getRight().getDynamics(simulator.getCurrentHistory());
-      final var solver = new DiscreteSolver<SerializedValue>();
-      timelines.get(name).add(solver.valueAt(dynamics.getDynamics(), Duration.ZERO));
-    });
-    realResources.forEach((name, resource) -> {
-      final var dynamics = resource.getDynamics(simulator.getCurrentHistory());
-      final var solver = new RealSolver();
-      timelines.get(name).add(SerializedValue.of(solver.valueAt(dynamics.getDynamics(), Duration.ZERO)));
+    resourceGroups.forEach(group -> {
+      sampleResourceType(simulator.getCurrentHistory(), timelines, group);
     });
   }
+
+  private static <$Schema, Resource> void sampleResourceType(
+      final History<? extends $Schema> now,
+      final HashMap<String, List<SerializedValue>> timelines,
+      final ResourceFamily<$Schema, Resource, ?> type)
+  {
+    final var solver = type.getSolver();
+
+    type.getResources().forEach((name, resource) -> {
+      timelines.get(name).add(sampleDynamics(solver, resource, now));
+    });
+  }
+
+  private static <$Schema, $Timeline extends $Schema, Resource, Dynamics>
+  SerializedValue sampleDynamics(
+      final ResourceSolver<$Schema, Resource, Dynamics, ?> solver,
+      final Resource resource,
+      final History<$Timeline> now)
+  {
+    final var approximator = solver.getApproximator();
+    final var dynamics = solver.getDynamics(resource, now);
+
+    return approximator.match(new Approximator.Visitor<>() {
+      @Override
+      public SerializedValue real(final RealApproximator<Dynamics> approximator) {
+        final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
+        return SerializedValue.of(part.getDynamics().initial);
+      }
+
+      @Override
+      public SerializedValue discrete(final DiscreteApproximator<Dynamics> approximator) {
+        final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
+        return part.getDynamics();
+      }
+    });
+  }
+
+
+  private static <$Schema, Resource>
+  void displayResources(final History<? extends $Schema> now, final ResourceFamily<$Schema, Resource, ?> type) {
+    final var solver = type.getSolver();
+
+    type.getResources().forEach((name, resource) -> {
+      System.out.printf("%-18s%s%n", name, displayDynamics(solver, resource, now));
+    });
+  }
+
+  private static <$Schema, $Timeline extends $Schema, Resource, Dynamics>
+  String displayDynamics(
+      final ResourceSolver<$Schema, Resource, Dynamics, ?> solver,
+      final Resource resource,
+      final History<$Timeline> now)
+  {
+    final var dynamics = solver.getDynamics(resource, now).getDynamics();
+
+    return solver.getApproximator().match(new Approximator.Visitor<>() {
+      @Override
+      public String real(final RealApproximator<Dynamics> approximator) {
+        return approximator.approximate(dynamics).iterator().next().toString();
+      }
+
+      @Override
+      public String discrete(final DiscreteApproximator<Dynamics> approximator) {
+        return approximator.approximate(dynamics).iterator().next().toString();
+      }
+    });
+  }
+
 
   private static final class TaskSpec<$Schema, Spec> {
     private final Spec spec;

@@ -2,20 +2,18 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Resource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealResource;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
-import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -38,6 +36,7 @@ public final class ResourcesBuilder<$Schema> {
   public BuiltResources<$Schema> build() {
     return this.state.build(this.schemaBuilder.build());
   }
+
 
   public static final class Cursor<$Schema> {
     private final ResourcesBuilder<$Schema> builder;
@@ -66,22 +65,28 @@ public final class ResourcesBuilder<$Schema> {
           new ModelApplicator<>(initialState));
     }
 
-    public <ResourceType>
-    DiscreteResource<History<? extends $Schema>, ResourceType>
+    public <Resource>
+    DiscreteResource<$Schema, Resource>
     discrete(final String name,
-             final Property<History<? extends $Schema>, ResourceType> resource,
-             final ValueMapper<ResourceType> mapper)
+             final Property<History<? extends $Schema>, Resource> property,
+             final ValueMapper<Resource> mapper)
     {
+      final var resource = DiscreteResource.atom(property);
       this.builder.state.discrete(this.namespace + "/" + name, resource, mapper);
-      return resource::ask;
+      return resource;
     }
 
-    public RealResource<History<? extends $Schema>>
+    public RealResource<$Schema>
     real(final String name,
-         final Property<History<? extends $Schema>, RealDynamics> resource)
+         final Property<History<? extends $Schema>, RealDynamics> property)
     {
+      final var resource = RealResource.atom(property);
       this.builder.state.real(this.namespace + "/" + name, resource);
-      return resource::ask;
+      return resource;
+    }
+
+    public void constraint(final String id, final Condition<$Schema> condition) {
+      this.builder.state.constraint(this.namespace + "/" + id, condition);
     }
 
     public void daemon(final String id, final Runnable task) {
@@ -89,16 +94,21 @@ public final class ResourcesBuilder<$Schema> {
     }
   }
 
+
   private interface ResourcesBuilderState<$Schema> {
-    <ResourceType>
+    <Resource>
     void
     discrete(String name,
-             Property<History<? extends $Schema>, ResourceType> resource,
-             ValueMapper<ResourceType> mapper);
+             DiscreteResource<$Schema, Resource> resource,
+             ValueMapper<Resource> mapper);
 
     void
     real(String name,
-         Property<History<? extends $Schema>, RealDynamics> resource);
+         RealResource<$Schema> resource);
+
+    void
+    constraint(String id,
+               Condition<$Schema> condition);
 
     void
     daemon(String id,
@@ -109,28 +119,29 @@ public final class ResourcesBuilder<$Schema> {
   }
 
   private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
-    private final Map<String, Resource<$Schema, RealDynamics>> realResources = new HashMap<>();
-    private final Map<String, Pair<ValueSchema, Resource<$Schema, SerializedValue>>> discreteResources = new HashMap<>();
+    private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
+    private final Map<String, RealResource<$Schema>> realResources = new HashMap<>();
+    private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, Runnable> daemons = new HashMap<>();
 
     @Override
-    public <ResourceType>
+    public <Resource>
     void discrete(
         final String name,
-        final Property<History<? extends $Schema>, ResourceType> resource,
-        final ValueMapper<ResourceType> mapper)
+        final DiscreteResource<$Schema, Resource> resource,
+        final ValueMapper<Resource> mapper)
     {
-      this.discreteResources.put(name, Pair.of(
-          mapper.getValueSchema(),
-          (time) -> resource.ask(time).map(mapper::serializeValue)));
+      this.resourceFamilies.add(new DiscreteResourceFamily<>(mapper, Map.of(name, resource)));
     }
 
     @Override
-    public void real(
-        final String name,
-        final Property<History<? extends $Schema>, RealDynamics> resource)
-    {
-      this.realResources.put(name, resource::ask);
+    public void real(final String name, final RealResource<$Schema> resource) {
+      this.realResources.put(name, resource);
+    }
+
+    @Override
+    public void constraint(final String id, final Condition<$Schema> condition) {
+      this.constraints.put(id, condition);
     }
 
     @Override
@@ -140,7 +151,9 @@ public final class ResourcesBuilder<$Schema> {
 
     @Override
     public BuiltResources<$Schema> build(final Schema<$Schema> schema) {
-      final var resources = new BuiltResources<>(schema, this.realResources, this.discreteResources, this.daemons);
+      this.resourceFamilies.add(new RealResourceFamily<>(this.realResources));
+
+      final var resources = new BuiltResources<>(schema, this.resourceFamilies, this.constraints, this.daemons);
 
       ResourcesBuilder.this.state = new BuiltResourcesBuilderState(resources);
       return resources;
@@ -155,20 +168,23 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     @Override
-    public <ResourceType> void discrete(
+    public <Resource>
+    void discrete(
         final String name,
-        final Property<History<? extends $Schema>, ResourceType> resource,
-        final ValueMapper<ResourceType> mapper)
+        final DiscreteResource<$Schema, Resource> resource,
+        final ValueMapper<Resource> mapper)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
-    public void real(
-        final String name,
-        final Property<History<? extends $Schema>, RealDynamics> resource)
-    {
+    public void real(final String name, final RealResource<$Schema> resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
+    }
+
+    @Override
+    public void constraint(final String id, final Condition<$Schema> condition) {
+      throw new IllegalStateException("Constraints cannot be added after the schema is built");
     }
 
     @Override

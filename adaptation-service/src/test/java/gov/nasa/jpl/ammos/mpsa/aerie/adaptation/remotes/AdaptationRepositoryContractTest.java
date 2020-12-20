@@ -1,17 +1,33 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Note:
+//   If the tests fail, please try to update the adaptation jar file.
+//   See the `jarFixturePath` field below for the expected (CLASSPATH-relative) location.
 public abstract class AdaptationRepositoryContractTest {
+    private final Path jarFixturePath;
+    {
+        try {
+            jarFixturePath = Path.of(
+                this.getClass()
+                    .getResource("/gov/nasa/jpl/ammos/mpsa/aerie/foo-adaptation-0.6.0-SNAPSHOT.jar")
+                    .toURI());
+        } catch (final URISyntaxException ex) {
+          throw new Error("Unable to find adaptation fixture", ex);
+        }
+    }
+
     protected AdaptationRepository adaptationRepository = null;
 
     protected abstract void resetRepository();
@@ -24,7 +40,7 @@ public abstract class AdaptationRepositoryContractTest {
     @Test
     public void testGetAdaptation() throws AdaptationRepository.NoSuchAdaptationException {
         // GIVEN
-        final AdaptationJar newAdaptation = Fixtures.createValidAdaptationJar("new-adaptation");
+        final AdaptationJar newAdaptation = createValidAdaptationJar("new-adaptation");
         final String id = this.adaptationRepository.createAdaptation(newAdaptation);
 
         // WHEN
@@ -37,9 +53,9 @@ public abstract class AdaptationRepositoryContractTest {
     @Test
     public void testRetrieveAllAdaptations() {
         // GIVEN
-        final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test1"));
-        final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test2"));
-        final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test3"));
+        final String id1 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test1"));
+        final String id2 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test2"));
+        final String id3 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test3"));
 
         // WHEN
         final Map<String, AdaptationJar> adaptations = this.adaptationRepository
@@ -56,9 +72,9 @@ public abstract class AdaptationRepositoryContractTest {
     @Test
     public void testCanDeleteAllAdaptations() throws AdaptationRepository.NoSuchAdaptationException {
         // GIVEN
-        final String id1 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test1"));
-        final String id2 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test2"));
-        final String id3 = this.adaptationRepository.createAdaptation(Fixtures.createValidAdaptationJar("test3"));
+        final String id1 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test1"));
+        final String id2 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test2"));
+        final String id3 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test3"));
 
         // WHEN
         this.adaptationRepository.deleteAdaptation(id1);
@@ -67,5 +83,15 @@ public abstract class AdaptationRepositoryContractTest {
 
         // THEN
         assertThat(this.adaptationRepository.getAllAdaptations()).isEmpty();
+    }
+
+    protected AdaptationJar createValidAdaptationJar(final String mission) {
+        final AdaptationJar adaptation = new AdaptationJar();
+        adaptation.name = "foo-adaptation-0.6.0-SNAPSHOT";
+        adaptation.version = "0.0.1";
+        adaptation.mission = mission;
+        adaptation.owner = "Arthur";
+        adaptation.path = this.jarFixturePath;
+        return adaptation;
     }
 }

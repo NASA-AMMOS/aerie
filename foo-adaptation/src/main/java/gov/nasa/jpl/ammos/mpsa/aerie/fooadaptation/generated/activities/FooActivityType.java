@@ -1,11 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.activities.FooActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.activities.FooActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.IntegerValueMapper;
