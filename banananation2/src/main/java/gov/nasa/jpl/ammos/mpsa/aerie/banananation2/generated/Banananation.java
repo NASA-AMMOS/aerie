@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.BanananationResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.activities.BiteBananaActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.activities.DaemonTaskType;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.activities.ParameterTestActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.activities.PeelBananaActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
@@ -40,6 +41,10 @@ public class Banananation<$Schema> implements Adaptation<$Schema> {
     }
     {
       final var activityType = new PeelBananaActivityType<>(this.rootContext, container);
+      allTaskSpecTypes.put(activityType.getName(), activityType);
+    }
+    {
+      final var activityType = new ParameterTestActivityType<>(this.rootContext, container);
       allTaskSpecTypes.put(activityType.getName(), activityType);
     }
 
