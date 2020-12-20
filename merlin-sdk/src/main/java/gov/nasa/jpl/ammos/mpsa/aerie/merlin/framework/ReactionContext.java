@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
@@ -62,40 +61,25 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public <Spec> String spawn(final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
-    if (this.history.isEmpty()) {
-      // We're running normally.
-      final var id = this.scheduler.spawn(spec, type);
-
-      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
-      this.nextBreadcrumbIndex += 1;
-
-      return id;
-    } else {
-      return respawn();
-    }
-  }
-
-  @Override
-  public <Spec> String defer(final Duration duration, final Spec spec, final TaskSpecType<? super $Schema, Spec> type) {
-    if (this.history.isEmpty()) {
-      // We're running normally.
-      final var id = this.scheduler.defer(duration, spec, type);
-
-      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
-      this.nextBreadcrumbIndex += 1;
-
-      return id;
-    } else {
-      return respawn();
-    }
-  }
-
-  @Override
   public String spawn(final String type, final Map<String, SerializedValue> arguments) {
     if (this.history.isEmpty()) {
       // We're running normally.
       final var id = this.scheduler.spawn(type, arguments);
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+      this.nextBreadcrumbIndex += 1;
+
+      return id;
+    } else {
+      return respawn();
+    }
+  }
+
+  @Override
+  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    if (this.history.isEmpty()) {
+      // We're running normally.
+      final var id = this.scheduler.defer(duration, type, arguments);
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;
