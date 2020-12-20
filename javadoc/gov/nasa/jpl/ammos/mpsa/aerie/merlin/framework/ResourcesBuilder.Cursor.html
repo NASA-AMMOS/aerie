@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -159,32 +159,38 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#constraint(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition)">constraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
+          <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Condition</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;&nbsp;condition)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#daemon(java.lang.String,java.lang.Runnable)">daemon</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="ResourcesBuilder.Cursor.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">ResourcesBuilder.Cursor</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#descend(java.lang.String)">descend</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>&lt;ResourceType&gt;<br><a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;ResourceType&gt;</code></td>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>&lt;Resource&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">DiscreteResource</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>,&#8203;Resource&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#discrete(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Property,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-        <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;ResourceType&gt;&nbsp;resource,
-        <a href="../../merlinsdk/typemappers/ValueMapper.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers">ValueMapper</a>&lt;ResourceType&gt;&nbsp;mapper)</code></th>
+        <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;Resource&gt;&nbsp;property,
+        <a href="../../merlinsdk/typemappers/ValueMapper.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers">ValueMapper</a>&lt;Resource&gt;&nbsp;mapper)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="models/Model.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models">Model</a>&lt;Effect,&#8203;ModelType&gt;&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">Query</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#model(ModelType,java.util.function.Function)">model</a></span>&#8203;(ModelType&nbsp;initialState,
      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code><a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;&gt;</code></td>
+<tr id="i5" class="rowColor">
+<td class="colFirst"><code><a href="RealResource.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">RealResource</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#real(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Property)">real</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-    <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&nbsp;resource)</code></th>
+    <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&nbsp;property)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -238,9 +244,9 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>discrete</h4>
-<pre class="methodSignature">public&nbsp;&lt;ResourceType&gt;&nbsp;<a href="../../merlinsdk/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete">DiscreteResource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;ResourceType&gt;&nbsp;discrete&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-                                                                                               <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;ResourceType&gt;&nbsp;resource,
-                                                                                               <a href="../../merlinsdk/typemappers/ValueMapper.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers">ValueMapper</a>&lt;ResourceType&gt;&nbsp;mapper)</pre>
+<pre class="methodSignature">public&nbsp;&lt;Resource&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">DiscreteResource</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>,&#8203;Resource&gt;&nbsp;discrete&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
+                                                                    <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;Resource&gt;&nbsp;property,
+                                                                    <a href="../../merlinsdk/typemappers/ValueMapper.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers">ValueMapper</a>&lt;Resource&gt;&nbsp;mapper)</pre>
 </li>
 </ul>
 <a id="real(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Property)">
@@ -249,8 +255,18 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>real</h4>
-<pre class="methodSignature">public&nbsp;<a href="../../merlinsdk/resources/real/RealResource.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealResource</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;&gt;&nbsp;real&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-                                                     <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&nbsp;resource)</pre>
+<pre class="methodSignature">public&nbsp;<a href="RealResource.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">RealResource</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;&nbsp;real&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
+                                  <a href="Property.html" title="interface in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;,&#8203;<a href="../../merlinsdk/resources/real/RealDynamics.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real">RealDynamics</a>&gt;&nbsp;property)</pre>
+</li>
+</ul>
+<a id="constraint(java.lang.String,gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>constraint</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;constraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
+                       <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">Condition</a>&lt;<a href="ResourcesBuilder.Cursor.html" title="type parameter in ResourcesBuilder.Cursor">$Schema</a>&gt;&nbsp;condition)</pre>
 </li>
 </ul>
 <a id="daemon(java.lang.String,java.lang.Runnable)">
