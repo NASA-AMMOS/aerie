@@ -1,0 +1,53 @@
+package gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated;
+
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.activities.BiteBananaActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.activities.PeelBananaActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.mappers.BiteBananaActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.mappers.PeelBananaActivityMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+
+// TODO: Automatically generate at compile time.
+public abstract class Module<$Schema>
+    extends gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module<$Schema>
+{
+  protected Module(final Context<$Schema> context) {
+    super(context);
+  }
+
+  protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
+    super(builder);
+  }
+
+
+  protected final String spawn(final BiteBananaActivity activity) {
+    return spawn(new BiteBananaActivityMapper().getName(), new BiteBananaActivityMapper().getArguments(activity));
+  }
+
+  protected final String spawn(final PeelBananaActivity activity) {
+    return spawn(new PeelBananaActivityMapper().getName(), new PeelBananaActivityMapper().getArguments(activity));
+  }
+
+  protected final String defer(final Duration duration, final BiteBananaActivity activity) {
+    return defer(
+        duration,
+        new BiteBananaActivityMapper().getName(),
+        new BiteBananaActivityMapper().getArguments(activity));
+  }
+
+  protected final String defer(final Duration duration, final PeelBananaActivity activity) {
+    return defer(
+        duration,
+        new PeelBananaActivityMapper().getName(),
+        new PeelBananaActivityMapper().getArguments(activity));
+  }
+
+  protected void call(final BiteBananaActivity activity) {
+    waitFor(spawn(activity));
+  }
+
+  protected void call(final PeelBananaActivity activity) {
+    waitFor(spawn(activity));
+  }
+}

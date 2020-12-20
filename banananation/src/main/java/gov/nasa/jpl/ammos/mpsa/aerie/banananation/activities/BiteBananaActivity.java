@@ -24,15 +24,9 @@ public final class BiteBananaActivity implements Activity {
   @Parameter
   public double biteSize = 1.0;
 
-  @Override
-  public List<String> validateParameters() {
-    final List<String> failures = new ArrayList<>();
-
-    if (this.biteSize <= 0) {
-      failures.add("bite size must be positive");
-    }
-
-    return failures;
+  @Validation("bite size must be positive")
+  public boolean validateBiteSize() {
+    return this.biteSize > 0;
   }
 
   @Override

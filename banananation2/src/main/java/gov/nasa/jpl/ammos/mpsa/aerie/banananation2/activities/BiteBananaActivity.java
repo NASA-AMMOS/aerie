@@ -1,0 +1,32 @@
+package gov.nasa.jpl.ammos.mpsa.aerie.banananation2.activities;
+
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.BanananationResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.Flag;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation2.generated.Task;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
+
+/**
+ * Bite a banana.
+ *
+ * This activity causes a piece of banana to be bitten off and consumed.
+ *
+ * @subsystem fruit
+ * @contact John Doe
+ */
+public final class BiteBananaActivity {
+  @Parameter
+  public double biteSize = 1.0;
+
+  @Validation("bite size must be positive")
+  public boolean validateBiteSize() {
+    return this.biteSize >= 0;
+  }
+
+  public final class EffectModel<$Schema> extends Task<$Schema> {
+    public void run(final BanananationResources<$Schema> resources) {
+      resources.flag.set(Flag.B);
+      resources.fruit.subtract(biteSize);
+    }
+  }
+}
