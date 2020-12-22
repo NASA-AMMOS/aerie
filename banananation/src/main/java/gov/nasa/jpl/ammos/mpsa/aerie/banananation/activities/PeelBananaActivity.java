@@ -1,14 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.Task;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.fruit;
-import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.peel;
 
 /**
  * Peel a banana, in preparation for consumption.
@@ -20,30 +17,23 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.peel
  * @subsystem fruit
  * @contact Jane Doe
  */
-@ActivityType(name="PeelBanana")
-public final class PeelBananaActivity implements Activity {
+public final class PeelBananaActivity {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
   @Parameter
   public String peelDirection = "fromStem";
 
-  @Override
-  public List<String> validateParameters() {
-    final List<String> failures = new ArrayList<>();
-
-    if (!List.of("fromStem", "fromTip").contains(this.peelDirection)) {
-      failures.add("peel direction must be fromStem or fromTip");
-    }
-
-    return failures;
+  @Validation("peel direction must be fromStem or fromTip")
+  public boolean validatePeelDirection() {
+    return List.of("fromStem", "fromTip").contains(this.peelDirection);
   }
 
-  @Override
-  public void modelEffects() {
-    if (this.peelDirection.equals("fromStem")) {
-      fruit.add(-MASHED_BANANA_AMOUNT);
+  public final class EffectModel<$Schema> extends Task<$Schema> {
+    public void run(final BanananationResources<$Schema> resources) {
+      if (peelDirection.equals("fromStem")) {
+        resources.fruit.subtract(MASHED_BANANA_AMOUNT);
+      }
+      resources.peel.subtract(1.0);
     }
-
-    peel.add(-1.0);
   }
 }

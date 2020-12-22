@@ -1,15 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.Flag;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.activities.Activity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.Parameter;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.flag;
-import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.fruit;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.Flag;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.Task;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
 
 /**
  * Bite a banana.
@@ -19,25 +14,19 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.banananation.state.BananaStates.frui
  * @subsystem fruit
  * @contact John Doe
  */
-@ActivityType(name="BiteBanana", generateMapper=true)
-public final class BiteBananaActivity implements Activity {
+public final class BiteBananaActivity {
   @Parameter
   public double biteSize = 1.0;
 
-  @Override
-  public List<String> validateParameters() {
-    final List<String> failures = new ArrayList<>();
-
-    if (this.biteSize <= 0) {
-      failures.add("bite size must be positive");
-    }
-
-    return failures;
+  @Validation("bite size must be positive")
+  public boolean validateBiteSize() {
+    return this.biteSize > 0;
   }
 
-  @Override
-  public void modelEffects() {
-    flag.set(Flag.B);
-    fruit.add(-biteSize);
+  public final class EffectModel<$Schema> extends Task<$Schema> {
+    public void run(final BanananationResources<$Schema> resources) {
+      resources.flag.set(Flag.B);
+      resources.fruit.subtract(biteSize);
+    }
   }
 }
