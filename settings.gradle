@@ -7,7 +7,6 @@ include 'contrib'
 
 // Adaptations
 include 'banananation'
-include 'banananation2'
 include 'sample-adaptation'
 include 'foo-adaptation'
 
