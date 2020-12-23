@@ -24,9 +24,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiFunction;
 
@@ -55,6 +57,7 @@ public final class SimulationDriver {
   {
     final var activityTypes = adaptation.getTaskSpecificationTypes();
     final var taskSpecs = new ArrayList<Triple<Duration, String, TaskSpec<$Schema, ?>>>();
+    final var daemonSet = new HashSet<String>();
 
     for (final var daemon : adaptation.getDaemons()) {
       final var activityId = UUID.randomUUID().toString();
@@ -65,6 +68,7 @@ public final class SimulationDriver {
       } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
         throw new TaskSpecInstantiationException(activityId, e);
       }
+      daemonSet.add(activityId);
     }
 
     for (final var entry : schedule.entrySet()) {
@@ -105,7 +109,7 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    return simulate(adaptation, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId);
+    return simulate(adaptation, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
   }
 
   private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
@@ -114,7 +118,8 @@ public final class SimulationDriver {
       final Instant startTime,
       final Duration simulationDuration,
       final Duration samplingPeriod,
-      final Map<String, String> taskIdToActivityId
+      final Map<String, String> taskIdToActivityId,
+      final Set<String> daemonSet
   )
   {
     final var timestamps = new ArrayList<Duration>();
@@ -183,7 +188,7 @@ public final class SimulationDriver {
           mappedTaskWindows,
           startTime);
 
-      if (!results.unfinishedActivities.isEmpty()) {
+      if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
         throw new Error("There should be no unfinished activities when simulating to completion.");
       }
 
