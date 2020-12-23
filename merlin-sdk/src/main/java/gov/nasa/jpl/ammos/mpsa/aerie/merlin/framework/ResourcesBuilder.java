@@ -17,13 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public final class ResourcesBuilder<$Schema> {
-  private final Context<$Schema> rootContext;
+  private final Supplier<? extends Context<$Schema>> rootContext;
   private final Schema.Builder<$Schema> schemaBuilder;
   private ResourcesBuilderState<$Schema> state;
 
-  public ResourcesBuilder(final Context<$Schema> rootContext, final Schema.Builder<$Schema> schemaBuilder) {
+  public ResourcesBuilder(final Supplier<? extends Context<$Schema>> rootContext, final Schema.Builder<$Schema> schemaBuilder) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
     this.state = new UnbuiltResourcesBuilderState();
@@ -48,7 +49,7 @@ public final class ResourcesBuilder<$Schema> {
     }
 
     /*package-local*/
-    Context<$Schema> getRootContext() {
+    Supplier<? extends Context<$Schema>> getRootContext() {
       return this.builder.rootContext;
     }
 

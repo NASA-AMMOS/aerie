@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.DaemonTaskType;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities.FooActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
@@ -12,6 +12,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 
 // TODO: Automatically generate at compile time.
 public final class FooAdaptation<$Schema> implements Adaptation<$Schema> {
-  private final ProxyContext<$Schema> rootContext = new ProxyContext<>();
+  private final DynamicCell<Context<$Schema>> rootContext = DynamicCell.create();
 
   private final BuiltResources<$Schema> resources;
   private final Map<String, TaskSpecType<$Schema, ?>> daemonTypes;

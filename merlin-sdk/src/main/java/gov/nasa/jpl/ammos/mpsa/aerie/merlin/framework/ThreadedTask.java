@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +13,11 @@ import java.util.concurrent.ArrayBlockingQueue;
 public final class ThreadedTask<$Schema, $Timeline extends $Schema>
     implements Task<$Timeline>
 {
-  private final ProxyContext<$Schema> rootContext;
+  private final DynamicCell<Context<$Schema>> rootContext;
   private final ThreadedTaskHandle task;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
-  public ThreadedTask(final ProxyContext<$Schema> rootContext, final Runnable task) {
+  public ThreadedTask(final DynamicCell<Context<$Schema>> rootContext, final Runnable task) {
     this.rootContext = rootContext;
     this.task = new ThreadedTaskHandle(task);
   }
@@ -31,16 +32,7 @@ public final class ThreadedTask<$Schema, $Timeline extends $Schema>
         scheduler,
         this.task);
 
-    {
-      final var oldContext = this.rootContext.getTarget();
-      this.rootContext.setTarget(context);
-
-      try {
-        this.task.resumeTask();
-      } finally {
-        this.rootContext.setTarget(oldContext);
-      }
-    }
+    this.rootContext.setWithin(context, this.task::resumeTask);
 
     return context.getStatus();
   }
