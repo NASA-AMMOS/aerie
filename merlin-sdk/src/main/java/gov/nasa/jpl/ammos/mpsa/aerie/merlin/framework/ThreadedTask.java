@@ -13,77 +13,59 @@ import java.util.concurrent.ArrayBlockingQueue;
 public final class ThreadedTask<$Schema, $Timeline extends $Schema>
     implements Task<$Timeline>
 {
-  private final DynamicCell<Context<$Schema>> rootContext;
-  private final ThreadedTaskHandle task;
+  private final Thread thread;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
+  private final ArrayBlockingQueue<Scheduler<$Timeline>> hostToTask = new ArrayBlockingQueue<>(1);
+  private final ArrayBlockingQueue<TaskStatus<$Timeline>> taskToHost = new ArrayBlockingQueue<>(1);
+  private boolean done = false;
+
   public ThreadedTask(final DynamicCell<Context<$Schema>> rootContext, final Runnable task) {
-    this.rootContext = rootContext;
-    this.task = new ThreadedTaskHandle(task);
+    Objects.requireNonNull(rootContext);
+    Objects.requireNonNull(task);
+
+    final var handle = new ThreadedTaskHandle();
+
+    this.thread = new Thread(() -> {
+      try {
+        final var scheduler = this.hostToTask.take();
+        this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
+
+        final var context = new ReactionContext<$Schema, $Timeline>(this.breadcrumbs, scheduler, handle);
+        rootContext.setWithin(context, task::run);
+
+        this.done = true;
+        this.taskToHost.put(TaskStatus.completed());
+      } catch (final InterruptedException ex) {
+        throw new Error("Merlin task unexpectedly interrupted", ex);
+      }
+    });
+
+    this.thread.setDaemon(true);
   }
 
   @Override
   public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
-    this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
+    try {
+      if (!this.thread.isAlive()) this.thread.start();
 
-    final var context = new ReactionContext<$Schema, $Timeline>(
-        this.breadcrumbs.size() - 1,
-        this.breadcrumbs,
-        scheduler,
-        this.task);
+      this.hostToTask.put(scheduler);
+      final var status = this.taskToHost.take();
 
-    this.rootContext.setWithin(context, this.task::resumeTask);
+      if (this.done) this.thread.join();
 
-    return context.getStatus();
+      return status;
+    } catch (final InterruptedException ex) {
+      throw new Error("Merlin host unexpectedly interrupted", ex);
+    }
   }
 
-  private static final class ThreadedTaskHandle implements TaskHandle {
-    private enum Token { TOKEN }
-
-    private final Runnable task;
-    private final Thread thread;
-
-    private final ArrayBlockingQueue<Token> hostToTask = new ArrayBlockingQueue<>(1);
-    private final ArrayBlockingQueue<Token> taskToHost = new ArrayBlockingQueue<>(1);
-    private boolean done = false;
-
-    public ThreadedTaskHandle(final Runnable task) {
-      this.task = Objects.requireNonNull(task);
-      this.thread = new Thread(this::run);
-
-      this.thread.setDaemon(true);
-    }
-
-    private void run() {
+  private final class ThreadedTaskHandle implements TaskHandle<$Timeline> {
+    @Override
+    public Scheduler<$Timeline> yield(final TaskStatus<$Timeline> status) {
       try {
-        this.hostToTask.take();
-
-        this.task.run();
-        this.done = true;
-
-        this.taskToHost.put(Token.TOKEN);
-      } catch (final InterruptedException ex) {
-        throw new Error("Merlin task unexpectedly interrupted", ex);
-      }
-    }
-
-    public void resumeTask() {
-      try {
-        if (!this.thread.isAlive()) this.thread.start();
-
-        this.hostToTask.put(Token.TOKEN);
-        this.taskToHost.take();
-
-        if (this.done) this.thread.join();
-      } catch (final InterruptedException ex) {
-        throw new Error("Merlin host unexpectedly interrupted", ex);
-      }
-    }
-
-    public void yieldTask() {
-      try {
-        this.taskToHost.put(Token.TOKEN);
-        this.hostToTask.take();
+        ThreadedTask.this.taskToHost.put(status);
+        return ThreadedTask.this.hostToTask.take();
       } catch (final InterruptedException ex) {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }

@@ -1,5 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-public interface TaskHandle {
-  void yieldTask();
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
+
+public interface TaskHandle<$Timeline> {
+  Scheduler<$Timeline> yield(TaskStatus<$Timeline> status);
 }

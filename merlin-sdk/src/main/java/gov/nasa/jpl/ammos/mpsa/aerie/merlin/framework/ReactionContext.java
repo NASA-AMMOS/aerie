@@ -10,38 +10,30 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /* package-local */
 final class ReactionContext<$Schema, $Timeline extends $Schema>
     implements Context<$Schema>
 {
-  private final TaskHandle handle;
-  private final Scheduler<$Timeline> scheduler;
-  private TaskStatus<$Timeline> status = TaskStatus.completed();
+  private final TaskHandle<$Timeline> handle;
+  private Scheduler<$Timeline> scheduler;
+  private Optional<History<$Timeline>> history = Optional.empty();
 
-  private Optional<History<$Timeline>> history;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs;
-  private int nextBreadcrumbIndex;
+  private int nextBreadcrumbIndex = 0;
 
   public ReactionContext(
-      final int initialBreadcrumbIndex,
       final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
       final Scheduler<$Timeline> scheduler,
-      final TaskHandle handle)
+      final TaskHandle<$Timeline> handle)
   {
-    this.nextBreadcrumbIndex = initialBreadcrumbIndex;
-    this.history = Optional.empty();
-    this.breadcrumbs = breadcrumbs;
+    this.breadcrumbs = Objects.requireNonNull(breadcrumbs);
     this.scheduler = scheduler;
     this.handle = handle;
 
     readvance();
-  }
-
-  /* package-local */
-  TaskStatus<$Timeline> getStatus() {
-    return this.status;
   }
 
   @Override
@@ -94,10 +86,10 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   public void delay(final Duration duration) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.status = TaskStatus.delayed(duration);
+      this.scheduler = this.handle.yield(TaskStatus.delayed(duration));
 
+      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;
-      this.handle.yieldTask();
     } else {
       readvance();
     }
@@ -107,10 +99,10 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   public void waitFor(final String id) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.status = TaskStatus.awaiting(id);
+      this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
 
+      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;
-      this.handle.yieldTask();
     } else {
       readvance();
     }
@@ -120,10 +112,10 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   public void waitUntil(final Condition<$Schema> condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.status = TaskStatus.awaiting(condition);
+      this.scheduler = this.handle.yield(TaskStatus.awaiting(condition));
 
+      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;
-      this.handle.yieldTask();
     } else {
       readvance();
     }
