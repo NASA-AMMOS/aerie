@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.mappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities.ParameterTestActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -33,7 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ParameterTestActivityMapper {
+public class ParameterTestActivityMapper implements ActivityMapper<ParameterTestActivity> {
   private final ValueMapper<Double> mapper_primitiveDouble = new NullableValueMapper<>(new DoubleValueMapper());
   private final ValueMapper<Float> mapper_primitiveFloat = new NullableValueMapper<>(new FloatValueMapper());
   private final ValueMapper<Byte> mapper_primitiveByte = new NullableValueMapper<>(new ByteValueMapper());
@@ -154,10 +155,12 @@ public class ParameterTestActivityMapper {
 
   public ParameterTestActivityMapper() { }
 
+  @Override
   public String getName() {
     return "ParameterTest";
   }
 
+  @Override
   public Map<String, ValueSchema> getParameters() {
     final var parameters = new HashMap<String, ValueSchema>();
     parameters.put("primitiveDouble", this.mapper_primitiveDouble.getValueSchema());
@@ -220,10 +223,12 @@ public class ParameterTestActivityMapper {
     return parameters;
   }
 
+  @Override
   public ParameterTestActivity instantiateDefault() {
     return new ParameterTestActivity();
   }
 
+  @Override
   public ParameterTestActivity instantiate(final Map<String, SerializedValue> arguments)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
@@ -520,6 +525,7 @@ public class ParameterTestActivityMapper {
     return activity;
   }
 
+  @Override
   public Map<String, SerializedValue> getArguments(final ParameterTestActivity activity) {
     final var arguments = new HashMap<String, SerializedValue>();
     arguments.put("primitiveDouble", this.mapper_primitiveDouble.serializeValue(activity.primitiveDouble));
@@ -582,6 +588,7 @@ public class ParameterTestActivityMapper {
     return arguments;
   }
 
+  @Override
   public List<String> getValidationFailures(final ParameterTestActivity activity) {
     // TODO: Extract validation messages from @Validation annotation at compile time.
     return new ArrayList<>();

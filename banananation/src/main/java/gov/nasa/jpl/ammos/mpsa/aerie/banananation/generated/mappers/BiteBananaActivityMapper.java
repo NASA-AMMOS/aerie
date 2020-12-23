@@ -1,6 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.mappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities.BiteBananaActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -10,20 +11,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BiteBananaActivityMapper {
+public class BiteBananaActivityMapper implements ActivityMapper<BiteBananaActivity> {
   public String getName() {
     return "BiteBanana";
   }
 
+  @Override
   public Map<String, ValueSchema> getParameters() {
     return Map.of(
         "biteSize", new DoubleValueMapper().getValueSchema());
   }
 
+  @Override
   public BiteBananaActivity instantiateDefault() {
     return new BiteBananaActivity();
   }
 
+  @Override
   public BiteBananaActivity instantiate(final Map<String, SerializedValue> arguments)
   throws TaskSpecType.UnconstructableTaskSpecException
   {
@@ -42,11 +46,13 @@ public class BiteBananaActivityMapper {
     return activity;
   }
 
+  @Override
   public Map<String, SerializedValue> getArguments(final BiteBananaActivity activity) {
     return Map.of(
         "biteSize", new DoubleValueMapper().serializeValue(activity.biteSize));
   }
 
+  @Override
   public List<String> getValidationFailures(final BiteBananaActivity activity) {
     // TODO: Extract validation messages from @Validation annotation at compile time.
     final var failures = new ArrayList<String>();

@@ -1,12 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.activities.BiteBananaActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.activities.DaemonTaskType;
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.activities.ParameterTestActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.activities.PeelBananaActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DaemonTaskType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
@@ -35,28 +32,19 @@ public class Banananation<$Schema> implements Adaptation<$Schema> {
     final var container = new BanananationResources<>(builder.getCursor());
     final var resources = builder.build();
 
-    final var allTaskSpecTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
-    {
-      final var activityType = new BiteBananaActivityType<>(this.rootContext, container);
-      allTaskSpecTypes.put(activityType.getName(), activityType);
-    }
-    {
-      final var activityType = new PeelBananaActivityType<>(this.rootContext, container);
-      allTaskSpecTypes.put(activityType.getName(), activityType);
-    }
-    {
-      final var activityType = new ParameterTestActivityType<>(this.rootContext, container);
-      allTaskSpecTypes.put(activityType.getName(), activityType);
-    }
-
+    final var activityTypes = ActivityTypes.get(this.rootContext, container);
     final var daemonTypes = new HashMap<String, TaskSpecType<$Schema, ?>>();
 
     resources.daemons.forEach((name, daemon) -> {
       final var daemonType = new DaemonTaskType<>("/daemons/" + name, daemon, this.rootContext);
 
       daemonTypes.put(daemonType.getName(), daemonType);
-      allTaskSpecTypes.put(daemonType.getName(), daemonType);
     });
+
+    final var allTaskSpecTypes =
+        new HashMap<String, TaskSpecType<$Schema, ?>>(activityTypes.size() + daemonTypes.size());
+    allTaskSpecTypes.putAll(activityTypes);
+    allTaskSpecTypes.putAll(daemonTypes);
 
     this.resources = resources;
     this.daemonTypes = Collections.unmodifiableMap(daemonTypes);
