@@ -13,55 +13,47 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     implements Task<$Timeline>
 {
   private final DynamicCell<Context<$Schema>> rootContext;
-  private final ReplayingTaskHandle handle;
+  private final Runnable task;
+
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
   public ReplayingTask(final DynamicCell<Context<$Schema>> rootContext, final Runnable task) {
-    this.rootContext = rootContext;
-    this.handle = new ReplayingTaskHandle(task);
+    this.rootContext = Objects.requireNonNull(rootContext);
+    this.task = Objects.requireNonNull(task);
   }
 
   @Override
   public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
     this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
 
-    final var context = new ReactionContext<$Schema, $Timeline>(
-        0,
-        this.breadcrumbs,
-        scheduler,
-        this.handle);
+    final var handle = new ReplayingTaskHandle<$Timeline>();
+    final var context = new ReactionContext<$Schema, $Timeline>(this.breadcrumbs, scheduler, handle);
 
-    this.rootContext.setWithin(context, this.handle::resumeTask);
+    try {
+      this.rootContext.setWithin(context, this.task::run);
 
-    return context.getStatus();
+      // If we get here, the activity has completed normally.
+      return TaskStatus.completed();
+    } catch (final Yield ignored) {
+      // If we get here, the activity has suspended.
+      return handle.status;
+    }
   }
 
-  private static final class ReplayingTaskHandle implements TaskHandle {
-    private final Runnable task;
-
-    public ReplayingTaskHandle(final Runnable task) {
-      this.task = Objects.requireNonNull(task);
-    }
+  private static final class ReplayingTaskHandle<$Timeline> implements TaskHandle<$Timeline> {
+    public TaskStatus<$Timeline> status = TaskStatus.completed();
 
     @Override
-    public void yieldTask() {
+    public Scheduler<$Timeline> yield(final TaskStatus<$Timeline> status) {
+      this.status = status;
       throw Yield;
     }
-
-    public void resumeTask() {
-      try {
-        this.task.run();
-        // If we get here, the activity has completed normally.
-      } catch (final Yield ignored) {
-        // If we get here, the activity has suspended.
-      }
-    }
-
-    // Since this exception is just used to transfer control out of an activity,
-    //   we can pre-allocate a single instance as a unique token
-    //   to avoid some of the overhead of exceptions
-    //   (most notably the call stack snapshotting).
-    private static final class Yield extends RuntimeException {}
-    private static final Yield Yield = new Yield();
   }
+
+  // Since this exception is just used to transfer control out of an activity,
+  //   we can pre-allocate a single instance as a unique token
+  //   to avoid some of the overhead of exceptions
+  //   (most notably the call stack snapshotting).
+  private static final class Yield extends RuntimeException {}
+  private static final Yield Yield = new Yield();
 }
