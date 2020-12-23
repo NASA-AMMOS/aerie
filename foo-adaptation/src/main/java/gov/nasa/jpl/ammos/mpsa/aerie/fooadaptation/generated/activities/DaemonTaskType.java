@@ -1,11 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 import java.util.List;
 import java.util.Map;
@@ -13,9 +14,9 @@ import java.util.Map;
 public final class DaemonTaskType<$Schema> implements TaskSpecType<$Schema, Runnable> {
   private final String name;
   private final Runnable runnable;
-  private final ProxyContext<$Schema> rootContext;
+  private final DynamicCell<Context<$Schema>> rootContext;
 
-  public DaemonTaskType(final String name, final Runnable runnable, final ProxyContext<$Schema> rootContext) {
+  public DaemonTaskType(final String name, final Runnable runnable, final DynamicCell<Context<$Schema>> rootContext) {
     this.name = name;
     this.runnable = runnable;
     this.rootContext = rootContext;

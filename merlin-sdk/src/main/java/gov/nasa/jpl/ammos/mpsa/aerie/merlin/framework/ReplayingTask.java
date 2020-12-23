@@ -3,6 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,11 +12,11 @@ import java.util.Objects;
 public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     implements Task<$Timeline>
 {
-  private final ProxyContext<$Schema> rootContext;
+  private final DynamicCell<Context<$Schema>> rootContext;
   private final ReplayingTaskHandle handle;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final ProxyContext<$Schema> rootContext, final Runnable task) {
+  public ReplayingTask(final DynamicCell<Context<$Schema>> rootContext, final Runnable task) {
     this.rootContext = rootContext;
     this.handle = new ReplayingTaskHandle(task);
   }
@@ -30,16 +31,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
         scheduler,
         this.handle);
 
-    {
-      final var oldContext = this.rootContext.getTarget();
-      this.rootContext.setTarget(context);
-
-      try {
-        this.handle.resumeTask();
-      } finally {
-        this.rootContext.setTarget(oldContext);
-      }
-    }
+    this.rootContext.setWithin(context, this.handle::resumeTask);
 
     return context.getStatus();
   }

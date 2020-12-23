@@ -8,12 +8,17 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public abstract class Module<$Schema> {
-  private final Context<$Schema> context;
+  private final Supplier<? extends Context<$Schema>> context;
+
+  protected Module(final Supplier<? extends Context<$Schema>> context) {
+    this.context = Objects.requireNonNull(context);
+  }
 
   protected Module(final Context<$Schema> context) {
-    this.context = Objects.requireNonNull(context);
+    this(() -> context);
   }
 
   protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
@@ -22,16 +27,16 @@ public abstract class Module<$Schema> {
 
 
   protected final History<? extends $Schema> now() {
-    return this.context.now();
+    return this.context.get().now();
   }
 
 
   protected final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
-    this.context.emit(event, query);
+    this.context.get().emit(event, query);
   }
 
   protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
-    return this.context.spawn(type, arguments);
+    return this.context.get().spawn(type, arguments);
   }
 
   protected final void call(final String type, final Map<String, SerializedValue> arguments) {
@@ -39,7 +44,7 @@ public abstract class Module<$Schema> {
   }
 
   protected final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.context.defer(duration, type, arguments);
+    return this.context.get().defer(duration, type, arguments);
   }
 
   protected final String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
@@ -48,7 +53,7 @@ public abstract class Module<$Schema> {
 
 
   protected final void delay(final Duration duration) {
-    this.context.delay(duration);
+    this.context.get().delay(duration);
   }
 
   protected final void delay(final long quantity, final Duration unit) {
@@ -56,10 +61,10 @@ public abstract class Module<$Schema> {
   }
 
   protected final void waitFor(final String id) {
-    this.context.waitFor(id);
+    this.context.get().waitFor(id);
   }
 
   protected final void waitUntil(final Condition<$Schema> condition) {
-    this.context.waitUntil(condition);
+    this.context.get().waitUntil(condition);
   }
 }

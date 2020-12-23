@@ -3,12 +3,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities.ParameterTestActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.mappers.ParameterTestActivityMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ProxyContext;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 import java.util.List;
 import java.util.Map;
@@ -16,11 +17,11 @@ import java.util.Map;
 public class ParameterTestActivityType<$Schema> implements TaskSpecType<$Schema, ParameterTestActivity> {
   private final ParameterTestActivityMapper mapper = new ParameterTestActivityMapper();
 
-  private final ProxyContext<$Schema> rootContext;
+  private final DynamicCell<Context<$Schema>> rootContext;
   private final BanananationResources<$Schema> container;
 
   public ParameterTestActivityType(
-      final ProxyContext<$Schema> rootContext,
+      final DynamicCell<Context<$Schema>> rootContext,
       final BanananationResources<$Schema> container)
   {
     this.rootContext = rootContext;
