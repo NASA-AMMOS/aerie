@@ -3,8 +3,11 @@ package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.ClockModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.LinearIntegrationModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
+
+import java.time.Instant;
 
 public final class FooResources<$Schema> extends Module<$Schema> {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
@@ -18,13 +21,16 @@ public final class FooResources<$Schema> extends Module<$Schema> {
 
   public final RealResource<$Schema> combo;
 
+  public final ClockModule<$Schema> utcClock;
+
   public FooResources(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.foo = RegisterModule.create(builder.descend("foo"), 0.0);
     this.data = new LinearIntegrationModule<>(builder.descend("data"));
     this.combo = this.data.volume.resource.plus(this.data.rate.resource);
-
+    Instant instant = Instant.parse("2023-08-18T00:00:00.00Z");
+    this.utcClock = new ClockModule<>(builder.descend("utcClock"), instant);
     // TODO: automatically perform this for each @Daemon annotation
     builder.daemon("test", this::test);
   }

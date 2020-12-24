@@ -14,9 +14,16 @@ public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
   public final Rate rate;
 
   public LinearIntegrationModule(final ResourcesBuilder.Cursor<$Schema> builder) {
-    super(builder);
+    this(builder, 0.0, 0.0);
+  }
 
-    this.query = builder.model(new LinearIntegrationModel(0.0, 0.0), ev -> ev);
+  public LinearIntegrationModule(
+      final ResourcesBuilder.Cursor<$Schema> builder,
+      final double initialVolume,
+      final double initialRate)
+  {
+    super(builder);
+    this.query = builder.model(new LinearIntegrationModel(initialVolume, initialRate), ev -> ev);
     this.volume = new Volume(builder.real("volume", now -> now.ask(this.query).getVolume()));
     this.rate = new Rate(builder.real("rate", now -> now.ask(this.query).getRate()));
   }
