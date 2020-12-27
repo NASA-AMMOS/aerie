@@ -2,8 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Validation;
 
 import java.util.List;
 
@@ -17,6 +18,7 @@ import java.util.List;
  * @subsystem fruit
  * @contact Jane Doe
  */
+@ActivityType("PeelBanana")
 public final class PeelBananaActivity {
   private static final double MASHED_BANANA_AMOUNT = 1.0;
 
