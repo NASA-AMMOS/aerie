@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.ModuleX;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.ClockModule;
@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 
 import java.time.Instant;
 
-public final class FooResources<$Schema> extends Module<$Schema> {
+public final class FooResources<$Schema> extends ModuleX<$Schema> {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
   // Need to collect profiles from published resources as simulation proceeds.

@@ -5,7 +5,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell;
 
 // TODO: Automatically generate at compile time.
-public abstract class Task<$Schema> extends Module<$Schema> {
+public abstract class Task<$Schema> extends ModuleX<$Schema> {
   private final DynamicCell<Context<$Schema>> context;
 
   private Task(final DynamicCell<Context<$Schema>> context) {
