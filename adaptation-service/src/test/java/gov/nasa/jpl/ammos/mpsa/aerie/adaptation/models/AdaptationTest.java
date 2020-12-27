@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.FooAdaptationFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import org.junit.Before;
@@ -17,7 +17,7 @@ public final class AdaptationTest {
 
     @Before
     public void initialize() throws AdaptationFacade.AdaptationContractException {
-        this.adaptation = new AdaptationFacade<>(new FooAdaptationFactory().instantiate());
+        this.adaptation = new AdaptationFacade<>(new GeneratedAdaptationFactory().instantiate());
     }
 
     @Test

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.FooAdaptationFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
@@ -15,7 +15,7 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
 
-public class  SimulateMapSchedule {
+public class SimulateMapSchedule {
   public static void main(final String[] args) {
     try {
       simulateWithMapSchedule();
@@ -28,7 +28,7 @@ public class  SimulateMapSchedule {
   void simulateWithMapSchedule()
   throws SimulationDriver.TaskSpecInstantiationException
   {
-    final var adaptation = new FooAdaptationFactory().instantiate();
+    final var adaptation = new GeneratedAdaptationFactory().instantiate();
     final var schedule = Map.of(
         UUID.randomUUID().toString(), Pair.of(
             duration(0, MILLISECONDS),
