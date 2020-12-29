@@ -331,6 +331,11 @@ public final class Duration implements Comparable<Duration> {
     return Duration.divide(this, duration(quantity, unit));
   }
 
+  /** @see Duration#divide(Duration, Duration) */
+  public long in(final Duration unit) {
+    return dividedBy(unit);
+  }
+
   /** @see Duration#remainder(Duration, Duration) */
   public Duration remainderOf(final Duration unit) {
     return Duration.remainder(this, unit);
