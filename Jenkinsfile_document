@@ -18,7 +18,6 @@ pipeline {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: 'GitHub-aerie-write', keyFileVariable: 'DEPLOY_KEY', passphraseVariable: '', usernameVariable: '')]) {
                         sh 'cp ${DEPLOY_KEY} id_rsa'
-                        sh 'ls -l'
                     }
                 }
             }
@@ -70,7 +69,6 @@ pipeline {
                 stage ('Clone Aerie.wiki repo') {
                     steps {
                         sh 'git clone git@github.jpl.nasa.gov:Aerie/aerie.wiki.git'
-                        sh 'ls -la'
                     }
                 }
                 stage ('Building HTML documents') {
@@ -105,8 +103,6 @@ pipeline {
                 stage ('Upload documents') {
                     steps {
                         sh 'pwd'
-                        sh 'ls -la'
-                        sh 'ls html/ -la'
                         sh 'git config user.email "achong@jpl.nasa.gov"'
                         sh 'git config user.name "Automatic Job"'
                         sh 'git add ${TAG}/wiki'
