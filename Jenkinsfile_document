@@ -9,7 +9,6 @@ pipeline {
     stages {
         stage ('Setup') {
             steps {
-                sh 'git checkout gh-pages'
                 echo "Printing environment variables..."
                 sh "env | sort"
             }
@@ -59,6 +58,13 @@ pipeline {
                     steps {
                         sh 'mkdir -p ~/.ssh && mv id_rsa ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa'
                         sh 'ssh-keyscan -t rsa github.jpl.nasa.gov >> ~/.ssh/known_hosts'
+                    }
+                }
+                stage ('Checkout gh-pages') {
+                    steps{
+                        sh 'git checkout gh-pages'
+                        sh 'git pull --ff-only'
+                        sh 'git log -1'
                     }
                 }
                 stage ('Clone Aerie.wiki repo') {
