@@ -1,7 +1,5 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;

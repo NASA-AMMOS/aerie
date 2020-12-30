@@ -2,11 +2,13 @@ package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Validation;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
 
+@ActivityType("foo")
 public final class FooActivity {
   @Parameter
   public int x = 0;

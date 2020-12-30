@@ -1,10 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
 
 import java.util.List;
 import java.util.Map;
 
+@ActivityType("ParameterTest")
 public final class ParameterTestActivity {
   // Primitive parameters
   @Parameter public double primitiveDouble = 3.141;

@@ -3,8 +3,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.Flag;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.Task;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Parameter;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Validation;
 
 /**
  * Bite a banana.
@@ -14,6 +15,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Validation;
  * @subsystem fruit
  * @contact John Doe
  */
+@ActivityType("BiteBanana")
 public final class BiteBananaActivity {
   @Parameter
   public double biteSize = 1.0;
