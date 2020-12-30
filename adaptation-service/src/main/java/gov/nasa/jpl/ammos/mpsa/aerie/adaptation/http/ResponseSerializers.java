@@ -195,7 +195,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeTimestamp(final Duration timestamp) {
-    return Json.createValue(timestamp.dividedBy(Duration.MICROSECOND));
+    return Json.createValue(timestamp.in(Duration.MICROSECONDS));
   }
 
   public static JsonValue serializeTimestamps(final List<Duration> elements) {
@@ -211,7 +211,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeDuration(final Duration duration) {
-    return Json.createValue(duration.dividedBy(Duration.MICROSECONDS));
+    return Json.createValue(duration.in(Duration.MICROSECONDS));
   }
 
   public static JsonValue serializeConstraintViolation(final ConstraintViolation violation) {
@@ -248,8 +248,8 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeWindow(final Window window) {
     return Json.createObjectBuilder()
-               .add("start", window.start.dividedBy(Duration.MICROSECOND))
-               .add("end", window.end.dividedBy(Duration.MICROSECOND))
+               .add("start", window.start.in(Duration.MICROSECONDS))
+               .add("end", window.end.in(Duration.MICROSECONDS))
                .build();
   }
 
@@ -283,7 +283,7 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
     return Json.createObjectBuilder()
-               .add("defer", scheduledActivity.getLeft().dividedBy(Duration.MICROSECOND))
+               .add("defer", scheduledActivity.getLeft().in(Duration.MICROSECONDS))
                .add("type", scheduledActivity.getRight().getTypeName())
                .add("parameters", serializeActivityParameters(scheduledActivity.getRight().getParameters()))
                .build();
@@ -297,8 +297,8 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
                .add("adaptationId", message.adaptationId)
                .add("startTime", serializeTimestampString(message.startTime))
-               .add("samplingDuration", message.samplingDuration.dividedBy(Duration.MICROSECOND))
-               .add("samplingPeriod", message.samplingPeriod.dividedBy(Duration.MICROSECOND))
+               .add("samplingDuration", message.samplingDuration.in(Duration.MICROSECONDS))
+               .add("samplingPeriod", message.samplingPeriod.in(Duration.MICROSECONDS))
                .add("activities", serializeScheduledActivities(message.activityInstances))
                .build();
   }

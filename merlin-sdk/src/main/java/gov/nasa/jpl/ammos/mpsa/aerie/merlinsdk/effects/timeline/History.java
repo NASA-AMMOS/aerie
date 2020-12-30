@@ -163,7 +163,7 @@ public final class History<Scope, Event> {
       return this;
     }
 
-    return new History<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.dividedBy(Duration.MICROSECOND)));
+    return new History<>(this.database, this.lastBranchBase, this.database.waiting(this.index, duration.in(Duration.MICROSECONDS)));
   }
 
   /**

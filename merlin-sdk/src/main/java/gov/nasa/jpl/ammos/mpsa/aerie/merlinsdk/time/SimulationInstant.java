@@ -13,11 +13,11 @@ public final class SimulationInstant {
   public static final SimulationInstant ORIGIN = new SimulationInstant(0);
 
   public SimulationInstant plus(final Duration duration) {
-    return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.dividedBy(Duration.MICROSECOND)));
+    return new SimulationInstant(Math.addExact(this.microsecondsFromStart, duration.in(Duration.MICROSECONDS)));
   }
 
   public SimulationInstant minus(final Duration duration) {
-    return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.dividedBy(Duration.MICROSECOND)));
+    return new SimulationInstant(Math.subtractExact(this.microsecondsFromStart, duration.in(Duration.MICROSECONDS)));
   }
 
   public Duration durationFrom(final SimulationInstant other) {
