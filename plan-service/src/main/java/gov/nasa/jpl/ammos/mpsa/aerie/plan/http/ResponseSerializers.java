@@ -109,7 +109,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeDuration(final Duration timestamp) {
-    return Json.createValue(timestamp.dividedBy(Duration.MICROSECOND));
+    return Json.createValue(timestamp.in(Duration.MICROSECONDS));
   }
 
   public static JsonValue serializeSimulationResults(final SimulationResults results) {

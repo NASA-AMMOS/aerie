@@ -24,6 +24,6 @@ public class DurationValueMapper implements ValueMapper<Duration> {
 
   @Override
   public SerializedValue serializeValue(final Duration value) {
-    return SerializedValue.of(value.dividedBy(Duration.MICROSECOND));
+    return SerializedValue.of(value.in(Duration.MICROSECONDS));
   }
 }
