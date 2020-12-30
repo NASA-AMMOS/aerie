@@ -57,9 +57,8 @@ public final class AdaptationBindings implements Plugin {
   @Override
   public void apply(final Javalin javalin) {
     javalin.routes(() -> {
+      before(ctx -> ctx.contentType("application/json"));
       path("adaptations", () -> {
-        before(ctx -> ctx.contentType("application/json"));
-
         get(this::getAdaptations);
         post(this::postAdaptation);
         path(":adaptationId", () -> {
