@@ -6,9 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Windows;
 
 import java.util.List;
 import java.util.Optional;

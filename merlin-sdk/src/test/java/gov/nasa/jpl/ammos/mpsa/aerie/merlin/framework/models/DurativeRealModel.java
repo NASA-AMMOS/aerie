@@ -3,8 +3,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;

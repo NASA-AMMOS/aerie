@@ -1,14 +1,14 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
+package gov.nasa.jpl.ammos.mpsa.aerie.time;
 
 import org.junit.Test;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.EPSILON;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.roundDownward;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.roundNearest;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.roundUpward;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.EPSILON;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.duration;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.roundDownward;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.roundNearest;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.roundUpward;
 import static org.junit.Assert.assertEquals;
 
 public final class DurationTest {

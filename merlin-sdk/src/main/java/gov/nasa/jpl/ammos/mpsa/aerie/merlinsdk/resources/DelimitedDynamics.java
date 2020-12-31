@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;

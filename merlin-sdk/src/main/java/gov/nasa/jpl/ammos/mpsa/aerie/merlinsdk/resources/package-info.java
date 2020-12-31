@@ -32,7 +32,7 @@
  *   <li>
  *     Determining the value of a resource at a given time, under its current dynamics; or
  *   <li>
- *     Determining the {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows} of time over which some condition
+ *     Determining the {@link gov.nasa.jpl.ammos.mpsa.aerie.time.Windows} of time over which some condition
  *     is held true.
  * </ul>
  * <p>

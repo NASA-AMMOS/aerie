@@ -10,10 +10,10 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECOND;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.duration;
 
 public final class Main {
   public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {

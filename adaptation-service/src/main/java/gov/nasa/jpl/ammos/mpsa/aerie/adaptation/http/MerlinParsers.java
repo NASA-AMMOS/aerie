@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.JsonString;

@@ -17,9 +17,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.SimulatedActivi
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Windows;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;

@@ -795,7 +795,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
-                                            gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.class,
+                                            gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.class,
                                             "duration")
                                         .addModifiers(Modifier.FINAL)
                                         .build())
@@ -828,7 +828,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
-                                            gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.class,
+                                            gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.class,
                                             "unit")
                                         .addModifiers(Modifier.FINAL)
                                         .build())

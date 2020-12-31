@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Validation;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECOND;
 
 @ActivityType("foo")
 public final class FooActivity {

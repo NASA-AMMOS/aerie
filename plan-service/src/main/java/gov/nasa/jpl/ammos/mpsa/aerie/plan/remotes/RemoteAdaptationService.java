@@ -4,16 +4,13 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.http.InvalidEntityException;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Timestamp;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.utils.HttpRequester;
 
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
@@ -26,11 +23,9 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.anyP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.doubleP;
@@ -38,10 +33,8 @@ import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.nullP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.Uncurry.uncurry3;
 
 public final class RemoteAdaptationService implements AdaptationService {
   private final HttpRequester client;

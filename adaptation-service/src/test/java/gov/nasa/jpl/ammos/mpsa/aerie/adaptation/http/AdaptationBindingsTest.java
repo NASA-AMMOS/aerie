@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.FakeFile;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.mocks.StubApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;

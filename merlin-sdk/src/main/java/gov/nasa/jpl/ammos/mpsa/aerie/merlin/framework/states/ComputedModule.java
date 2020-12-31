@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECOND;
 
 public class ComputedModule<$Schema, T> extends Module<$Schema> {
   private final RegisterModule<$Schema, T> result;

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time;
+package gov.nasa.jpl.ammos.mpsa.aerie.time;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.IntervalAlgebra;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.IntervalSet;

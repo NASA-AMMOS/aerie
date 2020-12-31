@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Windows;
 
 import java.util.Set;
 
