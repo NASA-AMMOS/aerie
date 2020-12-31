@@ -14,6 +14,12 @@ import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel.ActivityExecutionType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel.ActivityMapperRecord;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel.ActivityParameterRecord;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel.ActivityValidationRecord;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel.AdaptationRecord;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;

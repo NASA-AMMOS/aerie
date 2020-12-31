@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor.metamodel;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.Objects;
