@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.spice;
+package gov.nasa.jpl.ammos.mpsa.aerie.spice;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -38,11 +38,11 @@ public final class SpiceLoader {
         {
             final String osName = System.getProperty("os.name").toLowerCase();
             if (osName.startsWith("win")) {
-                resourcePath = "/gov/nasa/jpl/ammos/mpsa/aerie/merlinsdk/spice/JNISpice.dll";
+                resourcePath = "JNISpice.dll";
             } else if (osName.startsWith("linux")) {
-                resourcePath = "/gov/nasa/jpl/ammos/mpsa/aerie/merlinsdk/spice/libJNISpice.so";
+                resourcePath = "libJNISpice.so";
             } else if (osName.startsWith("mac")) {
-                resourcePath = "/gov/nasa/jpl/ammos/mpsa/aerie/merlinsdk/spice/libJNISpice.jnilib";
+                resourcePath = "libJNISpice.jnilib";
             } else {
                 throw new UnsupportedOperationException("Platform " + osName + " is not supported by JNISpice.");
             }
