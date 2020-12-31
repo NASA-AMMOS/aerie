@@ -449,26 +449,4 @@ public final class Duration implements Comparable<Duration> {
   public int compareTo(final Duration other) {
     return Long.compare(this.durationInMicroseconds, other.durationInMicroseconds);
   }
-
-  public static final class Trait implements Instant<Duration> {
-    @Override
-    public Duration origin() {
-      return Duration.ZERO;
-    }
-
-    @Override
-    public Duration plus(final Duration time, final Duration duration) {
-      return Duration.add(time, duration);
-    }
-
-    @Override
-    public Duration minus(final Duration time, final Duration duration) {
-      return Duration.subtract(time, duration);
-    }
-
-    @Override
-    public int compare(final Duration left, final Duration right) {
-      return left.compareTo(right);
-    }
-  }
 }
