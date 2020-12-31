@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import java.util.function.Supplier;
 

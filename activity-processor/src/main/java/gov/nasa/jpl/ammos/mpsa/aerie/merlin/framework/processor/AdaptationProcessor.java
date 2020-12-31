@@ -609,7 +609,7 @@ public final class AdaptationProcessor implements Processor {
                                 WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))))
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.class),
+                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context.class),
                                 TypeVariableName.get("$Schema"))),
@@ -882,7 +882,7 @@ public final class AdaptationProcessor implements Processor {
                 FieldSpec
                     .builder(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.class),
+                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context.class),
                                 TypeVariableName.get("$Schema"))),
@@ -897,7 +897,7 @@ public final class AdaptationProcessor implements Processor {
                         ParameterSpec
                             .builder(
                                 ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.class),
+                                    ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class),
                                     ParameterizedTypeName.get(
                                         ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context.class),
                                         TypeVariableName.get("$Schema"))),
@@ -918,7 +918,7 @@ public final class AdaptationProcessor implements Processor {
                     .addModifiers(Modifier.PROTECTED)
                     .addStatement(
                         "this($T.create())",
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.class)
+                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class)
                     .build())
             .addMethod(
                 MethodSpec
@@ -1008,7 +1008,7 @@ public final class AdaptationProcessor implements Processor {
                     .addStatement(
                         "final var $L = $T.<$T>create()",
                         "rootContext",
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.DynamicCell.class,
+                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class,
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context.class),
                             TypeVariableName.get("$Schema")))
