@@ -8,7 +8,7 @@
  *
  * <p>
  *   At any given time, a resource is in a given <b>state</b>, and its time-varying behavior -- its <b>dynamics</b> --
- *   depends only upon that state. The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Resource} interface
+ *   depends only upon that state. The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver} interface
  *   defines this relationship between state and dynamics.
  * </p>
  *
@@ -36,7 +36,7 @@
  *     is held true.
  * </ul>
  * <p>
- *   The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.Solver} interface captures these capabilities
+ *   The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver} interface captures these capabilities
  *   for a given choice of types for resource values, dynamics, and conditions.
  * </p>
  */

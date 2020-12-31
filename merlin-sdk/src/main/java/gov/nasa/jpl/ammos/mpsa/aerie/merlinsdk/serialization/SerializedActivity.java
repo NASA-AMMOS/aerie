@@ -1,8 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
-
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,10 +8,8 @@ import static java.util.Collections.unmodifiableMap;
 /**
  * A serializable representation of an adaptation-specific activity domain object.
  *
- * Implementors of the {@link ActivityType} protocol may be constructed from parameters (which are
- * themselves implementors of the {@link ParameterType} protocol). A SerializedActivity is an adaptation-
- * agnostic representation of the data in an activity, structured as serializable primitives
- * composed using sequences and maps.
+ * A SerializedActivity is an adaptation-agnostic representation of the data in an activity,
+ * structured as serializable primitives composed using sequences and maps.
  *
  * For instance, if a FooActivity accepts two parameters, each of which is a 3D point in
  * space, then the serialized activity may look something like:

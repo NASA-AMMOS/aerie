@@ -1,8 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes.Connector;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes.*;
 
 import java.util.HashSet;
 import java.util.Objects;

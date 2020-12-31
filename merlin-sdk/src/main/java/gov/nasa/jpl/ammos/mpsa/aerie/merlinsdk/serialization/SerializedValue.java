@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,7 +8,6 @@ import java.util.Optional;
 /**
  * A serializable representation of an adaptation-specific activity parameter domain object.
  *
- * Implementors of the {@link ParameterType} protocol may be constructed from other {@link ParameterType}s.
  * A {@link SerializedValue} is an adaptation-agnostic representation of the data in such an
  * activity parameter, structured as serializable primitives composed using sequences and maps.
  *

@@ -1,19 +1,13 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ActivityType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.annotations.ParameterType;
-
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
  * A serializable description of the structure of a value such as an activity parameter.
- *
- * Implementors of the {@link ActivityType} protocol may be constructed from parameters
- * (which are themselves implementors of the {@link ParameterType} protocol). A {@link ValueSchema}
- * is an adaptation-agnostic representation of the serialized structure of a parameter.
  *
  * For instance, if an activity accepts two parameters, each of which is a 3D point in space,
  * then the schema for each point will be a series of three real number primitives. The schema
