@@ -180,6 +180,10 @@ public final class Resolver {
           handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "string";
           args = List.of();
+        } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.class))) {
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
+          method = "duration";
+          args = List.of();
         } else if (this.typeUtils.isSubtype(mirrorErasure, erasureOf(Enum.class))) {
           handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$enum";

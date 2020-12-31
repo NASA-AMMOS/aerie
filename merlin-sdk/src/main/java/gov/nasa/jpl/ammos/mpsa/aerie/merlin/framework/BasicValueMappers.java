@@ -1,6 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ArrayValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DurationValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ListValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.MapValueMapper;
@@ -13,6 +15,10 @@ import java.util.Map;
 public final class BasicValueMappers {
   public static ValueMapper<String> string() {
     return new StringValueMapper();
+  }
+
+  public static ValueMapper<Duration> duration() {
+    return new DurationValueMapper();
   }
 
   public static <E extends Enum<E>> ValueMapper<E> $enum(final Class<E> enumClass) {
