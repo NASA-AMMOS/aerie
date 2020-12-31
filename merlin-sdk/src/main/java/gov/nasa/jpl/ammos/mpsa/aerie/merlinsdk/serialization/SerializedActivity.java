@@ -1,5 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+
 import java.util.Map;
 import java.util.Objects;
 

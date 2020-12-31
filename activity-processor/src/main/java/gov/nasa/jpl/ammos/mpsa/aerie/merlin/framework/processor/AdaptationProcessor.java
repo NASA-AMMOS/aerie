@@ -401,14 +401,14 @@ public final class AdaptationProcessor implements Processor {
                     .returns(ParameterizedTypeName.get(
                         java.util.Map.class,
                         String.class,
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema.class))
+                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema.class))
                     .addStatement(
                         "final var $L = new $T()",
                         "parameters",
                         ParameterizedTypeName.get(
                             java.util.HashMap.class,
                             String.class,
-                            gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema.class))
+                            gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema.class))
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -433,7 +433,7 @@ public final class AdaptationProcessor implements Processor {
                     .returns(ParameterizedTypeName.get(
                         java.util.Map.class,
                         String.class,
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue.class))
+                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue.class))
                     .addParameter(
                         TypeName.get(activityType.declaration.asType()),
                         "activity",
@@ -444,7 +444,7 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             java.util.HashMap.class,
                             String.class,
-                            gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue.class))
+                            gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue.class))
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -482,7 +482,7 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             java.util.Map.class,
                             String.class,
-                            gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue.class),
+                            gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue.class),
                         "arguments",
                         Modifier.FINAL)
                     .addStatement(

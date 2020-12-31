@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.activities.ParameterTestActivityMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import org.junit.Test;
 
 import java.util.HashMap;

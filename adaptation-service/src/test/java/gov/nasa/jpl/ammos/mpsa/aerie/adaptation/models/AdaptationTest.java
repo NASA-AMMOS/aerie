@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import org.junit.Before;
 import org.junit.Test;
 

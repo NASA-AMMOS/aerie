@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
 import java.util.List;
 import java.util.Map;
