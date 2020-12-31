@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;

@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.RegisterModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 
 public final class CumulableModule<$Schema> extends Module<$Schema> {

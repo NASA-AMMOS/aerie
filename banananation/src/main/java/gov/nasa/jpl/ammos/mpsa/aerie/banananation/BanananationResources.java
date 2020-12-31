@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.ModuleX;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.RegisterModule;
 
 public class BanananationResources<$Schema> extends ModuleX<$Schema> {
   public final CumulableModule<$Schema> fruit;

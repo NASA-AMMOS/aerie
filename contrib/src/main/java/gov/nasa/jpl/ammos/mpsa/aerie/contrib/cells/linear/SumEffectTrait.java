@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.linear;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 

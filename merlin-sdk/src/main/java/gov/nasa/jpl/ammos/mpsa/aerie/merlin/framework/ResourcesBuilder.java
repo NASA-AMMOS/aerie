@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.ModelApplicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;

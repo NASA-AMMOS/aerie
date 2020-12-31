@@ -1,5 +1,6 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import org.apache.commons.lang3.tuple.Pair;
 

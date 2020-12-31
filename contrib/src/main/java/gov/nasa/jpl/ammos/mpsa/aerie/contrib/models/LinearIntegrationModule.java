@@ -1,9 +1,9 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.LinearIntegrationModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.linear.LinearIntegrationModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 
