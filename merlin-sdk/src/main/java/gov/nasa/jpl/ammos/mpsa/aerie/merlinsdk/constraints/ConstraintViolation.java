@@ -9,6 +9,7 @@ public final class ConstraintViolation {
     public final String name;
     public final String message;
     public final String category;
+
     public final Set<String> associatedActivityIds;
     public final Set<String> associatedStateIds;
     public final Windows violationWindows;
@@ -19,8 +20,8 @@ public final class ConstraintViolation {
         this.name = violableConstraint.name;
         this.message = violableConstraint.message;
         this.category = violableConstraint.category;
-        this.associatedActivityIds = Set.copyOf(violableConstraint.getActivityIds());
-        this.associatedStateIds = Set.copyOf(violableConstraint.getStateIds());
+        this.associatedActivityIds = Set.copyOf(violableConstraint.activityIds);
+        this.associatedStateIds = Set.copyOf(violableConstraint.stateIds);
     }
 
     @Override

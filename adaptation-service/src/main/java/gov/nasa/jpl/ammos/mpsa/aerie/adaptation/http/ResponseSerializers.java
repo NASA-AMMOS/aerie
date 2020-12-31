@@ -6,23 +6,20 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.LocalApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.Breadcrumb;
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConditionTypes;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintStructure.ConstraintStructureVisitor;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.SimulatedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Windows;
-import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParseResult.FailureReason;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -80,61 +77,15 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityParameter, parameters);
   }
 
-  public static JsonValue serializeConstraintStructure(ConstraintStructure structure) {
-
-    return structure.visit(new ConstraintStructureVisitor<>() {
-
-      @Override
-      public JsonValue onActivityConstraintStructure(
-          final String activityType,
-          final ConditionTypes.ActivityCondition condition)
-      {
-        return Json.createObjectBuilder()
-                   .add("constraint type", "Activity")
-                   .add("activity type", activityType)
-                   .add("condition", condition.toString())
-                   .build();
-      }
-
-      @Override
-      public JsonValue onStateConstraintStructure(
-          final String stateName,
-          final ConditionTypes.StateComparator comparator,
-          final SerializedValue value)
-      {
-        return Json.createObjectBuilder()
-                   .add("constraint type", "State")
-                   .add("state name", stateName)
-                   .add("comparator", comparator.toString())
-                   .add("value", serializeParameter(value))
-                   .build();
-      }
-
-      @Override
-      public JsonValue onComplexConstraintStructure(
-          final ConditionTypes.Connector connector,
-          final ConstraintStructure left,
-          final ConstraintStructure right)
-      {
-        return Json.createObjectBuilder()
-                   .add("constraint type", "Complex")
-                   .add("connector", connector.toString())
-                   .add("left", serializeConstraintStructure(left))
-                   .add("right", serializeConstraintStructure(right))
-                   .build();
-      }
-    });
-  }
-
   public static JsonValue serializeConstraintType(final ViolableConstraint constraintType) {
     return Json
         .createObjectBuilder()
         .add("name", constraintType.name)
         .add("message", constraintType.message)
         .add("category", constraintType.category)
-        .add("stateIDs", Json.createArrayBuilder(constraintType.getStateIds()))
-        .add("activityTypes", Json.createArrayBuilder(constraintType.getActivityTypes()))
-        .add("structure", serializeConstraintStructure(constraintType.getStructure())).build();
+        .add("stateIDs", serializeIterable(Json::createValue, constraintType.stateIds))
+        .add("activityTypes", serializeIterable(Json::createValue, constraintType.activityTypes))
+        .build();
   }
 
   public static JsonValue serializeConstraintTypes(List<ViolableConstraint> constraintTypes) {

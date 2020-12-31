@@ -8,7 +8,6 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
@@ -151,7 +150,7 @@ public final class AdaptationBindings implements Plugin {
     try {
       final String adaptationId = ctx.pathParam("adaptationId");
 
-      final List<ViolableConstraint> constraintTypes = this.app.getConstraintTypes(adaptationId);
+      final var constraintTypes = this.app.getConstraintTypes(adaptationId);
 
       ctx.result(ResponseSerializers.serializeConstraintTypes(constraintTypes).toString());
     } catch (final App.NoSuchAdaptationException ex) {
