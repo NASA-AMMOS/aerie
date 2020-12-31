@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.processor;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.processor;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
