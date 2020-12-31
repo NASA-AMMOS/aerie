@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Windows;
 

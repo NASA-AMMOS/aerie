@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import java.util.Collections;
 import java.util.Set;

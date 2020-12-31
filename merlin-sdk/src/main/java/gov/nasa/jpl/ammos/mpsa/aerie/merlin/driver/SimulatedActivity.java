@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;

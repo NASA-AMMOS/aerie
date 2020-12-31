@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 

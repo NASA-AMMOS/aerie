@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import io.javalin.Javalin;

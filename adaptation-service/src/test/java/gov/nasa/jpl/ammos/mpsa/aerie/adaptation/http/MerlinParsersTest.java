@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.http;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;

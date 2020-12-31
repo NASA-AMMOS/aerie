@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.plan.remotes;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.plan.models.Plan;

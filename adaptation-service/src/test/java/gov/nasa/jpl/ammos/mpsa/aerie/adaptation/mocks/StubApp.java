@@ -6,9 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models.NewAdaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ViolableConstraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 
 import java.nio.file.Path;
