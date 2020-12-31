@@ -3,8 +3,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.discrete.DiscreteSolver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
 
 import java.util.Objects;
@@ -43,7 +41,7 @@ public abstract class DiscreteResource<$Schema, T> {
 
 
   public T ask(final History<? extends $Schema> now) {
-    return new DiscreteSolver<T>().valueAt(this.getDynamics(now).getDynamics(), Duration.ZERO);
+    return this.getDynamics(now).getDynamics();
   }
 
   public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {
