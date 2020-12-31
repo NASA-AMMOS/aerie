@@ -40,42 +40,42 @@ public final class Resolver {
     switch (mirror.getKind()) {
       // Primitives.
       case BOOLEAN:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$boolean";
         args = List.of();
         break;
       case BYTE:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$byte";
         args = List.of();
         break;
       case SHORT:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$short";
         args = List.of();
         break;
       case INT:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$int";
         args = List.of();
         break;
       case LONG:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$long";
         args = List.of();
         break;
       case CHAR:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$char";
         args = List.of();
         break;
       case FLOAT:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$float";
         args = List.of();
         break;
       case DOUBLE:
-        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+        handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
         method = "$double";
         args = List.of();
         break;
@@ -85,42 +85,42 @@ public final class Resolver {
         final var t = ((ArrayType) mirror).getComponentType();
         switch (t.getKind()) {
           case BOOLEAN:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "booleanArray";
             args = List.of();
             break;
           case BYTE:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "byteArray";
             args = List.of();
             break;
           case SHORT:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "shortArray";
             args = List.of();
             break;
           case INT:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "intArray";
             args = List.of();
             break;
           case LONG:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "longArray";
             args = List.of();
             break;
           case CHAR:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "charArray";
             args = List.of();
             break;
           case FLOAT:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "floatArray";
             args = List.of();
             break;
           case DOUBLE:
-            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveArrayValueMappers.class;
+            handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
             method = "doubleArray";
             args = List.of();
             break;
@@ -145,35 +145,35 @@ public final class Resolver {
         final var mirrorErasure = this.typeUtils.erasure(mirror);
 
         if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Boolean.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$boolean";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Byte.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$byte";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Short.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$short";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Integer.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$int";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Long.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$long";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Character.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$char";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Float.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$float";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(Double.class))) {
-          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class;
+          handler = gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class;
           method = "$double";
           args = List.of();
         } else if (this.typeUtils.isSameType(mirrorErasure, erasureOf(String.class))) {

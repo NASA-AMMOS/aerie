@@ -311,6 +311,7 @@ public abstract class TypePattern {
 //        List.of(),
 //        (deps, classes) -> CodeBlock.of(
 //          "$T.$enum($L)",
+//          gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
 //          classes.get("E")));
 
     rules.add(Triple.of(
@@ -336,14 +337,14 @@ public abstract class TypePattern {
         List.of(),
         (deps, classes) -> CodeBlock.of(
             "$T.$int()",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class)));
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class)));
 
     rules.add(Triple.of(
         new PrimitivePattern(Primitive.FLOAT),
         List.of(),
         (deps, classes) -> CodeBlock.of(
             "$T.$float()",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class)));
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class)));
 
     System.out.println(rules);
 
