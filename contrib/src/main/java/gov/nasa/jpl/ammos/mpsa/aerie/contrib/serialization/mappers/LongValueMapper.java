@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;

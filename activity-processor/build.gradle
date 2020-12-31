@@ -10,11 +10,11 @@ java {
 
 dependencies {
   implementation project(':merlin-sdk')
+  // TODO: Remove the "contrib" dependency once the processor can load mapping rules from @WithMappers declarations.
+  implementation project(':contrib')
 
-  implementation 'org.apache.commons:commons-collections4:4.4'
   implementation 'org.apache.commons:commons-lang3:3.9'
   implementation 'com.squareup:javapoet:1.11.1'
-  implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
 }
 
 publishing {

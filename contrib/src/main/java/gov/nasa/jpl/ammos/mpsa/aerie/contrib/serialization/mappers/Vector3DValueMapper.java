@@ -1,8 +1,7 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.contrib.typemappers;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;

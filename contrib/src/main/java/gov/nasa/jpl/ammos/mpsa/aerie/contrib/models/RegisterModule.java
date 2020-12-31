@@ -6,9 +6,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register.RegisterModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.BooleanValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.EnumValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.BooleanValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import org.apache.commons.lang3.tuple.Pair;
 

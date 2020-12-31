@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
+package gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
@@ -9,22 +9,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class PrimitiveBooleanArrayValueMapper implements ValueMapper<boolean[]> {
+public class PrimitiveFloatArrayValueMapper implements ValueMapper<float[]> {
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofSeries(ValueSchema.BOOLEAN);
+        return ValueSchema.ofSeries(ValueSchema.REAL);
     }
 
     @Override
-    public Result<boolean[], String> deserializeValue(SerializedValue serializedValue) {
-        var elementMapper = new BooleanValueMapper();
+    public Result<float[], String> deserializeValue(SerializedValue serializedValue) {
+        var elementMapper = new FloatValueMapper();
         return serializedValue
                 .asList()
                 .map((Function<List<SerializedValue>, Result<List<SerializedValue>, String>>) Result::success)
                 .orElseGet(() -> Result.failure("Expected list, got " + serializedValue.toString()))
                 .match(
                         serializedElements -> {
-                            final boolean[] elements = new boolean[serializedElements.size()];
+                            final float[] elements = new float[serializedElements.size()];
                             int index = 0;
                             for (final var serializedElement : serializedElements) {
                                 final var result = elementMapper.deserializeValue(serializedElement);
@@ -40,7 +40,7 @@ public class PrimitiveBooleanArrayValueMapper implements ValueMapper<boolean[]> 
     }
 
     @Override
-    public SerializedValue serializeValue(boolean[] elements) {
+    public SerializedValue serializeValue(float[] elements) {
         final var serializedElements = new ArrayList<SerializedValue>(elements.length);
         for (final var element : elements) {
             serializedElements.add(SerializedValue.of(element));

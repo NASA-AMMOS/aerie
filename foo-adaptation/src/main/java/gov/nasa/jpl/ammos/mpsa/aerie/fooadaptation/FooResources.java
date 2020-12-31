@@ -7,7 +7,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.ClockModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.ComputedModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.LinearIntegrationModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.RegisterModule;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
 
 import java.time.Instant;
 

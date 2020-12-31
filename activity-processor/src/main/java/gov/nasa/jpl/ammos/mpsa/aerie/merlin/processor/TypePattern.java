@@ -291,7 +291,7 @@ public abstract class TypePattern {
             new TypeVariablePattern("V")),
         (deps, classes) -> CodeBlock.of(
             "$T.map($L, $L)",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+            gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
             deps.get(0),
             deps.get(1))));
 
@@ -302,7 +302,7 @@ public abstract class TypePattern {
             new TypeVariablePattern("T")),
         (deps, classes) -> CodeBlock.of(
             "$T.list($L)",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+            gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
             deps.get(0))));
 
 //    // Enums; need to add the ability to check that E is a subtype of Enum.
@@ -311,7 +311,7 @@ public abstract class TypePattern {
 //        List.of(),
 //        (deps, classes) -> CodeBlock.of(
 //          "$T.$enum($L)",
-//          gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+//          gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
 //          classes.get("E")));
 
     rules.add(Triple.of(
@@ -321,7 +321,7 @@ public abstract class TypePattern {
             new TypeVariablePattern("T")),
         (deps, classes) -> CodeBlock.of(
             "$T.array($L, $L)",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+            gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
             classes.get("T"),
             deps.get(0))));
 
@@ -330,21 +330,21 @@ public abstract class TypePattern {
         List.of(),
         (deps, classes) -> CodeBlock.of(
             "$T.string()",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class)));
+            gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class)));
 
     rules.add(Triple.of(
         new ClassPattern(ClassName.get(Integer.class), List.of()),
         List.of(),
         (deps, classes) -> CodeBlock.of(
             "$T.$int()",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class)));
+            gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class)));
 
     rules.add(Triple.of(
         new PrimitivePattern(Primitive.FLOAT),
         List.of(),
         (deps, classes) -> CodeBlock.of(
             "$T.$float()",
-            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class)));
+            gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.rulesets.BasicValueMappers.class)));
 
     System.out.println(rules);
 
