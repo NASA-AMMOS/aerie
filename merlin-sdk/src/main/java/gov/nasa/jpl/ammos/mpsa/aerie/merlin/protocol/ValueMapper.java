@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
+import gov.nasa.jpl.ammos.mpsa.aerie.utilities.Result;
 
 /**
  * A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a

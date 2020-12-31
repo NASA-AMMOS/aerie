@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
+import gov.nasa.jpl.ammos.mpsa.aerie.utilities.Result;
 
 public final class NullableValueMapper<T> implements ValueMapper<T> {
   private final ValueMapper<T> valueMapper;

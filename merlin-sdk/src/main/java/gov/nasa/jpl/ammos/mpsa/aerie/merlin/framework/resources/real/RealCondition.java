@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.IntervalAlgebra;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.IntervalSet;
+import gov.nasa.jpl.ammos.mpsa.aerie.utilities.IntervalAlgebra;
+import gov.nasa.jpl.ammos.mpsa.aerie.utilities.IntervalSet;
 
 import java.util.List;
 import java.util.Objects;
