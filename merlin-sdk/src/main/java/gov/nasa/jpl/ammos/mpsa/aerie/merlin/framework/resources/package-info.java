@@ -22,7 +22,7 @@
  * <p>
  *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time. A resource, then,
  *   also gives the current extent of validity for its current dynamics.
- *   The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics} class describes this mechanism.
+ *   The {@link gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics} class describes this mechanism.
  * </p>
  *
  * <p>
@@ -40,4 +40,4 @@
  *   for a given choice of types for resource values, dynamics, and conditions.
  * </p>
  */
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources;

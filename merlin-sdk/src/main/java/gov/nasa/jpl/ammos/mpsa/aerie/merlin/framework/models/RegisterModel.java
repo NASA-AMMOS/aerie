@@ -1,12 +1,12 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 import java.util.Set;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics.persistent;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class RegisterModel<T> implements Model<Pair<Optional<T>, Set<T>>, RegisterModel<T>> {
   private T _value;

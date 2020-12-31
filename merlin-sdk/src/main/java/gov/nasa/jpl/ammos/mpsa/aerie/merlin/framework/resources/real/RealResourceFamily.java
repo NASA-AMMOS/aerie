@@ -1,10 +1,9 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ConditionType;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealCondition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
 
 import java.util.Collections;
 import java.util.Map;

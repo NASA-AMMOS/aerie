@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real;
 
 public final class ClosedInterval {
   // If end.shorterThan(start), this is the empty interval.

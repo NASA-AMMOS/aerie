@@ -1,11 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics.persistent;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class LinearIntegrationModel implements Model<Double, LinearIntegrationModel> {
   private double _volume;

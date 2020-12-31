@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models.LinearIntegrationModel;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;

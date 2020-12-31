@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ConditionType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;

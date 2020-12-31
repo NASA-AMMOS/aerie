@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.ModuleX;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.RealResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.ClockModule;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.ComputedModule;

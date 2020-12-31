@@ -1,8 +1,8 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics.delimited;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics.persistent;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics.delimited;
+import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class DurativeRealModel implements Model<Collection<DelimitedDynamics<RealDynamics>>, DurativeRealModel> {
   private final PriorityQueue<Pair<Window, RealDynamics>> activeEffects;

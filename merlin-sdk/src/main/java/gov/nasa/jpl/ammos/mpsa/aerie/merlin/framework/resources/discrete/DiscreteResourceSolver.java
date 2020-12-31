@@ -1,10 +1,10 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.DelimitedDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;

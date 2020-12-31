@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
 /**
  * A description of a time-dependent behavior for real-valued resources that may vary continuously.

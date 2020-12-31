@@ -1,4 +1,4 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.resources.real;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.IntervalAlgebra;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.IntervalSet;
