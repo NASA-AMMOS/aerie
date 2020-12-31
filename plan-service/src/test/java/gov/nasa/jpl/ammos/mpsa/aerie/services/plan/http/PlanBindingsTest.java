@@ -1,9 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.plan.http;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.services.plan.http.MerlinParsers.activityInstanceP;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.mocks.StubApp;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.ActivityInstance;
@@ -27,6 +23,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
+
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.services.plan.http.MerlinParsers.activityInstanceP;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public final class PlanBindingsTest {
   private static Javalin SERVER = null;

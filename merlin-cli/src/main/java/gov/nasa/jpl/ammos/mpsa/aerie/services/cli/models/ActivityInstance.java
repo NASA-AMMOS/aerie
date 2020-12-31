@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.exceptions.InvalidTokenException;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.exceptions.InvalidTokenException;
 
 import java.util.Map;
 

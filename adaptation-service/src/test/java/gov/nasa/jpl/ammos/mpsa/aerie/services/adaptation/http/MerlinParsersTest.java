@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -14,10 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http.MerlinParsers.createSimulationMessageP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http.MerlinParsersTest.NestedLists.nestedList;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.recursiveP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http.MerlinParsersTest.NestedLists.nestedList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class MerlinParsersTest {

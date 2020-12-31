@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation;
 
+import javax.json.JsonObject;
 import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
-import javax.json.JsonObject;
 
 public final class AppConfiguration {
     public final int HTTP_PORT;

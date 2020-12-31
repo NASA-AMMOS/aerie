@@ -3,15 +3,22 @@ package gov.nasa.jpl.ammos.mpsa.aerie.services.cli;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.matchers.JsonMatcher;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.mocks.MockHttpHandler;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository.ActivityInstanceNotFoundException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository.InvalidActivityInstanceException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository.InvalidJsonException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository.InvalidPlanException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository.PlanNotFoundException;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.RemotePlanRepository;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.StringEntity;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanRepository.*;
 
 import java.io.IOException;
 import java.nio.file.Files;

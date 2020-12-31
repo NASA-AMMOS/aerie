@@ -1,9 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Objects;
 
 public final class ActivityType {
     public final String name;

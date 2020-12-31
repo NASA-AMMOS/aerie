@@ -4,10 +4,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers;
 import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.SimulationResults;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.utils.HttpRequester;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 
 import javax.json.Json;
 import javax.json.JsonArray;

@@ -2,8 +2,8 @@ package gov.nasa.jpl.ammos.mpsa.aerie.services.plan;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.controllers.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.controllers.LocalApp;
-import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.http.PlanBindings;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.mocks.Fixtures;
 import io.javalin.Javalin;
 
 public final class DevAppDriver {

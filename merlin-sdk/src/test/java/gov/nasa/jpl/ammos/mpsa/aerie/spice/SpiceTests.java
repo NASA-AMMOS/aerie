@@ -1,12 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.spice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import spice.basic.CSPICE;
+
+import static org.junit.Assert.assertEquals;
 
 public class SpiceTests {
 

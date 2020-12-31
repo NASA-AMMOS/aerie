@@ -1,16 +1,16 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.json.JsonParser;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http.MerlinParsers.createSimulationMessageP;
 import static gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http.MerlinParsers.serializedParameterP;
-import static gov.nasa.jpl.ammos.mpsa.aerie.json.BasicParsers.mapP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;

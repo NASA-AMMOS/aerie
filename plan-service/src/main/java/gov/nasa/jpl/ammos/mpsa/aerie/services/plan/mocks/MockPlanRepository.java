@@ -5,9 +5,9 @@ import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.exceptions.NoSuchActivityInst
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.NewPlan;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Plan;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Timestamp;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.remotes.PlanRepository;
-import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;

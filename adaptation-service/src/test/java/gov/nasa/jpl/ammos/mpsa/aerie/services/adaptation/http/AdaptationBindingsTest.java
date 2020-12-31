@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.http;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.mocks.FakeFile;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.mocks.StubApp;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import io.javalin.Javalin;
 import org.apache.commons.lang3.tuple.Pair;

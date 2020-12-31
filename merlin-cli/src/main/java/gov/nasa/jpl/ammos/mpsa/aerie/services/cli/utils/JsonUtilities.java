@@ -3,14 +3,14 @@ package gov.nasa.jpl.ammos.mpsa.aerie.services.cli.utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.MalformedJsonException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanDetail;
-import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.apgen.model.Plan;
 
 import javax.json.Json;
-import javax.json.JsonReader;
 import javax.json.JsonArray;
+import javax.json.JsonReader;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 import java.io.FileOutputStream;

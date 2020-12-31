@@ -2,10 +2,12 @@ package gov.nasa.jpl.ammos.mpsa.aerie.services.cli;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.matchers.JsonMatcher;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.mocks.MockHttpHandler;
-import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.*;
-
-import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.AdaptationRepository.*;
-
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.Adaptation;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.AdaptationRepository;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.AdaptationRepository.ActivityTypeNotDefinedException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.AdaptationRepository.AdaptationNotFoundException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.AdaptationRepository.InvalidAdaptationException;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.RemoteAdaptationRepository;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.utils.JsonUtilities;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

@@ -21,8 +21,8 @@ import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.PrimitiveIntA
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.PrimitiveLongArrayValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.PrimitiveShortArrayValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.ShortValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.StringValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 
 import java.util.List;

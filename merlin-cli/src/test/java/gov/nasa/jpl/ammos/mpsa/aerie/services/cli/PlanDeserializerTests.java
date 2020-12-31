@@ -1,10 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.cli;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.exceptions.InvalidEntityException;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.models.PlanDetail;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.utils.PlanDeserializer;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import org.junit.Test;
 
 import javax.json.Json;

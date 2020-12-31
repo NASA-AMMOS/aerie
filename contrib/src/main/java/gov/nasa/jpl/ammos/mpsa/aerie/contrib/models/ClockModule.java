@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 
 import java.time.Instant;
 

@@ -1,15 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealApproximator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.ViolableConstraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;

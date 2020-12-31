@@ -1,12 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Deque;
-import java.util.Optional;
 
 /*package-local*/
 final class TaskFrame<$Timeline> {

@@ -1,9 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.linear;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics.persistent;

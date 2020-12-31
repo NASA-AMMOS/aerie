@@ -5,10 +5,10 @@ import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.utils.HttpUtilities;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.cli.utils.JsonUtilities;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 
 import java.io.File;
 import java.io.IOException;

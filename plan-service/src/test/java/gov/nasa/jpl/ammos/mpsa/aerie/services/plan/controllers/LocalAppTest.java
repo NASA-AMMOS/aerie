@@ -1,8 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.plan.controllers;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.exceptions.ValidationException;
@@ -10,15 +7,18 @@ import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.mocks.Fixtures;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Plan;
+import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.services.plan.models.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class LocalAppTest {
   @Test

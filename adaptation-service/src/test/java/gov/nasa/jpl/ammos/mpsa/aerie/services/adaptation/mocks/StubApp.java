@@ -1,15 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.mocks;
 
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.ViolableConstraint;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.App;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.ammos.mpsa.aerie.services.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.ViolableConstraint;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 
 import java.nio.file.Path;
 import java.time.Instant;

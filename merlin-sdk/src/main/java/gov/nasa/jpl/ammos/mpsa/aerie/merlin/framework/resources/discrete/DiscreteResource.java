@@ -2,9 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Property;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 
 import java.util.Objects;
 import java.util.Set;

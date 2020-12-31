@@ -2,9 +2,9 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Property;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 
 import java.util.Objects;
 

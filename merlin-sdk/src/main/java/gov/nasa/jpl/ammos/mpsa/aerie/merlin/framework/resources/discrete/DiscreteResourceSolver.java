@@ -1,15 +1,15 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Approximator;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.List;
 import java.util.Objects;
