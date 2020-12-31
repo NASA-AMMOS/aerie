@@ -363,7 +363,7 @@ public final class AdaptationProcessor implements Processor {
                     .map(parameter -> FieldSpec
                         .builder(
                             ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper.class),
+                                ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper.class),
                                 TypeName.get(parameter.type).box()),
                             "mapper_" + parameter.name)
                         .addModifiers(Modifier.PRIVATE, Modifier.FINAL)

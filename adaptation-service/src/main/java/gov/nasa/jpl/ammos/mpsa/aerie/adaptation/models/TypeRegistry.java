@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.adaptation.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.HashMap;
 import java.util.Map;

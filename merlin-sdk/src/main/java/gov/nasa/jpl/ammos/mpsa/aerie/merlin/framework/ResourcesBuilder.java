@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;

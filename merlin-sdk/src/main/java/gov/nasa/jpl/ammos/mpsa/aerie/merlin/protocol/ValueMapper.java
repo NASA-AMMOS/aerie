@@ -1,7 +1,5 @@
-package gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers;
+package gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.utilities.Result;
 
 /**

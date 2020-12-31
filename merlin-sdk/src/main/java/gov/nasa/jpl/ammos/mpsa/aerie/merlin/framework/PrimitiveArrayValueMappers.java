@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveFloatArrayVa
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveIntArrayValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveLongArrayValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.PrimitiveShortArrayValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 public final class PrimitiveArrayValueMappers {
   public static ValueMapper<byte[]> byteArray() {

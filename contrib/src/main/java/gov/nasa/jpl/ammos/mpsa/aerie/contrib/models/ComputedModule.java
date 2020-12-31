@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Objects;
 import java.util.function.Supplier;

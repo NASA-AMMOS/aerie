@@ -9,7 +9,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.List;
 import java.util.Objects;

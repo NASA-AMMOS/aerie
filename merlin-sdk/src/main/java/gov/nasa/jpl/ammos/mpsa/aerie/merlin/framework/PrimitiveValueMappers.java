@@ -8,7 +8,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.FloatValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.IntegerValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.LongValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ShortValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 public final class PrimitiveValueMappers {
   public static ValueMapper<Boolean> $boolean() {

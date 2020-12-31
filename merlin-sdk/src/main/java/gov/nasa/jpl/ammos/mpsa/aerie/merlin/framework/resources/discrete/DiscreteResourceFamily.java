@@ -2,7 +2,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ConditionType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.ValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Collections;
 import java.util.Map;
