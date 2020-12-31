@@ -2,15 +2,18 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.processor;
 
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 public abstract class TypePattern {
   private TypePattern() {}
@@ -273,6 +276,78 @@ public abstract class TypePattern {
   }
 
   public static void main(final String[] args) throws UnificationException {
+    final var rules = new ArrayList<Triple<
+        TypePattern,
+        List<TypePattern>,
+        BiFunction<List<CodeBlock>, Map<String, CodeBlock>, CodeBlock>>>();
+
+    rules.add(Triple.of(
+        new ClassPattern(ClassName.get(Map.class), List.of(
+            new TypeVariablePattern("K"),
+            new TypeVariablePattern("V")
+        )),
+        List.of(
+            new TypeVariablePattern("K"),
+            new TypeVariablePattern("V")),
+        (deps, classes) -> CodeBlock.of(
+            "$T.map($L, $L)",
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+            deps.get(0),
+            deps.get(1))));
+
+    rules.add(Triple.of(
+        new ClassPattern(ClassName.get(List.class), List.of(
+            new TypeVariablePattern("T"))),
+        List.of(
+            new TypeVariablePattern("T")),
+        (deps, classes) -> CodeBlock.of(
+            "$T.list($L)",
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+            deps.get(0))));
+
+//    // Enums; need to add the ability to check that E is a subtype of Enum.
+//    rules.add(Triple.of(
+//        new TypeVariablePattern("E"),
+//        List.of(),
+//        (deps, classes) -> CodeBlock.of(
+//          "$T.$enum($L)",
+//          classes.get("E")));
+
+    rules.add(Triple.of(
+        new ArrayPattern(
+            new TypeVariablePattern("T")),
+        List.of(
+            new TypeVariablePattern("T")),
+        (deps, classes) -> CodeBlock.of(
+            "$T.array($L, $L)",
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class,
+            classes.get("T"),
+            deps.get(0))));
+
+    rules.add(Triple.of(
+        new ClassPattern(ClassName.get(String.class), List.of()),
+        List.of(),
+        (deps, classes) -> CodeBlock.of(
+            "$T.string()",
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BasicValueMappers.class)));
+
+    rules.add(Triple.of(
+        new ClassPattern(ClassName.get(Integer.class), List.of()),
+        List.of(),
+        (deps, classes) -> CodeBlock.of(
+            "$T.$int()",
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class)));
+
+    rules.add(Triple.of(
+        new PrimitivePattern(Primitive.FLOAT),
+        List.of(),
+        (deps, classes) -> CodeBlock.of(
+            "$T.$float()",
+            gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.PrimitiveValueMappers.class)));
+
+    System.out.println(rules);
+
+
     // List<Map<String[][], Map<Integer, List<float[]>>>>
     final var goal =
         new ClassPattern(ClassName.get(List.class), List.of(
