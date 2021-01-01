@@ -11,12 +11,12 @@ import java.util.Objects;
 public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     implements Task<$Timeline>
 {
-  private final DynamicCell<Context<$Schema>> rootContext;
+  private final Scoped<Context<$Schema>> rootContext;
   private final Runnable task;
 
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final DynamicCell<Context<$Schema>> rootContext, final Runnable task) {
+  public ReplayingTask(final Scoped<Context<$Schema>> rootContext, final Runnable task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
   }

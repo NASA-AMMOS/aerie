@@ -11,9 +11,9 @@ import java.util.Map;
 public final class DaemonTaskType<$Schema> implements TaskSpecType<$Schema, Runnable> {
   private final String name;
   private final Runnable runnable;
-  private final DynamicCell<Context<$Schema>> rootContext;
+  private final Scoped<Context<$Schema>> rootContext;
 
-  public DaemonTaskType(final String name, final Runnable runnable, final DynamicCell<Context<$Schema>> rootContext) {
+  public DaemonTaskType(final String name, final Runnable runnable, final Scoped<Context<$Schema>> rootContext) {
     this.name = name;
     this.runnable = runnable;
     this.rootContext = rootContext;

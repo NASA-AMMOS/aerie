@@ -15,13 +15,13 @@ import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
   private final AdaptationBuilder<$Schema> builder;
-  private final DynamicCell<Context<$Schema>> rootContext;
+  private final Scoped<Context<$Schema>> rootContext;
   private final String namespace;
 
   /*package-local*/
   Registrar(
       final AdaptationBuilder<$Schema> builder,
-      final DynamicCell<Context<$Schema>> rootContext,
+      final Scoped<Context<$Schema>> rootContext,
       final String namespace)
   {
     this.builder = Objects.requireNonNull(builder);
