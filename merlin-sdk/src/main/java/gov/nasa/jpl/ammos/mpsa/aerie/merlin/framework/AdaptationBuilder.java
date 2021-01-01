@@ -25,13 +25,13 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public final class ResourcesBuilder<$Schema> {
+public final class AdaptationBuilder<$Schema> {
   private final Schema.Builder<$Schema> schemaBuilder;
 
   private final DynamicCell<Context<$Schema>> rootContext = DynamicCell.create();
-  private ResourcesBuilderState<$Schema> state = new UnbuiltResourcesBuilderState();
+  private AdaptationBuilderState<$Schema> state = new UnbuiltState();
 
-  public ResourcesBuilder(final Schema.Builder<$Schema> schemaBuilder) {
+  public AdaptationBuilder(final Schema.Builder<$Schema> schemaBuilder) {
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
   }
 
@@ -77,7 +77,7 @@ public final class ResourcesBuilder<$Schema> {
   public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
       // Keep our own reference to `rootContext` so that the ResourcesBuilder can get GC'd.
-      private final DynamicCell<Context<$Schema>> rootContext = ResourcesBuilder.this.rootContext;
+      private final DynamicCell<Context<$Schema>> rootContext = AdaptationBuilder.this.rootContext;
 
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
@@ -89,7 +89,7 @@ public final class ResourcesBuilder<$Schema> {
   public <Activity> void replayingTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
       // Keep our own reference to `rootContext` so that the ResourcesBuilder can get GC'd.
-      private final DynamicCell<Context<$Schema>> rootContext = ResourcesBuilder.this.rootContext;
+      private final DynamicCell<Context<$Schema>> rootContext = AdaptationBuilder.this.rootContext;
 
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
@@ -112,7 +112,7 @@ public final class ResourcesBuilder<$Schema> {
   }
 
 
-  private interface ResourcesBuilderState<$Schema> {
+  private interface AdaptationBuilderState<$Schema> {
     <Resource>
     void
     discrete(String name,
@@ -139,7 +139,7 @@ public final class ResourcesBuilder<$Schema> {
     build(Schema<$Schema> schema);
   }
 
-  private final class UnbuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
+  private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
     private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
     private final Map<String, RealResource<$Schema>> realResources = new HashMap<>();
@@ -190,16 +190,16 @@ public final class ResourcesBuilder<$Schema> {
           this.constraints,
           this.taskSpecTypes);
 
-      ResourcesBuilder.this.state = new BuiltResourcesBuilderState(adaptation);
+      AdaptationBuilder.this.state = new BuiltState(adaptation);
 
       return adaptation;
     }
   }
 
-  private final class BuiltResourcesBuilderState implements ResourcesBuilderState<$Schema> {
+  private final class BuiltState implements AdaptationBuilderState<$Schema> {
     private final BuiltAdaptation<$Schema> adaptation;
 
-    public BuiltResourcesBuilderState(final BuiltAdaptation<$Schema> adaptation) {
+    public BuiltState(final BuiltAdaptation<$Schema> adaptation) {
       this.adaptation = adaptation;
     }
 

@@ -607,7 +607,7 @@ public final class AdaptationProcessor implements Processor {
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder.class),
+                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.AdaptationBuilder.class),
                             TypeVariableName.get("$Schema")),
                         "builder",
                         Modifier.FINAL)
@@ -978,7 +978,7 @@ public final class AdaptationProcessor implements Processor {
                     .addStatement(
                         "final var $L = new $T<>($L)",
                         "builder",
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder.class,
+                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.AdaptationBuilder.class,
                         "schemaBuilder")
                     .addStatement(
                         "final var $L = new $T<>($L.getRegistrar())",

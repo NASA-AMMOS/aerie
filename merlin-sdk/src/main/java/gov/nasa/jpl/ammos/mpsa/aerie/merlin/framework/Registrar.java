@@ -14,13 +14,13 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
-  private final ResourcesBuilder<$Schema> builder;
+  private final AdaptationBuilder<$Schema> builder;
   private final DynamicCell<Context<$Schema>> rootContext;
   private final String namespace;
 
   /*package-local*/
   Registrar(
-      final ResourcesBuilder<$Schema> builder,
+      final AdaptationBuilder<$Schema> builder,
       final DynamicCell<Context<$Schema>> rootContext,
       final String namespace)
   {
