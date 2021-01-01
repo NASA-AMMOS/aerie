@@ -602,24 +602,14 @@ public final class AdaptationProcessor implements Processor {
                     .build())
             .addMethod(
                 MethodSpec
-                    .methodBuilder("get")
+                    .methodBuilder("register")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(java.util.Map.class),
-                            ClassName.get(String.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType.class),
-                                TypeVariableName.get("$Schema"),
-                                WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))))
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context.class),
-                                TypeVariableName.get("$Schema"))),
-                        "rootContext",
+                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder.class),
+                            TypeVariableName.get("$Schema")),
+                        "builder",
                         Modifier.FINAL)
                     .addParameter(
                         ParameterizedTypeName.get(
@@ -628,90 +618,49 @@ public final class AdaptationProcessor implements Processor {
                         "container",
                         Modifier.FINAL)
                     .addStatement(
-                        "final var $L = new $T()",
-                        "activityTypes",
-                        ParameterizedTypeName.get(
-                            ClassName.get(java.util.HashMap.class),
-                            TypeName.get(String.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType.class),
-                                TypeVariableName.get("$Schema"),
-                                WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))))
+                        "final var $L = $L.getRootContext();",
+                        "rootContext",
+                        "builder")
                     .addCode(
                         adaptation.activityTypes
                             .stream()
-                            .map(activityType -> CodeBlock
-                                .builder()
-                                .add("{\n")
-                                .indent()
-                                .addStatement(
-                                    "final var $L = $L",
-                                    "type",
-                                    TypeSpec
-                                        .anonymousClassBuilder(
-                                            "new $T()",
-                                            activityType.mapper.name)
-                                        .addSuperinterface(
-                                            ParameterizedTypeName.get(
-                                                ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ActivityType.class),
-                                                TypeVariableName.get("$Schema"),
-                                                ClassName.get(activityType.declaration)))
-                                        .addMethod(
-                                            MethodSpec
-                                                .methodBuilder("createTask")
-                                                .addModifiers(Modifier.PUBLIC)
-                                                .addAnnotation(Override.class)
-                                                .addTypeVariable(
-                                                    TypeVariableName.get("$Timeline", TypeVariableName.get("$Schema")))
-                                                .returns(
-                                                    ParameterizedTypeName.get(
-                                                        ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task.class),
-                                                        TypeVariableName.get("$Timeline")))
-                                                .addParameter(
-                                                    ClassName.get(activityType.declaration),
-                                                    "activity",
-                                                    Modifier.FINAL)
-                                                .addStatement(
-                                                    "return $L",
-                                                    (activityType.effectModel == ActivityExecutionType.None)
-                                                        ? CodeBlock.of(
-                                                            "$$ -> $T.completed()",
-                                                            gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskStatus.class)
-                                                        : (activityType.effectModel == ActivityExecutionType.Threaded)
-                                                            ? CodeBlock.of(
-                                                                ( "new $T<>("
-                                                                  + "\n" + "$L,"
-                                                                  + "\n" + "() -> $>$>activity"
-                                                                  + "\n" + ".new EffectModel<$$Schema>()"
-                                                                  + "\n" + ".runWith($L.get(), $L)$<$<)" ),
-                                                                TypeName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ThreadedTask.class),
-                                                                "rootContext",
-                                                                "rootContext",
-                                                                "container")
-                                                            : CodeBlock.of(
-                                                                ( "new $T<>("
-                                                                  + "\n" + "$L,"
-                                                                  + "\n" + "() -> $>$>activity"
-                                                                  + "\n" + ".new EffectModel<$$Schema>()"
-                                                                  + "\n" + ".runWith($L.get(), $L)$<$<)" ),
-                                                                TypeName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ReplayingTask.class),
-                                                                "rootContext",
-                                                                "rootContext",
-                                                                "container"))
-                                                .build())
-                                        .build())
-                                .addStatement(
-                                    "$L.put($L.getName(), $L)",
-                                    "activityTypes",
-                                    "type",
-                                    "type")
-                                .unindent()
-                                .add("}\n"))
+                            .map(activityType ->
+                                     (activityType.effectModel == ActivityExecutionType.None)
+                                         ? CodeBlock
+                                             .builder()
+                                             .addStatement(
+                                                 "$L.noopTask(new $T())",
+                                                 "builder",
+                                                 activityType.mapper.name)
+                                         : (activityType.effectModel == ActivityExecutionType.Threaded)
+                                             ? CodeBlock
+                                                 .builder()
+                                                 .addStatement(
+                                                     "$L.threadedTask("
+                                                     + "\n" + "new $T(),"
+                                                     + "\n" + "activity -> $>$>activity"
+                                                     + "\n" + ".new EffectModel<$T>()"
+                                                     + "\n" + ".runWith($L.get(), $L)$<$<)",
+                                                     "builder",
+                                                     activityType.mapper.name,
+                                                     TypeVariableName.get("$Schema"),
+                                                     "rootContext",
+                                                     "container")
+                                             : CodeBlock
+                                                 .builder()
+                                                 .addStatement(
+                                                     "$L.replayingTask("
+                                                     + "\n" + "new $T(),"
+                                                     + "\n" + "activity -> $>$>activity"
+                                                     + "\n" + ".new EffectModel<$T>())"
+                                                     + "\n" + ".runWith($L.get(), $L)$<$<)",
+                                                     "builder",
+                                                     activityType.mapper.name,
+                                                     TypeVariableName.get("$Schema"),
+                                                     "rootContext",
+                                                     "container"))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
-                    .addStatement(
-                        "return $L",
-                        "activityTypes")
                     .build())
             .build();
 
@@ -730,6 +679,11 @@ public final class AdaptationProcessor implements Processor {
             // The location of the adaptation package determines where to put this class.
             .addOriginatingElement(adaptation.$package)
             // TODO: List found task spec types as dependencies of this generated file.
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .build())
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addTypeVariable(TypeVariableName.get("$Schema"))
             .superclass(
@@ -878,6 +832,11 @@ public final class AdaptationProcessor implements Processor {
             .classBuilder(typeName)
             // The location of the adaptation package determines where to put this class.
             .addOriginatingElement(adaptation.$package)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .build())
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addTypeVariable(TypeVariableName.get("$Schema"))
             .superclass(
@@ -981,6 +940,11 @@ public final class AdaptationProcessor implements Processor {
     final var typeSpec =
         TypeSpec
             .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addSuperinterface(gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.AdaptationFactory.class)
             .addMethod(
@@ -1012,41 +976,24 @@ public final class AdaptationProcessor implements Processor {
                         "schemaBuilder",
                         Modifier.FINAL)
                     .addStatement(
-                        "final var $L = $T.<$T>create()",
-                        "rootContext",
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DynamicCell.class,
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Context.class),
-                            TypeVariableName.get("$Schema")))
-                    .addCode("\n")
-                    .addStatement(
-                        "final var $L = new $T<>($L, $L)",
-                        "registrar",
+                        "final var $L = new $T<>($L)",
+                        "builder",
                         gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder.class,
-                        "rootContext",
                         "schemaBuilder")
                     .addStatement(
                         "final var $L = new $T<>($L.getRegistrar())",
                         "model",
                         ClassName.get(adaptation.topLevelModel),
-                        "registrar")
+                        "builder")
                     .addStatement(
-                        "final var $L = $T.get($L, $L)",
-                        "activityTypes",
+                        "$T.register($L, $L)",
                         adaptation.getMasterActivityTypesName(),
-                        "rootContext",
+                        "builder",
                         "model")
-                    .addStatement(
-                        "final var $L = $L.build()",
-                        "resources",
-                        "registrar")
                     .addCode("\n")
                     .addStatement(
-                        "return new $T<>($L, $L, $L)",
-                        gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.BuiltAdaptation.class,
-                        "rootContext",
-                        "resources",
-                        "activityTypes")
+                        "return $L.build()",
+                        "builder")
                     .build())
             .build();
 

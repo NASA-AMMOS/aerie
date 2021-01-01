@@ -15,10 +15,17 @@ import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
   private final ResourcesBuilder<$Schema> builder;
+  private final DynamicCell<Context<$Schema>> rootContext;
   private final String namespace;
 
-  Registrar(final ResourcesBuilder<$Schema> builder, final String namespace) {
+  /*package-local*/
+  Registrar(
+      final ResourcesBuilder<$Schema> builder,
+      final DynamicCell<Context<$Schema>> rootContext,
+      final String namespace)
+  {
     this.builder = Objects.requireNonNull(builder);
+    this.rootContext = rootContext;
     this.namespace = Objects.requireNonNull(namespace);
   }
 
@@ -28,7 +35,7 @@ public final class Registrar<$Schema> {
   }
 
   public Registrar<$Schema> descend(final String namespace) {
-    return new Registrar<>(this.builder, this.namespace + "/" + namespace);
+    return new Registrar<>(this.builder, rootContext, this.namespace + "/" + namespace);
   }
 
   public <Event, Effect, ModelType extends Cell<Effect, ModelType>>
