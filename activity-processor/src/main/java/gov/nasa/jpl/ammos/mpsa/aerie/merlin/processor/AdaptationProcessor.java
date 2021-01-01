@@ -101,7 +101,7 @@ public final class AdaptationProcessor implements Processor {
         final var generatedFiles = new ArrayList<JavaFile>();
         generatedFiles.add(generateAdaptationFactory(adaptationRecord));
         generatedFiles.add(generateTaskClass(adaptationRecord));
-        generatedFiles.add(generateModuleClass(adaptationRecord));
+        generatedFiles.add(generateModelClass(adaptationRecord));
         generatedFiles.add(generateActivityTypes(adaptationRecord));
         for (final var activityRecord : adaptationRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration);
@@ -174,7 +174,7 @@ public final class AdaptationProcessor implements Processor {
   private AdaptationRecord
   parseAdaptation(final PackageElement adaptationElement)
   throws InvalidAdaptationException {
-    final var topLevelModule = this.getAdaptationModule(adaptationElement);
+    final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
 
     // TODO: Get any mapper groups registered using @WithMappers
@@ -183,7 +183,7 @@ public final class AdaptationProcessor implements Processor {
       activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
     }
 
-    return new AdaptationRecord(adaptationElement, topLevelModule, activityTypes);
+    return new AdaptationRecord(adaptationElement, topLevelModel, activityTypes);
   }
 
   private ActivityTypeRecord
@@ -313,7 +313,7 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private TypeElement
-  getAdaptationModule(final PackageElement adaptationElement)
+  getAdaptationModel(final PackageElement adaptationElement)
   throws InvalidAdaptationException {
     final var annotationMirror = this
         .getAnnotationMirrorByType(adaptationElement, Adaptation.class)
@@ -321,24 +321,24 @@ public final class AdaptationProcessor implements Processor {
             "The adaptation package is somehow missing an @Adaptation annotation",
             adaptationElement));
 
-    final var moduleAttribute = getAnnotationAttribute(annotationMirror, "module").orElseThrow();
-    if (!(moduleAttribute.getValue() instanceof DeclaredType)) {
+    final var modelAttribute = getAnnotationAttribute(annotationMirror, "model").orElseThrow();
+    if (!(modelAttribute.getValue() instanceof DeclaredType)) {
       throw new InvalidAdaptationException(
-          "The top-level module is not yet defined",
+          "The top-level model is not yet defined",
           adaptationElement,
           annotationMirror,
-          moduleAttribute);
+          modelAttribute);
     }
 
-    // TODO: Check that the given module conforms to the expected protocol.
+    // TODO: Check that the given model conforms to the expected protocol.
     //   * Has a (1,1) constructor that takes a type $Schema and a ResourcesBuilder.Cursor<$Schema>.
-    //   It doesn't actually need to subclass Module.
+    //   It doesn't actually need to subclass Model.
     // TODO: Consider enrolling the given model in a dependency injection framework,
     //   such that the Cursor can be injected like any other constructor argument,
     //   and indeed such that other arguments can flexibly be supported.
 
 
-    return (TypeElement) ((DeclaredType) moduleAttribute.getValue()).asElement();
+    return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
 
@@ -623,7 +623,7 @@ public final class AdaptationProcessor implements Processor {
                         Modifier.FINAL)
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(adaptation.topLevelModule),
+                            ClassName.get(adaptation.topLevelModel),
                             TypeVariableName.get("$Schema")),
                         "container",
                         Modifier.FINAL)
@@ -721,8 +721,8 @@ public final class AdaptationProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateModuleClass(final AdaptationRecord adaptation) {
-    final var typeName = adaptation.getModuleName();
+  private JavaFile generateModelClass(final AdaptationRecord adaptation) {
+    final var typeName = adaptation.getModelName();
 
     final var typeSpec =
         TypeSpec
@@ -734,7 +734,7 @@ public final class AdaptationProcessor implements Processor {
             .addTypeVariable(TypeVariableName.get("$Schema"))
             .superclass(
                 ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module.class),
+                    ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model.class),
                     TypeVariableName.get("$Schema")))
             .addMethod(
                 MethodSpec
@@ -882,7 +882,7 @@ public final class AdaptationProcessor implements Processor {
             .addTypeVariable(TypeVariableName.get("$Schema"))
             .superclass(
                 ParameterizedTypeName.get(
-                    ClassName.get(typeName.packageName(), "ModuleX"),
+                    adaptation.getModelName(),
                     TypeVariableName.get("$Schema")))
             .addField(
                 FieldSpec
@@ -935,7 +935,7 @@ public final class AdaptationProcessor implements Processor {
                         ParameterSpec
                             .builder(
                                 ParameterizedTypeName.get(
-                                    ClassName.get(adaptation.topLevelModule),
+                                    ClassName.get(adaptation.topLevelModel),
                                     TypeVariableName.get("$Schema")),
                                 "resources")
                             .build())
@@ -957,7 +957,7 @@ public final class AdaptationProcessor implements Processor {
                         ParameterSpec
                             .builder(
                                 ParameterizedTypeName.get(
-                                    ClassName.get(adaptation.topLevelModule),
+                                    ClassName.get(adaptation.topLevelModel),
                                     TypeVariableName.get("$Schema")),
                                 "resources")
                             .build())
@@ -1027,15 +1027,15 @@ public final class AdaptationProcessor implements Processor {
                         "schemaBuilder")
                     .addStatement(
                         "final var $L = new $T<>($L.getCursor())",
-                        "module",
-                        ClassName.get(adaptation.topLevelModule),
+                        "model",
+                        ClassName.get(adaptation.topLevelModel),
                         "builder")
                     .addStatement(
                         "final var $L = $T.get($L, $L)",
                         "activityTypes",
                         adaptation.getMasterActivityTypesName(),
                         "rootContext",
-                        "module")
+                        "model")
                     .addStatement(
                         "final var $L = $L.build()",
                         "resources",

@@ -1,31 +1,31 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.RegisterModule;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.Register;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
-public final class CumulableModule<$Schema> extends Module<$Schema> {
+public final class AdditiveRegister<$Schema> extends Model<$Schema> {
   private final DoubleValueMapper mapper = new DoubleValueMapper();
 
-  public final RegisterModule<$Schema, Double> value;
+  public final Register<$Schema, Double> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
-  public CumulableModule(
+  public AdditiveRegister(
       final ResourcesBuilder.Cursor<$Schema> builder,
       final double initialValue)
   {
     super(builder);
 
-    this.value = new RegisterModule<>(builder, initialValue, mapper);
+    this.value = new Register<>(builder, initialValue, mapper);
     this.conflicted = this.value.conflicted;
   }
 
   public static <$Schema>
-  CumulableModule<$Schema>
+  AdditiveRegister<$Schema>
   create(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
-    return new CumulableModule<>(builder, initialValue);
+    return new AdditiveRegister<>(builder, initialValue);
   }
 
   public void add(final double inc) {

@@ -1,23 +1,23 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.linear.LinearIntegrationCell;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 
-public final class LinearIntegrationModule<$Schema> extends Module<$Schema> {
+public final class Accumulator<$Schema> extends Model<$Schema> {
   private final Query<$Schema, Double, LinearIntegrationCell> query;
 
   public final Volume volume;
   public final Rate rate;
 
-  public LinearIntegrationModule(final ResourcesBuilder.Cursor<$Schema> builder) {
+  public Accumulator(final ResourcesBuilder.Cursor<$Schema> builder) {
     this(builder, 0.0, 0.0);
   }
 
-  public LinearIntegrationModule(
+  public Accumulator(
       final ResourcesBuilder.Cursor<$Schema> builder,
       final double initialVolume,
       final double initialRate)

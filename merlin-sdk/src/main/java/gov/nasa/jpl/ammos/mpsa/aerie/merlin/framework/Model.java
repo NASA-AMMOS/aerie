@@ -10,18 +10,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public abstract class Module<$Schema> {
+public abstract class Model<$Schema> {
   private final Supplier<? extends Context<$Schema>> context;
 
-  protected Module(final Supplier<? extends Context<$Schema>> context) {
+  protected Model(final Supplier<? extends Context<$Schema>> context) {
     this.context = Objects.requireNonNull(context);
   }
 
-  protected Module(final Context<$Schema> context) {
+  protected Model(final Context<$Schema> context) {
     this(() -> context);
   }
 
-  protected Module(final ResourcesBuilder.Cursor<$Schema> builder) {
+  protected Model(final ResourcesBuilder.Cursor<$Schema> builder) {
     this(builder.getRootContext());
   }
 

@@ -4,7 +4,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.EnumValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
@@ -16,14 +16,14 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
+public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
   private final Query<$Schema, Value, RegisterCell<Value>> query;
   public final DiscreteResource<$Schema, Value> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
-  public RegisterModule(
+  public Register(
       final ResourcesBuilder.Cursor<$Schema> builder,
       final Value initialValue,
       final ValueMapper<Value> mapper)
@@ -48,19 +48,19 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   }
 
   public static <$Schema>
-  RegisterModule<$Schema, Double>
+  Register<$Schema, Double>
   create(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
-    return new RegisterModule<>(builder, initialValue, new DoubleValueMapper());
+    return new Register<>(builder, initialValue, new DoubleValueMapper());
   }
 
   public static <$Schema, E extends Enum<E>>
-  RegisterModule<$Schema, E>
+  Register<$Schema, E>
   create(final ResourcesBuilder.Cursor<$Schema> builder, final E initialValue) {
     // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.
     @SuppressWarnings("unchecked")
     final var klass = (Class<E>) initialValue.getClass();
 
-    return new RegisterModule<>(builder, initialValue, new EnumValueMapper<>(klass));
+    return new Register<>(builder, initialValue, new EnumValueMapper<>(klass));
   }
 
   public void set(final Value value) {
