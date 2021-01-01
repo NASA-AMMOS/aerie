@@ -3,7 +3,7 @@ package gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 
-public interface Model<Effect, Self extends Model<Effect, Self>> {
+public interface Cell<Effect, Self extends Cell<Effect, Self>> {
   Self duplicate();
 
   EffectTrait<Effect> effectTrait();

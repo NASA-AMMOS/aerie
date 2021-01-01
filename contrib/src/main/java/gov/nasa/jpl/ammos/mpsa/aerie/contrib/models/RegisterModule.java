@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register.RegisterModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.EnumValueMapper;
@@ -19,7 +19,7 @@ import java.util.Set;
 public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
   private final ValueMapper<Value> mapper;
 
-  private final Query<$Schema, Value, RegisterModel<Value>> query;
+  private final Query<$Schema, Value, RegisterCell<Value>> query;
   public final DiscreteResource<$Schema, Value> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
@@ -33,7 +33,7 @@ public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
     this.mapper = Objects.requireNonNull(mapper);
 
     this.query = builder.model(
-        new RegisterModel<>(initialValue),
+        new RegisterCell<>(initialValue),
         (value) -> Pair.of(Optional.of(value), Set.of(value)));
 
     this.value = builder.discrete(

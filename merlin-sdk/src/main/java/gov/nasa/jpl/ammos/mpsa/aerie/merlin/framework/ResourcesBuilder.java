@@ -59,13 +59,13 @@ public final class ResourcesBuilder<$Schema> {
       return new Cursor<>(this.builder, this.namespace + "/" + namespace);
     }
 
-    public <Event, Effect, ModelType extends Model<Effect, ModelType>>
+    public <Event, Effect, ModelType extends Cell<Effect, ModelType>>
     Query<$Schema, Event, ModelType>
     model(final ModelType initialState, final Function<Event, Effect> interpreter)
     {
       return this.builder.schemaBuilder.register(
           Projection.from(initialState.effectTrait(), interpreter),
-          new ModelApplicator<>(initialState));
+          new CellApplicator<>(initialState));
     }
 
     public <Resource>

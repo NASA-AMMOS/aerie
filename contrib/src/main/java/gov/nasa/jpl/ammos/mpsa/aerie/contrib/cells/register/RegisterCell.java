@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -9,22 +9,22 @@ import java.util.Set;
 
 import static gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
-public final class RegisterModel<T> implements Model<Pair<Optional<T>, Set<T>>, RegisterModel<T>> {
+public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, RegisterCell<T>> {
   private T _value;
   private boolean _conflicted;
 
-  public RegisterModel(final T initialValue, final boolean conflicted) {
+  public RegisterCell(final T initialValue, final boolean conflicted) {
     this._value = initialValue;
     this._conflicted = conflicted;
   }
 
-  public RegisterModel(final T initialValue) {
+  public RegisterCell(final T initialValue) {
     this(initialValue, false);
   }
 
   @Override
-  public RegisterModel<T> duplicate() {
-    return new RegisterModel<>(this._value, this._conflicted);
+  public RegisterCell<T> duplicate() {
+    return new RegisterCell<>(this._value, this._conflicted);
   }
 
   @Override
