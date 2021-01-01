@@ -16,7 +16,6 @@ public final class Mission<$Schema> extends Model<$Schema> {
   // Need a clear story for external models.
   // Need to collect profiles from published resources as simulation proceeds.
   // Need to generalize RealDynamics to nonlinear polynomials.
-  // Need to implement compile-time code generation for various aspects of the Framework.
 
   public final Register<$Schema, Double> foo;
   public final Accumulator<$Schema> data;
