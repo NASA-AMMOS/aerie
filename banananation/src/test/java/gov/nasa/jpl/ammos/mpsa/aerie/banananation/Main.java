@@ -1,19 +1,19 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECOND;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.SECONDS;
-import static gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration.duration;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.MILLISECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECOND;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.SECONDS;
+import static gov.nasa.jpl.ammos.mpsa.aerie.time.Duration.duration;
 
 public final class Main {
   public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {

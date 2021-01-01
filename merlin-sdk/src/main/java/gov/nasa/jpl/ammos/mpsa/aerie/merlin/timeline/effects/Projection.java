@@ -1,7 +1,5 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.effects.EventGraph;
-
 import java.util.Optional;
 import java.util.function.Function;
 

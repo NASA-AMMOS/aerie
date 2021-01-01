@@ -6,17 +6,15 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealApproximator;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceSolver;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.SimulationTimeline;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -148,10 +146,6 @@ public final class SimulationDriver {
         sampleResources(simulator, resourceTypes, timestamps, timelines);
       }
 
-      resourceTypes.forEach(group -> {
-        displayResources(simulator.getCurrentHistory(), group);
-      });
-
       // TODO: implement constraint checking when we have a developed solution
       // for relating conditions, resources, and constraints in the driver. For
       // now we'll return an empty List.
@@ -244,38 +238,6 @@ public final class SimulationDriver {
       }
     });
   }
-
-
-  private static <$Schema, Resource>
-  void displayResources(final History<? extends $Schema> now, final ResourceFamily<$Schema, Resource, ?> type) {
-    final var solver = type.getSolver();
-
-    type.getResources().forEach((name, resource) -> {
-      System.out.printf("%-18s%s%n", name, displayDynamics(solver, resource, now));
-    });
-  }
-
-  private static <$Schema, $Timeline extends $Schema, Resource, Dynamics>
-  String displayDynamics(
-      final ResourceSolver<$Schema, Resource, Dynamics, ?> solver,
-      final Resource resource,
-      final History<$Timeline> now)
-  {
-    final var dynamics = solver.getDynamics(resource, now).getDynamics();
-
-    return solver.getApproximator().match(new Approximator.Visitor<>() {
-      @Override
-      public String real(final RealApproximator<Dynamics> approximator) {
-        return approximator.approximate(dynamics).iterator().next().toString();
-      }
-
-      @Override
-      public String discrete(final DiscreteApproximator<Dynamics> approximator) {
-        return approximator.approximate(dynamics).iterator().next().toString();
-      }
-    });
-  }
-
 
   private static final class TaskSpec<$Schema, Spec> {
     private final Spec spec;

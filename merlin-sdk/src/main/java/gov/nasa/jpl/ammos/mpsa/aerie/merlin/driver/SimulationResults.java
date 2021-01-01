@@ -1,12 +1,9 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.constraints.ConstraintViolation;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine.TaskRecord;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.engine.activities.SimulatedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedActivity;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization.SerializedValue;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Window;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
+import gov.nasa.jpl.ammos.mpsa.aerie.time.Window;
 
 import java.time.Instant;
 import java.util.ArrayList;

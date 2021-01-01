@@ -147,8 +147,7 @@ pipeline {
 
                 # For adaptations
                 mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
-                cp sample-adaptation/build/libs/*.jar \
-                   banananation/build/libs/*.jar \
+                cp banananation/build/libs/*.jar \
                    ${ASSEMBLE_PREP_DIR}/adaptations/
 
                 # For services

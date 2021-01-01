@@ -1,10 +1,10 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.DiscreteResource;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.RegisterModule;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states.RegisterModule;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.typemappers.DoubleValueMapper;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 public final class CumulableModule<$Schema> extends Module<$Schema> {
   private final DoubleValueMapper mapper = new DoubleValueMapper();
