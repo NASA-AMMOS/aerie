@@ -147,7 +147,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 
  <p>
  New events can be <a href="#emit(Event,gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query)"><code>emit(Event, gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query&lt;? super $Timeline, Event, ?&gt;)</code></a>ted after any point in time, establishing a <i>new</i> point in time that observes
- the same timeline with a new event added at the end. Similarly, a duration of time may be a<a href="#wait(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)"><code>wait(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)</code></a>ed,
+ the same timeline with a new event added at the end. Similarly, a duration of time may be a<a href="#wait(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)"><code>wait(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)</code></a>ed,
  producing a new point in time separated by the previous by the given span of time.
  </p>
 
@@ -222,15 +222,15 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">$Timeline</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#wait(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">wait</a></span>&#8203;(long&nbsp;quantity,
-    <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#wait(long,gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">wait</a></span>&#8203;(long&nbsp;quantity,
+    <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">
 <div class="block">Wait a span of time.</div>
 </td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code><a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">$Timeline</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#wait(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">wait</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#wait(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">wait</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">
 <div class="block">Wait a span of time.</div>
 </td>
@@ -343,13 +343,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
-<a id="wait(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="wait(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>wait</h4>
-<pre class="methodSignature">public&nbsp;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">$Timeline</a>&gt;&nbsp;wait&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</pre>
+<pre class="methodSignature">public&nbsp;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">$Timeline</a>&gt;&nbsp;wait&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;duration)</pre>
 <div class="block">Wait a span of time.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
@@ -359,14 +359,14 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </dl>
 </li>
 </ul>
-<a id="wait(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="wait(long,gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>wait</h4>
 <pre class="methodSignature">public&nbsp;<a href="History.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline">History</a>&lt;<a href="History.html" title="type parameter in History">$Timeline</a>&gt;&nbsp;wait&#8203;(long&nbsp;quantity,
-                               <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+                               <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;unit)</pre>
 <div class="block">Wait a span of time.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>

@@ -130,10 +130,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
-<dl>
-<dt>Direct Known Subclasses:</dt>
-<dd><code><a href="states/ClockModule.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states">ClockModule</a></code>, <code><a href="states/ComputedModule.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states">ComputedModule</a></code>, <code><a href="states/LinearIntegrationModule.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states">LinearIntegrationModule</a></code>, <code><a href="states/RegisterModule.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.states">RegisterModule</a></code></dd>
-</dl>
 <hr>
 <pre>public abstract class <span class="typeNameLabel">Module&lt;$Schema&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></pre>
@@ -193,33 +189,33 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#call(java.lang.String,java.util.Map)">call</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(long&nbsp;quantity,
-     <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(long,gov.nasa.jpl.ammos.mpsa.aerie.time.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(long&nbsp;quantity,
+     <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;unit,
      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;duration,
      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delay(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a></span>&#8203;(long&nbsp;quantity,
-     <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delay(long,gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">delay</a></span>&#8203;(long&nbsp;quantity,
+     <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">delay</a></span>&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delay(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">delay</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
@@ -236,7 +232,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#spawn(java.lang.String,java.util.Map)">spawn</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i8" class="altColor">
@@ -338,7 +334,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li class="blockList">
 <h4>spawn</h4>
 <pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;spawn&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</pre>
 </li>
 </ul>
 <a id="call(java.lang.String,java.util.Map)">
@@ -348,49 +344,49 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li class="blockList">
 <h4>call</h4>
 <pre class="methodSignature">protected final&nbsp;void&nbsp;call&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</pre>
 </li>
 </ul>
-<a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">
+<a id="defer(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration,java.lang.String,java.util.Map)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>defer</h4>
-<pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration,
+<pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;duration,
                              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</pre>
 </li>
 </ul>
-<a id="defer(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration,java.lang.String,java.util.Map)">
+<a id="defer(long,gov.nasa.jpl.ammos.mpsa.aerie.time.Duration,java.lang.String,java.util.Map)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>defer</h4>
 <pre class="methodSignature">protected final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;defer&#8203;(long&nbsp;quantity,
-                             <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit,
+                             <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;unit,
                              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
-                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../merlinsdk/serialization/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.serialization">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+                             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</pre>
 </li>
 </ul>
-<a id="delay(gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="delay(gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>delay</h4>
-<pre class="methodSignature">protected final&nbsp;void&nbsp;delay&#8203;(<a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;duration)</pre>
+<pre class="methodSignature">protected final&nbsp;void&nbsp;delay&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;duration)</pre>
 </li>
 </ul>
-<a id="delay(long,gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time.Duration)">
+<a id="delay(long,gov.nasa.jpl.ammos.mpsa.aerie.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>delay</h4>
 <pre class="methodSignature">protected final&nbsp;void&nbsp;delay&#8203;(long&nbsp;quantity,
-                           <a href="../../merlinsdk/time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.merlinsdk.time">Duration</a>&nbsp;unit)</pre>
+                           <a href="../../time/Duration.html" title="class in gov.nasa.jpl.ammos.mpsa.aerie.time">Duration</a>&nbsp;unit)</pre>
 </li>
 </ul>
 <a id="waitFor(java.lang.String)">
