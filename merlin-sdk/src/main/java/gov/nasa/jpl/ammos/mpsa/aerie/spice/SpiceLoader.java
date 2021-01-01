@@ -2,7 +2,6 @@ package gov.nasa.jpl.ammos.mpsa.aerie.spice;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -16,7 +15,7 @@ public final class SpiceLoader {
         final String library = "JNISpice";
 
         // Attempt to load our copy of JNISpice via `System.load`.
-        try (final InputStream in = getResourceByOS().openStream()) {
+        try (final InputStream in = SpiceLoader.class.getResource(getResourcePathByOS()).openStream()) {
             // Copy the JNISpice library to a temporary location on-disk, then load it into the JVM.
             final Path file = Files.createTempFile(library + "-", ".tmp");
             deleteFileOnExit(file);
@@ -33,22 +32,18 @@ public final class SpiceLoader {
         System.loadLibrary(library);
     }
 
-    private static URL getResourceByOS() {
-        final String resourcePath;
-        {
-            final String osName = System.getProperty("os.name").toLowerCase();
-            if (osName.startsWith("win")) {
-                resourcePath = "JNISpice.dll";
-            } else if (osName.startsWith("linux")) {
-                resourcePath = "libJNISpice.so";
-            } else if (osName.startsWith("mac")) {
-                resourcePath = "libJNISpice.jnilib";
-            } else {
-                throw new UnsupportedOperationException("Platform " + osName + " is not supported by JNISpice.");
-            }
+    private static String getResourcePathByOS() {
+        final String osName = System.getProperty("os.name").toLowerCase();
+
+        if (osName.startsWith("win")) {
+            return "JNISpice.dll";
+        } else if (osName.startsWith("linux")) {
+            return "libJNISpice.so";
+        } else if (osName.startsWith("mac")) {
+            return "libJNISpice.jnilib";
         }
 
-        return SpiceLoader.class.getResource(resourcePath);
+        throw new UnsupportedOperationException("Platform " + osName + " is not supported by JNISpice.");
     }
 
     private static void deleteFileOnExit(final Path path) {
