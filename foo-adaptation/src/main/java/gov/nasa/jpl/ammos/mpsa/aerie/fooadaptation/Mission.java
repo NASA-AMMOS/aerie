@@ -11,7 +11,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResourc
 
 import java.time.Instant;
 
-public final class FooResources<$Schema> extends Model<$Schema> {
+public final class Mission<$Schema> extends Model<$Schema> {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
   // Need to collect profiles from published resources as simulation proceeds.
@@ -28,7 +28,7 @@ public final class FooResources<$Schema> extends Model<$Schema> {
 
   public final Clock<$Schema> utcClock;
 
-  public FooResources(final ResourcesBuilder.Cursor<$Schema> builder) {
+  public Mission(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.foo = Register.create(builder.descend("foo"), 0.0);

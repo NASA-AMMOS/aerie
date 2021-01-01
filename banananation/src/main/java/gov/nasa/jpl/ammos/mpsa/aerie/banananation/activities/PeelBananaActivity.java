@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.banananation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.banananation.BanananationResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.banananation.Mission;
 import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
@@ -31,7 +31,7 @@ public final class PeelBananaActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    public void run(final BanananationResources<$Schema> resources) {
+    public void run(final Mission<$Schema> resources) {
       if (peelDirection.equals("fromStem")) {
         resources.fruit.subtract(MASHED_BANANA_AMOUNT);
       }

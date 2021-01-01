@@ -1,4 +1,4 @@
-@Adaptation(model = BanananationResources.class)
+@Adaptation(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
 

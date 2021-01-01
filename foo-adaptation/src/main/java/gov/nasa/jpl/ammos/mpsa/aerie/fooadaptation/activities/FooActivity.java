@@ -1,6 +1,6 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.activities;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.FooResources;
+import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.Mission;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Task;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations.ActivityType.Parameter;
@@ -27,7 +27,7 @@ public final class FooActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    public void run(final FooResources<$Schema> resources) {
+    public void run(final Mission<$Schema> resources) {
       final var data = resources.data;
 
       if (y.equals("test")) {

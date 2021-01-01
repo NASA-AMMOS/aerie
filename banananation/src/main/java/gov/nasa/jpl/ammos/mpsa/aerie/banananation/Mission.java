@@ -4,12 +4,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.banananation.generated.Model;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.Register;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
 
-public class BanananationResources<$Schema> extends Model<$Schema> {
+public class Mission<$Schema> extends Model<$Schema> {
   public final AdditiveRegister<$Schema> fruit;
   public final AdditiveRegister<$Schema> peel;
   public final Register<$Schema, Flag> flag;
 
-  public BanananationResources(final ResourcesBuilder.Cursor<$Schema> builder) {
+  public Mission(final ResourcesBuilder.Cursor<$Schema> builder) {
     super(builder);
 
     this.flag = Register.create(builder.descend("flag"), Flag.A);
