@@ -21,8 +21,8 @@ public abstract class Model<$Schema> {
     this(() -> context);
   }
 
-  protected Model(final ResourcesBuilder.Cursor<$Schema> builder) {
-    this(builder.getRootContext());
+  protected Model(final Registrar<$Schema> registrar) {
+    this(registrar.getRootContext());
   }
 
 

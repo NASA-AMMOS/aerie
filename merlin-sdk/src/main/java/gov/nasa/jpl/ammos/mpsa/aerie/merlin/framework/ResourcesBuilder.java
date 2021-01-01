@@ -5,12 +5,11 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.Discret
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.History;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.effects.Projection;
 
 import java.util.ArrayList;
@@ -18,7 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class ResourcesBuilder<$Schema> {
@@ -32,69 +30,43 @@ public final class ResourcesBuilder<$Schema> {
     this.state = new UnbuiltResourcesBuilderState();
   }
 
-  public Cursor<$Schema> getCursor() {
-    return new Cursor<>(this, "");
+  public Registrar<$Schema> getRegistrar() {
+    return new Registrar<>(this, "");
+  }
+
+  public Supplier<? extends Context<$Schema>> getRootContext() {
+    return this.rootContext;
+  }
+
+  public <Event, Effect, ModelType>
+  Query<$Schema, Event, ModelType>
+  register(final Projection<Event, Effect> projection, final Applicator<Effect, ModelType> applicator) {
+    return this.schemaBuilder.register(projection, applicator);
+  }
+
+  public <Resource>
+  void
+  discrete(final String name,
+           final DiscreteResource<$Schema, Resource> resource,
+           final ValueMapper<Resource> mapper)
+  {
+    this.state.discrete(name, resource, mapper);
+  }
+
+  public void real(final String name, final RealResource<$Schema> resource) {
+    this.state.real(name, resource);
+  }
+
+  public void constraint(final String id, final Condition<$Schema> condition) {
+    this.state.constraint(id, condition);
+  }
+
+  public void daemon(final String id, final Runnable task) {
+    this.state.daemon(id, task);
   }
 
   public BuiltResources<$Schema> build() {
     return this.state.build(this.schemaBuilder.build());
-  }
-
-
-  public static final class Cursor<$Schema> {
-    private final ResourcesBuilder<$Schema> builder;
-    private final String namespace;
-
-    private Cursor(final ResourcesBuilder<$Schema> builder, final String namespace) {
-      this.builder = Objects.requireNonNull(builder);
-      this.namespace = Objects.requireNonNull(namespace);
-    }
-
-    /*package-local*/
-    Supplier<? extends Context<$Schema>> getRootContext() {
-      return this.builder.rootContext;
-    }
-
-    public Cursor<$Schema> descend(final String namespace) {
-      return new Cursor<>(this.builder, this.namespace + "/" + namespace);
-    }
-
-    public <Event, Effect, ModelType extends Cell<Effect, ModelType>>
-    Query<$Schema, Event, ModelType>
-    model(final ModelType initialState, final Function<Event, Effect> interpreter)
-    {
-      return this.builder.schemaBuilder.register(
-          Projection.from(initialState.effectTrait(), interpreter),
-          new CellApplicator<>(initialState));
-    }
-
-    public <Resource>
-    DiscreteResource<$Schema, Resource>
-    discrete(final String name,
-             final Property<History<? extends $Schema>, Resource> property,
-             final ValueMapper<Resource> mapper)
-    {
-      final var resource = DiscreteResource.atom(property);
-      this.builder.state.discrete(this.namespace + "/" + name, resource, mapper);
-      return resource;
-    }
-
-    public RealResource<$Schema>
-    real(final String name,
-         final Property<History<? extends $Schema>, RealDynamics> property)
-    {
-      final var resource = RealResource.atom(property);
-      this.builder.state.real(this.namespace + "/" + name, resource);
-      return resource;
-    }
-
-    public void constraint(final String id, final Condition<$Schema> condition) {
-      this.builder.state.constraint(this.namespace + "/" + id, condition);
-    }
-
-    public void daemon(final String id, final Runnable task) {
-      this.builder.state.daemon(this.namespace + "/" + id, task);
-    }
   }
 
 

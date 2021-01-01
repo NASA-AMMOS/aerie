@@ -2,24 +2,24 @@ package gov.nasa.jpl.ammos.mpsa.aerie.banananation;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.Register;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 public final class AdditiveRegister<$Schema> extends Model<$Schema> {
   public final Register<$Schema, Double> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
-  public AdditiveRegister(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
-    super(builder);
+  public AdditiveRegister(final Registrar<$Schema> registrar, final double initialValue) {
+    super(registrar);
 
-    this.value = Register.create(builder, initialValue);
+    this.value = Register.create(registrar, initialValue);
     this.conflicted = this.value.conflicted;
   }
 
   public static <$Schema>
   AdditiveRegister<$Schema>
-  create(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
-    return new AdditiveRegister<>(builder, initialValue);
+  create(final Registrar<$Schema> registrar, final double initialValue) {
+    return new AdditiveRegister<>(registrar, initialValue);
   }
 
   public void add(final double inc) {

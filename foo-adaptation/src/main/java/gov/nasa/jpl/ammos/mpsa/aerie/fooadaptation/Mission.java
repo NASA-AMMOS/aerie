@@ -6,7 +6,7 @@ import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.models.Register;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.fooadaptation.generated.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.real.RealResource;
 
 import java.time.Instant;
@@ -28,25 +28,25 @@ public final class Mission<$Schema> extends Model<$Schema> {
 
   public final Clock<$Schema> utcClock;
 
-  public Mission(final ResourcesBuilder.Cursor<$Schema> builder) {
-    super(builder);
+  public Mission(final Registrar<$Schema> registrar) {
+    super(registrar);
 
-    this.foo = Register.create(builder.descend("foo"), 0.0);
-    this.data = new Accumulator<>(builder.descend("data"));
+    this.foo = Register.create(registrar.descend("foo"), 0.0);
+    this.data = new Accumulator<>(registrar.descend("data"));
     this.combo = this.data.volume.resource.plus(this.data.rate.resource);
 
-    this.source = new Accumulator<>(builder.descend("source"), 100.0, 1.0);
-    this.sink = new Accumulator<>(builder.descend("sink"), 0.0, 0.5);
+    this.source = new Accumulator<>(registrar.descend("source"), 100.0, 1.0);
+    this.sink = new Accumulator<>(registrar.descend("sink"), 0.0, 0.5);
     this.batterySoC = new SampledResource<>(
-        builder.descend("batterySoC"),
+        registrar.descend("batterySoC"),
         ()->this.source.volume.get() - this.sink.volume.get(),
         0.0,
         new DoubleValueMapper());
 
     Instant instant = Instant.parse("2023-08-18T00:00:00.00Z");
-    this.utcClock = new Clock<>(builder.descend("utcClock"), instant);
+    this.utcClock = new Clock<>(registrar.descend("utcClock"), instant);
     // TODO: automatically perform this for each @Daemon annotation
-    builder.daemon("test", this::test);
+    registrar.daemon("test", this::test);
   }
 
   public void test() {

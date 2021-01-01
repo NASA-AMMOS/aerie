@@ -1,7 +1,7 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Objects;
@@ -14,7 +14,7 @@ public class SampledResource<$Schema, T> extends Model<$Schema> {
   private final Supplier<T> sampler;
 
   public SampledResource(
-      final ResourcesBuilder.Cursor<$Schema> builder,
+      final Registrar<$Schema> builder,
       final Supplier<T> sampler,
       final T initialValue,
       final ValueMapper<T> mapper)

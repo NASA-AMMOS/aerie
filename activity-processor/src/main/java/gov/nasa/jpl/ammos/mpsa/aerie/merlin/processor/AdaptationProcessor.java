@@ -331,7 +331,7 @@ public final class AdaptationProcessor implements Processor {
     }
 
     // TODO: Check that the given model conforms to the expected protocol.
-    //   * Has a (1,1) constructor that takes a type $Schema and a ResourcesBuilder.Cursor<$Schema>.
+    //   * Has a (1,1) constructor that takes a type $Schema and a Registrar<$Schema>.
     //   It doesn't actually need to subclass Model.
     // TODO: Consider enrolling the given model in a dependency injection framework,
     //   such that the Cursor can be injected like any other constructor argument,
@@ -762,14 +762,14 @@ public final class AdaptationProcessor implements Processor {
                         ParameterSpec
                             .builder(
                                 ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder.Cursor.class),
+                                    ClassName.get(gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Registrar.class),
                                     TypeVariableName.get("$Schema")),
-                                "cursor")
+                                "registrar")
                             .addModifiers(Modifier.FINAL)
                             .build())
                     .addStatement(
                         "super($L)",
-                        "cursor")
+                        "registrar")
                     .build())
             .addMethods(
                 adaptation.activityTypes
@@ -1021,15 +1021,15 @@ public final class AdaptationProcessor implements Processor {
                     .addCode("\n")
                     .addStatement(
                         "final var $L = new $T<>($L, $L)",
-                        "builder",
+                        "registrar",
                         gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder.class,
                         "rootContext",
                         "schemaBuilder")
                     .addStatement(
-                        "final var $L = new $T<>($L.getCursor())",
+                        "final var $L = new $T<>($L.getRegistrar())",
                         "model",
                         ClassName.get(adaptation.topLevelModel),
-                        "builder")
+                        "registrar")
                     .addStatement(
                         "final var $L = $T.get($L, $L)",
                         "activityTypes",
@@ -1039,7 +1039,7 @@ public final class AdaptationProcessor implements Processor {
                     .addStatement(
                         "final var $L = $L.build()",
                         "resources",
-                        "builder")
+                        "registrar")
                     .addCode("\n")
                     .addStatement(
                         "return new $T<>($L, $L, $L)",
