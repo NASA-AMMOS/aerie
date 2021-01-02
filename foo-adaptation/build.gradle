@@ -15,5 +15,6 @@ dependencies {
   testImplementation project(':merlin-sdk')
   testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.13.2'
+  testImplementation 'org.glassfish:javax.json:1.1.4'
   testImplementation 'junit:junit:4.12'
 }
