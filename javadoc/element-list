@@ -1,5 +1,6 @@
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.engine
+gov.nasa.jpl.ammos.mpsa.aerie.merlin.driver.json
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.annotations
 gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete
