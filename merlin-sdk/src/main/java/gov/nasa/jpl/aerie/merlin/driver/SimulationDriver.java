@@ -145,49 +145,49 @@ public final class SimulationDriver {
         simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
         sampleResources(simulator, resourceTypes, timestamps, timelines);
       }
-
-      // TODO: implement constraint checking when we have a developed solution
-      // for relating conditions, resources, and constraints in the driver. For
-      // now we'll return an empty List.
-      final var constraintViolations = Collections.<ConstraintViolation>emptyList();
-
-      // Use the map of task id to activity id to replace task ids with the corresponding
-      // activity id for use by the front end.
-      final Map<String, Window> mappedTaskWindows;
-      final Map<String, TaskRecord> mappedTaskRecords;
-      {
-        final var taskRecords = simulator.getTaskRecords();
-        final var taskWindows = simulator.getTaskWindows();
-
-        // Generate activity ids for all tasks
-        taskRecords.forEach((id, record) -> taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString()));
-
-        mappedTaskWindows = new HashMap<>();
-        taskWindows.forEach((id, window) -> mappedTaskWindows.put(taskIdToActivityId.get(id), window));
-
-        mappedTaskRecords = new HashMap<>();
-        taskRecords.forEach((id, record) -> {
-          final var activityId = taskIdToActivityId.get(id);
-          final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
-
-          mappedTaskRecords.put(activityId, new TaskRecord(record.type, record.arguments, mappedParentId));
-        });
-      }
-
-      final var results = new SimulationResults(
-          timestamps,
-          timelines,
-          constraintViolations,
-          mappedTaskRecords,
-          mappedTaskWindows,
-          startTime);
-
-      if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
-        throw new Error("There should be no unfinished activities when simulating to completion.");
-      }
-
-      return results;
     }
+
+    // TODO: implement constraint checking when we have a developed solution
+    // for relating conditions, resources, and constraints in the driver. For
+    // now we'll return an empty List.
+    final var constraintViolations = Collections.<ConstraintViolation>emptyList();
+
+    // Use the map of task id to activity id to replace task ids with the corresponding
+    // activity id for use by the front end.
+    final Map<String, Window> mappedTaskWindows;
+    final Map<String, TaskRecord> mappedTaskRecords;
+    {
+      final var taskRecords = simulator.getTaskRecords();
+      final var taskWindows = simulator.getTaskWindows();
+
+      // Generate activity ids for all tasks
+      taskRecords.forEach((id, record) -> taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString()));
+
+      mappedTaskWindows = new HashMap<>();
+      taskWindows.forEach((id, window) -> mappedTaskWindows.put(taskIdToActivityId.get(id), window));
+
+      mappedTaskRecords = new HashMap<>();
+      taskRecords.forEach((id, record) -> {
+        final var activityId = taskIdToActivityId.get(id);
+        final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
+
+        mappedTaskRecords.put(activityId, new TaskRecord(record.type, record.arguments, mappedParentId));
+      });
+    }
+
+    final var results = new SimulationResults(
+        timestamps,
+        timelines,
+        constraintViolations,
+        mappedTaskRecords,
+        mappedTaskWindows,
+        startTime);
+
+    if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
+      throw new Error("There should be no unfinished activities when simulating to completion.");
+    }
+
+    return results;
   }
 
   private static <$Schema, $Timeline extends $Schema>
