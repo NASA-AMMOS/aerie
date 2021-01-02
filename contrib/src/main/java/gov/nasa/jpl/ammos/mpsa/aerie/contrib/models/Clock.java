@@ -1,21 +1,18 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Registrar;
 
 import java.time.Instant;
 
-public final class ClockModule<$Schema> extends Module<$Schema> {
-  private final LinearIntegrationModule<$Schema> ticks;
+public final class Clock<$Schema> extends Model<$Schema> {
+  private final Accumulator<$Schema> ticks;
   private final Instant startTime;
 
-  public ClockModule(
-      final ResourcesBuilder.Cursor<$Schema> builder,
-      final Instant startTime)
-  {
-    super(builder);
+  public Clock(final Registrar<$Schema> registrar, final Instant startTime) {
+    super(registrar);
     this.startTime = startTime;
-    this.ticks = new LinearIntegrationModule<>(builder, 0.0, 1000.0);
+    this.ticks = new Accumulator<>(registrar, 0.0, 1000.0);
   }
 
   public double getElapsedMilliseconds() {

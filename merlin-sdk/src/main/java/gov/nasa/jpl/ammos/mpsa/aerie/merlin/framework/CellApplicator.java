@@ -5,12 +5,12 @@ import gov.nasa.jpl.ammos.mpsa.aerie.time.Duration;
 
 import java.util.Objects;
 
-public class ModelApplicator<EffectType, ModelType extends Model<EffectType, ModelType>>
+public class CellApplicator<EffectType, ModelType extends Cell<EffectType, ModelType>>
     implements Applicator<EffectType, ModelType>
 {
   private final ModelType initialState;
 
-  public ModelApplicator(final ModelType initialState) {
+  public CellApplicator(final ModelType initialState) {
     this.initialState = Objects.requireNonNull(initialState);
   }
 

@@ -1,11 +1,11 @@
 package gov.nasa.jpl.ammos.mpsa.aerie.contrib.models;
 
-import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register.RegisterModel;
+import gov.nasa.jpl.ammos.mpsa.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.ammos.mpsa.aerie.contrib.serialization.mappers.EnumValueMapper;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Module;
-import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.ResourcesBuilder;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Model;
+import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.ValueMapper;
@@ -16,51 +16,51 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public final class RegisterModule<$Schema, Value> extends Module<$Schema> {
+public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
-  private final Query<$Schema, Value, RegisterModel<Value>> query;
+  private final Query<$Schema, Value, RegisterCell<Value>> query;
   public final DiscreteResource<$Schema, Value> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
-  public RegisterModule(
-      final ResourcesBuilder.Cursor<$Schema> builder,
+  public Register(
+      final Registrar<$Schema> registrar,
       final Value initialValue,
       final ValueMapper<Value> mapper)
   {
-    super(builder);
+    super(registrar);
 
     this.mapper = Objects.requireNonNull(mapper);
 
-    this.query = builder.model(
-        new RegisterModel<>(initialValue),
+    this.query = registrar.model(
+        new RegisterCell<>(initialValue),
         (value) -> Pair.of(Optional.of(value), Set.of(value)));
 
-    this.value = builder.discrete(
+    this.value = registrar.discrete(
         "value",
         now -> now.ask(this.query).getValue(),
         mapper);
 
-    this.conflicted = builder.discrete(
+    this.conflicted = registrar.discrete(
         "conflicted",
         now -> now.ask(this.query).isConflicted(),
         new BooleanValueMapper());
   }
 
   public static <$Schema>
-  RegisterModule<$Schema, Double>
-  create(final ResourcesBuilder.Cursor<$Schema> builder, final double initialValue) {
-    return new RegisterModule<>(builder, initialValue, new DoubleValueMapper());
+  Register<$Schema, Double>
+  create(final Registrar<$Schema> registrar, final double initialValue) {
+    return new Register<>(registrar, initialValue, new DoubleValueMapper());
   }
 
   public static <$Schema, E extends Enum<E>>
-  RegisterModule<$Schema, E>
-  create(final ResourcesBuilder.Cursor<$Schema> builder, final E initialValue) {
+  Register<$Schema, E>
+  create(final Registrar<$Schema> registrar, final E initialValue) {
     // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.
     @SuppressWarnings("unchecked")
     final var klass = (Class<E>) initialValue.getClass();
 
-    return new RegisterModule<>(builder, initialValue, new EnumValueMapper<>(klass));
+    return new Register<>(registrar, initialValue, new EnumValueMapper<>(klass));
   }
 
   public void set(final Value value) {

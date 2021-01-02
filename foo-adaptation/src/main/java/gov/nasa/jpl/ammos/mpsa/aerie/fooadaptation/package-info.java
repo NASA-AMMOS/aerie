@@ -1,4 +1,4 @@
-@Adaptation(module = FooResources.class)
+@Adaptation(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
 

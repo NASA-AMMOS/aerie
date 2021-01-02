@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.PACKAGE)
 public @interface Adaptation {
-  Class<?> module();
+  Class<?> model();
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)

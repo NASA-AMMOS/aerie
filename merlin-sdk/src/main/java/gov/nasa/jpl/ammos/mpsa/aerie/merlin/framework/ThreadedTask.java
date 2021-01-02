@@ -19,7 +19,7 @@ public final class ThreadedTask<$Schema, $Timeline extends $Schema>
   private final ArrayBlockingQueue<TaskStatus<$Timeline>> taskToHost = new ArrayBlockingQueue<>(1);
   private boolean done = false;
 
-  public ThreadedTask(final DynamicCell<Context<$Schema>> rootContext, final Runnable task) {
+  public ThreadedTask(final Scoped<Context<$Schema>> rootContext, final Runnable task) {
     Objects.requireNonNull(rootContext);
     Objects.requireNonNull(task);
 

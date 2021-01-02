@@ -8,32 +8,30 @@ import gov.nasa.jpl.ammos.mpsa.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.ammos.mpsa.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
-  private final BuiltResources<$Schema> resources;
-  private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
-  private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
+  private final Schema<$Schema> schema;
+  private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies;
+  private final Map<String, Condition<$Schema>> constraints;
+  private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
+  private final List<Pair<String, Map<String, SerializedValue>>> daemons;
 
   public BuiltAdaptation(
-      final DynamicCell<Context<$Schema>> rootContext,
-      final BuiltResources<$Schema> resources,
-      final Map<String, TaskSpecType<$Schema, ?>> activityTypes)
+      final Schema<$Schema> schema,
+      final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies,
+      final List<Pair<String, Map<String, SerializedValue>>> daemons,
+      final Map<String, Condition<$Schema>> constraints,
+      final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes)
   {
-    this.taskSpecTypes.putAll(activityTypes);
-
-    resources.daemons.forEach((name, daemon) -> {
-      final var daemonType = new DaemonTaskType<>("/daemons/" + name, daemon, rootContext);
-
-      this.taskSpecTypes.put(daemonType.getName(), daemonType);
-      this.daemons.add(Pair.of(daemonType.getName(), Map.of()));
-    });
-
-    this.resources = Objects.requireNonNull(resources);
+    this.schema = Objects.requireNonNull(schema);
+    this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
+    this.constraints = Collections.unmodifiableMap(constraints);
+    this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
+    this.daemons = Collections.unmodifiableList(daemons);
   }
 
   @Override
@@ -48,16 +46,16 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
 
   @Override
   public Iterable<ResourceFamily<$Schema, ?, ?>> getResourceFamilies() {
-    return this.resources.resourceFamilies;
+    return this.resourceFamilies;
   }
 
   @Override
   public Map<String, Condition<$Schema>> getConstraints() {
-    return this.resources.constraints;
+    return this.constraints;
   }
 
   @Override
   public Schema<$Schema> getSchema() {
-    return this.resources.schema;
+    return this.schema;
   }
 }
