@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
@@ -221,10 +220,9 @@ public final class SimulationDriver {
       final Resource resource,
       final History<$Timeline> now)
   {
-    final var approximator = solver.getApproximator();
     final var dynamics = solver.getDynamics(resource, now);
 
-    return approximator.match(new Approximator.Visitor<>() {
+    return solver.approximate(new ResourceSolver.ApproximatorVisitor<>() {
       @Override
       public SerializedValue real(final RealApproximator<Dynamics> approximator) {
         final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
