@@ -5,12 +5,14 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectExpression;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EventGraph;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
 
 /**
  * A persistent representation of {@link EffectExpression}s.
@@ -77,7 +79,60 @@ public final class SimulationTimeline<$Timeline> {
     return new History<>(this, null, START_INDEX);
   }
 
-  public <Event, ModelType, Effect> Query<$Timeline, Event, ModelType> register(
+  public <Result> Result accumulateUpTo(
+      final History<$Timeline> endTime,
+      final Result initialValue,
+      final BiFunction<Result, Pair<History<$Timeline>, Window>, Result> accumulator)
+  {
+    final List<Pair<History<$Timeline>, Long>> foo = new ArrayList<>();
+
+    {
+      var index = endTime.getIndex();
+      long microsecondsUntilNext = 0;
+
+      while (index != START_INDEX) {
+        var timePoint = this.times.get(index);
+
+        if (timePoint instanceof EventPoint.Waiting) {
+          microsecondsUntilNext += ((EventPoint.Waiting) timePoint).microseconds;
+        } else if (timePoint instanceof EventPoint.Advancing || timePoint instanceof EventPoint.Joining) {
+          // SAFETY: If we see a Joining, there was no Waiting inside it, and there was definitely an Advancing.
+          if (microsecondsUntilNext > 0 || index == endTime.getIndex()) {
+            // This is the beginning of a period of time without anything happening.
+            foo.add(0, Pair.of(new History<>(this, null, index), microsecondsUntilNext));
+
+            microsecondsUntilNext = 0;
+          }
+        } else {
+          throw new Error("Unexpected subclass of " + EventPoint.class + ": " + timePoint.getClass());
+        }
+
+        index = timePoint.getPrevious();
+      }
+
+      if (microsecondsUntilNext > 0 || index == endTime.getIndex()) {
+        // This is the beginning of a period of time without anything happening.
+        foo.add(0, Pair.of(new History<>(this, null, index), microsecondsUntilNext));
+      }
+    }
+
+    var value = initialValue;
+    {
+      var elapsedTime = Duration.ZERO;
+      for (final var pair : foo) {
+        final var window = Window.between(elapsedTime, elapsedTime.plus(pair.getRight(), Duration.MICROSECONDS));
+
+        value = accumulator.apply(value, Pair.of(pair.getLeft(), window));
+        elapsedTime = window.end;
+      }
+    }
+
+    return value;
+  }
+
+  public <Event, ModelType, Effect>
+  Query<$Timeline, Event, ModelType>
+  register(
       final Projection<Event, Effect> projection,
       final Applicator<Effect, ModelType> applicator)
   {

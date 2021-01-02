@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public final class SimulationDriver {
@@ -106,11 +107,12 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    return simulate(adaptation, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
+    return simulate(adaptation, database, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
   }
 
   private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
       final Adaptation<$Schema> adaptation,
+      final SimulationTimeline<$Timeline> database,
       final SimulationEngine<$Timeline> simulator,
       final Instant startTime,
       final Duration simulationDuration,
@@ -145,6 +147,12 @@ public final class SimulationDriver {
         sampleResources(simulator, resourceTypes, timestamps, timelines);
       }
     }
+
+    // Collect profiles for all resources.
+    final var profiles = new HashMap<String, Profile<?, ?>>();
+    resourceTypes.forEach(group -> {
+      forEachProfile(database, simulator.getCurrentHistory(), group, profiles::put);
+    });
 
     // TODO: implement constraint checking when we have a developed solution
     // for relating conditions, resources, and constraints in the driver. For
@@ -187,6 +195,55 @@ public final class SimulationDriver {
     }
 
     return results;
+  }
+
+  private static <$Timeline, Resource>
+  void
+  forEachProfile(
+      final SimulationTimeline<$Timeline> database,
+      final History<$Timeline> endTime,
+      final ResourceFamily<? super $Timeline, Resource, ?> family,
+      final BiConsumer<String, Profile<?, ?>> consumer)
+  {
+    final var solver = family.getSolver();
+    final var resources = family.getResources();
+
+    resources.forEach((name, resource) -> {
+      consumer.accept(name, computeProfile(database, endTime, solver, resource));
+    });
+  }
+
+  private static <$Timeline, Resource, Dynamics, Condition>
+  Profile<Dynamics, Condition>
+  computeProfile(
+      final SimulationTimeline<$Timeline> database,
+      final History<$Timeline> endTime,
+      final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
+      final Resource resource)
+  {
+    return database.accumulateUpTo(endTime, new Profile<>(solver), (currentProfile, info) -> {
+      var augmentedProfile = currentProfile;
+      var currentHistory = info.getLeft();
+      final var window = info.getRight();
+
+      var timeSincePreviousEvent = Duration.ZERO;
+      var timeUntilNextEvent = window.end.minus(window.start);
+
+      while (timeUntilNextEvent.isPositive()) {
+        final var delimitedDynamics = solver.getDynamics(resource, currentHistory);
+        final var timeUntilNextDynamics = delimitedDynamics.getEndTime();
+
+        final var longestValidDuration = Duration.min(timeUntilNextDynamics, timeUntilNextEvent);
+
+        augmentedProfile = augmentedProfile.append(longestValidDuration, delimitedDynamics.getDynamics());
+        currentHistory = currentHistory.wait(timeSincePreviousEvent);
+
+        timeSincePreviousEvent = timeSincePreviousEvent.plus(longestValidDuration);
+        timeUntilNextEvent = timeUntilNextEvent.minus(longestValidDuration);
+      }
+
+      return augmentedProfile;
+    });
   }
 
   private static <$Schema, $Timeline extends $Schema>
