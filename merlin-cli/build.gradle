@@ -9,7 +9,7 @@ java {
 }
 
 application {
-  mainClass = 'gov.nasa.jpl.ammos.mpsa.aerie.services.merlincli.MainCLI'
+  mainClass = 'gov.nasa.jpl.aerie.services.merlincli.MainCLI'
 }
 
 dependencies {
