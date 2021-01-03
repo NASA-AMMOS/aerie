@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
@@ -154,6 +155,17 @@ public final class SimulationDriver {
       forEachProfile(database, simulator.getCurrentHistory(), group, profiles::put);
     });
 
+    // Collect windows for all conditions.
+    adaptation.getConstraints().forEach((id, condition) -> {
+      final var windows = condition.interpret(
+          new ConditionSolver<>(
+              database,
+              simulator.getCurrentHistory(),
+              Window.between(Duration.ZERO, simulationDuration)));
+
+      // TODO: collect these windows
+    });
+
     // TODO: implement constraint checking when we have a developed solution
     // for relating conditions, resources, and constraints in the driver. For
     // now we'll return an empty List.
@@ -197,7 +209,7 @@ public final class SimulationDriver {
     return results;
   }
 
-  private static <$Timeline, Resource>
+  public static <$Timeline, Resource>
   void
   forEachProfile(
       final SimulationTimeline<$Timeline> database,
@@ -213,7 +225,7 @@ public final class SimulationDriver {
     });
   }
 
-  private static <$Timeline, Resource, Dynamics, Condition>
+  public static <$Timeline, Resource, Dynamics, Condition>
   Profile<Dynamics, Condition>
   computeProfile(
       final SimulationTimeline<$Timeline> database,
