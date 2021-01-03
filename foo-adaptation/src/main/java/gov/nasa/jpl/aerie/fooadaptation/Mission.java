@@ -46,6 +46,8 @@ public final class Mission<$Schema> extends Model<$Schema> {
     this.utcClock = new Clock<>(registrar.descend("utcClock"), instant);
     // TODO: automatically perform this for each @Daemon annotation
     registrar.daemon("test", this::test);
+
+    registrar.constraint("haha", this.data.volume.isBetween(42.0, 101.0));
   }
 
   public void test() {

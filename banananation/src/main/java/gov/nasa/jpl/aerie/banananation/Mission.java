@@ -15,5 +15,8 @@ public class Mission<$Schema> extends Model<$Schema> {
     this.flag = Register.create(registrar.descend("flag"), Flag.A);
     this.peel = AdditiveRegister.create(registrar.descend("peel"), 4.0);
     this.fruit = AdditiveRegister.create(registrar.descend("fruit"), 4.0);
+
+    registrar.constraint("FlagIsA", this.flag.is(Flag.A));
+    registrar.constraint("haha", this.fruit.value.isOneOf(2.0, 2.5, 3.0, 3.5));
   }
 }
