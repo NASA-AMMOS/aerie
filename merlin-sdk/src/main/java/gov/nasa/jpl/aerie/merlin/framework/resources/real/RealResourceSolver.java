@@ -37,6 +37,22 @@ public final class RealResourceSolver<$Schema>
     return Optional.empty();
   }
 
+  @Override
+  public Optional<Duration> firstDissatisfied(
+      final RealDynamics dynamics,
+      final RealCondition condition,
+      final Window selection)
+  {
+    final var results = new Windows(selection);
+    results.subtractAll(this.whenSatisfied(dynamics, condition, selection));
+
+    for (final var window : results) {
+      return Optional.of(window.start);
+    }
+
+    return Optional.empty();
+  }
+
 
   public Windows whenSatisfied(final RealDynamics dynamics, final RealCondition condition, final Window selection) {
     final var windows = new Windows();

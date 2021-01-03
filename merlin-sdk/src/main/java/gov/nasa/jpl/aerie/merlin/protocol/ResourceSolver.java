@@ -31,6 +31,7 @@ public interface ResourceSolver<$Schema, Resource,  /*->*/ Dynamics, Condition> 
   <Result> Result approximate(ApproximatorVisitor<Dynamics, Result> visitor);
 
   Optional<Duration> firstSatisfied(Dynamics dynamics, Condition condition, Window selection);
+  Optional<Duration> firstDissatisfied(Dynamics dynamics, Condition condition, Window selection);
 
   interface ApproximatorVisitor<Dynamics, Result> {
     Result real(RealApproximator<Dynamics> approximator);

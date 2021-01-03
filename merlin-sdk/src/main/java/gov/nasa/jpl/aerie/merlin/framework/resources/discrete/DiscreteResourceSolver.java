@@ -55,4 +55,13 @@ public final class DiscreteResourceSolver<$Schema, Resource>
       return Optional.empty();
     }
   }
+
+  @Override
+  public Optional<Duration> firstDissatisfied(final Resource value, final Set<Resource> values, final Window selection) {
+    if (values.contains(value)) {
+      return Optional.empty();
+    } else {
+      return Optional.of(selection.start);
+    }
+  }
 }
