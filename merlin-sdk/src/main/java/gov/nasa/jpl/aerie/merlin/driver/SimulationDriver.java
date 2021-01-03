@@ -156,6 +156,7 @@ public final class SimulationDriver {
     });
 
     // Collect windows for all conditions.
+    final var constraintViolations = new ArrayList<ConstraintViolation>();
     adaptation.getConstraints().forEach((id, condition) -> {
       final var windows = condition.interpret(
           new ConditionSolver<>(
@@ -163,13 +164,13 @@ public final class SimulationDriver {
               simulator.getCurrentHistory(),
               Window.between(Duration.ZERO, simulationDuration)));
 
-      // TODO: collect these windows
+      final var violableConstraint = new ViolableConstraint();
+      violableConstraint.name = id;
+      violableConstraint.id = id;
+      violableConstraint.category = "None";
+      violableConstraint.message = "None";
+      constraintViolations.add(new ConstraintViolation(windows, violableConstraint));
     });
-
-    // TODO: implement constraint checking when we have a developed solution
-    // for relating conditions, resources, and constraints in the driver. For
-    // now we'll return an empty List.
-    final var constraintViolations = Collections.<ConstraintViolation>emptyList();
 
     // Use the map of task id to activity id to replace task ids with the corresponding
     // activity id for use by the front end.
