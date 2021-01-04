@@ -27,8 +27,8 @@ public final class FooActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    public void run(final Mission<$Schema> resources) {
-      final var data = resources.data;
+    public void run(final Mission<$Schema> mission) {
+      final var data = mission.data;
 
       if (y.equals("test")) {
         data.rate.add(x);

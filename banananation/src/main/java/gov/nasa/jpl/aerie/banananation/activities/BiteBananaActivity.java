@@ -26,9 +26,9 @@ public final class BiteBananaActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    public void run(final Mission<$Schema> resources) {
-      resources.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
-      resources.fruit.subtract(biteSize);
+    public void run(final Mission<$Schema> mission) {
+      mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
+      mission.fruit.subtract(biteSize);
     }
   }
 }
