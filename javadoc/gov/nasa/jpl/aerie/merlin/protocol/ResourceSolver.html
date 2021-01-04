@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6};
+var data = {"i0":6,"i1":6,"i2":6,"i3":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -88,7 +88,7 @@ loadScripts(document, 'script');</script>
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -153,6 +153,29 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<section role="region">
+<ul class="blockList">
+<li class="blockList"><a id="nested.class.summary">
+<!--   -->
+</a>
+<h3>Nested Class Summary</h3>
+<table class="memberSummary">
+<caption><span>Nested Classes</span><span class="tabEnd">&nbsp;</span></caption>
+<tr>
+<th class="colFirst" scope="col">Modifier and Type</th>
+<th class="colSecond" scope="col">Interface</th>
+<th class="colLast" scope="col">Description</th>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code>static interface&nbsp;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver.ApproximatorVisitor</a>&lt;<a href="ResourceSolver.ApproximatorVisitor.html" title="type parameter in ResourceSolver.ApproximatorVisitor">Dynamics</a>,&#8203;<a href="ResourceSolver.ApproximatorVisitor.html" title="type parameter in ResourceSolver.ApproximatorVisitor">Result</a>&gt;</span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+</table>
+</li>
+</ul>
+</section>
 <!-- ========== METHOD SUMMARY =========== -->
 <section role="region">
 <ul class="blockList">
@@ -168,18 +191,25 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>&lt;Result&gt;&nbsp;Result</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">approximate</a></span>&#8203;(<a href="ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver.ApproximatorVisitor</a>&lt;<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>,&#8203;Result&gt;&nbsp;visitor)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#firstDissatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstDissatisfied</a></span>&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
+                 <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
+                 <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#firstSatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstSatisfied</a></span>&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
               <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
               <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="Approximator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Approximator</a>&lt;<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getApproximator()">getApproximator</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="DelimitedDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">DelimitedDynamics</a>&lt;<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics(Resource,gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamics</a></span>&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Resource</a>&nbsp;resource,
            <a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourceSolver.html" title="type parameter in ResourceSolver">$Schema</a>&gt;&nbsp;now)</code></th>
@@ -214,13 +244,13 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
                                         <a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="ResourceSolver.html" title="type parameter in ResourceSolver">$Schema</a>&gt;&nbsp;now)</pre>
 </li>
 </ul>
-<a id="getApproximator()">
+<a id="approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getApproximator</h4>
-<pre class="methodSignature"><a href="Approximator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Approximator</a>&lt;<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&gt;&nbsp;getApproximator()</pre>
+<h4>approximate</h4>
+<pre class="methodSignature">&lt;Result&gt;&nbsp;Result&nbsp;approximate&#8203;(<a href="ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver.ApproximatorVisitor</a>&lt;<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>,&#8203;Result&gt;&nbsp;visitor)</pre>
 </li>
 </ul>
 <a id="firstSatisfied(java.lang.Object,java.lang.Object,gov.nasa.jpl.aerie.time.Window)">
@@ -228,12 +258,25 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </a><a id="firstSatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">
 <!--   -->
 </a>
-<ul class="blockListLast">
+<ul class="blockList">
 <li class="blockList">
 <h4>firstSatisfied</h4>
 <pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;&nbsp;firstSatisfied&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
                                   <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
                                   <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
+</li>
+</ul>
+<a id="firstDissatisfied(java.lang.Object,java.lang.Object,gov.nasa.jpl.aerie.time.Window)">
+<!--   -->
+</a><a id="firstDissatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">
+<!--   -->
+</a>
+<ul class="blockListLast">
+<li class="blockList">
+<h4>firstDissatisfied</h4>
+<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;&nbsp;firstDissatisfied&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
+                                     <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
+                                     <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
 </li>
 </ul>
 </li>
@@ -287,7 +330,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <div>
 <ul class="subNavList">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>

@@ -213,7 +213,9 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colFirst"><code>static <a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#between(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">between</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
        <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</code></th>
-<td class="colLast">&nbsp;</td>
+<td class="colLast">
+<div class="block">Constructs a window between two durations based on a common instant.</div>
+</td>
 </tr>
 <tr id="i4" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
@@ -379,6 +381,14 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <h4>between</h4>
 <pre class="methodSignature">public static&nbsp;<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;between&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
                              <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</pre>
+<div class="block">Constructs a window between two durations based on a common instant.</div>
+<dl>
+<dt><span class="paramLabel">Parameters:</span></dt>
+<dd><code>start</code> - The starting time of the window.</dd>
+<dd><code>end</code> - The ending time of the window.</dd>
+<dt><span class="returnLabel">Returns:</span></dt>
+<dd>A non-empty window if start &le; end, or an empty window otherwise.</dd>
+</dl>
 </li>
 </ul>
 <a id="between(long,long,gov.nasa.jpl.aerie.time.Duration)">
