@@ -9,7 +9,7 @@ java {
 }
 
 application {
-  mainClassName = 'gov.nasa.jpl.ammos.mpsa.aerie.adaptation.AerieAppDriver'
+  mainClass = 'gov.nasa.jpl.aerie.services.adaptation.AerieAppDriver'
   applicationDefaultJvmArgs = ['-Xmx2g']
 }
 
@@ -22,7 +22,9 @@ dependencies {
   implementation 'io.javalin:javalin:3.8.0'
   implementation 'org.mongodb:mongodb-driver-sync:3.11.0'
   implementation 'org.slf4j:slf4j-simple:1.7.26'
+  implementation 'org.apache.bcel:bcel:6.5.0'
 
+  testImplementation project(':foo-adaptation')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
   testImplementation 'org.assertj:assertj-core:3.13.2'
   testImplementation 'junit:junit:4.12'

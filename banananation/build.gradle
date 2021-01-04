@@ -9,7 +9,6 @@ java {
 
 dependencies {
   annotationProcessor project(':activity-processor')
-  testAnnotationProcessor project(':activity-processor')
 
   compileOnly project(':merlin-sdk')
   compileOnly project(':contrib')

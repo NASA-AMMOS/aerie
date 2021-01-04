@@ -137,39 +137,46 @@ pipeline {
         }
         stage ('Assemble') {
             steps {
-                // TODO: Publish Merlin-SDK.jar to Maven/Artifactory
 
                 echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-                sh """
-                echo ${BUILD_NUMBER}
+                sh '''
+                ASSEMBLE_PREP_DIR=$(mktemp -d)
+                STAGING_DIR=$(mktemp -d)
 
                 ./gradlew assemble
 
                 # For adaptations
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations
-                cp sample-adaptation/build/libs/*.jar \
-                   banananation/build/libs/*.jar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/adaptations/
+                mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
+                cp banananation/build/libs/*.jar \
+                   ${ASSEMBLE_PREP_DIR}/adaptations/
 
                 # For services
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/services
+                mkdir -p ${ASSEMBLE_PREP_DIR}/services
                 cp plan-service/build/distributions/*.tar \
                    adaptation-service/build/distributions/*.tar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/services/
-
-                # For merlin-sdk
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk
-                cp merlin-sdk/build/libs/*.jar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-sdk/
+                   ${ASSEMBLE_PREP_DIR}/services/
 
                 # For merlin-cli
-                mkdir -p /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli
+                mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-cli
                 cp merlin-cli/build/distributions/*.tar \
-                   /tmp/aerie-jenkins/${BUILD_NUMBER}/merlin-cli/
+                   ${ASSEMBLE_PREP_DIR}/merlin-cli/
 
-                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C /tmp/aerie-jenkins/${BUILD_NUMBER} .
-                tar -czf aerie-docker-compose.tar.gz -C ./scripts/docker-compose-aerie .
-                """
+                # For docker-compose
+                cp -r ./scripts/docker-compose-aerie ${STAGING_DIR}
+
+                if [[ $GIT_BRANCH =~ staging ]] || [[ $GIT_BRANCH =~ release-.* ]]; then
+                    cd ${STAGING_DIR}/docker-compose-aerie
+                    echo "# This file contains environment variables used in docker-compose files." > .env
+                    echo "AERIE_DOCKER_URL=$ARTIFACT_PATH" >> .env
+                    echo "DOCKER_TAG=$DOCKER_TAG" >> .env
+                    cd -
+                fi
+
+                tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C ${ASSEMBLE_PREP_DIR}/ .
+                tar -czf aerie-docker-compose.tar.gz -C ${STAGING_DIR}/ .
+                rm -rfv ${ASSEMBLE_PREP_DIR}
+                rm -rfv ${STAGING_DIR}
+                '''
             }
 
         }
@@ -283,7 +290,7 @@ pipeline {
                 git config user.email "achong@jpl.nasa.gov"
                 git config user.name "Jenkins gh-pages sync"
                 git add javadoc/
-                git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
+                git diff --quiet HEAD || git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
                 git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
                 git checkout ${GIT_BRANCH}
                 """
@@ -304,9 +311,6 @@ pipeline {
 
             echo 'Logging out docker'
             sh 'docker logout || true'
-
-            echo 'Remove temp folder'
-            sh 'rm -rf /tmp/aerie-jenkins'
 
             setBuildStatus("Build ${currentBuild.currentResult}", "${currentBuild.currentResult}", "jenkins/branch-check")
         }

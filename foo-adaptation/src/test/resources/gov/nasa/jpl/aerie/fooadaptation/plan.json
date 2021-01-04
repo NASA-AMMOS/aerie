@@ -1,0 +1,25 @@
+[ { "defer": 0,
+    "type": "foo",
+    "arguments":
+      { "x": 1,
+        "y": "test_1" } },
+  { "defer": 50000,
+    "type": "foo",
+    "arguments":
+      { "x": 2,
+        "y": "spawn" } },
+  { "defer": 50000,
+    "type": "foo",
+    "arguments":
+      { "x": 2,
+        "y": "test" } },
+  { "defer": 100000,
+    "type": "foo",
+    "arguments":
+      { "x": 2,
+        "y": "test_2" } },
+  { "defer": 150000,
+    "type": "foo",
+    "arguments":
+      { "x": 3,
+        "y": "test_3" } } ]
