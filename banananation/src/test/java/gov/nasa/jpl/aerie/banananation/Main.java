@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+import static gov.nasa.jpl.aerie.time.Duration.MILLISECOND;
 import static gov.nasa.jpl.aerie.time.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
@@ -23,8 +24,14 @@ public final class Main {
             duration(0, MILLISECONDS),
             new SerializedActivity("PeelBanana", Map.of("peelDirection", SerializedValue.of("fromStem")))),
         UUID.randomUUID().toString(), Pair.of(
-            duration(500, MILLISECONDS),
+            duration(300, MILLISECONDS),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(1.5)))),
+        UUID.randomUUID().toString(), Pair.of(
+            duration(700, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(0.5)))),
+        UUID.randomUUID().toString(), Pair.of(
+            duration(1100, MILLISECONDS),
+            new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(2.0)))),
         UUID.randomUUID().toString(), Pair.of(
             duration(1500, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of()))
@@ -32,7 +39,7 @@ public final class Main {
 
     final var startTime = Instant.now();
     final var simulationDuration = duration(5, SECONDS);
-    final var samplingPeriod = duration(1, SECOND);
+    final var samplingPeriod = duration(100, MILLISECOND);
 
     final var simulationResults = SimulationDriver.simulate(
         adaptation,

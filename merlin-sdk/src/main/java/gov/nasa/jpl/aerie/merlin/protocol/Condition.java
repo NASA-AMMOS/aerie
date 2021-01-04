@@ -8,8 +8,8 @@ public abstract class Condition<$Schema> {
   public abstract <Result> Result interpret(Visitor<$Schema, Result> visitor);
 
   public interface Visitor<$Schema, Result> {
-    <R, C>
-    Result atom(ResourceSolver<$Schema, R, ?, C> resourceType, R resource, C condition);
+    <R, D, C>
+    Result atom(ResourceSolver<$Schema, R, D, C> resourceType, R resource, C condition);
 
     Result not(Result x);
     Result and(Result x, Result y);

@@ -27,7 +27,14 @@ import java.util.Optional;
  */
 public interface ResourceSolver<$Schema, Resource,  /*->*/ Dynamics, Condition> {
   DelimitedDynamics<Dynamics> getDynamics(Resource resource, History<? extends $Schema> now);
-  Approximator<Dynamics> getApproximator();
+
+  <Result> Result approximate(ApproximatorVisitor<Dynamics, Result> visitor);
 
   Optional<Duration> firstSatisfied(Dynamics dynamics, Condition condition, Window selection);
+  Optional<Duration> firstDissatisfied(Dynamics dynamics, Condition condition, Window selection);
+
+  interface ApproximatorVisitor<Dynamics, Result> {
+    Result real(RealApproximator<Dynamics> approximator);
+    Result discrete(DiscreteApproximator<Dynamics> approximator);
+  }
 }

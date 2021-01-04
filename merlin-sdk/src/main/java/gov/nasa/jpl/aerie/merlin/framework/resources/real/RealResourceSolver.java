@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
@@ -24,14 +23,30 @@ public final class RealResourceSolver<$Schema>
   }
 
   @Override
-  public Approximator<RealDynamics> getApproximator() {
-    return Approximator.real(dynamics -> List.of(DelimitedDynamics.persistent(dynamics)));
+  public <Result> Result approximate(final ApproximatorVisitor<RealDynamics, Result> visitor) {
+    return visitor.real(dynamics -> List.of(DelimitedDynamics.persistent(dynamics)));
   }
 
   @Override
   public Optional<Duration>
   firstSatisfied(final RealDynamics dynamics, final RealCondition condition, final Window selection) {
     for (final var window : this.whenSatisfied(dynamics, condition, selection)) {
+      return Optional.of(window.start);
+    }
+
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<Duration> firstDissatisfied(
+      final RealDynamics dynamics,
+      final RealCondition condition,
+      final Window selection)
+  {
+    final var results = new Windows(selection);
+    results.subtractAll(this.whenSatisfied(dynamics, condition, selection));
+
+    for (final var window : results) {
       return Optional.of(window.start);
     }
 

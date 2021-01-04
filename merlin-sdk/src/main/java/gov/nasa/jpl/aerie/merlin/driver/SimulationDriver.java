@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.Approximator;
+import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public final class SimulationDriver {
@@ -107,11 +108,12 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    return simulate(adaptation, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
+    return simulate(adaptation, database, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
   }
 
   private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
       final Adaptation<$Schema> adaptation,
+      final SimulationTimeline<$Timeline> database,
       final SimulationEngine<$Timeline> simulator,
       final Instant startTime,
       final Duration simulationDuration,
@@ -145,49 +147,116 @@ public final class SimulationDriver {
         simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
         sampleResources(simulator, resourceTypes, timestamps, timelines);
       }
-
-      // TODO: implement constraint checking when we have a developed solution
-      // for relating conditions, resources, and constraints in the driver. For
-      // now we'll return an empty List.
-      final var constraintViolations = Collections.<ConstraintViolation>emptyList();
-
-      // Use the map of task id to activity id to replace task ids with the corresponding
-      // activity id for use by the front end.
-      final Map<String, Window> mappedTaskWindows;
-      final Map<String, TaskRecord> mappedTaskRecords;
-      {
-        final var taskRecords = simulator.getTaskRecords();
-        final var taskWindows = simulator.getTaskWindows();
-
-        // Generate activity ids for all tasks
-        taskRecords.forEach((id, record) -> taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString()));
-
-        mappedTaskWindows = new HashMap<>();
-        taskWindows.forEach((id, window) -> mappedTaskWindows.put(taskIdToActivityId.get(id), window));
-
-        mappedTaskRecords = new HashMap<>();
-        taskRecords.forEach((id, record) -> {
-          final var activityId = taskIdToActivityId.get(id);
-          final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
-
-          mappedTaskRecords.put(activityId, new TaskRecord(record.type, record.arguments, mappedParentId));
-        });
-      }
-
-      final var results = new SimulationResults(
-          timestamps,
-          timelines,
-          constraintViolations,
-          mappedTaskRecords,
-          mappedTaskWindows,
-          startTime);
-
-      if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
-        throw new Error("There should be no unfinished activities when simulating to completion.");
-      }
-
-      return results;
     }
+
+    // Collect profiles for all resources.
+    final var profiles = new HashMap<String, Profile<?, ?>>();
+    resourceTypes.forEach(group -> {
+      forEachProfile(database, simulator.getCurrentHistory(), group, profiles::put);
+    });
+
+    // Collect windows for all conditions.
+    final var constraintViolations = new ArrayList<ConstraintViolation>();
+    adaptation.getConstraints().forEach((id, condition) -> {
+      final var windows = condition.interpret(
+          new ConditionSolver<>(
+              database,
+              simulator.getCurrentHistory(),
+              Window.between(Duration.ZERO, simulationDuration)));
+
+      final var violableConstraint = new ViolableConstraint();
+      violableConstraint.name = id;
+      violableConstraint.id = id;
+      violableConstraint.category = "None";
+      violableConstraint.message = "None";
+      constraintViolations.add(new ConstraintViolation(windows, violableConstraint));
+    });
+
+    // Use the map of task id to activity id to replace task ids with the corresponding
+    // activity id for use by the front end.
+    final Map<String, Window> mappedTaskWindows;
+    final Map<String, TaskRecord> mappedTaskRecords;
+    {
+      final var taskRecords = simulator.getTaskRecords();
+      final var taskWindows = simulator.getTaskWindows();
+
+      // Generate activity ids for all tasks
+      taskRecords.forEach((id, record) -> taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString()));
+
+      mappedTaskWindows = new HashMap<>();
+      taskWindows.forEach((id, window) -> mappedTaskWindows.put(taskIdToActivityId.get(id), window));
+
+      mappedTaskRecords = new HashMap<>();
+      taskRecords.forEach((id, record) -> {
+        final var activityId = taskIdToActivityId.get(id);
+        final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
+
+        mappedTaskRecords.put(activityId, new TaskRecord(record.type, record.arguments, mappedParentId));
+      });
+    }
+
+    final var results = new SimulationResults(
+        timestamps,
+        timelines,
+        constraintViolations,
+        mappedTaskRecords,
+        mappedTaskWindows,
+        startTime);
+
+    if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
+      throw new Error("There should be no unfinished activities when simulating to completion.");
+    }
+
+    return results;
+  }
+
+  public static <$Timeline, Resource>
+  void
+  forEachProfile(
+      final SimulationTimeline<$Timeline> database,
+      final History<$Timeline> endTime,
+      final ResourceFamily<? super $Timeline, Resource, ?> family,
+      final BiConsumer<String, Profile<?, ?>> consumer)
+  {
+    final var solver = family.getSolver();
+    final var resources = family.getResources();
+
+    resources.forEach((name, resource) -> {
+      consumer.accept(name, computeProfile(database, endTime, solver, resource));
+    });
+  }
+
+  public static <$Timeline, Resource, Dynamics, Condition>
+  Profile<Dynamics, Condition>
+  computeProfile(
+      final SimulationTimeline<$Timeline> database,
+      final History<$Timeline> endTime,
+      final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
+      final Resource resource)
+  {
+    return database.accumulateUpTo(endTime, new Profile<>(solver), (currentProfile, info) -> {
+      var augmentedProfile = currentProfile;
+      var currentHistory = info.getLeft();
+      final var window = info.getRight();
+
+      var timeSincePreviousEvent = Duration.ZERO;
+      var timeUntilNextEvent = window.end.minus(window.start);
+
+      while (timeUntilNextEvent.isPositive()) {
+        final var delimitedDynamics = solver.getDynamics(resource, currentHistory);
+        final var timeUntilNextDynamics = delimitedDynamics.getEndTime();
+
+        final var longestValidDuration = Duration.min(timeUntilNextDynamics, timeUntilNextEvent);
+
+        augmentedProfile = augmentedProfile.append(longestValidDuration, delimitedDynamics.getDynamics());
+        currentHistory = currentHistory.wait(timeSincePreviousEvent);
+
+        timeSincePreviousEvent = timeSincePreviousEvent.plus(longestValidDuration);
+        timeUntilNextEvent = timeUntilNextEvent.minus(longestValidDuration);
+      }
+
+      return augmentedProfile;
+    });
   }
 
   private static <$Schema, $Timeline extends $Schema>
@@ -221,10 +290,9 @@ public final class SimulationDriver {
       final Resource resource,
       final History<$Timeline> now)
   {
-    final var approximator = solver.getApproximator();
     final var dynamics = solver.getDynamics(resource, now);
 
-    return approximator.match(new Approximator.Visitor<>() {
+    return solver.approximate(new ResourceSolver.ApproximatorVisitor<>() {
       @Override
       public SerializedValue real(final RealApproximator<Dynamics> approximator) {
         final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();

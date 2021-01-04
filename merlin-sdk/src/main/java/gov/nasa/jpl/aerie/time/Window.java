@@ -16,9 +16,17 @@ public final class Window {
     this.end = Objects.requireNonNull(end);
   }
 
+  /**
+   * Constructs a window between two durations based on a common instant.
+   *
+   * @param start The starting time of the window.
+   * @param end The ending time of the window.
+   * @return A non-empty window if start &le; end, or an empty window otherwise.
+   */
   public static Window between(final Duration start, final Duration end) {
-    if (end.shorterThan(start)) throw new RuntimeException("The end of a window cannot come before its start");
-    return new Window(start, end);
+    return (end.shorterThan(start))
+      ? Window.EMPTY
+      : new Window(start, end);
   }
 
   public static Window between(final long start, final long end, final Duration unit) {

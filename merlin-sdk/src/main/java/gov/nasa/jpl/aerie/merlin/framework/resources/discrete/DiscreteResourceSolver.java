@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Approximator;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
@@ -34,8 +33,8 @@ public final class DiscreteResourceSolver<$Schema, Resource>
   }
 
   @Override
-  public Approximator<Resource> getApproximator() {
-    return Approximator.discrete(new DiscreteApproximator<>() {
+  public <Result> Result approximate(final ApproximatorVisitor<Resource, Result> visitor) {
+    return visitor.discrete(new DiscreteApproximator<>() {
       @Override
       public Iterable<DelimitedDynamics<SerializedValue>> approximate(final Resource value) {
         return List.of(DelimitedDynamics.persistent(DiscreteResourceSolver.this.mapper.serializeValue(value)));
@@ -54,6 +53,15 @@ public final class DiscreteResourceSolver<$Schema, Resource>
       return Optional.of(selection.start);
     } else {
       return Optional.empty();
+    }
+  }
+
+  @Override
+  public Optional<Duration> firstDissatisfied(final Resource value, final Set<Resource> values, final Window selection) {
+    if (values.contains(value)) {
+      return Optional.empty();
+    } else {
+      return Optional.of(selection.start);
     }
   }
 }
