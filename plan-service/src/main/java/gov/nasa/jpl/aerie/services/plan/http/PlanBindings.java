@@ -44,9 +44,8 @@ public final class PlanBindings implements Plugin {
   @Override
   public void apply(final Javalin javalin) {
     javalin.routes(() -> {
+      before(ctx -> ctx.contentType("application/json"));
       path("plans", () -> {
-        before(ctx -> ctx.contentType("application/json"));
-
         get(this::getPlans);
         post(this::postPlan);
         path(":planId", () -> {
