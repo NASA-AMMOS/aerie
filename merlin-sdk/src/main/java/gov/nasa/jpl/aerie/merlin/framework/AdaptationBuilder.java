@@ -43,9 +43,9 @@ public final class AdaptationBuilder<$Schema> {
     return this.rootContext;
   }
 
-  public <Event, Effect, ModelType>
-  Query<$Schema, Event, ModelType>
-  register(final Projection<Event, Effect> projection, final Applicator<Effect, ModelType> applicator) {
+  public <Event, Effect, CellType>
+  Query<$Schema, Event, CellType>
+  register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
     return this.schemaBuilder.register(projection, applicator);
   }
 

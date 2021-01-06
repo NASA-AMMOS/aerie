@@ -49,14 +49,14 @@ public final class Query<$Schema, Event, Model> {
     database.getTable(this.inner.getTableIndex()).clearCache();
   }
 
-  private static final class Inner<$Schema, Event, Effect, ModelType> {
+  private static final class Inner<$Schema, Event, Effect, CellType> {
     private final Projection<Event, Effect> projection;
-    private final Applicator<Effect, ModelType> applicator;
+    private final Applicator<Effect, CellType> applicator;
     private final int tableIndex;
 
     private Inner(
         final Projection<Event, Effect> projection,
-        final Applicator<Effect, ModelType> applicator,
+        final Applicator<Effect, CellType> applicator,
         final int tableIndex)
     {
       this.projection = projection;
@@ -65,7 +65,7 @@ public final class Query<$Schema, Event, Model> {
     }
 
     public <$Timeline extends $Schema>
-    Table<$Timeline, Event, ?, ModelType> createTable(final SimulationTimeline<$Timeline> database) {
+    Table<$Timeline, Event, ?, CellType> createTable(final SimulationTimeline<$Timeline> database) {
       return new Table<>(database, this.projection, this.applicator, this.tableIndex);
     }
 

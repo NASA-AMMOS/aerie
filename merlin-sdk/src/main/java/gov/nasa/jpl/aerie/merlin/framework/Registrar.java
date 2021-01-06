@@ -38,9 +38,9 @@ public final class Registrar<$Schema> {
     return new Registrar<>(this.builder, rootContext, this.namespace + "/" + namespace);
   }
 
-  public <Event, Effect, ModelType extends Cell<Effect, ModelType>>
-  Query<$Schema, Event, ModelType>
-  cell(final ModelType initialState, final Function<Event, Effect> interpreter)
+  public <Event, Effect, CellType extends Cell<Effect, CellType>>
+  Query<$Schema, Event, CellType>
+  cell(final CellType initialState, final Function<Event, Effect> interpreter)
   {
     return this.builder.register(
         Projection.from(initialState.effectTrait(), interpreter),
