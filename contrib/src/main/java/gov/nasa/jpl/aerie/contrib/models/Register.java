@@ -32,7 +32,7 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
 
     this.mapper = Objects.requireNonNull(mapper);
 
-    this.query = registrar.model(
+    this.query = registrar.cell(
         new RegisterCell<>(initialValue),
         (value) -> Pair.of(Optional.of(value), Set.of(value)));
 

@@ -40,7 +40,7 @@ public final class Registrar<$Schema> {
 
   public <Event, Effect, ModelType extends Cell<Effect, ModelType>>
   Query<$Schema, Event, ModelType>
-  model(final ModelType initialState, final Function<Event, Effect> interpreter)
+  cell(final ModelType initialState, final Function<Event, Effect> interpreter)
   {
     return this.builder.register(
         Projection.from(initialState.effectTrait(), interpreter),
