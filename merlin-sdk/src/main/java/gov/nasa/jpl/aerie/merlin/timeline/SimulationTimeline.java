@@ -130,14 +130,14 @@ public final class SimulationTimeline<$Timeline> {
     return value;
   }
 
-  public <Event, ModelType, Effect>
-  Query<$Timeline, Event, ModelType>
+  public <Event, CellType, Effect>
+  Query<$Timeline, Event, CellType>
   register(
       final Projection<Event, Effect> projection,
-      final Applicator<Effect, ModelType> applicator)
+      final Applicator<Effect, CellType> applicator)
   {
     final var index = this.tables.size();
-    final var query = new Query<$Timeline, Event, ModelType>(projection, applicator, index);
+    final var query = new Query<$Timeline, Event, CellType>(projection, applicator, index);
     this.tables.add(query.createTable(this));
 
     return query;
@@ -173,12 +173,12 @@ public final class SimulationTimeline<$Timeline> {
   }
 
   /* package-local */
-  <Event, ModelType>
-  Table<$Timeline, Event, ?, ModelType>
+  <Event, CellType>
+  Table<$Timeline, Event, ?, CellType>
   getTable(final int index) {
     // SAFETY: The index is provided by the query from which this cache was built.
     @SuppressWarnings("unchecked")
-    final var table = (Table<$Timeline, Event, ?, ModelType>) this.tables.get(index);
+    final var table = (Table<$Timeline, Event, ?, CellType>) this.tables.get(index);
     return table;
   }
 
