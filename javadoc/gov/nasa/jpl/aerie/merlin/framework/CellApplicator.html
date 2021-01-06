@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></div>
-<h2 title="Class CellApplicator" class="title">Class CellApplicator&lt;EffectType,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;EffectType,&#8203;ModelType&gt;&gt;</h2>
+<h2 title="Class CellApplicator" class="title">Class CellApplicator&lt;EffectType,&#8203;CellType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;EffectType,&#8203;CellType&gt;&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.aerie.merlin.framework.CellApplicator&lt;EffectType,&#8203;ModelType&gt;</li>
+<li>gov.nasa.jpl.aerie.merlin.framework.CellApplicator&lt;EffectType,&#8203;CellType&gt;</li>
 </ul>
 </li>
 </ul>
@@ -132,12 +132,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;EffectType,&#8203;ModelType&gt;</code></dd>
+<dd><code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;EffectType,&#8203;CellType&gt;</code></dd>
 </dl>
 <hr>
-<pre>public class <span class="typeNameLabel">CellApplicator&lt;EffectType,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;EffectType,&#8203;ModelType&gt;&gt;</span>
+<pre>public class <span class="typeNameLabel">CellApplicator&lt;EffectType,&#8203;CellType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;EffectType,&#8203;CellType&gt;&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>
-implements <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;EffectType,&#8203;ModelType&gt;</pre>
+implements <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;EffectType,&#8203;CellType&gt;</pre>
 </li>
 </ul>
 </div>
@@ -158,7 +158,7 @@ implements <a href="../timeline/effects/Applicator.html" title="interface in gov
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(ModelType)">CellApplicator</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;initialState)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(CellType)">CellApplicator</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;initialState)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -181,23 +181,23 @@ implements <a href="../timeline/effects/Applicator.html" title="interface in gov
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#apply(ModelType,EffectType)">apply</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;model,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#apply(CellType,EffectType)">apply</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;cell,
      <a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>&nbsp;effect)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#duplicate(ModelType)">duplicate</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;model)</code></th>
+<td class="colFirst"><code><a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#duplicate(CellType)">duplicate</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;cell)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a></code></td>
+<td class="colFirst"><code><a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#initial()">initial</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#step(ModelType,gov.nasa.jpl.aerie.time.Duration)">step</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;model,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#step(CellType,gov.nasa.jpl.aerie.time.Duration)">step</a></span>&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;cell,
     <a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -227,13 +227,13 @@ implements <a href="../timeline/effects/Applicator.html" title="interface in gov
 <h3>Constructor Detail</h3>
 <a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.Cell)">
 <!--   -->
-</a><a id="&lt;init&gt;(ModelType)">
+</a><a id="&lt;init&gt;(CellType)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>CellApplicator</h4>
-<pre>public&nbsp;CellApplicator&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;initialState)</pre>
+<pre>public&nbsp;CellApplicator&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;initialState)</pre>
 </li>
 </ul>
 </li>
@@ -252,57 +252,57 @@ implements <a href="../timeline/effects/Applicator.html" title="interface in gov
 <ul class="blockList">
 <li class="blockList">
 <h4>initial</h4>
-<pre class="methodSignature">public&nbsp;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;initial()</pre>
+<pre class="methodSignature">public&nbsp;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;initial()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../timeline/effects/Applicator.html#initial()">initial</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&gt;&gt;</code></dd>
+<dd><code><a href="../timeline/effects/Applicator.html#initial()">initial</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
 <a id="duplicate(gov.nasa.jpl.aerie.merlin.framework.Cell)">
 <!--   -->
-</a><a id="duplicate(ModelType)">
+</a><a id="duplicate(CellType)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>duplicate</h4>
-<pre class="methodSignature">public&nbsp;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;duplicate&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;model)</pre>
+<pre class="methodSignature">public&nbsp;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;duplicate&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;cell)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../timeline/effects/Applicator.html#duplicate(Model)">duplicate</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&gt;&gt;</code></dd>
+<dd><code><a href="../timeline/effects/Applicator.html#duplicate(Model)">duplicate</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
 <a id="apply(gov.nasa.jpl.aerie.merlin.framework.Cell,java.lang.Object)">
 <!--   -->
-</a><a id="apply(ModelType,EffectType)">
+</a><a id="apply(CellType,EffectType)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>apply</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;apply&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;model,
+<pre class="methodSignature">public&nbsp;void&nbsp;apply&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;cell,
                   <a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>&nbsp;effect)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../timeline/effects/Applicator.html#apply(Model,Effect)">apply</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&gt;&gt;</code></dd>
+<dd><code><a href="../timeline/effects/Applicator.html#apply(Model,Effect)">apply</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>
 <a id="step(gov.nasa.jpl.aerie.merlin.framework.Cell,gov.nasa.jpl.aerie.time.Duration)">
 <!--   -->
-</a><a id="step(ModelType,gov.nasa.jpl.aerie.time.Duration)">
+</a><a id="step(CellType,gov.nasa.jpl.aerie.time.Duration)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>step</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;step&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&nbsp;model,
+<pre class="methodSignature">public&nbsp;void&nbsp;step&#8203;(<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&nbsp;cell,
                  <a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;duration)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../timeline/effects/Applicator.html#step(Model,gov.nasa.jpl.aerie.time.Duration)">step</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">ModelType</a>&gt;&gt;</code></dd>
+<dd><code><a href="../timeline/effects/Applicator.html#step(Model,gov.nasa.jpl.aerie.time.Duration)">step</a></code>&nbsp;in interface&nbsp;<code><a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a> extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="CellApplicator.html" title="type parameter in CellApplicator">EffectType</a>,&#8203;<a href="CellApplicator.html" title="type parameter in CellApplicator">CellType</a>&gt;&gt;</code></dd>
 </dl>
 </li>
 </ul>

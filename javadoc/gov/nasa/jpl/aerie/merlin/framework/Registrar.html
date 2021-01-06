@@ -154,8 +154,8 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;ModelType&gt;&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#cell(ModelType,java.util.function.Function)">cell</a></span>&#8203;(ModelType&nbsp;initialState,
+<td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;CellType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;CellType&gt;&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;CellType&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#cell(CellType,java.util.function.Function)">cell</a></span>&#8203;(CellType&nbsp;initialState,
     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -224,14 +224,14 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </ul>
 <a id="cell(gov.nasa.jpl.aerie.merlin.framework.Cell,java.util.function.Function)">
 <!--   -->
-</a><a id="cell(ModelType,java.util.function.Function)">
+</a><a id="cell(CellType,java.util.function.Function)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>cell</h4>
-<pre class="methodSignature">public&nbsp;&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;ModelType&gt;&gt;&nbsp;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;&nbsp;cell&#8203;(ModelType&nbsp;initialState,
-                                                                                                                                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</pre>
+<pre class="methodSignature">public&nbsp;&lt;Event,&#8203;Effect,&#8203;CellType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;CellType&gt;&gt;&nbsp;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;CellType&gt;&nbsp;cell&#8203;(CellType&nbsp;initialState,
+                                                                                                                              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</pre>
 </li>
 </ul>
 <a id="discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Property,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
