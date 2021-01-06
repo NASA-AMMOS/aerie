@@ -154,33 +154,33 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;ModelType&gt;&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#cell(ModelType,java.util.function.Function)">cell</a></span>&#8203;(ModelType&nbsp;initialState,
+    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#constraint(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.Condition)">constraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
           <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>&gt;&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#daemon(java.lang.String,java.lang.Runnable)">daemon</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#descend(java.lang.String)">descend</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>&lt;Resource&gt;&nbsp;<a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Resource&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Property,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
         <a href="Property.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Property</a>&lt;<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="Registrar.html" title="type parameter in Registrar">$Schema</a>&gt;,&#8203;Resource&gt;&nbsp;property,
         <a href="../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;Resource&gt;&nbsp;mapper)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;ModelType&gt;&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#model(ModelType,java.util.function.Function)">model</a></span>&#8203;(ModelType&nbsp;initialState,
-     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
@@ -222,16 +222,16 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <pre class="methodSignature">public&nbsp;<a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>&gt;&nbsp;descend&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</pre>
 </li>
 </ul>
-<a id="model(gov.nasa.jpl.aerie.merlin.framework.Cell,java.util.function.Function)">
+<a id="cell(gov.nasa.jpl.aerie.merlin.framework.Cell,java.util.function.Function)">
 <!--   -->
-</a><a id="model(ModelType,java.util.function.Function)">
+</a><a id="cell(ModelType,java.util.function.Function)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>model</h4>
-<pre class="methodSignature">public&nbsp;&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;ModelType&gt;&gt;&nbsp;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;&nbsp;model&#8203;(ModelType&nbsp;initialState,
-                                                                                                                                  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</pre>
+<h4>cell</h4>
+<pre class="methodSignature">public&nbsp;&lt;Event,&#8203;Effect,&#8203;ModelType extends <a href="Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;Effect,&#8203;ModelType&gt;&gt;&nbsp;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="Registrar.html" title="type parameter in Registrar">$Schema</a>,&#8203;Event,&#8203;ModelType&gt;&nbsp;cell&#8203;(ModelType&nbsp;initialState,
+                                                                                                                                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;Event,&#8203;Effect&gt;&nbsp;interpreter)</pre>
 </li>
 </ul>
 <a id="discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Property,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
