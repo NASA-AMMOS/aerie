@@ -131,6 +131,7 @@ public final class SimulationDriver {
     // Run simulation to completion, sampling states at periodic intervals.
     {
       // Get an initial sample.
+      simulator.runFor(Duration.ZERO);
       sampleResources(simulator, resourceTypes, timestamps, timelines);
 
       // Sample periodically until the sampling duration expires.
