@@ -618,7 +618,7 @@ public final class AdaptationProcessor implements Processor {
                         "model",
                         Modifier.FINAL)
                     .addStatement(
-                        "final var $L = $L.getRootContext();",
+                        "final var $L = $L.getRootContext()",
                         "rootContext",
                         "builder")
                     .addCode(
@@ -652,7 +652,7 @@ public final class AdaptationProcessor implements Processor {
                                                      "$L.replayingTask("
                                                      + "\n" + "new $T(),"
                                                      + "\n" + "activity -> $>$>activity"
-                                                     + "\n" + ".new EffectModel<$T>())"
+                                                     + "\n" + ".new EffectModel<$T>()"
                                                      + "\n" + ".runWith($L.get(), $L)$<$<)",
                                                      "builder",
                                                      activityType.mapper.name,
