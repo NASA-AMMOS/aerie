@@ -142,7 +142,7 @@ public final class Window {
   public String toString() {
     if (this.isEmpty()) {
       return "Window(empty)";
-    } else if (this.start.equals(this.end)) {
+    } else if (this.start.isEqualTo(this.end)) {
       return String.format("Window(at: %s)", this.start);
     } else {
       return String.format("Window(from: %s, to: %s)", this.start, this.end);
