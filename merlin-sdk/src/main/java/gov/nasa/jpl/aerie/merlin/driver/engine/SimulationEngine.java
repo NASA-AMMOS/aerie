@@ -134,12 +134,12 @@ public final class SimulationEngine<$Timeline> {
   // The "next" root frame is the earliest of these.
   private TaskFrame<$Timeline> extractNextRootFrame() {
     assert !this.queue.isEmpty();
-    final var nextJobTime = this.queue.peek().getMiddle();
+    final var nextJobTime = this.queue.peek().getLeft();
 
     var tip = this.currentHistory;
     var spawns = new ArrayDeque<Triple<History<$Timeline>, String, Task<$Timeline>>>();
 
-    while (!this.queue.isEmpty() && this.queue.peek().getMiddle().equals(nextJobTime)) {
+    while (!this.queue.isEmpty() && this.queue.peek().getLeft().isEqualTo(nextJobTime)) {
       tip = tip.fork();
       final var entry = this.queue.poll();
       spawns.push(Triple.of(tip, entry.getMiddle(), entry.getRight()));
@@ -222,7 +222,7 @@ public final class SimulationEngine<$Timeline> {
 
     builder.append(this.currentHistory.getDebugTrace());
     for (final var point : this.queue) {
-      builder.append(String.format("%10s: %s\n", point.getMiddle(), point.getRight()));
+      builder.append(String.format("%10s: %s\n", point.getLeft(), point.getMiddle()));
     }
 
     return builder.toString();
