@@ -6,9 +6,8 @@ A suite of software tools and services created to support activity planning and 
 
 ## Getting Started
 
-- To get Aerie running locally see the [installation documentation](./docs/installation.md).
 - To deploy an existing set of Aerie images from Artifactory see the [deployment documentation](./docs/deployment.md).
 
 ## Contributing
 
-Please read our [CONTRIBUTING.md](./CONTRIBUTING.md) file for branch naming and pull request conventions.
+Please read the [CONTRIBUTING.md](./CONTRIBUTING.md) guidelines for branch naming and pull request conventions.
