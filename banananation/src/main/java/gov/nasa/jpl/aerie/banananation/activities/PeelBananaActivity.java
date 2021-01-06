@@ -31,11 +31,11 @@ public final class PeelBananaActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    public void run(final Mission<$Schema> resources) {
+    public void run(final Mission<$Schema> mission) {
       if (peelDirection.equals("fromStem")) {
-        resources.fruit.subtract(MASHED_BANANA_AMOUNT);
+        mission.fruit.subtract(MASHED_BANANA_AMOUNT);
       }
-      resources.peel.subtract(1.0);
+      mission.peel.subtract(1.0);
     }
   }
 }

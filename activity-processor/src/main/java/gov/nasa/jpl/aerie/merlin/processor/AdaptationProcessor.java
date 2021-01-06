@@ -615,10 +615,10 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             ClassName.get(adaptation.topLevelModel),
                             TypeVariableName.get("$Schema")),
-                        "container",
+                        "model",
                         Modifier.FINAL)
                     .addStatement(
-                        "final var $L = $L.getRootContext();",
+                        "final var $L = $L.getRootContext()",
                         "rootContext",
                         "builder")
                     .addCode(
@@ -645,20 +645,20 @@ public final class AdaptationProcessor implements Processor {
                                                      activityType.mapper.name,
                                                      TypeVariableName.get("$Schema"),
                                                      "rootContext",
-                                                     "container")
+                                                     "model")
                                              : CodeBlock
                                                  .builder()
                                                  .addStatement(
                                                      "$L.replayingTask("
                                                      + "\n" + "new $T(),"
                                                      + "\n" + "activity -> $>$>activity"
-                                                     + "\n" + ".new EffectModel<$T>())"
+                                                     + "\n" + ".new EffectModel<$T>()"
                                                      + "\n" + ".runWith($L.get(), $L)$<$<)",
                                                      "builder",
                                                      activityType.mapper.name,
                                                      TypeVariableName.get("$Schema"),
                                                      "rootContext",
-                                                     "container"))
+                                                     "model"))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
                     .build())
@@ -896,7 +896,7 @@ public final class AdaptationProcessor implements Processor {
                                 ParameterizedTypeName.get(
                                     ClassName.get(adaptation.topLevelModel),
                                     TypeVariableName.get("$Schema")),
-                                "resources")
+                                "model")
                             .build())
                     .build())
             .addMethod(
@@ -918,13 +918,13 @@ public final class AdaptationProcessor implements Processor {
                                 ParameterizedTypeName.get(
                                     ClassName.get(adaptation.topLevelModel),
                                     TypeVariableName.get("$Schema")),
-                                "resources")
+                                "model")
                             .build())
                     .addStatement(
                         "this.$L.setWithin($L, () -> this.run($L))",
                         "context",
                         "context",
-                        "resources")
+                        "model")
                     .build())
             .build();
 

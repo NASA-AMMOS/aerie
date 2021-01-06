@@ -44,6 +44,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   @Override
   public <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
     if (this.history.isEmpty()) {
+      // We're running normally.
       this.scheduler.emit(event, query);
     } else {
       // TODO: Avoid leaving garbage behind -- find some way to remove regenerated events
