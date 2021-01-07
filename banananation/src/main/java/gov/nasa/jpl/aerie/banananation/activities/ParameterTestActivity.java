@@ -6,6 +6,11 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * An activity type to test the mapper generation capability of the annotation processor.
+ * Most, if not all, of the primitive types supported by Java are exercised here,
+ * as well as several compound parameter types built up from those primitives.
+ */
 @ActivityType("ParameterTest")
 public final class ParameterTestActivity {
   // Primitive parameters
