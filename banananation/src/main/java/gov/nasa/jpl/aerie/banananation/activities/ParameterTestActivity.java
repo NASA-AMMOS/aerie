@@ -19,136 +19,127 @@ public final class ParameterTestActivity {
   @Parameter public boolean primitiveBoolean = true;
 
   // Boxed parameters
-  @Parameter public Double boxedDouble = 6.282;
-  @Parameter public Float boxedFloat = 3.236f;
-  @Parameter public Byte boxedByte = 116;
-  @Parameter public Short boxedShort = 132;
-  @Parameter public Integer boxedInt = 164;
-  @Parameter public Long boxedLong = 1128L;
-  @Parameter public Character boxedChar = 'G';
-  @Parameter public Boolean boxedBoolean = false;
-  @Parameter public String string = "h";
+  @Parameter public Double boxedDouble;
+  @Parameter public Float boxedFloat;
+  @Parameter public Byte boxedByte;
+  @Parameter public Short boxedShort;
+  @Parameter public Integer boxedInt;
+  @Parameter public Long boxedLong;
+  @Parameter public Character boxedChar;
+  @Parameter public Boolean boxedBoolean;
+  @Parameter public String string;
 
   // Array parameters
-  @Parameter public Double[] doubleArray = null;
-  @Parameter public Float[] floatArray = null;
-  @Parameter public Byte[] byteArray = null;
-  @Parameter public Short[] shortArray = null;
-  @Parameter public Integer[] intArray = null;
-  @Parameter public Long[] longArray = null;
-  @Parameter public Character[] charArray = null;
-  @Parameter public Boolean[] booleanArray = null;
-  @Parameter public String[] stringArray = null;
+  @Parameter public Double[] doubleArray;
+  @Parameter public Float[] floatArray;
+  @Parameter public Byte[] byteArray;
+  @Parameter public Short[] shortArray;
+  @Parameter public Integer[] intArray;
+  @Parameter public Long[] longArray;
+  @Parameter public Character[] charArray;
+  @Parameter public Boolean[] booleanArray;
+  @Parameter public String[] stringArray;
 
   // Primitive Array parameters
-  @Parameter public double[] primDoubleArray = null;
-  @Parameter public float[] primFloatArray = null;
-  @Parameter public byte[] primByteArray = null;
-  @Parameter public short[] primShortArray = null;
-  @Parameter public int[] primIntArray = null;
-  @Parameter public long[] primLongArray = null;
-  @Parameter public char[] primCharArray = null;
-  @Parameter public boolean[] primBooleanArray = null;
+  @Parameter public double[] primDoubleArray;
+  @Parameter public float[] primFloatArray;
+  @Parameter public byte[] primByteArray;
+  @Parameter public short[] primShortArray;
+  @Parameter public int[] primIntArray;
+  @Parameter public long[] primLongArray;
+  @Parameter public char[] primCharArray;
+  @Parameter public boolean[] primBooleanArray;
 
   // List parameters
-  @Parameter public List<Double> doubleList = null;
-  @Parameter public List<Float> floatList = null;
-  @Parameter public List<Byte> byteList = null;
-  @Parameter public List<Short> shortList = null;
-  @Parameter public List<Integer> intList = null;
-  @Parameter public List<Long> longList = null;
-  @Parameter public List<Character> charList = null;
-  @Parameter public List<Boolean> booleanList = null;
-  @Parameter public List<String> stringList = null;
+  @Parameter public List<Double> doubleList;
+  @Parameter public List<Float> floatList;
+  @Parameter public List<Byte> byteList;
+  @Parameter public List<Short> shortList;
+  @Parameter public List<Integer> intList;
+  @Parameter public List<Long> longList;
+  @Parameter public List<Character> charList;
+  @Parameter public List<Boolean> booleanList;
+  @Parameter public List<String> stringList;
 
   // Map Parameters
-  @Parameter public Map<Double, Double> doubleMap = null;
-  @Parameter public Map<Float, Float> floatMap = null;
-  @Parameter public Map<Byte, Byte> byteMap = null;
-  @Parameter public Map<Short, Short> shortMap = null;
-  @Parameter public Map<Integer, Integer> intMap = null;
-  @Parameter public Map<Long, Long> longMap = null;
-  @Parameter public Map<Character, Character> charMap = null;
-  @Parameter public Map<Boolean, Boolean> booleanMap = null;
-  @Parameter public Map<String, String> stringMap = null;
+  @Parameter public Map<Double, Double> doubleMap;
+  @Parameter public Map<Float, Float> floatMap;
+  @Parameter public Map<Byte, Byte> byteMap;
+  @Parameter public Map<Short, Short> shortMap;
+  @Parameter public Map<Integer, Integer> intMap;
+  @Parameter public Map<Long, Long> longMap;
+  @Parameter public Map<Character, Character> charMap;
+  @Parameter public Map<Boolean, Boolean> booleanMap;
+  @Parameter public Map<String, String> stringMap;
 
   // Enum type
   public enum Tenum { A, B, C }
-  @Parameter public Tenum testEnum = null;
+  @Parameter public Tenum testEnum;
 
   // Complex Parameters
   @Parameter
-  public Map<Integer, List<String>> mappyBoi = null;
+  public Map<Integer, List<String>> mappyBoi;
 
   @Parameter
-  public int[][] doublePrimIntArray = null;
+  public int[][] doublePrimIntArray;
 
   @Parameter
-  public List<Integer>[][] intListArrayArray = null;
+  public List<Integer>[][] intListArrayArray;
 
   @Parameter
   public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
 
-  public static ParameterTestActivity createTestActivity() {
-    ParameterTestActivity testActivity = new ParameterTestActivity();
-    testActivity.primitiveDouble = 3.141;
-    testActivity.primitiveFloat = 1.618f;
-    testActivity.primitiveByte = 16;
-    testActivity.primitiveShort = 32;
-    testActivity.primitiveInt = 64;
-    testActivity.primitiveLong = 128;
-    testActivity.primitiveChar = 'g';
-    testActivity.primitiveBoolean = true;
-    testActivity.boxedDouble = 6.282;
-    testActivity.boxedFloat = 3.236f;
-    testActivity.boxedByte = 116;
-    testActivity.boxedShort = 132;
-    testActivity.boxedInt = 164;
-    testActivity.boxedLong = 1128L;
-    testActivity.boxedChar = 'G';
-    testActivity.boxedBoolean =  false;
-    testActivity.string = "h";
-    testActivity.doubleArray = List.of(1.0, 2.0).toArray(new Double[2]);
-    testActivity.floatArray = List.of(3.0f, 4.0f).toArray(new Float[2]);
-    testActivity.byteArray = List.of((byte)5, (byte)6).toArray(new Byte[2]);
-    testActivity.shortArray = List.of((short)7, (short)8).toArray(new Short[2]);
-    testActivity.intArray = List.of(9, 10).toArray(new Integer[2]);
-    testActivity.longArray = List.of((long)11, (long)12).toArray(new Long[2]);
-    testActivity.charArray = List.of('a', 'b').toArray(new Character[2]);
-    testActivity.booleanArray = List.of(true, false).toArray(new Boolean[2]);
-    testActivity.stringArray = List.of("17", "18").toArray(new String[2]);
-    testActivity.primDoubleArray = new double[] {102.0, 103.0};
-    testActivity.primFloatArray = new float[] {(float)104.0, (float)105.0};
-    testActivity.primByteArray = new byte[] {(byte)106, (byte)107};
-    testActivity.primShortArray = new short[] {(short)108, (short)109};
-    testActivity.primIntArray = new int[] {110, 111};
-    testActivity.primLongArray = new long[] {(long)112, (long)113};
-    testActivity.primCharArray = new char[] {'c', 'd'};
-    testActivity.primBooleanArray = new boolean[] {true, false};
-    testActivity.doubleList = List.of(19.0, 20.0);
-    testActivity.floatList = List.of(21.0f, 22.0f);
-    testActivity.byteList = List.of((byte)23, (byte)24);
-    testActivity.shortList = List.of((short)25, (short)26);
-    testActivity.intList = List.of(27, 28);
-    testActivity.longList = List.of((long)29, (long)30);
-    testActivity.charList = List.of('c', 'd');
-    testActivity.booleanList = List.of(false, true);
-    testActivity.stringList = List.of("35", "36");
-    testActivity.doubleMap = Map.of(37.0, 38.0, 39.0, 40.0);
-    testActivity.floatMap = Map.of(41.0f, 42.0f, 43.0f, 44.0f);
-    testActivity.byteMap = Map.of((byte)45, (byte)46, (byte)47, (byte)48);
-    testActivity.shortMap = Map.of((short)49, (short)50, (short)51, (short)52);
-    testActivity.intMap = Map.of(53, 54, 55, 56);
-    testActivity.longMap = Map.of((long)57, (long)58, (long)59, (long)60);
-    testActivity.charMap = Map.of('e', 'f', 'g', 'h');
-    testActivity.booleanMap = Map.of(false, true, true, false);
-    testActivity.stringMap = Map.of("69", "70", "71", "72");
-    testActivity.testEnum = Tenum.A;
-    testActivity.mappyBoi = Map.of(
+  public ParameterTestActivity() {
+    this.boxedDouble = 6.282;
+    this.boxedFloat = 3.236f;
+    this.boxedByte = 116;
+    this.boxedShort = 132;
+    this.boxedInt = 164;
+    this.boxedLong = 1128L;
+    this.boxedChar = 'G';
+    this.boxedBoolean =  false;
+    this.string = "h";
+    this.doubleArray = List.of(1.0, 2.0).toArray(new Double[2]);
+    this.floatArray = List.of(3.0f, 4.0f).toArray(new Float[2]);
+    this.byteArray = List.of((byte)5, (byte)6).toArray(new Byte[2]);
+    this.shortArray = List.of((short)7, (short)8).toArray(new Short[2]);
+    this.intArray = List.of(9, 10).toArray(new Integer[2]);
+    this.longArray = List.of((long)11, (long)12).toArray(new Long[2]);
+    this.charArray = List.of('a', 'b').toArray(new Character[2]);
+    this.booleanArray = List.of(true, false).toArray(new Boolean[2]);
+    this.stringArray = List.of("17", "18").toArray(new String[2]);
+    this.primDoubleArray = new double[] {102.0, 103.0};
+    this.primFloatArray = new float[] {(float)104.0, (float)105.0};
+    this.primByteArray = new byte[] {(byte)106, (byte)107};
+    this.primShortArray = new short[] {(short)108, (short)109};
+    this.primIntArray = new int[] {110, 111};
+    this.primLongArray = new long[] {(long)112, (long)113};
+    this.primCharArray = new char[] {'c', 'd'};
+    this.primBooleanArray = new boolean[] {true, false};
+    this.doubleList = List.of(19.0, 20.0);
+    this.floatList = List.of(21.0f, 22.0f);
+    this.byteList = List.of((byte)23, (byte)24);
+    this.shortList = List.of((short)25, (short)26);
+    this.intList = List.of(27, 28);
+    this.longList = List.of((long)29, (long)30);
+    this.charList = List.of('c', 'd');
+    this.booleanList = List.of(false, true);
+    this.stringList = List.of("35", "36");
+    this.doubleMap = Map.of(37.0, 38.0, 39.0, 40.0);
+    this.floatMap = Map.of(41.0f, 42.0f, 43.0f, 44.0f);
+    this.byteMap = Map.of((byte)45, (byte)46, (byte)47, (byte)48);
+    this.shortMap = Map.of((short)49, (short)50, (short)51, (short)52);
+    this.intMap = Map.of(53, 54, 55, 56);
+    this.longMap = Map.of((long)57, (long)58, (long)59, (long)60);
+    this.charMap = Map.of('e', 'f', 'g', 'h');
+    this.booleanMap = Map.of(false, true, true, false);
+    this.stringMap = Map.of("69", "70", "71", "72");
+    this.testEnum = Tenum.A;
+    this.mappyBoi = Map.of(
             100, List.of("abc", "xyz"),
             200, List.of("def", "uvw")
     );
-    testActivity.doublePrimIntArray = new int[][] {
+    this.doublePrimIntArray = new int[][] {
             new int[] {101, 102},
             new int[] {103, 103}
     };
@@ -163,7 +154,7 @@ public final class ParameterTestActivity {
                     List.of(206, 207)
             }
     };
-    testActivity.intListArrayArray = intListArrayArray;
+    this.intListArrayArray = intListArrayArray;
     @SuppressWarnings("unchecked")
     final List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious = List.of(
             Map.of(
@@ -223,8 +214,6 @@ public final class ParameterTestActivity {
                     )
             )
     );
-    testActivity.obnoxious = obnoxious;
-
-    return testActivity;
+    this.obnoxious = obnoxious;
   }
 }
