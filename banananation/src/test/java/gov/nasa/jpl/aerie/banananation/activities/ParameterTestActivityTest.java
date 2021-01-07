@@ -27,7 +27,7 @@ public class ParameterTestActivityTest {
   @Test
   public void testDeserialization() throws TaskSpecType.UnconstructableTaskSpecException {
     final Map<String, SerializedValue> sourceActivity = createSerializedArguments();
-    final ParameterTestActivity testValues = ParameterTestActivity.createTestActivity();
+    final ParameterTestActivity testValues = new ParameterTestActivity();
 
     final ParameterTestActivity deserializedActivity = this.mapper.instantiate(sourceActivity);
 
@@ -93,7 +93,7 @@ public class ParameterTestActivityTest {
 
   @Test
   public void testSerialization() throws TaskSpecType.UnconstructableTaskSpecException {
-    final ParameterTestActivity sourceActivity = createParameterTestActivityInstance();
+    final ParameterTestActivity sourceActivity = new ParameterTestActivity();
     final Map<String, SerializedValue> activityArgs = this.mapper.getArguments(sourceActivity);
 
     final ParameterTestActivity deserializedActivity = this.mapper.instantiate(activityArgs);
@@ -158,7 +158,7 @@ public class ParameterTestActivityTest {
   }
 
   private Map<String, SerializedValue> createSerializedArguments() {
-    final ParameterTestActivity testValues = ParameterTestActivity.createTestActivity();
+    final ParameterTestActivity testValues = new ParameterTestActivity();
     final Map<String, SerializedValue> arguments = new HashMap<>();
 
     // Primitive parameters
@@ -740,10 +740,6 @@ public class ParameterTestActivityTest {
     );
 
     return arguments;
-  }
-
-  private ParameterTestActivity createParameterTestActivityInstance() {
-    return ParameterTestActivity.createTestActivity();
   }
 
   @SuppressWarnings("unchecked")
