@@ -39,6 +39,21 @@ public final class Pointing<$Schema> extends Model<$Schema> {
     this.z.rate.add(delta.getZ());
   }
 
+  /** Slew to a target vector over a given duration. */
+  public void slew(final Vector3D target, final Duration duration) {
+    final var previousRate = getRate();
+    addRate(previousRate.negate()); // Negate the previous rate to bring rate to <0, 0, 0>
+
+    // rate = (v2 - v1) / duration
+    final var desiredRate = target.subtract(getVector()).scalarMultiply(1/duration.ratioOver(Duration.SECOND));
+    addRate(desiredRate);
+    delay(duration);
+
+    // Reset the rate post-slew
+    addRate(desiredRate.negate()); // Negate the slew rate to bring rate back to <0, 0, 0>
+    addRate(previousRate);         // Reset rate to previous rate
+  }
+
   public final class Component {
     public final Accumulator<$Schema>.Volume value;
     public final Accumulator<$Schema>.Rate rate;
