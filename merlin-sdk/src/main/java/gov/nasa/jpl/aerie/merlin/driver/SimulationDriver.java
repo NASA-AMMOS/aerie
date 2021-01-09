@@ -233,28 +233,13 @@ public final class SimulationDriver {
       final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
       final Resource resource)
   {
-    return database.accumulateUpTo(endTime, new Profile<>(solver), (currentProfile, info) -> {
-      var augmentedProfile = currentProfile;
-      var currentHistory = info.getLeft();
+    return database.accumulateUpTo(endTime, new Profile<>(solver), (profile, info) -> {
+      final var history = info.getLeft();
       final var window = info.getRight();
 
-      var timeSincePreviousEvent = Duration.ZERO;
-      var timeUntilNextEvent = window.end.minus(window.start);
-
-      while (timeUntilNextEvent.isPositive()) {
-        final var delimitedDynamics = solver.getDynamics(resource, currentHistory);
-        final var timeUntilNextDynamics = delimitedDynamics.getEndTime();
-
-        final var longestValidDuration = Duration.min(timeUntilNextDynamics, timeUntilNextEvent);
-
-        augmentedProfile = augmentedProfile.append(longestValidDuration, delimitedDynamics.getDynamics());
-        currentHistory = currentHistory.wait(timeSincePreviousEvent);
-
-        timeSincePreviousEvent = timeSincePreviousEvent.plus(longestValidDuration);
-        timeUntilNextEvent = timeUntilNextEvent.minus(longestValidDuration);
-      }
-
-      return augmentedProfile;
+      return profile.append(
+          window.end.minus(window.start),
+          solver.getDynamics(resource, history));
     });
   }
 
@@ -294,13 +279,13 @@ public final class SimulationDriver {
     return solver.approximate(new ResourceSolver.ApproximatorVisitor<>() {
       @Override
       public SerializedValue real(final RealApproximator<Dynamics> approximator) {
-        final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
+        final var part = approximator.approximate(dynamics).iterator().next();
         return SerializedValue.of(part.getDynamics().initial);
       }
 
       @Override
       public SerializedValue discrete(final DiscreteApproximator<Dynamics> approximator) {
-        final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
+        final var part = approximator.approximate(dynamics).iterator().next();
         return part.getDynamics();
       }
     });

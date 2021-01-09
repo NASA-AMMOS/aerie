@@ -25,11 +25,11 @@ public final class DiscreteResourceSolver<$Schema, Resource>
   }
 
   @Override
-  public DelimitedDynamics<Resource> getDynamics(
+  public Resource getDynamics(
       final DiscreteResource<$Schema, Resource> resource,
       final History<? extends $Schema> now)
   {
-    return DelimitedDynamics.persistent(resource.getDynamics(now));
+    return resource.getDynamics(now);
   }
 
   @Override

@@ -15,11 +15,11 @@ public final class RealResourceSolver<$Schema>
     implements ResourceSolver<$Schema, RealResource<$Schema>, RealDynamics, RealCondition>
 {
   @Override
-  public DelimitedDynamics<RealDynamics> getDynamics(
+  public RealDynamics getDynamics(
       final RealResource<$Schema> resource,
       final History<? extends $Schema> now)
   {
-    return DelimitedDynamics.persistent(resource.getDynamics(now));
+    return resource.getDynamics(now);
   }
 
   @Override
