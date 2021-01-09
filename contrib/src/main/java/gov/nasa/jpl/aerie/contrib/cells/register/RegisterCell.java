@@ -10,12 +10,12 @@ import java.util.Set;
 import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, RegisterCell<T>> {
-  private T _value;
-  private boolean _conflicted;
+  private T value;
+  private boolean conflicted;
 
   public RegisterCell(final T initialValue, final boolean conflicted) {
-    this._value = initialValue;
-    this._conflicted = conflicted;
+    this.value = initialValue;
+    this.conflicted = conflicted;
   }
 
   public RegisterCell(final T initialValue) {
@@ -24,7 +24,7 @@ public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, Re
 
   @Override
   public RegisterCell<T> duplicate() {
-    return new RegisterCell<>(this._value, this._conflicted);
+    return new RegisterCell<>(this.value, this.conflicted);
   }
 
   @Override
@@ -34,17 +34,17 @@ public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, Re
 
   @Override
   public void react(final Pair<Optional<T>, Set<T>> concurrentValues) {
-    concurrentValues.getLeft().ifPresent(newValue -> this._value = newValue);
-    this._conflicted = (concurrentValues.getRight().size() > 1);
+    concurrentValues.getLeft().ifPresent(newValue -> this.value = newValue);
+    this.conflicted = (concurrentValues.getRight().size() > 1);
   }
 
 
   /// Resources
   public DelimitedDynamics<T> getValue() {
-    return persistent(this._value);
+    return persistent(this.value);
   }
 
   public DelimitedDynamics<Boolean> isConflicted() {
-    return persistent(this._conflicted);
+    return persistent(this.conflicted);
   }
 }
