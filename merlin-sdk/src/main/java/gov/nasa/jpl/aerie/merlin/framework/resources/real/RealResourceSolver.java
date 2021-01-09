@@ -19,7 +19,7 @@ public final class RealResourceSolver<$Schema>
       final RealResource<$Schema> resource,
       final History<? extends $Schema> now)
   {
-    return resource.getDynamics(now);
+    return DelimitedDynamics.persistent(resource.getDynamics(now));
   }
 
   @Override
