@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
@@ -45,23 +44,16 @@ public final class Registrar<$Schema> {
         new CellApplicator<>(initialState));
   }
 
-  public <Resource, CellType>
-  DiscreteResource<$Schema, Resource>
-  discrete(
-      final String name,
-      final Query<$Schema, ?, CellType> query,
-      final Function<CellType, Resource> property,
-      final ValueMapper<Resource> mapper)
-  {
-    final var resource = DiscreteResource.atom(query, property);
+  public <State>
+  DiscreteResource<$Schema, State>
+  discrete(final String name, final DiscreteResource<$Schema, State> resource, final ValueMapper<State> mapper) {
     this.builder.discrete(this.namespace + "/" + name, resource, mapper);
     return resource;
   }
 
-  public <CellType>
+  public
   RealResource<$Schema>
-  real(final String name, final Query<$Schema, ?, CellType> query, final Function<CellType, RealDynamics> property) {
-    final var resource = RealResource.atom(query, property);
+  real(final String name, final RealResource<$Schema> resource) {
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }
