@@ -12,8 +12,6 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
-
 public final class Registrar<$Schema> {
   private final AdaptationBuilder<$Schema> builder;
   private final Supplier<? extends Context<$Schema>> rootContext;
@@ -55,7 +53,7 @@ public final class Registrar<$Schema> {
       final Function<CellType, Resource> property,
       final ValueMapper<Resource> mapper)
   {
-    final var resource = DiscreteResource.<$Schema, Resource>atom(now -> persistent(property.apply(now.ask(query))));
+    final var resource = DiscreteResource.atom(query, property);
     this.builder.discrete(this.namespace + "/" + name, resource, mapper);
     return resource;
   }
@@ -63,7 +61,7 @@ public final class Registrar<$Schema> {
   public <CellType>
   RealResource<$Schema>
   real(final String name, final Query<$Schema, ?, CellType> query, final Function<CellType, RealDynamics> property) {
-    final var resource = RealResource.<$Schema>atom(now -> persistent(property.apply(now.ask(query))));
+    final var resource = RealResource.atom(query, property);
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }

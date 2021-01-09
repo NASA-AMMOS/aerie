@@ -1,27 +1,31 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
-import gov.nasa.jpl.aerie.merlin.framework.Property;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.timeline.Query;
 
 import java.util.Objects;
+import java.util.function.Function;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public abstract class RealResource<$Schema> {
   private RealResource() {}
 
   public abstract DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now);
 
-  public static <$Schema>
+  public static <$Schema, CellType>
   RealResource<$Schema>
-  atom(final Property<History<? extends $Schema>, RealDynamics> property) {
+  atom(final Query<$Schema, ?, CellType> query, final Function<CellType, RealDynamics> property) {
+    Objects.requireNonNull(query);
     Objects.requireNonNull(property);
 
     return new RealResource<>() {
       @Override
       public DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now) {
-        return property.ask(now);
+        return persistent(property.apply(now.ask(query)));
       }
     };
   }
