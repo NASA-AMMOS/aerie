@@ -1,13 +1,10 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Optional;
 import java.util.Set;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, RegisterCell<T>> {
   private T value;
@@ -38,11 +35,11 @@ public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, Re
     this.conflicted = (concurrentValues.getRight().size() > 1);
   }
 
-  public DelimitedDynamics<T> getValue() {
-    return persistent(this.value);
+  public T getValue() {
+    return this.value;
   }
 
-  public DelimitedDynamics<Boolean> isConflicted() {
-    return persistent(this.conflicted);
+  public Boolean isConflicted() {
+    return this.conflicted;
   }
 }

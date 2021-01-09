@@ -1,12 +1,9 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class LinearIntegrationCell implements Cell<Double, LinearIntegrationCell> {
   private double volume;
@@ -38,11 +35,11 @@ public final class LinearIntegrationCell implements Cell<Double, LinearIntegrati
     this.volume += this.rate * elapsedTime.ratioOver(Duration.SECOND);
   }
 
-  public DelimitedDynamics<RealDynamics> getVolume() {
-    return persistent(RealDynamics.linear(this.volume, this.rate));
+  public RealDynamics getVolume() {
+    return RealDynamics.linear(this.volume, this.rate);
   }
 
-  public DelimitedDynamics<RealDynamics> getRate() {
-    return persistent(RealDynamics.constant(this.rate));
+  public RealDynamics getRate() {
+    return RealDynamics.constant(this.rate);
   }
 }

@@ -16,6 +16,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
+
 public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
@@ -36,12 +38,12 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
 
     this.value = registrar.discrete(
         "value",
-        now -> now.ask(this.query).getValue(),
+        now -> persistent(now.ask(this.query).getValue()),
         mapper);
 
     this.conflicted = registrar.discrete(
         "conflicted",
-        now -> now.ask(this.query).isConflicted(),
+        now -> persistent(now.ask(this.query).isConflicted()),
         new BooleanValueMapper());
   }
 
