@@ -34,11 +34,11 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
 
     this.query = registrar.cell(new RegisterCell<>(initialValue));
 
-    this.value = registrar.discrete(
+    this.value = registrar.resource(
         "value",
         DiscreteResource.atom(this.query, RegisterCell::getValue),
         mapper);
-    this.conflicted = registrar.discrete(
+    this.conflicted = registrar.resource(
         "conflicted",
         DiscreteResource.atom(this.query, RegisterCell::isConflicted),
         new BooleanValueMapper());

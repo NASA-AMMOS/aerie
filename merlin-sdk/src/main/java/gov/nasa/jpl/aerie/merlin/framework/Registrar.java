@@ -46,14 +46,14 @@ public final class Registrar<$Schema> {
 
   public <State>
   DiscreteResource<$Schema, State>
-  discrete(final String name, final DiscreteResource<$Schema, State> resource, final ValueMapper<State> mapper) {
+  resource(final String name, final DiscreteResource<$Schema, State> resource, final ValueMapper<State> mapper) {
     this.builder.discrete(this.namespace + "/" + name, resource, mapper);
     return resource;
   }
 
   public
   RealResource<$Schema>
-  real(final String name, final RealResource<$Schema> resource) {
+  resource(final String name, final RealResource<$Schema> resource) {
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }
