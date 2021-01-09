@@ -19,7 +19,7 @@ import java.util.Set;
 public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
-  private final Query<$Schema, Value, RegisterCell<Value>> query;
+  private final Query<$Schema, Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> query;
   public final DiscreteResource<$Schema, Value> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
@@ -32,9 +32,7 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
 
     this.mapper = Objects.requireNonNull(mapper);
 
-    this.query = registrar.cell(
-        new RegisterCell<>(initialValue),
-        (value) -> Pair.of(Optional.of(value), Set.of(value)));
+    this.query = registrar.cell(new RegisterCell<>(initialValue));
 
     this.value = registrar.discrete(
         "value",
@@ -64,7 +62,7 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
   }
 
   public void set(final Value value) {
-    emit(value, this.query);
+    emit(Pair.of(Optional.of(value), Set.of(value)), this.query);
   }
 
   public Value get() {
