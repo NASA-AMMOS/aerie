@@ -202,7 +202,7 @@ public final class SimulationDriver {
         mappedTaskWindows,
         startTime);
 
-    if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
+    if (!daemonSet.containsAll(results.unfinishedActivities.keySet())) {
       throw new Error("There should be no unfinished activities when simulating to completion.");
     }
 
