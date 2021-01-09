@@ -280,13 +280,13 @@ public final class SimulationDriver {
       @Override
       public SerializedValue real(final RealApproximator<Dynamics> approximator) {
         final var part = approximator.approximate(dynamics).iterator().next();
-        return SerializedValue.of(part.getDynamics().initial);
+        return SerializedValue.of(part.dynamics.initial);
       }
 
       @Override
       public SerializedValue discrete(final DiscreteApproximator<Dynamics> approximator) {
         final var part = approximator.approximate(dynamics).iterator().next();
-        return part.getDynamics();
+        return part.dynamics;
       }
     });
   }
