@@ -5,10 +5,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
-
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class Accumulator<$Schema> extends Model<$Schema> {
   private final Query<$Schema, Double, LinearIntegrationCell> query;
@@ -27,8 +24,8 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
   {
     super(registrar);
     this.query = registrar.cell(new LinearIntegrationCell(initialVolume, initialRate));
-    this.volume = new Volume(registrar.real("volume", now -> persistent(now.ask(this.query).getVolume())));
-    this.rate = new Rate(registrar.real("rate", now -> persistent(now.ask(this.query).getRate())));
+    this.volume = new Volume(registrar.real("volume", now -> now.ask(this.query).getVolume()));
+    this.rate = new Rate(registrar.real("rate", now -> now.ask(this.query).getRate()));
   }
 
   public final class Volume {

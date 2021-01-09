@@ -10,7 +10,10 @@ import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
 public final class Registrar<$Schema> {
   private final AdaptationBuilder<$Schema> builder;
@@ -49,18 +52,18 @@ public final class Registrar<$Schema> {
   DiscreteResource<$Schema, Resource>
   discrete(
       final String name,
-      final Property<History<? extends $Schema>, Resource> property,
+      final Function<History<? extends $Schema>, Resource> property,
       final ValueMapper<Resource> mapper)
   {
-    final var resource = DiscreteResource.atom(property);
+    final var resource = DiscreteResource.<$Schema, Resource>atom(now -> persistent(property.apply(now)));
     this.builder.discrete(this.namespace + "/" + name, resource, mapper);
     return resource;
   }
 
   public
   RealResource<$Schema>
-  real(final String name, final Property<History<? extends $Schema>, RealDynamics> property) {
-    final var resource = RealResource.atom(property);
+  real(final String name, final Function<History<? extends $Schema>, RealDynamics> property) {
+    final var resource = RealResource.<$Schema>atom(now -> persistent(property.apply(now)));
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }
