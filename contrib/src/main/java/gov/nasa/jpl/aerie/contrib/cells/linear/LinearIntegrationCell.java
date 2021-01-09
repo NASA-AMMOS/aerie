@@ -38,8 +38,6 @@ public final class LinearIntegrationCell implements Cell<Double, LinearIntegrati
     this.volume += this.rate * elapsedTime.ratioOver(Duration.SECOND);
   }
 
-
-  /// Resources
   public DelimitedDynamics<RealDynamics> getVolume() {
     return persistent(RealDynamics.linear(this.volume, this.rate));
   }

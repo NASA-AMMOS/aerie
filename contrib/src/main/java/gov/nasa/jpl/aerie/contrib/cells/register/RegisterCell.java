@@ -38,8 +38,6 @@ public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, Re
     this.conflicted = (concurrentValues.getRight().size() > 1);
   }
 
-
-  /// Resources
   public DelimitedDynamics<T> getValue() {
     return persistent(this.value);
   }
