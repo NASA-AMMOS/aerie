@@ -75,5 +75,5 @@ public final class DurativeRealCell implements Cell<Collection<DelimitedDynamics
     }
 
     return acc;
-  };
+  }
 }
