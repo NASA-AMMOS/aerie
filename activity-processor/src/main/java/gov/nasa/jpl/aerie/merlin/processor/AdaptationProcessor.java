@@ -981,10 +981,16 @@ public final class AdaptationProcessor implements Processor {
                         gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
                         "schemaBuilder")
                     .addStatement(
-                        "final var $L = new $T<>($L.getRegistrar())",
+                        "final var $L = new $T<>($L, $L.getRootContext(), \"\")",
+                        "registrar",
+                        gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
+                        "builder",
+                        "builder")
+                    .addStatement(
+                        "final var $L = new $T<>($L)",
                         "model",
                         ClassName.get(adaptation.topLevelModel),
-                        "builder")
+                        "registrar")
                     .addStatement(
                         "$T.register($L, $L)",
                         adaptation.getMasterActivityTypesName(),

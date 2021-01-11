@@ -35,10 +35,6 @@ public final class AdaptationBuilder<$Schema> {
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
   }
 
-  public Registrar<$Schema> getRegistrar() {
-    return new Registrar<>(this, this.rootContext, "");
-  }
-
   public Supplier<? extends Context<$Schema>> getRootContext() {
     return this.rootContext;
   }

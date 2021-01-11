@@ -10,22 +10,20 @@ import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
   private final AdaptationBuilder<$Schema> builder;
-  private final Scoped<Context<$Schema>> rootContext;
+  private final Supplier<? extends Context<$Schema>> rootContext;
   private final String namespace;
 
-  /*package-local*/
-  Registrar(
+  public Registrar(
       final AdaptationBuilder<$Schema> builder,
-      final Scoped<Context<$Schema>> rootContext,
+      final Supplier<? extends Context<$Schema>> rootContext,
       final String namespace)
   {
     this.builder = Objects.requireNonNull(builder);
-    this.rootContext = rootContext;
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.namespace = Objects.requireNonNull(namespace);
   }
 
