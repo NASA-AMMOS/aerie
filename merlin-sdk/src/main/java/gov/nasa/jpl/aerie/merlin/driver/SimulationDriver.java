@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -109,20 +108,6 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    return simulate(adaptation, database, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
-  }
-
-  private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
-      final Adaptation<$Schema> adaptation,
-      final SimulationTimeline<$Timeline> database,
-      final SimulationEngine<$Timeline> simulator,
-      final Instant startTime,
-      final Duration simulationDuration,
-      final Duration samplingPeriod,
-      final Map<String, String> taskIdToActivityId,
-      final Set<String> daemonSet
-  )
-  {
     simulator.runFor(simulationDuration);
 
     // Collect profiles for all resources.
@@ -169,7 +154,7 @@ public final class SimulationDriver {
 
     // Use the map of task id to activity id to replace task ids with the corresponding
     // activity id for use by the front end.
-    final var mappedTaskWindows = new HashMap<String, Window> ();
+    final var mappedTaskWindows = new HashMap<String, Window>();
     final var mappedTaskRecords = new HashMap<String, TaskRecord>();
     {
       final var taskRecords = simulator.getTaskRecords();
