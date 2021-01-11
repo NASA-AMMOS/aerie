@@ -16,17 +16,24 @@ public final class Profile<Dynamics, Condition>
 {
   private final ResourceSolver<?, ?, Dynamics, Condition> solver;
   private final List<Pair<Window, Dynamics>> pieces;
+  private final Duration duration;
 
   private Profile(
       final ResourceSolver<?, ?, Dynamics, Condition> solver,
-      final List<Pair<Window, Dynamics>> pieces)
+      final List<Pair<Window, Dynamics>> pieces,
+      final Duration duration)
   {
     this.solver = solver;
     this.pieces = pieces;
+    this.duration = duration;
   }
 
   public Profile(final ResourceSolver<?, ?, Dynamics, Condition> solver) {
-    this(Objects.requireNonNull(solver), Collections.emptyList());
+    this(Objects.requireNonNull(solver), Collections.emptyList(), Duration.ZERO);
+  }
+
+  public Duration getDuration() {
+    return this.duration;
   }
 
   public Profile<Dynamics, Condition> append(final Duration duration, Dynamics dynamics) {
@@ -44,7 +51,10 @@ public final class Profile<Dynamics, Condition>
 
     final var newPieces = new ArrayList<>(this.pieces);
     newPieces.add(Pair.of(window,  dynamics));
-    return new Profile<>(this.solver, newPieces);
+
+    final var newDuration = this.duration.plus(duration);
+
+    return new Profile<>(this.solver, newPieces, newDuration);
   }
 
   public ResourceSolver<?, ?, Dynamics, Condition> getSolver() {

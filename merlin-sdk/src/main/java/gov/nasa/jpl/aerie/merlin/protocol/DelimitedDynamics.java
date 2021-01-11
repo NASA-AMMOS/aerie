@@ -8,6 +8,10 @@ public final class DelimitedDynamics<Dynamics> {
   public final Duration endTime;
   public final Dynamics dynamics;
 
+  public boolean isPersistent() {
+    return (this.endTime.isEqualTo(Duration.MAX_VALUE));
+  }
+
   private DelimitedDynamics(final Duration endTime, final Dynamics dynamics) {
     this.endTime = Objects.requireNonNull(endTime);
     this.dynamics = Objects.requireNonNull(dynamics);
