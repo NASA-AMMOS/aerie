@@ -1,8 +1,9 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.banananation.generated.activities.ParameterTestActivityMapper;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -84,6 +85,7 @@ public class ParameterTestActivityTest {
     assertEquals(deserializedActivity.charMap, testValues.charMap);
     assertEquals(deserializedActivity.booleanMap, testValues.booleanMap);
     assertEquals(deserializedActivity.stringMap, testValues.stringMap);
+    assertEquals(deserializedActivity.testDuration, testValues.testDuration);
     assertEquals(deserializedActivity.testEnum, testValues.testEnum);
     assertEquals(deserializedActivity.mappyBoi, testValues.mappyBoi);
     assertArrayEquals(deserializedActivity.doublePrimIntArray, testValues.doublePrimIntArray);
@@ -150,6 +152,7 @@ public class ParameterTestActivityTest {
     assertEquals(sourceActivity.charMap, deserializedActivity.charMap);
     assertEquals(sourceActivity.booleanMap, deserializedActivity.booleanMap);
     assertEquals(sourceActivity.stringMap, deserializedActivity.stringMap);
+    assertEquals(sourceActivity.testDuration, deserializedActivity.testDuration);
     assertEquals(sourceActivity.testEnum, deserializedActivity.testEnum);
     assertEquals(sourceActivity.mappyBoi, deserializedActivity.mappyBoi);
     assertArrayEquals(sourceActivity.doublePrimIntArray, deserializedActivity.doublePrimIntArray);
@@ -499,6 +502,9 @@ public class ParameterTestActivityTest {
             )
         )
     ));
+
+    // Duration Parameter
+    arguments.put("testDuration", new DurationValueMapper().serializeValue(testValues.testDuration));
 
     // Enum Parameter
     arguments.put("testEnum", SerializedValue.of(testValues.testEnum.name()));
