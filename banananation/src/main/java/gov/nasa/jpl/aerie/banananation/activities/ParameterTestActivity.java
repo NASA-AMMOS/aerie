@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
+import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,9 @@ public final class ParameterTestActivity {
   @Parameter public Map<Boolean, Boolean> booleanMap;
   @Parameter public Map<String, String> stringMap;
 
+  // Duration type
+  @Parameter public Duration testDuration;
+
   // Enum type
   public enum Tenum { A, B, C }
   @Parameter public Tenum testEnum;
@@ -139,6 +143,7 @@ public final class ParameterTestActivity {
     this.charMap = Map.of('e', 'f', 'g', 'h');
     this.booleanMap = Map.of(false, true, true, false);
     this.stringMap = Map.of("69", "70", "71", "72");
+    this.testDuration = Duration.of(300000000, Duration.MICROSECONDS);
     this.testEnum = Tenum.A;
     this.mappyBoi = Map.of(
             100, List.of("abc", "xyz"),
