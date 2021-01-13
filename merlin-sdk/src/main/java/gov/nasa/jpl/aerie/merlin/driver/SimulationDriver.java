@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
@@ -20,7 +19,6 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -133,6 +131,7 @@ public final class SimulationDriver {
     // Run simulation to completion, sampling states at periodic intervals.
     {
       // Get an initial sample.
+      simulator.runFor(Duration.ZERO);
       sampleResources(simulator, resourceTypes, timestamps, timelines);
 
       // Sample periodically until the sampling duration expires.

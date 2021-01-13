@@ -411,13 +411,18 @@ public final class Duration implements Comparable<Duration> {
     return this.durationInMicroseconds == 0;
   }
 
+  public boolean isEqualTo(final Duration other) {
+    return this.durationInMicroseconds == other.durationInMicroseconds;
+  }
+
   /** Determine whether two durations are the same. */
   @Override
+  @Deprecated
   public boolean equals(final Object o) {
     if (!(o instanceof Duration)) return false;
     final var other = (Duration)o;
 
-    return (this.durationInMicroseconds == other.durationInMicroseconds);
+    return this.isEqualTo(other);
   }
 
   @Override

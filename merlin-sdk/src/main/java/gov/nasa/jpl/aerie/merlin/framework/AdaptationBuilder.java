@@ -43,9 +43,9 @@ public final class AdaptationBuilder<$Schema> {
     return this.rootContext;
   }
 
-  public <Event, Effect, ModelType>
-  Query<$Schema, Event, ModelType>
-  register(final Projection<Event, Effect> projection, final Applicator<Effect, ModelType> applicator) {
+  public <Event, Effect, CellType>
+  Query<$Schema, Event, CellType>
+  register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
     return this.schemaBuilder.register(projection, applicator);
   }
 
@@ -168,7 +168,7 @@ public final class AdaptationBuilder<$Schema> {
 
     @Override
     public void daemon(final String id, final Runnable task) {
-      final var daemonType = new DaemonTaskType<>("/daemons/" + id, task, rootContext);
+      final var daemonType = new DaemonTaskType<>(id, task, rootContext);
 
       this.taskSpecTypes.put(daemonType.getName(), daemonType);
       this.daemons.add(Pair.of(daemonType.getName(), Map.of()));

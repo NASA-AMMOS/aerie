@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
@@ -11,7 +10,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class Profile<Dynamics, Condition>
     implements Iterable<Pair<Window, Dynamics>>
@@ -39,8 +37,7 @@ public final class Profile<Dynamics, Condition>
       startTime = this.pieces
           .get(this.pieces.size() - 1)
           .getLeft()
-          .end
-          .plus(Duration.EPSILON);
+          .end;
     }
 
     final var window = Window.between(startTime, startTime.plus(duration));

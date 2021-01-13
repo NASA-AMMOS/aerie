@@ -35,12 +35,12 @@ public final class Registrar<$Schema> {
   }
 
   public Registrar<$Schema> descend(final String namespace) {
-    return new Registrar<>(this.builder, rootContext, this.namespace + "/" + namespace);
+    return new Registrar<>(this.builder, this.rootContext, this.namespace + "/" + namespace);
   }
 
-  public <Event, Effect, ModelType extends Cell<Effect, ModelType>>
-  Query<$Schema, Event, ModelType>
-  model(final ModelType initialState, final Function<Event, Effect> interpreter)
+  public <Event, Effect, CellType extends Cell<Effect, CellType>>
+  Query<$Schema, Event, CellType>
+  cell(final CellType initialState, final Function<Event, Effect> interpreter)
   {
     return this.builder.register(
         Projection.from(initialState.effectTrait(), interpreter),
@@ -72,6 +72,6 @@ public final class Registrar<$Schema> {
   }
 
   public void daemon(final String id, final Runnable task) {
-    this.builder.daemon(this.namespace + "/" + id, task);
+    this.builder.daemon("/daemons" + this.namespace + "/" + id, task);
   }
 }
