@@ -35,7 +35,7 @@ public final class Registrar<$Schema> {
   }
 
   public Registrar<$Schema> descend(final String namespace) {
-    return new Registrar<>(this.builder, rootContext, this.namespace + "/" + namespace);
+    return new Registrar<>(this.builder, this.rootContext, this.namespace + "/" + namespace);
   }
 
   public <Event, Effect, CellType extends Cell<Effect, CellType>>
@@ -72,6 +72,6 @@ public final class Registrar<$Schema> {
   }
 
   public void daemon(final String id, final Runnable task) {
-    this.builder.daemon(this.namespace + "/" + id, task);
+    this.builder.daemon("/daemons" + this.namespace + "/" + id, task);
   }
 }

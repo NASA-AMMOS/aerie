@@ -168,7 +168,7 @@ public final class AdaptationBuilder<$Schema> {
 
     @Override
     public void daemon(final String id, final Runnable task) {
-      final var daemonType = new DaemonTaskType<>("/daemons/" + id, task, rootContext);
+      final var daemonType = new DaemonTaskType<>(id, task, rootContext);
 
       this.taskSpecTypes.put(daemonType.getName(), daemonType);
       this.daemons.add(Pair.of(daemonType.getName(), Map.of()));
