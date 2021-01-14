@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
+import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
@@ -21,7 +22,7 @@ public final class LinearIntegrationCell implements Cell<Double, LinearIntegrati
 
   @Override
   public EffectTrait<Double> effectTrait() {
-    return new SumEffectTrait();
+    return new CommutativeMonoid<>(0.0, Double::sum);
   }
 
   @Override
