@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.contrib.models.Clock;
 import gov.nasa.jpl.aerie.contrib.models.SampledResource;
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.aerie.contrib.models.Register;
+import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.generated.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
@@ -22,6 +23,7 @@ public final class Mission<$Schema> extends Model<$Schema> {
   public final Accumulator<$Schema> source;
   public final Accumulator<$Schema> sink;
   public final SampledResource<$Schema, Double> batterySoC;
+  public final Counter<$Schema, Integer> activitiesExecuted;
 
   public final RealResource<$Schema> combo;
 
@@ -36,6 +38,9 @@ public final class Mission<$Schema> extends Model<$Schema> {
 
     this.source = new Accumulator<>(registrar.descend("source"), 100.0, 1.0);
     this.sink = new Accumulator<>(registrar.descend("sink"), 0.0, 0.5);
+
+    this.activitiesExecuted = Counter.ofInteger(registrar.descend("activities"), 0);
+
     this.batterySoC = new SampledResource<>(
         registrar.descend("batterySoC"),
         ()->this.source.volume.get() - this.sink.volume.get(),
