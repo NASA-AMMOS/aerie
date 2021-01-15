@@ -1,27 +1,28 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
-import gov.nasa.jpl.aerie.merlin.framework.Property;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.timeline.Query;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 public abstract class RealResource<$Schema> {
   private RealResource() {}
 
-  public abstract DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now);
+  public abstract RealDynamics getDynamics(final History<? extends $Schema> now);
 
-  public static <$Schema>
+  public static <$Schema, CellType>
   RealResource<$Schema>
-  atom(final Property<History<? extends $Schema>, RealDynamics> property) {
+  atom(final Query<$Schema, ?, CellType> query, final Function<CellType, RealDynamics> property) {
+    Objects.requireNonNull(query);
     Objects.requireNonNull(property);
 
     return new RealResource<>() {
       @Override
-      public DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now) {
-        return property.ask(now);
+      public RealDynamics getDynamics(final History<? extends $Schema> now) {
+        return property.apply(now.ask(query));
       }
     };
   }
@@ -33,8 +34,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now) {
-        return resource.getDynamics(now).map($ -> $.scaledBy(scalar));
+      public RealDynamics getDynamics(final History<? extends $Schema> now) {
+        return resource.getDynamics(now).scaledBy(scalar);
       }
     };
   }
@@ -47,8 +48,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now) {
-        return left.getDynamics(now).parWith(right.getDynamics(now), RealDynamics::plus);
+      public RealDynamics getDynamics(final History<? extends $Schema> now) {
+        return left.getDynamics(now).plus(right.getDynamics(now));
       }
     };
   }
@@ -61,8 +62,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public DelimitedDynamics<RealDynamics> getDynamics(final History<? extends $Schema> now) {
-        return left.getDynamics(now).parWith(right.getDynamics(now), RealDynamics::minus);
+      public RealDynamics getDynamics(final History<? extends $Schema> now) {
+        return left.getDynamics(now).minus(right.getDynamics(now));
       }
     };
   }
@@ -82,7 +83,7 @@ public abstract class RealResource<$Schema> {
 
 
   public final double ask(final History<? extends $Schema> now) {
-    return this.getDynamics(now).getDynamics().initial;
+    return this.getDynamics(now).initial;
   }
 
   public Condition<$Schema> isBetween(final double lower, final double upper) {

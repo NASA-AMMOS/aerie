@@ -1,10 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
-import gov.nasa.jpl.aerie.merlin.framework.Property;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.timeline.Query;
 
 import java.util.Objects;
 import java.util.Set;
@@ -13,16 +12,17 @@ import java.util.function.Function;
 public abstract class DiscreteResource<$Schema, T> {
   private DiscreteResource() {}
 
-  public abstract DelimitedDynamics<T> getDynamics(History<? extends $Schema> history);
+  public abstract T getDynamics(History<? extends $Schema> history);
 
-  public static <$Schema, T>
-  DiscreteResource<$Schema, T> atom(final Property<History<? extends $Schema>, T> property) {
+  public static <$Schema, CellType, T>
+  DiscreteResource<$Schema, T> atom(final Query<$Schema, ?, CellType> query, final Function<CellType, T> property) {
+    Objects.requireNonNull(query);
     Objects.requireNonNull(property);
 
     return new DiscreteResource<>() {
       @Override
-      public DelimitedDynamics<T> getDynamics(final History<? extends $Schema> now) {
-        return property.ask(now);
+      public T getDynamics(final History<? extends $Schema> now) {
+        return property.apply(now.ask(query));
       }
     };
   }
@@ -34,15 +34,15 @@ public abstract class DiscreteResource<$Schema, T> {
 
     return new DiscreteResource<>() {
       @Override
-      public DelimitedDynamics<S> getDynamics(final History<? extends $Schema> now) {
-        return resource.getDynamics(now).map(transform);
+      public S getDynamics(final History<? extends $Schema> now) {
+        return transform.apply(resource.getDynamics(now));
       }
     };
   }
 
 
   public T ask(final History<? extends $Schema> now) {
-    return this.getDynamics(now).getDynamics();
+    return this.getDynamics(now);
   }
 
   public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {

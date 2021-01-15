@@ -3,9 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
@@ -15,17 +13,16 @@ import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
   private final AdaptationBuilder<$Schema> builder;
-  private final Scoped<Context<$Schema>> rootContext;
+  private final Supplier<? extends Context<$Schema>> rootContext;
   private final String namespace;
 
-  /*package-local*/
-  Registrar(
+  public Registrar(
       final AdaptationBuilder<$Schema> builder,
-      final Scoped<Context<$Schema>> rootContext,
+      final Supplier<? extends Context<$Schema>> rootContext,
       final String namespace)
   {
     this.builder = Objects.requireNonNull(builder);
-    this.rootContext = rootContext;
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.namespace = Objects.requireNonNull(namespace);
   }
 
@@ -38,31 +35,25 @@ public final class Registrar<$Schema> {
     return new Registrar<>(this.builder, this.rootContext, this.namespace + "/" + namespace);
   }
 
-  public <Event, Effect, CellType extends Cell<Effect, CellType>>
-  Query<$Schema, Event, CellType>
-  cell(final CellType initialState, final Function<Event, Effect> interpreter)
+  public <Effect, CellType extends Cell<Effect, CellType>>
+  Query<$Schema, Effect, CellType>
+  cell(final CellType initialState)
   {
     return this.builder.register(
-        Projection.from(initialState.effectTrait(), interpreter),
+        Projection.from(initialState.effectTrait(), ev -> ev),
         new CellApplicator<>(initialState));
   }
 
-  public <Resource>
-  DiscreteResource<$Schema, Resource>
-  discrete(
-      final String name,
-      final Property<History<? extends $Schema>, Resource> property,
-      final ValueMapper<Resource> mapper)
-  {
-    final var resource = DiscreteResource.atom(property);
+  public <State>
+  DiscreteResource<$Schema, State>
+  resource(final String name, final DiscreteResource<$Schema, State> resource, final ValueMapper<State> mapper) {
     this.builder.discrete(this.namespace + "/" + name, resource, mapper);
     return resource;
   }
 
   public
   RealResource<$Schema>
-  real(final String name, final Property<History<? extends $Schema>, RealDynamics> property) {
-    final var resource = RealResource.atom(property);
+  resource(final String name, final RealResource<$Schema> resource) {
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }

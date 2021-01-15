@@ -23,9 +23,9 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
       final double initialRate)
   {
     super(registrar);
-    this.query = registrar.cell(new LinearIntegrationCell(initialVolume, initialRate), ev -> ev);
-    this.volume = new Volume(registrar.real("volume", now -> now.ask(this.query).getVolume()));
-    this.rate = new Rate(registrar.real("rate", now -> now.ask(this.query).getRate()));
+    this.query = registrar.cell(new LinearIntegrationCell(initialVolume, initialRate));
+    this.volume = new Volume(registrar.resource("volume", RealResource.atom(this.query, LinearIntegrationCell::getVolume)));
+    this.rate = new Rate(registrar.resource("rate", RealResource.atom(this.query, LinearIntegrationCell::getRate)));
   }
 
   public final class Volume {

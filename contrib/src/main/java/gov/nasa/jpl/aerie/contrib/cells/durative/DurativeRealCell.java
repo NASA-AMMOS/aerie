@@ -13,9 +13,8 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.delimited;
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
 
-public final class DurativeRealCell implements Cell<Collection<DelimitedDynamics<RealDynamics>>, DurativeRealCell> {
+public final class DurativeRealCell implements Cell<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell> {
   private final PriorityQueue<Pair<Window, RealDynamics>> activeEffects;
   private Duration elapsedTime;
 
@@ -35,16 +34,16 @@ public final class DurativeRealCell implements Cell<Collection<DelimitedDynamics
   }
 
   @Override
-  public EffectTrait<Collection<DelimitedDynamics<RealDynamics>>> effectTrait() {
+  public EffectTrait<Collection<Pair<Duration, RealDynamics>>> effectTrait() {
     return new CollectingEffectTrait<>();
   }
 
   @Override
-  public void react(final Collection<DelimitedDynamics<RealDynamics>> effects) {
-    for (final var dynamics : effects) {
+  public void react(final Collection<Pair<Duration, RealDynamics>> effects) {
+    for (final var effect : effects) {
       this.activeEffects.add(Pair.of(
-          Window.between(this.elapsedTime, dynamics.getEndTime().plus(this.elapsedTime)),
-          dynamics.getDynamics()));
+          Window.between(this.elapsedTime, this.elapsedTime.plus(effect.getLeft())),
+          effect.getRight()));
     }
   }
 
@@ -65,15 +64,14 @@ public final class DurativeRealCell implements Cell<Collection<DelimitedDynamics
   }
 
   public DelimitedDynamics<RealDynamics> getValue() {
-    var acc = persistent(RealDynamics.constant(0.0));
+    var duration = Duration.MAX_VALUE;
+    var dynamics = RealDynamics.constant(0.0);
 
     for (final var entry : this.activeEffects) {
-      final var x = delimited(
-          entry.getLeft().end.minus(this.elapsedTime),
-          entry.getRight());
-      acc = acc.parWith(x, RealDynamics::plus);
+      duration = entry.getLeft().end.minus(this.elapsedTime);
+      dynamics = dynamics.plus(entry.getRight());
     }
 
-    return acc;
-  };
+    return delimited(duration, dynamics);
+  }
 }
