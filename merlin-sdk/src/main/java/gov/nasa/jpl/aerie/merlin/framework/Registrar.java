@@ -11,16 +11,10 @@ import java.util.function.Supplier;
 
 public final class Registrar {
   private final AdaptationBuilder<?> builder;
-  private final Supplier<? extends Context<?>> rootContext;
   private final String namespace;
 
-  public Registrar(
-      final AdaptationBuilder<?> builder,
-      final Supplier<? extends Context<?>> rootContext,
-      final String namespace)
-  {
+  public Registrar(final AdaptationBuilder<?> builder, final String namespace) {
     this.builder = Objects.requireNonNull(builder);
-    this.rootContext = Objects.requireNonNull(rootContext);
     this.namespace = Objects.requireNonNull(namespace);
   }
 
@@ -34,7 +28,7 @@ public final class Registrar {
   }
 
   public Registrar descend(final String namespace) {
-    return new Registrar(this.builder, this.rootContext, this.namespace + "/" + namespace);
+    return new Registrar(this.builder, this.namespace + "/" + namespace);
   }
 
   public <Effect, CellType extends Cell<Effect, CellType>>

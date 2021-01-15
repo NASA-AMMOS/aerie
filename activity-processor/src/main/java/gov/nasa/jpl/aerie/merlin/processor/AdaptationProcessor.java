@@ -963,10 +963,9 @@ public final class AdaptationProcessor implements Processor {
                         gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
                         "schemaBuilder")
                     .addStatement(
-                        "final var $L = new $T($L, $L.getRootContext(), \"\")",
+                        "final var $L = new $T($L, \"\")",
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
-                        "builder",
                         "builder")
                     .addStatement(
                         "final var $L = new $T($L)",
