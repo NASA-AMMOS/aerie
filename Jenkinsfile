@@ -67,6 +67,16 @@ def getArtifactTag() {
   }
 }
 
+def getReleaseTag() {
+  if (GIT_BRANCH ==~ /release-.*/) {
+    String[] str = GIT_BRANCH.split('-');
+    if (str.size() == 2) {
+      return str[1];
+    }
+  }
+  return ""
+}
+
 void setBuildStatus(String message, String state, String context) {
   step([
       $class: "GitHubCommitStatusSetter",
@@ -303,6 +313,20 @@ pipeline {
               git checkout ${GIT_BRANCH}
             """
           }
+        }
+      }
+    }
+    stage ('Trigger document generation') {
+      when {
+        expression { GIT_BRANCH ==~ /(release-.*)/ }
+      }
+      steps {
+        script {
+          String tag = getReleaseTag();
+          build job: '../aerie-gh-pages', parameters:[
+            string(name: 'BRANCH', value: "${GIT_BRANCH}"),
+            string(name: 'TAG', value: "${tag}")
+          ]
         }
       }
     }
