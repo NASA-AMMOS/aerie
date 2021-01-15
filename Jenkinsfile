@@ -87,7 +87,7 @@ def imageNames = []
 pipeline {
 
   agent {
-    label 'coronado || Pismo || San-clemente || Sugarloaf'
+    label 'CAE-Jenkins2-DH-Agents-Linux'
   }
 
   environment {
@@ -105,7 +105,6 @@ pipeline {
     ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
     AWS_ECR_PATH = "${AWS_ECR}/aerie"
     DOCKERFILE_PATH = "scripts/dockerfiles"
-    JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
   }
 
   stages {
@@ -115,183 +114,196 @@ pipeline {
         sh "env | sort"
       }
     }
-    stage ('Build') {
-      steps {
-        script { setBuildStatus("Building", "pending", "jenkins/branch-check"); }
-        echo "Building $ARTIFACT_TAG..."
-        sh './gradlew classes'
-      }
-    }
-    stage ('Test') {
-      steps {
-        script { setBuildStatus("Testing", "pending", "jenkins/branch-check"); }
-        sh "./gradlew test"
-
-          // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
-          // Bump their last modified time to trick Jenkins.
-          sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
-
-          junit testResults: '*/build/test-results/test/*.xml'
-      }
-    }
-    stage ('Assemble') {
-      steps {
-        echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
-        sh '''
-        ASSEMBLE_PREP_DIR=$(mktemp -d)
-        STAGING_DIR=$(mktemp -d)
-
-        ./gradlew assemble
-
-        # For adaptations
-        mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
-        cp banananation/build/libs/*.jar \
-           ${ASSEMBLE_PREP_DIR}/adaptations/
-
-        # For services
-        mkdir -p ${ASSEMBLE_PREP_DIR}/services
-        cp plan-service/build/distributions/*.tar \
-           adaptation-service/build/distributions/*.tar \
-           ${ASSEMBLE_PREP_DIR}/services/
-
-        # For merlin-cli
-        mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-cli
-        cp merlin-cli/build/distributions/*.tar \
-           ${ASSEMBLE_PREP_DIR}/merlin-cli/
-
-        # For docker-compose
-        cp -r ./scripts/docker-compose-aerie ${STAGING_DIR}
-
-        if [[ $GIT_BRANCH =~ staging ]] || [[ $GIT_BRANCH =~ release-.* ]]; then
-            cd ${STAGING_DIR}/docker-compose-aerie
-            echo "# This file contains environment variables used in docker-compose files." > .env
-            echo "AERIE_DOCKER_URL=$ARTIFACT_PATH" >> .env
-            echo "DOCKER_TAG=$DOCKER_TAG" >> .env
-            cd -
-        fi
-
-        tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C ${ASSEMBLE_PREP_DIR}/ .
-        tar -czf aerie-docker-compose.tar.gz -C ${STAGING_DIR}/ .
-        rm -rfv ${ASSEMBLE_PREP_DIR}
-        rm -rfv ${STAGING_DIR}
-        '''
-      }
-
-    }
-    stage ('Release') {
-      when {
-        expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-      }
-      steps {
-        script {
-          try {
-            def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
-            def uploadSpec =
-            """
-            {
-              "files": [
-                {
-                  "pattern": "aerie-${ARTIFACT_TAG}.tar.gz",
-                  "target": "${getPublishPath()}",
-                  "recursive":false
-                },
-                {
-                  "pattern": "aerie-docker-compose.tar.gz",
-                  "target": "${getPublishPath()}",
-                  "recursive":false
-                }
-              ]
-            }
-            """
-            def buildInfo = server.upload spec: uploadSpec
-            server.publishBuildInfo buildInfo
-          } catch (Exception e) {
-              println("Publishing to Artifactory failed with exception: ${e.message}")
-              currentBuild.result = 'UNSTABLE'
-          }
+    stage ('Enter Docker Container') {
+      agent {
+        docker {
+          reuseNode true
+          registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+          registryCredentialsId 'Artifactory-credential'
+          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/jenkins:latest'
+          alwaysPull true
+          args '-u root --mount type=bind,source=${WORKSPACE},target=/home --workdir="/home'
         }
       }
-    }
-    stage ('Docker') {
-      when {
-        expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-      }
-      steps {
-        script {
-          imageNames = getDockerImageName(env.DOCKERFILE_DIR)
-          docker.withRegistry("https://$ARTIFACTORY_URL", '9db65bd3-f8f0-4de0-b344-449ae2782b86') {
-            for (def name: imageNames) {
-              def tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
-              def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm ." )
-              image.push()
-              buildImages.push(tag_name)
-            }
+      stages {
+        stage ('Build') {
+          steps {
+            script { setBuildStatus("Building", "pending", "jenkins/branch-check"); }
+            echo "Building $ARTIFACT_TAG..."
+            sh './gradlew classes'
           }
         }
-      }
-    }
-    stage ('Deploy') {
-      when {
-        expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-      }
-      steps {
-        echo 'Deployment stage started...'
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'mpsa-aws-test-account']]) {
-          script {
-            echo 'Logging out docker'
-            sh 'docker logout || true'
-            echo 'Logging into ECR'
-            sh('aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR')
+        stage ('Test') {
+          steps {
+            script { setBuildStatus("Testing", "pending", "jenkins/branch-check"); }
+            sh "./gradlew test"
 
-            def filenames = getDockerImageName(env.DOCKERFILE_DIR)
-            docker.withRegistry(AWS_ECR) {
-              for (def name: imageNames) {
-                def old_tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
-                def new_tag_name="$AWS_ECR_PATH/$name:$AWS_TAG"
-                def changeTagCmd = "docker tag $old_tag_name $new_tag_name"
-                def pushCmd = "docker push $new_tag_name"
+              // Jenkins will complain about "old" test results if Gradle didn't need to re-run them.
+              // Bump their last modified time to trick Jenkins.
+              sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
 
-                // retag the image and push to aws
-                sh changeTagCmd
-                sh pushCmd
-                buildImages.push(new_tag_name)
-              }
-              sleep 5
+              junit testResults: '*/build/test-results/test/*.xml'
+          }
+        }
+        stage ('Assemble') {
+          steps {
+            echo 'Publishing JARs and Aerie Docker Compose to Artifactory...'
+            sh '''
+            ASSEMBLE_PREP_DIR=$(mktemp -d)
+            STAGING_DIR=$(mktemp -d)
+
+            ./gradlew assemble
+
+            # For adaptations
+            mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
+            cp banananation/build/libs/*.jar \
+               ${ASSEMBLE_PREP_DIR}/adaptations/
+
+            # For services
+            mkdir -p ${ASSEMBLE_PREP_DIR}/services
+            cp plan-service/build/distributions/*.tar \
+               adaptation-service/build/distributions/*.tar \
+               ${ASSEMBLE_PREP_DIR}/services/
+
+            # For merlin-cli
+            mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-cli
+            cp merlin-cli/build/distributions/*.tar \
+               ${ASSEMBLE_PREP_DIR}/merlin-cli/
+
+            # For docker-compose
+            cp -r ./scripts/docker-compose-aerie ${STAGING_DIR}
+
+            if [[ $GIT_BRANCH =~ staging ]] || [[ $GIT_BRANCH =~ release-.* ]]; then
+                cd ${STAGING_DIR}/docker-compose-aerie
+                echo "# This file contains environment variables used in docker-compose files." > .env
+                echo "AERIE_DOCKER_URL=$ARTIFACT_PATH" >> .env
+                echo "DOCKER_TAG=$DOCKER_TAG" >> .env
+                cd -
+            fi
+
+            tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C ${ASSEMBLE_PREP_DIR}/ .
+            tar -czf aerie-docker-compose.tar.gz -C ${STAGING_DIR}/ .
+            rm -rfv ${ASSEMBLE_PREP_DIR}
+            rm -rfv ${STAGING_DIR}
+            '''
+          }
+        }
+        stage ('Release') {
+          when {
+            expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+          }
+          steps {
+            script {
               try {
-                sh '''
-                 aws ecs stop-task --cluster "aerie-${AWS_TAG}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${AWS_TAG}-cluster" --output text --query taskArns[0])
-                '''
+                def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
+                def uploadSpec =
+                """
+                {
+                  "files": [
+                    {
+                      "pattern": "aerie-${ARTIFACT_TAG}.tar.gz",
+                      "target": "${getPublishPath()}",
+                      "recursive":false
+                    },
+                    {
+                      "pattern": "aerie-docker-compose.tar.gz",
+                      "target": "${getPublishPath()}",
+                      "recursive":false
+                    }
+                  ]
+                }
+                """
+                def buildInfo = server.upload spec: uploadSpec
+                server.publishBuildInfo buildInfo
               } catch (Exception e) {
-                echo "Restarting failed since the task does not exist."
-                echo e.getMessage()
+                  println("Publishing to Artifactory failed with exception: ${e.message}")
+                  currentBuild.result = 'UNSTABLE'
               }
             }
           }
         }
-      }
-    }
-    stage ('Generate Javadoc for Merlin-SDK') {
-      when {
-        expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-      }
-      steps {
-        sh """
-        JAVADOC_PREP_DIR=\$(mktemp -d)
+        stage ('Docker') {
+          when {
+            expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+          }
+          steps {
+            script {
+              imageNames = getDockerImageName(env.DOCKERFILE_DIR)
+              docker.withRegistry("https://$ARTIFACTORY_URL", '9db65bd3-f8f0-4de0-b344-449ae2782b86') {
+                for (def name: imageNames) {
+                  def tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
+                  def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm ." )
+                  image.push()
+                  buildImages.push(tag_name)
+                }
+              }
+            }
+          }
+        }
+        stage ('Deploy') {
+          when {
+            expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+          }
+          steps {
+            echo 'Deployment stage started...'
+            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'mpsa-aws-test-account']]) {
+              script {
+                echo 'Logging out docker'
+                sh 'docker logout || true'
+                echo 'Logging into ECR'
+                sh('aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR')
 
-        ./gradlew merlin-sdk:javadoc
-        cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+                def filenames = getDockerImageName(env.DOCKERFILE_DIR)
+                docker.withRegistry(AWS_ECR) {
+                  for (def name: imageNames) {
+                    def old_tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
+                    def new_tag_name="$AWS_ECR_PATH/$name:$AWS_TAG"
+                    def changeTagCmd = "docker tag $old_tag_name $new_tag_name"
+                    def pushCmd = "docker push $new_tag_name"
 
-        git checkout gh-pages
-        rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc/ javadoc
-        rm -rf \${JAVADOC_PREP_DIR}
+                    // retag the image and push to aws
+                    sh changeTagCmd
+                    sh pushCmd
+                    buildImages.push(new_tag_name)
+                  }
+                  sleep 5
+                  try {
+                    sh '''
+                     aws ecs stop-task --cluster "aerie-${AWS_TAG}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${AWS_TAG}-cluster" --output text --query taskArns[0])
+                    '''
+                  } catch (Exception e) {
+                    echo "Restarting failed since the task does not exist."
+                    echo e.getMessage()
+                  }
+                }
+              }
+            }
+          }
+        }
+        stage ('Generate Javadoc for Merlin-SDK') {
+          when {
+            expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
+          }
+          steps {
+            sh """
+              JAVADOC_PREP_DIR=\$(mktemp -d)
 
-        git config user.email "achong@jpl.nasa.gov"
-        git config user.name "Jenkins gh-pages sync"
-        git add javadoc/
-        git diff --quiet HEAD || git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
-        git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
-        git checkout ${GIT_BRANCH}
-        """
+              ./gradlew merlin-sdk:javadoc
+              cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+
+              git checkout gh-pages
+              rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc/ javadoc
+              rm -rf \${JAVADOC_PREP_DIR}
+
+              git config user.email "achong@jpl.nasa.gov"
+              git config user.name "Jenkins gh-pages sync"
+              git add javadoc/
+              git diff --quiet HEAD || git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
+              git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
+              git checkout ${GIT_BRANCH}
+            """
+          }
+        }
       }
     }
   }
