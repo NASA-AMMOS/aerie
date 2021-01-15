@@ -65,11 +65,11 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
   }
 
   public Value get() {
-    return this.value.ask(now());
+    return this.value.ask();
   }
 
   public boolean isConflicted() {
-    return this.conflicted.ask(now());
+    return this.conflicted.ask();
   }
 
   public Condition<$Schema> isOneOf(final Set<Value> values) {

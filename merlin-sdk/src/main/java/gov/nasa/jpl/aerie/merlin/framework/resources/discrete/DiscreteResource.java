@@ -67,8 +67,8 @@ public abstract class DiscreteResource<$Schema, T> {
   }
 
 
-  public T ask(final History<? extends $Schema> now) {
-    return this.getDynamicsAt(now);
+  public T ask() {
+    return this.getDynamics();
   }
 
   public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {

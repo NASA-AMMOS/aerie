@@ -108,8 +108,8 @@ public abstract class RealResource<$Schema> {
   }
 
 
-  public final double ask(final History<? extends $Schema> now) {
-    return this.getDynamicsAt(now).initial;
+  public final double ask() {
+    return this.getDynamics().initial;
   }
 
   public Condition<$Schema> isBetween(final double lower, final double upper) {

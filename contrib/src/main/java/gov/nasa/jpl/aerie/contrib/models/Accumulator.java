@@ -36,7 +36,7 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
     }
 
     public double get() {
-      return this.resource.ask(now());
+      return this.resource.ask();
     }
 
     public Condition<$Schema> isBetween(final double lower, final double upper) {
@@ -55,7 +55,7 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
     }
 
     public double get() {
-      return this.resource.ask(now());
+      return this.resource.ask();
     }
 
     public void add(final double delta) {
