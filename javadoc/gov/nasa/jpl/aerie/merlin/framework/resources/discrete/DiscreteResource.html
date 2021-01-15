@@ -159,12 +159,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>static &lt;$Schema,&#8203;T&gt;<br><a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;$Schema,&#8203;T&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#atom(gov.nasa.jpl.aerie.merlin.framework.Property)">atom</a></span>&#8203;(<a href="../../Property.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Property</a>&lt;<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends $Schema&gt;,&#8203;T&gt;&nbsp;property)</code></th>
+<td class="colFirst"><code>static &lt;$Schema,&#8203;CellType,&#8203;T&gt;<br><a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;$Schema,&#8203;T&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#atom(gov.nasa.jpl.aerie.merlin.timeline.Query,java.util.function.Function)">atom</a></span>&#8203;(<a href="../../../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;$Schema,&#8203;?,&#8203;CellType&gt;&nbsp;query,
+    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;CellType,&#8203;T&gt;&nbsp;property)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>abstract <a href="../../../protocol/DelimitedDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">DelimitedDynamics</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;</code></td>
+<td class="colFirst"><code>abstract <a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamics</a></span>&#8203;(<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="DiscreteResource.html" title="type parameter in DiscreteResource">$Schema</a>&gt;&nbsp;history)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -215,16 +216,17 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>getDynamics</h4>
-<pre class="methodSignature">public abstract&nbsp;<a href="../../../protocol/DelimitedDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">DelimitedDynamics</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;getDynamics&#8203;(<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="DiscreteResource.html" title="type parameter in DiscreteResource">$Schema</a>&gt;&nbsp;history)</pre>
+<pre class="methodSignature">public abstract&nbsp;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;getDynamics&#8203;(<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="DiscreteResource.html" title="type parameter in DiscreteResource">$Schema</a>&gt;&nbsp;history)</pre>
 </li>
 </ul>
-<a id="atom(gov.nasa.jpl.aerie.merlin.framework.Property)">
+<a id="atom(gov.nasa.jpl.aerie.merlin.timeline.Query,java.util.function.Function)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>atom</h4>
-<pre class="methodSignature">public static&nbsp;&lt;$Schema,&#8203;T&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;$Schema,&#8203;T&gt;&nbsp;atom&#8203;(<a href="../../Property.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Property</a>&lt;<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends $Schema&gt;,&#8203;T&gt;&nbsp;property)</pre>
+<pre class="methodSignature">public static&nbsp;&lt;$Schema,&#8203;CellType,&#8203;T&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;$Schema,&#8203;T&gt;&nbsp;atom&#8203;(<a href="../../../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;$Schema,&#8203;?,&#8203;CellType&gt;&nbsp;query,
+                                                                                      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;CellType,&#8203;T&gt;&nbsp;property)</pre>
 </li>
 </ul>
 <a id="mapped(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,java.util.function.Function)">
