@@ -1,7 +1,7 @@
 pipeline {
 
   agent {
-    label 'coronado || Pismo || San-clemente || Sugarloaf'
+    label 'CAE-Jenkins2-DH-Agents-Linux'
   }
 
   environment {
@@ -23,33 +23,48 @@ pipeline {
         sh "env | sort"
       }
     }
-    stage ('Build') {
-      steps {
-        echo "Building $GIT_BRANCH..."
-        sh './gradlew classes'
-      }
-    }
-    stage ('Test') {
-      steps {
-        script {
-          temp_dir = sh(returnStdout: true, script: "mktemp -d -p ${WORKSPACE}").toString().trim()
-          sh """
-          ./gradlew test
-          mkdir -p ${temp_dir}/test-results
-          find . -name "TEST-*.xml" -exec cp {} ${temp_dir}/test-results \\;
-          scripts/testrail.sh ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
-          """
-          junit testResults: "*/test-results/*.xml"
-          sh "rm -rf ${temp_dir}"
+    stage('Enter Docker Container') {
+      agent {
+        docker {
+          reuseNode true
+          registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+          registryCredentialsId 'Artifactory-credential'
+          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/testrail:latest'
+          alwaysPull true
+          args "-u root --mount type=bind,source=${WORKSPACE},target=/home"
         }
       }
-    }
-    stage ('Publish Snapshot') {
-      steps {
-        sh "./gradlew publish \
-            -PjplArtifactoryUsername=${env.ARTIFACTORY_CREDENTIALS_USR}\
-            -PjplArtifactoryPassword=${env.ARTIFACTORY_CREDENTIALS_PSW}\
-            --info"
+      stages {
+        stage ('Build') {
+          steps {
+            echo "Building $GIT_BRANCH..."
+            sh './gradlew classes'
+          }
+        }
+        stage ('Test') {
+          steps {
+            script {
+              temp_dir = sh(returnStdout: true, script: "mktemp -d -p ${WORKSPACE}").toString().trim()
+              sh """
+                ./gradlew test
+                mkdir -p ${temp_dir}/test-results
+                find . -name "TEST-*.xml" -exec cp {} ${temp_dir}/test-results \\;
+                cd scripts/testrail
+                ./main.py ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
+              """
+              junit testResults: '*/build/test-results/test/*.xml'
+              sh "rm -rf ${temp_dir}"
+            }
+          }
+        }
+        stage ('Publish Snapshot') {
+          steps {
+            sh "./gradlew publish \
+                -PjplArtifactoryUsername=${env.ARTIFACTORY_CREDENTIALS_USR}\
+                -PjplArtifactoryPassword=${env.ARTIFACTORY_CREDENTIALS_PSW}\
+                --info"
+          }
+        }
       }
     }
   }
