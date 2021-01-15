@@ -2,8 +2,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
@@ -25,15 +23,6 @@ public abstract class Model<$Schema> {
     this(registrar.getRootContext());
   }
 
-
-  protected final History<? extends $Schema> now() {
-    return this.context.get().now();
-  }
-
-
-  protected final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
-    this.context.get().emit(event, query);
-  }
 
   protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
     return this.context.get().spawn(type, arguments);
