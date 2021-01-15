@@ -33,30 +33,12 @@ pipeline {
           reuseNode true
           registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
-          image 'gov/nasa/jpl/ammos/mpsa/aerie/ubuntu:18.04'
+          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/document:latest'
           alwaysPull true
-          args '-u root --mount type=bind,source=${WORKSPACE},target=/home --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+          args "-u root --mount type=bind,source=${WORKSPACE},target=/home"
         }
       }
       stages {
-        stage ('Configure docker dependencies') {
-          steps {
-            sh 'apt update'
-            sh 'apt install git -y'
-            sh 'apt install nodejs -y'
-            sh 'apt install npm -y'
-            sh 'npm install -g github-wikito-converter'
-            sh 'apt install xfonts-75dpi -y'
-            sh 'apt install libjpeg-turbo8 -y'
-            sh 'apt install fontconfig -y'
-            sh 'apt install xfonts-base -y'
-            sh 'apt install libxrender1 -y'
-            sh 'apt install rsync -y'
-            sh 'apt install wget -y'
-            sh 'wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb'
-            sh 'dpkg -i wkhtmltox_0.12.5-1.bionic_amd64.deb'
-          }
-        }
         stage ('Setup docker Git credentials') {
           steps {
             sh 'mkdir -p ~/.ssh && mv id_rsa ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa'
