@@ -4,11 +4,9 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
@@ -36,12 +34,14 @@ public final class Registrar<$Schema> {
   }
 
   public <Effect, CellType extends Cell<Effect, CellType>>
-  Query<$Schema, Effect, CellType>
+  CellRef<$Schema, Effect, CellType>
   cell(final CellType initialState)
   {
-    return this.builder.register(
-        Projection.from(initialState.effectTrait(), ev -> ev),
+    final var query = this.builder.register(
+        Projection.<Effect, Effect>from(initialState.effectTrait(), ev -> ev),
         new CellApplicator<>(initialState));
+
+    return new CellRef<>(this.builder.getRootContext(), query);
   }
 
   public <State>

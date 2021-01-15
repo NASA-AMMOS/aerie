@@ -4,12 +4,12 @@ import gov.nasa.jpl.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
@@ -19,7 +19,7 @@ import java.util.Set;
 public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
-  private final Query<$Schema, Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> query;
+  private final CellRef<$Schema, Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;
   public final DiscreteResource<$Schema, Value> value;
   public final DiscreteResource<$Schema, Boolean> conflicted;
 
@@ -32,15 +32,15 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
 
     this.mapper = Objects.requireNonNull(mapper);
 
-    this.query = registrar.cell(new RegisterCell<>(initialValue));
+    this.ref = registrar.cell(new RegisterCell<>(initialValue));
 
     this.value = registrar.resource(
         "value",
-        DiscreteResource.atom(this.query, RegisterCell::getValue),
+        DiscreteResource.atom(this.ref, RegisterCell::getValue),
         mapper);
     this.conflicted = registrar.resource(
         "conflicted",
-        DiscreteResource.atom(this.query, RegisterCell::isConflicted),
+        DiscreteResource.atom(this.ref, RegisterCell::isConflicted),
         new BooleanValueMapper());
   }
 
@@ -61,7 +61,7 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
   }
 
   public void set(final Value value) {
-    emit(Pair.of(Optional.of(value), Set.of(value)), this.query);
+    this.ref.emit(Pair.of(Optional.of(value), Set.of(value)));
   }
 
   public Value get() {

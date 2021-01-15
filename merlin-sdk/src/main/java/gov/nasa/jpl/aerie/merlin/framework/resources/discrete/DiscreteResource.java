@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
+import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 
 import java.util.Objects;
 import java.util.Set;
@@ -15,14 +15,14 @@ public abstract class DiscreteResource<$Schema, T> {
   public abstract T getDynamics(History<? extends $Schema> history);
 
   public static <$Schema, CellType, T>
-  DiscreteResource<$Schema, T> atom(final Query<$Schema, ?, CellType> query, final Function<CellType, T> property) {
-    Objects.requireNonNull(query);
+  DiscreteResource<$Schema, T> atom(final CellRef<$Schema, ?, CellType> ref, final Function<CellType, T> property) {
+    Objects.requireNonNull(ref);
     Objects.requireNonNull(property);
 
     return new DiscreteResource<>() {
       @Override
       public T getDynamics(final History<? extends $Schema> now) {
-        return property.apply(now.ask(query));
+        return property.apply(ref.getAt(now));
       }
     };
   }
