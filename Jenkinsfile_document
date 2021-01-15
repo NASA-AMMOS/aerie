@@ -1,153 +1,157 @@
 pipeline {
 
-    agent {
-        label 'CAE-Jenkins2-DH-Agents-Linux'
+  agent {
+    label 'CAE-Jenkins2-DH-Agents-Linux'
+  }
+  parameters {
+    string(name: 'TAG', defaultValue: 'TEST-Documentation')
+  }
+  stages {
+    stage ('Setup') {
+      steps {
+        echo "Printing environment variables..."
+        sh "env | sort"
+      }
     }
-    parameters {
-        string(name: 'TAG', defaultValue: 'TEST-Documentation')
+    stage ('Passing Deploy Key to Agent') {
+      steps {
+        script {
+          withCredentials(
+            [sshUserPrivateKey(
+              credentialsId: 'GitHub-aerie-write',
+              keyFileVariable: 'DEPLOY_KEY',
+              passphraseVariable: '',
+              usernameVariable: '')]) {
+            sh 'cp ${DEPLOY_KEY} id_rsa'
+          }
+        }
+      }
     }
-    stages {
-        stage ('Setup') {
-            steps {
-                echo "Printing environment variables..."
-                sh "env | sort"
-            }
+    stage ('Enter Docker Container') {
+      agent {
+        docker {
+          reuseNode true
+          registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+          registryCredentialsId 'Artifactory-credential'
+          image 'gov/nasa/jpl/ammos/mpsa/aerie/ubuntu:18.04'
+          alwaysPull true
+          args '-u root --mount type=bind,source=${WORKSPACE},target=/home --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
         }
-        stage ('Passing Deploy Key to Agent') {
-            steps {
-                script {
-                    withCredentials([sshUserPrivateKey(credentialsId: 'GitHub-aerie-write', keyFileVariable: 'DEPLOY_KEY', passphraseVariable: '', usernameVariable: '')]) {
-                        sh 'cp ${DEPLOY_KEY} id_rsa'
-                    }
-                }
-            }
+      }
+      stages {
+        stage ('Configure docker dependencies') {
+          steps {
+            sh 'apt update'
+            sh 'apt install git -y'
+            sh 'apt install nodejs -y'
+            sh 'apt install npm -y'
+            sh 'npm install -g github-wikito-converter'
+            sh 'apt install xfonts-75dpi -y'
+            sh 'apt install libjpeg-turbo8 -y'
+            sh 'apt install fontconfig -y'
+            sh 'apt install xfonts-base -y'
+            sh 'apt install libxrender1 -y'
+            sh 'apt install rsync -y'
+            sh 'apt install wget -y'
+            sh 'wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb'
+            sh 'dpkg -i wkhtmltox_0.12.5-1.bionic_amd64.deb'
+          }
         }
-        stage ('Enter Docker Container') {
-            agent {
-                docker {
-                    reuseNode true
-                    registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
-                    registryCredentialsId 'Artifactory-credential'
-                    image 'gov/nasa/jpl/ammos/mpsa/aerie/ubuntu:18.04'
-                    alwaysPull true
-                    args '-u root --mount type=bind,source=${WORKSPACE},target=/home --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-                }
-            }
-            stages{
-                stage ('Configure docker dependencies') {
-                    steps {
-                        sh 'apt update'
-                        sh 'apt install git -y'
-                        sh 'apt install nodejs -y'
-                        sh 'apt install npm -y'
-                        sh 'npm install -g github-wikito-converter'
-                        sh 'apt install xfonts-75dpi -y'
-                        sh 'apt install libjpeg-turbo8 -y'
-                        sh 'apt install fontconfig -y'
-                        sh 'apt install xfonts-base -y'
-                        sh 'apt install libxrender1 -y'
-                        sh 'apt install rsync -y'
-                        sh 'apt install wget -y'
-                        sh 'wget https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb'
-                        sh 'dpkg -i wkhtmltox_0.12.5-1.bionic_amd64.deb'
-
-                    }
-                }
-                stage ('Setup docker Git credentials') {
-                    steps {
-                        sh 'mkdir -p ~/.ssh && mv id_rsa ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa'
-                        sh 'ssh-keyscan -t rsa github.jpl.nasa.gov >> ~/.ssh/known_hosts'
-                    }
-                }
-                stage ('Checkout gh-pages') {
-                    steps{
-                        sh 'git checkout gh-pages'
-                        sh 'git pull --ff-only'
-                        sh 'git log -1'
-                    }
-                }
-                stage ('Clone Aerie.wiki repo') {
-                    steps {
-                        sh 'git clone git@github.jpl.nasa.gov:Aerie/aerie.wiki.git'
-                    }
-                }
-                stage ('Building HTML documents') {
-                    steps {
-                        sh """
-                            DOC_PREP_DIR=\$(mktemp -d)
-                            mkdir -p \${DOC_PREP_DIR}/wiki
-                            gwtc -f html -n index -t ${TAG} -o \${DOC_PREP_DIR}/wiki ./aerie.wiki
-                            rsync -av --delete \${DOC_PREP_DIR}/wiki ${TAG}
-                            rm -rf \${DOC_PREP_DIR}
-                        """
-                    }
-                }
-                stage ('Building PDF documents') {
-                    steps {
-                        sh """
-                            DOC_PREP_DIR=\$(mktemp -d)
-                            mkdir -p \${DOC_PREP_DIR}/pdf
-                            gwtc -f pdf -n Aerie-${TAG} -t ${TAG} -o \${DOC_PREP_DIR}/pdf ./aerie.wiki
-                            rsync -av --delete \${DOC_PREP_DIR}/pdf ${TAG}
-                            rm -rf \${DOC_PREP_DIR}
-                        """
-                    }
-                }
-                stage ('Copying JAVADOC documents') {
-                    steps {
-                        sh """
-                            rsync -av --delete javadoc ${TAG}
-                        """
-                    }
-                }
-                stage ('Upload documents') {
-                    steps {
-                        sh 'pwd'
-                        sh 'git config user.email "achong@jpl.nasa.gov"'
-                        sh 'git config user.name "Automatic Job"'
-                        sh 'git add ${TAG}/wiki'
-                        sh 'git add ${TAG}/pdf'
-                        sh 'git add ${TAG}/javadoc'
-                        sh 'git status -uno'
-                        sh 'git commit -m "Auto commit generated documents"'
-                        sh 'git push'
-                    }
-                }
-            }
-            post {
-                cleanup {
-                    sh 'rm ~/.ssh/id_rsa'
-                }
-            }
+        stage ('Setup docker Git credentials') {
+          steps {
+            sh 'mkdir -p ~/.ssh && mv id_rsa ~/.ssh/id_rsa && chmod og-rwx ~/.ssh/id_rsa'
+            sh 'ssh-keyscan -t rsa github.jpl.nasa.gov >> ~/.ssh/known_hosts'
+          }
         }
-    }
-    post {
-        always {
-            echo 'Cleaning up images'
-            sh "docker image prune -f"
-
-            echo 'Logging out docker'
-            sh 'docker logout || true'
+        stage ('Checkout gh-pages') {
+          steps {
+              sh 'git checkout gh-pages'
+              sh 'git pull --ff-only'
+              sh 'git log -1'
+          }
         }
-        unstable {
-            emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <p>Jenkins job unstable (failed tests): <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
-            """,
-            mimeType: 'text/html',
-            recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
+        stage ('Clone Aerie.wiki repo') {
+          steps {
+            sh 'git clone git@github.jpl.nasa.gov:Aerie/aerie.wiki.git'
+          }
         }
-        failure {
-            emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <p>Jenkins job failure: <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
-            """,
-            mimeType: 'text/html',
-            recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+        stage ('Building HTML documents') {
+          steps {
+            sh """
+              DOC_PREP_DIR=\$(mktemp -d)
+              mkdir -p \${DOC_PREP_DIR}/wiki
+              gwtc -f html -n index -t ${TAG} -o \${DOC_PREP_DIR}/wiki ./aerie.wiki
+              rsync -av --delete \${DOC_PREP_DIR}/wiki ${TAG}
+              rm -rf \${DOC_PREP_DIR}
+            """
+          }
         }
+        stage ('Building PDF documents') {
+          steps {
+            sh """
+              DOC_PREP_DIR=\$(mktemp -d)
+              mkdir -p \${DOC_PREP_DIR}/pdf
+              gwtc -f pdf -n Aerie-${TAG} -t ${TAG} -o \${DOC_PREP_DIR}/pdf ./aerie.wiki
+              rsync -av --delete \${DOC_PREP_DIR}/pdf ${TAG}
+              rm -rf \${DOC_PREP_DIR}
+            """
+          }
+        }
+        stage ('Copying JAVADOC documents') {
+          steps {
+            sh """
+              rsync -av --delete javadoc ${TAG}
+            """
+          }
+        }
+        stage ('Upload documents') {
+          steps {
+            sh 'pwd'
+            sh 'git config user.email "achong@jpl.nasa.gov"'
+            sh 'git config user.name "Automatic Job"'
+            sh 'git add ${TAG}/wiki'
+            sh 'git add ${TAG}/pdf'
+            sh 'git add ${TAG}/javadoc'
+            sh 'git status -uno'
+            sh 'git commit -m "Auto commit generated documents"'
+            sh 'git push'
+          }
+        }
+      }
+      post {
         cleanup {
-            cleanWs()
-            deleteDir()
+          sh 'rm ~/.ssh/id_rsa'
         }
+      }
     }
+  }
+  post {
+    always {
+      echo 'Cleaning up images'
+      sh "docker image prune -f"
+
+      echo 'Logging out docker'
+      sh 'docker logout || true'
+    }
+    unstable {
+      emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+      body: """
+          <p>Jenkins job unstable (failed tests): <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
+      """,
+      mimeType: 'text/html',
+      recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
+    }
+    failure {
+      emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+      body: """
+          <p>Jenkins job failure: <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
+      """,
+      mimeType: 'text/html',
+      recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+    }
+    cleanup {
+      cleanWs()
+      deleteDir()
+    }
+  }
 }
