@@ -18,7 +18,6 @@ import java.time.Instant;
 public final class Mission extends Model {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
-  // Need to collect profiles from published resources as simulation proceeds.
   // Need to generalize RealDynamics to nonlinear polynomials.
 
   public final Register<Double> foo;
