@@ -25,7 +25,7 @@ public final class Mission<$Schema> extends Model<$Schema> {
   public final SampledResource<$Schema, Double> batterySoC;
   public final Counter<$Schema, Integer> activitiesExecuted;
 
-  public final RealResource<$Schema> combo;
+  public final RealResource combo;
 
   public final Clock<$Schema> utcClock;
 

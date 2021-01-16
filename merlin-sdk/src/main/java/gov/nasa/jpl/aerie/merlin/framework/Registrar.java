@@ -50,8 +50,8 @@ public final class Registrar<$Schema> {
   }
 
   public
-  RealResource<$Schema>
-  resource(final String name, final RealResource<$Schema> resource) {
+  RealResource
+  resource(final String name, final RealResource resource) {
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }

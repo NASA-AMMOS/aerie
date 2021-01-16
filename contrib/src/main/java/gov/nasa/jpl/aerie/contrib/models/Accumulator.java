@@ -29,9 +29,9 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
   }
 
   public final class Volume {
-    public final RealResource<$Schema> resource;
+    public final RealResource resource;
 
-    private Volume(final CellRef<$Schema, Double, LinearIntegrationCell> ref) {
+    private Volume(final CellRef<?, Double, LinearIntegrationCell> ref) {
       this.resource = RealResource.atom(ref, LinearIntegrationCell::getVolume);
     }
 
@@ -39,17 +39,17 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
       return this.resource.ask();
     }
 
-    public Condition<$Schema> isBetween(final double lower, final double upper) {
+    public Condition<?> isBetween(final double lower, final double upper) {
       return this.resource.isBetween(lower, upper);
     }
   }
 
   public final class Rate {
-    private final CellRef<$Schema, Double, LinearIntegrationCell> ref;
+    private final CellRef<?, Double, LinearIntegrationCell> ref;
 
-    public final RealResource<$Schema> resource;
+    public final RealResource resource;
 
-    private Rate(final CellRef<$Schema, Double, LinearIntegrationCell> ref) {
+    private Rate(final CellRef<?, Double, LinearIntegrationCell> ref) {
       this.ref = ref;
       this.resource = RealResource.atom(ref, LinearIntegrationCell::getRate);
     }
@@ -62,7 +62,7 @@ public final class Accumulator<$Schema> extends Model<$Schema> {
       this.ref.emit(delta);
     }
 
-    public Condition<$Schema> isBetween(final double lower, final double upper) {
+    public Condition<?> isBetween(final double lower, final double upper) {
       return this.resource.isBetween(lower, upper);
     }
   }

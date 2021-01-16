@@ -53,7 +53,7 @@ public final class AdaptationBuilder<$Schema> {
     this.state.discrete(name, resource, mapper);
   }
 
-  public void real(final String name, final RealResource<$Schema> resource) {
+  public void real(final String name, final RealResource resource) {
     this.state.real(name, resource);
   }
 
@@ -120,7 +120,7 @@ public final class AdaptationBuilder<$Schema> {
 
     void
     real(String name,
-         RealResource<$Schema> resource);
+         RealResource resource);
 
     void
     constraint(String id,
@@ -141,7 +141,7 @@ public final class AdaptationBuilder<$Schema> {
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
     private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
-    private final Map<String, RealResource<$Schema>> realResources = new HashMap<>();
+    private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
@@ -156,7 +156,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void real(final String name, final RealResource<$Schema> resource) {
+    public void real(final String name, final RealResource resource) {
       this.realResources.put(name, resource);
     }
 
@@ -213,7 +213,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void real(final String name, final RealResource<$Schema> resource) {
+    public void real(final String name, final RealResource resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
