@@ -110,10 +110,14 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public void waitUntil(final Condition<$Schema> condition) {
+  public void waitUntil(final Condition<?> condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.scheduler = this.handle.yield(TaskStatus.awaiting(condition));
+
+      // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+      @SuppressWarnings("unchecked")
+      final var brandedCondition = (Condition<$Schema>) condition;
+      this.scheduler = this.handle.yield(TaskStatus.awaiting(brandedCondition));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;

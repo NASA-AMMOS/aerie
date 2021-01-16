@@ -53,7 +53,7 @@ public abstract class Model<$Schema> {
     this.context.get().waitFor(id);
   }
 
-  protected final void waitUntil(final Condition<$Schema> condition) {
+  protected final void waitUntil(final Condition<?> condition) {
     this.context.get().waitUntil(condition);
   }
 }
