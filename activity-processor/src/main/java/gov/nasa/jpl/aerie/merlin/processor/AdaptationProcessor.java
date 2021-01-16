@@ -612,9 +612,7 @@ public final class AdaptationProcessor implements Processor {
                         "builder",
                         Modifier.FINAL)
                     .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(adaptation.topLevelModel),
-                            TypeVariableName.get("$Schema")),
+                        ClassName.get(adaptation.topLevelModel),
                         "model",
                         Modifier.FINAL)
                     .addStatement(
@@ -886,9 +884,7 @@ public final class AdaptationProcessor implements Processor {
                     .addParameter(
                         ParameterSpec
                             .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(adaptation.topLevelModel),
-                                    TypeVariableName.get("$Schema")),
+                                ClassName.get(adaptation.topLevelModel),
                                 "model")
                             .build())
                     .build())
@@ -908,9 +904,7 @@ public final class AdaptationProcessor implements Processor {
                     .addParameter(
                         ParameterSpec
                             .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(adaptation.topLevelModel),
-                                    TypeVariableName.get("$Schema")),
+                                ClassName.get(adaptation.topLevelModel),
                                 "model")
                             .build())
                     .addStatement(
@@ -980,7 +974,7 @@ public final class AdaptationProcessor implements Processor {
                         "builder",
                         "builder")
                     .addStatement(
-                        "final var $L = new $T<>($L)",
+                        "final var $L = new $T($L)",
                         "model",
                         ClassName.get(adaptation.topLevelModel),
                         "registrar")

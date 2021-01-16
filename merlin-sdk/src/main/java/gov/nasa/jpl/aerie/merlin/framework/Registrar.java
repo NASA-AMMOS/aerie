@@ -15,7 +15,7 @@ public final class Registrar<$Schema> {
   private final String namespace;
 
   public Registrar(
-      final AdaptationBuilder<$Schema> builder,
+      final AdaptationBuilder<?> builder,
       final Supplier<? extends Context<?>> rootContext,
       final String namespace)
   {

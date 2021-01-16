@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
 import java.time.Instant;
 
-public final class Mission<$Schema> extends Model {
+public final class Mission extends Model {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
   // Need to collect profiles from published resources as simulation proceeds.
@@ -29,7 +29,7 @@ public final class Mission<$Schema> extends Model {
 
   public final Clock utcClock;
 
-  public Mission(final Registrar<$Schema> registrar) {
+  public Mission(final Registrar<?> registrar) {
     super(registrar);
 
     this.foo = Register.create(registrar.descend("foo"), 0.0);

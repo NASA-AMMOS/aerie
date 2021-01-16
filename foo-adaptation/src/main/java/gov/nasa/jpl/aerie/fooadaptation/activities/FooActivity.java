@@ -27,7 +27,7 @@ public final class FooActivity {
   }
 
   public final class EffectModel<$Schema> extends Task<$Schema> {
-    public void run(final Mission<$Schema> mission) {
+    public void run(final Mission mission) {
       final var data = mission.data;
 
       if (y.equals("test")) {
