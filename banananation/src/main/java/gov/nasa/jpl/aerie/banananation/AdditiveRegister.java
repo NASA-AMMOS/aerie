@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 public final class AdditiveRegister<$Schema> extends Model {
-  public final Register<$Schema, Double> value;
+  public final Register<Double> value;
   public final DiscreteResource<Boolean> conflicted;
 
   public AdditiveRegister(final Registrar<$Schema> registrar, final double initialValue) {

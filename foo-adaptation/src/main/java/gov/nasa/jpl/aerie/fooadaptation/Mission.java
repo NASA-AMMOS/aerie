@@ -18,7 +18,7 @@ public final class Mission<$Schema> extends Model {
   // Need to collect profiles from published resources as simulation proceeds.
   // Need to generalize RealDynamics to nonlinear polynomials.
 
-  public final Register<$Schema, Double> foo;
+  public final Register<Double> foo;
   public final Accumulator<$Schema> data;
   public final Accumulator<$Schema> source;
   public final Accumulator<$Schema> sink;

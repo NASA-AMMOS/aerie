@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 
 public class SampledResource<$Schema, T> extends Model {
-  private final Register<$Schema, T> result;
+  private final Register<T> result;
   private final Supplier<T> sampler;
 
   public SampledResource(
