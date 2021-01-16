@@ -637,11 +637,10 @@ public final class AdaptationProcessor implements Processor {
                                                      "$L.threadedTask("
                                                      + "\n" + "new $T(),"
                                                      + "\n" + "activity -> $>$>activity"
-                                                     + "\n" + ".new EffectModel<$T>()"
+                                                     + "\n" + ".new EffectModel()"
                                                      + "\n" + ".runWith($L.get(), $L)$<$<)",
                                                      "builder",
                                                      activityType.mapper.name,
-                                                     TypeVariableName.get("$Schema"),
                                                      "rootContext",
                                                      "model")
                                              : CodeBlock
@@ -650,11 +649,10 @@ public final class AdaptationProcessor implements Processor {
                                                      "$L.replayingTask("
                                                      + "\n" + "new $T(),"
                                                      + "\n" + "activity -> $>$>activity"
-                                                     + "\n" + ".new EffectModel<$T>()"
+                                                     + "\n" + ".new EffectModel()"
                                                      + "\n" + ".runWith($L.get(), $L)$<$<)",
                                                      "builder",
                                                      activityType.mapper.name,
-                                                     TypeVariableName.get("$Schema"),
                                                      "rootContext",
                                                      "model"))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -830,7 +828,6 @@ public final class AdaptationProcessor implements Processor {
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .addTypeVariable(TypeVariableName.get("$Schema"))
             .superclass(adaptation.getModelName())
             .addField(
                 FieldSpec
@@ -839,7 +836,7 @@ public final class AdaptationProcessor implements Processor {
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Scoped.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                TypeVariableName.get("$Schema"))),
+                                WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))),
                         "context")
                     .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                     .build())
@@ -854,7 +851,7 @@ public final class AdaptationProcessor implements Processor {
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Scoped.class),
                                     ParameterizedTypeName.get(
                                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                        TypeVariableName.get("$Schema"))),
+                                        WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))),
                                 "context")
                             .addModifiers(Modifier.FINAL)
                             .build())
@@ -896,7 +893,7 @@ public final class AdaptationProcessor implements Processor {
                             .builder(
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                    TypeVariableName.get("$Schema")),
+                                    WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
                                 "context")
                             .build())
                     .addParameter(

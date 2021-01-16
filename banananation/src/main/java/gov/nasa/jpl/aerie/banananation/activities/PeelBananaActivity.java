@@ -30,7 +30,7 @@ public final class PeelBananaActivity {
     return List.of("fromStem", "fromTip").contains(this.peelDirection);
   }
 
-  public final class EffectModel<$Schema> extends Task<$Schema> {
+  public final class EffectModel extends Task {
     public void run(final Mission mission) {
       if (peelDirection.equals("fromStem")) {
         mission.fruit.subtract(MASHED_BANANA_AMOUNT);

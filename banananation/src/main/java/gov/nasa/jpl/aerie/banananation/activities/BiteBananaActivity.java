@@ -25,7 +25,7 @@ public final class BiteBananaActivity {
     return this.biteSize > 0;
   }
 
-  public final class EffectModel<$Schema> extends Task<$Schema> {
+  public final class EffectModel extends Task {
     public void run(final Mission mission) {
       mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
       mission.fruit.subtract(biteSize);
