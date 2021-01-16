@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-public final class Register<$Schema, Value> extends Model<$Schema> {
+public final class Register<$Schema, Value> extends Model {
   private final ValueMapper<Value> mapper;
 
   private final CellRef<Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;

@@ -8,18 +8,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public abstract class Model<$Schema> {
-  private final Supplier<? extends Context<$Schema>> context;
+public abstract class Model {
+  private final Supplier<? extends Context<?>> context;
 
-  protected Model(final Supplier<? extends Context<$Schema>> context) {
+  protected Model(final Supplier<? extends Context<?>> context) {
     this.context = Objects.requireNonNull(context);
   }
 
-  protected Model(final Context<$Schema> context) {
+  protected Model(final Context<?> context) {
     this(() -> context);
   }
 
-  protected Model(final Registrar<$Schema> registrar) {
+  protected Model(final Registrar<?> registrar) {
     this(registrar.getRootContext());
   }
 

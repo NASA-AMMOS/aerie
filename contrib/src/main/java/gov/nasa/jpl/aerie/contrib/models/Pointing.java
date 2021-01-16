@@ -10,7 +10,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
  * Each component contains a value and rate <code>Accumulator</code>, which exposes an underlying resource and
  * convenience methods.
  */
-public final class Pointing<$Schema> extends Model<$Schema> {
+public final class Pointing<$Schema> extends Model {
   public final Component x, y, z;
 
   public Pointing(final Registrar<$Schema> registrar, final Vector3D initialVec) {

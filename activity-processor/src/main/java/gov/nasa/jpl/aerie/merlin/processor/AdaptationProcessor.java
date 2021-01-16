@@ -685,11 +685,7 @@ public final class AdaptationProcessor implements Processor {
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .addTypeVariable(TypeVariableName.get("$Schema"))
-            .superclass(
-                ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Model.class),
-                    TypeVariableName.get("$Schema")))
+            .superclass(gov.nasa.jpl.aerie.merlin.framework.Model.class)
             .addMethod(
                 MethodSpec
                     .constructorBuilder()
@@ -702,7 +698,7 @@ public final class AdaptationProcessor implements Processor {
                                     WildcardTypeName.subtypeOf(
                                         ParameterizedTypeName.get(
                                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                            TypeVariableName.get("$Schema")))),
+                                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))),
                                 "context")
                             .addModifiers(Modifier.FINAL)
                             .build())
@@ -717,7 +713,7 @@ public final class AdaptationProcessor implements Processor {
                             .builder(
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
-                                    TypeVariableName.get("$Schema")),
+                                    WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
                                 "registrar")
                             .addModifiers(Modifier.FINAL)
                             .build())
@@ -839,10 +835,7 @@ public final class AdaptationProcessor implements Processor {
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
             .addTypeVariable(TypeVariableName.get("$Schema"))
-            .superclass(
-                ParameterizedTypeName.get(
-                    adaptation.getModelName(),
-                    TypeVariableName.get("$Schema")))
+            .superclass(adaptation.getModelName())
             .addField(
                 FieldSpec
                     .builder(

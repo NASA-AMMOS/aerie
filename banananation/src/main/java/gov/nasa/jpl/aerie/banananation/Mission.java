@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.banananation.generated.Model;
 import gov.nasa.jpl.aerie.contrib.models.Register;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 
-public class Mission<$Schema> extends Model<$Schema> {
+public class Mission<$Schema> extends Model {
   public final AdditiveRegister<$Schema> fruit;
   public final AdditiveRegister<$Schema> peel;
   public final Register<$Schema, Flag> flag;

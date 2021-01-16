@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 
 import java.time.Instant;
 
-public final class Clock<$Schema> extends Model<$Schema> {
+public final class Clock<$Schema> extends Model {
   private final Accumulator<$Schema> ticks;
   private final Instant startTime;
 

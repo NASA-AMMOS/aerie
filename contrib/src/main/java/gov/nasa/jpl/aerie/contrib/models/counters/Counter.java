@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import java.util.function.BinaryOperator;
 
 
-public final class Counter<$Schema, T> extends Model<$Schema> {
+public final class Counter<$Schema, T> extends Model {
   public final DiscreteResource<T> value;
 
   private final CellRef<T, CounterCell<T>> ref;

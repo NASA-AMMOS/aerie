@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 
-public final class Accumulator<$Schema> extends Model<$Schema> {
+public final class Accumulator<$Schema> extends Model {
   public final Volume volume;
   public final Rate rate;
 
