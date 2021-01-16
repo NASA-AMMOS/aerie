@@ -55,11 +55,11 @@ public final class Pointing<$Schema> extends Model {
   }
 
   public final class Component {
-    public final Accumulator<$Schema>.Volume value;
-    public final Accumulator<$Schema>.Rate rate;
+    public final Accumulator.Volume value;
+    public final Accumulator.Rate rate;
 
     public Component(final Registrar<$Schema> registrar, final double value, final double rate) {
-      final var acc = new Accumulator<>(registrar, value, rate);
+      final var acc = new Accumulator(registrar, value, rate);
       this.value = acc.volume;
       this.rate = acc.rate;
     }

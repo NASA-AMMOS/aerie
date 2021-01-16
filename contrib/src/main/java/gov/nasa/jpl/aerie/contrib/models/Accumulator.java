@@ -7,16 +7,16 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 
-public final class Accumulator<$Schema> extends Model {
+public final class Accumulator extends Model {
   public final Volume volume;
   public final Rate rate;
 
-  public Accumulator(final Registrar<$Schema> registrar) {
+  public Accumulator(final Registrar<?> registrar) {
     this(registrar, 0.0, 0.0);
   }
 
   public Accumulator(
-      final Registrar<$Schema> registrar,
+      final Registrar<?> registrar,
       final double initialVolume,
       final double initialRate)
   {
@@ -28,7 +28,7 @@ public final class Accumulator<$Schema> extends Model {
     this.rate = new Rate(ref);
   }
 
-  public final class Volume {
+  public static final class Volume {
     public final RealResource resource;
 
     private Volume(final CellRef<Double, LinearIntegrationCell> ref) {
@@ -44,7 +44,7 @@ public final class Accumulator<$Schema> extends Model {
     }
   }
 
-  public final class Rate {
+  public static final class Rate {
     private final CellRef<Double, LinearIntegrationCell> ref;
 
     public final RealResource resource;

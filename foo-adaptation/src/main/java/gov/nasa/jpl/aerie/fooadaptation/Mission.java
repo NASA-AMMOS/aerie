@@ -19,9 +19,9 @@ public final class Mission<$Schema> extends Model {
   // Need to generalize RealDynamics to nonlinear polynomials.
 
   public final Register<Double> foo;
-  public final Accumulator<$Schema> data;
-  public final Accumulator<$Schema> source;
-  public final Accumulator<$Schema> sink;
+  public final Accumulator data;
+  public final Accumulator source;
+  public final Accumulator sink;
   public final SampledResource<$Schema, Double> batterySoC;
   public final Counter<$Schema, Integer> activitiesExecuted;
 
@@ -33,11 +33,11 @@ public final class Mission<$Schema> extends Model {
     super(registrar);
 
     this.foo = Register.create(registrar.descend("foo"), 0.0);
-    this.data = new Accumulator<>(registrar.descend("data"));
+    this.data = new Accumulator(registrar.descend("data"));
     this.combo = this.data.volume.resource.plus(this.data.rate.resource);
 
-    this.source = new Accumulator<>(registrar.descend("source"), 100.0, 1.0);
-    this.sink = new Accumulator<>(registrar.descend("sink"), 0.0, 0.5);
+    this.source = new Accumulator(registrar.descend("source"), 100.0, 1.0);
+    this.sink = new Accumulator(registrar.descend("sink"), 0.0, 0.5);
 
     this.activitiesExecuted = Counter.ofInteger(registrar.descend("activities"), 0);
 
