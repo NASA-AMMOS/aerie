@@ -27,7 +27,7 @@ public final class Mission<$Schema> extends Model {
 
   public final RealResource combo;
 
-  public final Clock<$Schema> utcClock;
+  public final Clock utcClock;
 
   public Mission(final Registrar<$Schema> registrar) {
     super(registrar);
@@ -48,7 +48,7 @@ public final class Mission<$Schema> extends Model {
         new DoubleValueMapper());
 
     Instant instant = Instant.parse("2023-08-18T00:00:00.00Z");
-    this.utcClock = new Clock<>(registrar.descend("utcClock"), instant);
+    this.utcClock = new Clock(registrar.descend("utcClock"), instant);
     // TODO: automatically perform this for each @Daemon annotation
     registrar.daemon("test", this::test);
 
