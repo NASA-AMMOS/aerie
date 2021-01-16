@@ -29,7 +29,7 @@ public final class DiscreteResourceSolver<$Schema, Resource>
       final DiscreteResource<$Schema, Resource> resource,
       final History<? extends $Schema> now)
   {
-    return resource.getDynamics(now);
+    return resource.getDynamicsAt(now);
   }
 
   @Override

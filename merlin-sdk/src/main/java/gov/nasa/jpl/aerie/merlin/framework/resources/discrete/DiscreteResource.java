@@ -12,7 +12,12 @@ import java.util.function.Function;
 public abstract class DiscreteResource<$Schema, T> {
   private DiscreteResource() {}
 
-  public abstract T getDynamics(History<? extends $Schema> history);
+  protected abstract T getDynamics(final CellGetter<$Schema> getter);
+
+  private interface CellGetter<$Schema> {
+    <CellType> CellType get(CellRef<$Schema, ?, CellType> ref);
+  }
+
 
   public static <$Schema, CellType, T>
   DiscreteResource<$Schema, T> atom(final CellRef<$Schema, ?, CellType> ref, final Function<CellType, T> property) {
@@ -21,8 +26,8 @@ public abstract class DiscreteResource<$Schema, T> {
 
     return new DiscreteResource<>() {
       @Override
-      public T getDynamics(final History<? extends $Schema> now) {
-        return property.apply(ref.getAt(now));
+      protected T getDynamics(final CellGetter<$Schema> getter) {
+        return property.apply(getter.get(ref));
       }
     };
   }
@@ -34,15 +39,36 @@ public abstract class DiscreteResource<$Schema, T> {
 
     return new DiscreteResource<>() {
       @Override
-      public S getDynamics(final History<? extends $Schema> now) {
-        return transform.apply(resource.getDynamics(now));
+      protected S getDynamics(final CellGetter<$Schema> getter) {
+        return transform.apply(resource.getDynamics(getter));
       }
     };
   }
 
 
+  public final T getDynamics() {
+    return this.getDynamics(new CellGetter<>() {
+      @Override
+      public <CellType> CellType get(final CellRef<$Schema, ?, CellType> ref) {
+        return ref.get();
+      }
+    });
+  }
+
+  public final T getDynamicsAt(final History<? extends $Schema> now) {
+    Objects.requireNonNull(now);
+
+    return this.getDynamics(new CellGetter<>() {
+      @Override
+      public <CellType> CellType get(final CellRef<$Schema, ?, CellType> ref) {
+        return ref.getAt(now);
+      }
+    });
+  }
+
+
   public T ask(final History<? extends $Schema> now) {
-    return this.getDynamics(now);
+    return this.getDynamicsAt(now);
   }
 
   public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {

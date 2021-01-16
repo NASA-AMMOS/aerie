@@ -11,7 +11,12 @@ import java.util.function.Function;
 public abstract class RealResource<$Schema> {
   private RealResource() {}
 
-  public abstract RealDynamics getDynamics(final History<? extends $Schema> now);
+  protected abstract RealDynamics getDynamics(final CellGetter<$Schema> getter);
+
+  private interface CellGetter<$Schema> {
+    <CellType> CellType get(CellRef<$Schema, ?, CellType> ref);
+  }
+
 
   public static <$Schema, CellType>
   RealResource<$Schema>
@@ -21,8 +26,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public RealDynamics getDynamics(final History<? extends $Schema> now) {
-        return property.apply(ref.getAt(now));
+      public RealDynamics getDynamics(final CellGetter<$Schema> getter) {
+        return property.apply(getter.get(ref));
       }
     };
   }
@@ -34,8 +39,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public RealDynamics getDynamics(final History<? extends $Schema> now) {
-        return resource.getDynamics(now).scaledBy(scalar);
+      public RealDynamics getDynamics(final CellGetter<$Schema> getter) {
+        return resource.getDynamics(getter).scaledBy(scalar);
       }
     };
   }
@@ -48,8 +53,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public RealDynamics getDynamics(final History<? extends $Schema> now) {
-        return left.getDynamics(now).plus(right.getDynamics(now));
+      public RealDynamics getDynamics(final CellGetter<$Schema> getter) {
+        return left.getDynamics(getter).plus(right.getDynamics(getter));
       }
     };
   }
@@ -62,8 +67,8 @@ public abstract class RealResource<$Schema> {
 
     return new RealResource<>() {
       @Override
-      public RealDynamics getDynamics(final History<? extends $Schema> now) {
-        return left.getDynamics(now).minus(right.getDynamics(now));
+      public RealDynamics getDynamics(final CellGetter<$Schema> getter) {
+        return left.getDynamics(getter).minus(right.getDynamics(getter));
       }
     };
   }
@@ -82,8 +87,29 @@ public abstract class RealResource<$Schema> {
   }
 
 
+  public final RealDynamics getDynamics() {
+    return this.getDynamics(new CellGetter<>() {
+      @Override
+      public <CellType> CellType get(final CellRef<$Schema, ?, CellType> ref) {
+        return ref.get();
+      }
+    });
+  }
+
+  public final RealDynamics getDynamicsAt(final History<? extends $Schema> now) {
+    Objects.requireNonNull(now);
+
+    return this.getDynamics(new CellGetter<>() {
+      @Override
+      public <CellType> CellType get(final CellRef<$Schema, ?, CellType> ref) {
+        return ref.getAt(now);
+      }
+    });
+  }
+
+
   public final double ask(final History<? extends $Schema> now) {
-    return this.getDynamics(now).initial;
+    return this.getDynamicsAt(now).initial;
   }
 
   public Condition<$Schema> isBetween(final double lower, final double upper) {
