@@ -22,7 +22,7 @@ public final class Mission<$Schema> extends Model {
   public final Accumulator data;
   public final Accumulator source;
   public final Accumulator sink;
-  public final SampledResource<$Schema, Double> batterySoC;
+  public final SampledResource<Double> batterySoC;
   public final Counter<Integer> activitiesExecuted;
 
   public final RealResource combo;
