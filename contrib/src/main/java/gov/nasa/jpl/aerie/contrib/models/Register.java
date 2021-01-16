@@ -19,9 +19,9 @@ import java.util.Set;
 public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
-  private final CellRef<$Schema, Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;
-  public final DiscreteResource<$Schema, Value> value;
-  public final DiscreteResource<$Schema, Boolean> conflicted;
+  private final CellRef<?, Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;
+  public final DiscreteResource<Value> value;
+  public final DiscreteResource<Boolean> conflicted;
 
   public Register(
       final Registrar<$Schema> registrar,
@@ -72,16 +72,16 @@ public final class Register<$Schema, Value> extends Model<$Schema> {
     return this.conflicted.ask();
   }
 
-  public Condition<$Schema> isOneOf(final Set<Value> values) {
+  public Condition<?> isOneOf(final Set<Value> values) {
     return this.value.isOneOf(values, this.mapper);
   }
 
   @SafeVarargs
-  public final Condition<$Schema> isOneOf(final Value... values) {
+  public final Condition<?> isOneOf(final Value... values) {
     return this.isOneOf(Set.of(values));
   }
 
-  public Condition<$Schema> is(final Value value) {
+  public Condition<?> is(final Value value) {
     return this.isOneOf(value);
   }
 }

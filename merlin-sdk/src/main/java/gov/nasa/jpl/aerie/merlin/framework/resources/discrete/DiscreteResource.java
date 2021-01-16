@@ -9,37 +9,37 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
-public abstract class DiscreteResource<$Schema, T> {
+public abstract class DiscreteResource<T> {
   private DiscreteResource() {}
 
-  protected abstract T getDynamics(final CellGetter<$Schema> getter);
+  protected abstract T getDynamics(final CellGetter getter);
 
-  private interface CellGetter<$Schema> {
-    <CellType> CellType get(CellRef<$Schema, ?, CellType> ref);
+  private interface CellGetter {
+    <CellType> CellType get(CellRef<?, ?, CellType> ref);
   }
 
 
-  public static <$Schema, CellType, T>
-  DiscreteResource<$Schema, T> atom(final CellRef<$Schema, ?, CellType> ref, final Function<CellType, T> property) {
+  public static <CellType, T>
+  DiscreteResource<T> atom(final CellRef<?, ?, CellType> ref, final Function<CellType, T> property) {
     Objects.requireNonNull(ref);
     Objects.requireNonNull(property);
 
     return new DiscreteResource<>() {
       @Override
-      protected T getDynamics(final CellGetter<$Schema> getter) {
+      protected T getDynamics(final CellGetter getter) {
         return property.apply(getter.get(ref));
       }
     };
   }
 
-  public static <$Schema, T, S>
-  DiscreteResource<$Schema, S> mapped(final DiscreteResource<$Schema, T> resource, final Function<T, S> transform) {
+  public static <T, S>
+  DiscreteResource<S> mapped(final DiscreteResource<T> resource, final Function<T, S> transform) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(transform);
 
     return new DiscreteResource<>() {
       @Override
-      protected S getDynamics(final CellGetter<$Schema> getter) {
+      protected S getDynamics(final CellGetter getter) {
         return transform.apply(resource.getDynamics(getter));
       }
     };
@@ -47,20 +47,20 @@ public abstract class DiscreteResource<$Schema, T> {
 
 
   public final T getDynamics() {
-    return this.getDynamics(new CellGetter<>() {
+    return this.getDynamics(new CellGetter() {
       @Override
-      public <CellType> CellType get(final CellRef<$Schema, ?, CellType> ref) {
+      public <CellType> CellType get(final CellRef<?, ?, CellType> ref) {
         return ref.get();
       }
     });
   }
 
-  public final T getDynamicsAt(final History<? extends $Schema> now) {
+  public final T getDynamicsAt(final History<?> now) {
     Objects.requireNonNull(now);
 
-    return this.getDynamics(new CellGetter<>() {
+    return this.getDynamics(new CellGetter() {
       @Override
-      public <CellType> CellType get(final CellRef<$Schema, ?, CellType> ref) {
+      public <CellType> CellType get(final CellRef<?, ?, CellType> ref) {
         return ref.getAt(now);
       }
     });
@@ -71,11 +71,11 @@ public abstract class DiscreteResource<$Schema, T> {
     return this.getDynamics();
   }
 
-  public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {
+  public <S> DiscreteResource<S> map(final Function<T, S> transform) {
     return DiscreteResource.mapped(this, transform);
   }
 
-  public Condition<$Schema> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
+  public Condition<?> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
     return Condition.atom(
         new DiscreteResourceSolver<>(mapper),
         this,

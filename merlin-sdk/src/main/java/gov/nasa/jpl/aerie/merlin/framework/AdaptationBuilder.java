@@ -47,7 +47,7 @@ public final class AdaptationBuilder<$Schema> {
   public <Resource>
   void
   discrete(final String name,
-           final DiscreteResource<$Schema, Resource> resource,
+           final DiscreteResource<Resource> resource,
            final ValueMapper<Resource> mapper)
   {
     this.state.discrete(name, resource, mapper);
@@ -115,7 +115,7 @@ public final class AdaptationBuilder<$Schema> {
     <Resource>
     void
     discrete(String name,
-             DiscreteResource<$Schema, Resource> resource,
+             DiscreteResource<Resource> resource,
              ValueMapper<Resource> mapper);
 
     void
@@ -149,7 +149,7 @@ public final class AdaptationBuilder<$Schema> {
     public <Resource>
     void discrete(
         final String name,
-        final DiscreteResource<$Schema, Resource> resource,
+        final DiscreteResource<Resource> resource,
         final ValueMapper<Resource> mapper)
     {
       this.resourceFamilies.add(new DiscreteResourceFamily<>(mapper, Map.of(name, resource)));
@@ -206,7 +206,7 @@ public final class AdaptationBuilder<$Schema> {
     public <Resource>
     void discrete(
         final String name,
-        final DiscreteResource<$Schema, Resource> resource,
+        final DiscreteResource<Resource> resource,
         final ValueMapper<Resource> mapper)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");

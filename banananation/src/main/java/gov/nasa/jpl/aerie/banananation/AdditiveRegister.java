@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 public final class AdditiveRegister<$Schema> extends Model<$Schema> {
   public final Register<$Schema, Double> value;
-  public final DiscreteResource<$Schema, Boolean> conflicted;
+  public final DiscreteResource<Boolean> conflicted;
 
   public AdditiveRegister(final Registrar<$Schema> registrar, final double initialValue) {
     super(registrar);
