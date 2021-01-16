@@ -11,12 +11,12 @@ import java.util.function.Supplier;
 
 public final class Registrar<$Schema> {
   private final AdaptationBuilder<$Schema> builder;
-  private final Supplier<? extends Context<$Schema>> rootContext;
+  private final Supplier<? extends Context<?>> rootContext;
   private final String namespace;
 
   public Registrar(
       final AdaptationBuilder<$Schema> builder,
-      final Supplier<? extends Context<$Schema>> rootContext,
+      final Supplier<? extends Context<?>> rootContext,
       final String namespace)
   {
     this.builder = Objects.requireNonNull(builder);
@@ -37,11 +37,9 @@ public final class Registrar<$Schema> {
   CellRef<$Schema, Effect, CellType>
   cell(final CellType initialState)
   {
-    final var query = this.builder.register(
-        Projection.<Effect, Effect>from(initialState.effectTrait(), ev -> ev),
+    return this.builder.register(
+        Projection.from(initialState.effectTrait(), ev -> ev),
         new CellApplicator<>(initialState));
-
-    return new CellRef<>(this.builder.getRootContext(), query);
   }
 
   public <State>
@@ -58,7 +56,7 @@ public final class Registrar<$Schema> {
     return resource;
   }
 
-  public void constraint(final String id, final Condition<$Schema> condition) {
+  public void constraint(final String id, final Condition<?> condition) {
     this.builder.constraint(this.namespace + "/" + id, condition);
   }
 

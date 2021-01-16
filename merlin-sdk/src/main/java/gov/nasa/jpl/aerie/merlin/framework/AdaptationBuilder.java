@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
@@ -40,9 +39,9 @@ public final class AdaptationBuilder<$Schema> {
   }
 
   public <Event, Effect, CellType>
-  Query<$Schema, Event, CellType>
+  CellRef<$Schema, Event, CellType>
   register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return this.schemaBuilder.register(projection, applicator);
+    return new CellRef<>(this.getRootContext(), this.schemaBuilder.register(projection, applicator));
   }
 
   public <Resource>
@@ -58,8 +57,12 @@ public final class AdaptationBuilder<$Schema> {
     this.state.real(name, resource);
   }
 
-  public void constraint(final String id, final Condition<$Schema> condition) {
-    this.state.constraint(id, condition);
+  public void constraint(final String id, final Condition<?> condition) {
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedCondition = (Condition<$Schema>) condition;
+
+    this.state.constraint(id, brandedCondition);
   }
 
   public void daemon(final String id, final Runnable task) {
