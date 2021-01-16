@@ -19,7 +19,7 @@ public abstract class Model {
     this(() -> context);
   }
 
-  protected Model(final Registrar<?> registrar) {
+  protected Model(final Registrar registrar) {
     this(registrar.getRootContext());
   }
 

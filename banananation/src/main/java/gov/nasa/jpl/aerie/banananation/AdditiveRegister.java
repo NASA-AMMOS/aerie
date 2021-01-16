@@ -9,7 +9,7 @@ public final class AdditiveRegister extends Model {
   public final Register<Double> value;
   public final DiscreteResource<Boolean> conflicted;
 
-  public AdditiveRegister(final Registrar<?> registrar, final double initialValue) {
+  public AdditiveRegister(final Registrar registrar, final double initialValue) {
     super(registrar);
 
     this.value = Register.create(registrar, initialValue);
@@ -18,7 +18,7 @@ public final class AdditiveRegister extends Model {
 
   public static
   AdditiveRegister
-  create(final Registrar<?> registrar, final double initialValue) {
+  create(final Registrar registrar, final double initialValue) {
     return new AdditiveRegister(registrar, initialValue);
   }
 

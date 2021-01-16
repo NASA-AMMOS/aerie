@@ -11,12 +11,12 @@ public final class Accumulator extends Model {
   public final Volume volume;
   public final Rate rate;
 
-  public Accumulator(final Registrar<?> registrar) {
+  public Accumulator(final Registrar registrar) {
     this(registrar, 0.0, 0.0);
   }
 
   public Accumulator(
-      final Registrar<?> registrar,
+      final Registrar registrar,
       final double initialVolume,
       final double initialRate)
   {

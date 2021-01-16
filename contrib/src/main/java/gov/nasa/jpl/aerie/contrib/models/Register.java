@@ -24,7 +24,7 @@ public final class Register<Value> extends Model {
   public final DiscreteResource<Boolean> conflicted;
 
   public Register(
-      final Registrar<?> registrar,
+      final Registrar registrar,
       final Value initialValue,
       final ValueMapper<Value> mapper)
   {
@@ -46,13 +46,13 @@ public final class Register<Value> extends Model {
 
   public static
   Register<Double>
-  create(final Registrar<?> registrar, final double initialValue) {
+  create(final Registrar registrar, final double initialValue) {
     return new Register<>(registrar, initialValue, new DoubleValueMapper());
   }
 
   public static <E extends Enum<E>>
   Register<E>
-  create(final Registrar<?> registrar, final E initialValue) {
+  create(final Registrar registrar, final E initialValue) {
     // SAFETY: Every subclass of `Enum<E>` is final, so `Class<? extends Enum<E>> == Class<E>`.
     @SuppressWarnings("unchecked")
     final var klass = (Class<E>) initialValue.getClass();

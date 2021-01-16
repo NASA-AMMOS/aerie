@@ -18,7 +18,7 @@ public final class Counter<T> extends Model {
   private final CellRef<T, CounterCell<T>> ref;
 
   public Counter(
-      final Registrar<?> registrar,
+      final Registrar registrar,
       final T initialValue,
       final T zero,
       final BinaryOperator<T> adder,
@@ -37,19 +37,19 @@ public final class Counter<T> extends Model {
     this.ref.emit(change);
   }
 
-  public static Counter<Integer> ofInteger(final Registrar<?> registrar, final Integer initialValue) {
+  public static Counter<Integer> ofInteger(final Registrar registrar, final Integer initialValue) {
     return new Counter<>(registrar, initialValue, 0, Integer::sum, new IntegerValueMapper());
   }
 
-  public static Counter<Integer> ofInteger(final Registrar<?> registrar) {
+  public static Counter<Integer> ofInteger(final Registrar registrar) {
     return ofInteger(registrar, 0);
   }
 
-  public static Counter<Double> ofDouble(final Registrar<?> registrar, final Double initialValue) {
+  public static Counter<Double> ofDouble(final Registrar registrar, final Double initialValue) {
     return new Counter<>(registrar, initialValue, 0.0, Double::sum, new DoubleValueMapper());
   }
 
-  public static Counter<Double> ofDouble(final Registrar<?> registrar) {
+  public static Counter<Double> ofDouble(final Registrar registrar) {
     return ofDouble(registrar, 0.0);
   }
 }

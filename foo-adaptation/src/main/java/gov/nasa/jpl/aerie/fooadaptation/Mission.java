@@ -29,7 +29,7 @@ public final class Mission extends Model {
 
   public final Clock utcClock;
 
-  public Mission(final Registrar<?> registrar) {
+  public Mission(final Registrar registrar) {
     super(registrar);
 
     this.foo = Register.create(registrar.descend("foo"), 0.0);

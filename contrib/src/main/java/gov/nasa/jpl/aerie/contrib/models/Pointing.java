@@ -13,11 +13,11 @@ import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 public final class Pointing extends Model {
   public final Component x, y, z;
 
-  public Pointing(final Registrar<?> registrar, final Vector3D initialVec) {
+  public Pointing(final Registrar registrar, final Vector3D initialVec) {
     this(registrar, initialVec, new Vector3D(0, 0, 0));
   }
 
-  public Pointing(final Registrar<?> registrar, final Vector3D initialVec, final Vector3D initialRate) {
+  public Pointing(final Registrar registrar, final Vector3D initialVec, final Vector3D initialRate) {
     super(registrar);
 
     this.x = new Component(registrar, initialVec.getX(), initialRate.getX());
@@ -58,7 +58,7 @@ public final class Pointing extends Model {
     public final Accumulator.Volume value;
     public final Accumulator.Rate rate;
 
-    public Component(final Registrar<?> registrar, final double value, final double rate) {
+    public Component(final Registrar registrar, final double value, final double rate) {
       final var acc = new Accumulator(registrar, value, rate);
       this.value = acc.volume;
       this.rate = acc.rate;

@@ -9,8 +9,8 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class Registrar<$Schema> {
-  private final AdaptationBuilder<$Schema> builder;
+public final class Registrar {
+  private final AdaptationBuilder<?> builder;
   private final Supplier<? extends Context<?>> rootContext;
   private final String namespace;
 
@@ -25,12 +25,12 @@ public final class Registrar<$Schema> {
   }
 
   /*package-local*/
-  Supplier<? extends Context<$Schema>> getRootContext() {
+  Supplier<? extends Context<?>> getRootContext() {
     return this.builder.getRootContext();
   }
 
-  public Registrar<$Schema> descend(final String namespace) {
-    return new Registrar<>(this.builder, this.rootContext, this.namespace + "/" + namespace);
+  public Registrar descend(final String namespace) {
+    return new Registrar(this.builder, this.rootContext, this.namespace + "/" + namespace);
   }
 
   public <Effect, CellType extends Cell<Effect, CellType>>

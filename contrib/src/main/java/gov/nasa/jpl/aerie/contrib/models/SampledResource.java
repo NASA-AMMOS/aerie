@@ -14,7 +14,7 @@ public class SampledResource<T> extends Model {
   private final Supplier<T> sampler;
 
   public SampledResource(
-      final Registrar<?> builder,
+      final Registrar builder,
       final Supplier<T> sampler,
       final T initialValue,
       final ValueMapper<T> mapper)

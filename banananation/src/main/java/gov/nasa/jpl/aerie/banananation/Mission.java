@@ -9,7 +9,7 @@ public class Mission extends Model {
   public final AdditiveRegister peel;
   public final Register<Flag> flag;
 
-  public Mission(final Registrar<?> registrar) {
+  public Mission(final Registrar registrar) {
     super(registrar);
 
     this.flag = Register.create(registrar.descend("flag"), Flag.A);

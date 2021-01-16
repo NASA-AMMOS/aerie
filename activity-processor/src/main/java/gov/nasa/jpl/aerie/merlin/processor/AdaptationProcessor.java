@@ -709,9 +709,7 @@ public final class AdaptationProcessor implements Processor {
                     .addParameter(
                         ParameterSpec
                             .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
-                                    WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
                                 "registrar")
                             .addModifiers(Modifier.FINAL)
                             .build())
@@ -968,7 +966,7 @@ public final class AdaptationProcessor implements Processor {
                         gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
                         "schemaBuilder")
                     .addStatement(
-                        "final var $L = new $T<>($L, $L.getRootContext(), \"\")",
+                        "final var $L = new $T($L, $L.getRootContext(), \"\")",
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
                         "builder",
