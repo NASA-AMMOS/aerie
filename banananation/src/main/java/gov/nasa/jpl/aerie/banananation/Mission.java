@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.contrib.models.Register;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 
 public class Mission<$Schema> extends Model {
-  public final AdditiveRegister<$Schema> fruit;
-  public final AdditiveRegister<$Schema> peel;
+  public final AdditiveRegister fruit;
+  public final AdditiveRegister peel;
   public final Register<Flag> flag;
 
   public Mission(final Registrar<$Schema> registrar) {
