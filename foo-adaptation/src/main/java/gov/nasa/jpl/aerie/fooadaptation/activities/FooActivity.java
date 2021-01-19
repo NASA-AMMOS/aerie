@@ -41,6 +41,8 @@ public final class FooActivity {
       waitUntil(data.volume.isBetween(5.0, 10.0));
       data.rate.add(2.0);
       data.rate.add(data.rate.get());
+
+      mission.activitiesExecuted.add(1);
     }
   }
 }
