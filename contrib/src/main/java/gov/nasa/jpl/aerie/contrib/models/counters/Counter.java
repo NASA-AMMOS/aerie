@@ -15,7 +15,7 @@ import java.util.function.BinaryOperator;
 public final class Counter<$Schema, T> extends Model<$Schema> {
   public final DiscreteResource<T> value;
 
-  private final CellRef<$Schema, T, CounterCell<T>> ref;
+  private final CellRef<T, CounterCell<T>> ref;
 
   public Counter(
       final Registrar<$Schema> registrar,

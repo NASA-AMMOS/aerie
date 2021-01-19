@@ -14,13 +14,13 @@ public abstract class RealResource {
   protected abstract RealDynamics getDynamics(final CellGetter getter);
 
   private interface CellGetter {
-    <CellType> CellType get(CellRef<?, ?, CellType> ref);
+    <CellType> CellType get(CellRef<?, CellType> ref);
   }
 
 
   public static <CellType>
   RealResource
-  atom(final CellRef<?, ?, CellType> ref, final Function<CellType, RealDynamics> property) {
+  atom(final CellRef<?, CellType> ref, final Function<CellType, RealDynamics> property) {
     Objects.requireNonNull(ref);
     Objects.requireNonNull(property);
 
@@ -90,7 +90,7 @@ public abstract class RealResource {
   public final RealDynamics getDynamics() {
     return this.getDynamics(new CellGetter() {
       @Override
-      public <CellType> CellType get(final CellRef<?, ?, CellType> ref) {
+      public <CellType> CellType get(final CellRef<?, CellType> ref) {
         return ref.get();
       }
     });
@@ -101,7 +101,7 @@ public abstract class RealResource {
 
     return this.getDynamics(new CellGetter() {
       @Override
-      public <CellType> CellType get(final CellRef<?, ?, CellType> ref) {
+      public <CellType> CellType get(final CellRef<?, CellType> ref) {
         return ref.getAt(now);
       }
     });

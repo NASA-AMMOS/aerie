@@ -6,11 +6,14 @@ import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class CellRef<$Schema, Effect, CellType> {
-  private final Supplier<? extends Context<$Schema>> context;
-  private final Query<$Schema, Effect, CellType> query;
+public final class CellRef<Effect, CellType> {
+  private final Supplier<? extends Context<?>> context;
+  private final Query<?, Effect, CellType> query;
 
-  public CellRef(final Supplier<? extends Context<$Schema>> context, final Query<$Schema, Effect, CellType> query) {
+  public <$Schema> CellRef(
+      final Supplier<? extends Context<$Schema>> context,
+      final Query<$Schema, Effect, CellType> query)
+  {
     this.context = Objects.requireNonNull(context);
     this.query = Objects.requireNonNull(query);
   }
@@ -23,12 +26,12 @@ public final class CellRef<$Schema, Effect, CellType> {
    * @param now The time from which to get the state of the cell.
    * @return the state of the referenced cell at the given time.
    */
-  public CellType getAt(final History<?> now) {
+  public <$Timeline> CellType getAt(final History<$Timeline> now) {
     // SAFETY: All objects accessible within a single adaptation instance have the same brand.
     @SuppressWarnings("unchecked")
-    final var brandedNow = (History<? extends $Schema>) now;
+    final var brandedQuery = (Query<? super $Timeline, Effect, CellType>) this.query;
 
-    return brandedNow.ask(this.query);
+    return now.ask(brandedQuery);
   }
 
 
@@ -37,6 +40,14 @@ public final class CellRef<$Schema, Effect, CellType> {
   }
 
   public void emit(final Effect effect) {
-    this.context.get().emit(effect, this.query);
+    this.emit(this.context.get(), effect);
+  }
+
+  private <$Schema> void emit(final Context<$Schema> context, final Effect effect) {
+    // SAFETY: CellRef can only be constructed on a context+query pair with matching brands.
+    @SuppressWarnings("unchecked")
+    final var brandedQuery = (Query<$Schema, Effect, CellType>) this.query;
+
+    context.emit(effect, brandedQuery);
   }
 }

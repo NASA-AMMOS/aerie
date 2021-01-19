@@ -39,7 +39,7 @@ public final class AdaptationBuilder<$Schema> {
   }
 
   public <Event, Effect, CellType>
-  CellRef<$Schema, Event, CellType>
+  CellRef<Event, CellType>
   register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
     return new CellRef<>(this.getRootContext(), this.schemaBuilder.register(projection, applicator));
   }

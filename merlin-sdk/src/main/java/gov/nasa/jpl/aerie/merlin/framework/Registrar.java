@@ -34,7 +34,7 @@ public final class Registrar<$Schema> {
   }
 
   public <Effect, CellType extends Cell<Effect, CellType>>
-  CellRef<$Schema, Effect, CellType>
+  CellRef<Effect, CellType>
   cell(final CellType initialState)
   {
     return this.builder.register(

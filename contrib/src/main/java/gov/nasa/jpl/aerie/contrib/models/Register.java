@@ -19,7 +19,7 @@ import java.util.Set;
 public final class Register<$Schema, Value> extends Model<$Schema> {
   private final ValueMapper<Value> mapper;
 
-  private final CellRef<?, Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;
+  private final CellRef<Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;
   public final DiscreteResource<Value> value;
   public final DiscreteResource<Boolean> conflicted;
 

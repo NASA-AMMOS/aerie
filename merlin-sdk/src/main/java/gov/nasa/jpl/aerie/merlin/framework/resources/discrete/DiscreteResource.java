@@ -15,12 +15,12 @@ public abstract class DiscreteResource<T> {
   protected abstract T getDynamics(final CellGetter getter);
 
   private interface CellGetter {
-    <CellType> CellType get(CellRef<?, ?, CellType> ref);
+    <CellType> CellType get(CellRef<?, CellType> ref);
   }
 
 
   public static <CellType, T>
-  DiscreteResource<T> atom(final CellRef<?, ?, CellType> ref, final Function<CellType, T> property) {
+  DiscreteResource<T> atom(final CellRef<?, CellType> ref, final Function<CellType, T> property) {
     Objects.requireNonNull(ref);
     Objects.requireNonNull(property);
 
@@ -49,7 +49,7 @@ public abstract class DiscreteResource<T> {
   public final T getDynamics() {
     return this.getDynamics(new CellGetter() {
       @Override
-      public <CellType> CellType get(final CellRef<?, ?, CellType> ref) {
+      public <CellType> CellType get(final CellRef<?, CellType> ref) {
         return ref.get();
       }
     });
@@ -60,7 +60,7 @@ public abstract class DiscreteResource<T> {
 
     return this.getDynamics(new CellGetter() {
       @Override
-      public <CellType> CellType get(final CellRef<?, ?, CellType> ref) {
+      public <CellType> CellType get(final CellRef<?, CellType> ref) {
         return ref.getAt(now);
       }
     });
