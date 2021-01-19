@@ -12,13 +12,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import java.util.function.BinaryOperator;
 
 
-public final class Counter<$Schema, T> extends Model {
+public final class Counter<T> extends Model {
   public final DiscreteResource<T> value;
 
   private final CellRef<T, CounterCell<T>> ref;
 
   public Counter(
-      final Registrar<$Schema> registrar,
+      final Registrar<?> registrar,
       final T initialValue,
       final T zero,
       final BinaryOperator<T> adder,
@@ -37,19 +37,19 @@ public final class Counter<$Schema, T> extends Model {
     this.ref.emit(change);
   }
 
-  public static <$Schema> Counter<$Schema, Integer> ofInteger(final Registrar<$Schema> registrar, final Integer initialValue) {
+  public static Counter<Integer> ofInteger(final Registrar<?> registrar, final Integer initialValue) {
     return new Counter<>(registrar, initialValue, 0, Integer::sum, new IntegerValueMapper());
   }
 
-  public static <$Schema> Counter<$Schema, Integer> ofInteger(final Registrar<$Schema> registrar) {
+  public static Counter<Integer> ofInteger(final Registrar<?> registrar) {
     return ofInteger(registrar, 0);
   }
 
-  public static <$Schema> Counter<$Schema, Double> ofDouble(final Registrar<$Schema> registrar, final Double initialValue) {
+  public static Counter<Double> ofDouble(final Registrar<?> registrar, final Double initialValue) {
     return new Counter<>(registrar, initialValue, 0.0, Double::sum, new DoubleValueMapper());
   }
 
-  public static <$Schema> Counter<$Schema, Double> ofDouble(final Registrar<$Schema> registrar) {
+  public static Counter<Double> ofDouble(final Registrar<?> registrar) {
     return ofDouble(registrar, 0.0);
   }
 }
