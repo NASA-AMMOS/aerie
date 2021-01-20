@@ -4,21 +4,19 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class Registrar<$Schema> {
-  private final AdaptationBuilder<$Schema> builder;
-  private final Supplier<? extends Context<$Schema>> rootContext;
+public final class Registrar {
+  private final AdaptationBuilder<?> builder;
+  private final Supplier<? extends Context<?>> rootContext;
   private final String namespace;
 
   public Registrar(
-      final AdaptationBuilder<$Schema> builder,
-      final Supplier<? extends Context<$Schema>> rootContext,
+      final AdaptationBuilder<?> builder,
+      final Supplier<? extends Context<?>> rootContext,
       final String namespace)
   {
     this.builder = Objects.requireNonNull(builder);
@@ -27,16 +25,16 @@ public final class Registrar<$Schema> {
   }
 
   /*package-local*/
-  Supplier<? extends Context<$Schema>> getRootContext() {
+  Supplier<? extends Context<?>> getRootContext() {
     return this.builder.getRootContext();
   }
 
-  public Registrar<$Schema> descend(final String namespace) {
-    return new Registrar<>(this.builder, this.rootContext, this.namespace + "/" + namespace);
+  public Registrar descend(final String namespace) {
+    return new Registrar(this.builder, this.rootContext, this.namespace + "/" + namespace);
   }
 
   public <Effect, CellType extends Cell<Effect, CellType>>
-  Query<$Schema, Effect, CellType>
+  CellRef<Effect, CellType>
   cell(final CellType initialState)
   {
     return this.builder.register(
@@ -45,20 +43,20 @@ public final class Registrar<$Schema> {
   }
 
   public <State>
-  DiscreteResource<$Schema, State>
-  resource(final String name, final DiscreteResource<$Schema, State> resource, final ValueMapper<State> mapper) {
+  DiscreteResource<State>
+  resource(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {
     this.builder.discrete(this.namespace + "/" + name, resource, mapper);
     return resource;
   }
 
   public
-  RealResource<$Schema>
-  resource(final String name, final RealResource<$Schema> resource) {
+  RealResource
+  resource(final String name, final RealResource resource) {
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
   }
 
-  public void constraint(final String id, final Condition<$Schema> condition) {
+  public void constraint(final String id, final Condition<?> condition) {
     this.builder.constraint(this.namespace + "/" + id, condition);
   }
 

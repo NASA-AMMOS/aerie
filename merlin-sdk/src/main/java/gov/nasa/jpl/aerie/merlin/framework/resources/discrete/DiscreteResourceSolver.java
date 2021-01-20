@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public final class DiscreteResourceSolver<$Schema, Resource>
-    implements ResourceSolver<$Schema, DiscreteResource<$Schema, Resource>, Resource, Set<Resource>>
+    implements ResourceSolver<$Schema, DiscreteResource<Resource>, Resource, Set<Resource>>
 {
   private final ValueMapper<Resource> mapper;
 
@@ -26,10 +26,10 @@ public final class DiscreteResourceSolver<$Schema, Resource>
 
   @Override
   public Resource getDynamics(
-      final DiscreteResource<$Schema, Resource> resource,
+      final DiscreteResource<Resource> resource,
       final History<? extends $Schema> now)
   {
-    return resource.getDynamics(now);
+    return resource.getDynamicsAt(now);
   }
 
   @Override

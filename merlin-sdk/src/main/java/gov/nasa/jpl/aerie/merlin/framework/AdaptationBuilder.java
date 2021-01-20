@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
@@ -40,26 +39,30 @@ public final class AdaptationBuilder<$Schema> {
   }
 
   public <Event, Effect, CellType>
-  Query<$Schema, Event, CellType>
+  CellRef<Event, CellType>
   register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return this.schemaBuilder.register(projection, applicator);
+    return new CellRef<>(this.getRootContext(), this.schemaBuilder.register(projection, applicator));
   }
 
   public <Resource>
   void
   discrete(final String name,
-           final DiscreteResource<$Schema, Resource> resource,
+           final DiscreteResource<Resource> resource,
            final ValueMapper<Resource> mapper)
   {
     this.state.discrete(name, resource, mapper);
   }
 
-  public void real(final String name, final RealResource<$Schema> resource) {
+  public void real(final String name, final RealResource resource) {
     this.state.real(name, resource);
   }
 
-  public void constraint(final String id, final Condition<$Schema> condition) {
-    this.state.constraint(id, condition);
+  public void constraint(final String id, final Condition<?> condition) {
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedCondition = (Condition<$Schema>) condition;
+
+    this.state.constraint(id, brandedCondition);
   }
 
   public void daemon(final String id, final Runnable task) {
@@ -112,12 +115,12 @@ public final class AdaptationBuilder<$Schema> {
     <Resource>
     void
     discrete(String name,
-             DiscreteResource<$Schema, Resource> resource,
+             DiscreteResource<Resource> resource,
              ValueMapper<Resource> mapper);
 
     void
     real(String name,
-         RealResource<$Schema> resource);
+         RealResource resource);
 
     void
     constraint(String id,
@@ -138,7 +141,7 @@ public final class AdaptationBuilder<$Schema> {
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
     private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
-    private final Map<String, RealResource<$Schema>> realResources = new HashMap<>();
+    private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
@@ -146,14 +149,14 @@ public final class AdaptationBuilder<$Schema> {
     public <Resource>
     void discrete(
         final String name,
-        final DiscreteResource<$Schema, Resource> resource,
+        final DiscreteResource<Resource> resource,
         final ValueMapper<Resource> mapper)
     {
       this.resourceFamilies.add(new DiscreteResourceFamily<>(mapper, Map.of(name, resource)));
     }
 
     @Override
-    public void real(final String name, final RealResource<$Schema> resource) {
+    public void real(final String name, final RealResource resource) {
       this.realResources.put(name, resource);
     }
 
@@ -203,14 +206,14 @@ public final class AdaptationBuilder<$Schema> {
     public <Resource>
     void discrete(
         final String name,
-        final DiscreteResource<$Schema, Resource> resource,
+        final DiscreteResource<Resource> resource,
         final ValueMapper<Resource> mapper)
     {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
-    public void real(final String name, final RealResource<$Schema> resource) {
+    public void real(final String name, final RealResource resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 

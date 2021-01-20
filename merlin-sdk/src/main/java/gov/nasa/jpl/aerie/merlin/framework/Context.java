@@ -18,5 +18,5 @@ public interface Context<$Schema> {
 
   void delay(Duration duration);
   void waitFor(String id);
-  void waitUntil(Condition<$Schema> condition);
+  void waitUntil(Condition<?> condition);
 }

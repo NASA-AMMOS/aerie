@@ -1,55 +1,81 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
+import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
-public abstract class DiscreteResource<$Schema, T> {
+public abstract class DiscreteResource<T> {
   private DiscreteResource() {}
 
-  public abstract T getDynamics(History<? extends $Schema> history);
+  protected abstract T getDynamics(final CellGetter getter);
 
-  public static <$Schema, CellType, T>
-  DiscreteResource<$Schema, T> atom(final Query<$Schema, ?, CellType> query, final Function<CellType, T> property) {
-    Objects.requireNonNull(query);
+  private interface CellGetter {
+    <CellType> CellType get(CellRef<?, CellType> ref);
+  }
+
+
+  public static <CellType, T>
+  DiscreteResource<T> atom(final CellRef<?, CellType> ref, final Function<CellType, T> property) {
+    Objects.requireNonNull(ref);
     Objects.requireNonNull(property);
 
     return new DiscreteResource<>() {
       @Override
-      public T getDynamics(final History<? extends $Schema> now) {
-        return property.apply(now.ask(query));
+      protected T getDynamics(final CellGetter getter) {
+        return property.apply(getter.get(ref));
       }
     };
   }
 
-  public static <$Schema, T, S>
-  DiscreteResource<$Schema, S> mapped(final DiscreteResource<$Schema, T> resource, final Function<T, S> transform) {
+  public static <T, S>
+  DiscreteResource<S> mapped(final DiscreteResource<T> resource, final Function<T, S> transform) {
     Objects.requireNonNull(resource);
     Objects.requireNonNull(transform);
 
     return new DiscreteResource<>() {
       @Override
-      public S getDynamics(final History<? extends $Schema> now) {
-        return transform.apply(resource.getDynamics(now));
+      protected S getDynamics(final CellGetter getter) {
+        return transform.apply(resource.getDynamics(getter));
       }
     };
   }
 
 
-  public T ask(final History<? extends $Schema> now) {
-    return this.getDynamics(now);
+  public final T getDynamics() {
+    return this.getDynamics(new CellGetter() {
+      @Override
+      public <CellType> CellType get(final CellRef<?, CellType> ref) {
+        return ref.get();
+      }
+    });
   }
 
-  public <S> DiscreteResource<$Schema, S> map(final Function<T, S> transform) {
+  public final T getDynamicsAt(final History<?> now) {
+    Objects.requireNonNull(now);
+
+    return this.getDynamics(new CellGetter() {
+      @Override
+      public <CellType> CellType get(final CellRef<?, CellType> ref) {
+        return ref.getAt(now);
+      }
+    });
+  }
+
+
+  public T ask() {
+    return this.getDynamics();
+  }
+
+  public <S> DiscreteResource<S> map(final Function<T, S> transform) {
     return DiscreteResource.mapped(this, transform);
   }
 
-  public Condition<$Schema> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
+  public Condition<?> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
     return Condition.atom(
         new DiscreteResourceSolver<>(mapper),
         this,

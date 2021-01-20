@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.Optional;
 
 public final class RealResourceSolver<$Schema>
-    implements ResourceSolver<$Schema, RealResource<$Schema>, RealDynamics, RealCondition>
+    implements ResourceSolver<$Schema, RealResource, RealDynamics, RealCondition>
 {
   @Override
   public RealDynamics getDynamics(
-      final RealResource<$Schema> resource,
+      final RealResource resource,
       final History<? extends $Schema> now)
   {
-    return resource.getDynamics(now);
+    return resource.getDynamicsAt(now);
   }
 
   @Override

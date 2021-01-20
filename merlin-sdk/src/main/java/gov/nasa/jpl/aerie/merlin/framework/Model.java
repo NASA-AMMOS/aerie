@@ -2,38 +2,27 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public abstract class Model<$Schema> {
-  private final Supplier<? extends Context<$Schema>> context;
+public abstract class Model {
+  private final Supplier<? extends Context<?>> context;
 
-  protected Model(final Supplier<? extends Context<$Schema>> context) {
+  protected Model(final Supplier<? extends Context<?>> context) {
     this.context = Objects.requireNonNull(context);
   }
 
-  protected Model(final Context<$Schema> context) {
+  protected Model(final Context<?> context) {
     this(() -> context);
   }
 
-  protected Model(final Registrar<$Schema> registrar) {
+  protected Model(final Registrar registrar) {
     this(registrar.getRootContext());
   }
 
-
-  protected final History<? extends $Schema> now() {
-    return this.context.get().now();
-  }
-
-
-  protected final <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
-    this.context.get().emit(event, query);
-  }
 
   protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
     return this.context.get().spawn(type, arguments);
@@ -64,7 +53,7 @@ public abstract class Model<$Schema> {
     this.context.get().waitFor(id);
   }
 
-  protected final void waitUntil(final Condition<$Schema> condition) {
+  protected final void waitUntil(final Condition<?> condition) {
     this.context.get().waitUntil(condition);
   }
 }
