@@ -182,7 +182,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#constraint(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.Condition)">constraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
-          <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>&gt;&nbsp;condition)</code></th>
+          <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
@@ -194,7 +194,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>&lt;Resource&gt;&nbsp;void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-        <a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>,&#8203;Resource&gt;&nbsp;resource,
+        <a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Resource&gt;&nbsp;resource,
         <a href="../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;Resource&gt;&nbsp;mapper)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -211,11 +211,11 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource)">real</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-    <a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>&gt;&nbsp;resource)</code></th>
+    <a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i7" class="rowColor">
-<td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;CellType&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>,&#8203;Event,&#8203;CellType&gt;</code></td>
+<td class="colFirst"><code>&lt;Event,&#8203;Effect,&#8203;CellType&gt;<br><a href="CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a>&lt;Event,&#8203;CellType&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#register(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">register</a></span>&#8203;(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
         <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;Effect,&#8203;CellType&gt;&nbsp;applicator)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -296,8 +296,8 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>register</h4>
-<pre class="methodSignature">public&nbsp;&lt;Event,&#8203;Effect,&#8203;CellType&gt;&nbsp;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>,&#8203;Event,&#8203;CellType&gt;&nbsp;register&#8203;(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
-                                                                                              <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;Effect,&#8203;CellType&gt;&nbsp;applicator)</pre>
+<pre class="methodSignature">public&nbsp;&lt;Event,&#8203;Effect,&#8203;CellType&gt;&nbsp;<a href="CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a>&lt;Event,&#8203;CellType&gt;&nbsp;register&#8203;(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
+                                                                                  <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;Effect,&#8203;CellType&gt;&nbsp;applicator)</pre>
 </li>
 </ul>
 <a id="discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
@@ -307,7 +307,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li class="blockList">
 <h4>discrete</h4>
 <pre class="methodSignature">public&nbsp;&lt;Resource&gt;&nbsp;void&nbsp;discrete&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-                                <a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>,&#8203;Resource&gt;&nbsp;resource,
+                                <a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Resource&gt;&nbsp;resource,
                                 <a href="../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;Resource&gt;&nbsp;mapper)</pre>
 </li>
 </ul>
@@ -318,7 +318,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li class="blockList">
 <h4>real</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;real&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-                 <a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>&gt;&nbsp;resource)</pre>
+                 <a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</pre>
 </li>
 </ul>
 <a id="constraint(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.Condition)">
@@ -328,7 +328,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li class="blockList">
 <h4>constraint</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;constraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
-                       <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>&gt;&nbsp;condition)</pre>
+                       <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;condition)</pre>
 </li>
 </ul>
 <a id="daemon(java.lang.String,java.lang.Runnable)">

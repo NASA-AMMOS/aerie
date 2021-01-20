@@ -27,7 +27,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -116,14 +116,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></div>
-<h2 title="Class Model" class="title">Class Model&lt;$Schema&gt;</h2>
+<h2 title="Class Model" class="title">Class Model</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.aerie.merlin.framework.Model&lt;$Schema&gt;</li>
+<li>gov.nasa.jpl.aerie.merlin.framework.Model</li>
 </ul>
 </li>
 </ul>
@@ -131,7 +131,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <hr>
-<pre>public abstract class <span class="typeNameLabel">Model&lt;$Schema&gt;</span>
+<pre>public abstract class <span class="typeNameLabel">Model</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></pre>
 </li>
 </ul>
@@ -155,17 +155,17 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected </code></td>
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Context)">Model</a></span>&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;context)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Context)">Model</a></span>&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;?&gt;&nbsp;context)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
 <td class="colFirst"><code>protected </code></td>
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Registrar)">Model</a></span>&#8203;(<a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;registrar)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Registrar)">Model</a></span>&#8203;(<a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&nbsp;registrar)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
 <td class="colFirst"><code>protected </code></td>
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.util.function.Supplier)">Model</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&gt;&nbsp;context)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.util.function.Supplier)">Model</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;?&gt;&gt;&nbsp;context)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -219,30 +219,19 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i5" class="rowColor">
-<td class="colFirst"><code>protected &lt;Event&gt;&nbsp;void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event,gov.nasa.jpl.aerie.merlin.timeline.Query)">emit</a></span>&#8203;(Event&nbsp;event,
-    <a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="Model.html" title="type parameter in Model">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>protected <a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="Model.html" title="type parameter in Model">$Schema</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#now()">now</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i7" class="rowColor">
 <td class="colFirst"><code>protected <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#spawn(java.lang.String,java.util.Map)">spawn</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>protected void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitFor(java.lang.String)">waitFor</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>protected void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitUntil(gov.nasa.jpl.aerie.merlin.protocol.Condition)">waitUntil</a></span>&#8203;(<a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;condition)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#waitUntil(gov.nasa.jpl.aerie.merlin.protocol.Condition)">waitUntil</a></span>&#8203;(<a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;condition)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -275,7 +264,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>Model</h4>
-<pre>protected&nbsp;Model&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&gt;&nbsp;context)</pre>
+<pre>protected&nbsp;Model&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;?&gt;&gt;&nbsp;context)</pre>
 </li>
 </ul>
 <a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.Context)">
@@ -284,7 +273,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>Model</h4>
-<pre>protected&nbsp;Model&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;context)</pre>
+<pre>protected&nbsp;Model&#8203;(<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;?&gt;&nbsp;context)</pre>
 </li>
 </ul>
 <a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.Registrar)">
@@ -293,7 +282,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockListLast">
 <li class="blockList">
 <h4>Model</h4>
-<pre>protected&nbsp;Model&#8203;(<a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;registrar)</pre>
+<pre>protected&nbsp;Model&#8203;(<a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&nbsp;registrar)</pre>
 </li>
 </ul>
 </li>
@@ -306,27 +295,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="now()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>now</h4>
-<pre class="methodSignature">protected final&nbsp;<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;now()</pre>
-</li>
-</ul>
-<a id="emit(java.lang.Object,gov.nasa.jpl.aerie.merlin.timeline.Query)">
-<!--   -->
-</a><a id="emit(Event,gov.nasa.jpl.aerie.merlin.timeline.Query)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>emit</h4>
-<pre class="methodSignature">protected final&nbsp;&lt;Event&gt;&nbsp;void&nbsp;emit&#8203;(Event&nbsp;event,
-                                  <a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="Model.html" title="type parameter in Model">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</pre>
-</li>
-</ul>
 <a id="spawn(java.lang.String,java.util.Map)">
 <!--   -->
 </a>
@@ -404,7 +372,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockListLast">
 <li class="blockList">
 <h4>waitUntil</h4>
-<pre class="methodSignature">protected final&nbsp;void&nbsp;waitUntil&#8203;(<a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;<a href="Model.html" title="type parameter in Model">$Schema</a>&gt;&nbsp;condition)</pre>
+<pre class="methodSignature">protected final&nbsp;void&nbsp;waitUntil&#8203;(<a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;condition)</pre>
 </li>
 </ul>
 </li>
