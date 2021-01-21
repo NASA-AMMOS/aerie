@@ -26,6 +26,9 @@ public final class Accumulator extends Model {
 
     this.volume = new Volume(ref);
     this.rate = new Rate(ref);
+
+    registrar.resource("volume", this.volume.resource);
+    registrar.resource("rate", this.rate.resource);
   }
 
   public static final class Volume {
