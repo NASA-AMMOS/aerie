@@ -49,7 +49,7 @@ public final class FooActivity {
       data.rate.add(2.0);
       data.rate.add(data.rate.get());
 
-      delay(1, SECOND);
+      delay(10, SECOND);
 
       complexData.imagingInProgress.set(false);
       complexData.imagerHardwareState.set(ComplexData.ImagerHardwareState.OFF);
