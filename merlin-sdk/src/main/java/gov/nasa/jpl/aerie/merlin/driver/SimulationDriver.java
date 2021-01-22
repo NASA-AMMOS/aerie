@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -135,6 +136,29 @@ public final class SimulationDriver {
       timelines.put(name, SampleTaker.sample(profile, timestamps));
     });
 
+    // Collect samples for all resources in which it can have different sampling time
+    final var resourceSamplingPoints = new HashMap<String, TreeSet<Duration>>();
+    profiles.forEach((name, profile) -> {
+      var i = profile.iterator();
+      var sampleTimes = new TreeSet<Duration>();
+      while (i.hasNext()) {
+        var win = i.next().getLeft();
+        sampleTimes.add(win.start);
+        sampleTimes.add(win.end);
+      }
+      sampleTimes.addAll(timestamps);
+      resourceSamplingPoints.put(name, sampleTimes);
+    });
+
+    final var resourceSamples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
+    profiles.forEach((name, profile) -> {
+      final var sampleValues = new ArrayList<SerializedValue>();
+      final var samplePoints = new ArrayList<Duration>(resourceSamplingPoints.get(name));
+      sampleValues.addAll(SampleTaker.sample(profile, samplePoints));
+
+      resourceSamples.put(name, constructPairList(samplePoints, sampleValues));
+    });
+
     // Collect windows for all conditions.
     final var constraintViolations = new ArrayList<ConstraintViolation>();
     adaptation.getConstraints().forEach((id, condition) -> {
@@ -206,6 +230,22 @@ public final class SimulationDriver {
     resources.forEach((name, resource) -> {
       consumer.accept(name, computeProfile(database, endTime, solver, resource));
     });
+  }
+
+  public static <S, T>
+  List<Pair<S,T>>
+  constructPairList(
+      final List<S> a,
+      final List<T> b)
+  {
+    final var pair = new ArrayList<Pair<S, T>>
+        (Math.min(a.size(), b.size()));
+    final var aIter = a.iterator();
+    final var bIter = b.iterator();
+    while (aIter.hasNext() && bIter.hasNext()) {
+      pair.add(Pair.of(aIter.next(), bIter.next()));
+    }
+    return pair;
   }
 
   public static <$Timeline, Resource, Dynamics, Condition>
