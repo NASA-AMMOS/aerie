@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.contrib.models.Register;
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.generated.Model;
+import gov.nasa.jpl.aerie.fooadaptation.models.ComplexData;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
@@ -24,6 +25,7 @@ public final class Mission extends Model {
   public final Accumulator sink;
   public final SampledResource<Double> batterySoC;
   public final Counter<Integer> activitiesExecuted;
+  public final ComplexData complexData;
 
   public final RealResource combo;
 
@@ -49,9 +51,11 @@ public final class Mission extends Model {
 
     Instant instant = Instant.parse("2023-08-18T00:00:00.00Z");
     this.utcClock = new Clock(registrar.descend("utcClock"), instant);
+
+    this.complexData = new ComplexData(registrar.descend("complex_data"), 5, ComplexData.ImagerResMode.LOW_RES, 30);
+
     // TODO: automatically perform this for each @Daemon annotation
     registrar.daemon("test", this::test);
-
     registrar.constraint("haha", this.data.volume.isBetween(42.0, 101.0));
   }
 
