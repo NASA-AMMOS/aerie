@@ -131,13 +131,8 @@ public final class SimulationDriver {
       }
     }
 
-    final var timelines = new HashMap<String, List<SerializedValue>>();
-    profiles.forEach((name, profile) -> {
-      timelines.put(name, SampleTaker.sample(profile, timestamps));
-    });
-
     // Collect samples for all resources in which it can have different sampling time
-    final var resourceSamplingPoints = new HashMap<String, TreeSet<Duration>>();
+    final var resourceSamplingPoints = new HashMap<String, List<Duration>>();
     profiles.forEach((name, profile) -> {
       var i = profile.iterator();
       var sampleTimes = new TreeSet<Duration>();
@@ -147,14 +142,14 @@ public final class SimulationDriver {
         sampleTimes.add(win.end);
       }
       sampleTimes.addAll(timestamps);
-      resourceSamplingPoints.put(name, sampleTimes);
+      resourceSamplingPoints.put(name, List.copyOf(sampleTimes));
     });
 
     final var resourceSamples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
     profiles.forEach((name, profile) -> {
-      final var sampleValues = new ArrayList<SerializedValue>();
-      final var samplePoints = new ArrayList<Duration>(resourceSamplingPoints.get(name));
-      sampleValues.addAll(SampleTaker.sample(profile, samplePoints));
+
+      final var samplePoints = resourceSamplingPoints.get(name);
+      final var sampleValues = SampleTaker.sample(profile, samplePoints);
 
       resourceSamples.put(name, constructPairList(samplePoints, sampleValues));
     });
@@ -202,8 +197,7 @@ public final class SimulationDriver {
     }
 
     final var results = new SimulationResults(
-        timestamps,
-        timelines,
+        resourceSamples,
         constraintViolations,
         mappedTaskRecords,
         mappedTaskWindows,
@@ -238,8 +232,7 @@ public final class SimulationDriver {
       final List<S> a,
       final List<T> b)
   {
-    final var pair = new ArrayList<Pair<S, T>>
-        (Math.min(a.size(), b.size()));
+    final var pair = new ArrayList<Pair<S, T>>(Math.min(a.size(), b.size()));
     final var aIter = a.iterator();
     final var bIter = b.iterator();
     while (aIter.hasNext() && bIter.hasNext()) {

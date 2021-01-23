@@ -52,7 +52,6 @@ public final class StubApp implements App {
       "Unconstructable activity instance");
 
   public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(
-      List.of(),
       Map.of(),
       List.of(),
       Map.of(),

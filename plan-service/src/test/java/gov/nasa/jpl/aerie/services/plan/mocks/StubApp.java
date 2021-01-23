@@ -236,6 +236,6 @@ public final class StubApp implements App {
       throw new NoSuchPlanException(planId);
     }
 
-    return new SimulationResults(Instant.EPOCH, List.of(), Map.of(), JsonValue.EMPTY_JSON_ARRAY, JsonValue.EMPTY_JSON_OBJECT);
+    return new SimulationResults(Instant.EPOCH, Map.of(), JsonValue.EMPTY_JSON_ARRAY, JsonValue.EMPTY_JSON_OBJECT);
   }
 }

@@ -41,6 +41,15 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
+  public static JsonValue serializeSample(final Pair<Duration, SerializedValue> element) {
+    if (element == null) return JsonValue.NULL;
+    return Json
+        .createObjectBuilder()
+        .add("x", serializeDuration(element.getLeft()))
+        .add("y", serializeActivityParameter(element.getRight()))
+        .build();
+  }
+
   public static JsonValue serializeString(final String value) {
     if (value == null) return JsonValue.NULL;
     return Json.createValue(value);
@@ -116,10 +125,9 @@ public final class ResponseSerializers {
 
     return Json.createObjectBuilder()
         .add("start", serializeTimestamp(results.startTime))
-        .add("times", serializeList(element -> serializeDuration(element), results.timestamps))
         .add("resources", serializeMap(
-            elements -> serializeList(element -> serializeActivityParameter(element), elements),
-            results.timelines))
+            elements -> serializeList(element -> serializeSample(element), elements),
+            results.resourceSamples))
         .add("constraints", results.constraints)
         .add("activities", results.activities)
         .build();
