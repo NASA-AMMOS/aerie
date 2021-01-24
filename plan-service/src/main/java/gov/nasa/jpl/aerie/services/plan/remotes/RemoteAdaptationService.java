@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.services.plan.remotes;
 
 import gov.nasa.jpl.aerie.json.BasicParsers;
+import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -8,6 +9,7 @@ import gov.nasa.jpl.aerie.services.plan.models.Plan;
 import gov.nasa.jpl.aerie.services.plan.models.SimulationResults;
 import gov.nasa.jpl.aerie.services.plan.utils.HttpRequester;
 import gov.nasa.jpl.aerie.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -35,6 +37,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.nullP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.json.ProductParsers.productP;
 
 public final class RemoteAdaptationService implements AdaptationService {
   private final HttpRequester client;
@@ -162,19 +165,22 @@ public final class RemoteAdaptationService implements AdaptationService {
       . when(ValueType.OBJECT,
              mapP(selfP).map(SerializedValue::of)));
 
-  private static JsonParser<List<Duration>> timestampsP = listP(durationP);
-  private static JsonParser<Map<String, List<SerializedValue>>> timelinesP = mapP(listP(serializedValueP));
+  private static JsonParser<Pair<Duration, SerializedValue>>
+  sampleP =
+      productP
+      .field("x", durationP)
+      .field("y", serializedValueP);
 
+  private static JsonParser<Map<String, List<Pair<Duration, SerializedValue>>>> resourceSampleP = mapP(listP(sampleP));
   public static SimulationResults deserializeSimulationResults(final Instant startTime, final JsonValue json) {
     if (!(json instanceof JsonObject)) throw new InvalidServiceResponseException();
     final var jsonObject = (JsonObject) json;
 
-    final var timestamps = timestampsP.parse(jsonObject.get("times")).getSuccessOrThrow(InvalidServiceResponseException::new);
-    final var timelines = timelinesP.parse(jsonObject.get("resources")).getSuccessOrThrow(InvalidServiceResponseException::new);
+    final var resourceSamples = resourceSampleP.parse(jsonObject.get("resources")).getSuccessOrThrow(InvalidServiceResponseException::new);
     final var constraints = jsonObject.get("constraints");
     final var activities = jsonObject.get("activities");
 
-    return new SimulationResults(startTime, timestamps, timelines, constraints, activities);
+    return new SimulationResults(startTime, resourceSamples, constraints, activities);
   }
 
   private static List<String> deserializeActivityValidation(final JsonValue json) {

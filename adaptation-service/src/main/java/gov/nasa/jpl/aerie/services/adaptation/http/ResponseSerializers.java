@@ -44,6 +44,16 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
+  public static JsonValue serializeSample(final Pair<Duration, SerializedValue> element) {
+    if (element == null) return JsonValue.NULL;
+
+    return Json
+        .createObjectBuilder()
+        .add("x", serializeDuration(element.getLeft()))
+        .add("y", serializeParameter(element.getRight()))
+        .build();
+  }
+
   public static <T> JsonValue serializeMap(final Function<T, JsonValue> fieldSerializer, final Map<String, T> fields) {
     if (fields == null) return JsonValue.NULL;
 
@@ -141,18 +151,6 @@ public final class ResponseSerializers {
     return parameter.match(new ParameterSerializer());
   }
 
-  public static JsonValue serializeTimeline(final List<SerializedValue> elements) {
-    return serializeIterable(ResponseSerializers::serializeParameter, elements);
-  }
-
-  public static JsonValue serializeTimestamp(final Duration timestamp) {
-    return Json.createValue(timestamp.in(Duration.MICROSECONDS));
-  }
-
-  public static JsonValue serializeTimestamps(final List<Duration> elements) {
-    return serializeIterable(ResponseSerializers::serializeTimestamp, elements);
-  }
-
   public static JsonValue serializeTimestampString(final TemporalAccessor timestamp) {
     return Json.createValue(
         DateTimeFormatter
@@ -208,8 +206,11 @@ public final class ResponseSerializers {
     if (results == null) return JsonValue.NULL;
 
     final var builder = Json.createObjectBuilder();
-    builder.add("times", serializeTimestamps(results.timestamps));
-    builder.add("resources", serializeMap(ResponseSerializers::serializeTimeline, results.timelines));
+    builder.add(
+        "resources",
+        serializeMap(
+            elements -> serializeIterable(ResponseSerializers::serializeSample, elements),
+            results.resourceSamples));
     builder.add(
         "constraints",
         serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations));

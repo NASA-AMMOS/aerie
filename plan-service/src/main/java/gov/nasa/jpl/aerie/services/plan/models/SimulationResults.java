@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.services.plan.models;
 
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.JsonValue;
 import java.time.Instant;
@@ -11,15 +12,18 @@ import java.util.Objects;
 
 public final class SimulationResults {
   public final Instant startTime;
-  public final List<Duration> timestamps;
-  public final Map<String, List<SerializedValue>> timelines;
+  public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final JsonValue constraints;
   public final JsonValue activities;
 
-  public SimulationResults(final Instant startTime, final List<Duration> timestamps, final Map<String, List<SerializedValue>> timelines, JsonValue constraints, JsonValue activities) {
+  public SimulationResults(
+      final Instant startTime,
+      final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples,
+      final JsonValue constraints,
+      final JsonValue activities)
+  {
     this.startTime = startTime;
-    this.timestamps = timestamps;
-    this.timelines = timelines;
+    this.resourceSamples = resourceSamples;
     this.constraints = constraints;
     this.activities = activities;
   }
@@ -29,8 +33,7 @@ public final class SimulationResults {
     return "SimulationResults" +
         " {" +
         " startTime=" + startTime + "," +
-        " timestamps=" + timestamps + "," +
-        " timelines=" + timelines + "," +
+        " resourceSamples=" + resourceSamples + "," +
         " constraints=" + constraints + "," +
         " activities=" + activities +
         " }";
@@ -43,8 +46,7 @@ public final class SimulationResults {
 
     return
         (  Objects.equals(this.startTime, other.startTime)
-        && Objects.equals(this.timestamps, other.timestamps)
-        && Objects.equals(this.timelines, other.timelines)
+        && Objects.equals(this.resourceSamples, other.resourceSamples)
         && Objects.equals(this.constraints, other.constraints)
         && Objects.equals(this.activities, other.activities)
         );
@@ -52,6 +54,6 @@ public final class SimulationResults {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.startTime, this.timestamps, this.timelines, this.constraints, this.activities);
+    return Objects.hash(this.startTime, this.resourceSamples, this.constraints, this.activities);
   }
 }

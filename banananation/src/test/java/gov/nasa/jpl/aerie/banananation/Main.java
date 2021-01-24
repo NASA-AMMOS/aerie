@@ -48,8 +48,7 @@ public final class Main {
         simulationDuration,
         samplingPeriod);
 
-    System.out.println(simulationResults.timestamps);
-    System.out.println(simulationResults.timelines);
+    System.out.println(simulationResults.resourceSamples);
     System.out.println(simulationResults.constraintViolations);
   }
 }

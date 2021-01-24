@@ -44,7 +44,7 @@ public class SimulateMapSchedule {
         simulationDuration,
         samplingPeriod);
 
-    simulationResults.timelines.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
+    simulationResults.resourceSamples.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
   }
 
   private static Map<String, Pair<Duration, SerializedActivity>> loadSchedule() {
