@@ -431,6 +431,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html#constraintViolations">constraintViolations</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationResults</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationDriver.html#constructPairList(java.util.List,java.util.List)">constructPairList(List&lt;S&gt;, List&lt;T&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationDriver.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationDriver</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html#ContainedBy">ContainedBy</a></span> - gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html" title="enum in gov.nasa.jpl.aerie.utilities">IntervalAlgebra.Relation</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html#contains(gov.nasa.jpl.aerie.merlin.framework.resources.real.ClosedInterval)">contains(ClosedInterval)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">ClosedInterval</a></dt>
@@ -1544,6 +1546,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="typeNameLink">ResourceFamily</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceFamily.html" title="type parameter in ResourceFamily">$Schema</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceFamily.html" title="type parameter in ResourceFamily">Resource</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceFamily.html" title="type parameter in ResourceFamily">Condition</a>&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/protocol/package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html#resourceSamples">resourceSamples</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationResults</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="typeNameLink">ResourceSolver</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceSolver.html" title="type parameter in ResourceSolver">$Schema</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceSolver.html" title="type parameter in ResourceSolver">Resource</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/protocol/ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/protocol/package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></dt>
 <dd>
 <div class="block">A solver over a continuous dynamics for a resource type and conditions against that resource.</div>
@@ -1714,7 +1718,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver"><span class="typeNameLink">SimulationResults</span></a> - Class in <a href="gov/nasa/jpl/aerie/merlin/driver/package-summary.html">gov.nasa.jpl.aerie.merlin.driver</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html#%3Cinit%3E(java.util.List,java.util.Map,java.util.List,java.util.Map,java.util.Map,java.time.Instant)">SimulationResults(List&lt;Duration&gt;, Map&lt;String, List&lt;SerializedValue&gt;&gt;, List&lt;ConstraintViolation&gt;, Map&lt;String, TaskRecord&gt;, Map&lt;String, Window&gt;, Instant)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationResults</a></dt>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html#%3Cinit%3E(java.util.Map,java.util.List,java.util.Map,java.util.Map,java.time.Instant)">SimulationResults(Map&lt;String, List&lt;Pair&lt;Duration, SerializedValue&gt;&gt;&gt;, List&lt;ConstraintViolation&gt;, Map&lt;String, TaskRecord&gt;, Map&lt;String, Window&gt;, Instant)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationResults</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/timeline/SimulationTimeline.html" title="class in gov.nasa.jpl.aerie.merlin.timeline"><span class="typeNameLink">SimulationTimeline</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/timeline/SimulationTimeline.html" title="type parameter in SimulationTimeline">$Timeline</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/timeline/package-summary.html">gov.nasa.jpl.aerie.merlin.timeline</a></dt>
 <dd>
@@ -1832,11 +1836,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)">ThreadedTask(Scoped&lt;Context&lt;$Schema&gt;&gt;, Runnable)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html#timelines">timelines</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationResults</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#times(long)">times(long)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html#timestamps">timestamps</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/SimulationResults.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationResults</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/ConstraintViolation.html#toString()">toString()</a></span> - Method in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/ConstraintViolation.html" title="class in gov.nasa.jpl.aerie.merlin.driver">ConstraintViolation</a></dt>
 <dd>&nbsp;</dd>
