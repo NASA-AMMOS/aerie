@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
+import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
@@ -26,7 +28,7 @@ public final class Pointing extends Model {
   }
 
   public Vector3D getVector() {
-    return new Vector3D(this.x.value.get(), this.y.value.get(), this.z.value.get());
+    return new Vector3D(this.x.get(), this.y.get(), this.z.get());
   }
 
   public Vector3D getRate() {
@@ -54,14 +56,18 @@ public final class Pointing extends Model {
     addRate(previousRate);         // Reset rate to previous rate
   }
 
-  public static final class Component {
-    public final Accumulator.Volume value;
+  public static final class Component implements RealResource {
+    private final Accumulator acc;
     public final Accumulator.Rate rate;
 
     public Component(final Registrar registrar, final double value, final double rate) {
-      final var acc = new Accumulator(registrar, value, rate);
-      this.value = acc.volume;
-      this.rate = acc.rate;
+      this.acc = new Accumulator(registrar, value, rate);
+      this.rate = this.acc.rate;
+    }
+
+    @Override
+    public RealDynamics getDynamics() {
+      return this.acc.getDynamics();
     }
   }
 }

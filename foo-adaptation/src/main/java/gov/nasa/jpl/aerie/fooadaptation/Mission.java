@@ -40,7 +40,7 @@ public final class Mission extends Model {
 
     this.foo = Register.create(registrar.descend("foo"), 0.0);
     this.data = new Accumulator(registrar.descend("data"));
-    this.combo = this.data.volume.resource.plus(this.data.rate.resource);
+    this.combo = this.data.plus(this.data.rate);
 
     this.source = new Accumulator(registrar.descend("source"), 100.0, 1.0);
     this.sink = new Accumulator(registrar.descend("sink"), 0.0, 0.5);
@@ -49,7 +49,7 @@ public final class Mission extends Model {
 
     this.batterySoC = new SampledResource<>(
         registrar.descend("batterySoC"),
-        ()->this.source.volume.get() - this.sink.volume.get(),
+        () -> (this.source.minus(this.sink)).get(),
         0.0,
         new DoubleValueMapper());
 

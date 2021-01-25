@@ -16,11 +16,11 @@ public final class Clock extends Model {
   }
 
   public double getElapsedMilliseconds() {
-    return ticks.volume.get();
+    return ticks.get();
   }
 
   public Instant getTime() {
-    final var ticksCount = ticks.volume.get();
+    final var ticksCount = ticks.get();
     final var milli = (long) ticksCount;
     final var nano = (long) ((ticksCount - milli) * 1_000_000);
 

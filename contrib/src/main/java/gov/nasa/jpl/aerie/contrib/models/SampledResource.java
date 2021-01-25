@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Objects;
@@ -9,7 +10,7 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 
-public class SampledResource<T> extends Model {
+public class SampledResource<T> extends Model implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
 
@@ -35,7 +36,8 @@ public class SampledResource<T> extends Model {
     }
   }
 
-  public T get() {
-    return this.result.get();
+  @Override
+  public T getDynamics() {
+    return this.result.getDynamics();
   }
 }

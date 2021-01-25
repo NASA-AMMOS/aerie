@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.contrib.cells.counters.CounterCell;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
@@ -12,9 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import java.util.function.BinaryOperator;
 
 
-public final class Counter<T> extends Model {
-  public final DiscreteResource<T> value;
-
+public final class Counter<T> implements DiscreteResource<T> {
   private final CellRef<T, CounterCell<T>> ref;
 
   public Counter(
@@ -24,17 +21,9 @@ public final class Counter<T> extends Model {
       final BinaryOperator<T> adder,
       final ValueMapper<T> mapper)
   {
-    super(registrar);
     this.ref = registrar.cell(new CounterCell<>(initialValue, zero, adder));
 
-    this.value = registrar.resource(
-        "value",
-        () -> this.ref.get().getValue(),
-        mapper);
-  }
-
-  public void add(final T change) {
-    this.ref.emit(change);
+    registrar.resource("value", this, mapper);
   }
 
   public static Counter<Integer> ofInteger(final Registrar registrar, final Integer initialValue) {
@@ -51,5 +40,15 @@ public final class Counter<T> extends Model {
 
   public static Counter<Double> ofDouble(final Registrar registrar) {
     return ofDouble(registrar, 0.0);
+  }
+
+
+  @Override
+  public T getDynamics() {
+    return this.ref.get().getValue();
+  }
+
+  public void add(final T change) {
+    this.ref.emit(change);
   }
 }

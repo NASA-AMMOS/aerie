@@ -7,36 +7,18 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.framework.Condition;
-import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
-import java.util.Set;
-
-public final class Register<Value> extends Model {
+public final class Register<Value> implements DiscreteResource<Value> {
   private final CellRef<RegisterEffect<Value>, RegisterCell<Value>> ref;
-  public final DiscreteResource<Value> value;
-  public final DiscreteResource<Boolean> conflicted;
 
-  public Register(
-      final Registrar registrar,
-      final Value initialValue,
-      final ValueMapper<Value> mapper)
-  {
-    super(registrar);
-
+  public Register(final Registrar registrar, final Value initialValue, final ValueMapper<Value> mapper) {
     this.ref = registrar.cell(new RegisterCell<>(initialValue));
 
-    this.value = registrar.resource(
-        "value",
-        () -> this.ref.get().getValue(),
-        mapper);
-    this.conflicted = registrar.resource(
-        "conflicted",
-        () -> this.ref.get().isConflicted(),
-        new BooleanValueMapper());
+    registrar.resource("value", this, mapper);
+    registrar.resource("conflicted", this::isConflicted, new BooleanValueMapper());
   }
 
   public static
@@ -61,28 +43,16 @@ public final class Register<Value> extends Model {
     return new Register<>(registrar, initialValue, new EnumValueMapper<>(klass));
   }
 
-  public void set(final Value value) {
-    this.ref.emit(RegisterEffect.set(value));
-  }
-
-  public Value get() {
-    return this.value.get();
+  @Override
+  public Value getDynamics() {
+    return this.ref.get().getValue();
   }
 
   public boolean isConflicted() {
-    return this.conflicted.get();
+    return this.ref.get().isConflicted();
   }
 
-  public Condition isOneOf(final Set<Value> values) {
-    return this.value.isOneOf(values);
-  }
-
-  @SafeVarargs
-  public final Condition isOneOf(final Value... values) {
-    return this.isOneOf(Set.of(values));
-  }
-
-  public Condition is(final Value value) {
-    return this.isOneOf(value);
+  public void set(final Value value) {
+    this.ref.emit(RegisterEffect.set(value));
   }
 }
