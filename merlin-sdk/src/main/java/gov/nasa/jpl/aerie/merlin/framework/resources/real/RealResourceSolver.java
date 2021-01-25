@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
-import gov.nasa.jpl.aerie.time.Windows;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,63 +29,12 @@ public final class RealResourceSolver<$Schema>
   @Override
   public Optional<Duration>
   firstSatisfied(final RealDynamics dynamics, final RealCondition condition, final Window selection) {
-    for (final var window : this.whenSatisfied(dynamics, condition, selection)) {
-      return Optional.of(window.start);
-    }
-
-    return Optional.empty();
+    return dynamics.whenSatisfies(condition, selection);
   }
 
   @Override
-  public Optional<Duration> firstDissatisfied(
-      final RealDynamics dynamics,
-      final RealCondition condition,
-      final Window selection)
-  {
-    final var results = new Windows(selection);
-    results.subtractAll(this.whenSatisfied(dynamics, condition, selection));
-
-    for (final var window : results) {
-      return Optional.of(window.start);
-    }
-
-    return Optional.empty();
-  }
-
-
-  public Windows whenSatisfied(final RealDynamics dynamics, final RealCondition condition, final Window selection) {
-    final var windows = new Windows();
-
-    if (dynamics.rate == 0) {
-      windows.add((condition.includesPoint(dynamics.initial)) ? selection : Window.EMPTY);
-    } else if (dynamics.rate > 0) {
-      for (final var interval : condition.ascendingOrder()) {
-        // It starts too high (and it's going higher); no intersection.
-        if (dynamics.initial > interval.max) continue;
-
-        final var start = (interval.min - dynamics.initial) / dynamics.rate;
-        final var end = (interval.max - dynamics.initial) / dynamics.rate;
-        final var window = Window.roundIn(start, end, Duration.SECONDS);
-
-        if (!window.overlaps(selection)) continue;
-
-        windows.add(window);
-      }
-    } else {
-      for (final var interval : condition.descendingOrder()) {
-        // It starts too low (and it's going lower); no intersection.
-        if (dynamics.initial < interval.min) continue;
-
-        final var start = (interval.max - dynamics.initial) / dynamics.rate;
-        final var end = (interval.min - dynamics.initial) / dynamics.rate;
-        final var window = Window.roundIn(start, end, Duration.SECONDS);
-
-        if (!window.overlaps(selection)) continue;
-
-        windows.add(window);
-      }
-    }
-
-    return windows;
+  public Optional<Duration>
+  firstDissatisfied(final RealDynamics dynamics, final RealCondition condition, final Window selection) {
+    return dynamics.whenDissatisfies(condition, selection);
   }
 }

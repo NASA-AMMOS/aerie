@@ -1,5 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
+import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition;
+import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.time.Window;
+import gov.nasa.jpl.aerie.time.Windows;
+
+import java.util.Optional;
+
 /**
  * A description of a time-dependent behavior for real-valued resources that may vary continuously.
  *
@@ -35,6 +42,62 @@ public final class RealDynamics {
 
   public final RealDynamics minus(final RealDynamics other) {
     return this.plus(other.scaledBy(-1.0));
+  }
+
+
+  public Optional<Duration> whenSatisfies(final RealCondition condition, final Window selection) {
+    for (final var window : this.getSatisfyingWindows(condition, selection)) {
+      return Optional.of(window.start);
+    }
+
+    return Optional.empty();
+  }
+
+  public Optional<Duration> whenDissatisfies(final RealCondition condition, final Window selection) {
+    final var results = new Windows(selection);
+    results.subtractAll(this.getSatisfyingWindows(condition, selection));
+
+    for (final var window : results) {
+      return Optional.of(window.start);
+    }
+
+    return Optional.empty();
+  }
+
+  public Windows getSatisfyingWindows(final RealCondition condition, final Window selection) {
+    final var windows = new Windows();
+
+    if (this.rate == 0) {
+      windows.add((condition.includesPoint(this.initial)) ? selection : Window.EMPTY);
+    } else if (this.rate > 0) {
+      for (final var interval : condition.ascendingOrder()) {
+        // It starts too high (and it's going higher); no intersection.
+        if (this.initial > interval.max) continue;
+
+        final var start = (interval.min - this.initial) / this.rate;
+        final var end = (interval.max - this.initial) / this.rate;
+        final var window = Window.roundIn(start, end, Duration.SECONDS);
+
+        if (!window.overlaps(selection)) continue;
+
+        windows.add(window);
+      }
+    } else {
+      for (final var interval : condition.descendingOrder()) {
+        // It starts too low (and it's going lower); no intersection.
+        if (this.initial < interval.min) continue;
+
+        final var start = (interval.max - this.initial) / this.rate;
+        final var end = (interval.min - this.initial) / this.rate;
+        final var window = Window.roundIn(start, end, Duration.SECONDS);
+
+        if (!window.overlaps(selection)) continue;
+
+        windows.add(window);
+      }
+    }
+
+    return windows;
   }
 
 
