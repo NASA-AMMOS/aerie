@@ -36,14 +36,14 @@ public final class Registrar {
   public <State>
   DiscreteResource<State>
   resource(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {
-    this.builder.discrete("/" + name, resource, mapper);
+    this.builder.discrete(name, resource, mapper);
     return resource;
   }
 
   public
   RealResource
   resource(final String name, final RealResource resource) {
-    this.builder.real("/" + name, resource);
+    this.builder.real(name, resource);
     return resource;
   }
 

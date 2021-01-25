@@ -19,9 +19,9 @@ public class Mission extends Model {
     this.peel = AdditiveRegister.create(registrar, 4.0);
     this.fruit = AdditiveRegister.create(registrar, 4.0);
 
-    registrar.resource("flag", this.flag, new EnumValueMapper<>(Flag.class));
-    registrar.resource("flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
-    registrar.resource("peel", this.peel, new DoubleValueMapper());
-    registrar.resource("fruit", this.fruit, new DoubleValueMapper());
+    registrar.resource("/flag", this.flag, new EnumValueMapper<>(Flag.class));
+    registrar.resource("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
+    registrar.resource("/peel", this.peel, new DoubleValueMapper());
+    registrar.resource("/fruit", this.fruit, new DoubleValueMapper());
   }
 }

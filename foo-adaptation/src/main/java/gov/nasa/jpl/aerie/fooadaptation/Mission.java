@@ -67,23 +67,23 @@ public final class Mission extends Model {
 
     // TODO: Move resource registration out into an Aerie-specific binding layer.
     //   (This binding layer should also be the one responsible for feeding in constructor parameters.)
-    registrar.resource("foo", this.foo, new DoubleValueMapper());
-    registrar.resource("foo/conflicted", this.foo::isConflicted, new BooleanValueMapper());
-    registrar.resource("batterySoC", this.batterySoC, new DoubleValueMapper());
-    registrar.resource("data", this.data);
-    registrar.resource("data/rate", this.data.rate);
-    registrar.resource("source", this.source);
-    registrar.resource("source/rate", this.source.rate);
-    registrar.resource("sink", this.sink);
-    registrar.resource("sink/rate", this.sink.rate);
-    registrar.resource("activitiesExecuted", this.activitiesExecuted, new IntegerValueMapper());
-    registrar.resource("utcClock", this.utcClock.ticks);
+    registrar.resource("/foo", this.foo, new DoubleValueMapper());
+    registrar.resource("/foo/conflicted", this.foo::isConflicted, new BooleanValueMapper());
+    registrar.resource("/batterySoC", this.batterySoC, new DoubleValueMapper());
+    registrar.resource("/data", this.data);
+    registrar.resource("/data/rate", this.data.rate);
+    registrar.resource("/source", this.source);
+    registrar.resource("/source/rate", this.source.rate);
+    registrar.resource("/sink", this.sink);
+    registrar.resource("/sink/rate", this.sink.rate);
+    registrar.resource("/activitiesExecuted", this.activitiesExecuted, new IntegerValueMapper());
+    registrar.resource("/utcClock", this.utcClock.ticks);
 
-    registrar.resource("simple_data/a/volume", this.simpleData.a.volume);
-    registrar.resource("simple_data/a/rate", this.simpleData.a.rate);
-    registrar.resource("simple_data/b/volume", this.simpleData.b.volume);
-    registrar.resource("simple_data/b/rate", this.simpleData.b.rate);
-    registrar.resource("simple_data/total_volume", this.simpleData.totalVolume);
+    registrar.resource("/simple_data/a/volume", this.simpleData.a.volume);
+    registrar.resource("/simple_data/a/rate", this.simpleData.a.rate);
+    registrar.resource("/simple_data/b/volume", this.simpleData.b.volume);
+    registrar.resource("/simple_data/b/rate", this.simpleData.b.rate);
+    registrar.resource("/simple_data/total_volume", this.simpleData.totalVolume);
   }
 
   public void test() {
