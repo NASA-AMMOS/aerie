@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.contrib.models;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -14,14 +13,9 @@ public class SampledResource<T> extends Model implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
 
-  public SampledResource(
-      final Registrar builder,
-      final Supplier<T> sampler,
-      final T initialValue,
-      final ValueMapper<T> mapper)
-  {
+  public SampledResource(final Registrar builder, final Supplier<T> sampler, final T initialValue) {
     super(builder);
-    this.result = new Register<>(builder, initialValue, mapper);
+    this.result = Register.create(builder, initialValue);
     this.sampler = Objects.requireNonNull(sampler);
     builder.daemon("results", this::takeSamples);
   }

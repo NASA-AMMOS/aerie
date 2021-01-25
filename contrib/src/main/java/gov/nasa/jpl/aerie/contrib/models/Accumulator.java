@@ -18,9 +18,6 @@ public final class Accumulator implements RealResource {
 
   public Accumulator(final Registrar registrar, final double initialVolume, final double initialRate) {
     this.ref = registrar.cell(new LinearIntegrationCell(initialVolume, initialRate));
-
-    registrar.resource("volume", this);
-    registrar.resource("rate", this.rate);
   }
 
   @Override

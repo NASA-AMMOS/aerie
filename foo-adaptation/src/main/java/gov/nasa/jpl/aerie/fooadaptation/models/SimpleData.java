@@ -20,12 +20,6 @@ public final class SimpleData extends Model {
     this.a = new InstrumentData(10.0, registrar.cell(new LinearIntegrationCell(0, 0)));
     this.b = new InstrumentData(5.0, registrar.cell(new LinearIntegrationCell(0, 0)));
     this.totalVolume = RealResource.add(this.a.volume, this.b.volume);
-
-    registrar.descend("a").resource("volume", this.a.volume);
-    registrar.descend("a").resource("rate", this.a.rate);
-    registrar.descend("b").resource("volume", this.b.volume);
-    registrar.descend("b").resource("rate", this.b.rate);
-    registrar.resource("total_volume", this.totalVolume);
   }
 
   public void downlinkData() {

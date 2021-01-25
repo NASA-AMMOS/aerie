@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.fooadaptation;
 
-import gov.nasa.jpl.aerie.contrib.models.Clock;
-import gov.nasa.jpl.aerie.contrib.models.SampledResource;
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
+import gov.nasa.jpl.aerie.contrib.models.Clock;
 import gov.nasa.jpl.aerie.contrib.models.Register;
+import gov.nasa.jpl.aerie.contrib.models.SampledResource;
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.generated.Model;
 import gov.nasa.jpl.aerie.fooadaptation.models.Imager;
 import gov.nasa.jpl.aerie.fooadaptation.models.ImagerMode;
@@ -38,31 +40,50 @@ public final class Mission extends Model {
     super(registrar);
     this.cachedRegistrar = registrar;
 
-    this.foo = Register.create(registrar.descend("foo"), 0.0);
-    this.data = new Accumulator(registrar.descend("data"));
+    this.foo = Register.create(registrar, 0.0);
+    this.data = new Accumulator(registrar);
     this.combo = this.data.plus(this.data.rate);
 
-    this.source = new Accumulator(registrar.descend("source"), 100.0, 1.0);
-    this.sink = new Accumulator(registrar.descend("sink"), 0.0, 0.5);
+    this.source = new Accumulator(registrar, 100.0, 1.0);
+    this.sink = new Accumulator(registrar, 0.0, 0.5);
 
-    this.activitiesExecuted = Counter.ofInteger(registrar.descend("activities"), 0);
+    this.activitiesExecuted = Counter.ofInteger(registrar, 0);
 
     this.batterySoC = new SampledResource<>(
-        registrar.descend("batterySoC"),
+        registrar,
         () -> (this.source.minus(this.sink)).get(),
-        0.0,
-        new DoubleValueMapper());
+        0.0);
 
-    this.simpleData = new SimpleData(registrar.descend("simple_data"));
-    this.complexData = new Imager(registrar.descend("complex_data"), 5, ImagerMode.LOW_RES, 30);
+    this.simpleData = new SimpleData(registrar);
+    this.complexData = new Imager(registrar, 5, ImagerMode.LOW_RES, 30);
 
-    this.utcClock = new Clock(registrar.descend("utcClock"), Instant.parse("2023-08-18T00:00:00.00Z"));
+    this.utcClock = new Clock(registrar, Instant.parse("2023-08-18T00:00:00.00Z"));
     // TODO: automatically perform this for each @Daemon annotation
     registrar.daemon("test", this::test);
 
     // Assert adaptation is unbuilt
     if (registrar.isInitializationComplete())
       throw new AssertionError("Registrar should not report initialization as complete");
+
+    // TODO: Move resource registration out into an Aerie-specific binding layer.
+    //   (This binding layer should also be the one responsible for feeding in constructor parameters.)
+    registrar.resource("foo", this.foo, new DoubleValueMapper());
+    registrar.resource("foo/conflicted", this.foo::isConflicted, new BooleanValueMapper());
+    registrar.resource("batterySoC", this.batterySoC, new DoubleValueMapper());
+    registrar.resource("data", this.data);
+    registrar.resource("data/rate", this.data.rate);
+    registrar.resource("source", this.source);
+    registrar.resource("source/rate", this.source.rate);
+    registrar.resource("sink", this.sink);
+    registrar.resource("sink/rate", this.sink.rate);
+    registrar.resource("activitiesExecuted", this.activitiesExecuted, new IntegerValueMapper());
+    registrar.resource("utcClock", this.utcClock.ticks);
+
+    registrar.resource("simple_data/a/volume", this.simpleData.a.volume);
+    registrar.resource("simple_data/a/rate", this.simpleData.a.rate);
+    registrar.resource("simple_data/b/volume", this.simpleData.b.volume);
+    registrar.resource("simple_data/b/rate", this.simpleData.b.rate);
+    registrar.resource("simple_data/total_volume", this.simpleData.totalVolume);
   }
 
   public void test() {

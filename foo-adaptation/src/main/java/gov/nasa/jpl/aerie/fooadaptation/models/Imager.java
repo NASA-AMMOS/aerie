@@ -19,9 +19,9 @@ public final class Imager {
   public Imager(final Registrar registrar, final double bitsPerPixel, final ImagerMode mode, final double frameRate) {
     this.bitsPerPixel = bitsPerPixel;
 
-    this.mode = Register.create(registrar.descend("mode"), mode);
-    this.frameRate = Register.create(registrar.descend("frameRate"), frameRate);
-    this.imagedBits = new Accumulator(registrar.descend("imagedBits"));
+    this.mode = Register.create(registrar, mode);
+    this.frameRate = Register.create(registrar, frameRate);
+    this.imagedBits = new Accumulator(registrar);
 
     this.volume = this.imagedBits;
     this.rate = this.imagedBits.rate;
