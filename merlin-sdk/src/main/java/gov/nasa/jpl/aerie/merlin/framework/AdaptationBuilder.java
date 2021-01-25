@@ -60,8 +60,8 @@ public final class AdaptationBuilder<$Schema> {
     this.state.real(name, resource);
   }
 
-  public void daemon(final String id, final Runnable task) {
-    this.state.daemon(id, task);
+  public void daemon(final Runnable task) {
+    this.state.daemon(task);
   }
 
   public void taskType(final String id, final TaskSpecType<$Schema, ?> taskSpecType) {
@@ -120,8 +120,7 @@ public final class AdaptationBuilder<$Schema> {
          RealResource resource);
 
     void
-    daemon(String id,
-           Runnable task);
+    daemon(Runnable task);
 
     void
     taskType(String id,
@@ -136,6 +135,8 @@ public final class AdaptationBuilder<$Schema> {
     private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
+
+    private int nextDaemonId = 0;
 
     @Override
     public boolean isBuilt() {
@@ -161,7 +162,8 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void daemon(final String id, final Runnable task) {
+    public void daemon(final Runnable task) {
+      final var id = "/daemons/daemon" + (this.nextDaemonId++);
       final var daemonType = new DaemonTaskType<>(id, task, rootContext);
 
       this.taskSpecTypes.put(daemonType.getName(), daemonType);
@@ -217,7 +219,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void daemon(final String id, final Runnable task) {
+    public void daemon(final Runnable task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

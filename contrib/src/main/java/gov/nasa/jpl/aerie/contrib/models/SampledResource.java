@@ -17,7 +17,7 @@ public class SampledResource<T> extends Model implements DiscreteResource<T> {
     super(builder);
     this.result = Register.create(builder, initialValue);
     this.sampler = Objects.requireNonNull(sampler);
-    builder.daemon("results", this::takeSamples);
+    builder.daemon(this::takeSamples);
   }
 
   private void takeSamples() {

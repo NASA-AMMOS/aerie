@@ -47,7 +47,7 @@ public final class Registrar {
     return resource;
   }
 
-  public void daemon(final String id, final Runnable task) {
-    this.builder.daemon("/daemons/" + id, task);
+  public void daemon(final Runnable task) {
+    this.builder.daemon(task);
   }
 }

@@ -59,7 +59,7 @@ public final class Mission extends Model {
 
     this.utcClock = new Clock(registrar, Instant.parse("2023-08-18T00:00:00.00Z"));
     // TODO: automatically perform this for each @Daemon annotation
-    registrar.daemon("test", this::test);
+    registrar.daemon(this::test);
 
     // Assert adaptation is unbuilt
     if (registrar.isInitializationComplete())
