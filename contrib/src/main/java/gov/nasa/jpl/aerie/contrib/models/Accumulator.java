@@ -3,10 +3,10 @@ package gov.nasa.jpl.aerie.contrib.models;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 
 public final class Accumulator extends Model {
   public final Volume volume;
@@ -43,7 +43,7 @@ public final class Accumulator extends Model {
       return this.resource.ask();
     }
 
-    public CompoundCondition<?> isBetween(final double lower, final double upper) {
+    public Condition isBetween(final double lower, final double upper) {
       return this.resource.isBetween(lower, upper);
     }
   }
@@ -66,7 +66,7 @@ public final class Accumulator extends Model {
       this.ref.emit(LinearAccumulationEffect.addRate(delta));
     }
 
-    public CompoundCondition<?> isBetween(final double lower, final double upper) {
+    public Condition isBetween(final double lower, final double upper) {
       return this.resource.isBetween(lower, upper);
     }
   }

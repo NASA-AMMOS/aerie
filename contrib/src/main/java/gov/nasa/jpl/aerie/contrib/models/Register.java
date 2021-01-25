@@ -7,19 +7,15 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 public final class Register<Value> extends Model {
-  private final ValueMapper<Value> mapper;
-
   private final CellRef<RegisterEffect<Value>, RegisterCell<Value>> ref;
   public final DiscreteResource<Value> value;
   public final DiscreteResource<Boolean> conflicted;
@@ -30,8 +26,6 @@ public final class Register<Value> extends Model {
       final ValueMapper<Value> mapper)
   {
     super(registrar);
-
-    this.mapper = Objects.requireNonNull(mapper);
 
     this.ref = registrar.cell(new RegisterCell<>(initialValue));
 
@@ -79,16 +73,16 @@ public final class Register<Value> extends Model {
     return this.conflicted.ask();
   }
 
-  public CompoundCondition<?> isOneOf(final Set<Value> values) {
-    return this.value.isOneOf(values, this.mapper);
+  public Condition isOneOf(final Set<Value> values) {
+    return this.value.isOneOf(values);
   }
 
   @SafeVarargs
-  public final CompoundCondition<?> isOneOf(final Value... values) {
+  public final Condition isOneOf(final Value... values) {
     return this.isOneOf(Set.of(values));
   }
 
-  public CompoundCondition<?> is(final Value value) {
+  public Condition is(final Value value) {
     return this.isOneOf(value);
   }
 }

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
 
@@ -53,7 +52,7 @@ public abstract class Model {
     this.context.get().waitFor(id);
   }
 
-  protected final void waitUntil(final CompoundCondition<?> condition) {
+  protected final void waitUntil(final Condition condition) {
     this.context.get().waitUntil(condition);
   }
 }

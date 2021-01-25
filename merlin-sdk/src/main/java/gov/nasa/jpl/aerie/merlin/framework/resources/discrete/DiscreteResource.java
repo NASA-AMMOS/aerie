@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -75,10 +75,13 @@ public abstract class DiscreteResource<T> {
     return DiscreteResource.mapped(this, transform);
   }
 
-  public CompoundCondition<?> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
-    return CompoundCondition.atom(
-        new DiscreteResourceSolver<>(mapper),
-        this,
-        Set.copyOf(values));
+  public Condition isOneOf(final Set<T> values) {
+    return (scope, positive) -> {
+      final var dynamics = this.getDynamics();
+
+      return (positive == values.contains(dynamics))
+          ? Optional.of(scope.start)
+          : Optional.empty();
+    };
   }
 }
