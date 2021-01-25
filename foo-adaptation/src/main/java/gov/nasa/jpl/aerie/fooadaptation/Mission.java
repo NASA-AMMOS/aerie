@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.fooadaptation;
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.aerie.contrib.models.Clock;
 import gov.nasa.jpl.aerie.contrib.models.Register;
-import gov.nasa.jpl.aerie.contrib.models.SampledResource;
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
@@ -26,7 +25,6 @@ public final class Mission extends Model {
   public final Accumulator data;
   public final Accumulator source;
   public final Accumulator sink;
-  public final SampledResource<Double> batterySoC;
   public final SimpleData simpleData;
   public final Counter<Integer> activitiesExecuted;
   public final Imager complexData;
@@ -49,11 +47,6 @@ public final class Mission extends Model {
 
     this.activitiesExecuted = Counter.ofInteger(registrar, 0);
 
-    this.batterySoC = new SampledResource<>(
-        registrar,
-        () -> (this.source.minus(this.sink)).get(),
-        0.0);
-
     this.simpleData = new SimpleData(registrar);
     this.complexData = new Imager(registrar, 5, ImagerMode.LOW_RES, 30);
 
@@ -69,7 +62,7 @@ public final class Mission extends Model {
     //   (This binding layer should also be the one responsible for feeding in constructor parameters.)
     registrar.resource("/foo", this.foo, new DoubleValueMapper());
     registrar.resource("/foo/conflicted", this.foo::isConflicted, new BooleanValueMapper());
-    registrar.resource("/batterySoC", this.batterySoC, new DoubleValueMapper());
+    registrar.resource("/batterySoC", this.source.minus(this.sink));
     registrar.resource("/data", this.data);
     registrar.resource("/data/rate", this.data.rate);
     registrar.resource("/source", this.source);
