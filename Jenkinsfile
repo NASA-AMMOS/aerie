@@ -132,7 +132,7 @@ pipeline {
           registryCredentialsId 'Artifactory-credential'
           image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/jenkins:latest'
           alwaysPull true
-          args '-u root --mount type=bind,source=${WORKSPACE},target=/home --workdir="/home'
+          args '-u root --mount type=bind,source=${WORKSPACE},target=/home --workdir=/home -v /var/run/docker.sock:/var/run/docker.sock'
         }
       }
       stages {
