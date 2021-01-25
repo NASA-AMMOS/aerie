@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static gov.nasa.jpl.aerie.time.Duration.MICROSECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
 import static gov.nasa.jpl.aerie.time.Duration.duration;
 
@@ -35,7 +34,7 @@ public class SimulateMapSchedule {
     final var schedule = loadSchedule();
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
-    final var samplingPeriod = duration(1, SECOND);
+    final var samplingPeriod = simulationDuration; // Don't sample more than necessary
 
     final var simulationResults = SimulationDriver.simulate(
         new GeneratedAdaptationFactory().instantiate(),
@@ -44,7 +43,10 @@ public class SimulateMapSchedule {
         simulationDuration,
         samplingPeriod);
 
-    simulationResults.resourceSamples.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
+    simulationResults.resourceSamples.forEach((name, samples) -> {
+      System.out.println(name + ":");
+      samples.forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
+    });
   }
 
   private static Map<String, Pair<Duration, SerializedActivity>> loadSchedule() {
