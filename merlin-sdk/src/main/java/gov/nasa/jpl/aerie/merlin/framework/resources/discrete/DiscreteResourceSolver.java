@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
+import gov.nasa.jpl.aerie.merlin.framework.Context;
+import gov.nasa.jpl.aerie.merlin.framework.QueryContext;
+import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
@@ -18,9 +21,11 @@ import java.util.Set;
 public final class DiscreteResourceSolver<$Schema, Resource>
     implements ResourceSolver<$Schema, DiscreteResource<Resource>, Resource, Set<Resource>>
 {
+  private final Scoped<Context<$Schema>> rootContext;
   private final ValueMapper<Resource> mapper;
 
-  public DiscreteResourceSolver(final ValueMapper<Resource> mapper) {
+  public DiscreteResourceSolver(final Scoped<Context<$Schema>> rootContext, final ValueMapper<Resource> mapper) {
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.mapper = Objects.requireNonNull(mapper);
   }
 
@@ -29,7 +34,7 @@ public final class DiscreteResourceSolver<$Schema, Resource>
       final DiscreteResource<Resource> resource,
       final History<? extends $Schema> now)
   {
-    return resource.getDynamicsAt(now);
+    return this.rootContext.setWithin(new QueryContext<>(now), resource::getDynamics);
   }
 
   @Override

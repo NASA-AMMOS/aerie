@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -11,11 +10,7 @@ import java.util.function.Function;
 public abstract class RealResource {
   private RealResource() {}
 
-  protected abstract RealDynamics getDynamics(final CellGetter getter);
-
-  private interface CellGetter {
-    <CellType> CellType get(CellRef<?, CellType> ref);
-  }
+  public abstract RealDynamics getDynamics();
 
 
   public static <CellType>
@@ -26,8 +21,8 @@ public abstract class RealResource {
 
     return new RealResource() {
       @Override
-      public RealDynamics getDynamics(final CellGetter getter) {
-        return property.apply(getter.get(ref));
+      public RealDynamics getDynamics() {
+        return property.apply(ref.get());
       }
     };
   }
@@ -39,8 +34,8 @@ public abstract class RealResource {
 
     return new RealResource() {
       @Override
-      public RealDynamics getDynamics(final CellGetter getter) {
-        return resource.getDynamics(getter).scaledBy(scalar);
+      public RealDynamics getDynamics() {
+        return resource.getDynamics().scaledBy(scalar);
       }
     };
   }
@@ -53,8 +48,8 @@ public abstract class RealResource {
 
     return new RealResource() {
       @Override
-      public RealDynamics getDynamics(final CellGetter getter) {
-        return left.getDynamics(getter).plus(right.getDynamics(getter));
+      public RealDynamics getDynamics() {
+        return left.getDynamics().plus(right.getDynamics());
       }
     };
   }
@@ -67,8 +62,8 @@ public abstract class RealResource {
 
     return new RealResource() {
       @Override
-      public RealDynamics getDynamics(final CellGetter getter) {
-        return left.getDynamics(getter).minus(right.getDynamics(getter));
+      public RealDynamics getDynamics() {
+        return left.getDynamics().minus(right.getDynamics());
       }
     };
   }
@@ -84,27 +79,6 @@ public abstract class RealResource {
 
   public RealResource scaledBy(final double scalar) {
     return RealResource.scaleBy(scalar, this);
-  }
-
-
-  public final RealDynamics getDynamics() {
-    return this.getDynamics(new CellGetter() {
-      @Override
-      public <CellType> CellType get(final CellRef<?, CellType> ref) {
-        return ref.get();
-      }
-    });
-  }
-
-  public final RealDynamics getDynamicsAt(final History<?> now) {
-    Objects.requireNonNull(now);
-
-    return this.getDynamics(new CellGetter() {
-      @Override
-      public <CellType> CellType get(final CellRef<?, CellType> ref) {
-        return ref.getAt(now);
-      }
-    });
   }
 
 

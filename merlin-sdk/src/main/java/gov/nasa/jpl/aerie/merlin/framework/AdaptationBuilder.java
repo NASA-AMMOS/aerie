@@ -149,7 +149,10 @@ public final class AdaptationBuilder<$Schema> {
         final DiscreteResource<Resource> resource,
         final ValueMapper<Resource> mapper)
     {
-      this.resourceFamilies.add(new DiscreteResourceFamily<>(mapper, Map.of(name, resource)));
+      this.resourceFamilies.add(new DiscreteResourceFamily<>(
+          AdaptationBuilder.this.rootContext,
+          mapper,
+          Map.of(name, resource)));
     }
 
     @Override
@@ -172,7 +175,7 @@ public final class AdaptationBuilder<$Schema> {
 
     @Override
     public BuiltAdaptation<$Schema> build(final Schema<$Schema> schema) {
-      this.resourceFamilies.add(new RealResourceFamily<>(this.realResources));
+      this.resourceFamilies.add(new RealResourceFamily<>(AdaptationBuilder.this.rootContext, this.realResources));
 
       final var adaptation = new BuiltAdaptation<>(
           schema,

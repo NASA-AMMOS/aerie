@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -12,11 +11,7 @@ import java.util.function.Function;
 public abstract class DiscreteResource<T> {
   private DiscreteResource() {}
 
-  protected abstract T getDynamics(final CellGetter getter);
-
-  private interface CellGetter {
-    <CellType> CellType get(CellRef<?, CellType> ref);
-  }
+  public abstract T getDynamics();
 
 
   public static <CellType, T>
@@ -26,8 +21,8 @@ public abstract class DiscreteResource<T> {
 
     return new DiscreteResource<>() {
       @Override
-      protected T getDynamics(final CellGetter getter) {
-        return property.apply(getter.get(ref));
+      public T getDynamics() {
+        return property.apply(ref.get());
       }
     };
   }
@@ -39,31 +34,10 @@ public abstract class DiscreteResource<T> {
 
     return new DiscreteResource<>() {
       @Override
-      protected S getDynamics(final CellGetter getter) {
-        return transform.apply(resource.getDynamics(getter));
+      public S getDynamics() {
+        return transform.apply(resource.getDynamics());
       }
     };
-  }
-
-
-  public final T getDynamics() {
-    return this.getDynamics(new CellGetter() {
-      @Override
-      public <CellType> CellType get(final CellRef<?, CellType> ref) {
-        return ref.get();
-      }
-    });
-  }
-
-  public final T getDynamicsAt(final History<?> now) {
-    Objects.requireNonNull(now);
-
-    return this.getDynamics(new CellGetter() {
-      @Override
-      public <CellType> CellType get(final CellRef<?, CellType> ref) {
-        return ref.getAt(now);
-      }
-    });
   }
 
 
