@@ -3,9 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -22,15 +19,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeSet;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public final class SimulationDriver {
   public static <$Schema> SimulationResults simulate(
@@ -131,27 +125,10 @@ public final class SimulationDriver {
       }
     }
 
-    // Collect samples for all resources in which it can have different sampling time
-    final var resourceSamplingPoints = new HashMap<String, List<Duration>>();
-    profiles.forEach((name, profile) -> {
-      var i = profile.iterator();
-      var sampleTimes = new TreeSet<Duration>();
-      while (i.hasNext()) {
-        var win = i.next().getLeft();
-        sampleTimes.add(win.start);
-        sampleTimes.add(win.end);
-      }
-      sampleTimes.addAll(timestamps);
-      resourceSamplingPoints.put(name, List.copyOf(sampleTimes));
-    });
-
+    // Collect samples for all resources.
     final var resourceSamples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
     profiles.forEach((name, profile) -> {
-
-      final var samplePoints = resourceSamplingPoints.get(name);
-      final var sampleValues = SampleTaker.sample(profile, samplePoints);
-
-      resourceSamples.put(name, constructPairList(samplePoints, sampleValues));
+      resourceSamples.put(name, SampleTaker.sample(profile, timestamps));
     });
 
     // Collect windows for all conditions.

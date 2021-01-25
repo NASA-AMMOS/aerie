@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -15,7 +16,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public final class SampleTaker<Dynamics>
-    implements ResourceSolver.ApproximatorVisitor<Dynamics, List<SerializedValue>>
+    implements ResourceSolver.ApproximatorVisitor<Dynamics, List<Pair<Duration, SerializedValue>>>
 {
   private final Profile<Dynamics, ?> profile;
   private final List<Duration> sampleTimes;
@@ -26,12 +27,12 @@ public final class SampleTaker<Dynamics>
   }
 
   public static <Dynamics>
-  List<SerializedValue> sample(final Profile<Dynamics, ?> profile, final List<Duration> sampleTimes) {
+  List<Pair<Duration, SerializedValue>> sample(final Profile<Dynamics, ?> profile, final List<Duration> sampleTimes) {
     return profile.getSolver().approximate(new SampleTaker<>(profile, sampleTimes));
   }
 
   @Override
-  public List<SerializedValue> real(final RealApproximator<Dynamics> approximator) {
+  public List<Pair<Duration, SerializedValue>> real(final RealApproximator<Dynamics> approximator) {
     return takeSamples(
         dynamics -> approximator.approximate(dynamics).iterator(),
         (dynamics, offset) -> SerializedValue.of(
@@ -40,18 +41,18 @@ public final class SampleTaker<Dynamics>
   }
 
   @Override
-  public List<SerializedValue> discrete(final DiscreteApproximator<Dynamics> approximator) {
+  public List<Pair<Duration, SerializedValue>> discrete(final DiscreteApproximator<Dynamics> approximator) {
     return takeSamples(
         dynamics -> approximator.approximate(dynamics).iterator(),
         (dynamics, offset) -> dynamics);
   }
 
   private <T>
-  List<SerializedValue> takeSamples(
+  List<Pair<Duration, SerializedValue>> takeSamples(
       final Function<Dynamics, Iterator<DelimitedDynamics<T>>> approximate,
       final BiFunction<T, Duration, SerializedValue> takeSample)
   {
-    final var timeline = new ArrayList<SerializedValue>();
+    final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
 
     final var sampleTimeIter = this.sampleTimes.iterator();
     if (!sampleTimeIter.hasNext()) {
@@ -76,17 +77,19 @@ public final class SampleTaker<Dynamics>
       final var approximation = approximate.apply(dynamics);
 
       var partStart = window.start;
-      while (sampleTime.shorterThan(window.end) || (dynamicsOwnsEndpoint && sampleTime.isEqualTo(window.end))) {
+      do {
         final var part = approximation.next();
         final var partEnd = Duration.min(
             (part.isPersistent()) ? Duration.MAX_VALUE : partStart.plus(part.endTime),
             window.end);
         final var partOwnsEndpoint = !approximation.hasNext() && dynamicsOwnsEndpoint;
 
-        while (sampleTime.shorterThan(partEnd) || (partOwnsEndpoint && sampleTime.isEqualTo(partEnd))) {
-          final var sample = takeSample.apply(part.dynamics, sampleTime.minus(partStart));
+        timeline.add(Pair.of(partStart, takeSample.apply(part.dynamics, Duration.ZERO)));
 
-          timeline.add(sample);
+        while (sampleTime.shorterThan(partEnd) || (partOwnsEndpoint && sampleTime.isEqualTo(partEnd))) {
+          if (!List.of(partStart, partEnd).contains(sampleTime)) {
+            timeline.add(Pair.of(sampleTime, takeSample.apply(part.dynamics, sampleTime.minus(partStart))));
+          }
 
           if (!sampleTimeIter.hasNext()) {
             // No other samples need to be taken.
@@ -105,8 +108,10 @@ public final class SampleTaker<Dynamics>
           sampleTime = nextSampleTime;
         }
 
+        timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+
         partStart = partEnd;
-      }
+      } while (sampleTime.shorterThan(window.end) || (dynamicsOwnsEndpoint && sampleTime.isEqualTo(window.end)));
     }
 
     // This should be unreachable.
