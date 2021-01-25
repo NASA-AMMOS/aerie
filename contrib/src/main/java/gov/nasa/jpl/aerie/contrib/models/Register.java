@@ -31,11 +31,11 @@ public final class Register<Value> extends Model {
 
     this.value = registrar.resource(
         "value",
-        DiscreteResource.atom(this.ref, RegisterCell::getValue),
+        () -> this.ref.get().getValue(),
         mapper);
     this.conflicted = registrar.resource(
         "conflicted",
-        DiscreteResource.atom(this.ref, RegisterCell::isConflicted),
+        () -> this.ref.get().isConflicted(),
         new BooleanValueMapper());
   }
 
@@ -66,11 +66,11 @@ public final class Register<Value> extends Model {
   }
 
   public Value get() {
-    return this.value.ask();
+    return this.value.get();
   }
 
   public boolean isConflicted() {
-    return this.conflicted.ask();
+    return this.conflicted.get();
   }
 
   public Condition isOneOf(final Set<Value> values) {

@@ -45,8 +45,8 @@ public final class SimpleData extends Model {
     {
       this.ref = ref;
       this.activeRate = activeRate;
-      this.volume = RealResource.atom(ref, LinearIntegrationCell::getVolume);
-      this.rate = RealResource.atom(ref, LinearIntegrationCell::getRate);
+      this.volume = () -> this.ref.get().getVolume();
+      this.rate = () -> this.ref.get().getRate();
     }
 
     private void setRate(final double newRate) {

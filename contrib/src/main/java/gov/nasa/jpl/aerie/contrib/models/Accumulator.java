@@ -36,11 +36,11 @@ public final class Accumulator extends Model {
     public final RealResource resource;
 
     private Volume(final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref) {
-      this.resource = RealResource.atom(ref, LinearIntegrationCell::getVolume);
+      this.resource = () -> ref.get().getVolume();
     }
 
     public double get() {
-      return this.resource.ask();
+      return this.resource.get();
     }
 
     public Condition isBetween(final double lower, final double upper) {
@@ -55,11 +55,11 @@ public final class Accumulator extends Model {
 
     private Rate(final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref) {
       this.ref = ref;
-      this.resource = RealResource.atom(ref, LinearIntegrationCell::getRate);
+      this.resource = () -> ref.get().getRate();
     }
 
     public double get() {
-      return this.resource.ask();
+      return this.resource.get();
     }
 
     public void add(final double delta) {

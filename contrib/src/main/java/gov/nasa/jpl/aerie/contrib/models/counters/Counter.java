@@ -29,7 +29,7 @@ public final class Counter<T> extends Model {
 
     this.value = registrar.resource(
         "value",
-        DiscreteResource.atom(this.ref, CounterCell::getValue),
+        () -> this.ref.get().getValue(),
         mapper);
   }
 
