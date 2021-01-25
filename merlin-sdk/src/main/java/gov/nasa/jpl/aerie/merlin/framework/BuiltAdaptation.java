@@ -16,7 +16,6 @@ import java.util.Objects;
 public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies;
-  private final Map<String, Condition<$Schema>> constraints;
   private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
   private final List<Pair<String, Map<String, SerializedValue>>> daemons;
 
@@ -24,12 +23,10 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies,
       final List<Pair<String, Map<String, SerializedValue>>> daemons,
-      final Map<String, Condition<$Schema>> constraints,
       final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes)
   {
     this.schema = Objects.requireNonNull(schema);
     this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
-    this.constraints = Collections.unmodifiableMap(constraints);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
@@ -51,7 +48,7 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
 
   @Override
   public Map<String, Condition<$Schema>> getConstraints() {
-    return this.constraints;
+    return Collections.emptyMap();
   }
 
   @Override

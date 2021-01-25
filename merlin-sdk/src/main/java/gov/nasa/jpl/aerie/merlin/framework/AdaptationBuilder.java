@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
@@ -59,14 +58,6 @@ public final class AdaptationBuilder<$Schema> {
 
   public void real(final String name, final RealResource resource) {
     this.state.real(name, resource);
-  }
-
-  public void constraint(final String id, final Condition<?> condition) {
-    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
-    @SuppressWarnings("unchecked")
-    final var brandedCondition = (Condition<$Schema>) condition;
-
-    this.state.constraint(id, brandedCondition);
   }
 
   public void daemon(final String id, final Runnable task) {
@@ -129,10 +120,6 @@ public final class AdaptationBuilder<$Schema> {
          RealResource resource);
 
     void
-    constraint(String id,
-               Condition<$Schema> condition);
-
-    void
     daemon(String id,
            Runnable task);
 
@@ -148,7 +135,6 @@ public final class AdaptationBuilder<$Schema> {
     private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
     private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
-    private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
     @Override
@@ -172,11 +158,6 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void constraint(final String id, final Condition<$Schema> condition) {
-      this.constraints.put(id, condition);
-    }
-
-    @Override
     public void daemon(final String id, final Runnable task) {
       final var daemonType = new DaemonTaskType<>(id, task, rootContext);
 
@@ -197,7 +178,6 @@ public final class AdaptationBuilder<$Schema> {
           schema,
           this.resourceFamilies,
           this.daemons,
-          this.constraints,
           this.taskSpecTypes);
 
       AdaptationBuilder.this.state = new BuiltState(adaptation);
@@ -231,11 +211,6 @@ public final class AdaptationBuilder<$Schema> {
     @Override
     public void real(final String name, final RealResource resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
-    }
-
-    @Override
-    public void constraint(final String id, final Condition<$Schema> condition) {
-      throw new IllegalStateException("Constraints cannot be added after the schema is built");
     }
 
     @Override

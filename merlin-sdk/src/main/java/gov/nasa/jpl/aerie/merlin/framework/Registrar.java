@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
@@ -52,10 +51,6 @@ public final class Registrar {
   resource(final String name, final RealResource resource) {
     this.builder.real(this.namespace + "/" + name, resource);
     return resource;
-  }
-
-  public void constraint(final String id, final Condition<?> condition) {
-    this.builder.constraint(this.namespace + "/" + id, condition);
   }
 
   public void daemon(final String id, final Runnable task) {

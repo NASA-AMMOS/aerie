@@ -60,8 +60,6 @@ public final class Mission extends Model {
     // TODO: automatically perform this for each @Daemon annotation
     registrar.daemon("test", this::test);
 
-    registrar.constraint("data_volume_constraint", this.data.volume.isBetween(42.0, 101.0));
-
     // Assert adaptation is unbuilt
     if (registrar.isInitializationComplete())
       throw new AssertionError("Registrar should not report initialization as complete");
