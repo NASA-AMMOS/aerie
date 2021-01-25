@@ -16,7 +16,7 @@ public abstract class TaskStatus<$Timeline> {
 
     Result awaiting(String activityId);
 
-    Result awaiting(Condition<? super $Timeline> condition);
+    Result awaiting(CompoundCondition<? super $Timeline> condition);
   }
 
   public static <$Timeline> TaskStatus<$Timeline> completed() {
@@ -50,7 +50,7 @@ public abstract class TaskStatus<$Timeline> {
     };
   }
 
-  public static <$Timeline> TaskStatus<$Timeline> awaiting(final Condition<? super $Timeline> condition) {
+  public static <$Timeline> TaskStatus<$Timeline> awaiting(final CompoundCondition<? super $Timeline> condition) {
     Objects.requireNonNull(condition);
 
     return new TaskStatus<>() {

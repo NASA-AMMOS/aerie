@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 
@@ -75,8 +75,8 @@ public abstract class DiscreteResource<T> {
     return DiscreteResource.mapped(this, transform);
   }
 
-  public Condition<?> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
-    return Condition.atom(
+  public CompoundCondition<?> isOneOf(final Set<T> values, final ValueMapper<T> mapper) {
+    return CompoundCondition.atom(
         new DiscreteResourceSolver<>(mapper),
         this,
         Set.copyOf(values));

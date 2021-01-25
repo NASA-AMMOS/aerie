@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Objects;
@@ -79,16 +79,16 @@ public final class Register<Value> extends Model {
     return this.conflicted.ask();
   }
 
-  public Condition<?> isOneOf(final Set<Value> values) {
+  public CompoundCondition<?> isOneOf(final Set<Value> values) {
     return this.value.isOneOf(values, this.mapper);
   }
 
   @SafeVarargs
-  public final Condition<?> isOneOf(final Value... values) {
+  public final CompoundCondition<?> isOneOf(final Value... values) {
     return this.isOneOf(Set.of(values));
   }
 
-  public Condition<?> is(final Value value) {
+  public CompoundCondition<?> is(final Value value) {
     return this.isOneOf(value);
   }
 }

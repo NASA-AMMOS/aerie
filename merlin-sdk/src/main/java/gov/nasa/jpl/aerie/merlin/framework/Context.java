@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
@@ -18,5 +18,5 @@ public interface Context<$Schema> {
 
   void delay(Duration duration);
   void waitFor(String id);
-  void waitUntil(Condition<?> condition);
+  void waitUntil(CompoundCondition<?> condition);
 }

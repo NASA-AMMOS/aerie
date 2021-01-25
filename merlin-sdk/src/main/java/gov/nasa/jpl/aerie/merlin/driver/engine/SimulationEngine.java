@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
@@ -315,7 +315,7 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
-    public Object awaiting(final Condition<? super $Timeline> condition) {
+    public Object awaiting(final CompoundCondition<? super $Timeline> condition) {
       // TODO: work out how to await a task on conditions
       // this is a hack which will be removed when awaiting on a condition
       // has an implementation path.

@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 
@@ -112,8 +112,8 @@ public abstract class RealResource {
     return this.getDynamics().initial;
   }
 
-  public Condition<?> isBetween(final double lower, final double upper) {
-    return Condition.atom(
+  public CompoundCondition<?> isBetween(final double lower, final double upper) {
+    return CompoundCondition.atom(
           new RealResourceSolver<>(),
           this,
           new RealCondition(ClosedInterval.between(lower, upper)));

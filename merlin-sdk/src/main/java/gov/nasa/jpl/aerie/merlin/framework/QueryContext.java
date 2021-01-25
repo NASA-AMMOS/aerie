@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
@@ -46,7 +46,7 @@ public final class QueryContext<$Schema> implements Context<$Schema> {
   }
 
   @Override
-  public void waitUntil(final Condition<?> condition) {
+  public void waitUntil(final CompoundCondition<?> condition) {
     throw new IllegalStateException("Cannot yield in a query-only context");
   }
 }

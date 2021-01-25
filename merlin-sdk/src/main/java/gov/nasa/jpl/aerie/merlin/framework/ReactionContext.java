@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
@@ -110,13 +110,13 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public void waitUntil(final Condition<?> condition) {
+  public void waitUntil(final CompoundCondition<?> condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
 
       // SAFETY: All objects accessible within a single adaptation instance have the same brand.
       @SuppressWarnings("unchecked")
-      final var brandedCondition = (Condition<$Schema>) condition;
+      final var brandedCondition = (CompoundCondition<$Schema>) condition;
       this.scheduler = this.handle.yield(TaskStatus.awaiting(brandedCondition));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));

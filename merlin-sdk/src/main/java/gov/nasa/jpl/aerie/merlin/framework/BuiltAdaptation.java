@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
@@ -47,7 +47,7 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
   }
 
   @Override
-  public Map<String, Condition<$Schema>> getConstraints() {
+  public Map<String, CompoundCondition<$Schema>> getConstraints() {
     return Collections.emptyMap();
   }
 
