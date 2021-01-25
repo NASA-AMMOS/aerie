@@ -1,144 +1,93 @@
-def getDockerCompatibleTag(tag) {
-    def fixedTag = tag.replaceAll('\\+', '-')
-    return fixedTag
-}
-
-def getDockerImageName(folder) {
-    files = findFiles(glob: "${DOCKERFILE_PATH}/*.*")
-    def list = []
-
-    for (def file : files) {
-        def token = (file.getName()).tokenize('.')
-        if (token.size() > 1 && token[1] == "Dockerfile") {
-            list.push(token[0])
-        } else {
-            println("File not added " + token[0])
-        }
-    }
-    return list
-
-}
-
-def getAWSTag(tag) {
-    if (tag ==~ /release-.*/) {
-        return "release"
-    }
-    if (tag ==~ /develop/) {
-        return "develop"
-    }
-    if (tag ==~ /staging/) {
-        return "staging"
-    }
-    return "unknown"
-}
-
-def getArtifactoryUrl() {
-    echo "Choosing an Artifactory port based off of branch name: $GIT_BRANCH"
-
-    if (GIT_BRANCH ==~ /release-.*/) {
-        echo "Publishing to 16002-STAGE-LOCAL"
-        return "cae-artifactory.jpl.nasa.gov:16002"
-    }
-    else {
-        echo "Publishing to 16001-DEVELOP-LOCAL"
-        return "cae-artifactory.jpl.nasa.gov:16001"
-    }
-}
-
 pipeline {
 
-    agent {
-        label 'coronado || Pismo || San-clemente || Sugarloaf'
-    }
+  agent {
+    label 'CAE-Jenkins2-DH-Agents-Linux'
+  }
 
-    environment {
-        ARTIFACTORY_URL = "${getArtifactoryUrl()}"
-        ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/ammos/mpsa/aerie"
-        ARTIFACT_TAG = "${GIT_BRANCH}"
-        // Please refer to the below document for Jenkins credentials
-        // It automatically sets ARTIFACT_CREDENTIAL_USR and ARTIFACT_CREDENTIAL_PSW
-        // https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#usernames-and-passwords
-        ARTIFACTORY_CREDENTIALS = credentials('Artifactory-credential')
-        AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
-        AWS_DEFAULT_REGION = 'us-gov-west-1'
-        AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
-        AWS_ECR_PATH = "${AWS_ECR}/aerie"
-        AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
-        AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
-        DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
-        DOCKERFILE_PATH = "scripts/dockerfiles"
-        DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
-        JAVA_HOME = "/usr/lib/jvm/java-11-openjdk"
-        LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
-        TESTRAIL_API_KEY = credentials('testrail-api-key')
-        TESTRAIL_URL = "https://cae-testrail.jpl.nasa.gov/testrail/"
-        TESTRAIL_SUITE_ID = 4115
-        TESTRAIL_USERNAME = credentials('testrail-username')
-    }
+  environment {
+    // Please refer to the below document for Jenkins credentials
+    // It automatically sets ARTIFACT_CREDENTIAL_USR and ARTIFACT_CREDENTIAL_PSW
+    // https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#usernames-and-passwords
+    ARTIFACTORY_CREDENTIALS = credentials('Artifactory-credential')
+    LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
+    TESTRAIL_API_KEY = credentials('testrail-api-key')
+    TESTRAIL_URL = "https://cae-testrail.jpl.nasa.gov/testrail/"
+    TESTRAIL_SUITE_ID = 4115
+    TESTRAIL_USERNAME = credentials('testrail-username')
+  }
 
-    stages {
-        stage('Setup') {
-            steps {
-                echo "Printing environment variables..."
-                sh "env | sort"
-            }
+  stages {
+    stage ('Setup') {
+      steps {
+        echo "Printing environment variables..."
+        sh "env | sort"
+      }
+    }
+    stage('Enter Docker Container') {
+      agent {
+        docker {
+          reuseNode true
+          registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+          registryCredentialsId 'Artifactory-credential'
+          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/testrail:latest'
+          alwaysPull true
+          args "-u root --mount type=bind,source=${WORKSPACE},target=/home"
         }
-
+      }
+      stages {
         stage ('Build') {
-            steps {
-                echo "Building $ARTIFACT_TAG..."
-                sh './gradlew classes'
-            }
+          steps {
+            echo "Building $GIT_BRANCH..."
+            sh './gradlew classes'
+          }
         }
-
         stage ('Test') {
-            steps {
-                script {
-                    temp_dir = sh(returnStdout: true, script: "mktemp -d -p ${WORKSPACE}").toString().trim()
-                    sh """
-                    ./gradlew test
-                    mkdir -p ${temp_dir}/test-results
-                    find . -name "TEST-*.xml" -exec cp {} ${temp_dir}/test-results \\;
-                    scripts/testrail.sh ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
-                    """
-                    junit testResults: "*/test-results/*.xml"
-                    sh "rm -rf ${temp_dir}"
-                }
+          steps {
+            script {
+              temp_dir = sh(returnStdout: true, script: "mktemp -d -p ${WORKSPACE}").toString().trim()
+              sh """
+                ./gradlew test
+                mkdir -p ${temp_dir}/test-results
+                find . -name "TEST-*.xml" -exec cp {} ${temp_dir}/test-results \\;
+                cd scripts/testrail
+                ./main.py ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
+              """
+              junit testResults: '*/build/test-results/test/*.xml'
+              sh "rm -rf ${temp_dir}"
             }
+          }
         }
-
         stage ('Publish Snapshot') {
-            steps{
-                sh "./gradlew publish \
-                        -PjplArtifactoryUsername=${env.ARTIFACTORY_CREDENTIALS_USR}\
-                        -PjplArtifactoryPassword=${env.ARTIFACTORY_CREDENTIALS_PSW}\
-                        --info"
-            }
+          steps {
+            sh "./gradlew publish \
+                -PjplArtifactoryUsername=${env.ARTIFACTORY_CREDENTIALS_USR}\
+                -PjplArtifactoryPassword=${env.ARTIFACTORY_CREDENTIALS_PSW}\
+                --info"
+          }
         }
+      }
     }
-
-    post {
-        always {
-            echo 'Remove temp folder'
-            sh 'rm -rf /tmp/aerie-jenkins'
-        }
-
-        unstable {
-            emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <p>Jenkins job unstable (failed tests): <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
-            """,
-            mimeType: 'text/html',
-            recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
-        }
-
-        failure {
-            emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
-            body: """
-                <p>Jenkins job failure: <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
-            """,
-            mimeType: 'text/html',
-            recipientProviders: [[$class: 'CulpritsRecipientProvider']]
-        }
+  }
+  post {
+    always {
+      echo 'Remove temp folder'
+      sh 'rm -rf /tmp/aerie-jenkins'
     }
+    unstable {
+      emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+      body: """
+          <p>Jenkins job unstable (failed tests): <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
+      """,
+      mimeType: 'text/html',
+      recipientProviders: [[$class: 'FailingTestSuspectsRecipientProvider']]
+    }
+    failure {
+      emailext subject: "Jenkins FAILURE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
+      body: """
+          <p>Jenkins job failure: <br> <a href=\"${env.BUILD_URL}\">${env.JOB_NAME} #${env.BUILD_NUMBER}</a></p>
+      """,
+      mimeType: 'text/html',
+      recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+    }
+  }
 }
