@@ -52,6 +52,7 @@ pipeline {
                 cd /scripts/testrail
                 ./main.py ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
               """
+              sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
               junit testResults: '*/build/test-results/test/*.xml'
               sh "rm -rf ${temp_dir}"
             }
