@@ -5,21 +5,21 @@ import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
-public final class AdditiveRegister<$Schema> extends Model<$Schema> {
-  public final Register<$Schema, Double> value;
-  public final DiscreteResource<$Schema, Boolean> conflicted;
+public final class AdditiveRegister extends Model {
+  public final Register<Double> value;
+  public final DiscreteResource<Boolean> conflicted;
 
-  public AdditiveRegister(final Registrar<$Schema> registrar, final double initialValue) {
+  public AdditiveRegister(final Registrar registrar, final double initialValue) {
     super(registrar);
 
     this.value = Register.create(registrar, initialValue);
     this.conflicted = this.value.conflicted;
   }
 
-  public static <$Schema>
-  AdditiveRegister<$Schema>
-  create(final Registrar<$Schema> registrar, final double initialValue) {
-    return new AdditiveRegister<>(registrar, initialValue);
+  public static
+  AdditiveRegister
+  create(final Registrar registrar, final double initialValue) {
+    return new AdditiveRegister(registrar, initialValue);
   }
 
   public void add(final double inc) {

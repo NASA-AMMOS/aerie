@@ -14,5 +14,5 @@ public interface ResourceFamily<$Schema, Resource, /*->*/ Condition> {
   Map<String, BinaryOperator<Resource>> getBinaryOperators();
   Map<String, ConditionType<Condition>> getConditionTypes();
 
-  ResourceSolver<$Schema, Resource, ?, ?> getSolver();
+  ResourceSolver<$Schema, Resource, ?, Condition> getSolver();
 }

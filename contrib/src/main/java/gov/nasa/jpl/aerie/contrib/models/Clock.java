@@ -5,14 +5,14 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 
 import java.time.Instant;
 
-public final class Clock<$Schema> extends Model<$Schema> {
-  private final Accumulator<$Schema> ticks;
+public final class Clock extends Model {
+  private final Accumulator ticks;
   private final Instant startTime;
 
-  public Clock(final Registrar<$Schema> registrar, final Instant startTime) {
+  public Clock(final Registrar registrar, final Instant startTime) {
     super(registrar);
     this.startTime = startTime;
-    this.ticks = new Accumulator<>(registrar, 0.0, 1000.0);
+    this.ticks = new Accumulator(registrar, 0.0, 1000.0);
   }
 
   public double getElapsedMilliseconds() {

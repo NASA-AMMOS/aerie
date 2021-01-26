@@ -1,6 +1,8 @@
-package gov.nasa.jpl.aerie.contrib.cells.linear;
+package gov.nasa.jpl.aerie.contrib.traits;
 
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
+
+import java.util.function.BinaryOperator;
 
 /**
  * An effect algebra for combining floating-point numbers by summing.
@@ -18,19 +20,27 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
  *
  * @see EffectTrait
  */
-public final class SumEffectTrait implements EffectTrait<Double> {
-  @Override
-  public Double empty() {
-    return 0.0;
+public final class CommutativeMonoid<T> implements EffectTrait<T> {
+  private final T empty;
+  private final BinaryOperator<T> combinator;
+
+  public CommutativeMonoid(final T empty, final BinaryOperator<T> combinator) {
+    this.empty = empty;
+    this.combinator = combinator;
   }
 
   @Override
-  public Double sequentially(final Double prefix, final Double suffix) {
-    return prefix + suffix;
+  public T empty() {
+    return this.empty;
   }
 
   @Override
-  public Double concurrently(final Double left, final Double right) {
-    return left + right;
+  public T sequentially(final T prefix, final T suffix) {
+    return combinator.apply(prefix, suffix);
+  }
+
+  @Override
+  public T concurrently(final T left, final T right) {
+    return combinator.apply(left, right);
   }
 }

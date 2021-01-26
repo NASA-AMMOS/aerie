@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -12,22 +13,19 @@ import java.util.List;
 import java.util.Map;
 
 public final class SimulationResults {
-  public final List<Duration> timestamps;
-  public final Map<String, List<SerializedValue>> timelines;
+  public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final List<ConstraintViolation> constraintViolations;
   public final Map<String, SimulatedActivity> simulatedActivities;
   public final Map<String, SerializedActivity> unfinishedActivities = new HashMap<>();
 
   public SimulationResults(
-      final List<Duration> timestamps,
-      final Map<String, List<SerializedValue>> timelines,
+      final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples,
       final List<ConstraintViolation> constraintViolations,
       final Map<String, TaskRecord> activityRecords,
       final Map<String, Window> activityWindows,
       final Instant startTime)
   {
-    this.timestamps = timestamps;
-    this.timelines = timelines;
+    this.resourceSamples = resourceSamples;
     this.constraintViolations = constraintViolations;
     this.simulatedActivities = buildSimulatedActivities(startTime, activityRecords, activityWindows);
   }

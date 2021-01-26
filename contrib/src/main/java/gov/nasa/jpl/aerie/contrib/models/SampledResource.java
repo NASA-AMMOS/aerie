@@ -9,12 +9,12 @@ import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 
-public class SampledResource<$Schema, T> extends Model<$Schema> {
-  private final Register<$Schema, T> result;
+public class SampledResource<T> extends Model {
+  private final Register<T> result;
   private final Supplier<T> sampler;
 
   public SampledResource(
-      final Registrar<$Schema> builder,
+      final Registrar builder,
       final Supplier<T> sampler,
       final T initialValue,
       final ValueMapper<T> mapper)

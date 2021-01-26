@@ -3,8 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -24,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -106,52 +103,32 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    return simulate(adaptation, database, simulator, startTime, simulationDuration, samplingPeriod, taskIdToActivityId, daemonSet);
-  }
-
-  private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
-      final Adaptation<$Schema> adaptation,
-      final SimulationTimeline<$Timeline> database,
-      final SimulationEngine<$Timeline> simulator,
-      final Instant startTime,
-      final Duration simulationDuration,
-      final Duration samplingPeriod,
-      final Map<String, String> taskIdToActivityId,
-      final Set<String> daemonSet
-  )
-  {
-    final var timestamps = new ArrayList<Duration>();
-    final var timelines = new HashMap<String, List<SerializedValue>>();
-    final var resourceTypes = adaptation.getResourceFamilies();
-
-    resourceTypes.forEach(group -> {
-      group.getResources().forEach((name, resource) -> timelines.put(name, new ArrayList<>()));
-    });
-
-    // Run simulation to completion, sampling states at periodic intervals.
-    {
-      // Get an initial sample.
-      simulator.runFor(Duration.ZERO);
-      sampleResources(simulator, resourceTypes, timestamps, timelines);
-
-      // Sample periodically until the sampling duration expires.
-      final var remainder = simulationDuration.remainderOf(samplingPeriod);
-      for (long i = 0; i < simulationDuration.dividedBy(samplingPeriod); ++i) {
-        simulator.runFor(samplingPeriod);
-        sampleResources(simulator, resourceTypes, timestamps, timelines);
-      }
-
-      // Take one last sample if the period doesn't evenly divide the duration.
-      if (!remainder.isZero()) {
-        simulator.runFor(simulationDuration.remainderOf(samplingPeriod));
-        sampleResources(simulator, resourceTypes, timestamps, timelines);
-      }
-    }
+    simulator.runFor(simulationDuration);
 
     // Collect profiles for all resources.
     final var profiles = new HashMap<String, Profile<?, ?>>();
-    resourceTypes.forEach(group -> {
+    adaptation.getResourceFamilies().forEach(group -> {
       forEachProfile(database, simulator.getCurrentHistory(), group, profiles::put);
+    });
+
+    // Collect samples for all resources.
+    final var timestamps = new ArrayList<Duration>();
+    {
+      var elapsedTime = Duration.ZERO;
+      while (!elapsedTime.longerThan(simulationDuration)) {
+        timestamps.add(elapsedTime);
+        elapsedTime = elapsedTime.plus(samplingPeriod);
+      }
+
+      if (!simulationDuration.remainderOf(samplingPeriod).isZero()) {
+        timestamps.add(simulationDuration);
+      }
+    }
+
+    // Collect samples for all resources.
+    final var resourceSamples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
+    profiles.forEach((name, profile) -> {
+      resourceSamples.put(name, SampleTaker.sample(profile, timestamps));
     });
 
     // Collect windows for all conditions.
@@ -173,19 +150,21 @@ public final class SimulationDriver {
 
     // Use the map of task id to activity id to replace task ids with the corresponding
     // activity id for use by the front end.
-    final Map<String, Window> mappedTaskWindows;
-    final Map<String, TaskRecord> mappedTaskRecords;
+    final var mappedTaskWindows = new HashMap<String, Window>();
+    final var mappedTaskRecords = new HashMap<String, TaskRecord>();
     {
       final var taskRecords = simulator.getTaskRecords();
       final var taskWindows = simulator.getTaskWindows();
 
       // Generate activity ids for all tasks
-      taskRecords.forEach((id, record) -> taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString()));
+      taskRecords.forEach((id, record) -> {
+        taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString());
+      });
 
-      mappedTaskWindows = new HashMap<>();
-      taskWindows.forEach((id, window) -> mappedTaskWindows.put(taskIdToActivityId.get(id), window));
+      taskWindows.forEach((id, window) -> {
+        mappedTaskWindows.put(taskIdToActivityId.get(id), window);
+      });
 
-      mappedTaskRecords = new HashMap<>();
       taskRecords.forEach((id, record) -> {
         final var activityId = taskIdToActivityId.get(id);
         final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
@@ -195,14 +174,13 @@ public final class SimulationDriver {
     }
 
     final var results = new SimulationResults(
-        timestamps,
-        timelines,
+        resourceSamples,
         constraintViolations,
         mappedTaskRecords,
         mappedTaskWindows,
         startTime);
 
-    if (!results.unfinishedActivities.keySet().stream().allMatch(daemonSet::contains)) {
+    if (!daemonSet.containsAll(results.unfinishedActivities.keySet())) {
       throw new Error("There should be no unfinished activities when simulating to completion.");
     }
 
@@ -225,6 +203,21 @@ public final class SimulationDriver {
     });
   }
 
+  public static <S, T>
+  List<Pair<S,T>>
+  constructPairList(
+      final List<S> a,
+      final List<T> b)
+  {
+    final var pair = new ArrayList<Pair<S, T>>(Math.min(a.size(), b.size()));
+    final var aIter = a.iterator();
+    final var bIter = b.iterator();
+    while (aIter.hasNext() && bIter.hasNext()) {
+      pair.add(Pair.of(aIter.next(), bIter.next()));
+    }
+    return pair;
+  }
+
   public static <$Timeline, Resource, Dynamics, Condition>
   Profile<Dynamics, Condition>
   computeProfile(
@@ -233,76 +226,13 @@ public final class SimulationDriver {
       final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
       final Resource resource)
   {
-    return database.accumulateUpTo(endTime, new Profile<>(solver), (currentProfile, info) -> {
-      var augmentedProfile = currentProfile;
-      var currentHistory = info.getLeft();
+    return database.accumulateUpTo(endTime, new Profile<>(solver), (profile, info) -> {
+      final var history = info.getLeft();
       final var window = info.getRight();
 
-      var timeSincePreviousEvent = Duration.ZERO;
-      var timeUntilNextEvent = window.end.minus(window.start);
-
-      while (timeUntilNextEvent.isPositive()) {
-        final var delimitedDynamics = solver.getDynamics(resource, currentHistory);
-        final var timeUntilNextDynamics = delimitedDynamics.getEndTime();
-
-        final var longestValidDuration = Duration.min(timeUntilNextDynamics, timeUntilNextEvent);
-
-        augmentedProfile = augmentedProfile.append(longestValidDuration, delimitedDynamics.getDynamics());
-        currentHistory = currentHistory.wait(timeSincePreviousEvent);
-
-        timeSincePreviousEvent = timeSincePreviousEvent.plus(longestValidDuration);
-        timeUntilNextEvent = timeUntilNextEvent.minus(longestValidDuration);
-      }
-
-      return augmentedProfile;
-    });
-  }
-
-  private static <$Schema, $Timeline extends $Schema>
-  void sampleResources(
-      final SimulationEngine<$Timeline> simulator,
-      final Iterable<ResourceFamily<$Schema, ?, ?>> resourceGroups,
-      final ArrayList<Duration> timestamps,
-      final HashMap<String, List<SerializedValue>> timelines)
-  {
-    timestamps.add(simulator.getElapsedTime());
-    resourceGroups.forEach(group -> {
-      sampleResourceType(simulator.getCurrentHistory(), timelines, group);
-    });
-  }
-
-  private static <$Schema, Resource> void sampleResourceType(
-      final History<? extends $Schema> now,
-      final HashMap<String, List<SerializedValue>> timelines,
-      final ResourceFamily<$Schema, Resource, ?> type)
-  {
-    final var solver = type.getSolver();
-
-    type.getResources().forEach((name, resource) -> {
-      timelines.get(name).add(sampleDynamics(solver, resource, now));
-    });
-  }
-
-  private static <$Schema, $Timeline extends $Schema, Resource, Dynamics>
-  SerializedValue sampleDynamics(
-      final ResourceSolver<$Schema, Resource, Dynamics, ?> solver,
-      final Resource resource,
-      final History<$Timeline> now)
-  {
-    final var dynamics = solver.getDynamics(resource, now);
-
-    return solver.approximate(new ResourceSolver.ApproximatorVisitor<>() {
-      @Override
-      public SerializedValue real(final RealApproximator<Dynamics> approximator) {
-        final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
-        return SerializedValue.of(part.getDynamics().initial);
-      }
-
-      @Override
-      public SerializedValue discrete(final DiscreteApproximator<Dynamics> approximator) {
-        final var part = approximator.approximate(dynamics.getDynamics()).iterator().next();
-        return part.getDynamics();
-      }
+      return profile.append(
+          window.end.minus(window.start),
+          solver.getDynamics(resource, history));
     });
   }
 

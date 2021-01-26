@@ -12,28 +12,28 @@ import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 
 public final class RealResourceFamily<$Schema>
-    implements ResourceFamily<$Schema, RealResource<$Schema>, RealCondition>
+    implements ResourceFamily<$Schema, RealResource, RealCondition>
 {
-  private final Map<String, RealResource<$Schema>> resources;
+  private final Map<String, RealResource> resources;
 
-  public RealResourceFamily(final Map<String, RealResource<$Schema>> resources) {
+  public RealResourceFamily(final Map<String, RealResource> resources) {
     this.resources = Objects.requireNonNull(resources);
   }
 
   @Override
-  public Map<String, RealResource<$Schema>> getResources() {
+  public Map<String, RealResource> getResources() {
     return Collections.unmodifiableMap(this.resources);
   }
 
   @Override
-  public Map<String, UnaryOperator<RealResource<$Schema>>> getUnaryOperators() {
+  public Map<String, UnaryOperator<RealResource>> getUnaryOperators() {
     // TODO: add (x) -> c*x
     return Map.of(
         "negate", $ -> $.scaledBy(-1));
   }
 
   @Override
-  public Map<String, BinaryOperator<RealResource<$Schema>>> getBinaryOperators() {
+  public Map<String, BinaryOperator<RealResource>> getBinaryOperators() {
     return Map.of(
         "add", RealResource::plus,
         "subtract", RealResource::minus);
@@ -45,7 +45,7 @@ public final class RealResourceFamily<$Schema>
   }
 
   @Override
-  public ResourceSolver<$Schema, RealResource<$Schema>, RealDynamics, RealCondition> getSolver() {
+  public ResourceSolver<$Schema, RealResource, RealDynamics, RealCondition> getSolver() {
     return new RealResourceSolver<>();
   }
 }

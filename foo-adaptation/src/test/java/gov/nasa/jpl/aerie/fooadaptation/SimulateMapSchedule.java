@@ -34,7 +34,7 @@ public class SimulateMapSchedule {
   {
     final var schedule = loadSchedule();
     final var startTime = Instant.now();
-    final var simulationDuration = duration(5, SECONDS);
+    final var simulationDuration = duration(25, SECONDS);
     final var samplingPeriod = duration(1, SECOND);
 
     final var simulationResults = SimulationDriver.simulate(
@@ -44,7 +44,7 @@ public class SimulateMapSchedule {
         simulationDuration,
         samplingPeriod);
 
-    simulationResults.timelines.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
+    simulationResults.resourceSamples.forEach((name, samples) -> System.out.format("%s: %s\n", name, samples));
   }
 
   private static Map<String, Pair<Duration, SerializedActivity>> loadSchedule() {

@@ -1,50 +1,61 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
+import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.persistent;
+public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {
+  // We split `initialVolume` from `accumulatedVolume` to avoid loss of floating-point precision.
+  // The rate is usually smaller than the volume by some orders of magnitude,
+  // so accumulated deltas will usually be closer to each other in magnitude than to the current volume.
+  private double initialVolume;
+  private double accumulatedVolume;
+  private double rate;
 
-public final class LinearIntegrationCell implements Cell<Double, LinearIntegrationCell> {
-  private double _volume;
-  private double _rate;
+  public LinearIntegrationCell(final double initialVolume, final double rate, final double accumulatedVolume) {
+    this.initialVolume = initialVolume;
+    this.accumulatedVolume = accumulatedVolume;
+    this.rate = rate;
+  }
 
-  public LinearIntegrationCell(final double volume, final double rate) {
-    this._volume = volume;
-    this._rate = rate;
+  public LinearIntegrationCell(final double initialVolume, final double rate) {
+    this(initialVolume, rate, 0.0);
   }
 
   @Override
   public LinearIntegrationCell duplicate() {
-    return new LinearIntegrationCell(this._volume, this._rate);
+    return new LinearIntegrationCell(this.initialVolume, this.rate, this.accumulatedVolume);
   }
 
   @Override
-  public EffectTrait<Double> effectTrait() {
-    return new SumEffectTrait();
+  public EffectTrait<LinearAccumulationEffect> effectTrait() {
+    return new CommutativeMonoid<>(
+      LinearAccumulationEffect.empty(),
+      (left, right) -> new LinearAccumulationEffect(left.deltaRate + right.deltaRate, left.clearVolume || right.clearVolume));
   }
 
   @Override
-  public void react(final Double delta) {
-    this._rate += delta;
+  public void react(final LinearAccumulationEffect effect) {
+    this.rate += effect.deltaRate;
+    if (effect.clearVolume) {
+      this.initialVolume = 0;
+      this.accumulatedVolume = 0;
+    }
   }
 
   @Override
   public void step(final Duration elapsedTime) {
     // Law: The passage of time shall not alter a valid dynamics.
-    this._volume += this._rate * elapsedTime.ratioOver(Duration.SECOND);
+    this.accumulatedVolume += this.rate * elapsedTime.ratioOver(Duration.SECOND);
   }
 
-
-  /// Resources
-  public DelimitedDynamics<RealDynamics> getVolume() {
-    return persistent(RealDynamics.linear(this._volume, this._rate));
+  public RealDynamics getVolume() {
+    return RealDynamics.linear(this.initialVolume + this.accumulatedVolume, this.rate);
   }
 
-  public DelimitedDynamics<RealDynamics> getRate() {
-    return persistent(RealDynamics.constant(this._rate));
+  public RealDynamics getRate() {
+    return RealDynamics.constant(this.rate);
   }
 }

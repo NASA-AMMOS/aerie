@@ -11,31 +11,31 @@ import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
 
 public final class DiscreteResourceFamily<$Schema, Resource>
-    implements ResourceFamily<$Schema, DiscreteResource<$Schema, Resource>, Set<Resource>>
+    implements ResourceFamily<$Schema, DiscreteResource<Resource>, Set<Resource>>
 {
   private final ValueMapper<Resource> mapper;
-  private final Map<String, DiscreteResource<$Schema, Resource>> resources;
+  private final Map<String, DiscreteResource<Resource>> resources;
 
   public DiscreteResourceFamily(
       final ValueMapper<Resource> mapper,
-      final Map<String, DiscreteResource<$Schema, Resource>> resources)
+      final Map<String, DiscreteResource<Resource>> resources)
   {
     this.mapper = mapper;
     this.resources = resources;
   }
 
   @Override
-  public Map<String, DiscreteResource<$Schema, Resource>> getResources() {
+  public Map<String, DiscreteResource<Resource>> getResources() {
     return Collections.unmodifiableMap(this.resources);
   }
 
   @Override
-  public Map<String, UnaryOperator<DiscreteResource<$Schema, Resource>>> getUnaryOperators() {
+  public Map<String, UnaryOperator<DiscreteResource<Resource>>> getUnaryOperators() {
     return Collections.emptyMap();
   }
 
   @Override
-  public Map<String, BinaryOperator<DiscreteResource<$Schema, Resource>>> getBinaryOperators() {
+  public Map<String, BinaryOperator<DiscreteResource<Resource>>> getBinaryOperators() {
     return Collections.emptyMap();
   }
 
