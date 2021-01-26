@@ -67,6 +67,12 @@ pipeline {
           }
         }
       }
+      post {
+        cleanup {
+          cleanWs()
+          deleteDir()
+        }
+      }
     }
   }
   post {
@@ -85,6 +91,10 @@ pipeline {
       """,
       mimeType: 'text/html',
       recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+    }
+    cleanup {
+      cleanWs()
+      deleteDir()
     }
   }
 }
