@@ -7,18 +7,26 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
 
 public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {
-
-  private double volume;
+  // We split `initialVolume` from `accumulatedVolume` to avoid loss of floating-point precision.
+  // The rate is usually smaller than the volume by some orders of magnitude,
+  // so accumulated deltas will usually be closer to each other in magnitude than to the current volume.
+  private double initialVolume;
+  private double accumulatedVolume;
   private double rate;
 
-  public LinearIntegrationCell(final double volume, final double rate) {
-    this.volume = volume;
+  public LinearIntegrationCell(final double initialVolume, final double rate, final double accumulatedVolume) {
+    this.initialVolume = initialVolume;
+    this.accumulatedVolume = accumulatedVolume;
     this.rate = rate;
+  }
+
+  public LinearIntegrationCell(final double initialVolume, final double rate) {
+    this(initialVolume, rate, 0.0);
   }
 
   @Override
   public LinearIntegrationCell duplicate() {
-    return new LinearIntegrationCell(this.volume, this.rate);
+    return new LinearIntegrationCell(this.initialVolume, this.rate, this.accumulatedVolume);
   }
 
   @Override
@@ -31,17 +39,20 @@ public final class LinearIntegrationCell implements Cell<LinearAccumulationEffec
   @Override
   public void react(final LinearAccumulationEffect effect) {
     this.rate += effect.deltaRate;
-    if (effect.clearVolume) this.volume = 0;
+    if (effect.clearVolume) {
+      this.initialVolume = 0;
+      this.accumulatedVolume = 0;
+    }
   }
 
   @Override
   public void step(final Duration elapsedTime) {
     // Law: The passage of time shall not alter a valid dynamics.
-    this.volume += this.rate * elapsedTime.ratioOver(Duration.SECOND);
+    this.accumulatedVolume += this.rate * elapsedTime.ratioOver(Duration.SECOND);
   }
 
   public RealDynamics getVolume() {
-    return RealDynamics.linear(this.volume, this.rate);
+    return RealDynamics.linear(this.initialVolume + this.accumulatedVolume, this.rate);
   }
 
   public RealDynamics getRate() {
