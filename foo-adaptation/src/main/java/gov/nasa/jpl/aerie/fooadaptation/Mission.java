@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.generated.Model;
 import gov.nasa.jpl.aerie.fooadaptation.models.ComplexData;
+import gov.nasa.jpl.aerie.fooadaptation.models.SimpleData;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
@@ -24,6 +25,7 @@ public final class Mission extends Model {
   public final Accumulator source;
   public final Accumulator sink;
   public final SampledResource<Double> batterySoC;
+  public final SimpleData simpleData;
   public final Counter<Integer> activitiesExecuted;
   public final ComplexData complexData;
 
@@ -49,18 +51,20 @@ public final class Mission extends Model {
         0.0,
         new DoubleValueMapper());
 
-    Instant instant = Instant.parse("2023-08-18T00:00:00.00Z");
-    this.utcClock = new Clock(registrar.descend("utcClock"), instant);
-
+    this.simpleData = new SimpleData(registrar.descend("simple_data"));
     this.complexData = new ComplexData(registrar.descend("complex_data"), 5, ComplexData.ImagerResMode.LOW_RES, 30);
 
+    this.utcClock = new Clock(registrar.descend("utcClock"), Instant.parse("2023-08-18T00:00:00.00Z"));
     // TODO: automatically perform this for each @Daemon annotation
     registrar.daemon("test", this::test);
-    registrar.constraint("haha", this.data.volume.isBetween(42.0, 101.0));
+
+    registrar.constraint("data_volume_constraint", this.data.volume.isBetween(42.0, 101.0));
   }
 
   public void test() {
-    foo.set(21.0);
-    data.rate.add(42.0);
+    this.foo.set(21.0);
+    this.data.rate.add(42.0);
+    this.simpleData.toggleInstrumentA(true);
+    this.simpleData.toggleInstrumentB(true);
   }
 }

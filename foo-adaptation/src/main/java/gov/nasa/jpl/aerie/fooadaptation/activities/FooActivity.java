@@ -45,14 +45,20 @@ public final class FooActivity {
 
       data.rate.add(1.0);
       delay(1, SECOND);
+
+      mission.simpleData.downlinkData();
+
       waitUntil(data.volume.isBetween(5.0, 10.0));
       data.rate.add(2.0);
       data.rate.add(data.rate.get());
-
       delay(10, SECOND);
 
       complexData.imagingInProgress.set(false);
       complexData.imagerHardwareState.set(ComplexData.ImagerHardwareState.OFF);
+
+      mission.simpleData.toggleInstrumentA(false);
+      mission.simpleData.toggleInstrumentB(false);
+      delay(1, SECOND);
 
       mission.activitiesExecuted.add(1);
     }
