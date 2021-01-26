@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
+import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
@@ -34,7 +35,7 @@ public final class Accumulator extends Model {
   public static final class Volume {
     public final RealResource resource;
 
-    private Volume(final CellRef<Double, LinearIntegrationCell> ref) {
+    private Volume(final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref) {
       this.resource = RealResource.atom(ref, LinearIntegrationCell::getVolume);
     }
 
@@ -48,11 +49,11 @@ public final class Accumulator extends Model {
   }
 
   public static final class Rate {
-    private final CellRef<Double, LinearIntegrationCell> ref;
+    private final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref;
 
     public final RealResource resource;
 
-    private Rate(final CellRef<Double, LinearIntegrationCell> ref) {
+    private Rate(final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref) {
       this.ref = ref;
       this.resource = RealResource.atom(ref, LinearIntegrationCell::getRate);
     }
@@ -62,7 +63,7 @@ public final class Accumulator extends Model {
     }
 
     public void add(final double delta) {
-      this.ref.emit(delta);
+      this.ref.emit(LinearAccumulationEffect.addRate(delta));
     }
 
     public Condition<?> isBetween(final double lower, final double upper) {

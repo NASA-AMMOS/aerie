@@ -6,7 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
 
-public final class LinearIntegrationCell implements Cell<Double, LinearIntegrationCell> {
+public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {
+
   private double volume;
   private double rate;
 
@@ -21,13 +22,16 @@ public final class LinearIntegrationCell implements Cell<Double, LinearIntegrati
   }
 
   @Override
-  public EffectTrait<Double> effectTrait() {
-    return new CommutativeMonoid<>(0.0, Double::sum);
+  public EffectTrait<LinearAccumulationEffect> effectTrait() {
+    return new CommutativeMonoid<>(
+      LinearAccumulationEffect.empty(),
+      (left, right) -> new LinearAccumulationEffect(left.deltaRate + right.deltaRate, left.clearVolume || right.clearVolume));
   }
 
   @Override
-  public void react(final Double delta) {
-    this.rate += delta;
+  public void react(final LinearAccumulationEffect effect) {
+    this.rate += effect.deltaRate;
+    if (effect.clearVolume) this.volume = 0;
   }
 
   @Override
