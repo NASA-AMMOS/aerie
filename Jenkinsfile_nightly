@@ -67,13 +67,15 @@ pipeline {
           }
         }
       }
+      post {
+        cleanup {
+          cleanWs()
+          deleteDir()
+        }
+      }
     }
   }
   post {
-    always {
-      echo 'Remove temp folder'
-      sh 'rm -rf /tmp/aerie-jenkins'
-    }
     unstable {
       emailext subject: "Jenkins UNSTABLE: ${env.JOB_BASE_NAME} #${env.BUILD_NUMBER}",
       body: """
@@ -89,6 +91,10 @@ pipeline {
       """,
       mimeType: 'text/html',
       recipientProviders: [[$class: 'CulpritsRecipientProvider']]
+    }
+    cleanup {
+      cleanWs()
+      deleteDir()
     }
   }
 }

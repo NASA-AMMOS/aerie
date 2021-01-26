@@ -102,7 +102,8 @@ pipeline {
       }
       post {
         cleanup {
-          sh 'rm ~/.ssh/id_rsa'
+          cleanWs()
+          deleteDir()
         }
       }
     }

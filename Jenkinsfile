@@ -315,6 +315,12 @@ pipeline {
           }
         }
       }
+      post {
+        cleanup {
+          cleanWs()
+          deleteDir()
+        }
+      }
     }
     stage ('Trigger document generation') {
       when {
