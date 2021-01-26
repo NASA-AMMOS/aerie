@@ -49,9 +49,10 @@ pipeline {
                 ./gradlew test
                 mkdir -p ${temp_dir}/test-results
                 find . -name "TEST-*.xml" -exec cp {} ${temp_dir}/test-results \\;
-                cd scripts/testrail
+                cd /scripts/testrail
                 ./main.py ${temp_dir}/test-results ${TESTRAIL_SUITE_ID}
               """
+              sh 'find . -name "TEST-*.xml" -exec touch {} \\;'
               junit testResults: '*/build/test-results/test/*.xml'
               sh "rm -rf ${temp_dir}"
             }
