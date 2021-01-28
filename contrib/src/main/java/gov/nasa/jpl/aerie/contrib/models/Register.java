@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
@@ -48,6 +49,12 @@ public final class Register<Value> extends Model {
   Register<Double>
   create(final Registrar registrar, final double initialValue) {
     return new Register<>(registrar, initialValue, new DoubleValueMapper());
+  }
+
+  public static
+  Register<Integer>
+  create(final Registrar registrar, final int initialValue) {
+    return new Register<>(registrar, initialValue, new IntegerValueMapper());
   }
 
   public static <E extends Enum<E>>

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.fooadaptation.activities;
 
 import gov.nasa.jpl.aerie.fooadaptation.Mission;
 import gov.nasa.jpl.aerie.fooadaptation.generated.Task;
-import gov.nasa.jpl.aerie.fooadaptation.models.ComplexData;
+import gov.nasa.jpl.aerie.fooadaptation.models.ImagerMode;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
@@ -32,10 +32,7 @@ public final class FooActivity {
       final var data = mission.data;
       final var complexData = mission.complexData;
 
-      complexData.imagerHardwareState.set(ComplexData.ImagerHardwareState.ON);
-      complexData.imagerResMode.set(ComplexData.ImagerResMode.HI_RES);
-      complexData.imagerFrameRate.set(60.0);
-      complexData.imagingInProgress.set(true);
+      complexData.beginImaging(ImagerMode.HI_RES, 60);
 
       if (y.equals("test")) {
         data.rate.add(x);
@@ -53,11 +50,10 @@ public final class FooActivity {
       data.rate.add(data.rate.get());
       delay(10, SECOND);
 
-      complexData.imagingInProgress.set(false);
-      complexData.imagerHardwareState.set(ComplexData.ImagerHardwareState.OFF);
+      complexData.endImaging();
 
-      mission.simpleData.toggleInstrumentA(false);
-      mission.simpleData.toggleInstrumentB(false);
+      mission.simpleData.a.deactivate();
+      mission.simpleData.b.deactivate();
       delay(1, SECOND);
 
       mission.activitiesExecuted.add(1);
