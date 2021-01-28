@@ -64,7 +64,7 @@ public final class Mission extends Model {
   public void test() {
     this.foo.set(21.0);
     this.data.rate.add(42.0);
-    this.simpleData.toggleInstrumentA(true);
-    this.simpleData.toggleInstrumentB(true);
+    this.simpleData.a.activate();
+    this.simpleData.b.activate();
   }
 }

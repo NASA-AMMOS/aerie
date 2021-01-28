@@ -56,8 +56,8 @@ public final class FooActivity {
       complexData.imagingInProgress.set(false);
       complexData.imagerHardwareState.set(ComplexData.ImagerHardwareState.OFF);
 
-      mission.simpleData.toggleInstrumentA(false);
-      mission.simpleData.toggleInstrumentB(false);
+      mission.simpleData.a.deactivate();
+      mission.simpleData.b.deactivate();
       delay(1, SECOND);
 
       mission.activitiesExecuted.add(1);
