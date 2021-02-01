@@ -1,12 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Optional;
-import java.util.Set;
-
-public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, RegisterCell<T>> {
+public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCell<T>> {
   private T value;
   private boolean conflicted;
 
@@ -25,14 +21,14 @@ public final class RegisterCell<T> implements Cell<Pair<Optional<T>, Set<T>>, Re
   }
 
   @Override
-  public ConcurrentUpdateTrait<T> effectTrait() {
-    return new ConcurrentUpdateTrait<>();
+  public RegisterEffectTrait<T> effectTrait() {
+    return new RegisterEffectTrait<>();
   }
 
   @Override
-  public void react(final Pair<Optional<T>, Set<T>> concurrentValues) {
-    concurrentValues.getLeft().ifPresent(newValue -> this.value = newValue);
-    this.conflicted = (concurrentValues.getRight().size() > 1);
+  public void react(final RegisterEffect<T> concurrentValues) {
+    concurrentValues.newValue.ifPresent(newValue -> this.value = newValue);
+    this.conflicted = (concurrentValues.conflictingValues.size() > 1);
   }
 
   public T getValue() {
