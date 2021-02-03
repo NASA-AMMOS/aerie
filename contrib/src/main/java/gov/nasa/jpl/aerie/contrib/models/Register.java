@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.contrib.cells.register.RegisterCell;
+import gov.nasa.jpl.aerie.contrib.cells.register.RegisterEffect;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
@@ -11,7 +12,6 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -20,7 +20,7 @@ import java.util.Set;
 public final class Register<Value> extends Model {
   private final ValueMapper<Value> mapper;
 
-  private final CellRef<Pair<Optional<Value>, Set<Value>>, RegisterCell<Value>> ref;
+  private final CellRef<RegisterEffect<Value>, RegisterCell<Value>> ref;
   public final DiscreteResource<Value> value;
   public final DiscreteResource<Boolean> conflicted;
 
@@ -68,7 +68,7 @@ public final class Register<Value> extends Model {
   }
 
   public void set(final Value value) {
-    this.ref.emit(Pair.of(Optional.of(value), Set.of(value)));
+    this.ref.emit(RegisterEffect.set(value));
   }
 
   public Value get() {
