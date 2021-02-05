@@ -38,6 +38,10 @@ public final class AdaptationBuilder<$Schema> {
     return this.rootContext;
   }
 
+  public boolean isBuilt() {
+    return state.isBuilt();
+  }
+
   public <Event, Effect, CellType>
   CellRef<Event, CellType>
   register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
@@ -112,6 +116,8 @@ public final class AdaptationBuilder<$Schema> {
 
 
   private interface AdaptationBuilderState<$Schema> {
+    boolean isBuilt();
+
     <Resource>
     void
     discrete(String name,
@@ -144,6 +150,11 @@ public final class AdaptationBuilder<$Schema> {
     private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
+
+    @Override
+    public boolean isBuilt() {
+      return false;
+    }
 
     @Override
     public <Resource>
@@ -200,6 +211,11 @@ public final class AdaptationBuilder<$Schema> {
 
     public BuiltState(final BuiltAdaptation<$Schema> adaptation) {
       this.adaptation = adaptation;
+    }
+
+    @Override
+    public boolean isBuilt() {
+      return true;
     }
 
     @Override
