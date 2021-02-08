@@ -36,7 +36,15 @@ public final class CellRef<Effect, CellType> {
 
 
   public CellType get() {
-    return this.getAt(this.context.get().now());
+    return this.get(this.context.get());
+  }
+
+  private <$Schema> CellType get(final Context<$Schema> context) {
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedQuery = (Query<? super $Schema, Effect, CellType>) this.query;
+
+    return context.ask(brandedQuery);
   }
 
   public void emit(final Effect effect) {
