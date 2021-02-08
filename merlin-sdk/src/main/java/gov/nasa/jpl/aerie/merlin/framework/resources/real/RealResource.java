@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 
 import java.util.Objects;
 import java.util.function.Function;
@@ -96,7 +96,7 @@ public abstract class RealResource {
     });
   }
 
-  public final RealDynamics getDynamicsAt(final History<?> now) {
+  public final RealDynamics getDynamicsAt(final Checkpoint<?> now) {
     Objects.requireNonNull(now);
 
     return this.getDynamics(new CellGetter() {

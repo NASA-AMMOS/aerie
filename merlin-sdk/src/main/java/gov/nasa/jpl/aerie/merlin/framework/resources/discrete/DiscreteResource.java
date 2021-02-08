@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 
 import java.util.Objects;
 import java.util.Set;
@@ -55,7 +55,7 @@ public abstract class DiscreteResource<T> {
     });
   }
 
-  public final T getDynamicsAt(final History<?> now) {
+  public final T getDynamicsAt(final Checkpoint<?> now) {
     Objects.requireNonNull(now);
 
     return this.getDynamics(new CellGetter() {

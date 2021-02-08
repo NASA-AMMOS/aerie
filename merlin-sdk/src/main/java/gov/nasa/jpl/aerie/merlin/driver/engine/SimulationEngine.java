@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -239,8 +240,8 @@ public final class SimulationEngine<$Timeline> {
     }
 
     @Override
-    public History<$Timeline> now() {
-      return this.now;
+    public Checkpoint<$Timeline> now() {
+      return this.now::ask;
     }
 
     @Override

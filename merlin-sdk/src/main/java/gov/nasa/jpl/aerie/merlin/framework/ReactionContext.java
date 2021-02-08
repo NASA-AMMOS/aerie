@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
@@ -19,7 +19,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
 {
   private final TaskHandle<$Timeline> handle;
   private Scheduler<$Timeline> scheduler;
-  private Optional<History<$Timeline>> history = Optional.empty();
+  private Optional<Checkpoint<$Timeline>> history = Optional.empty();
 
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs;
   private int nextBreadcrumbIndex = 0;

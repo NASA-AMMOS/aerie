@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 
 import java.util.Objects;
@@ -26,7 +26,7 @@ public final class CellRef<Effect, CellType> {
    * @param now The time from which to get the state of the cell.
    * @return the state of the referenced cell at the given time.
    */
-  public <$Timeline> CellType getAt(final History<$Timeline> now) {
+  public <$Timeline> CellType getAt(final Checkpoint<$Timeline> now) {
     // SAFETY: All objects accessible within a single adaptation instance have the same brand.
     @SuppressWarnings("unchecked")
     final var brandedQuery = (Query<? super $Timeline, Effect, CellType>) this.query;

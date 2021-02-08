@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 import gov.nasa.jpl.aerie.time.Windows;
@@ -17,7 +17,7 @@ public final class RealResourceSolver<$Schema>
   @Override
   public RealDynamics getDynamics(
       final RealResource resource,
-      final History<? extends $Schema> now)
+      final Checkpoint<? extends $Schema> now)
   {
     return resource.getDynamicsAt(now);
   }
