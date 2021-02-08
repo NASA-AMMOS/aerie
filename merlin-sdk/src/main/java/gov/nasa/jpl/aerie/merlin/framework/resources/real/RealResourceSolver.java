@@ -3,10 +3,10 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 import gov.nasa.jpl.aerie.merlin.framework.Context;
 import gov.nasa.jpl.aerie.merlin.framework.QueryContext;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 
@@ -24,7 +24,7 @@ public final class RealResourceSolver<$Schema>
   }
 
   @Override
-  public RealDynamics getDynamics(final RealResource resource, final History<? extends $Schema> now) {
+  public RealDynamics getDynamics(final RealResource resource, final Checkpoint<? extends $Schema> now) {
     return this.rootContext.setWithin(new QueryContext<>(now), resource::getDynamics);
   }
 

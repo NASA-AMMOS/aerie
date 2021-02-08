@@ -1,22 +1,22 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 
 public final class QueryContext<$Schema> implements Context<$Schema> {
-  private final History<? extends $Schema> history;
+  private final Checkpoint<? extends $Schema> history;
 
-  public QueryContext(final History<? extends $Schema> history) {
+  public QueryContext(final Checkpoint<? extends $Schema> history) {
     this.history = history;
   }
 
   @Override
-  public History<? extends $Schema> now() {
-    return this.history;
+  public <CellType> CellType ask(final Query<? super $Schema, ?, CellType> query) {
+    return this.history.ask(query);
   }
 
   @Override

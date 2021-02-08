@@ -3,13 +3,13 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 import gov.nasa.jpl.aerie.merlin.framework.Context;
 import gov.nasa.jpl.aerie.merlin.framework.QueryContext;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 
@@ -32,7 +32,7 @@ public final class DiscreteResourceSolver<$Schema, Resource>
   @Override
   public Resource getDynamics(
       final DiscreteResource<Resource> resource,
-      final History<? extends $Schema> now)
+      final Checkpoint<? extends $Schema> now)
   {
     return this.rootContext.setWithin(new QueryContext<>(now), resource::getDynamics);
   }

@@ -232,7 +232,7 @@ public final class SimulationDriver {
 
       return profile.append(
           window.end.minus(window.start),
-          solver.getDynamics(resource, history));
+          solver.getDynamics(resource, history::ask));
     });
   }
 
