@@ -46,10 +46,11 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
     if (this.history.isEmpty()) {
       // We're running normally.
       this.scheduler.emit(event, query);
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
+      this.nextBreadcrumbIndex += 1;
     } else {
-      // TODO: Avoid leaving garbage behind -- find some way to remove regenerated events
-      //   on dead-end branches when references to it disappear.
-      this.history = this.history.map(now -> now.emit(event, query));
+      readvance();
     }
   }
 
