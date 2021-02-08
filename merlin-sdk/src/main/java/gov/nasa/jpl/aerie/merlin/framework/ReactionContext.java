@@ -39,8 +39,8 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public History<$Timeline> now() {
-    return this.history.orElseGet(this.scheduler::now);
+  public <CellType> CellType ask(final Query<? super $Schema, ?, CellType> query) {
+    return this.history.orElseGet(this.scheduler::now).ask(query);
   }
 
   @Override

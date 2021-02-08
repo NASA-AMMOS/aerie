@@ -1,15 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 
 public interface Context<$Schema> {
-  History<? extends $Schema> now();
-
+  <CellType> CellType ask(Query<? super $Schema, ?, CellType> query);
   <Event> void emit(Event event, Query<? super $Schema, Event, ?> query);
 
   String spawn(String type, Map<String, SerializedValue> arguments);
