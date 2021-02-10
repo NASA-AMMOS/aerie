@@ -3,12 +3,14 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
@@ -22,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -218,6 +221,16 @@ public final class SimulationDriver {
     return pair;
   }
 
+  private static final class Foo<$Timeline, Dynamics, Condition> {
+    public Profile<Dynamics, Condition> profile;
+    public Optional<Pair<History<$Timeline>, List<Query<? super $Timeline, ?, ?>>>> lastUpdate = Optional.empty();
+
+    private Foo(final ResourceSolver<? super $Timeline, ?, Dynamics, Condition> solver)
+    {
+      this.profile = new Profile<>(solver);
+    }
+  }
+
   public static <$Timeline, Resource, Dynamics, Condition>
   Profile<Dynamics, Condition>
   computeProfile(
@@ -226,14 +239,33 @@ public final class SimulationDriver {
       final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
       final Resource resource)
   {
-    return database.accumulateUpTo(endTime, new Profile<>(solver), (profile, info) -> {
+    final var result = database.accumulateUpTo(endTime, new Foo<$Timeline, Dynamics, Condition>(solver), (foo, info) -> {
       final var history = info.getLeft();
       final var window = info.getRight();
 
-      return profile.append(
-          window.end.minus(window.start),
-          solver.getDynamics(resource, history));
+      if (foo.lastUpdate.isEmpty() || history.isStrictlyAheadOfOn(foo.lastUpdate.get().getLeft(), foo.lastUpdate.get().getRight())) {
+        final var queries = new ArrayList<Query<? super $Timeline, ?, ?>>();
+        final var dynamics = solver.getDynamics(resource, new Checkpoint<$Timeline>() {
+          @Override
+          public <Event, Model> Model ask(final Query<? super $Timeline, Event, Model> query) {
+            queries.add(query);
+            return history.ask(query);
+          }
+        });
+
+        queries.forEach(System.out::println);
+        System.out.println();
+
+        foo.lastUpdate = Optional.of(Pair.of(history, queries));
+        foo.profile = foo.profile.append(window.end.minus(window.start), dynamics);
+      } else {
+        foo.profile = foo.profile.extendBy(window.end.minus(window.start));
+      }
+
+      return foo;
     });
+
+    return result.profile;
   }
 
   private static final class TaskSpec<$Schema, Spec> {

@@ -35,7 +35,7 @@ public class SimulateMapSchedule {
     final var schedule = loadSchedule();
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
-    final var samplingPeriod = duration(1, SECOND);
+    final var samplingPeriod = simulationDuration;
 
     final var simulationResults = SimulationDriver.simulate(
         new GeneratedAdaptationFactory().instantiate(),

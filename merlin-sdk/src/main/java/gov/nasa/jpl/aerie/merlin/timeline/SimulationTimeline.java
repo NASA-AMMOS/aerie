@@ -143,27 +143,65 @@ public final class SimulationTimeline<$Timeline> {
     return query;
   }
 
+  private static List<Long> makeInitialCounts(final int size) {
+    final var counts = new ArrayList<Long>(size);
+    for (int i = 0; i < size; i += 1) counts.add(0L);
+    return counts;
+  }
+
   /* package-local */
   <Event> int advancing(final int previous, final Query<? super $Timeline, Event, ?> query, final Event event) {
     final var tableIndex = query.getTableIndex();
     final var eventIndex = this.getTable(tableIndex).emit(event);
 
+    final var counts = (previous == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : new ArrayList<>(this.times.get(previous).getCounts());
+
+    counts.set(tableIndex, 1 + counts.get(tableIndex));
+
     final var nextTime = this.times.size();
-    this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex));
+    this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex, counts));
     return nextTime;
   }
 
   /* package-local */
   int joining(final int base, final int left, final int right) {
+    final var leftCounts = (left == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : this.times.get(left).getCounts();
+
+    final var rightCounts = (right == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : this.times.get(right).getCounts();
+
+    final var counts = (base == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : new ArrayList<>(this.times.get(base).getCounts());
+
+    for (int i = 0; i < counts.size(); i += 1) {
+      if (leftCounts.get(i).equals(counts.get(i))) {
+        counts.set(i, rightCounts.get(i) + counts.get(i));
+      } else if (rightCounts.get(i).equals(counts.get(i))) {
+        counts.set(i, leftCounts.get(i) + counts.get(i));
+      } else {
+        counts.set(i, 1 + Math.max(leftCounts.get(i), counts.get(i)));
+      }
+    }
+
     final var nextTime = this.times.size();
-    this.times.add(nextTime, new EventPoint.Joining(base, left, right));
+    this.times.add(nextTime, new EventPoint.Joining(base, left, right, counts));
     return nextTime;
   }
 
   /* package-local */
   int waiting(final int previous, final long microseconds) {
+    final var counts = (previous == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : this.times.get(previous).getCounts();
+
     final var nextTime = this.times.size();
-    this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds));
+    this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds, counts));
     return nextTime;
   }
 
@@ -250,5 +288,27 @@ public final class SimulationTimeline<$Timeline> {
         return path.effects;
       }
     }
+  }
+
+  /* package-local */
+  boolean isStrictlyAheadOfOn(
+      final int endTime,
+      final int startTime,
+      final List<Query<? super $Timeline, ?, ?>> queries)
+  {
+    final var endCounts = (endTime == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : this.times.get(endTime).getCounts();
+    final var startCounts = (startTime == START_INDEX)
+        ? makeInitialCounts(this.tables.size())
+        : this.times.get(startTime).getCounts();
+
+    for (final var query : queries) {
+      final var tableIndex = query.getTableIndex();
+      if (startCounts.get(tableIndex) < endCounts.get(tableIndex)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

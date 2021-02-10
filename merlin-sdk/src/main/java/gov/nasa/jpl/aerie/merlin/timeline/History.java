@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.timeline;
 
 import gov.nasa.jpl.aerie.time.Duration;
 
+import java.util.List;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline.START_INDEX;
@@ -172,5 +173,10 @@ public final class History<$Timeline> {
     }
 
     return builder.toString();
+  }
+
+  public
+  boolean isStrictlyAheadOfOn(final History<$Timeline> past, final List<Query<? super $Timeline, ?, ?>> queries) {
+    return this.database.isStrictlyAheadOfOn(this.index, past.index, queries);
   }
 }

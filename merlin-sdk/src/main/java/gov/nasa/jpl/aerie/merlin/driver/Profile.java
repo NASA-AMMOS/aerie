@@ -57,6 +57,22 @@ public final class Profile<Dynamics, Condition>
     return new Profile<>(this.solver, newPieces, newDuration);
   }
 
+  public Profile<Dynamics, Condition> extendBy(final Duration duration) {
+    if (duration.isNegative()) throw new IllegalArgumentException("cannot extend by a negative duration");
+    if (this.pieces.isEmpty()) throw new IllegalStateException("cannot extend an empty profile");
+
+    final var lastSegment = this.pieces.get(this.pieces.size() - 1);
+    final var newPieces = new ArrayList<>(this.pieces.subList(0, this.pieces.size() - 1));
+
+    newPieces.add(Pair.of(
+        Window.between(lastSegment.getLeft().start, lastSegment.getLeft().end.plus(duration)),
+        lastSegment.getRight()));
+
+    final var newDuration = this.duration.plus(duration);
+
+    return new Profile<>(this.solver, newPieces, newDuration);
+  }
+
   public ResourceSolver<?, ?, Dynamics, Condition> getSolver() {
     return this.solver;
   }
