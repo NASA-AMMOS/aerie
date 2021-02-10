@@ -174,9 +174,4 @@ public final class History<$Timeline> {
 
     return builder.toString();
   }
-
-  public
-  boolean isStrictlyAheadOfOn(final History<$Timeline> past, final List<Query<? super $Timeline, ?, ?>> queries) {
-    return this.database.isStrictlyAheadOfOn(this.index, past.index, queries);
-  }
 }

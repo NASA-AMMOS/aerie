@@ -15,11 +15,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
@@ -47,6 +49,8 @@ public final class SimulationEngine<$Timeline> {
 
   // The history of events produced by tasks.
   private History<$Timeline> currentHistory;
+  // The trace of transaction points.
+  private List<Pair<Duration, History<$Timeline>>> trace = new ArrayList<>();
   // The elapsed simulation time since creating this engine.
   private Duration elapsedTime = Duration.ZERO;
   // The next available task id.
@@ -58,6 +62,8 @@ public final class SimulationEngine<$Timeline> {
       final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask) {
     this.currentHistory = initialHistory;
     this.createTask = createTask;
+
+    this.trace.add(Pair.of(Duration.ZERO, this.currentHistory));
   }
 
   private String generateId() {
@@ -122,13 +128,15 @@ public final class SimulationEngine<$Timeline> {
 
     // Step up to the next job time.
     final var nextJobTime = this.queue.peek().getLeft();
-    this.currentHistory = this.currentHistory.wait(nextJobTime.minus(this.elapsedTime));
+    final var timeDelta = nextJobTime.minus(this.elapsedTime);
+    this.currentHistory = this.currentHistory.wait(timeDelta);
     this.elapsedTime = nextJobTime;
 
     // Process each task at this time, and any spawned sub-tasks.
     final var frames = new ArrayDeque<TaskFrame<$Timeline>>();
     frames.push(this.extractNextRootFrame());
     this.currentHistory = this.processFrameStack(frames);
+    this.trace.add(Pair.of(timeDelta, this.currentHistory));
   }
 
   // A "root frame" is the set of all tasks scheduled for a given time.
@@ -194,6 +202,10 @@ public final class SimulationEngine<$Timeline> {
 
   public Map<String, TaskRecord> getTaskRecords() {
     return Collections.unmodifiableMap(this.taskRecords);
+  }
+
+  public List<Pair<Duration, History<$Timeline>>> getTrace() {
+    return Collections.unmodifiableList(this.trace);
   }
 
   public Map<String, Window> getTaskWindows() {

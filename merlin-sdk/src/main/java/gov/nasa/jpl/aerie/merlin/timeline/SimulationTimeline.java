@@ -5,14 +5,13 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectExpression;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EventGraph;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.BiFunction;
 
 /**
  * A persistent representation of {@link EffectExpression}s.
@@ -79,57 +78,6 @@ public final class SimulationTimeline<$Timeline> {
     return new History<>(this, null, START_INDEX);
   }
 
-  public <Result> Result accumulateUpTo(
-      final History<$Timeline> endTime,
-      final Result initialValue,
-      final BiFunction<Result, Pair<History<$Timeline>, Window>, Result> accumulator)
-  {
-    final List<Pair<History<$Timeline>, Long>> foo = new ArrayList<>();
-
-    {
-      var index = endTime.getIndex();
-      long microsecondsUntilNext = 0;
-
-      while (index != START_INDEX) {
-        var timePoint = this.times.get(index);
-
-        if (timePoint instanceof EventPoint.Waiting) {
-          microsecondsUntilNext += ((EventPoint.Waiting) timePoint).microseconds;
-        } else if (timePoint instanceof EventPoint.Advancing || timePoint instanceof EventPoint.Joining) {
-          // SAFETY: If we see a Joining, there was no Waiting inside it, and there was definitely an Advancing.
-          if (microsecondsUntilNext > 0 || index == endTime.getIndex()) {
-            // This is the beginning of a period of time without anything happening.
-            foo.add(0, Pair.of(new History<>(this, null, index), microsecondsUntilNext));
-
-            microsecondsUntilNext = 0;
-          }
-        } else {
-          throw new Error("Unexpected subclass of " + EventPoint.class + ": " + timePoint.getClass());
-        }
-
-        index = timePoint.getPrevious();
-      }
-
-      if (microsecondsUntilNext > 0 || index == endTime.getIndex()) {
-        // This is the beginning of a period of time without anything happening.
-        foo.add(0, Pair.of(new History<>(this, null, index), microsecondsUntilNext));
-      }
-    }
-
-    var value = initialValue;
-    {
-      var elapsedTime = Duration.ZERO;
-      for (final var pair : foo) {
-        final var window = Window.between(elapsedTime, elapsedTime.plus(pair.getRight(), Duration.MICROSECONDS));
-
-        value = accumulator.apply(value, Pair.of(pair.getLeft(), window));
-        elapsedTime = window.end;
-      }
-    }
-
-    return value;
-  }
-
   public <Event, CellType, Effect>
   Query<$Timeline, Event, CellType>
   register(
@@ -143,65 +91,26 @@ public final class SimulationTimeline<$Timeline> {
     return query;
   }
 
-  private static List<Long> makeInitialCounts(final int size) {
-    final var counts = new ArrayList<Long>(size);
-    for (int i = 0; i < size; i += 1) counts.add(0L);
-    return counts;
-  }
-
   /* package-local */
   <Event> int advancing(final int previous, final Query<? super $Timeline, Event, ?> query, final Event event) {
     final var tableIndex = query.getTableIndex();
     final var eventIndex = this.getTable(tableIndex).emit(event);
-
-    final var counts = (previous == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : new ArrayList<>(this.times.get(previous).getCounts());
-
-    counts.set(tableIndex, 1 + counts.get(tableIndex));
-
     final var nextTime = this.times.size();
-    this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex, counts));
+    this.times.add(nextTime, new EventPoint.Advancing(previous, tableIndex, eventIndex));
     return nextTime;
   }
 
   /* package-local */
   int joining(final int base, final int left, final int right) {
-    final var leftCounts = (left == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : this.times.get(left).getCounts();
-
-    final var rightCounts = (right == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : this.times.get(right).getCounts();
-
-    final var counts = (base == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : new ArrayList<>(this.times.get(base).getCounts());
-
-    for (int i = 0; i < counts.size(); i += 1) {
-      if (leftCounts.get(i).equals(counts.get(i))) {
-        counts.set(i, rightCounts.get(i) + counts.get(i));
-      } else if (rightCounts.get(i).equals(counts.get(i))) {
-        counts.set(i, leftCounts.get(i) + counts.get(i));
-      } else {
-        counts.set(i, 1 + Math.max(leftCounts.get(i), counts.get(i)));
-      }
-    }
-
     final var nextTime = this.times.size();
-    this.times.add(nextTime, new EventPoint.Joining(base, left, right, counts));
+    this.times.add(nextTime, new EventPoint.Joining(base, left, right));
     return nextTime;
   }
 
   /* package-local */
   int waiting(final int previous, final long microseconds) {
-    final var counts = (previous == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : this.times.get(previous).getCounts();
-
     final var nextTime = this.times.size();
-    this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds, counts));
+    this.times.add(nextTime, new EventPoint.Waiting(previous, microseconds));
     return nextTime;
   }
 
@@ -290,25 +199,61 @@ public final class SimulationTimeline<$Timeline> {
     }
   }
 
-  /* package-local */
-  boolean isStrictlyAheadOfOn(
-      final int endTime,
-      final int startTime,
-      final List<Query<? super $Timeline, ?, ?>> queries)
-  {
-    final var endCounts = (endTime == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : this.times.get(endTime).getCounts();
-    final var startCounts = (startTime == START_INDEX)
-        ? makeInitialCounts(this.tables.size())
-        : this.times.get(startTime).getCounts();
+  public boolean[] getChangedTablesBetween(final History<$Timeline> startTime, final History<$Timeline> endTime) {
+    final var changed = new boolean[this.tables.size()];
+    Arrays.fill(changed, false);
 
-    for (final var query : queries) {
-      final var tableIndex = query.getTableIndex();
-      if (startCounts.get(tableIndex) < endCounts.get(tableIndex)) {
-        return true;
+    // NOTE: In principle, we can determine the maximum size of the path stack.
+    //   Whenever two time points are joined, increment a counter on the resulting time point.
+    //   This counter can then be used to allocate a stack of just the right size.
+    final var pathStack = new ArrayDeque<ActivePath<Void>>();
+    ActivePath<Void> currentPath = new ActivePath.TopLevel<>(startTime.getIndex(), null);
+    var pointIndex = endTime.getIndex();
+
+    // TERMINATION: In principle, we can bound this loop by determining the maximum number
+    //   of time points we will visit. Whenever a new time point is generated from an old one,
+    //   its count would be updated appropriately. (Emitting an event adds one; joining two branches
+    //   adds the branches and subtracts the base.)
+    while (true) {
+      if (currentPath.basePoint() != pointIndex) {
+        // There's still more path to follow!
+        final var point = this.times.get(pointIndex);
+        if (point instanceof EventPoint.Advancing) {
+          // Accumulate the event into the currently open path.
+          final var step = (EventPoint.Advancing) point;
+          changed[step.tableIndex] = true;
+          pointIndex = step.previous;
+        } else if (point instanceof EventPoint.Joining) {
+          // We've walked backwards into a join point between two branches.
+          // Walk down the left side first, and stash the base and right side for later evaluation.
+          final var join = (EventPoint.Joining) point;
+          pathStack.push(currentPath);
+          currentPath = new ActivePath.Left<>(join.base, null, join.right);
+          pointIndex = join.left;
+        } else if (point instanceof EventPoint.Waiting) {
+          // We've walked backwards into a delay.
+          // SAFETY: Delays can only occur at the top-level.
+          assert currentPath instanceof ActivePath.TopLevel;
+          final var wait = (EventPoint.Waiting) point;
+          pointIndex = wait.previous;
+        }
+      } else if (currentPath instanceof ActivePath.Left) {
+        // We've just finished evaluating the left side of a concurrence.
+        // Stash the result and switch to the right side.
+        final var path = (ActivePath.Left<Void>) currentPath;
+        currentPath = new ActivePath.Right<>(path.base, path.left, null);
+        pointIndex = path.right;
+      } else if (currentPath instanceof ActivePath.Right) {
+        // We've just finished evaluating the right side of a concurrence.
+        // We already evaluated the left side, so bind them together and accumulate the result
+        //   into the open path one level up. We'll continue from the given base point.
+        final var path = (ActivePath.Right<Void>) currentPath;
+        currentPath = pathStack.pop();
+        pointIndex = path.base;
+      } else if (currentPath instanceof ActivePath.TopLevel) {
+        // We've just finished the top-level path -- we're done!
+        return changed;
       }
     }
-    return false;
   }
 }

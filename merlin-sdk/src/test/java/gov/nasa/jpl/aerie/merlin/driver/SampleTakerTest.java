@@ -33,7 +33,6 @@ public final class SampleTakerTest {
 
     final var expected = List.of(
         Pair.of(duration(0, MILLISECONDS), SerializedValue.of(5.0)),
-        Pair.of(duration(0, MILLISECONDS), SerializedValue.of(5.0)),
         Pair.of(duration(0, MILLISECONDS), SerializedValue.of(0.0)),
         Pair.of(duration(250, MILLISECONDS), SerializedValue.of(1.0)),
         Pair.of(duration(500, MILLISECONDS), SerializedValue.of(2.0)),
