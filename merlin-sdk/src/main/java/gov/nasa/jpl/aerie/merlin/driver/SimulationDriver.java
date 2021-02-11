@@ -235,7 +235,7 @@ public final class SimulationDriver {
 
       lastCheckedTime = history;
       lastDependencies = queries;
-      profile = profile.append(delta, dynamics);
+      profile.append(delta, dynamics);
     }
 
     while (iter.hasNext()) {
@@ -264,9 +264,9 @@ public final class SimulationDriver {
         });
 
         lastDependencies = queries;
-        profile = profile.append(delta, dynamics);
+        profile.append(delta, dynamics);
       } else {
-        profile = profile.extendBy(delta);
+        profile.extendBy(delta);
       }
 
       lastCheckedTime = history;

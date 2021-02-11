@@ -16,7 +16,7 @@ public final class Profile<Dynamics, Condition>
 {
   private final ResourceSolver<?, ?, Dynamics, Condition> solver;
   private final List<Pair<Window, Dynamics>> pieces;
-  private final Duration duration;
+  private Duration duration;
 
   private Profile(
       final ResourceSolver<?, ?, Dynamics, Condition> solver,
@@ -29,7 +29,7 @@ public final class Profile<Dynamics, Condition>
   }
 
   public Profile(final ResourceSolver<?, ?, Dynamics, Condition> solver) {
-    this(Objects.requireNonNull(solver), Collections.emptyList(), Duration.ZERO);
+    this(Objects.requireNonNull(solver), new ArrayList<>(), Duration.ZERO);
   }
 
   public Duration getDuration() {
@@ -47,14 +47,13 @@ public final class Profile<Dynamics, Condition>
           .end;
     }
 
-    final var window = Window.between(startTime, startTime.plus(duration));
+    this.pieces.add(Pair.of(
+        Window.between(startTime, startTime.plus(duration)),
+        dynamics));
 
-    final var newPieces = new ArrayList<>(this.pieces);
-    newPieces.add(Pair.of(window,  dynamics));
+    this.duration = this.duration.plus(duration);
 
-    final var newDuration = this.duration.plus(duration);
-
-    return new Profile<>(this.solver, newPieces, newDuration);
+    return this;
   }
 
   public Profile<Dynamics, Condition> extendBy(final Duration duration) {
@@ -62,15 +61,16 @@ public final class Profile<Dynamics, Condition>
     if (this.pieces.isEmpty()) throw new IllegalStateException("cannot extend an empty profile");
 
     final var lastSegment = this.pieces.get(this.pieces.size() - 1);
-    final var newPieces = new ArrayList<>(this.pieces.subList(0, this.pieces.size() - 1));
 
-    newPieces.add(Pair.of(
-        Window.between(lastSegment.getLeft().start, lastSegment.getLeft().end.plus(duration)),
-        lastSegment.getRight()));
+    this.pieces.set(
+        this.pieces.size() - 1,
+        Pair.of(
+            Window.between(lastSegment.getLeft().start, lastSegment.getLeft().end.plus(duration)),
+            lastSegment.getRight()));
 
-    final var newDuration = this.duration.plus(duration);
+    this.duration = this.duration.plus(duration);
 
-    return new Profile<>(this.solver, newPieces, newDuration);
+    return this;
   }
 
   public ResourceSolver<?, ?, Dynamics, Condition> getSolver() {
