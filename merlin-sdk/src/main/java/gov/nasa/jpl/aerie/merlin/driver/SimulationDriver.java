@@ -110,7 +110,7 @@ public final class SimulationDriver {
     // Collect profiles for all resources.
     final var profiles = new HashMap<String, Profile<?, ?>>();
     adaptation.getResourceFamilies().forEach(group -> {
-      forEachProfile(database, simulator.getTrace(), group, profiles::put);
+      forEachProfile(simulator.getTrace(), group, profiles::put);
     });
 
     // Collect samples for all resources.
@@ -138,7 +138,6 @@ public final class SimulationDriver {
     adaptation.getConstraints().forEach((id, condition) -> {
       final var windows = condition.interpret(
           new ConditionSolver<>(
-              database,
               simulator.getTrace(),
               Window.between(Duration.ZERO, simulationDuration)));
 
@@ -192,7 +191,6 @@ public final class SimulationDriver {
   public static <$Timeline, Resource>
   void
   forEachProfile(
-      final SimulationTimeline<$Timeline> database,
       final List<Pair<Duration, History<$Timeline>>> trace,
       final ResourceFamily<? super $Timeline, Resource, ?> family,
       final BiConsumer<String, Profile<?, ?>> consumer)
@@ -201,28 +199,30 @@ public final class SimulationDriver {
     final var resources = family.getResources();
 
     resources.forEach((name, resource) -> {
-      consumer.accept(name, computeProfile(database, trace, solver, resource));
+      consumer.accept(name, computeProfile(trace, solver, resource));
     });
   }
 
   public static <$Timeline, Resource, Dynamics, Condition>
   Profile<Dynamics, Condition>
   computeProfile(
-      final SimulationTimeline<$Timeline> database,
       final List<Pair<Duration, History<$Timeline>>> trace,
       final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
       final Resource resource)
   {
     final var iter = trace.iterator();
-
     History<$Timeline> lastCheckedTime;
-    List<Query<? super $Timeline, ?, ?>> lastDependencies;
+
     var profile = new Profile<>(solver);
+    List<Query<? super $Timeline, ?, ?>> lastDependencies;
 
     {
       final var info = iter.next();
       final var history = info.getRight();
       final var delta = info.getLeft();
+
+      lastCheckedTime = history;
+      profile.extendBy(delta);
 
       final var queries = new ArrayList<Query<? super $Timeline, ?, ?>>();
       final var dynamics = solver.getDynamics(resource, new Checkpoint<$Timeline>() {
@@ -233,9 +233,8 @@ public final class SimulationDriver {
         }
       });
 
-      lastCheckedTime = history;
+      profile.append(dynamics);
       lastDependencies = queries;
-      profile.append(delta, dynamics);
     }
 
     while (iter.hasNext()) {
@@ -243,17 +242,14 @@ public final class SimulationDriver {
       final var history = info.getRight();
       final var delta = info.getLeft();
 
-      final var changedTables = database.getChangedTablesBetween(lastCheckedTime, history);
+      final var changedTables = history.getChangedTablesSince(lastCheckedTime);
 
-      boolean shouldUpdate = false;
+      profile.extendBy(delta);
+      lastCheckedTime = history;
+
       for (final var dependency : lastDependencies) {
-        if (changedTables[dependency.getTableIndex()]) {
-          shouldUpdate = true;
-          break;
-        }
-      }
+        if (!changedTables[dependency.getTableIndex()]) continue;
 
-      if (shouldUpdate) {
         final var queries = new ArrayList<Query<? super $Timeline, ?, ?>>();
         final var dynamics = solver.getDynamics(resource, new Checkpoint<$Timeline>() {
           @Override
@@ -263,13 +259,11 @@ public final class SimulationDriver {
           }
         });
 
+        profile.append(dynamics);
         lastDependencies = queries;
-        profile.append(delta, dynamics);
-      } else {
-        profile.extendBy(delta);
-      }
 
-      lastCheckedTime = history;
+        break;
+      }
     }
 
     return profile;

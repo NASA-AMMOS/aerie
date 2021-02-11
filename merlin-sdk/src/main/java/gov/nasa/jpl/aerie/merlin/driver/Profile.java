@@ -36,39 +36,26 @@ public final class Profile<Dynamics, Condition>
     return this.duration;
   }
 
-  public Profile<Dynamics, Condition> append(final Duration duration, Dynamics dynamics) {
-    final Duration startTime;
-    if (this.pieces.isEmpty()) {
-      startTime = Duration.ZERO;
-    } else {
-      startTime = this.pieces
-          .get(this.pieces.size() - 1)
-          .getLeft()
-          .end;
-    }
-
-    this.pieces.add(Pair.of(
-        Window.between(startTime, startTime.plus(duration)),
-        dynamics));
-
-    this.duration = this.duration.plus(duration);
+  public Profile<Dynamics, Condition> append(Dynamics dynamics) {
+    this.pieces.add(Pair.of(Window.at(this.duration), dynamics));
 
     return this;
   }
 
   public Profile<Dynamics, Condition> extendBy(final Duration duration) {
     if (duration.isNegative()) throw new IllegalArgumentException("cannot extend by a negative duration");
+    else if (duration.isZero()) return this;
+
     if (this.pieces.isEmpty()) throw new IllegalStateException("cannot extend an empty profile");
 
     final var lastSegment = this.pieces.get(this.pieces.size() - 1);
 
+    this.duration = this.duration.plus(duration);
     this.pieces.set(
         this.pieces.size() - 1,
         Pair.of(
-            Window.between(lastSegment.getLeft().start, lastSegment.getLeft().end.plus(duration)),
+            Window.between(lastSegment.getLeft().start, this.duration),
             lastSegment.getRight()));
-
-    this.duration = this.duration.plus(duration);
 
     return this;
   }

@@ -15,23 +15,20 @@ import java.util.Objects;
 public final class ConditionSolver<$Schema, $Timeline extends $Schema>
     implements Condition.Visitor<$Schema, Windows>
 {
-  private final SimulationTimeline<$Timeline> database;
   private final List<Pair<Duration, History<$Timeline>>> trace;
   private final Window planWindow;
 
   public ConditionSolver(
-      final SimulationTimeline<$Timeline> database,
       final List<Pair<Duration, History<$Timeline>>> trace,
       final Window planWindow)
   {
-    this.database = Objects.requireNonNull(database);
     this.trace = Objects.requireNonNull(trace);
     this.planWindow = Objects.requireNonNull(planWindow);
   }
 
   @Override
   public <R, D, C> Windows atom(final ResourceSolver<$Schema, R, D, C> solver, final R resource, final C condition) {
-    final var profile = SimulationDriver.computeProfile(this.database, this.trace, solver, resource);
+    final var profile = SimulationDriver.computeProfile(this.trace, solver, resource);
 
     return WindowAccumulator.solve(this.planWindow, solver, condition, profile);
   }

@@ -174,4 +174,8 @@ public final class History<$Timeline> {
 
     return builder.toString();
   }
+
+  public boolean[] getChangedTablesSince(final History<$Timeline> startTime) {
+    return this.database.getChangedTablesBetween(startTime, this);
+  }
 }
