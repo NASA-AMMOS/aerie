@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.fooadaptation;
 
-import gov.nasa.jpl.aerie.contrib.models.Clock;
-import gov.nasa.jpl.aerie.contrib.models.SampledResource;
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
+import gov.nasa.jpl.aerie.contrib.models.Clock;
 import gov.nasa.jpl.aerie.contrib.models.Register;
+import gov.nasa.jpl.aerie.contrib.models.SampledResource;
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.generated.Model;

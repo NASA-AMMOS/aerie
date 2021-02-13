@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -108,10 +109,7 @@ public final class SimulationDriver {
     simulator.runFor(simulationDuration);
 
     // Collect profiles for all resources.
-    final var profiles = new HashMap<String, Profile<?, ?>>();
-    adaptation.getResourceFamilies().forEach(group -> {
-      forEachProfile(simulator.getTrace(), group, profiles::put);
-    });
+    final var profiles = computeProfiles(adaptation, simulator);
 
     // Collect samples for all resources.
     final var timestamps = new ArrayList<Duration>();
@@ -188,33 +186,45 @@ public final class SimulationDriver {
     return results;
   }
 
-  public static <$Timeline, Resource>
-  void
-  forEachProfile(
-      final List<Pair<Duration, History<$Timeline>>> trace,
-      final ResourceFamily<? super $Timeline, Resource, ?> family,
-      final BiConsumer<String, Profile<?, ?>> consumer)
-  {
-    final var solver = family.getSolver();
-    final var resources = family.getResources();
+  private static <$Schema, $Timeline extends $Schema>
+  HashMap<String, Profile<?, ?>>
+  computeProfiles(final Adaptation<$Schema> adaptation, final SimulationEngine<$Timeline> simulator) {
+    final var foos = new HashMap<String, Foo<$Schema, ?, ?, ?>>();
+    for (final var family : adaptation.getResourceFamilies()) {
+      collectResourceFoos(foos, family);
+    }
 
-    resources.forEach((name, resource) -> {
-      consumer.accept(name, computeProfile(trace, solver, resource));
-    });
+    computeProfiles(simulator.getTrace(), foos.values());
+
+    final var profiles = new HashMap<String, Profile<?, ?>>();
+    for (final var entry : foos.entrySet()) {
+      profiles.put(entry.getKey(), entry.getValue().profile);
+    }
+
+    return profiles;
   }
 
-  public static <$Timeline, Resource, Dynamics, Condition>
-  Profile<Dynamics, Condition>
-  computeProfile(
+  private static <$Schema, Resource, Condition>
+  void
+  collectResourceFoos(
+      final HashMap<String, Foo<$Schema, ?, ?, ?>> foos,
+      final ResourceFamily<$Schema, Resource, Condition> family)
+  {
+    final var solver = family.getSolver();
+
+    for (final var entry : family.getResources().entrySet()) {
+      foos.put(entry.getKey(), new Foo<>(solver, entry.getValue()));
+    }
+  }
+
+  public static <$Schema, $Timeline extends $Schema>
+  void
+  computeProfiles(
       final List<Pair<Duration, History<$Timeline>>> trace,
-      final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
-      final Resource resource)
+      final Iterable<Foo<$Schema, ?, ?, ?>> foos)
   {
     final var iter = trace.iterator();
     History<$Timeline> lastCheckedTime;
-
-    var profile = new Profile<>(solver);
-    List<Query<? super $Timeline, ?, ?>> lastDependencies;
 
     {
       final var info = iter.next();
@@ -222,51 +232,66 @@ public final class SimulationDriver {
       final var delta = info.getLeft();
 
       lastCheckedTime = history;
-      profile.extendBy(delta);
 
-      final var queries = new ArrayList<Query<? super $Timeline, ?, ?>>();
-      final var dynamics = solver.getDynamics(resource, new Checkpoint<$Timeline>() {
+      for (final var foo : foos) {
+        foo.extendBy(delta);
+        foo.updateAt(history);
+      }
+    }
+
+    while (iter.hasNext()) {
+      final var info = iter.next();
+      final var delta = info.getLeft();
+      final var history = info.getRight();
+
+      final var changedTables = history.getChangedTablesSince(lastCheckedTime);
+      lastCheckedTime = history;
+
+      for (final var foo : foos) {
+        foo.extendBy(delta);
+        for (final var dependency : foo.lastDependencies) {
+          if (changedTables[dependency.getTableIndex()]) {
+            foo.updateAt(history);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  public static final class Foo<$Schema, Resource, Dynamics, Condition> {
+    public final ResourceSolver<$Schema, Resource, Dynamics, Condition> solver;
+    public final Resource resource;
+    public final Profile<Dynamics, Condition> profile;
+    public List<Query<? super $Schema, ?, ?>> lastDependencies;
+
+    public Foo(
+        final ResourceSolver<$Schema, Resource, Dynamics, Condition> solver,
+        final Resource resource)
+    {
+      this.solver = solver;
+      this.resource = resource;
+      this.profile = new Profile<>(solver);
+      this.lastDependencies = Collections.emptyList();
+    }
+
+    public void updateAt(final History<? extends $Schema> history) {
+      final var queries = new ArrayList<Query<? super $Schema, ?, ?>>();
+      final var dynamics = solver.getDynamics(resource, new Checkpoint<>() {
         @Override
-        public <Event, Model> Model ask(final Query<? super $Timeline, Event, Model> query) {
+        public <Event, Model> Model ask(final Query<? super $Schema, Event, Model> query) {
           queries.add(query);
           return history.ask(query);
         }
       });
 
-      profile.append(dynamics);
-      lastDependencies = queries;
+      this.profile.append(dynamics);
+      this.lastDependencies = queries;
     }
 
-    while (iter.hasNext()) {
-      final var info = iter.next();
-      final var history = info.getRight();
-      final var delta = info.getLeft();
-
-      final var changedTables = history.getChangedTablesSince(lastCheckedTime);
-
-      profile.extendBy(delta);
-      lastCheckedTime = history;
-
-      for (final var dependency : lastDependencies) {
-        if (!changedTables[dependency.getTableIndex()]) continue;
-
-        final var queries = new ArrayList<Query<? super $Timeline, ?, ?>>();
-        final var dynamics = solver.getDynamics(resource, new Checkpoint<$Timeline>() {
-          @Override
-          public <Event, Model> Model ask(final Query<? super $Timeline, Event, Model> query) {
-            queries.add(query);
-            return history.ask(query);
-          }
-        });
-
-        profile.append(dynamics);
-        lastDependencies = queries;
-
-        break;
-      }
+    public void extendBy(final Duration delta) {
+      this.profile.extendBy(delta);
     }
-
-    return profile;
   }
 
   private static final class TaskSpec<$Schema, Spec> {

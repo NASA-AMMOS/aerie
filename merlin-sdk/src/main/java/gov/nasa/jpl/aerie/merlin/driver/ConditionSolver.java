@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 import gov.nasa.jpl.aerie.time.Windows;
@@ -28,9 +27,10 @@ public final class ConditionSolver<$Schema, $Timeline extends $Schema>
 
   @Override
   public <R, D, C> Windows atom(final ResourceSolver<$Schema, R, D, C> solver, final R resource, final C condition) {
-    final var profile = SimulationDriver.computeProfile(this.trace, solver, resource);
+    final var foo = new SimulationDriver.Foo<>(solver, resource);
+    SimulationDriver.computeProfiles(this.trace, List.of(foo));
 
-    return WindowAccumulator.solve(this.planWindow, solver, condition, profile);
+    return WindowAccumulator.solve(this.planWindow, solver, condition, foo.profile);
   }
 
   @Override
