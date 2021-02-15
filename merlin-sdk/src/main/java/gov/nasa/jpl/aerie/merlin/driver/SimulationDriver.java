@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -109,9 +110,13 @@ public final class SimulationDriver {
     simulator.runFor(simulationDuration);
 
     // Collect profiles for all resources.
-    final var profiles = computeProfiles(adaptation, simulator);
+    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?, ?>>();
+    for (final var family : adaptation.getResourceFamilies()) {
+      createProfilesForFamily(family, profiles::put);
+    }
+    computeProfiles(simulator.getTrace(), profiles.values());
 
-    // Collect samples for all resources.
+    // Identify all sample times.
     final var timestamps = new ArrayList<Duration>();
     {
       var elapsedTime = Duration.ZERO;
@@ -186,34 +191,16 @@ public final class SimulationDriver {
     return results;
   }
 
-  private static <$Schema, $Timeline extends $Schema>
-  HashMap<String, Profile<?, ?>>
-  computeProfiles(final Adaptation<$Schema> adaptation, final SimulationEngine<$Timeline> simulator) {
-    final var foos = new HashMap<String, Foo<$Schema, ?, ?, ?>>();
-    for (final var family : adaptation.getResourceFamilies()) {
-      collectResourceFoos(foos, family);
-    }
-
-    computeProfiles(simulator.getTrace(), foos.values());
-
-    final var profiles = new HashMap<String, Profile<?, ?>>();
-    for (final var entry : foos.entrySet()) {
-      profiles.put(entry.getKey(), entry.getValue().profile);
-    }
-
-    return profiles;
-  }
-
   private static <$Schema, Resource, Condition>
   void
-  collectResourceFoos(
-      final HashMap<String, Foo<$Schema, ?, ?, ?>> foos,
-      final ResourceFamily<$Schema, Resource, Condition> family)
+  createProfilesForFamily(
+      final ResourceFamily<$Schema, Resource, Condition> family,
+      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?, ?>> handler)
   {
     final var solver = family.getSolver();
 
     for (final var entry : family.getResources().entrySet()) {
-      foos.put(entry.getKey(), new Foo<>(solver, entry.getValue()));
+      handler.accept(entry.getKey(), new ProfileBuilder<>(solver, entry.getValue()));
     }
   }
 
@@ -221,7 +208,7 @@ public final class SimulationDriver {
   void
   computeProfiles(
       final List<Pair<Duration, History<$Timeline>>> trace,
-      final Iterable<Foo<$Schema, ?, ?, ?>> foos)
+      final Iterable<ProfileBuilder<$Schema, ?, ?, ?>> foos)
   {
     final var iter = trace.iterator();
     History<$Timeline> lastCheckedTime;
@@ -259,38 +246,60 @@ public final class SimulationDriver {
     }
   }
 
-  public static final class Foo<$Schema, Resource, Dynamics, Condition> {
+  public static final class ProfileBuilder<$Schema, Resource, Dynamics, Condition> {
     public final ResourceSolver<$Schema, Resource, Dynamics, Condition> solver;
     public final Resource resource;
-    public final Profile<Dynamics, Condition> profile;
-    public List<Query<? super $Schema, ?, ?>> lastDependencies;
+    public final List<Pair<Window, Dynamics>> pieces;
+    public final Set<Query<? super $Schema, ?, ?>> lastDependencies;
 
-    public Foo(
+    public ProfileBuilder(
         final ResourceSolver<$Schema, Resource, Dynamics, Condition> solver,
         final Resource resource)
     {
       this.solver = solver;
       this.resource = resource;
-      this.profile = new Profile<>(solver);
-      this.lastDependencies = Collections.emptyList();
+      this.pieces = new ArrayList<>();
+      this.lastDependencies = new HashSet<>();
     }
 
     public void updateAt(final History<? extends $Schema> history) {
-      final var queries = new ArrayList<Query<? super $Schema, ?, ?>>();
+      final var start =
+          (this.pieces.isEmpty())
+              ? Duration.ZERO
+              : this.pieces.get(this.pieces.size() - 1).getLeft().end;
+
+      this.lastDependencies.clear();
+
       final var dynamics = solver.getDynamics(resource, new Checkpoint<>() {
         @Override
         public <Event, Model> Model ask(final Query<? super $Schema, Event, Model> query) {
-          queries.add(query);
+          ProfileBuilder.this.lastDependencies.add(query);
           return history.ask(query);
         }
       });
 
-      this.profile.append(dynamics);
-      this.lastDependencies = queries;
+      this.pieces.add(Pair.of(Window.at(start), dynamics));
     }
 
-    public void extendBy(final Duration delta) {
-      this.profile.extendBy(delta);
+    public void extendBy(final Duration duration) {
+      if (duration.isNegative()) throw new IllegalArgumentException("cannot extend by a negative duration");
+      else if (duration.isZero()) return;
+
+      if (this.pieces.isEmpty()) throw new IllegalStateException("cannot extend an empty profile");
+
+      final var lastSegment = this.pieces.get(this.pieces.size() - 1);
+      final var lastWindow = lastSegment.getLeft();
+      final var dynamics = lastSegment.getRight();
+
+      this.pieces.set(
+          this.pieces.size() - 1,
+          Pair.of(
+              Window.between(lastWindow.start, lastWindow.end.plus(duration)),
+              dynamics));
+    }
+
+    public List<Pair<Window, Dynamics>> build() {
+      return Collections.unmodifiableList(this.pieces);
     }
   }
 

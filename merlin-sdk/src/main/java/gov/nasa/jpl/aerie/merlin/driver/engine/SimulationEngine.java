@@ -149,10 +149,13 @@ public final class SimulationEngine<$Timeline> {
     var spawns = new ArrayDeque<Triple<History<$Timeline>, String, Task<$Timeline>>>();
 
     while (!this.queue.isEmpty() && this.queue.peek().getLeft().isEqualTo(nextJobTime)) {
-      tip = tip.fork();
       final var entry = this.queue.poll();
+      assert entry != null;
+
+      tip = tip.fork();
       spawns.push(Triple.of(tip, entry.getMiddle(), entry.getRight()));
     }
+
     return new TaskFrame<>(tip, spawns);
   }
 

@@ -30,7 +30,7 @@ public final class WindowAccumulator<D, C> {
       final Window planWindow,
       final ResourceSolver<$Schema, R, D, C> solver,
       final C condition,
-      final Profile<D, C> profile)
+      final Iterable<Pair<Window, D>> profile)
   {
     final var iter = profile.iterator();
     final var foo = new WindowAccumulator<>(solver, condition, iter);

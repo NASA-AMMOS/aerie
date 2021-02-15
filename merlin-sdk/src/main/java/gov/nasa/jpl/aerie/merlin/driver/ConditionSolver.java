@@ -27,10 +27,11 @@ public final class ConditionSolver<$Schema, $Timeline extends $Schema>
 
   @Override
   public <R, D, C> Windows atom(final ResourceSolver<$Schema, R, D, C> solver, final R resource, final C condition) {
-    final var foo = new SimulationDriver.Foo<>(solver, resource);
-    SimulationDriver.computeProfiles(this.trace, List.of(foo));
+    final var builder = new SimulationDriver.ProfileBuilder<>(solver, resource);
+    SimulationDriver.computeProfiles(this.trace, List.of(builder));
+    final var profile = builder.build();
 
-    return WindowAccumulator.solve(this.planWindow, solver, condition, foo.profile);
+    return WindowAccumulator.solve(this.planWindow, solver, condition, profile);
   }
 
   @Override
