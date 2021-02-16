@@ -12,7 +12,6 @@ import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -31,17 +30,18 @@ import java.util.function.BiFunction;
  */
 public final class SimulationEngine<$Timeline> {
   // A time-ordered queue of all scheduled tasks.
-  private final PriorityQueue<Triple<Duration, String, Task<$Timeline>>> queue =
-      new PriorityQueue<>(Comparator.comparing(Triple::getLeft));
+  private final PriorityQueue<Pair<Duration, String>> queue = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
+
+  // The remaining work to perform for each task.
+  private final Map<String, Task<$Timeline>> taskContinuations = new HashMap<>();
   // The set of all tasks that have completed.
   private final Set<String> completed = new HashSet<>();
-
   // The elapsed time when a task was first resumed.
   private final Map<String, Duration> taskStartTimes = new HashMap<>();
   // The elapsed time when a task reported completion.
   private final Map<String, Duration> taskEndTimes = new HashMap<>();
   // For each task, a set of tasks awaiting its completion.
-  private final Map<String, Set<Pair<String, Task<$Timeline>>>> conditioned = new HashMap<>();
+  private final Map<String, Set<String>> conditioned = new HashMap<>();
   // For each task, a record of its type, arguments and parent task id.
   private final Map<String, TaskRecord> taskRecords = new HashMap<>();
 
@@ -61,10 +61,6 @@ public final class SimulationEngine<$Timeline> {
     return id;
   }
 
-  private void enqueue(final String id, final Duration delay, final Task<$Timeline> task) {
-    this.queue.add(Triple.of(this.elapsedTime.plus(delay), id, task));
-  }
-
   /**
    * Schedule a task to be run after a given duration of simulated time.
    *
@@ -76,9 +72,11 @@ public final class SimulationEngine<$Timeline> {
   public <Spec> String defer(Duration delay, Spec spec, TaskSpecType<? super $Timeline, Spec> type) {
     final var id = this.generateId();
     final var record = new TaskRecord(type.getName(), type.getArguments(spec), Optional.empty());
+    final var task = type.<$Timeline>createTask(spec);
 
+    this.taskContinuations.put(id, task);
     this.taskRecords.put(id, record);
-    this.enqueue(id, delay, type.createTask(spec));
+    this.queue.add(Pair.of(this.elapsedTime.plus(delay), id));
     return id;
   }
 
@@ -107,7 +105,7 @@ public final class SimulationEngine<$Timeline> {
   // The "next" root frame is the earliest of these.
   private TaskFrame<$Timeline> extractNextRootFrame(final History<$Timeline> startTime) {
     var tip = startTime;
-    final var spawns = new ArrayDeque<Triplle<History<$Timeline>, String, Task<$Timeline>>>();
+    final var spawns = new ArrayDeque<Pair<History<$Timeline>, String>>();
 
     final var iter = this.queue.iterator();
     if (iter.hasNext()) {
@@ -118,11 +116,11 @@ public final class SimulationEngine<$Timeline> {
         iter.remove();
 
         tip = tip.fork();
-        spawns.push(Triple.of(tip, entry.getMiddle(), entry.getRight()));
+        spawns.push(Pair.of(tip, entry.getRight()));
 
         if (!iter.hasNext()) break;
         entry = iter.next();
-      } while (!nextJobTime.longerThan(entry.getLeft()));
+      } while (entry.getLeft().noShorterThan(nextJobTime));
     }
 
     return new TaskFrame<>(tip, spawns);
@@ -143,14 +141,13 @@ public final class SimulationEngine<$Timeline> {
         final var frame = stack.peek();
         final var branch = frame.popBranch();
         final var branchTip = branch.getLeft();
-        final var taskId = branch.getMiddle();
-        final var task = branch.getRight();
+        final var taskId = branch.getRight();
 
         final var scheduler = new EngineScheduler(branchTip, taskId);
-        final var status = task.step(scheduler);
+        final var status = this.taskContinuations.get(taskId).step(scheduler);
 
         this.taskStartTimes.putIfAbsent(taskId, this.elapsedTime);
-        status.match(new StatusVisitor(task, taskId));
+        status.match(new StatusVisitor(taskId));
         stack.push(new TaskFrame<>(scheduler.now, scheduler.branches));
       } else {
         // Join this completed sub-task with its parent.
@@ -194,7 +191,7 @@ public final class SimulationEngine<$Timeline> {
     final var builder = new StringBuilder();
 
     for (final var point : this.queue) {
-      builder.append(String.format("%10s: %s\n", point.getLeft(), point.getMiddle()));
+      builder.append(String.format("%10s: %s\n", point.getLeft(), point.getRight()));
     }
 
     return builder.toString();
@@ -202,7 +199,7 @@ public final class SimulationEngine<$Timeline> {
 
   private final class EngineScheduler implements Scheduler<$Timeline> {
     public History<$Timeline> now;
-    public final Deque<Triple<History<$Timeline>, String, Task<$Timeline>>> branches = new ArrayDeque<>();
+    public final Deque<Pair<History<$Timeline>, String>> branches = new ArrayDeque<>();
     private final String parentTaskId;
 
     public EngineScheduler(final History<$Timeline> now, final String parentTaskId) {
@@ -227,8 +224,9 @@ public final class SimulationEngine<$Timeline> {
       final var task = SimulationEngine.this.createTask.apply(type, arguments);
 
       this.now = this.now.fork();
-      this.branches.push(Triple.of(this.now, id, task));
+      this.branches.push(Pair.of(this.now, id));
 
+      SimulationEngine.this.taskContinuations.put(id, task);
       SimulationEngine.this.taskRecords.put(id, record);
       return id;
     }
@@ -239,59 +237,58 @@ public final class SimulationEngine<$Timeline> {
       final var record = new TaskRecord(type, arguments, Optional.of(this.parentTaskId));
       final var task = SimulationEngine.this.createTask.apply(type, arguments);
 
-      SimulationEngine.this.enqueue(id, delay, task);
-
+      SimulationEngine.this.queue.add(Pair.of(SimulationEngine.this.elapsedTime.plus(delay), id));
+      SimulationEngine.this.taskContinuations.put(id, task);
       SimulationEngine.this.taskRecords.put(id, record);
       return id;
     }
 
   }
 
-  private final class StatusVisitor implements TaskStatus.Visitor<$Timeline, Object> {
-    private final Task<$Timeline> task;
+  private final class StatusVisitor implements TaskStatus.Visitor<$Timeline, Void> {
     private final String taskId;
 
-    public StatusVisitor(final Task<$Timeline> task, final String taskId) {
-      this.task = task;
+    public StatusVisitor(final String taskId) {
       this.taskId = taskId;
     }
 
     @Override
-    public Object completed() {
+    public Void completed() {
       SimulationEngine.this.completed.add(this.taskId);
       SimulationEngine.this.taskEndTimes.put(this.taskId, SimulationEngine.this.elapsedTime);
+      SimulationEngine.this.taskContinuations.remove(this.taskId);
 
       final var conditionedActivities = SimulationEngine.this.conditioned.remove(this.taskId);
       if (conditionedActivities != null) {
         for (final var conditionedTask : conditionedActivities) {
-          SimulationEngine.this.enqueue(conditionedTask.getLeft(), Duration.ZERO, conditionedTask.getRight());
+          SimulationEngine.this.queue.add(Pair.of(SimulationEngine.this.elapsedTime, conditionedTask));
         }
       }
       return null;
     }
 
     @Override
-    public Object delayed(final Duration delay) {
-      SimulationEngine.this.enqueue(this.taskId, delay, this.task);
+    public Void delayed(final Duration delay) {
+      SimulationEngine.this.queue.add(Pair.of(SimulationEngine.this.elapsedTime.plus(delay), this.taskId));
       return null;
     }
 
     @Override
-    public Object awaiting(final String activityId) {
+    public Void awaiting(final String activityId) {
       if (SimulationEngine.this.completed.contains(activityId)) {
-        SimulationEngine.this.enqueue(taskId, Duration.ZERO, task);
+        SimulationEngine.this.queue.add(Pair.of(SimulationEngine.this.elapsedTime, this.taskId));
       } else {
-        SimulationEngine.this.conditioned.computeIfAbsent(activityId, k -> new HashSet<>()).add(Pair.of(taskId, task));
+        SimulationEngine.this.conditioned.computeIfAbsent(activityId, k -> new HashSet<>()).add(taskId);
       }
       return null;
     }
 
     @Override
-    public Object awaiting(final Condition<? super $Timeline> condition) {
+    public Void awaiting(final Condition<? super $Timeline> condition) {
       // TODO: work out how to await a task on conditions
       // this is a hack which will be removed when awaiting on a condition
       // has an implementation path.
-      SimulationEngine.this.enqueue(this.taskId, Duration.ZERO, this.task);
+      SimulationEngine.this.queue.add(Pair.of(SimulationEngine.this.elapsedTime, this.taskId));
       return null;
     }
   }
