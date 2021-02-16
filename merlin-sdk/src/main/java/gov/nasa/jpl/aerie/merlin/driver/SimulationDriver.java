@@ -96,7 +96,7 @@ public final class SimulationDriver {
       }
     };
 
-    final var simulator = new SimulationEngine<>(database.origin(), createTask);
+    final var simulator = new SimulationEngine<>(createTask);
     final var taskIdToActivityId = new HashMap<String, String>();
     for (final var entry : taskSpecs) {
       final var activityId = entry.getMiddle();
@@ -107,14 +107,26 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    simulator.runFor(simulationDuration);
+    final var trace = new ArrayList<Pair<Duration, History<$Timeline>>>();
+    {
+      // The trace of transaction points.
+      var now = database.origin();
+      trace.add(Pair.of(Duration.ZERO, now));
+
+      while (simulator.getNextJobTime().map(simulationDuration::noShorterThan).orElse(false)) {
+        final var nextJobTime = simulator.getNextJobTime().orElseThrow();
+
+        now = simulator.step(now);
+        trace.add(Pair.of(nextJobTime, now));
+      }
+    }
 
     // Collect profiles for all resources.
     final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?, ?>>();
     for (final var family : adaptation.getResourceFamilies()) {
       createProfilesForFamily(family, profiles::put);
     }
-    computeProfiles(simulator.getTrace(), profiles.values());
+    computeProfiles(trace, profiles.values());
 
     // Identify all sample times.
     final var timestamps = new ArrayList<Duration>();
@@ -141,7 +153,7 @@ public final class SimulationDriver {
     adaptation.getConstraints().forEach((id, condition) -> {
       final var windows = condition.interpret(
           new ConditionSolver<>(
-              simulator.getTrace(),
+              trace,
               Window.between(Duration.ZERO, simulationDuration)));
 
       final var violableConstraint = new ViolableConstraint();

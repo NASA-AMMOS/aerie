@@ -15,13 +15,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.PriorityQueue;
@@ -47,23 +45,14 @@ public final class SimulationEngine<$Timeline> {
   // For each task, a record of its type, arguments and parent task id.
   private final Map<String, TaskRecord> taskRecords = new HashMap<>();
 
-  // The history of events produced by tasks.
-  private History<$Timeline> currentHistory;
-  // The trace of transaction points.
-  private List<Pair<Duration, History<$Timeline>>> trace = new ArrayList<>();
   // The elapsed simulation time since creating this engine.
   private Duration elapsedTime = Duration.ZERO;
   // The next available task id.
   private Integer nextTaskId = 0;
   private final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask;
 
-  public SimulationEngine(
-      final History<$Timeline> initialHistory,
-      final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask) {
-    this.currentHistory = initialHistory;
+  public SimulationEngine(final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask) {
     this.createTask = createTask;
-
-    this.trace.add(Pair.of(Duration.ZERO, this.currentHistory));
   }
 
   private String generateId() {
@@ -93,67 +82,47 @@ public final class SimulationEngine<$Timeline> {
     return id;
   }
 
-  /** @see #runFor(Duration) */
-  public void runFor(final long quantity, final Duration unit) {
-    this.runFor(Duration.of(quantity, unit));
-  }
-
-  /**
-   * Run the simulation for the given duration of simulated time.
-   *
-   * When this method returns, there will be no remaining tasks at the current time.
-   *
-   * @param duration The amount of simulation time to run the simulation for.
-   */
-  public void runFor(final Duration duration) {
-    final var endTime = this.elapsedTime.plus(duration);
-    while (!endTime.shorterThan(this.elapsedTime)) {
-      // If there are no jobs remaining, or the next job is after the end time, simply step up to the end time.
-      if (this.queue.isEmpty() || endTime.shorterThan(this.queue.peek().getLeft())) {
-        this.currentHistory = this.currentHistory.wait(endTime.minus(this.elapsedTime));
-        this.elapsedTime = endTime;
-        break;
-      }
-
-      // Step up to, and perform, the next job.
-      this.step();
-    }
-  }
-
   /**
    * Run the simulation up to (and including) the next set of simultaneous tasks.
    */
-  public void step() {
-    if (this.queue.isEmpty()) return;
+  public History<$Timeline> step(final History<$Timeline> startTime) {
+    return this.getNextJobTime().map(nextJobTime -> {
+      var now = startTime;
 
-    // Step up to the next job time.
-    final var nextJobTime = this.queue.peek().getLeft();
-    final var timeDelta = nextJobTime.minus(this.elapsedTime);
-    this.currentHistory = this.currentHistory.wait(timeDelta);
-    this.elapsedTime = nextJobTime;
+      // Step up to the next job time.
+      final var timeDelta = nextJobTime.minus(this.elapsedTime);
+      now = now.wait(timeDelta);
+      this.elapsedTime = nextJobTime;
 
-    // Process each task at this time, and any spawned sub-tasks.
-    final var frames = new ArrayDeque<TaskFrame<$Timeline>>();
-    frames.push(this.extractNextRootFrame());
-    this.currentHistory = this.processFrameStack(frames);
-    this.trace.add(Pair.of(timeDelta, this.currentHistory));
+      // Process each task at this time, and any spawned sub-tasks.
+      final var frames = new ArrayDeque<TaskFrame<$Timeline>>();
+      frames.push(this.extractNextRootFrame(now));
+      now = this.processFrameStack(frames);
+
+      return now;
+    }).orElse(startTime);
   }
 
   // A "root frame" is the set of all tasks scheduled for a given time.
   // The "next" root frame is the earliest of these.
-  private TaskFrame<$Timeline> extractNextRootFrame() {
-    assert !this.queue.isEmpty();
-    final var nextJobTime = this.queue.peek().getLeft();
+  private TaskFrame<$Timeline> extractNextRootFrame(final History<$Timeline> startTime) {
+    var tip = startTime;
+    final var spawns = new ArrayDeque<Triplle<History<$Timeline>, String, Task<$Timeline>>>();
 
-    var tip = this.currentHistory;
-    var spawns = new ArrayDeque<Triple<History<$Timeline>, String, Task<$Timeline>>>();
+    final var iter = this.queue.iterator();
+    if (iter.hasNext()) {
+      var entry = iter.next();
+      final var nextJobTime = entry.getLeft();
 
-    while (!this.queue.isEmpty() && this.queue.peek().getLeft().isEqualTo(nextJobTime)) {
-      final var entry = this.queue.poll();
-      assert entry != null;
+      do {
+        iter.remove();
 
-      tip = tip.fork();
-      spawns.push(Triple.of(tip, entry.getMiddle(), entry.getRight()));
+        tip = tip.fork();
+        spawns.push(Triple.of(tip, entry.getMiddle(), entry.getRight()));
+
+        if (!iter.hasNext()) break;
+        entry = iter.next();
+      } while (!nextJobTime.longerThan(entry.getLeft()));
     }
 
     return new TaskFrame<>(tip, spawns);
@@ -195,20 +164,12 @@ public final class SimulationEngine<$Timeline> {
     }
   }
 
-  public boolean hasMoreTasks() {
-    return !this.queue.isEmpty();
-  }
-
-  public History<$Timeline> getCurrentHistory() {
-    return this.currentHistory;
+  public Optional<Duration> getNextJobTime() {
+    return Optional.ofNullable(this.queue.peek()).map(Pair::getLeft);
   }
 
   public Map<String, TaskRecord> getTaskRecords() {
     return Collections.unmodifiableMap(this.taskRecords);
-  }
-
-  public List<Pair<Duration, History<$Timeline>>> getTrace() {
-    return Collections.unmodifiableList(this.trace);
   }
 
   public Map<String, Window> getTaskWindows() {
@@ -229,14 +190,9 @@ public final class SimulationEngine<$Timeline> {
     return windows;
   }
 
-  public Duration getElapsedTime() {
-    return this.elapsedTime;
-  }
-
   public String getDebugTrace() {
     final var builder = new StringBuilder();
 
-    builder.append(this.currentHistory.getDebugTrace());
     for (final var point : this.queue) {
       builder.append(String.format("%10s: %s\n", point.getLeft(), point.getMiddle()));
     }
