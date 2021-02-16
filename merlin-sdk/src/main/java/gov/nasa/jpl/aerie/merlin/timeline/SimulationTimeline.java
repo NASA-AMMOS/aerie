@@ -9,7 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -129,6 +128,10 @@ public final class SimulationTimeline<$Timeline> {
     return table;
   }
 
+  public int getTableCount() {
+    return this.tables.size();
+  }
+
   // PRECONDITION: `startTime` occurs-before `endTime`.
   //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */
@@ -195,64 +198,6 @@ public final class SimulationTimeline<$Timeline> {
         final var path = (ActivePath.TopLevel<Effect>) currentPath;
         path.effects.addFirst(Pair.of(Duration.ZERO, path.effect));
         return path.effects;
-      }
-    }
-  }
-
-  public boolean[] getChangedTablesBetween(final History<$Timeline> startTime, final History<$Timeline> endTime) {
-    final var changed = new boolean[this.tables.size()];
-    Arrays.fill(changed, false);
-
-    // NOTE: In principle, we can determine the maximum size of the path stack.
-    //   Whenever two time points are joined, increment a counter on the resulting time point.
-    //   This counter can then be used to allocate a stack of just the right size.
-    final var pathStack = new ArrayDeque<ActivePath<Void>>();
-    ActivePath<Void> currentPath = new ActivePath.TopLevel<>(startTime.getIndex(), null);
-    var pointIndex = endTime.getIndex();
-
-    // TERMINATION: In principle, we can bound this loop by determining the maximum number
-    //   of time points we will visit. Whenever a new time point is generated from an old one,
-    //   its count would be updated appropriately. (Emitting an event adds one; joining two branches
-    //   adds the branches and subtracts the base.)
-    while (true) {
-      if (currentPath.basePoint() != pointIndex) {
-        // There's still more path to follow!
-        final var point = this.times.get(pointIndex);
-        if (point instanceof EventPoint.Advancing) {
-          // Accumulate the event into the currently open path.
-          final var step = (EventPoint.Advancing) point;
-          changed[step.tableIndex] = true;
-          pointIndex = step.previous;
-        } else if (point instanceof EventPoint.Joining) {
-          // We've walked backwards into a join point between two branches.
-          // Walk down the left side first, and stash the base and right side for later evaluation.
-          final var join = (EventPoint.Joining) point;
-          pathStack.push(currentPath);
-          currentPath = new ActivePath.Left<>(join.base, null, join.right);
-          pointIndex = join.left;
-        } else if (point instanceof EventPoint.Waiting) {
-          // We've walked backwards into a delay.
-          // SAFETY: Delays can only occur at the top-level.
-          assert currentPath instanceof ActivePath.TopLevel;
-          final var wait = (EventPoint.Waiting) point;
-          pointIndex = wait.previous;
-        }
-      } else if (currentPath instanceof ActivePath.Left) {
-        // We've just finished evaluating the left side of a concurrence.
-        // Stash the result and switch to the right side.
-        final var path = (ActivePath.Left<Void>) currentPath;
-        currentPath = new ActivePath.Right<>(path.base, path.left, null);
-        pointIndex = path.right;
-      } else if (currentPath instanceof ActivePath.Right) {
-        // We've just finished evaluating the right side of a concurrence.
-        // We already evaluated the left side, so bind them together and accumulate the result
-        //   into the open path one level up. We'll continue from the given base point.
-        final var path = (ActivePath.Right<Void>) currentPath;
-        currentPath = pathStack.pop();
-        pointIndex = path.base;
-      } else if (currentPath instanceof ActivePath.TopLevel) {
-        // We've just finished the top-level path -- we're done!
-        return changed;
       }
     }
   }

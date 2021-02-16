@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -107,26 +108,43 @@ public final class SimulationDriver {
       taskIdToActivityId.put(taskId, activityId);
     }
 
-    final var trace = new ArrayList<Pair<Duration, History<$Timeline>>>();
-    {
-      // The trace of transaction points.
-      var now = database.origin();
-      trace.add(Pair.of(Duration.ZERO, now));
-
-      while (simulator.getNextJobTime().map(simulationDuration::noShorterThan).orElse(false)) {
-        final var nextJobTime = simulator.getNextJobTime().orElseThrow();
-
-        now = simulator.step(now);
-        trace.add(Pair.of(nextJobTime, now));
-      }
-    }
-
     // Collect profiles for all resources.
     final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?, ?>>();
     for (final var family : adaptation.getResourceFamilies()) {
       createProfilesForFamily(family, profiles::put);
     }
-    computeProfiles(trace, profiles.values());
+
+    {
+      var elapsedTime = Duration.ZERO;
+      var now = database.origin();
+
+      for (final var profile : profiles.values()) {
+        profile.updateAt(now);
+      }
+
+      while (simulator.getNextJobTime().map(simulationDuration::noShorterThan).orElse(false)) {
+        var rootFrame = simulator.extractNextRootFrame().orElseThrow();
+        final var nextJobTime = rootFrame.getLeft();
+        final var stepper = rootFrame.getRight();
+
+        final var delta = nextJobTime.minus(elapsedTime);
+        elapsedTime = nextJobTime;
+
+        final var result = stepper.apply(now.wait(delta));
+        final var changedTables = result.getLeft();
+        now = result.getRight();
+
+        for (final var profile : profiles.values()) {
+          profile.extendBy(delta);
+          for (final var dependency : profile.lastDependencies) {
+            if (changedTables.get(dependency.getTableIndex())) {
+              profile.updateAt(now);
+              break;
+            }
+          }
+        }
+      }
+    }
 
     // Identify all sample times.
     final var timestamps = new ArrayList<Duration>();
@@ -150,19 +168,6 @@ public final class SimulationDriver {
 
     // Collect windows for all conditions.
     final var constraintViolations = new ArrayList<ConstraintViolation>();
-    adaptation.getConstraints().forEach((id, condition) -> {
-      final var windows = condition.interpret(
-          new ConditionSolver<>(
-              trace,
-              Window.between(Duration.ZERO, simulationDuration)));
-
-      final var violableConstraint = new ViolableConstraint();
-      violableConstraint.name = id;
-      violableConstraint.id = id;
-      violableConstraint.category = "None";
-      violableConstraint.message = "None";
-      constraintViolations.add(new ConstraintViolation(windows, violableConstraint));
-    });
 
     // Use the map of task id to activity id to replace task ids with the corresponding
     // activity id for use by the front end.
@@ -213,48 +218,6 @@ public final class SimulationDriver {
 
     for (final var entry : family.getResources().entrySet()) {
       handler.accept(entry.getKey(), new ProfileBuilder<>(solver, entry.getValue()));
-    }
-  }
-
-  public static <$Schema, $Timeline extends $Schema>
-  void
-  computeProfiles(
-      final List<Pair<Duration, History<$Timeline>>> trace,
-      final Iterable<ProfileBuilder<$Schema, ?, ?, ?>> foos)
-  {
-    final var iter = trace.iterator();
-    History<$Timeline> lastCheckedTime;
-
-    {
-      final var info = iter.next();
-      final var history = info.getRight();
-      final var delta = info.getLeft();
-
-      lastCheckedTime = history;
-
-      for (final var foo : foos) {
-        foo.extendBy(delta);
-        foo.updateAt(history);
-      }
-    }
-
-    while (iter.hasNext()) {
-      final var info = iter.next();
-      final var delta = info.getLeft();
-      final var history = info.getRight();
-
-      final var changedTables = history.getChangedTablesSince(lastCheckedTime);
-      lastCheckedTime = history;
-
-      for (final var foo : foos) {
-        foo.extendBy(delta);
-        for (final var dependency : foo.lastDependencies) {
-          if (changedTables[dependency.getTableIndex()]) {
-            foo.updateAt(history);
-            break;
-          }
-        }
-      }
     }
   }
 

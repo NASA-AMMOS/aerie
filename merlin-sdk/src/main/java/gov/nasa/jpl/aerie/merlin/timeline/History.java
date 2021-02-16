@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.timeline;
 
 import gov.nasa.jpl.aerie.time.Duration;
 
-import java.util.List;
 import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline.START_INDEX;
@@ -35,7 +34,7 @@ public final class History<$Timeline> {
   /**
    * The database governing this time point.
    */
-  private final SimulationTimeline<$Timeline> database;
+  public final SimulationTimeline<$Timeline> database;
 
   /**
    * The index of the current point in time in the SimulationTimeline database.
@@ -173,9 +172,5 @@ public final class History<$Timeline> {
     }
 
     return builder.toString();
-  }
-
-  public boolean[] getChangedTablesSince(final History<$Timeline> startTime) {
-    return this.database.getChangedTablesBetween(startTime, this);
   }
 }
