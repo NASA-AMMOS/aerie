@@ -29,6 +29,10 @@ public final class Registrar {
     return this.builder.getRootContext();
   }
 
+  public boolean isInitializationComplete() {
+    return builder.isBuilt();
+  }
+
   public Registrar descend(final String namespace) {
     return new Registrar(this.builder, this.rootContext, this.namespace + "/" + namespace);
   }

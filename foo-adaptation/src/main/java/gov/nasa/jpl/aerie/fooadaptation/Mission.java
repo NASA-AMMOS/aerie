@@ -33,9 +33,11 @@ public final class Mission extends Model {
   public final RealResource combo;
 
   public final Clock utcClock;
+  private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
   public Mission(final Registrar registrar) {
     super(registrar);
+    this.cachedRegistrar = registrar;
 
     this.foo = Register.create(registrar.descend("foo"), 0.0);
     this.data = new Accumulator(registrar.descend("data"));
@@ -60,6 +62,10 @@ public final class Mission extends Model {
     registrar.daemon("test", this::test);
 
     registrar.constraint("data_volume_constraint", this.data.volume.isBetween(42.0, 101.0));
+
+    // Assert adaptation is unbuilt
+    if (registrar.isInitializationComplete())
+      throw new AssertionError("Registrar should not report initialization as complete");
   }
 
   public void test() {
@@ -67,5 +73,9 @@ public final class Mission extends Model {
     this.data.rate.add(42.0);
     this.simpleData.a.activate();
     this.simpleData.b.activate();
+
+    // Assert adaptation is built
+    if (!cachedRegistrar.isInitializationComplete())
+      throw new AssertionError("Registrar should report initialization as complete");
   }
 }
