@@ -2,21 +2,55 @@ package gov.nasa.jpl.aerie.merlin.processor;
 
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
-import org.apache.commons.lang3.tuple.Triple;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
 
 public abstract class TypePattern {
   private TypePattern() {}
+
+  public static TypePattern from(final TypeMirror mirror) {
+    switch (mirror.getKind()) {
+      case BOOLEAN: return new PrimitivePattern(Primitive.BOOLEAN);
+      case BYTE: return new PrimitivePattern(Primitive.BYTE);
+      case SHORT: return new PrimitivePattern(Primitive.SHORT);
+      case INT: return new PrimitivePattern(Primitive.INT);
+      case LONG: return new PrimitivePattern(Primitive.LONG);
+      case CHAR: return new PrimitivePattern(Primitive.CHAR);
+      case FLOAT: return new PrimitivePattern(Primitive.FLOAT);
+      case DOUBLE: return new PrimitivePattern(Primitive.DOUBLE);
+      case ARRAY: return new ArrayPattern(TypePattern.from(((ArrayType) mirror).getComponentType()));
+      case TYPEVAR: return new TypeVariablePattern(mirror.toString());
+      case DECLARED: {
+        // DeclaredType element can be cast as TypeElement because it's a Type
+        final var className = ClassName.get((TypeElement) ((DeclaredType) mirror).asElement());
+        final var typeArguments = ((DeclaredType) mirror).getTypeArguments();
+        final var argumentPatterns = new ArrayList<TypePattern>(typeArguments.size());
+        for (final var typeArgument : typeArguments) {
+          argumentPatterns.add(TypePattern.from(typeArgument));
+        }
+        return new ClassPattern(className, argumentPatterns);
+      }
+
+      default:
+        throw new Error("Cannot construct a pattern for type " + mirror);
+    }
+  }
+
+  public static TypePattern from(final VariableElement element) {
+    return from(element.asType());
+  }
 
   public abstract TypePattern substitute(Map<String, TypePattern> substitution);
 
@@ -28,13 +62,14 @@ public abstract class TypePattern {
 
   public abstract TypeName render();
 
+  public abstract TypeName erasure();
+
   @Override
-  public String toString() {
+  public final String toString() {
     return this.render().toString();
   }
 
-  private static class UnificationException extends Exception {}
-
+  public static class UnificationException extends Exception {}
 
   public static final class TypeVariablePattern extends TypePattern {
     public final String name;
@@ -71,6 +106,11 @@ public abstract class TypePattern {
     @Override
     public TypeName render() {
       return TypeVariableName.get(this.name);
+    }
+
+    @Override
+    public TypeName erasure() {
+      return this.render();
     }
   }
 
@@ -109,6 +149,11 @@ public abstract class TypePattern {
     @Override
     public TypeName render() {
       return this.primitive.toTypeName();
+    }
+
+    @Override
+    public TypeName erasure() {
+      return this.render();
     }
   }
 
@@ -173,6 +218,11 @@ public abstract class TypePattern {
     public TypeName render() {
       return ArrayTypeName.of(this.element.render());
     }
+
+    @Override
+    public TypeName erasure() {
+      return ArrayTypeName.of(this.element.erasure());
+    }
   }
 
   public static final class ClassPattern extends TypePattern {
@@ -209,7 +259,7 @@ public abstract class TypePattern {
     public Map<String, TypePattern> match(final TypePattern o) throws UnificationException {
       if (!(o instanceof ClassPattern)) throw new UnificationException();
       final var other = (ClassPattern) o;
-
+      if (!this.name.equals(other.name)) throw new UnificationException();
       if (this.arguments.size() != other.arguments.size()) throw new UnificationException();
 
       // This specialization by arity can be removed without impacting correctness,
@@ -273,118 +323,10 @@ public abstract class TypePattern {
 
       return ParameterizedTypeName.get(this.name, argumentTypeNames);
     }
-  }
 
-  public static void main(final String[] args) throws UnificationException {
-    final var rules = new ArrayList<Triple<
-        TypePattern,
-        List<TypePattern>,
-        BiFunction<List<CodeBlock>, Map<String, CodeBlock>, CodeBlock>>>();
-
-    rules.add(Triple.of(
-        new ClassPattern(ClassName.get(Map.class), List.of(
-            new TypeVariablePattern("K"),
-            new TypeVariablePattern("V")
-        )),
-        List.of(
-            new TypeVariablePattern("K"),
-            new TypeVariablePattern("V")),
-        (deps, classes) -> CodeBlock.of(
-            "$T.map($L, $L)",
-            gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
-            deps.get(0),
-            deps.get(1))));
-
-    rules.add(Triple.of(
-        new ClassPattern(ClassName.get(List.class), List.of(
-            new TypeVariablePattern("T"))),
-        List.of(
-            new TypeVariablePattern("T")),
-        (deps, classes) -> CodeBlock.of(
-            "$T.list($L)",
-            gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
-            deps.get(0))));
-
-//    // Enums; need to add the ability to check that E is a subtype of Enum.
-//    rules.add(Triple.of(
-//        new TypeVariablePattern("E"),
-//        List.of(),
-//        (deps, classes) -> CodeBlock.of(
-//          "$T.$enum($L)",
-//          gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
-//          classes.get("E")));
-
-    rules.add(Triple.of(
-        new ArrayPattern(
-            new TypeVariablePattern("T")),
-        List.of(
-            new TypeVariablePattern("T")),
-        (deps, classes) -> CodeBlock.of(
-            "$T.array($L, $L)",
-            gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class,
-            classes.get("T"),
-            deps.get(0))));
-
-    rules.add(Triple.of(
-        new ClassPattern(ClassName.get(String.class), List.of()),
-        List.of(),
-        (deps, classes) -> CodeBlock.of(
-            "$T.string()",
-            gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class)));
-
-    rules.add(Triple.of(
-        new ClassPattern(ClassName.get(Integer.class), List.of()),
-        List.of(),
-        (deps, classes) -> CodeBlock.of(
-            "$T.$int()",
-            gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class)));
-
-    rules.add(Triple.of(
-        new PrimitivePattern(Primitive.FLOAT),
-        List.of(),
-        (deps, classes) -> CodeBlock.of(
-            "$T.$float()",
-            gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers.class)));
-
-    System.out.println(rules);
-
-
-    // List<Map<String[][], Map<Integer, List<float[]>>>>
-    final var goal =
-        new ClassPattern(ClassName.get(List.class), List.of(
-            new ClassPattern(ClassName.get(java.util.Map.class), List.of(
-                new ArrayPattern(
-                    new ArrayPattern(
-                        new ClassPattern(ClassName.get(String.class), List.of()))),
-                new ClassPattern(ClassName.get(java.util.Map.class), List.of(
-                    new ClassPattern(ClassName.get(Integer.class), List.of()),
-                    new ClassPattern(ClassName.get(List.class), List.of(
-                        new ArrayPattern(
-                            new PrimitivePattern(Primitive.FLOAT))))))))));
-
-    final var elementPattern = new TypeVariablePattern("T");
-    final var head =
-        new ClassPattern(ClassName.get(List.class), List.of(
-            elementPattern));
-
-    final var unifier = Map.<String, TypePattern>of(
-        elementPattern.name, (
-            new ClassPattern(ClassName.get(Map.class), List.of(
-                new ArrayPattern(
-                    new ArrayPattern(
-                        new ClassPattern(ClassName.get(String.class), List.of()))),
-                new ClassPattern(ClassName.get(Map.class), List.of(
-                    new ClassPattern(ClassName.get(Integer.class), List.of()),
-                    new ClassPattern(ClassName.get(List.class), List.of(
-                        new ArrayPattern(
-                            new PrimitivePattern(Primitive.FLOAT))))))))));
-
-    System.out.println(head);
-
-    System.out.println(unifier);
-    System.out.println(head.match(goal));
-
-    System.out.println(goal);
-    System.out.println(head.substitute(unifier));
+    @Override
+    public TypeName erasure() {
+      return this.name;
+    }
   }
 }
