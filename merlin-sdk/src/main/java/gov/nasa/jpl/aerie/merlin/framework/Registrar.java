@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
@@ -11,17 +10,9 @@ import java.util.function.Supplier;
 
 public final class Registrar {
   private final AdaptationBuilder<?> builder;
-  private final Supplier<? extends Context<?>> rootContext;
-  private final String namespace;
 
-  public Registrar(
-      final AdaptationBuilder<?> builder,
-      final Supplier<? extends Context<?>> rootContext,
-      final String namespace)
-  {
+  public Registrar(final AdaptationBuilder<?> builder) {
     this.builder = Objects.requireNonNull(builder);
-    this.rootContext = Objects.requireNonNull(rootContext);
-    this.namespace = Objects.requireNonNull(namespace);
   }
 
   /*package-local*/
@@ -30,11 +21,7 @@ public final class Registrar {
   }
 
   public boolean isInitializationComplete() {
-    return builder.isBuilt();
-  }
-
-  public Registrar descend(final String namespace) {
-    return new Registrar(this.builder, this.rootContext, this.namespace + "/" + namespace);
+    return this.builder.isBuilt();
   }
 
   public <Effect, CellType extends Cell<Effect, CellType>>
@@ -49,22 +36,18 @@ public final class Registrar {
   public <State>
   DiscreteResource<State>
   resource(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {
-    this.builder.discrete(this.namespace + "/" + name, resource, mapper);
+    this.builder.discrete(name, resource, mapper);
     return resource;
   }
 
   public
   RealResource
   resource(final String name, final RealResource resource) {
-    this.builder.real(this.namespace + "/" + name, resource);
+    this.builder.real(name, resource);
     return resource;
   }
 
-  public void constraint(final String id, final Condition<?> condition) {
-    this.builder.constraint(this.namespace + "/" + id, condition);
-  }
-
-  public void daemon(final String id, final Runnable task) {
-    this.builder.daemon("/daemons" + this.namespace + "/" + id, task);
+  public void daemon(final Runnable task) {
+    this.builder.daemon(task);
   }
 }

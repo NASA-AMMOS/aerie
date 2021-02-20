@@ -26,7 +26,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
 
     final var handle = new ReplayingTaskHandle<$Timeline>();
-    final var context = new ReactionContext<$Schema, $Timeline>(this.breadcrumbs, scheduler, handle);
+    final var context = new ReactionContext<>(this.rootContext, this.breadcrumbs, scheduler, handle);
 
     try {
       this.rootContext.setWithin(context, this.task::run);

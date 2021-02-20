@@ -45,7 +45,7 @@ public final class FooActivity {
 
       mission.simpleData.downlinkData();
 
-      waitUntil(data.volume.isBetween(5.0, 10.0));
+      waitUntil(data.isBetween(5.0, 10.0));
       data.rate.add(2.0);
       data.rate.add(data.rate.get());
       delay(10, SECOND);

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
@@ -17,6 +16,7 @@ import java.util.Optional;
 final class ReactionContext<$Schema, $Timeline extends $Schema>
     implements Context<$Schema>
 {
+  private final Scoped<Context<$Schema>> rootContext;
   private final TaskHandle<$Timeline> handle;
   private Scheduler<$Timeline> scheduler;
   private Optional<History<$Timeline>> history = Optional.empty();
@@ -25,10 +25,12 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   private int nextBreadcrumbIndex = 0;
 
   public ReactionContext(
+      final Scoped<Context<$Schema>> rootContext,
       final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
       final Scheduler<$Timeline> scheduler,
       final TaskHandle<$Timeline> handle)
   {
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.breadcrumbs = Objects.requireNonNull(breadcrumbs);
     this.scheduler = scheduler;
     this.handle = handle;
@@ -110,14 +112,16 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public void waitUntil(final Condition<?> condition) {
+  public void waitUntil(final Condition condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
 
-      // SAFETY: All objects accessible within a single adaptation instance have the same brand.
-      @SuppressWarnings("unchecked")
-      final var brandedCondition = (Condition<$Schema>) condition;
-      this.scheduler = this.handle.yield(TaskStatus.awaiting(brandedCondition));
+      this.scheduler = this.handle.yield(TaskStatus.awaiting((now, scope, positive) -> {
+        // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
+        return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(
+            new QueryContext<>(now),
+            () -> condition.nextSatisfied(scope, positive));
+      }));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.time.Windows;
 import java.util.Objects;
 
 public final class ConditionSolver<$Schema, $Timeline extends $Schema>
-    implements Condition.Visitor<$Schema, Windows>
+    implements CompoundCondition.Visitor<$Schema, Windows>
 {
   private final SimulationTimeline<$Timeline> database;
   private final History<$Timeline> endTime;

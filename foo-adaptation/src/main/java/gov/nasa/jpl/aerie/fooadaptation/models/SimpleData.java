@@ -20,12 +20,6 @@ public final class SimpleData extends Model {
     this.a = new InstrumentData(10.0, registrar.cell(new LinearIntegrationCell(0, 0)));
     this.b = new InstrumentData(5.0, registrar.cell(new LinearIntegrationCell(0, 0)));
     this.totalVolume = RealResource.add(this.a.volume, this.b.volume);
-
-    registrar.descend("a").resource("volume", this.a.volume);
-    registrar.descend("a").resource("rate", this.a.rate);
-    registrar.descend("b").resource("volume", this.b.volume);
-    registrar.descend("b").resource("rate", this.b.rate);
-    registrar.resource("total_volume", this.totalVolume);
   }
 
   public void downlinkData() {
@@ -45,8 +39,8 @@ public final class SimpleData extends Model {
     {
       this.ref = ref;
       this.activeRate = activeRate;
-      this.volume = RealResource.atom(ref, LinearIntegrationCell::getVolume);
-      this.rate = RealResource.atom(ref, LinearIntegrationCell::getRate);
+      this.volume = () -> this.ref.get().getVolume();
+      this.rate = () -> this.ref.get().getRate();
     }
 
     private void setRate(final double newRate) {

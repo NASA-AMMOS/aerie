@@ -30,7 +30,7 @@ public final class ThreadedTask<$Schema, $Timeline extends $Schema>
         final var scheduler = this.hostToTask.take();
         this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
 
-        final var context = new ReactionContext<$Schema, $Timeline>(this.breadcrumbs, scheduler, handle);
+        final var context = new ReactionContext<>(rootContext, this.breadcrumbs, scheduler, handle);
         rootContext.setWithin(context, task::run);
 
         this.done = true;

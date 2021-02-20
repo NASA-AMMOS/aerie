@@ -15,7 +15,7 @@ public interface Adaptation<$Schema> {
   /* Produce */ Iterable<ResourceFamily<$Schema, ?, ?>>
   /* Given   */ getResourceFamilies();
 
-  /* Produce */ Map<String, Condition<$Schema>>
+  /* Produce */ Map<String, CompoundCondition<$Schema>>
   /* Given   */ getConstraints();
 
   /* Produce */ Schema<$Schema>

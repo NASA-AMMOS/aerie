@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -18,7 +19,7 @@ public final class SampleTakerTest {
   @Test
   public void smokeTest() {
     final var profile =
-        new Profile<>(new RealResourceSolver<>())
+        new Profile<>(new RealResourceSolver<>(Scoped.create()))
             .append(duration(0, SECONDS), RealDynamics.linear(5.0, 0.0))
             .append(duration(1, SECOND), RealDynamics.linear(0.0, 4.0))
             .append(duration(1, SECOND), RealDynamics.linear(8.0, 0.0));

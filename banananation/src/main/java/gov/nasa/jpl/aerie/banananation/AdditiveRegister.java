@@ -1,19 +1,14 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import gov.nasa.jpl.aerie.contrib.models.Register;
-import gov.nasa.jpl.aerie.merlin.framework.Model;
+import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
-public final class AdditiveRegister extends Model {
-  public final Register<Double> value;
-  public final DiscreteResource<Boolean> conflicted;
+public final class AdditiveRegister implements DiscreteResource<Double> {
+  public final Counter<Double> value;
 
   public AdditiveRegister(final Registrar registrar, final double initialValue) {
-    super(registrar);
-
-    this.value = Register.create(registrar, initialValue);
-    this.conflicted = this.value.conflicted;
+    this.value = Counter.ofDouble(registrar, initialValue);
   }
 
   public static
@@ -22,11 +17,16 @@ public final class AdditiveRegister extends Model {
     return new AdditiveRegister(registrar, initialValue);
   }
 
+  @Override
+  public Double getDynamics() {
+    return this.value.getDynamics();
+  }
+
   public void add(final double inc) {
-    this.value.set(this.value.get() + inc);
+    this.value.add(inc);
   }
 
   public void subtract(final double inc) {
-    this.value.set(this.value.get() - inc);
+    this.value.add(-inc);
   }
 }

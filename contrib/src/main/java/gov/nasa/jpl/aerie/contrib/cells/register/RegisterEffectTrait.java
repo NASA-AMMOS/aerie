@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -15,7 +14,7 @@ public class RegisterEffectTrait<T> implements EffectTrait<RegisterEffect<T>> {
 
   @Override
   public RegisterEffect<T> sequentially(final RegisterEffect<T> prefix, final RegisterEffect<T> suffix) {
-    return new RegisterEffect(
+    return new RegisterEffect<>(
         suffix.newValue.or(() -> prefix.newValue),
         (suffix.conflictingValues.isEmpty()) ? prefix.conflictingValues : suffix.conflictingValues);
   }
@@ -30,6 +29,6 @@ public class RegisterEffectTrait<T> implements EffectTrait<RegisterEffect<T>> {
     final var set = new HashSet<>(left.conflictingValues);
     set.addAll(right.conflictingValues);
 
-    return new RegisterEffect(nextValue, set);
+    return new RegisterEffect<>(nextValue, set);
   }
 }
