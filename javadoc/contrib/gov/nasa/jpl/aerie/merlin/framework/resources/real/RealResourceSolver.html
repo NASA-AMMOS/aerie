@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -131,12 +131,12 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <li class="blockList">
 <dl>
 <dt>All Implemented Interfaces:</dt>
-<dd><code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;$Schema,&#8203;<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
+<dd><code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;$Schema,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
 </dl>
 <hr>
 <pre>public final class <span class="typeNameLabel">RealResourceSolver&lt;$Schema&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>
-implements <a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;$Schema,&#8203;<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</pre>
+implements <a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;$Schema,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</pre>
 </li>
 </ul>
 </div>
@@ -174,7 +174,7 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E()">RealResourceSolver</a></span>()</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped)">RealResourceSolver</a></span>&#8203;(<a href="../../Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="../../Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>&gt;&gt;&nbsp;rootContext)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -216,15 +216,8 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource,gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamics</a></span>&#8203;(<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource,
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource,gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamics</a></span>&#8203;(<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource,
            <a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>&gt;&nbsp;now)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code><a href="../../../../time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#whenSatisfied(gov.nasa.jpl.aerie.merlin.protocol.RealDynamics,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition,gov.nasa.jpl.aerie.time.Window)">whenSatisfied</a></span>&#8203;(<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>&nbsp;dynamics,
-             <a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&nbsp;condition,
-             <a href="../../../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -251,13 +244,13 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;()">
+<a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.Scoped)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>RealResourceSolver</h4>
-<pre>public&nbsp;RealResourceSolver()</pre>
+<pre>public&nbsp;RealResourceSolver&#8203;(<a href="../../Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="../../Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>&gt;&gt;&nbsp;rootContext)</pre>
 </li>
 </ul>
 </li>
@@ -276,11 +269,11 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
 <ul class="blockList">
 <li class="blockList">
 <h4>getDynamics</h4>
-<pre class="methodSignature">public&nbsp;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>&nbsp;getDynamics&#8203;(<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource,
+<pre class="methodSignature">public&nbsp;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>&nbsp;getDynamics&#8203;(<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource,
                                 <a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>&gt;&nbsp;now)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../protocol/ResourceSolver.html#getDynamics(Resource,gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamics</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
+<dd><code><a href="../../../protocol/ResourceSolver.html#getDynamics(Resource,gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamics</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -293,7 +286,7 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
 <pre class="methodSignature">public&nbsp;&lt;Result&gt;&nbsp;Result&nbsp;approximate&#8203;(<a href="../../../protocol/ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver.ApproximatorVisitor</a>&lt;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;Result&gt;&nbsp;visitor)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../protocol/ResourceSolver.html#approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">approximate</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
+<dd><code><a href="../../../protocol/ResourceSolver.html#approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">approximate</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
@@ -308,14 +301,14 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
                                          <a href="../../../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../protocol/ResourceSolver.html#firstSatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstSatisfied</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
+<dd><code><a href="../../../protocol/ResourceSolver.html#firstSatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstSatisfied</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
 <a id="firstDissatisfied(gov.nasa.jpl.aerie.merlin.protocol.RealDynamics,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition,gov.nasa.jpl.aerie.time.Window)">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>firstDissatisfied</h4>
 <pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;&nbsp;firstDissatisfied&#8203;(<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>&nbsp;dynamics,
@@ -323,19 +316,8 @@ implements <a href="../../../protocol/ResourceSolver.html" title="interface in g
                                             <a href="../../../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../../../protocol/ResourceSolver.html#firstDissatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstDissatisfied</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
+<dd><code><a href="../../../protocol/ResourceSolver.html#firstDissatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstDissatisfied</a></code>&nbsp;in interface&nbsp;<code><a href="../../../protocol/ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>,&#8203;<a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&gt;</code></dd>
 </dl>
-</li>
-</ul>
-<a id="whenSatisfied(gov.nasa.jpl.aerie.merlin.protocol.RealDynamics,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition,gov.nasa.jpl.aerie.time.Window)">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>whenSatisfied</h4>
-<pre class="methodSignature">public&nbsp;<a href="../../../../time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;whenSatisfied&#8203;(<a href="../../../protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a>&nbsp;dynamics,
-                             <a href="RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a>&nbsp;condition,
-                             <a href="../../../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
 </li>
 </ul>
 </li>

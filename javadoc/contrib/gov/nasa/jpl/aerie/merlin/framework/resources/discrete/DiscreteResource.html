@@ -26,8 +26,8 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":9,"i2":10,"i3":6,"i4":10,"i5":10,"i6":10,"i7":9};
-var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"],8:["t4","Concrete Methods"]};
+var data = {"i0":18,"i1":18,"i2":18,"i3":18,"i4":1};
+var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],16:["t5","Default Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
 var tableTab = "tableTab";
@@ -115,23 +115,19 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework.resources.discrete</a></div>
-<h2 title="Class DiscreteResource" class="title">Class DiscreteResource&lt;T&gt;</h2>
+<h2 title="Interface DiscreteResource" class="title">Interface DiscreteResource&lt;T&gt;</h2>
 </div>
 <div class="contentContainer">
-<ul class="inheritance">
-<li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
-<li>
-<ul class="inheritance">
-<li>gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource&lt;T&gt;</li>
-</ul>
-</li>
-</ul>
 <div class="description">
 <ul class="blockList">
 <li class="blockList">
+<dl>
+<dt>All Superinterfaces:</dt>
+<dd><code><a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;T&gt;</code></dd>
+</dl>
 <hr>
-<pre>public abstract class <span class="typeNameLabel">DiscreteResource&lt;T&gt;</span>
-extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></pre>
+<pre>public interface <span class="typeNameLabel">DiscreteResource&lt;T&gt;</span>
+extends <a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;T&gt;</pre>
 </li>
 </ul>
 </div>
@@ -146,62 +142,45 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </a>
 <h3>Method Summary</h3>
 <table class="memberSummary">
-<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t3" class="tableTab"><span><a href="javascript:show(4);">Abstract Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t4" class="tableTab"><span><a href="javascript:show(8);">Concrete Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
+<caption><span id="t0" class="activeTableTab"><span>All Methods</span><span class="tabEnd">&nbsp;</span></span><span id="t1" class="tableTab"><span><a href="javascript:show(1);">Static Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t2" class="tableTab"><span><a href="javascript:show(2);">Instance Methods</a></span><span class="tabEnd">&nbsp;</span></span><span id="t5" class="tableTab"><span><a href="javascript:show(16);">Default Methods</a></span><span class="tabEnd">&nbsp;</span></span></caption>
 <tr>
 <th class="colFirst" scope="col">Modifier and Type</th>
 <th class="colSecond" scope="col">Method</th>
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask()">ask</a></span>()</code></th>
+<td class="colFirst"><code>default <a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#get()">get</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code>static &lt;CellType,&#8203;T&gt;<br><a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;T&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#atom(gov.nasa.jpl.aerie.merlin.framework.CellRef,java.util.function.Function)">atom</a></span>&#8203;(<a href="../../CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a>&lt;?,&#8203;CellType&gt;&nbsp;ref,
-    <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;CellType,&#8203;T&gt;&nbsp;property)</code></th>
+<td class="colFirst"><code>default <a href="../../Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#is(T)">is</a></span>&#8203;(<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;value)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics()">getDynamics</a></span>()</code></th>
+<td class="colFirst"><code>default <a href="../../Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a></code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#isOneOf(java.util.Set)">isOneOf</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;values)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i3" class="rowColor">
-<td class="colFirst"><code>protected abstract <a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource.CellGetter)">getDynamics</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource.CellGetter&nbsp;getter)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
-<td class="colFirst"><code><a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamicsAt(gov.nasa.jpl.aerie.merlin.timeline.History)">getDynamicsAt</a></span>&#8203;(<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;?&gt;&nbsp;now)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i5" class="rowColor">
-<td class="colFirst"><code><a href="../../../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#isOneOf(java.util.Set,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">isOneOf</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;values,
-       <a href="../../../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;mapper)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code>&lt;S&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;</code></td>
+<td class="colFirst"><code>default &lt;S&gt;&nbsp;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#map(java.util.function.Function)">map</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>,&#8203;S&gt;&nbsp;transform)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
-<td class="colFirst"><code>static &lt;T,&#8203;S&gt;<br><a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mapped(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,java.util.function.Function)">mapped</a></span>&#8203;(<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;T&gt;&nbsp;resource,
+<tr id="i4" class="altColor">
+<td class="colFirst"><code>static &lt;T,&#8203;S&gt;<br><a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#mapped(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,java.util.function.Function)">mapped</a></span>&#8203;(<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;T&gt;&nbsp;resource,
       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;T,&#8203;S&gt;&nbsp;transform)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
 <ul class="blockList">
-<li class="blockList"><a id="methods.inherited.from.class.java.lang.Object">
+<li class="blockList"><a id="methods.inherited.from.class.gov.nasa.jpl.aerie.merlin.framework.Resource">
 <!--   -->
 </a>
-<h3>Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></h3>
-<code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#clone()" title="class or interface in java.lang" class="externalLink">clone</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#equals(java.lang.Object)" title="class or interface in java.lang" class="externalLink">equals</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#finalize()" title="class or interface in java.lang" class="externalLink">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#getClass()" title="class or interface in java.lang" class="externalLink">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#hashCode()" title="class or interface in java.lang" class="externalLink">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#notify()" title="class or interface in java.lang" class="externalLink">notify</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#notifyAll()" title="class or interface in java.lang" class="externalLink">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#toString()" title="class or interface in java.lang" class="externalLink">toString</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#wait()" title="class or interface in java.lang" class="externalLink">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#wait(long)" title="class or interface in java.lang" class="externalLink">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true#wait(long,int)" title="class or interface in java.lang" class="externalLink">wait</a></code></li>
+<h3>Methods inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.framework.<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a></h3>
+<code><a href="../../Resource.html#getDynamics()">getDynamics</a></code></li>
 </ul>
 </li>
 </ul>
@@ -219,60 +198,23 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource.CellGetter)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getDynamics</h4>
-<pre class="methodSignature">protected abstract&nbsp;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;getDynamics&#8203;(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource.CellGetter&nbsp;getter)</pre>
-</li>
-</ul>
-<a id="atom(gov.nasa.jpl.aerie.merlin.framework.CellRef,java.util.function.Function)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>atom</h4>
-<pre class="methodSignature">public static&nbsp;&lt;CellType,&#8203;T&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;T&gt;&nbsp;atom&#8203;(<a href="../../CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a>&lt;?,&#8203;CellType&gt;&nbsp;ref,
-                                                          <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;CellType,&#8203;T&gt;&nbsp;property)</pre>
-</li>
-</ul>
 <a id="mapped(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,java.util.function.Function)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
 <h4>mapped</h4>
-<pre class="methodSignature">public static&nbsp;&lt;T,&#8203;S&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;&nbsp;mapped&#8203;(<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;T&gt;&nbsp;resource,
-                                                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;T,&#8203;S&gt;&nbsp;transform)</pre>
+<pre class="methodSignature">static&nbsp;&lt;T,&#8203;S&gt;&nbsp;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;&nbsp;mapped&#8203;(<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;T&gt;&nbsp;resource,
+                                              <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;T,&#8203;S&gt;&nbsp;transform)</pre>
 </li>
 </ul>
-<a id="getDynamics()">
+<a id="get()">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>getDynamics</h4>
-<pre class="methodSignature">public final&nbsp;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;getDynamics()</pre>
-</li>
-</ul>
-<a id="getDynamicsAt(gov.nasa.jpl.aerie.merlin.timeline.History)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getDynamicsAt</h4>
-<pre class="methodSignature">public final&nbsp;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;getDynamicsAt&#8203;(<a href="../../../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;?&gt;&nbsp;now)</pre>
-</li>
-</ul>
-<a id="ask()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>ask</h4>
-<pre class="methodSignature">public&nbsp;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;ask()</pre>
+<h4>get</h4>
+<pre class="methodSignature">default&nbsp;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;get()</pre>
 </li>
 </ul>
 <a id="map(java.util.function.Function)">
@@ -281,17 +223,27 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>map</h4>
-<pre class="methodSignature">public&nbsp;&lt;S&gt;&nbsp;<a href="DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;&nbsp;map&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>,&#8203;S&gt;&nbsp;transform)</pre>
+<pre class="methodSignature">default&nbsp;&lt;S&gt;&nbsp;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;S&gt;&nbsp;map&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Function</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>,&#8203;S&gt;&nbsp;transform)</pre>
 </li>
 </ul>
-<a id="isOneOf(java.util.Set,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
+<a id="isOneOf(java.util.Set)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>isOneOf</h4>
+<pre class="methodSignature">default&nbsp;<a href="../../Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a>&nbsp;isOneOf&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;values)</pre>
+</li>
+</ul>
+<a id="is(java.lang.Object)">
+<!--   -->
+</a><a id="is(T)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
-<h4>isOneOf</h4>
-<pre class="methodSignature">public&nbsp;<a href="../../../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;isOneOf&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html?is-external=true" title="class or interface in java.util" class="externalLink">Set</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;values,
-                            <a href="../../../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&gt;&nbsp;mapper)</pre>
+<h4>is</h4>
+<pre class="methodSignature">default&nbsp;<a href="../../Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a>&nbsp;is&#8203;(<a href="DiscreteResource.html" title="type parameter in DiscreteResource">T</a>&nbsp;value)</pre>
 </li>
 </ul>
 </li>

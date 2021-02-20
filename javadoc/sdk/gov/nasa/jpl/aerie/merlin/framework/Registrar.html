@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -152,9 +152,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder,java.util.function.Supplier,java.lang.String)">Registrar</a></span>&#8203;(<a href="AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a>&lt;?&gt;&nbsp;builder,
-         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;?&gt;&gt;&nbsp;rootContext,
-         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder)">Registrar</a></span>&#8203;(<a href="AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a>&lt;?&gt;&nbsp;builder)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -182,37 +180,25 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#constraint(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.Condition)">constraint</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
-          <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;condition)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#daemon(java.lang.Runnable)">daemon</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
-<td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#daemon(java.lang.String,java.lang.Runnable)">daemon</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
-      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#descend(java.lang.String)">descend</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i4" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#isInitializationComplete()">isInitializationComplete</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
-<td class="colFirst"><code>&lt;State&gt;&nbsp;<a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;</code></td>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>&lt;State&gt;&nbsp;<a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#resource(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">resource</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-        <a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;&nbsp;resource,
+        <a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;&nbsp;resource,
         <a href="../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;State&gt;&nbsp;mapper)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
-<td class="colFirst"><code><a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a></code></td>
+<tr id="i4" class="altColor">
+<td class="colFirst"><code><a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#resource(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource)">resource</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-        <a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</code></th>
+        <a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -239,15 +225,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder,java.util.function.Supplier,java.lang.String)">
+<a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>Registrar</h4>
-<pre>public&nbsp;Registrar&#8203;(<a href="AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a>&lt;?&gt;&nbsp;builder,
-                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;?&gt;&gt;&nbsp;rootContext,
-                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</pre>
+<pre>public&nbsp;Registrar&#8203;(<a href="AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a>&lt;?&gt;&nbsp;builder)</pre>
 </li>
 </ul>
 </li>
@@ -269,15 +253,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <pre class="methodSignature">public&nbsp;boolean&nbsp;isInitializationComplete()</pre>
 </li>
 </ul>
-<a id="descend(java.lang.String)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>descend</h4>
-<pre class="methodSignature">public&nbsp;<a href="Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a>&nbsp;descend&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;namespace)</pre>
-</li>
-</ul>
 <a id="cell(gov.nasa.jpl.aerie.merlin.framework.Cell)">
 <!--   -->
 </a><a id="cell(CellType)">
@@ -295,8 +270,8 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>resource</h4>
-<pre class="methodSignature">public&nbsp;&lt;State&gt;&nbsp;<a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;&nbsp;resource&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-                                                <a href="resources/discrete/DiscreteResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;&nbsp;resource,
+<pre class="methodSignature">public&nbsp;&lt;State&gt;&nbsp;<a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;&nbsp;resource&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
+                                                <a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;State&gt;&nbsp;resource,
                                                 <a href="../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;State&gt;&nbsp;mapper)</pre>
 </li>
 </ul>
@@ -306,28 +281,17 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <ul class="blockList">
 <li class="blockList">
 <h4>resource</h4>
-<pre class="methodSignature">public&nbsp;<a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
-                             <a href="resources/real/RealResource.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</pre>
+<pre class="methodSignature">public&nbsp;<a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;name,
+                             <a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</pre>
 </li>
 </ul>
-<a id="constraint(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.Condition)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>constraint</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;constraint&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
-                       <a href="../protocol/Condition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;?&gt;&nbsp;condition)</pre>
-</li>
-</ul>
-<a id="daemon(java.lang.String,java.lang.Runnable)">
+<a id="daemon(java.lang.Runnable)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>daemon</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;daemon&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
-                   <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</pre>
+<pre class="methodSignature">public&nbsp;void&nbsp;daemon&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</pre>
 </li>
 </ul>
 </li>
