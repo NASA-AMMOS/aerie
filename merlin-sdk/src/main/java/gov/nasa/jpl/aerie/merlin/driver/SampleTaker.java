@@ -60,9 +60,7 @@ public final class SampleTaker<Dynamics>
     }
 
     var sampleTime = sampleTimeIter.next();
-    if (sampleTime.longerThan(this.profile.getDuration())) {
-      throw new IllegalArgumentException("sample time is past end of profile");
-    } else if (sampleTime.isNegative()) {
+    if (sampleTime.isNegative()) {
       throw new IllegalArgumentException("sample time is before start of profile");
     }
 
@@ -97,9 +95,7 @@ public final class SampleTaker<Dynamics>
           }
 
           final var nextSampleTime = sampleTimeIter.next();
-          if (sampleTime.longerThan(this.profile.getDuration())) {
-            throw new IllegalArgumentException("sample time is past end of profile");
-          } else if (sampleTime.isNegative()) {
+          if (sampleTime.isNegative()) {
             throw new IllegalArgumentException("sample time is before start of profile");
           } else if (!sampleTime.shorterThan(nextSampleTime)) {
             throw new IllegalArgumentException("sample times must be strictly increasing");
@@ -114,7 +110,6 @@ public final class SampleTaker<Dynamics>
       } while (sampleTime.shorterThan(window.end) || (dynamicsOwnsEndpoint && sampleTime.isEqualTo(window.end)));
     }
 
-    // This should be unreachable.
-    throw new Error("Unable to take all samples");
+    throw new IllegalArgumentException("sample time is past end of profile");
   }
 }
