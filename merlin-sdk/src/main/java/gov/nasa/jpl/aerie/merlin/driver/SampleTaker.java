@@ -91,6 +91,9 @@ public final class SampleTaker<Dynamics>
 
           if (!sampleTimeIter.hasNext()) {
             // No other samples need to be taken.
+            if (!partEnd.isEqualTo(partStart)) {
+              timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+            }
             return timeline;
           }
 
@@ -104,7 +107,9 @@ public final class SampleTaker<Dynamics>
           sampleTime = nextSampleTime;
         }
 
-        timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+        if (!partEnd.isEqualTo(partStart)) {
+          timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+        }
 
         partStart = partEnd;
       } while (sampleTime.shorterThan(window.end) || (dynamicsOwnsEndpoint && sampleTime.isEqualTo(window.end)));
