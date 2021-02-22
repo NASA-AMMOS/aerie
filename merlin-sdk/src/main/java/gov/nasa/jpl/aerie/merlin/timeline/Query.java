@@ -33,8 +33,7 @@ public final class Query<$Schema, Event, Model> {
     return this.inner.createTable(database);
   }
 
-  /* package-local */
-  int getTableIndex() {
+  public int getTableIndex() {
     return this.inner.getTableIndex();
   }
 

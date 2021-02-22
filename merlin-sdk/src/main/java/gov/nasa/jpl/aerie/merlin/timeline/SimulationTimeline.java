@@ -128,6 +128,10 @@ public final class SimulationTimeline<$Timeline> {
     return table;
   }
 
+  public int getTableCount() {
+    return this.tables.size();
+  }
+
   // PRECONDITION: `startTime` occurs-before `endTime`.
   //   This will enter an infinite loop if `startTime` and `endTime` are incomparable or occur in the opposite order.
   /* package-local */

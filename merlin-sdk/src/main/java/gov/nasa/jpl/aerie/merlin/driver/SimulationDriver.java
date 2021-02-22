@@ -18,6 +18,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +88,10 @@ public final class SimulationDriver {
     for (final var profile : profiles.values()) profile.updateAt(now);
 
     // Step the stimulus program forward until we reach the end of the simulation.
+    final var changedTables = new boolean[database.getTableCount()];
     now = kernel.consumeUpTo(simulationDuration, now, (delta, frame) -> {
+      Arrays.fill(changedTables, false);
+
       final var yieldTime = TaskFrame.runToCompletion(frame, (taskId, builder) -> {
         final var info = taskFactory.get(taskId);
 
@@ -99,6 +103,7 @@ public final class SimulationDriver {
 
           @Override
           public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+            changedTables[query.getTableIndex()] = true;
             builder.emit(event, query);
           }
 
@@ -122,7 +127,14 @@ public final class SimulationDriver {
 
       for (final var profile : profiles.values()) {
         profile.extendBy(delta);
-        profile.updateAt(yieldTime);
+
+        // Only fetch a new dynamics if it could possibly have been changed by the tasks we just ran.
+        for (final var dependency : profile.lastDependencies) {
+          if (changedTables[dependency.getTableIndex()]) {
+            profile.updateAt(yieldTime);
+            break;
+          }
+        }
       }
 
       // TODO: Check if any conditioned tasks should be signalled.
