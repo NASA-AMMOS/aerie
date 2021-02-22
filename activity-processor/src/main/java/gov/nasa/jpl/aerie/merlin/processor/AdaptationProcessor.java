@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
@@ -45,8 +46,10 @@ import java.lang.annotation.Repeatable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -170,20 +173,83 @@ public final class AdaptationProcessor implements Processor {
     return Collections::emptyIterator;
   }
 
-
   private AdaptationRecord
   parseAdaptation(final PackageElement adaptationElement)
   throws InvalidAdaptationException {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
+    final var typeRules = new ArrayList<TypeRule>();
 
-    // TODO: Get any mapper groups registered using @WithMappers
+    for (final var factory : this.getAdaptationMapperClasses(adaptationElement)) {
+      typeRules.addAll(this.parseValueMappers(factory));
+    }
 
     for (final var activityTypeElement : this.getAdaptationActivityTypes(adaptationElement)) {
       activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
     }
 
-    return new AdaptationRecord(adaptationElement, topLevelModel, activityTypes);
+    return new AdaptationRecord(adaptationElement, topLevelModel, typeRules, activityTypes);
+  }
+
+  private List<TypeRule>
+  parseValueMappers(final TypeElement factory)
+  throws InvalidAdaptationException {
+    final var valueMappers = new ArrayList<TypeRule>();
+
+    for (final var element : factory.getEnclosedElements()) {
+      if (element.getKind().equals(ElementKind.METHOD)) {
+        valueMappers.add(this.parseValueMapperMethod((ExecutableElement)element, ClassName.get(factory)));
+      }
+    }
+
+    return valueMappers;
+  }
+
+  private TypeRule
+  parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
+  throws InvalidAdaptationException {
+    if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
+      throw new InvalidAdaptationException(
+          "Value Mapper method must be public and static",
+          element
+      );
+    }
+
+    final var head = TypePattern.from(element.getReturnType());
+    final var enumBoundedTypeParameters = getEnumBoundedTypeParameters(element);
+    final var method = element.getSimpleName().toString();
+    final var parameters = new ArrayList<TypePattern>();
+    for (final var parameter : element.getParameters()) {
+      parameters.add(TypePattern.from(parameter));
+    }
+
+    return new TypeRule(head, enumBoundedTypeParameters, parameters, factory, method);
+  }
+
+  private Set<String>
+  getEnumBoundedTypeParameters(final ExecutableElement element)
+  throws InvalidAdaptationException {
+    final var enumBoundedTypeParameters = new HashSet<String>();
+    // Check type parameters are bounded only by enum type or not at all
+    for (final var typeParameter : element.getTypeParameters()) {
+      final var bounds = typeParameter.getBounds();
+      for (final var bound : bounds) {
+        final var erasure = typeUtils.erasure(bound);
+        final var objectType = elementUtils.getTypeElement("java.lang.Object").asType();
+        final var enumType = typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
+        if (typeUtils.isSameType(erasure, objectType)) {
+          // Nothing to do
+        } else if (typeUtils.isSameType(erasure, enumType)) {
+          enumBoundedTypeParameters.add(typeParameter.getSimpleName().toString());
+        } else {
+          throw new InvalidAdaptationException(
+              "Value Mapper method type parameter must be unbounded, or bounded by enum type only",
+              element
+          );
+        }
+      }
+    }
+    return enumBoundedTypeParameters;
   }
 
   private ActivityTypeRecord
@@ -266,7 +332,7 @@ public final class AdaptationProcessor implements Processor {
       final var name = element.getSimpleName().toString();
       final var type = element.asType();
 
-      parameters.add(new ActivityParameterRecord(name, type));
+      parameters.add(new ActivityParameterRecord(name, type, element));
     }
 
     return parameters;
@@ -291,6 +357,28 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private List<TypeElement>
+  getAdaptationMapperClasses(final PackageElement adaptationElement)
+  throws InvalidAdaptationException {
+    final var mapperClassElements = new ArrayList<TypeElement>();
+
+    for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithMappers.class)) {
+      final var attribute = getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
+
+      if (!(attribute.getValue() instanceof DeclaredType)) {
+        throw new InvalidAdaptationException(
+            "Mappers class not yet defined",
+            adaptationElement,
+            withMappersAnnotation,
+            attribute);
+      }
+
+      mapperClassElements.add((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
+    }
+
+      return mapperClassElements;
+  }
+
+  private List<TypeElement>
   getAdaptationActivityTypes(final PackageElement adaptationElement)
   throws InvalidAdaptationException {
     final var activityTypeElements = new ArrayList<TypeElement>();
@@ -306,6 +394,8 @@ public final class AdaptationProcessor implements Processor {
             attribute);
       }
 
+      // DeclaredType cast works because we checked above that attribute is indeed a DeclaredType
+      // TypeElement cast works because the element of a DeclaredType must be a TypeElement
       activityTypeElements.add((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
     }
 

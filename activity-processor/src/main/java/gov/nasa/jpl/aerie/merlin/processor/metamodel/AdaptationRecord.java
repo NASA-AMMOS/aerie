@@ -10,15 +10,18 @@ import java.util.Objects;
 public final class AdaptationRecord {
   public final PackageElement $package;
   public final TypeElement topLevelModel;
+  public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
 
   public AdaptationRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
+      final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
+    this.typeRules = Objects.requireNonNull(typeRules);
     this.activityTypes = Objects.requireNonNull(activityTypes);
   }
 
