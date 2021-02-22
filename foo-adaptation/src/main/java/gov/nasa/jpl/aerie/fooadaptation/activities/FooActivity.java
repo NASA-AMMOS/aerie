@@ -6,6 +6,9 @@ import gov.nasa.jpl.aerie.fooadaptation.models.ImagerMode;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+
+import java.util.List;
 
 import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 
@@ -16,6 +19,9 @@ public final class FooActivity {
 
   @Parameter
   public String y = "test";
+
+  @Parameter
+  public List<Vector3D> vecs = List.of(new Vector3D(0.0, 0.0, 0.0));
 
   @Validation("x cannot be exactly 99")
   public boolean validateX() {

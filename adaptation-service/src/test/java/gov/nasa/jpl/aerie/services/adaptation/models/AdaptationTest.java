@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,10 +29,18 @@ public final class AdaptationTest {
                 "foo",
                 Map.of(
                     "x", ValueSchema.INT,
-                    "y", ValueSchema.STRING),
+                    "y", ValueSchema.STRING,
+                    "vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))),
                 Map.of(
                     "x", SerializedValue.of(0),
-                    "y", SerializedValue.of("test"))));
+                    "y", SerializedValue.of("test"),
+                    "vecs", SerializedValue.of(
+                        List.of(
+                            SerializedValue.of(
+                                List.of(
+                                    SerializedValue.of(0.0),
+                                    SerializedValue.of(0.0),
+                                    SerializedValue.of(0.0))))))));
 
         // WHEN
         final Map<String, ActivityType> typeList = adaptation.getActivityTypes();
@@ -47,10 +56,18 @@ public final class AdaptationTest {
             "foo",
             Map.of(
                 "x", ValueSchema.INT,
-                "y", ValueSchema.STRING),
+                "y", ValueSchema.STRING,
+                "vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))),
             Map.of(
                 "x", SerializedValue.of(0),
-                "y", SerializedValue.of("test")));
+                "y", SerializedValue.of("test"),
+                "vecs", SerializedValue.of(
+                    List.of(
+                        SerializedValue.of(
+                            List.of(
+                                SerializedValue.of(0.0),
+                                SerializedValue.of(0.0),
+                                SerializedValue.of(0.0)))))));
 
         // WHEN
         final ActivityType type = adaptation.getActivityType(expectedType.name);
