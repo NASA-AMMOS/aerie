@@ -109,7 +109,7 @@ public final class AdaptationProcessor implements Processor {
         for (final var activityRecord : adaptationRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration);
           if (!activityRecord.mapper.isCustom) {
-            generatedFiles.add(generateActivityMapper(adaptationRecord, activityRecord));
+            generateActivityMapper(adaptationRecord, activityRecord).ifPresent(generatedFiles::add);
           }
         }
 
@@ -431,9 +431,29 @@ public final class AdaptationProcessor implements Processor {
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
+  private Optional<Map<String, CodeBlock>> buildParameterMapperBlocks(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
+    final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
+    var failed = false;
+    final var mapperBlocks = new HashMap<String, CodeBlock>();
 
-  private JavaFile generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
-    final var resolver = new Resolver(this.typeUtils, this.elementUtils);
+    for (final var parameter : activityType.parameters) {
+      final var mapperBlock = resolver.instantiateMapperFor(parameter.type);
+      if (mapperBlock.isPresent()) {
+        mapperBlocks.put(parameter.name, mapperBlock.get());
+      } else {
+        failed = true;
+        messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for parameter", parameter.element);
+      }
+    }
+
+    if (failed) return Optional.empty();
+    return Optional.of(mapperBlocks);
+  }
+
+  private Optional<JavaFile> generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
+    final var maybeMapperBlocks = buildParameterMapperBlocks(adaptation, activityType);
+    if (maybeMapperBlocks.isEmpty()) return Optional.empty();
+    final var mapperBlocks = maybeMapperBlocks.get();
 
     final var typeSpec =
         TypeSpec
@@ -469,6 +489,12 @@ public final class AdaptationProcessor implements Processor {
                 MethodSpec
                     .constructorBuilder()
                     .addModifiers(Modifier.PUBLIC)
+                    // Suppress unchecked warnings because the resolver has to put some big casting in for Class parameters
+                    .addAnnotation(
+                        AnnotationSpec
+                            .builder(SuppressWarnings.class)
+                            .addMember("value", "$S", "unchecked")
+                            .build())
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -477,7 +503,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addStatement(
                                     "this.mapper_$L =\n$L",
                                     parameter.name,
-                                    resolver.instantiateMapperFor(parameter.type)))
+                                    mapperBlocks.get(parameter.name)))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
                     .build())
@@ -664,10 +690,10 @@ public final class AdaptationProcessor implements Processor {
                     .build())
             .build();
 
-    return JavaFile
+    return Optional.of(JavaFile
         .builder(activityType.mapper.name.packageName(), typeSpec)
         .skipJavaLangImports(true)
-        .build();
+        .build());
   }
 
   private JavaFile generateActivityTypes(final AdaptationRecord adaptation) {
