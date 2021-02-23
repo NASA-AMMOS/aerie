@@ -53,6 +53,28 @@ public final class TaskQueue<Task> {
     }));
   }
 
+  public interface Executor<$Timeline, Task> {
+    History<$Timeline> execute(Duration delta, TaskFrame<$Timeline, Task> frame);
+  }
+
+  public <$Timeline> History<$Timeline>
+  consumeUpTo(final Duration maximum, final History<$Timeline> startTime, final Executor<$Timeline, Task> executor) {
+    var elapsedTime = this.getElapsedTime();
+    var now = startTime;
+    var frame = this.popNextFrame(now, maximum);
+
+    while (frame.isPresent()) {
+      final var nextTime = this.getElapsedTime();
+      final var delta = nextTime.minus(elapsedTime);
+
+      elapsedTime = nextTime;
+      now = executor.execute(delta, frame.get());
+      frame = this.popNextFrame(now, maximum);
+    }
+
+    return now;
+  }
+
   public String getDebugTrace() {
     final var builder = new StringBuilder();
 
