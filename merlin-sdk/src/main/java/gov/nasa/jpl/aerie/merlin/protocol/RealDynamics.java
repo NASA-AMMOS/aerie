@@ -78,9 +78,7 @@ public final class RealDynamics {
         final var end = (interval.max - this.initial) / this.rate;
         final var window = Window.roundIn(start, end, Duration.SECONDS);
 
-        if (!window.overlaps(selection)) continue;
-
-        windows.add(window);
+        windows.add(Window.greatestLowerBound(window, selection));
       }
     } else {
       for (final var interval : condition.descendingOrder()) {
@@ -91,9 +89,7 @@ public final class RealDynamics {
         final var end = (interval.min - this.initial) / this.rate;
         final var window = Window.roundIn(start, end, Duration.SECONDS);
 
-        if (!window.overlaps(selection)) continue;
-
-        windows.add(window);
+        windows.add(Window.greatestLowerBound(window, selection));
       }
     }
 
