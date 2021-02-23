@@ -92,4 +92,10 @@ public final class TaskQueue<Task> {
   public Duration getElapsedTime() {
     return this.elapsedTime;
   }
+
+  public Optional<Duration> getNextJobTime() {
+    return (this.queue.isEmpty())
+        ? Optional.empty()
+        : Optional.of(this.queue.peek().getLeft());
+  }
 }

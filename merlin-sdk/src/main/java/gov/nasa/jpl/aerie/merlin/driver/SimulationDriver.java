@@ -63,6 +63,8 @@ public final class SimulationDriver {
     final var completedTasks = new HashSet<String>();
     // For each task, a set of tasks awaiting its completion (if any).
     final var waitingTasks = new HashMap<String, Set<String>>();
+    // For each task, the condition blocking its progress (if any).
+    final var conditionedTasks = new HashMap<String, Condition<? super $Timeline>>();
 
     for (final var daemon : adaptation.getDaemons()) {
       final var activityId = UUID.randomUUID().toString();
@@ -150,7 +152,6 @@ public final class SimulationDriver {
           @Override
           public Void delayed(final Duration delay) {
             queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
-
             return null;
           }
 
@@ -167,8 +168,7 @@ public final class SimulationDriver {
 
           @Override
           public Void awaiting(final Condition<? super $Timeline> condition) {
-            // TODO
-            queue.deferTo(queue.getElapsedTime(), info.id);
+            conditionedTasks.put(info.id, condition);
             return null;
           }
         });
@@ -186,7 +186,38 @@ public final class SimulationDriver {
         }
       }
 
-      // TODO: Check if any conditioned tasks should be signalled.
+      // Signal any tasks whose condition occurs soon.
+      // TODO: Only check conditions which could have possibly been affected by the latest batch of tasks.
+      //   This will require some rejigging, since we'll need to store alongside each condition
+      //   its dependencies *and* its last nextSatisfied() result.
+      {
+        var maxBound = queue.getNextJobTime().orElse(simulationDuration);
+        final var activatedTasks = new ArrayList<String>();
+
+        for (final var entry : conditionedTasks.entrySet()) {
+          final var taskId = entry.getKey();
+          final var condition = entry.getValue();
+
+          final var triggerTime$ = condition
+              .nextSatisfied(
+                  yieldTime::ask,
+                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
+                  true)
+              .map(queue.getElapsedTime()::plus);
+
+          if (triggerTime$.isEmpty()) continue;
+          final var triggerTime = triggerTime$.get();
+
+          if (triggerTime.shorterThan(maxBound)) activatedTasks.clear();
+          if (triggerTime.noLongerThan(maxBound)) activatedTasks.add(taskId);
+          maxBound = triggerTime;
+        }
+
+        for (final var taskId : activatedTasks) {
+          queue.deferTo(maxBound, taskId);
+          conditionedTasks.remove(taskId);
+        }
+      }
 
       return yieldTime;
     });
