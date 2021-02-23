@@ -48,10 +48,10 @@ public final class FooActivity {
 
       data.rate.add(1.0);
       delay(1, SECOND);
+      waitUntil(data.isBetween(50.0, 100.0));
 
       mission.simpleData.downlinkData();
 
-      waitUntil(data.isBetween(5.0, 10.0));
       data.rate.add(2.0);
       data.rate.add(data.rate.get());
       delay(10, SECOND);
