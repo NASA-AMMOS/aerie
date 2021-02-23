@@ -185,10 +185,6 @@ public final class SimulationDriver {
         mappedTaskWindows,
         startTime);
 
-    if (results.unfinishedActivities.keySet().stream().anyMatch($ -> !mappedTaskRecords.get($).isDaemon)) {
-      throw new Error("There should be no unfinished activities when simulating to completion.");
-    }
-
     return results;
   }
 
