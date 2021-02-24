@@ -157,7 +157,7 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.timeline.History)">QueryContext</a></span>&#8203;(<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;&nbsp;history)</code></th>
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.protocol.Checkpoint)">QueryContext</a></span>&#8203;(<a href="../protocol/Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Checkpoint</a>&lt;? extends <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;&nbsp;history)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -179,26 +179,26 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
+<td class="colFirst"><code>&lt;CellType&gt;&nbsp;CellType</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#ask(gov.nasa.jpl.aerie.merlin.timeline.Query)">ask</a></span>&#8203;(<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>,&#8203;?,&#8203;CellType&gt;&nbsp;query)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#defer(gov.nasa.jpl.aerie.time.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;duration,
      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;type,
      <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i1" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#delay(gov.nasa.jpl.aerie.time.Duration)">delay</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;duration)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code>&lt;Event&gt;&nbsp;void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event,gov.nasa.jpl.aerie.merlin.timeline.Query)">emit</a></span>&#8203;(Event&nbsp;event,
     <a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>,&#8203;Event,&#8203;?&gt;&nbsp;query)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i3" class="rowColor">
-<td class="colFirst"><code><a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#now()">now</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i4" class="altColor">
@@ -241,13 +241,13 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.timeline.History)">
+<a id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.protocol.Checkpoint)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>QueryContext</h4>
-<pre>public&nbsp;QueryContext&#8203;(<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;&nbsp;history)</pre>
+<pre>public&nbsp;QueryContext&#8203;(<a href="../protocol/Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Checkpoint</a>&lt;? extends <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;&nbsp;history)</pre>
 </li>
 </ul>
 </li>
@@ -260,16 +260,16 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="now()">
+<a id="ask(gov.nasa.jpl.aerie.merlin.timeline.Query)">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>now</h4>
-<pre class="methodSignature">public&nbsp;<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;&nbsp;now()</pre>
+<h4>ask</h4>
+<pre class="methodSignature">public&nbsp;&lt;CellType&gt;&nbsp;CellType&nbsp;ask&#8203;(<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>,&#8203;?,&#8203;CellType&gt;&nbsp;query)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="Context.html#now()">now</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;</code></dd>
+<dd><code><a href="Context.html#ask(gov.nasa.jpl.aerie.merlin.timeline.Query)">ask</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="QueryContext.html" title="type parameter in QueryContext">$Schema</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
