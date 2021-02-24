@@ -9,6 +9,9 @@ public interface Scheduler<$Timeline> {
   Checkpoint<$Timeline> now();
   <Event> void emit(Event event, Query<? super $Timeline, Event, ?> query);
 
+  String spawn(Task<$Timeline> task);
   String spawn(String type, Map<String, SerializedValue> arguments);
+
+  String defer(Duration delay, Task<$Timeline> task);
   String defer(Duration delay, String type, Map<String, SerializedValue> arguments);
 }

@@ -39,17 +39,24 @@ public final class SimulationResults {
     final var activityChildren = new HashMap<String, List<String>>();
 
     // Create the list of children for every activity
-    for (final var id : activityRecords.keySet()) activityChildren.put(id, new ArrayList<>());
-    for (final var entry : activityRecords.entrySet()) {
-      final var parentId = entry.getValue().parentId;
-
-      if (parentId.isPresent()) {
-        activityChildren.get(parentId.get()).add(entry.getKey());
-      }
+    for (final var id : activityRecords.keySet()) {
+      activityChildren.put(id, new ArrayList<>());
     }
 
-    for (final var id : activityRecords.keySet()) {
-      final var activityRecord = activityRecords.get(id);
+    for (final var entry : activityRecords.entrySet()) {
+      final var id = entry.getKey();
+      final var activityRecord = entry.getValue();
+
+      activityRecord.parentId.ifPresent(parentId -> {
+        activityChildren.get(parentId).add(id);
+      });
+    }
+
+    for (final var entry : activityRecords.entrySet()) {
+      final var id = entry.getKey();
+      final var activityRecord = entry.getValue();
+
+      if (activityRecord.isDaemon) continue;
 
       if (!activityWindows.containsKey(id)) {
         this.unfinishedActivities.put(id, new SerializedActivity(activityRecord.type, activityRecord.arguments));

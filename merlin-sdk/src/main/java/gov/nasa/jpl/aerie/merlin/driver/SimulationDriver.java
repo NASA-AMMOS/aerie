@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
@@ -120,15 +121,35 @@ public final class SimulationDriver {
           }
 
           @Override
+          public String spawn(final Task<$Timeline> task) {
+            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
+            if (info.isDaemon) childInfo.isDaemon = true;
+
+            builder.signal(childInfo.id);
+            return childInfo.id;
+          }
+
+          @Override
           public String spawn(final String type, final Map<String, SerializedValue> arguments) {
             final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+
             builder.signal(childInfo.id);
+            return childInfo.id;
+          }
+
+          @Override
+          public String defer(final Duration delay, final Task<$Timeline> task) {
+            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
+            if (info.isDaemon) childInfo.isDaemon = true;
+
+            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
             return childInfo.id;
           }
 
           @Override
           public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
             final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+
             queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
             return childInfo.id;
           }
@@ -258,14 +279,12 @@ public final class SimulationDriver {
       mappedTaskRecords.put(activityId, new TaskRecord(info.typeName, info.arguments, mappedParentId, info.isDaemon));
     });
 
-    final var results = new SimulationResults(
+    return new SimulationResults(
         resourceSamples,
         new ArrayList<>(),
         mappedTaskRecords,
         mappedTaskWindows,
         startTime);
-
-    return results;
   }
 
   private static <$Schema, Resource, Condition>

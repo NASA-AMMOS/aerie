@@ -37,6 +37,19 @@ public final class TaskFactory<$Schema, $Timeline extends $Schema>
     return info;
   }
 
+  public TaskInfo<$Timeline>
+  createAnonymousTask(final Task<$Timeline> task, final Optional<String> parent) {
+    final var taskId = Integer.toString(this.nextTaskId++);
+
+    // TODO: don't provide any name or arguments at all; we don't want these reported out either, their children
+    //   should be attributed to the original named activity that spawned it.
+    final var info = new TaskInfo<>(taskId, parent, task, "", Map.of());
+
+    this.taskInfo.put(taskId, info);
+
+    return info;
+  }
+
   private <Spec> Task<$Timeline>
   instantiate(final TaskSpecType<$Schema, Spec> specType, final Map<String, SerializedValue> arguments)
   throws SimulationDriver.InstantiationException
