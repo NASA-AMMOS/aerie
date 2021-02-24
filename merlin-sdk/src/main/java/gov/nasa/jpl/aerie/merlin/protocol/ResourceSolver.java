@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 
@@ -26,7 +25,7 @@ import java.util.Optional;
  * @param <Condition> The type of Boolean conditions on resource values.
  */
 public interface ResourceSolver<$Schema, Resource,  /*->*/ Dynamics, Condition> {
-  Dynamics getDynamics(Resource resource, History<? extends $Schema> now);
+  Dynamics getDynamics(Resource resource, Checkpoint<? extends $Schema> now);
 
   <Result> Result approximate(ApproximatorVisitor<Dynamics, Result> visitor);
 

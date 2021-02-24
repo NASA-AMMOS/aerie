@@ -47,6 +47,10 @@ public class SimulateMapSchedule {
       System.out.println(name + ":");
       samples.forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
     });
+
+    simulationResults.simulatedActivities.forEach((name, activity) -> {
+      System.out.println(name + ": " + activity.start + " for " + activity.duration);
+    });
   }
 
   private static Map<String, Pair<Duration, SerializedActivity>> loadSchedule() {

@@ -4,6 +4,8 @@ import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
@@ -18,11 +20,16 @@ import static org.junit.Assert.assertEquals;
 public final class SampleTakerTest {
   @Test
   public void smokeTest() {
-    final var profile =
-        new Profile<>(new RealResourceSolver<>(Scoped.create()))
-            .append(duration(0, SECONDS), RealDynamics.linear(5.0, 0.0))
-            .append(duration(1, SECOND), RealDynamics.linear(0.0, 4.0))
-            .append(duration(1, SECOND), RealDynamics.linear(8.0, 0.0));
+    final var profile = List.of(
+        Pair.of(
+            Window.at(Duration.ZERO),
+            RealDynamics.linear(5.0, 0.0)),
+        Pair.of(
+            Window.between(Duration.ZERO, duration(1, SECOND)),
+            RealDynamics.linear(0.0, 4.0)),
+        Pair.of(
+            Window.between(duration(1, SECOND), duration(2, SECONDS)),
+            RealDynamics.linear(8.0, 0.0)));
 
     final var timestamps = List.of(
         duration(0, MILLISECONDS),
@@ -34,16 +41,16 @@ public final class SampleTakerTest {
 
     final var expected = List.of(
         Pair.of(duration(0, MILLISECONDS), SerializedValue.of(5.0)),
-        Pair.of(duration(0, MILLISECONDS), SerializedValue.of(5.0)),
         Pair.of(duration(0, MILLISECONDS), SerializedValue.of(0.0)),
         Pair.of(duration(250, MILLISECONDS), SerializedValue.of(1.0)),
         Pair.of(duration(500, MILLISECONDS), SerializedValue.of(2.0)),
         Pair.of(duration(750, MILLISECONDS), SerializedValue.of(3.0)),
         Pair.of(duration(1000, MILLISECONDS), SerializedValue.of(4.0)),
         Pair.of(duration(1000, MILLISECONDS), SerializedValue.of(8.0)),
-        Pair.of(duration(1250, MILLISECONDS), SerializedValue.of(8.0)));
+        Pair.of(duration(1250, MILLISECONDS), SerializedValue.of(8.0)),
+        Pair.of(duration(2000, MILLISECONDS), SerializedValue.of(8.0)));
 
-    final var samples = SampleTaker.sample(profile, timestamps);
+    final var samples = SampleTaker.sample(profile, new RealResourceSolver<>(Scoped.create()), timestamps);
 
     assertEquals(expected, samples);
   }

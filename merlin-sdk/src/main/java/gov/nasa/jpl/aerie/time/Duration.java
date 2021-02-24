@@ -375,12 +375,30 @@ public final class Duration implements Comparable<Duration> {
   }
 
   /**
+   * Determine whether this duration is at least as long than another.
+   *
+   * @see Duration#compareTo(Duration)
+   */
+  public boolean noShorterThan(final Duration other) {
+    return this.compareTo(other) >= 0;
+  }
+
+  /**
    * Determine whether this duration is longer than another.
    *
    * @see Duration#compareTo(Duration)
    */
   public boolean longerThan(final Duration other) {
     return this.compareTo(other) > 0;
+  }
+
+  /**
+   * Determine whether this duration is at most as long than another.
+   *
+   * @see Duration#compareTo(Duration)
+   */
+  public boolean noLongerThan(final Duration other) {
+    return this.compareTo(other) <= 0;
   }
 
   /**

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -18,17 +19,29 @@ import java.util.function.Function;
 public final class SampleTaker<Dynamics>
     implements ResourceSolver.ApproximatorVisitor<Dynamics, List<Pair<Duration, SerializedValue>>>
 {
-  private final Profile<Dynamics, ?> profile;
-  private final List<Duration> sampleTimes;
+  private final Iterable<Pair<Window, Dynamics>> profile;
+  private final Iterable<Duration> sampleTimes;
 
-  private SampleTaker(final Profile<Dynamics, ?> profile, final List<Duration> sampleTimes) {
+  private SampleTaker(final Iterable<Pair<Window, Dynamics>> profile, final Iterable<Duration> sampleTimes) {
     this.profile = Objects.requireNonNull(profile);
     this.sampleTimes = Objects.requireNonNull(sampleTimes);
   }
 
   public static <Dynamics>
-  List<Pair<Duration, SerializedValue>> sample(final Profile<Dynamics, ?> profile, final List<Duration> sampleTimes) {
-    return profile.getSolver().approximate(new SampleTaker<>(profile, sampleTimes));
+  List<Pair<Duration, SerializedValue>> sample(
+      final Iterable<Pair<Window, Dynamics>> profile,
+      final ResourceSolver<?, ?, Dynamics, ?> solver,
+      final Iterable<Duration> sampleTimes)
+  {
+    return solver.approximate(new SampleTaker<>(profile, sampleTimes));
+  }
+
+  public static <Dynamics>
+  List<Pair<Duration, SerializedValue>> sample(
+      final ProfileBuilder<?, ?, Dynamics, ?> profile,
+      final Iterable<Duration> sampleTimes)
+  {
+    return sample(profile.pieces, profile.solver, sampleTimes);
   }
 
   @Override
@@ -60,9 +73,7 @@ public final class SampleTaker<Dynamics>
     }
 
     var sampleTime = sampleTimeIter.next();
-    if (sampleTime.longerThan(this.profile.getDuration())) {
-      throw new IllegalArgumentException("sample time is past end of profile");
-    } else if (sampleTime.isNegative()) {
+    if (sampleTime.isNegative()) {
       throw new IllegalArgumentException("sample time is before start of profile");
     }
 
@@ -93,13 +104,14 @@ public final class SampleTaker<Dynamics>
 
           if (!sampleTimeIter.hasNext()) {
             // No other samples need to be taken.
+            if (!partEnd.isEqualTo(partStart)) {
+              timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+            }
             return timeline;
           }
 
           final var nextSampleTime = sampleTimeIter.next();
-          if (sampleTime.longerThan(this.profile.getDuration())) {
-            throw new IllegalArgumentException("sample time is past end of profile");
-          } else if (sampleTime.isNegative()) {
+          if (sampleTime.isNegative()) {
             throw new IllegalArgumentException("sample time is before start of profile");
           } else if (!sampleTime.shorterThan(nextSampleTime)) {
             throw new IllegalArgumentException("sample times must be strictly increasing");
@@ -108,13 +120,14 @@ public final class SampleTaker<Dynamics>
           sampleTime = nextSampleTime;
         }
 
-        timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+        if (!partEnd.isEqualTo(partStart)) {
+          timeline.add(Pair.of(partEnd, takeSample.apply(part.dynamics, partEnd.minus(partStart))));
+        }
 
         partStart = partEnd;
       } while (sampleTime.shorterThan(window.end) || (dynamicsOwnsEndpoint && sampleTime.isEqualTo(window.end)));
     }
 
-    // This should be unreachable.
-    throw new Error("Unable to take all samples");
+    throw new IllegalArgumentException("sample time is past end of profile");
   }
 }

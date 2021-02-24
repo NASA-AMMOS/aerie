@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
@@ -19,7 +19,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   private final Scoped<Context<$Schema>> rootContext;
   private final TaskHandle<$Timeline> handle;
   private Scheduler<$Timeline> scheduler;
-  private Optional<History<$Timeline>> history = Optional.empty();
+  private Optional<Checkpoint<$Timeline>> history = Optional.empty();
 
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs;
   private int nextBreadcrumbIndex = 0;
@@ -39,8 +39,8 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public History<$Timeline> now() {
-    return this.history.orElseGet(this.scheduler::now);
+  public <CellType> CellType ask(final Query<? super $Schema, ?, CellType> query) {
+    return this.history.orElseGet(this.scheduler::now).ask(query);
   }
 
   @Override
@@ -48,10 +48,11 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
     if (this.history.isEmpty()) {
       // We're running normally.
       this.scheduler.emit(event, query);
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
+      this.nextBreadcrumbIndex += 1;
     } else {
-      // TODO: Avoid leaving garbage behind -- find some way to remove regenerated events
-      //   on dead-end branches when references to it disappear.
-      this.history = this.history.map(now -> now.emit(event, query));
+      readvance();
     }
   }
 
