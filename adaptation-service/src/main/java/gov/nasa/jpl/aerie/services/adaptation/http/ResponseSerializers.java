@@ -250,7 +250,6 @@ public final class ResponseSerializers {
                .add("adaptationId", message.adaptationId)
                .add("startTime", serializeTimestampString(message.startTime))
                .add("samplingDuration", message.samplingDuration.in(Duration.MICROSECONDS))
-               .add("samplingPeriod", message.samplingPeriod.in(Duration.MICROSECONDS))
                .add("activities", serializeScheduledActivities(message.activityInstances))
                .build();
   }

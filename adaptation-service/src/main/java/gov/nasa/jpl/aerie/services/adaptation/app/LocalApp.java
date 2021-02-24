@@ -204,7 +204,7 @@ public final class LocalApp implements App {
          SimulationDriver.TaskSpecInstantiationException
   {
     return loadAdaptation(message.adaptationId)
-        .simulate(message.activityInstances, message.samplingDuration, message.samplingPeriod, message.startTime);
+        .simulate(message.activityInstances, message.samplingDuration, message.startTime);
   }
 
   private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)

@@ -199,10 +199,10 @@ class AerieCommandReceiver implements MerlinCommandReceiver {
     }
 
     @Override
-    public void performSimulation(String planId, long samplingPeriod, String outName) {
+    public void performSimulation(String planId, String outName) {
         try {
             System.out.println("Requesting simulation results...");
-            this.planRepository.getSimulationResults(planId, samplingPeriod, outName);
+            this.planRepository.getSimulationResults(planId, outName);
         } catch (PlanRepository.PlanNotFoundException e) {
             System.out.println(String.format("Plan simulation results could not be retrieved: %s", e.getMessage()));
             return;

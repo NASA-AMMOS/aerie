@@ -27,5 +27,5 @@ public interface MerlinCommandReceiver {
     void listActivityTypes(String adaptationId);
     void displayActivityType(String adaptationId, String activityType);
     void convertApfFile(String input, String output, String dir, String[] tokens);
-    void performSimulation(String planId, long samplingPeriod, String outName);
+    void performSimulation(String planId, String outName);
 }

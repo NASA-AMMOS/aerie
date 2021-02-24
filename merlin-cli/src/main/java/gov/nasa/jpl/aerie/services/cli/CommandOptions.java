@@ -169,15 +169,8 @@ public class CommandOptions {
                         return true;
                     } else if (cmd.hasOption("simulate")) {
                         String[] params = cmd.getOptionValues("simulate");
-                        long samplingPeriod;
-                        try {
-                            samplingPeriod = Long.parseLong(params[0]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("Error while parsing argument to --simulate. Sampling Period must be an integer.");
-                            return false;
-                        }
                         String outName = params[1];
-                        commandReceiver.performSimulation(planId, samplingPeriod, outName);
+                        commandReceiver.performSimulation(planId, outName);
                     } else {
                         return false;
                     }

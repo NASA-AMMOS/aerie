@@ -34,14 +34,12 @@ public class SimulateMapSchedule {
     final var schedule = loadSchedule();
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
-    final var samplingPeriod = simulationDuration; // Don't sample more than necessary
 
     final var simulationResults = SimulationDriver.simulate(
         new GeneratedAdaptationFactory().instantiate(),
         schedule,
         startTime,
-        simulationDuration,
-        samplingPeriod);
+        simulationDuration);
 
     simulationResults.resourceSamples.forEach((name, samples) -> {
       System.out.println(name + ":");

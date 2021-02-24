@@ -31,11 +31,10 @@ public final class AdaptationFacade<$Schema> {
   public SimulationResults simulate(
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration simulationDuration,
-      final Duration samplingPeriod,
       final Instant startTime
   ) throws SimulationDriver.TaskSpecInstantiationException
   {
-    return SimulationDriver.simulate(this.adaptation, schedule, startTime, simulationDuration, samplingPeriod);
+    return SimulationDriver.simulate(this.adaptation, schedule, startTime, simulationDuration);
   }
 
   public List<ViolableConstraint> getConstraintTypes() throws AdaptationContractException {

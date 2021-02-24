@@ -319,10 +319,10 @@ public class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
-    public void getSimulationResults(String planId, long samplingPeriod, String outName) throws PlanNotFoundException {
+    public void getSimulationResults(String planId, String outName) throws PlanNotFoundException {
         HttpResponse response;
         try {
-            HttpGet request = new HttpGet(String.format("%s/%s/%s?sampling-period=%d", baseURL, planId, simulationResultsPath, samplingPeriod));
+            HttpGet request = new HttpGet(String.format("%s/%s/%s", baseURL, planId, simulationResultsPath));
             response = this.httpClient.execute(request);
         } catch (IOException e) {
             throw new Error(e);

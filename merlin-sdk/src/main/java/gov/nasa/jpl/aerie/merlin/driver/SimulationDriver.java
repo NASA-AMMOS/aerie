@@ -36,11 +36,10 @@ public final class SimulationDriver {
       final Adaptation<$Schema> adaptation,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
-      final Duration simulationDuration,
-      final Duration samplingPeriod)
+      final Duration simulationDuration)
   throws TaskSpecInstantiationException
   {
-    return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration, samplingPeriod);
+    return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration);
   }
 
   // The need for this helper is documented in the standard Java tutorials.
@@ -50,8 +49,7 @@ public final class SimulationDriver {
       final SimulationTimeline<$Timeline> database,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
-      final Duration simulationDuration,
-      final Duration samplingPeriod)
+      final Duration simulationDuration)
   throws TaskSpecInstantiationException
   {
     final var taskIdToActivityId = new HashMap<String, String>();
@@ -270,11 +268,7 @@ public final class SimulationDriver {
     // Identify all sample times.
     final var timestamps = new ArrayList<Duration>();
     {
-      var elapsedTime = Duration.ZERO;
-      while (elapsedTime.shorterThan(simulationDuration)) {
-        timestamps.add(elapsedTime);
-        elapsedTime = elapsedTime.plus(samplingPeriod);
-      }
+      timestamps.add(Duration.ZERO);
       timestamps.add(simulationDuration);
     }
 

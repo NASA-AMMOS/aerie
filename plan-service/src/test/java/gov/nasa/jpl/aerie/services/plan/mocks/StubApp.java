@@ -231,7 +231,7 @@ public final class StubApp implements App {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(final String planId, final long samplingPeriod) throws NoSuchPlanException {
+  public SimulationResults getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }

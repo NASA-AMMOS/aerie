@@ -354,7 +354,7 @@ public final class AdaptationBindingsTest {
         final CreateSimulationMessage message = new CreateSimulationMessage(
             StubApp.EXISTENT_ADAPTATION_ID,
             Instant.EPOCH,
-            Duration.ZERO, Duration.ZERO,
+            Duration.ZERO,
             Map.of(
                 "0", Pair.of(Duration.ZERO, StubApp.VALID_ACTIVITY_INSTANCE)
             )

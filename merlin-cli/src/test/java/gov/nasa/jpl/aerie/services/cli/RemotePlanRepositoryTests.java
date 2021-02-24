@@ -567,12 +567,12 @@ public class RemotePlanRepositoryTests {
         requestHandler.setNextResponse(response);
 
         // Call repository method
-        repository.getSimulationResults(planId, 3600000000L, outname);
+        repository.getSimulationResults(planId, outname);
 
         // Verify request contained expected information
         HttpUriRequest request = requestHandler.getLastRequest();
 
-        String expectedURIPath = String.format("/plans/%s/results?sampling-period=3600000000", planId);
+        String expectedURIPath = String.format("/plans/%s/results", planId);
         assertThat(request.getURI().toString()).endsWith(expectedURIPath);
         assertThat(request.getMethod()).isEqualTo(HttpGet.METHOD_NAME);
 
@@ -594,7 +594,7 @@ public class RemotePlanRepositoryTests {
         requestHandler.setNextResponse(response);
 
         // Call repository method
-        Throwable thrown = catchThrowable(() -> repository.getSimulationResults(planId, 3600000000L, outname));
+        Throwable thrown = catchThrowable(() -> repository.getSimulationResults(planId, outname));
 
         // Verify PlanNotFoundException was thrown
         assertThat(thrown).isInstanceOf(PlanNotFoundException.class);
