@@ -25,8 +25,18 @@ public final class QueryContext<$Schema> implements Context<$Schema> {
   }
 
   @Override
+  public String spawn(final Runnable task) {
+    throw new IllegalStateException("Cannot schedule tasks in a query-only context");
+  }
+
+  @Override
   public String spawn(final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities in a query-only context");
+  }
+
+  @Override
+  public String defer(final Duration duration, final Runnable task) {
+    throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
