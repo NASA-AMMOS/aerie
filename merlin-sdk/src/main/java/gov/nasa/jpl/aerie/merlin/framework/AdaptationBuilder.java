@@ -132,7 +132,7 @@ public final class AdaptationBuilder<$Schema> {
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
-    private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
+    private final List<Runnable> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
@@ -163,11 +163,7 @@ public final class AdaptationBuilder<$Schema> {
 
     @Override
     public void daemon(final Runnable task) {
-      final var id = "/daemons/daemon" + (this.nextDaemonId++);
-      final var daemonType = new DaemonTaskType<>(id, task, rootContext);
-
-      this.taskSpecTypes.put(daemonType.getName(), daemonType);
-      this.daemons.add(Pair.of(daemonType.getName(), Map.of()));
+      this.daemons.add(task);
     }
 
     @Override
@@ -180,6 +176,7 @@ public final class AdaptationBuilder<$Schema> {
       this.resourceFamilies.add(new RealResourceFamily<>(AdaptationBuilder.this.rootContext, this.realResources));
 
       final var adaptation = new BuiltAdaptation<>(
+          AdaptationBuilder.this.rootContext,
           schema,
           this.resourceFamilies,
           this.daemons,

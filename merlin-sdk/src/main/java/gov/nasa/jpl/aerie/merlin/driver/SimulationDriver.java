@@ -67,10 +67,11 @@ public final class SimulationDriver {
     // For each task, the condition blocking its progress (if any).
     final var conditionedTasks = new HashMap<String, Condition<? super $Timeline>>();
 
-    for (final var daemon : adaptation.getDaemons()) {
+    {
+      final var daemon = adaptation.<$Timeline>getDaemon();
       final var activityId = UUID.randomUUID().toString();
 
-      final var info = taskFactory.createTask(daemon.getKey(), daemon.getValue(), Optional.empty());
+      final var info = taskFactory.createAnonymousTask(daemon, Optional.empty());
       info.isDaemon = true;
 
       taskIdToActivityId.put(info.id, activityId);
