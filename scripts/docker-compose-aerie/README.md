@@ -1,7 +1,11 @@
 # aerie-docker
 
-Run [Aerie](https://github.jpl.nasa.gov/MPS/aerie) locally via Docker.  
+Run [Aerie](https://github.jpl.nasa.gov/MPS/aerie) locally via Docker.
 First make sure you have [Docker](https://docs.docker.com/get-docker/) installed.
+
+## Configuration
+
+- The Postgres database specifies a default `POSTGRES_USER` and `POSTGRES_PASSWORD`, these should be updated when deploying to production.
 
 ## Start
 
