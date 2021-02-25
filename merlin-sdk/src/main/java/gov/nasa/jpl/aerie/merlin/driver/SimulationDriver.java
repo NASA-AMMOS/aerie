@@ -1,15 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationKernel;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
+import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
@@ -20,10 +22,12 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
@@ -52,7 +56,15 @@ public final class SimulationDriver {
   {
     final var taskIdToActivityId = new HashMap<String, String>();
     final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
-    final var kernel = new SimulationKernel();
+
+    // A time-ordered queue of all scheduled future tasks.
+    final var queue = new TaskQueue<String>();
+    // The set of all tasks that have completed.
+    final var completedTasks = new HashSet<String>();
+    // For each task, a set of tasks awaiting its completion (if any).
+    final var waitingTasks = new HashMap<String, Set<String>>();
+    // For each task, the condition blocking its progress (if any).
+    final var conditionedTasks = new HashMap<String, Condition<? super $Timeline>>();
 
     for (final var daemon : adaptation.getDaemons()) {
       final var activityId = UUID.randomUUID().toString();
@@ -61,7 +73,7 @@ public final class SimulationDriver {
       info.isDaemon = true;
 
       taskIdToActivityId.put(info.id, activityId);
-      kernel.delay(info.id, Duration.ZERO);
+      queue.deferTo(Duration.ZERO, info.id);
     }
 
     for (final var entry : schedule.entrySet()) {
@@ -77,7 +89,7 @@ public final class SimulationDriver {
       }
 
       taskIdToActivityId.put(info.id, activityId);
-      kernel.delay(info.id, startDelta);
+      queue.deferTo(startDelta, info.id);
     }
 
     // Collect profiles for all resources.
@@ -89,13 +101,13 @@ public final class SimulationDriver {
 
     // Step the stimulus program forward until we reach the end of the simulation.
     final var changedTables = new boolean[database.getTableCount()];
-    now = kernel.consumeUpTo(simulationDuration, now, (delta, frame) -> {
+    now = queue.consumeUpTo(simulationDuration, now, (delta, frame) -> {
       Arrays.fill(changedTables, false);
 
       final var yieldTime = TaskFrame.runToCompletion(frame, (taskId, builder) -> {
         final var info = taskFactory.get(taskId);
 
-        final var status = info.step(kernel.getElapsedTime(), new Scheduler<>() {
+        final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
           @Override
           public Checkpoint<$Timeline> now() {
             return builder.now();
@@ -117,12 +129,49 @@ public final class SimulationDriver {
           @Override
           public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
             final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
-            kernel.delay(childInfo.id, delay);
+            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
             return childInfo.id;
           }
         });
 
-        kernel.updateByStatus(info.id, status);
+        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
+          @Override
+          public Void completed() {
+            completedTasks.add(info.id);
+
+            final var conditionedActivities = waitingTasks.remove(info.id);
+            if (conditionedActivities != null) {
+              for (final var conditionedTask : conditionedActivities) {
+                queue.deferTo(queue.getElapsedTime(), conditionedTask);
+              }
+            }
+
+            return null;
+          }
+
+          @Override
+          public Void delayed(final Duration delay) {
+            queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
+            return null;
+          }
+
+          @Override
+          public Void awaiting(final String target) {
+            if (completedTasks.contains(target)) {
+              queue.deferTo(queue.getElapsedTime(), taskId);
+            } else {
+              waitingTasks.computeIfAbsent(target, k -> new HashSet<>()).add(taskId);
+            }
+
+            return null;
+          }
+
+          @Override
+          public Void awaiting(final Condition<? super $Timeline> condition) {
+            conditionedTasks.put(info.id, condition);
+            return null;
+          }
+        });
       });
 
       for (final var profile : profiles.values()) {
@@ -137,7 +186,38 @@ public final class SimulationDriver {
         }
       }
 
-      // TODO: Check if any conditioned tasks should be signalled.
+      // Signal any tasks whose condition occurs soon.
+      // TODO: Only check conditions which could have possibly been affected by the latest batch of tasks.
+      //   This will require some rejigging, since we'll need to store alongside each condition
+      //   its dependencies *and* its last nextSatisfied() result.
+      {
+        var maxBound = queue.getNextJobTime().orElse(simulationDuration);
+        final var activatedTasks = new ArrayList<String>();
+
+        for (final var entry : conditionedTasks.entrySet()) {
+          final var taskId = entry.getKey();
+          final var condition = entry.getValue();
+
+          final var triggerTime$ = condition
+              .nextSatisfied(
+                  yieldTime::ask,
+                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
+                  true)
+              .map(queue.getElapsedTime()::plus);
+
+          if (triggerTime$.isEmpty()) continue;
+          final var triggerTime = triggerTime$.get();
+
+          if (triggerTime.shorterThan(maxBound)) activatedTasks.clear();
+          if (triggerTime.noLongerThan(maxBound)) activatedTasks.add(taskId);
+          maxBound = triggerTime;
+        }
+
+        for (final var taskId : activatedTasks) {
+          queue.deferTo(maxBound, taskId);
+          conditionedTasks.remove(taskId);
+        }
+      }
 
       return yieldTime;
     });
@@ -184,10 +264,6 @@ public final class SimulationDriver {
         mappedTaskRecords,
         mappedTaskWindows,
         startTime);
-
-    if (results.unfinishedActivities.keySet().stream().anyMatch($ -> !mappedTaskRecords.get($).isDaemon)) {
-      throw new Error("There should be no unfinished activities when simulating to completion.");
-    }
 
     return results;
   }
