@@ -124,6 +124,7 @@ public final class SimulationDriver {
           public String spawn(final Task<$Timeline> task) {
             final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
             if (info.isDaemon) childInfo.isDaemon = true;
+            info.children.add(childInfo.id);
 
             builder.signal(childInfo.id);
             return childInfo.id;
@@ -132,6 +133,7 @@ public final class SimulationDriver {
           @Override
           public String spawn(final String type, final Map<String, SerializedValue> arguments) {
             final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            info.children.add(childInfo.id);
 
             builder.signal(childInfo.id);
             return childInfo.id;
@@ -141,6 +143,7 @@ public final class SimulationDriver {
           public String defer(final Duration delay, final Task<$Timeline> task) {
             final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
             if (info.isDaemon) childInfo.isDaemon = true;
+            info.children.add(childInfo.id);
 
             queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
             return childInfo.id;
@@ -149,6 +152,7 @@ public final class SimulationDriver {
           @Override
           public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
             final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            info.children.add(childInfo.id);
 
             queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
             return childInfo.id;
@@ -158,13 +162,33 @@ public final class SimulationDriver {
         status.match(new TaskStatus.Visitor<$Timeline, Void>() {
           @Override
           public Void completed() {
-            completedTasks.add(info.id);
+            var ancestorId$ = Optional.of(info.id);
 
-            final var conditionedActivities = waitingTasks.remove(info.id);
-            if (conditionedActivities != null) {
-              for (final var conditionedTask : conditionedActivities) {
-                queue.deferTo(queue.getElapsedTime(), conditionedTask);
+            completeAncestors: while (ancestorId$.isPresent()) {
+              final var ancestorInfo = taskFactory.get(ancestorId$.get());
+
+              // If this task is still ongoing, it's definitely not complete.
+              if (!ancestorInfo.isDone()) break;
+
+              // Check if this task's children are all complete.
+              for (final var childId : ancestorInfo.children) {
+                if (!completedTasks.contains(taskFactory.get(childId).id)) {
+                  // It's not yet "truly" complete.
+                  break completeAncestors;
+                }
               }
+
+              // Mark this task as complete, and signal anybody waiting on it.
+              completedTasks.add(ancestorInfo.id);
+
+              final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
+              if (conditionedActivities != null) {
+                for (final var conditionedTask : conditionedActivities) {
+                  queue.deferTo(queue.getElapsedTime(), conditionedTask);
+                }
+              }
+
+              ancestorId$ = ancestorInfo.parent;
             }
 
             return null;
