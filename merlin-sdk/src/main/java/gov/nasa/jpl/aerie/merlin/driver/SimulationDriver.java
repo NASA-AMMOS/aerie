@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
@@ -263,28 +262,20 @@ public final class SimulationDriver {
 
     // Use the map of task id to activity id to replace task ids with the corresponding
     // activity id for use by the front end.
-    final var mappedTaskWindows = new HashMap<String, Window>();
-    final var mappedTaskRecords = new HashMap<String, TaskRecord>();
-    taskFactory.forEach(entry -> {
-      final var taskId = entry.getKey();
-      taskIdToActivityId.computeIfAbsent(taskId, $ -> UUID.randomUUID().toString());
-    });
+    final var taskInfo = new HashMap<String, TaskInfo<?>>();
     taskFactory.forEach(entry -> {
       final var taskId = entry.getKey();
       final var info = entry.getValue();
 
-      final var activityId = taskIdToActivityId.get(taskId);
-      final var mappedParentId = info.parent.map(taskIdToActivityId::get);
-
-      info.getWindow().ifPresent($ -> mappedTaskWindows.put(activityId, $));
-      mappedTaskRecords.put(activityId, new TaskRecord(info.typeName, info.arguments, mappedParentId, info.isDaemon));
+      taskIdToActivityId.computeIfAbsent(taskId, $ -> UUID.randomUUID().toString());
+      taskInfo.put(taskId, info);
     });
 
     return new SimulationResults(
         resourceSamples,
         new ArrayList<>(),
-        mappedTaskRecords,
-        mappedTaskWindows,
+        taskIdToActivityId,
+        taskInfo,
         startTime);
   }
 

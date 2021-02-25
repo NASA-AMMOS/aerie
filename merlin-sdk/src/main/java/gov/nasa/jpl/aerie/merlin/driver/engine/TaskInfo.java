@@ -1,14 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -21,8 +20,8 @@ public final class TaskInfo<$Timeline> {
   public Task<$Timeline> task;
 
   // The task type and arguments used to instantiate this task.
-  public final String typeName;
-  public final Map<String, SerializedValue> arguments;
+  // Empty if this is an anonymous task.
+  public final Optional<SerializedActivity> specification;
 
   // The elapsed time when this task was first resumed.
   public Optional<Duration> startTime = Optional.empty();
@@ -33,14 +32,12 @@ public final class TaskInfo<$Timeline> {
       final String id,
       final Optional<String> parent,
       final Task<$Timeline> task,
-      final String typeName,
-      final Map<String, SerializedValue> arguments)
+      final Optional<SerializedActivity> specification)
   {
     this.id = Objects.requireNonNull(id);
     this.parent = Objects.requireNonNull(parent);
     this.task = Objects.requireNonNull(task);
-    this.typeName = Objects.requireNonNull(typeName);
-    this.arguments = Objects.requireNonNull(arguments);
+    this.specification = Objects.requireNonNull(specification);
   }
 
   public Optional<Window> getWindow() {
