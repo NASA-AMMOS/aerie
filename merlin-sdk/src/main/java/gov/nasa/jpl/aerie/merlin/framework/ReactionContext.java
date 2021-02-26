@@ -57,10 +57,40 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
+  public String spawn(final Runnable task) {
+    if (this.history.isEmpty()) {
+      // We're running normally.
+      final var id = this.scheduler.spawn(new ThreadedTask<>(this.rootContext, task));
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+      this.nextBreadcrumbIndex += 1;
+
+      return id;
+    } else {
+      return respawn();
+    }
+  }
+
+  @Override
   public String spawn(final String type, final Map<String, SerializedValue> arguments) {
     if (this.history.isEmpty()) {
       // We're running normally.
       final var id = this.scheduler.spawn(type, arguments);
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+      this.nextBreadcrumbIndex += 1;
+
+      return id;
+    } else {
+      return respawn();
+    }
+  }
+
+  @Override
+  public String defer(final Duration duration, final Runnable task) {
+    if (this.history.isEmpty()) {
+      // We're running normally.
+      final var id = this.scheduler.defer(duration, new ThreadedTask<>(this.rootContext, task));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;

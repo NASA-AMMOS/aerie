@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
@@ -30,7 +31,17 @@ public final class TaskFactory<$Schema, $Timeline extends $Schema>
   {
     final var taskId = Integer.toString(this.nextTaskId++);
     final var task = instantiate(this.taskTypes.get(typeName), arguments);
-    final var info = new TaskInfo<>(taskId, parent, task, typeName, arguments);
+    final var info = new TaskInfo<>(taskId, parent, task, Optional.of(new SerializedActivity(typeName, arguments)));
+
+    this.taskInfo.put(taskId, info);
+
+    return info;
+  }
+
+  public TaskInfo<$Timeline>
+  createAnonymousTask(final Task<$Timeline> task, final Optional<String> parent) {
+    final var taskId = Integer.toString(this.nextTaskId++);
+    final var info = new TaskInfo<>(taskId, parent, task, Optional.empty());
 
     this.taskInfo.put(taskId, info);
 

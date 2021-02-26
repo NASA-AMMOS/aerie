@@ -22,6 +22,9 @@ public abstract class Model {
     this(registrar.getRootContext());
   }
 
+  protected final String spawn(final Runnable task) {
+    return this.context.get().spawn(task);
+  }
 
   protected final String spawn(final String type, final Map<String, SerializedValue> arguments) {
     return this.context.get().spawn(type, arguments);
@@ -29,6 +32,10 @@ public abstract class Model {
 
   protected final void call(final String type, final Map<String, SerializedValue> arguments) {
     this.waitFor(this.spawn(type, arguments));
+  }
+
+  protected final String defer(final Duration duration, final Runnable task) {
+    return this.context.get().defer(duration, task);
   }
 
   protected final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
