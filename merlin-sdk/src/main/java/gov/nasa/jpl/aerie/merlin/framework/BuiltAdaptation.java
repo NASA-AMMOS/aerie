@@ -41,8 +41,7 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
   @Override
   public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {
     return new ThreadedTask<>(this.rootContext, () -> {
-      final var ctx = this.rootContext.get();
-      this.daemons.forEach(ctx::spawn);
+      this.daemons.forEach(ModelActions::spawn);
     });
   }
 

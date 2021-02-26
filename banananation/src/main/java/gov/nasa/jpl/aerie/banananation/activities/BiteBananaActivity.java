@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
-import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.banananation.Flag;
-import gov.nasa.jpl.aerie.banananation.generated.Task;
+import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
 
@@ -25,10 +25,9 @@ public final class BiteBananaActivity {
     return this.biteSize > 0;
   }
 
-  public final class EffectModel extends Task {
-    public void run(final Mission mission) {
-      mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
-      mission.fruit.subtract(biteSize);
-    }
+  @EffectModel
+  public void run(final Mission mission) {
+    mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
+    mission.fruit.subtract(biteSize);
   }
 }

@@ -25,10 +25,6 @@ public final class AdaptationRecord {
     this.activityTypes = Objects.requireNonNull(activityTypes);
   }
 
-  public ClassName getMasterActivityTypesName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityTypes");
-  }
-
   public ClassName getFactoryName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedAdaptationFactory");
   }
@@ -37,7 +33,7 @@ public final class AdaptationRecord {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "Task");
   }
 
-  public ClassName getModelName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "Model");
+  public ClassName getActivityActionsName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityActions");
   }
 }

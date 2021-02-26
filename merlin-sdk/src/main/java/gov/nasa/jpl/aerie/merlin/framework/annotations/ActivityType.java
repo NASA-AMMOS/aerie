@@ -18,14 +18,6 @@ public @interface ActivityType {
     Class<? extends ActivityMapper<?>> value();
   }
 
-  @Retention(RetentionPolicy.CLASS)
-  @Target(ElementType.TYPE)
-  @interface WithExecutor {
-    Executor value();
-  }
-
-  enum Executor { Threaded, Replaying }
-
   /// A parameter to a task specification.
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.FIELD)
@@ -36,5 +28,13 @@ public @interface ActivityType {
   @Target(ElementType.METHOD)
   @interface Validation {
     String value();
+  }
+
+  enum Executor { Threaded, Replaying }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.METHOD)
+  @interface EffectModel {
+    Executor value() default Executor.Threaded;
   }
 }
