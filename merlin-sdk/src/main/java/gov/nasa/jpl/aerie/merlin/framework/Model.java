@@ -30,6 +30,10 @@ public abstract class Model {
     return this.context.get().spawn(type, arguments);
   }
 
+  protected final void call(final Runnable task) {
+    this.waitFor(this.spawn(task));
+  }
+
   protected final void call(final String type, final Map<String, SerializedValue> arguments) {
     this.waitFor(this.spawn(type, arguments));
   }
@@ -40,6 +44,10 @@ public abstract class Model {
 
   protected final String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
     return this.context.get().defer(duration, type, arguments);
+  }
+
+  protected final String defer(final long quantity, final Duration unit, final Runnable task) {
+    return this.defer(unit.times(quantity), task);
   }
 
   protected final String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {
