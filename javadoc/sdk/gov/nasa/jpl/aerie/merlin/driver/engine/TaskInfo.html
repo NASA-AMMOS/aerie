@@ -153,28 +153,28 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../protocol/SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#arguments">arguments</a></span></code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#endTime">endTime</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#id">id</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#isDaemon">isDaemon</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#parent">parent</a></span></code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr class="altColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../SerializedActivity.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SerializedActivity</a>&gt;</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#specification">specification</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
@@ -185,11 +185,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <tr class="altColor">
 <td class="colFirst"><code><a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;<a href="TaskInfo.html" title="type parameter in TaskInfo">$Timeline</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#task">task</a></span></code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#typeName">typeName</a></span></code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -210,11 +205,10 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,java.util.Optional,gov.nasa.jpl.aerie.merlin.protocol.Task,java.lang.String,java.util.Map)">TaskInfo</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.lang.String,java.util.Optional,gov.nasa.jpl.aerie.merlin.protocol.Task,java.util.Optional)">TaskInfo</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
         <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;parent,
         <a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;<a href="TaskInfo.html" title="type parameter in TaskInfo">$Timeline</a>&gt;&nbsp;task,
-        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;typeName,
-        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../protocol/SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</code></th>
+        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../SerializedActivity.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SerializedActivity</a>&gt;&nbsp;specification)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 </table>
@@ -306,22 +300,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <pre>public&nbsp;<a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;<a href="TaskInfo.html" title="type parameter in TaskInfo">$Timeline</a>&gt; task</pre>
 </li>
 </ul>
-<a id="typeName">
+<a id="specification">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>typeName</h4>
-<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a> typeName</pre>
-</li>
-</ul>
-<a id="arguments">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>arguments</h4>
-<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../protocol/SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a>&gt; arguments</pre>
+<h4>specification</h4>
+<pre>public final&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../SerializedActivity.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SerializedActivity</a>&gt; specification</pre>
 </li>
 </ul>
 <a id="startTime">
@@ -352,7 +337,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(java.lang.String,java.util.Optional,gov.nasa.jpl.aerie.merlin.protocol.Task,java.lang.String,java.util.Map)">
+<a id="&lt;init&gt;(java.lang.String,java.util.Optional,gov.nasa.jpl.aerie.merlin.protocol.Task,java.util.Optional)">
 <!--   -->
 </a>
 <ul class="blockListLast">
@@ -361,8 +346,7 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <pre>public&nbsp;TaskInfo&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;id,
                 <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&gt;&nbsp;parent,
                 <a href="../../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;<a href="TaskInfo.html" title="type parameter in TaskInfo">$Timeline</a>&gt;&nbsp;task,
-                <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>&nbsp;typeName,
-                <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../../protocol/SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a>&gt;&nbsp;arguments)</pre>
+                <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../SerializedActivity.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SerializedActivity</a>&gt;&nbsp;specification)</pre>
 </li>
 </ul>
 </li>
