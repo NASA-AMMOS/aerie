@@ -8,13 +8,13 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public abstract class Model {
-  private final Supplier<? extends Context<?>> context;
+  private final Supplier<? extends Context> context;
 
-  protected Model(final Supplier<? extends Context<?>> context) {
+  protected Model(final Supplier<? extends Context> context) {
     this.context = Objects.requireNonNull(context);
   }
 
-  protected Model(final Context<?> context) {
+  protected Model(final Context context) {
     this(() -> context);
   }
 

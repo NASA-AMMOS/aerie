@@ -808,9 +808,7 @@ public final class AdaptationProcessor implements Processor {
                                 ParameterizedTypeName.get(
                                     ClassName.get(java.util.function.Supplier.class),
                                     WildcardTypeName.subtypeOf(
-                                        ParameterizedTypeName.get(
-                                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))),
+                                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class))),
                                 "context")
                             .addModifiers(Modifier.FINAL)
                             .build())
@@ -950,9 +948,7 @@ public final class AdaptationProcessor implements Processor {
                     .builder(
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Scoped.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))),
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class)),
                         "context")
                     .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                     .build())
@@ -965,9 +961,7 @@ public final class AdaptationProcessor implements Processor {
                             .builder(
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Scoped.class),
-                                    ParameterizedTypeName.get(
-                                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                        WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))),
+                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class)),
                                 "context")
                             .addModifiers(Modifier.FINAL)
                             .build())
@@ -1007,9 +1001,7 @@ public final class AdaptationProcessor implements Processor {
                     .addParameter(
                         ParameterSpec
                             .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                    WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
                                 "context")
                             .build())
                     .addParameter(

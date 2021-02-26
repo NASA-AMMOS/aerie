@@ -13,10 +13,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 /* package-local */
-final class ReactionContext<$Schema, $Timeline extends $Schema>
-    implements Context<$Schema>
-{
-  private final Scoped<Context<$Schema>> rootContext;
+final class ReactionContext<$Timeline> implements Context {
+  private final Scoped<Context> rootContext;
   private final TaskHandle<$Timeline> handle;
   private Scheduler<$Timeline> scheduler;
   private Optional<Checkpoint<$Timeline>> history = Optional.empty();
@@ -25,7 +23,7 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   private int nextBreadcrumbIndex = 0;
 
   public ReactionContext(
-      final Scoped<Context<$Schema>> rootContext,
+      final Scoped<Context> rootContext,
       final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
       final Scheduler<$Timeline> scheduler,
       final TaskHandle<$Timeline> handle)
@@ -39,15 +37,23 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public <CellType> CellType ask(final Query<? super $Schema, ?, CellType> query) {
-    return this.history.orElseGet(this.scheduler::now).ask(query);
+  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedQuery = (Query<? super $Timeline, ?, CellType>) query;
+
+    return this.history.orElseGet(this.scheduler::now).ask(brandedQuery);
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.scheduler.emit(event, query);
+      // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+      @SuppressWarnings("unchecked")
+      final var brandedQuery = (Query<? super $Timeline, Event, ?>) query;
+
+      this.scheduler.emit(event, brandedQuery);
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;

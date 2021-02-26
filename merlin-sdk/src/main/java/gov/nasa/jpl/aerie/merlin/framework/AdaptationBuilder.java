@@ -26,14 +26,14 @@ import java.util.function.Supplier;
 public final class AdaptationBuilder<$Schema> {
   private final Schema.Builder<$Schema> schemaBuilder;
 
-  private final Scoped<Context<$Schema>> rootContext = Scoped.create();
+  private final Scoped<Context> rootContext = Scoped.create();
   private AdaptationBuilderState<$Schema> state = new UnbuiltState();
 
   public AdaptationBuilder(final Schema.Builder<$Schema> schemaBuilder) {
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
   }
 
-  public Supplier<? extends Context<$Schema>> getRootContext() {
+  public Supplier<? extends Context> getRootContext() {
     return this.rootContext;
   }
 
@@ -71,7 +71,7 @@ public final class AdaptationBuilder<$Schema> {
   public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
       // Keep our own reference to `rootContext` so that the ResourcesBuilder can get GC'd.
-      private final Scoped<Context<$Schema>> rootContext = AdaptationBuilder.this.rootContext;
+      private final Scoped<Context> rootContext = AdaptationBuilder.this.rootContext;
 
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
@@ -83,7 +83,7 @@ public final class AdaptationBuilder<$Schema> {
   public <Activity> void replayingTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
       // Keep our own reference to `rootContext` so that the ResourcesBuilder can get GC'd.
-      private final Scoped<Context<$Schema>> rootContext = AdaptationBuilder.this.rootContext;
+      private final Scoped<Context> rootContext = AdaptationBuilder.this.rootContext;
 
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {

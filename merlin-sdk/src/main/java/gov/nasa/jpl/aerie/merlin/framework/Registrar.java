@@ -16,7 +16,7 @@ public final class Registrar {
   }
 
   /*package-local*/
-  Supplier<? extends Context<?>> getRootContext() {
+  Supplier<? extends Context> getRootContext() {
     return this.builder.getRootContext();
   }
 

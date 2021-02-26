@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public final class ThreadedTask<$Schema, $Timeline extends $Schema>
-    implements Task<$Timeline>
-{
+public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   private final Thread thread;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
@@ -20,7 +18,7 @@ public final class ThreadedTask<$Schema, $Timeline extends $Schema>
   private boolean done = false;
   private Throwable failure = null;
 
-  public ThreadedTask(final Scoped<Context<$Schema>> rootContext, final Runnable task) {
+  public ThreadedTask(final Scoped<Context> rootContext, final Runnable task) {
     Objects.requireNonNull(rootContext);
     Objects.requireNonNull(task);
 

@@ -17,9 +17,9 @@ import java.util.Optional;
 public final class RealResourceSolver<$Schema>
     implements ResourceSolver<$Schema, RealResource, RealDynamics, RealCondition>
 {
-  private final Scoped<Context<$Schema>> rootContext;
+  private final Scoped<Context> rootContext;
 
-  public RealResourceSolver(final Scoped<Context<$Schema>> rootContext) {
+  public RealResourceSolver(final Scoped<Context> rootContext) {
     this.rootContext = Objects.requireNonNull(rootContext);
   }
 

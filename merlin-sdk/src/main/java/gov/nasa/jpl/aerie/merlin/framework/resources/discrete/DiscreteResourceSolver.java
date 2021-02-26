@@ -21,10 +21,10 @@ import java.util.Set;
 public final class DiscreteResourceSolver<$Schema, Resource>
     implements ResourceSolver<$Schema, DiscreteResource<Resource>, Resource, Set<Resource>>
 {
-  private final Scoped<Context<$Schema>> rootContext;
+  private final Scoped<Context> rootContext;
   private final ValueMapper<Resource> mapper;
 
-  public DiscreteResourceSolver(final Scoped<Context<$Schema>> rootContext, final ValueMapper<Resource> mapper) {
+  public DiscreteResourceSolver(final Scoped<Context> rootContext, final ValueMapper<Resource> mapper) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.mapper = Objects.requireNonNull(mapper);
   }

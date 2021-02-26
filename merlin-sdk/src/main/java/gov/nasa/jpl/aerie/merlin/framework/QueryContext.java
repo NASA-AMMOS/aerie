@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 
-public final class QueryContext<$Schema> implements Context<$Schema> {
+public final class QueryContext<$Schema> implements Context {
   private final Checkpoint<? extends $Schema> history;
 
   public QueryContext(final Checkpoint<? extends $Schema> history) {
@@ -15,12 +15,16 @@ public final class QueryContext<$Schema> implements Context<$Schema> {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<? super $Schema, ?, CellType> query) {
-    return this.history.ask(query);
+  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedQuery = (Query<? super $Schema, ?, CellType>) query;
+
+    return this.history.ask(brandedQuery);
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
     throw new IllegalStateException("Cannot update simulation state in a query-only context");
   }
 

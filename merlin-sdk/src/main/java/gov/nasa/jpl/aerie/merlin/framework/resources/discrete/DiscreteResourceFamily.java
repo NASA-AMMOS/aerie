@@ -15,12 +15,12 @@ import java.util.function.UnaryOperator;
 public final class DiscreteResourceFamily<$Schema, Resource>
     implements ResourceFamily<$Schema, DiscreteResource<Resource>, Set<Resource>>
 {
-  private final Scoped<Context<$Schema>> rootContext;
+  private final Scoped<Context> rootContext;
   private final ValueMapper<Resource> mapper;
   private final Map<String, DiscreteResource<Resource>> resources;
 
   public DiscreteResourceFamily(
-      final Scoped<Context<$Schema>> rootContext,
+      final Scoped<Context> rootContext,
       final ValueMapper<Resource> mapper,
       final Map<String, DiscreteResource<Resource>> resources)
   {
