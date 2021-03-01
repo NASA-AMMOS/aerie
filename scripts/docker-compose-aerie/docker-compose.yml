@@ -22,6 +22,7 @@ services:
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
   aerie_ui:
+    command: ["npm", "run", "start:production"]
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     depends_on: ["postgres"]
     ports: ["8080:80"]
