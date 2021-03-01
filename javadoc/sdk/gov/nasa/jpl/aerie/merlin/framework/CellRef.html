@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10};
+var data = {"i0":10,"i1":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -89,13 +89,13 @@ loadScripts(document, 'script');</script>
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>
@@ -115,14 +115,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></div>
-<h2 title="Class CellRef" class="title">Class CellRef&lt;Effect,&#8203;CellType&gt;</h2>
+<h2 title="Class CellRef" class="title">Class CellRef&lt;Event,&#8203;CellType&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.aerie.merlin.framework.CellRef&lt;Effect,&#8203;CellType&gt;</li>
+<li>gov.nasa.jpl.aerie.merlin.framework.CellRef&lt;Event,&#8203;CellType&gt;</li>
 </ul>
 </li>
 </ul>
@@ -130,7 +130,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <ul class="blockList">
 <li class="blockList">
 <hr>
-<pre>public final class <span class="typeNameLabel">CellRef&lt;Effect,&#8203;CellType&gt;</span>
+<pre>public final class <span class="typeNameLabel">CellRef&lt;Event,&#8203;CellType&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a></pre>
 </li>
 </ul>
@@ -138,28 +138,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <div class="summary">
 <ul class="blockList">
 <li class="blockList">
-<!-- ======== CONSTRUCTOR SUMMARY ======== -->
-<section role="region">
-<ul class="blockList">
-<li class="blockList"><a id="constructor.summary">
-<!--   -->
-</a>
-<h3>Constructor Summary</h3>
-<table class="memberSummary">
-<caption><span>Constructors</span><span class="tabEnd">&nbsp;</span></caption>
-<tr>
-<th class="colFirst" scope="col">Constructor</th>
-<th class="colLast" scope="col">Description</th>
-</tr>
-<tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(java.util.function.Supplier,gov.nasa.jpl.aerie.merlin.timeline.Query)">CellRef</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;$Schema&gt;&gt;&nbsp;context,
-       <a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;$Schema,&#8203;<a href="CellRef.html" title="type parameter in CellRef">Effect</a>,&#8203;<a href="CellRef.html" title="type parameter in CellRef">CellType</a>&gt;&nbsp;query)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-</table>
-</li>
-</ul>
-</section>
 <!-- ========== METHOD SUMMARY =========== -->
 <section role="region">
 <ul class="blockList">
@@ -176,20 +154,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Effect)">emit</a></span>&#8203;(<a href="CellRef.html" title="type parameter in CellRef">Effect</a>&nbsp;effect)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#emit(Event)">emit</a></span>&#8203;(<a href="CellRef.html" title="type parameter in CellRef">Event</a>&nbsp;event)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code><a href="CellRef.html" title="type parameter in CellRef">CellType</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#get()">get</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code>&lt;$Timeline&gt;<br><a href="CellRef.html" title="type parameter in CellRef">CellType</a></code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getAt(gov.nasa.jpl.aerie.merlin.protocol.Checkpoint)">getAt</a></span>&#8203;(<a href="../protocol/Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Checkpoint</a>&lt;$Timeline&gt;&nbsp;now)</code></th>
-<td class="colLast">
-<div class="block">Get the state of the referenced cell at a given time.</div>
-</td>
 </tr>
 </table>
 <ul class="blockList">
@@ -208,26 +179,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <div class="details">
 <ul class="blockList">
 <li class="blockList">
-<!-- ========= CONSTRUCTOR DETAIL ======== -->
-<section role="region">
-<ul class="blockList">
-<li class="blockList"><a id="constructor.detail">
-<!--   -->
-</a>
-<h3>Constructor Detail</h3>
-<a id="&lt;init&gt;(java.util.function.Supplier,gov.nasa.jpl.aerie.merlin.timeline.Query)">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>CellRef</h4>
-<pre>public&nbsp;CellRef&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Supplier.html?is-external=true" title="class or interface in java.util.function" class="externalLink">Supplier</a>&lt;? extends <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;$Schema&gt;&gt;&nbsp;context,
-               <a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;$Schema,&#8203;<a href="CellRef.html" title="type parameter in CellRef">Effect</a>,&#8203;<a href="CellRef.html" title="type parameter in CellRef">CellType</a>&gt;&nbsp;query)</pre>
-</li>
-</ul>
-</li>
-</ul>
-</section>
 <!-- ============ METHOD DETAIL ========== -->
 <section role="region">
 <ul class="blockList">
@@ -235,24 +186,6 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <!--   -->
 </a>
 <h3>Method Detail</h3>
-<a id="getAt(gov.nasa.jpl.aerie.merlin.protocol.Checkpoint)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getAt</h4>
-<pre class="methodSignature">public&nbsp;&lt;$Timeline&gt;&nbsp;<a href="CellRef.html" title="type parameter in CellRef">CellType</a>&nbsp;getAt&#8203;(<a href="../protocol/Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Checkpoint</a>&lt;$Timeline&gt;&nbsp;now)</pre>
-<div class="block">Get the state of the referenced cell at a given time.
-
- <p>Can be called outside of simulation context.</p></div>
-<dl>
-<dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>now</code> - The time from which to get the state of the cell.</dd>
-<dt><span class="returnLabel">Returns:</span></dt>
-<dd>the state of the referenced cell at the given time.</dd>
-</dl>
-</li>
-</ul>
 <a id="get()">
 <!--   -->
 </a>
@@ -264,13 +197,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 </ul>
 <a id="emit(java.lang.Object)">
 <!--   -->
-</a><a id="emit(Effect)">
+</a><a id="emit(Event)">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>emit</h4>
-<pre class="methodSignature">public&nbsp;void&nbsp;emit&#8203;(<a href="CellRef.html" title="type parameter in CellRef">Effect</a>&nbsp;effect)</pre>
+<pre class="methodSignature">public&nbsp;void&nbsp;emit&#8203;(<a href="CellRef.html" title="type parameter in CellRef">Event</a>&nbsp;event)</pre>
 </li>
 </ul>
 </li>
@@ -326,13 +259,13 @@ extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/ja
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="subNavList">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
+<li>Constr&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>

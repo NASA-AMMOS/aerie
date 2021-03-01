@@ -115,14 +115,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></div>
-<h2 title="Class ThreadedTask" class="title">Class ThreadedTask&lt;$Schema,&#8203;$Timeline extends $Schema&gt;</h2>
+<h2 title="Class ThreadedTask" class="title">Class ThreadedTask&lt;$Timeline&gt;</h2>
 </div>
 <div class="contentContainer">
 <ul class="inheritance">
 <li><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">java.lang.Object</a></li>
 <li>
 <ul class="inheritance">
-<li>gov.nasa.jpl.aerie.merlin.framework.ThreadedTask&lt;$Schema,&#8203;$Timeline&gt;</li>
+<li>gov.nasa.jpl.aerie.merlin.framework.ThreadedTask&lt;$Timeline&gt;</li>
 </ul>
 </li>
 </ul>
@@ -134,7 +134,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd><code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;</code></dd>
 </dl>
 <hr>
-<pre>public final class <span class="typeNameLabel">ThreadedTask&lt;$Schema,&#8203;$Timeline extends $Schema&gt;</span>
+<pre>public final class <span class="typeNameLabel">ThreadedTask&lt;$Timeline&gt;</span>
 extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>
 implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;</pre>
 </li>
@@ -157,7 +157,7 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aeri
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr class="altColor">
-<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)">ThreadedTask</a></span>&#8203;(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="ThreadedTask.html" title="type parameter in ThreadedTask">$Schema</a>&gt;&gt;&nbsp;rootContext,
+<th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)">ThreadedTask</a></span>&#8203;(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&gt;&nbsp;rootContext,
             <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
@@ -214,7 +214,7 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aeri
 <ul class="blockListLast">
 <li class="blockList">
 <h4>ThreadedTask</h4>
-<pre>public&nbsp;ThreadedTask&#8203;(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&lt;<a href="ThreadedTask.html" title="type parameter in ThreadedTask">$Schema</a>&gt;&gt;&nbsp;rootContext,
+<pre>public&nbsp;ThreadedTask&#8203;(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&gt;&nbsp;rootContext,
                     <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&nbsp;task)</pre>
 </li>
 </ul>
@@ -237,7 +237,7 @@ implements <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aeri
 <pre class="methodSignature">public&nbsp;<a href="../protocol/TaskStatus.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">TaskStatus</a>&lt;<a href="ThreadedTask.html" title="type parameter in ThreadedTask">$Timeline</a>&gt;&nbsp;step&#8203;(<a href="../protocol/Scheduler.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Scheduler</a>&lt;<a href="ThreadedTask.html" title="type parameter in ThreadedTask">$Timeline</a>&gt;&nbsp;scheduler)</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../protocol/Task.html#step(gov.nasa.jpl.aerie.merlin.protocol.Scheduler)">step</a></code>&nbsp;in interface&nbsp;<code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;<a href="ThreadedTask.html" title="type parameter in ThreadedTask">$Schema</a>&gt;</code></dd>
+<dd><code><a href="../protocol/Task.html#step(gov.nasa.jpl.aerie.merlin.protocol.Scheduler)">step</a></code>&nbsp;in interface&nbsp;<code><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;<a href="ThreadedTask.html" title="type parameter in ThreadedTask">$Timeline</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
