@@ -4,9 +4,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
@@ -14,7 +12,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,26 +19,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public final class AdaptationBuilder<$Schema> {
   private final Schema.Builder<$Schema> schemaBuilder;
 
-  private final Scoped<Context<$Schema>> rootContext = Scoped.create();
   private AdaptationBuilderState<$Schema> state = new UnbuiltState();
 
   public AdaptationBuilder(final Schema.Builder<$Schema> schemaBuilder) {
     this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
   }
 
-  public Supplier<? extends Context<$Schema>> getRootContext() {
-    return this.rootContext;
+  public boolean isBuilt() {
+    return state.isBuilt();
   }
 
   public <Event, Effect, CellType>
   CellRef<Event, CellType>
   register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return new CellRef<>(this.getRootContext(), this.schemaBuilder.register(projection, applicator));
+    return new CellRef<>(this.schemaBuilder.register(projection, applicator));
   }
 
   public <Resource>
@@ -57,16 +52,8 @@ public final class AdaptationBuilder<$Schema> {
     this.state.real(name, resource);
   }
 
-  public void constraint(final String id, final Condition<?> condition) {
-    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
-    @SuppressWarnings("unchecked")
-    final var brandedCondition = (Condition<$Schema>) condition;
-
-    this.state.constraint(id, brandedCondition);
-  }
-
-  public void daemon(final String id, final Runnable task) {
-    this.state.daemon(id, task);
+  public void daemon(final Runnable task) {
+    this.state.daemon(task);
   }
 
   public void taskType(final String id, final TaskSpecType<$Schema, ?> taskSpecType) {
@@ -75,24 +62,18 @@ public final class AdaptationBuilder<$Schema> {
 
   public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      // Keep our own reference to `rootContext` so that the ResourcesBuilder can get GC'd.
-      private final Scoped<Context<$Schema>> rootContext = AdaptationBuilder.this.rootContext;
-
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ThreadedTask<>(this.rootContext, () -> task.accept(activity));
+        return new ThreadedTask<>(ModelActions.context, () -> task.accept(activity));
       }
     });
   }
 
   public <Activity> void replayingTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      // Keep our own reference to `rootContext` so that the ResourcesBuilder can get GC'd.
-      private final Scoped<Context<$Schema>> rootContext = AdaptationBuilder.this.rootContext;
-
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ReplayingTask<>(this.rootContext, () -> task.accept(activity));
+        return new ReplayingTask<>(ModelActions.context, () -> task.accept(activity));
       }
     });
   }
@@ -112,6 +93,8 @@ public final class AdaptationBuilder<$Schema> {
 
 
   private interface AdaptationBuilderState<$Schema> {
+    boolean isBuilt();
+
     <Resource>
     void
     discrete(String name,
@@ -123,12 +106,7 @@ public final class AdaptationBuilder<$Schema> {
          RealResource resource);
 
     void
-    constraint(String id,
-               Condition<$Schema> condition);
-
-    void
-    daemon(String id,
-           Runnable task);
+    daemon(Runnable task);
 
     void
     taskType(String id,
@@ -140,10 +118,14 @@ public final class AdaptationBuilder<$Schema> {
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
-    private final List<Pair<String, Map<String, SerializedValue>>> daemons = new ArrayList<>();
+    private final List<Runnable> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
-    private final Map<String, Condition<$Schema>> constraints = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
+
+    @Override
+    public boolean isBuilt() {
+      return false;
+    }
 
     @Override
     public <Resource>
@@ -152,7 +134,10 @@ public final class AdaptationBuilder<$Schema> {
         final DiscreteResource<Resource> resource,
         final ValueMapper<Resource> mapper)
     {
-      this.resourceFamilies.add(new DiscreteResourceFamily<>(mapper, Map.of(name, resource)));
+      this.resourceFamilies.add(new DiscreteResourceFamily<>(
+          ModelActions.context,
+          mapper,
+          Map.of(name, resource)));
     }
 
     @Override
@@ -161,16 +146,8 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void constraint(final String id, final Condition<$Schema> condition) {
-      this.constraints.put(id, condition);
-    }
-
-    @Override
-    public void daemon(final String id, final Runnable task) {
-      final var daemonType = new DaemonTaskType<>(id, task, rootContext);
-
-      this.taskSpecTypes.put(daemonType.getName(), daemonType);
-      this.daemons.add(Pair.of(daemonType.getName(), Map.of()));
+    public void daemon(final Runnable task) {
+      this.daemons.add(task);
     }
 
     @Override
@@ -180,13 +157,13 @@ public final class AdaptationBuilder<$Schema> {
 
     @Override
     public BuiltAdaptation<$Schema> build(final Schema<$Schema> schema) {
-      this.resourceFamilies.add(new RealResourceFamily<>(this.realResources));
+      this.resourceFamilies.add(new RealResourceFamily<>(ModelActions.context, this.realResources));
 
       final var adaptation = new BuiltAdaptation<>(
+          ModelActions.context,
           schema,
           this.resourceFamilies,
           this.daemons,
-          this.constraints,
           this.taskSpecTypes);
 
       AdaptationBuilder.this.state = new BuiltState(adaptation);
@@ -203,6 +180,11 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
+    public boolean isBuilt() {
+      return true;
+    }
+
+    @Override
     public <Resource>
     void discrete(
         final String name,
@@ -218,12 +200,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void constraint(final String id, final Condition<$Schema> condition) {
-      throw new IllegalStateException("Constraints cannot be added after the schema is built");
-    }
-
-    @Override
-    public void daemon(final String id, final Runnable task) {
+    public void daemon(final Runnable task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

@@ -1,10 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
@@ -14,21 +13,22 @@ import java.util.Objects;
 import java.util.Optional;
 
 /* package-local */
-final class ReactionContext<$Schema, $Timeline extends $Schema>
-    implements Context<$Schema>
-{
+final class ReactionContext<$Timeline> implements Context {
+  private final Scoped<Context> rootContext;
   private final TaskHandle<$Timeline> handle;
   private Scheduler<$Timeline> scheduler;
-  private Optional<History<$Timeline>> history = Optional.empty();
+  private Optional<Checkpoint<$Timeline>> history = Optional.empty();
 
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs;
   private int nextBreadcrumbIndex = 0;
 
   public ReactionContext(
+      final Scoped<Context> rootContext,
       final List<ActivityBreadcrumb<$Timeline>> breadcrumbs,
       final Scheduler<$Timeline> scheduler,
       final TaskHandle<$Timeline> handle)
   {
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.breadcrumbs = Objects.requireNonNull(breadcrumbs);
     this.scheduler = scheduler;
     this.handle = handle;
@@ -37,19 +37,43 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public History<$Timeline> now() {
-    return this.history.orElseGet(this.scheduler::now);
+  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedQuery = (Query<? super $Timeline, ?, CellType>) query;
+
+    return this.history.orElseGet(this.scheduler::now).ask(brandedQuery);
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<? super $Schema, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      this.scheduler.emit(event, query);
+      // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+      @SuppressWarnings("unchecked")
+      final var brandedQuery = (Query<? super $Timeline, Event, ?>) query;
+
+      this.scheduler.emit(event, brandedQuery);
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
+      this.nextBreadcrumbIndex += 1;
     } else {
-      // TODO: Avoid leaving garbage behind -- find some way to remove regenerated events
-      //   on dead-end branches when references to it disappear.
-      this.history = this.history.map(now -> now.emit(event, query));
+      readvance();
+    }
+  }
+
+  @Override
+  public String spawn(final Runnable task) {
+    if (this.history.isEmpty()) {
+      // We're running normally.
+      final var id = this.scheduler.spawn(new ThreadedTask<>(this.rootContext, task));
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+      this.nextBreadcrumbIndex += 1;
+
+      return id;
+    } else {
+      return respawn();
     }
   }
 
@@ -58,6 +82,21 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
     if (this.history.isEmpty()) {
       // We're running normally.
       final var id = this.scheduler.spawn(type, arguments);
+
+      this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
+      this.nextBreadcrumbIndex += 1;
+
+      return id;
+    } else {
+      return respawn();
+    }
+  }
+
+  @Override
+  public String defer(final Duration duration, final Runnable task) {
+    if (this.history.isEmpty()) {
+      // We're running normally.
+      final var id = this.scheduler.defer(duration, new ThreadedTask<>(this.rootContext, task));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;
@@ -110,14 +149,16 @@ final class ReactionContext<$Schema, $Timeline extends $Schema>
   }
 
   @Override
-  public void waitUntil(final Condition<?> condition) {
+  public void waitUntil(final Condition condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
 
-      // SAFETY: All objects accessible within a single adaptation instance have the same brand.
-      @SuppressWarnings("unchecked")
-      final var brandedCondition = (Condition<$Schema>) condition;
-      this.scheduler = this.handle.yield(TaskStatus.awaiting(brandedCondition));
+      this.scheduler = this.handle.yield(TaskStatus.awaiting((now, scope, positive) -> {
+        // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
+        return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(
+            new QueryContext<>(now),
+            () -> condition.nextSatisfied(scope, positive));
+      }));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
       this.nextBreadcrumbIndex += 1;

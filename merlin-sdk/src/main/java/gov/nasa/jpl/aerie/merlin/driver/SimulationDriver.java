@@ -1,30 +1,35 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
+import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public final class SimulationDriver {
   public static <$Schema> SimulationResults simulate(
@@ -32,8 +37,8 @@ public final class SimulationDriver {
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration,
-      final Duration samplingPeriod
-  ) throws TaskSpecInstantiationException
+      final Duration samplingPeriod)
+  throws TaskSpecInstantiationException
   {
     return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration, samplingPeriod);
   }
@@ -46,83 +51,231 @@ public final class SimulationDriver {
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration,
-      final Duration samplingPeriod
-  ) throws TaskSpecInstantiationException
+      final Duration samplingPeriod)
+  throws TaskSpecInstantiationException
   {
-    final var activityTypes = adaptation.getTaskSpecificationTypes();
-    final var taskSpecs = new ArrayList<Triple<Duration, String, TaskSpec<$Schema, ?>>>();
-    final var daemonSet = new HashSet<String>();
+    final var taskIdToActivityId = new HashMap<String, String>();
+    final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
 
-    for (final var daemon : adaptation.getDaemons()) {
+    // A time-ordered queue of all scheduled future tasks.
+    final var queue = new TaskQueue<String>();
+    // The set of all tasks that have completed.
+    final var completedTasks = new HashSet<String>();
+    // For each task, a set of tasks awaiting its completion (if any).
+    final var waitingTasks = new HashMap<String, Set<String>>();
+    // For each task, the condition blocking its progress (if any).
+    final var conditionedTasks = new HashMap<String, Condition<? super $Timeline>>();
+
+    {
+      final var daemon = adaptation.<$Timeline>getDaemon();
       final var activityId = UUID.randomUUID().toString();
-      try {
-        taskSpecs.add(Triple.of(Duration.ZERO,
-                                activityId,
-                                TaskSpec.instantiate(activityTypes.get(daemon.getKey()), daemon.getValue())));
-      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
-        throw new TaskSpecInstantiationException(activityId, e);
-      }
-      daemonSet.add(activityId);
+
+      final var info = taskFactory.createAnonymousTask(daemon, Optional.empty());
+      info.isDaemon = true;
+
+      taskIdToActivityId.put(info.id, activityId);
+      queue.deferTo(Duration.ZERO, info.id);
     }
 
     for (final var entry : schedule.entrySet()) {
       final var activityId = entry.getKey();
       final var startDelta = entry.getValue().getLeft();
-      final var serializedInstance = entry.getValue().getRight();
-      final var type = serializedInstance.getTypeName();
-      final var arguments = serializedInstance.getParameters();
+      final var activity = entry.getValue().getRight();
 
+      final TaskInfo<$Timeline> info;
       try {
-        taskSpecs.add(Triple.of(startDelta,
-                                activityId,
-                                TaskSpec.instantiate(activityTypes.get(type), arguments)));
-      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
-        throw new TaskSpecInstantiationException(activityId, e);
+        info = taskFactory.createTask(activity.getTypeName(), activity.getParameters(), Optional.empty());
+      } catch (final InstantiationException ex) {
+        throw new TaskSpecInstantiationException(activityId, ex);
       }
+
+      taskIdToActivityId.put(info.id, activityId);
+      queue.deferTo(startDelta, info.id);
     }
-
-    final BiFunction<String, Map<String, SerializedValue>, Task<$Timeline>> createTask = (type, arguments) -> {
-      final var taskSpecType = activityTypes.get(type);
-      try {
-        return TaskSpec.instantiate(taskSpecType, arguments).createTask();
-      } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
-        throw new Error(String.format("Could not instantiate task of type %s with arguments %s",
-                                      taskSpecType.getName(),
-                                      arguments));
-      }
-    };
-
-    final var simulator = new SimulationEngine<>(database.origin(), createTask);
-    final var taskIdToActivityId = new HashMap<String, String>();
-    for (final var entry : taskSpecs) {
-      final var activityId = entry.getMiddle();
-      final var startDelta = entry.getLeft();
-      final var taskSpec = entry.getRight();
-
-      final var taskId = taskSpec.enqueueTask(startDelta, simulator);
-      taskIdToActivityId.put(taskId, activityId);
-    }
-
-    simulator.runFor(simulationDuration);
 
     // Collect profiles for all resources.
-    final var profiles = new HashMap<String, Profile<?, ?>>();
-    adaptation.getResourceFamilies().forEach(group -> {
-      forEachProfile(database, simulator.getCurrentHistory(), group, profiles::put);
+    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?, ?>>();
+    for (final var family : adaptation.getResourceFamilies()) createProfilesForFamily(family, profiles::put);
+
+    var now = database.origin();
+    for (final var profile : profiles.values()) profile.updateAt(now);
+
+    // Step the stimulus program forward until we reach the end of the simulation.
+    final var changedTables = new boolean[database.getTableCount()];
+    now = queue.consumeUpTo(simulationDuration, now, (delta, frame) -> {
+      Arrays.fill(changedTables, false);
+
+      final var yieldTime = TaskFrame.runToCompletion(frame, (taskId, builder) -> {
+        final var info = taskFactory.get(taskId);
+
+        final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
+          @Override
+          public Checkpoint<$Timeline> now() {
+            return builder.now();
+          }
+
+          @Override
+          public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+            changedTables[query.getTableIndex()] = true;
+            builder.emit(event, query);
+          }
+
+          @Override
+          public String spawn(final Task<$Timeline> task) {
+            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
+            if (info.isDaemon) childInfo.isDaemon = true;
+            info.children.add(childInfo.id);
+
+            builder.signal(childInfo.id);
+            return childInfo.id;
+          }
+
+          @Override
+          public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            info.children.add(childInfo.id);
+
+            builder.signal(childInfo.id);
+            return childInfo.id;
+          }
+
+          @Override
+          public String defer(final Duration delay, final Task<$Timeline> task) {
+            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
+            if (info.isDaemon) childInfo.isDaemon = true;
+            info.children.add(childInfo.id);
+
+            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
+            return childInfo.id;
+          }
+
+          @Override
+          public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
+            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            info.children.add(childInfo.id);
+
+            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
+            return childInfo.id;
+          }
+        });
+
+        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
+          @Override
+          public Void completed() {
+            var ancestorId$ = Optional.of(info.id);
+
+            completeAncestors: while (ancestorId$.isPresent()) {
+              final var ancestorInfo = taskFactory.get(ancestorId$.get());
+
+              // If this task is still ongoing, it's definitely not complete.
+              if (!ancestorInfo.isDone()) break;
+
+              // Check if this task's children are all complete.
+              for (final var childId : ancestorInfo.children) {
+                if (!completedTasks.contains(taskFactory.get(childId).id)) {
+                  // It's not yet "truly" complete.
+                  break completeAncestors;
+                }
+              }
+
+              // Mark this task as complete, and signal anybody waiting on it.
+              completedTasks.add(ancestorInfo.id);
+
+              final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
+              if (conditionedActivities != null) {
+                for (final var conditionedTask : conditionedActivities) {
+                  queue.deferTo(queue.getElapsedTime(), conditionedTask);
+                }
+              }
+
+              ancestorId$ = ancestorInfo.parent;
+            }
+
+            return null;
+          }
+
+          @Override
+          public Void delayed(final Duration delay) {
+            queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
+            return null;
+          }
+
+          @Override
+          public Void awaiting(final String target) {
+            if (completedTasks.contains(target)) {
+              queue.deferTo(queue.getElapsedTime(), taskId);
+            } else {
+              waitingTasks.computeIfAbsent(target, k -> new HashSet<>()).add(taskId);
+            }
+
+            return null;
+          }
+
+          @Override
+          public Void awaiting(final Condition<? super $Timeline> condition) {
+            conditionedTasks.put(info.id, condition);
+            return null;
+          }
+        });
+      });
+
+      for (final var profile : profiles.values()) {
+        profile.extendBy(delta);
+
+        // Only fetch a new dynamics if it could possibly have been changed by the tasks we just ran.
+        for (final var dependency : profile.lastDependencies) {
+          if (changedTables[dependency.getTableIndex()]) {
+            profile.updateAt(yieldTime);
+            break;
+          }
+        }
+      }
+
+      // Signal any tasks whose condition occurs soon.
+      // TODO: Only check conditions which could have possibly been affected by the latest batch of tasks.
+      //   This will require some rejigging, since we'll need to store alongside each condition
+      //   its dependencies *and* its last nextSatisfied() result.
+      {
+        var maxBound = queue.getNextJobTime().orElse(simulationDuration);
+        final var activatedTasks = new ArrayList<String>();
+
+        for (final var entry : conditionedTasks.entrySet()) {
+          final var taskId = entry.getKey();
+          final var condition = entry.getValue();
+
+          final var triggerTime$ = condition
+              .nextSatisfied(
+                  yieldTime::ask,
+                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
+                  true)
+              .map(queue.getElapsedTime()::plus);
+
+          if (triggerTime$.isEmpty()) continue;
+          final var triggerTime = triggerTime$.get();
+
+          if (triggerTime.shorterThan(maxBound)) activatedTasks.clear();
+          if (triggerTime.noLongerThan(maxBound)) activatedTasks.add(taskId);
+          maxBound = triggerTime;
+        }
+
+        for (final var taskId : activatedTasks) {
+          queue.deferTo(maxBound, taskId);
+          conditionedTasks.remove(taskId);
+        }
+      }
+
+      return yieldTime;
     });
 
-    // Collect samples for all resources.
+    // Identify all sample times.
     final var timestamps = new ArrayList<Duration>();
     {
       var elapsedTime = Duration.ZERO;
-      while (!elapsedTime.longerThan(simulationDuration)) {
+      while (elapsedTime.shorterThan(simulationDuration)) {
         timestamps.add(elapsedTime);
         elapsedTime = elapsedTime.plus(samplingPeriod);
       }
-
-      if (!simulationDuration.remainderOf(samplingPeriod).isZero()) {
-        timestamps.add(simulationDuration);
-      }
+      timestamps.add(simulationDuration);
     }
 
     // Collect samples for all resources.
@@ -131,153 +284,35 @@ public final class SimulationDriver {
       resourceSamples.put(name, SampleTaker.sample(profile, timestamps));
     });
 
-    // Collect windows for all conditions.
-    final var constraintViolations = new ArrayList<ConstraintViolation>();
-    adaptation.getConstraints().forEach((id, condition) -> {
-      final var windows = condition.interpret(
-          new ConditionSolver<>(
-              database,
-              simulator.getCurrentHistory(),
-              Window.between(Duration.ZERO, simulationDuration)));
-
-      final var violableConstraint = new ViolableConstraint();
-      violableConstraint.name = id;
-      violableConstraint.id = id;
-      violableConstraint.category = "None";
-      violableConstraint.message = "None";
-      constraintViolations.add(new ConstraintViolation(windows, violableConstraint));
-    });
-
     // Use the map of task id to activity id to replace task ids with the corresponding
     // activity id for use by the front end.
-    final var mappedTaskWindows = new HashMap<String, Window>();
-    final var mappedTaskRecords = new HashMap<String, TaskRecord>();
-    {
-      final var taskRecords = simulator.getTaskRecords();
-      final var taskWindows = simulator.getTaskWindows();
+    final var taskInfo = new HashMap<String, TaskInfo<?>>();
+    taskFactory.forEach(entry -> {
+      final var taskId = entry.getKey();
+      final var info = entry.getValue();
 
-      // Generate activity ids for all tasks
-      taskRecords.forEach((id, record) -> {
-        taskIdToActivityId.computeIfAbsent(id, $ -> UUID.randomUUID().toString());
-      });
+      taskIdToActivityId.computeIfAbsent(taskId, $ -> UUID.randomUUID().toString());
+      taskInfo.put(taskId, info);
+    });
 
-      taskWindows.forEach((id, window) -> {
-        mappedTaskWindows.put(taskIdToActivityId.get(id), window);
-      });
-
-      taskRecords.forEach((id, record) -> {
-        final var activityId = taskIdToActivityId.get(id);
-        final var mappedParentId = record.parentId.map(taskIdToActivityId::get);
-
-        mappedTaskRecords.put(activityId, new TaskRecord(record.type, record.arguments, mappedParentId));
-      });
-    }
-
-    final var results = new SimulationResults(
+    return new SimulationResults(
         resourceSamples,
-        constraintViolations,
-        mappedTaskRecords,
-        mappedTaskWindows,
+        new ArrayList<>(),
+        taskIdToActivityId,
+        taskInfo,
         startTime);
-
-    if (!daemonSet.containsAll(results.unfinishedActivities.keySet())) {
-      throw new Error("There should be no unfinished activities when simulating to completion.");
-    }
-
-    return results;
   }
 
-  public static <$Timeline, Resource>
+  private static <$Schema, Resource, Condition>
   void
-  forEachProfile(
-      final SimulationTimeline<$Timeline> database,
-      final History<$Timeline> endTime,
-      final ResourceFamily<? super $Timeline, Resource, ?> family,
-      final BiConsumer<String, Profile<?, ?>> consumer)
+  createProfilesForFamily(
+      final ResourceFamily<$Schema, Resource, Condition> family,
+      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?, ?>> handler)
   {
     final var solver = family.getSolver();
-    final var resources = family.getResources();
 
-    resources.forEach((name, resource) -> {
-      consumer.accept(name, computeProfile(database, endTime, solver, resource));
-    });
-  }
-
-  public static <S, T>
-  List<Pair<S,T>>
-  constructPairList(
-      final List<S> a,
-      final List<T> b)
-  {
-    final var pair = new ArrayList<Pair<S, T>>(Math.min(a.size(), b.size()));
-    final var aIter = a.iterator();
-    final var bIter = b.iterator();
-    while (aIter.hasNext() && bIter.hasNext()) {
-      pair.add(Pair.of(aIter.next(), bIter.next()));
-    }
-    return pair;
-  }
-
-  public static <$Timeline, Resource, Dynamics, Condition>
-  Profile<Dynamics, Condition>
-  computeProfile(
-      final SimulationTimeline<$Timeline> database,
-      final History<$Timeline> endTime,
-      final ResourceSolver<? super $Timeline, Resource, Dynamics, Condition> solver,
-      final Resource resource)
-  {
-    return database.accumulateUpTo(endTime, new Profile<>(solver), (profile, info) -> {
-      final var history = info.getLeft();
-      final var window = info.getRight();
-
-      return profile.append(
-          window.end.minus(window.start),
-          solver.getDynamics(resource, history));
-    });
-  }
-
-  private static final class TaskSpec<$Schema, Spec> {
-    private final Spec spec;
-    private final TaskSpecType<$Schema, Spec> specType;
-
-    private TaskSpec(
-        final Spec spec,
-        final TaskSpecType<$Schema, Spec> specType)
-    {
-      this.spec = Objects.requireNonNull(spec);
-      this.specType = Objects.requireNonNull(specType);
-    }
-
-    public static <$Schema, Spec>
-    TaskSpec<$Schema, Spec> instantiate(
-        final TaskSpecType<$Schema, Spec> specType,
-        final Map<String, SerializedValue> arguments)
-    throws TaskSpecType.UnconstructableTaskSpecException
-    {
-      return new TaskSpec<>(specType.instantiate(arguments), specType);
-    }
-
-    public String getTypeName() {
-      return this.specType.getName();
-    }
-
-    public Map<String, SerializedValue> getArguments() {
-      return this.specType.getArguments(this.spec);
-    }
-
-    public List<String> getValidationFailures() {
-      return this.specType.getValidationFailures(this.spec);
-    }
-
-    public <$Timeline extends $Schema> Task<$Timeline> createTask() {
-      return this.specType.createTask(this.spec);
-    }
-
-    public <$Timeline extends $Schema> String enqueueTask(
-        final Duration delay,
-        final SimulationEngine<$Timeline> engine)
-    {
-      return engine.defer(delay, this.spec, this.specType);
+    for (final var entry : family.getResources().entrySet()) {
+      handler.accept(entry.getKey(), new ProfileBuilder<>(solver, entry.getValue()));
     }
   }
 
@@ -287,6 +322,20 @@ public final class SimulationDriver {
     public TaskSpecInstantiationException(final String id, final Throwable cause) {
       super(cause);
       this.id = id;
+    }
+  }
+
+  public static class InstantiationException extends RuntimeException {
+    public final String typeName;
+    public final Map<String, SerializedValue> arguments;
+
+    public InstantiationException(final String typeName, final Map<String, SerializedValue> arguments, final Throwable cause) {
+      super(
+          String.format("Could not instantiate task of type %s with arguments %s", typeName, arguments),
+          cause);
+
+      this.typeName = Objects.requireNonNull(typeName);
+      this.arguments = Objects.requireNonNull(arguments);
     }
   }
 }

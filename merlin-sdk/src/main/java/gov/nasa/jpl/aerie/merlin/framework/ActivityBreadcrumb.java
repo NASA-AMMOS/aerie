@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 
 public abstract class ActivityBreadcrumb<$Timeline> {
   private ActivityBreadcrumb() {}
 
   public static final class Advance<$Timeline> extends ActivityBreadcrumb<$Timeline> {
-    public final History<$Timeline> next;
-    public Advance(final History<$Timeline> next) {
+    public final Checkpoint<$Timeline> next;
+    public Advance(final Checkpoint<$Timeline> next) {
       this.next = next;
     }
   }

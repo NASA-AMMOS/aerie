@@ -10,20 +10,19 @@ import java.util.Objects;
 public final class AdaptationRecord {
   public final PackageElement $package;
   public final TypeElement topLevelModel;
+  public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
 
   public AdaptationRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
+      final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
+    this.typeRules = Objects.requireNonNull(typeRules);
     this.activityTypes = Objects.requireNonNull(activityTypes);
-  }
-
-  public ClassName getMasterActivityTypesName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityTypes");
   }
 
   public ClassName getFactoryName() {
@@ -34,7 +33,7 @@ public final class AdaptationRecord {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "Task");
   }
 
-  public ClassName getModelName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "Model");
+  public ClassName getActivityActionsName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityActions");
   }
 }

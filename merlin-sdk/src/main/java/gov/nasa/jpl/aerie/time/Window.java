@@ -65,11 +65,11 @@ public final class Window {
   }
 
   public boolean overlaps(final Window other) {
-    return !other.isEmpty() && !this.isEmpty() && !this.end.shorterThan(other.start) && !other.end.shorterThan(this.start);
+    return !other.isEmpty() && !this.isEmpty() && this.end.noShorterThan(other.start) && other.end.noShorterThan(this.start);
   }
 
   public boolean contains(final Window other) {
-    return other.isEmpty() || (!this.isEmpty() && !this.end.shorterThan(other.end) && !other.start.shorterThan(this.start));
+    return other.isEmpty() || (!this.isEmpty() && this.end.noShorterThan(other.end) && other.start.noShorterThan(this.start));
   }
 
   public Duration duration() {
@@ -110,10 +110,10 @@ public final class Window {
         // This interval fully contains the other, splitting into two disjoint intervals.
         // The largest interval containing these intervals is the empty interval.
         return Window.EMPTY;
-      } else if (!other.start.longerThan(self.start) && !self.start.longerThan(other.end) && other.end.shorterThan(self.end)) {
+      } else if (other.start.noLongerThan(self.start) && self.start.noLongerThan(other.end) && other.end.shorterThan(self.end)) {
         // This interval is cut on the left by the other.
         return Window.between(other.end.plus(Duration.EPSILON), self.end);
-      } else if (self.start.shorterThan(other.start) && !other.start.longerThan(self.end) && !self.end.longerThan(other.end)) {
+      } else if (self.start.shorterThan(other.start) && other.start.noLongerThan(self.end) && self.end.noLongerThan(other.end)) {
         // This interval is cut on the right by the other.
         return Window.between(self.start, other.start.minus(Duration.EPSILON));
       } else /* other.start <= self.start && this.end <= other.end */ {

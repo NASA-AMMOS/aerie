@@ -1,42 +1,6 @@
-## Aerie Modules ##
-/adaptation_files/
-apgen-parser/
-banananation/
-docs/
-merlin-cli/
-merlin-multimission-models/
-merlin-sdk/
-sample-adaptation/
-third-party/
+# Don't send any particular file by default.
+*
 
-## Cache ##
-.DS_Store
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IDE's ###
-.idea
-.vscode
-*.iml
-*.ipr
-*.iws
-**/target/*
-
-### Build ###
-.m2
-*.local
-*.tar.gz
-/.buckd/
-/.nb-gradle/
-/build/
-/dist/
-/nbbuild/
-/nbdist/
-/nbproject/private/
+# Explicitly whitelist files relevant to image creation.
+!plan-service/build/distributions/*.tar
+!adaptation-service/build/distributions/*.tar

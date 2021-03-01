@@ -12,11 +12,11 @@ allprojects {
   }
 
   group = 'gov.nasa.jpl.aerie'
-  version = '0.6.2-SNAPSHOT'
+  version = '0.6.3-SNAPSHOT'
 
   gradle.projectsEvaluated {
     tasks.withType(JavaCompile) {
-      options.compilerArgs << "-Xlint:deprecation"
+      options.compilerArgs << "-Xlint:deprecation" << "-Xlint:unchecked"
     }
   }
 }

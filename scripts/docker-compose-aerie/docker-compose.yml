@@ -21,23 +21,27 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    hostname: "rabbit"
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    volumes: ["rabbitmq_data:/data/rabbitmq"]
   aerie_ui:
+    command: ["npm", "run", "start:production"]
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
+    depends_on: ["postgres"]
     ports: ["8080:80"]
   aerie_apollo:
     command: ["npm", "run", "start:docker"]
     image: "${AERIE_DOCKER_URL}/aerie-apollo:${DOCKER_TAG}"
     ports: ["27184:27184"]
+  postgres:
+    image: postgres
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: aerie
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_USER: aerie
+    restart: always
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
 
 volumes:
   adaptation_files:
   adaptation_mongo_data:
   plan_mongo_data:
-  rabbitmq_data:
+  postgres_data:

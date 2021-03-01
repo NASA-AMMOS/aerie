@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskRecord;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -21,48 +20,76 @@ public final class SimulationResults {
   public SimulationResults(
       final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples,
       final List<ConstraintViolation> constraintViolations,
-      final Map<String, TaskRecord> activityRecords,
-      final Map<String, Window> activityWindows,
+      final Map<String, String> taskIdToActivityId,
+      final Map<String, TaskInfo<?>> activityRecords,
       final Instant startTime)
   {
     this.resourceSamples = resourceSamples;
     this.constraintViolations = constraintViolations;
-    this.simulatedActivities = buildSimulatedActivities(startTime, activityRecords, activityWindows);
+    this.simulatedActivities = buildSimulatedActivities(startTime, taskIdToActivityId, activityRecords);
   }
 
   private Map<String, SimulatedActivity> buildSimulatedActivities(
       final Instant startTime,
-      final Map<String, TaskRecord> activityRecords,
-      final Map<String, Window> activityWindows)
+      final Map<String, String> taskIdToActivityId,
+      final Map<String, TaskInfo<?>> activityRecords)
   {
     final var simulatedActivities = new HashMap<String, SimulatedActivity>();
     final var activityChildren = new HashMap<String, List<String>>();
 
     // Create the list of children for every activity
-    for (final var id : activityRecords.keySet()) activityChildren.put(id, new ArrayList<>());
-    for (final var entry : activityRecords.entrySet()) {
-      final var parentId = entry.getValue().parentId;
-
-      if (parentId.isPresent()) {
-        activityChildren.get(parentId.get()).add(entry.getKey());
-      }
+    for (final var id : activityRecords.keySet()) {
+      activityChildren.put(id, new ArrayList<>());
     }
 
-    for (final var id : activityRecords.keySet()) {
-      final var activityRecord = activityRecords.get(id);
+    final var activityParents = new HashMap<String, String>();
+    for (final var entry : activityRecords.entrySet()) {
+      final var id = entry.getKey();
+      final var activityRecord = entry.getValue();
 
-      if (!activityWindows.containsKey(id)) {
-        this.unfinishedActivities.put(id, new SerializedActivity(activityRecord.type, activityRecord.arguments));
+      // An activity may have been spawned by an anonymous task.
+      // In this case, we want to find the nearest ancestor that isn't anonymous,
+      // and attribute this activity to it as a child.
+      var ancestorId$ = activityRecord.parent;
+      while (ancestorId$.isPresent()) {
+        final var ancestor = activityRecords.get(ancestorId$.get());
+        if (ancestor.specification.isPresent()) break;
+
+        ancestorId$ = ancestor.parent;
+      }
+
+      ancestorId$
+          .ifPresent(ancestorId -> {
+            activityParents.put(id, taskIdToActivityId.get(ancestorId));
+            activityChildren.get(ancestorId).add(id);
+          });
+    }
+
+    for (final var entry : activityRecords.entrySet()) {
+      final var taskId = entry.getKey();
+      final var activityRecord = entry.getValue();
+      final var activityId = taskIdToActivityId.get(taskId);
+
+      // Only report on activities, not anonymous tasks.
+      // TODO: Actually do report on everything, but distinguish the two kinds of task in some way.
+      //   It could be really valuable to be able to show the anonymous threads of behavior performed by an activity.
+      if (activityRecord.specification.isEmpty()) continue;
+
+      final var specification = activityRecord.specification.get();
+
+      final var window$ = activityRecord.getWindow();
+      if (window$.isEmpty()) {
+        this.unfinishedActivities.put(activityId, specification);
       } else {
-        final var window = activityWindows.get(id);
+        final var window = window$.get();
 
-        simulatedActivities.put(id, new SimulatedActivity(
-            activityRecord.type,
-            activityRecord.arguments,
+        simulatedActivities.put(activityId, new SimulatedActivity(
+            specification.getTypeName(),
+            specification.getParameters(),
             Duration.addToInstant(startTime, window.start),
             window.duration(),
-            activityRecord.parentId.orElse(null),
-            activityChildren.get(id)
+            activityParents.getOrDefault(taskId, null),
+            activityChildren.get(taskId)
         ));
       }
     }

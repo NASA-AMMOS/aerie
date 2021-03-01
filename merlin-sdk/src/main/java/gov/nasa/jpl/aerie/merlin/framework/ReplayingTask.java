@@ -8,15 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public final class ReplayingTask<$Schema, $Timeline extends $Schema>
-    implements Task<$Timeline>
-{
-  private final Scoped<Context<$Schema>> rootContext;
+public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
+  private final Scoped<Context> rootContext;
   private final Runnable task;
 
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
-  public ReplayingTask(final Scoped<Context<$Schema>> rootContext, final Runnable task) {
+  public ReplayingTask(final Scoped<Context> rootContext, final Runnable task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
   }
@@ -26,7 +24,7 @@ public final class ReplayingTask<$Schema, $Timeline extends $Schema>
     this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
 
     final var handle = new ReplayingTaskHandle<$Timeline>();
-    final var context = new ReactionContext<$Schema, $Timeline>(this.breadcrumbs, scheduler, handle);
+    final var context = new ReactionContext<>(this.rootContext, this.breadcrumbs, scheduler, handle);
 
     try {
       this.rootContext.setWithin(context, this.task::run);

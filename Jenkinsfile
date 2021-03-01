@@ -130,7 +130,7 @@ pipeline {
           reuseNode true
           registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
-          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/jenkins:latest'
+          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/aerie:latest'
           alwaysPull true
           args '-u root --mount type=bind,source=${WORKSPACE},target=/home --workdir=/home -v /var/run/docker.sock:/var/run/docker.sock'
         }
@@ -295,15 +295,20 @@ pipeline {
             expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
           }
           steps {
-            sh """
-              JAVADOC_PREP_DIR=\$(mktemp -d)
+            sh '''
+              JAVADOC_PREP_DIR=$(mktemp -d)
+              mkdir -p ${JAVADOC_PREP_DIR}/javadoc/sdk
+              mkdir -p ${JAVADOC_PREP_DIR}/javadoc/contrib
 
               ./gradlew merlin-sdk:javadoc
-              cp -r merlin-sdk/build/docs/javadoc/ \${JAVADOC_PREP_DIR}/.
+              cp -rv merlin-sdk/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/sdk/
+
+              ./gradlew contrib:javadoc
+              cp -rv merlin-sdk/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/contrib/
 
               git checkout gh-pages
-              rsync -av --delete \${JAVADOC_PREP_DIR}/javadoc/ javadoc
-              rm -rf \${JAVADOC_PREP_DIR}
+              rsync -av --delete ${JAVADOC_PREP_DIR}/javadoc/ javadoc
+              rm -rf ${JAVADOC_PREP_DIR}
 
               git config user.email "achong@jpl.nasa.gov"
               git config user.name "Jenkins gh-pages sync"
@@ -311,7 +316,7 @@ pipeline {
               git diff --quiet HEAD || git commit -m "Publish Javadocs for commit ${GIT_COMMIT}"
               git push https://${AERIE_SECRET_ACCESS_KEY}@github.jpl.nasa.gov/Aerie/aerie.git gh-pages
               git checkout ${GIT_BRANCH}
-            """
+            '''
           }
         }
       }

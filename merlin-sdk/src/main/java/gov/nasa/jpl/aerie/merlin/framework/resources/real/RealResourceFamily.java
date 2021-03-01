@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
+import gov.nasa.jpl.aerie.merlin.framework.Context;
+import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.protocol.ConditionType;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
@@ -14,9 +16,11 @@ import java.util.function.UnaryOperator;
 public final class RealResourceFamily<$Schema>
     implements ResourceFamily<$Schema, RealResource, RealCondition>
 {
+  private final Scoped<Context> rootContext;
   private final Map<String, RealResource> resources;
 
-  public RealResourceFamily(final Map<String, RealResource> resources) {
+  public RealResourceFamily(final Scoped<Context> rootContext, final Map<String, RealResource> resources) {
+    this.rootContext = Objects.requireNonNull(rootContext);
     this.resources = Objects.requireNonNull(resources);
   }
 
@@ -46,6 +50,6 @@ public final class RealResourceFamily<$Schema>
 
   @Override
   public ResourceSolver<$Schema, RealResource, RealDynamics, RealCondition> getSolver() {
-    return new RealResourceSolver<>();
+    return new RealResourceSolver<>(this.rootContext);
   }
 }

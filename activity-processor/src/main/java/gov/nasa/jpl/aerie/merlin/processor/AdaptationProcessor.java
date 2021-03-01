@@ -14,12 +14,13 @@ import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityExecutionType;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
@@ -45,8 +46,10 @@ import java.lang.annotation.Repeatable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -100,13 +103,11 @@ public final class AdaptationProcessor implements Processor {
 
         final var generatedFiles = new ArrayList<JavaFile>();
         generatedFiles.add(generateAdaptationFactory(adaptationRecord));
-        generatedFiles.add(generateTaskClass(adaptationRecord));
-        generatedFiles.add(generateModelClass(adaptationRecord));
-        generatedFiles.add(generateActivityTypes(adaptationRecord));
+        generatedFiles.add(generateActivityActions(adaptationRecord));
         for (final var activityRecord : adaptationRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration);
           if (!activityRecord.mapper.isCustom) {
-            generatedFiles.add(generateActivityMapper(adaptationRecord, activityRecord));
+            generateActivityMapper(adaptationRecord, activityRecord).ifPresent(generatedFiles::add);
           }
         }
 
@@ -170,20 +171,83 @@ public final class AdaptationProcessor implements Processor {
     return Collections::emptyIterator;
   }
 
-
   private AdaptationRecord
   parseAdaptation(final PackageElement adaptationElement)
   throws InvalidAdaptationException {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
+    final var typeRules = new ArrayList<TypeRule>();
 
-    // TODO: Get any mapper groups registered using @WithMappers
+    for (final var factory : this.getAdaptationMapperClasses(adaptationElement)) {
+      typeRules.addAll(this.parseValueMappers(factory));
+    }
 
     for (final var activityTypeElement : this.getAdaptationActivityTypes(adaptationElement)) {
       activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
     }
 
-    return new AdaptationRecord(adaptationElement, topLevelModel, activityTypes);
+    return new AdaptationRecord(adaptationElement, topLevelModel, typeRules, activityTypes);
+  }
+
+  private List<TypeRule>
+  parseValueMappers(final TypeElement factory)
+  throws InvalidAdaptationException {
+    final var valueMappers = new ArrayList<TypeRule>();
+
+    for (final var element : factory.getEnclosedElements()) {
+      if (element.getKind().equals(ElementKind.METHOD)) {
+        valueMappers.add(this.parseValueMapperMethod((ExecutableElement)element, ClassName.get(factory)));
+      }
+    }
+
+    return valueMappers;
+  }
+
+  private TypeRule
+  parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
+  throws InvalidAdaptationException {
+    if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
+      throw new InvalidAdaptationException(
+          "Value Mapper method must be public and static",
+          element
+      );
+    }
+
+    final var head = TypePattern.from(element.getReturnType());
+    final var enumBoundedTypeParameters = getEnumBoundedTypeParameters(element);
+    final var method = element.getSimpleName().toString();
+    final var parameters = new ArrayList<TypePattern>();
+    for (final var parameter : element.getParameters()) {
+      parameters.add(TypePattern.from(parameter));
+    }
+
+    return new TypeRule(head, enumBoundedTypeParameters, parameters, factory, method);
+  }
+
+  private Set<String>
+  getEnumBoundedTypeParameters(final ExecutableElement element)
+  throws InvalidAdaptationException {
+    final var enumBoundedTypeParameters = new HashSet<String>();
+    // Check type parameters are bounded only by enum type or not at all
+    for (final var typeParameter : element.getTypeParameters()) {
+      final var bounds = typeParameter.getBounds();
+      for (final var bound : bounds) {
+        final var erasure = typeUtils.erasure(bound);
+        final var objectType = elementUtils.getTypeElement("java.lang.Object").asType();
+        final var enumType = typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
+        if (typeUtils.isSameType(erasure, objectType)) {
+          // Nothing to do
+        } else if (typeUtils.isSameType(erasure, enumType)) {
+          enumBoundedTypeParameters.add(typeParameter.getSimpleName().toString());
+        } else {
+          throw new InvalidAdaptationException(
+              "Value Mapper method type parameter must be unbounded, or bounded by enum type only",
+              element
+          );
+        }
+      }
+    }
+    return enumBoundedTypeParameters;
   }
 
   private ActivityTypeRecord
@@ -193,7 +257,7 @@ public final class AdaptationProcessor implements Processor {
     final var mapper = this.getActivityMapper(adaptationElement, activityTypeElement);
     final var validations = this.getActivityValidations(activityTypeElement);
     final var parameters = this.getActivityParameters(activityTypeElement);
-    final var effectModel = this.getActivityExecutionType(activityTypeElement);
+    final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
     return new ActivityTypeRecord(activityTypeElement, name, mapper, validations, parameters, effectModel);
   }
@@ -266,28 +330,46 @@ public final class AdaptationProcessor implements Processor {
       final var name = element.getSimpleName().toString();
       final var type = element.asType();
 
-      parameters.add(new ActivityParameterRecord(name, type));
+      parameters.add(new ActivityParameterRecord(name, type, element));
     }
 
     return parameters;
   }
 
-  private ActivityExecutionType
-  getActivityExecutionType(final TypeElement activityTypeElement) {
+  private Optional<Pair<String, ActivityType.Executor>>
+  getActivityEffectModel(final TypeElement activityTypeElement) {
     for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getKind() != ElementKind.CLASS) continue;
-      if (!element.getSimpleName().toString().equals("EffectModel")) continue;
+      if (element.getKind() != ElementKind.METHOD) continue;
 
-      final var executorAnnotation = activityTypeElement.getAnnotation(ActivityType.WithExecutor.class);
-      if (executorAnnotation == null) return ActivityExecutionType.Threaded;
+      final var executorAnnotation = element.getAnnotation(ActivityType.EffectModel.class);
+      if (executorAnnotation == null) continue;
 
-      switch (executorAnnotation.value()) {
-        case Threaded: return ActivityExecutionType.Threaded;
-        case Replaying: return ActivityExecutionType.Replaying;
-      }
+      return Optional.of(Pair.of(element.getSimpleName().toString(), executorAnnotation.value()));
     }
 
-    return ActivityExecutionType.None;
+    return Optional.empty();
+  }
+
+  private List<TypeElement>
+  getAdaptationMapperClasses(final PackageElement adaptationElement)
+  throws InvalidAdaptationException {
+    final var mapperClassElements = new ArrayList<TypeElement>();
+
+    for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithMappers.class)) {
+      final var attribute = getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
+
+      if (!(attribute.getValue() instanceof DeclaredType)) {
+        throw new InvalidAdaptationException(
+            "Mappers class not yet defined",
+            adaptationElement,
+            withMappersAnnotation,
+            attribute);
+      }
+
+      mapperClassElements.add((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
+    }
+
+      return mapperClassElements;
   }
 
   private List<TypeElement>
@@ -306,6 +388,8 @@ public final class AdaptationProcessor implements Processor {
             attribute);
       }
 
+      // DeclaredType cast works because we checked above that attribute is indeed a DeclaredType
+      // TypeElement cast works because the element of a DeclaredType must be a TypeElement
       activityTypeElements.add((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
     }
 
@@ -341,9 +425,29 @@ public final class AdaptationProcessor implements Processor {
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
+  private Optional<Map<String, CodeBlock>> buildParameterMapperBlocks(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
+    final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
+    var failed = false;
+    final var mapperBlocks = new HashMap<String, CodeBlock>();
 
-  private JavaFile generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
-    final var resolver = new Resolver(this.typeUtils, this.elementUtils);
+    for (final var parameter : activityType.parameters) {
+      final var mapperBlock = resolver.instantiateMapperFor(parameter.type);
+      if (mapperBlock.isPresent()) {
+        mapperBlocks.put(parameter.name, mapperBlock.get());
+      } else {
+        failed = true;
+        messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for parameter", parameter.element);
+      }
+    }
+
+    if (failed) return Optional.empty();
+    return Optional.of(mapperBlocks);
+  }
+
+  private Optional<JavaFile> generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
+    final var maybeMapperBlocks = buildParameterMapperBlocks(adaptation, activityType);
+    if (maybeMapperBlocks.isEmpty()) return Optional.empty();
+    final var mapperBlocks = maybeMapperBlocks.get();
 
     final var typeSpec =
         TypeSpec
@@ -379,6 +483,12 @@ public final class AdaptationProcessor implements Processor {
                 MethodSpec
                     .constructorBuilder()
                     .addModifiers(Modifier.PUBLIC)
+                    // Suppress unchecked warnings because the resolver has to put some big casting in for Class parameters
+                    .addAnnotation(
+                        AnnotationSpec
+                            .builder(SuppressWarnings.class)
+                            .addMember("value", "$S", "unchecked")
+                            .build())
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -387,7 +497,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addStatement(
                                     "this.mapper_$L =\n$L",
                                     parameter.name,
-                                    resolver.instantiateMapperFor(parameter.type)))
+                                    mapperBlocks.get(parameter.name)))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
                     .build())
@@ -574,100 +684,14 @@ public final class AdaptationProcessor implements Processor {
                     .build())
             .build();
 
-    return JavaFile
+    return Optional.of(JavaFile
         .builder(activityType.mapper.name.packageName(), typeSpec)
         .skipJavaLangImports(true)
-        .build();
+        .build());
   }
 
-  private JavaFile generateActivityTypes(final AdaptationRecord adaptation) {
-    final var typeName = adaptation.getMasterActivityTypesName();
-
-    final var typeSpec =
-        TypeSpec
-            .classBuilder(typeName)
-            // The location of the adaptation package determines where to put this class.
-            .addOriginatingElement(adaptation.$package)
-            // TODO: List found task spec types as originating elements.
-            .addAnnotation(
-                AnnotationSpec
-                    .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
-                    .build())
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addMethod(
-                MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PRIVATE)
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("register")
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .addTypeVariable(TypeVariableName.get("$Schema"))
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
-                            TypeVariableName.get("$Schema")),
-                        "builder",
-                        Modifier.FINAL)
-                    .addParameter(
-                        ClassName.get(adaptation.topLevelModel),
-                        "model",
-                        Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = $L.getRootContext()",
-                        "rootContext",
-                        "builder")
-                    .addCode(
-                        adaptation.activityTypes
-                            .stream()
-                            .map(activityType ->
-                                     (activityType.effectModel == ActivityExecutionType.None)
-                                         ? CodeBlock
-                                             .builder()
-                                             .addStatement(
-                                                 "$L.noopTask(new $T())",
-                                                 "builder",
-                                                 activityType.mapper.name)
-                                         : (activityType.effectModel == ActivityExecutionType.Threaded)
-                                             ? CodeBlock
-                                                 .builder()
-                                                 .addStatement(
-                                                     "$L.threadedTask("
-                                                     + "\n" + "new $T(),"
-                                                     + "\n" + "activity -> $>$>activity"
-                                                     + "\n" + ".new EffectModel()"
-                                                     + "\n" + ".runWith($L.get(), $L)$<$<)",
-                                                     "builder",
-                                                     activityType.mapper.name,
-                                                     "rootContext",
-                                                     "model")
-                                             : CodeBlock
-                                                 .builder()
-                                                 .addStatement(
-                                                     "$L.replayingTask("
-                                                     + "\n" + "new $T(),"
-                                                     + "\n" + "activity -> $>$>activity"
-                                                     + "\n" + ".new EffectModel()"
-                                                     + "\n" + ".runWith($L.get(), $L)$<$<)",
-                                                     "builder",
-                                                     activityType.mapper.name,
-                                                     "rootContext",
-                                                     "model"))
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                            .build())
-                    .build())
-            .build();
-
-    return JavaFile
-        .builder(typeName.packageName(), typeSpec)
-        .skipJavaLangImports(true)
-        .build();
-  }
-
-  private JavaFile generateModelClass(final AdaptationRecord adaptation) {
-    final var typeName = adaptation.getModelName();
+  private JavaFile generateActivityActions(final AdaptationRecord adaptation) {
+    final var typeName = adaptation.getActivityActionsName();
 
     final var typeSpec =
         TypeSpec
@@ -680,41 +704,8 @@ public final class AdaptationProcessor implements Processor {
                     .builder(javax.annotation.processing.Generated.class)
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
-            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .superclass(gov.nasa.jpl.aerie.merlin.framework.Model.class)
-            .addMethod(
-                MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PROTECTED)
-                    .addParameter(
-                        ParameterSpec
-                            .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(java.util.function.Supplier.class),
-                                    WildcardTypeName.subtypeOf(
-                                        ParameterizedTypeName.get(
-                                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))),
-                                "context")
-                            .addModifiers(Modifier.FINAL)
-                            .build())
-                    .addStatement("super($L)", "context")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PROTECTED)
-                    .addParameter(
-                        ParameterSpec
-                            .builder(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
-                                "registrar")
-                            .addModifiers(Modifier.FINAL)
-                            .build())
-                    .addStatement(
-                        "super($L)",
-                        "registrar")
-                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build())
             .addMethods(
                 adaptation.activityTypes
                     .stream()
@@ -722,25 +713,26 @@ public final class AdaptationProcessor implements Processor {
                         .of(
                             MethodSpec
                                 .methodBuilder("spawn")
-                                .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
+                                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(String.class)
                                 .addParameter(
                                     ClassName.get(entry.declaration),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "final var $L = new $L()",
+                                    "final var $L = new $T()",
                                     "mapper",
                                     entry.mapper.name)
                                 .addStatement(
-                                    "return spawn($L.getName(), $L.getArguments($L))",
+                                    "return $T.spawn($L.getName(), $L.getArguments($L))",
+                                    gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "mapper",
                                     "activity")
                                 .build(),
                             MethodSpec
                                 .methodBuilder("defer")
-                                .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
+                                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(String.class)
                                 .addParameter(
                                     ParameterSpec
@@ -754,11 +746,12 @@ public final class AdaptationProcessor implements Processor {
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "final var $L = new $L()",
+                                    "final var $L = new $T()",
                                     "mapper",
                                     entry.mapper.name)
                                 .addStatement(
-                                    "return defer($L, $L.getName(), $L.getArguments($L))",
+                                    "return $T.defer($L, $L.getName(), $L.getArguments($L))",
+                                    gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
                                     "mapper",
@@ -766,7 +759,7 @@ public final class AdaptationProcessor implements Processor {
                                 .build(),
                             MethodSpec
                                 .methodBuilder("defer")
-                                .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
+                                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(String.class)
                                 .addParameter(
                                     ParameterSpec
@@ -794,120 +787,19 @@ public final class AdaptationProcessor implements Processor {
                                 .build(),
                             MethodSpec
                                 .methodBuilder("call")
-                                .addModifiers(Modifier.PROTECTED, Modifier.FINAL)
+                                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(TypeName.VOID)
                                 .addParameter(
                                     ClassName.get(entry.declaration),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "waitFor(spawn($L))",
+                                    "$T.waitFor(spawn($L))",
+                                    gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "activity")
                                 .build())
                         .stream())
                     .collect(Collectors.toList()))
-            .build();
-
-    return JavaFile
-        .builder(typeName.packageName(), typeSpec)
-        .skipJavaLangImports(true)
-        .build();
-  }
-
-  private JavaFile generateTaskClass(final AdaptationRecord adaptation) {
-    final var typeName = adaptation.getTaskName();
-
-    final var typeSpec =
-        TypeSpec
-            .classBuilder(typeName)
-            // The location of the adaptation package determines where to put this class.
-            .addOriginatingElement(adaptation.$package)
-            .addAnnotation(
-                AnnotationSpec
-                    .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
-                    .build())
-            .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT)
-            .superclass(adaptation.getModelName())
-            .addField(
-                FieldSpec
-                    .builder(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Scoped.class),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))),
-                        "context")
-                    .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PRIVATE)
-                    .addParameter(
-                        ParameterSpec
-                            .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Scoped.class),
-                                    ParameterizedTypeName.get(
-                                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                        WildcardTypeName.get(this.typeUtils.getWildcardType(null, null)))),
-                                "context")
-                            .addModifiers(Modifier.FINAL)
-                            .build())
-                    .addStatement(
-                        "super($L)",
-                        "context")
-                    .addStatement(
-                        "this.$L = $L",
-                        "context",
-                        "context")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PROTECTED)
-                    .addStatement(
-                        "this($T.create())",
-                        gov.nasa.jpl.aerie.merlin.framework.Scoped.class)
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("run")
-                    .addModifiers(Modifier.PROTECTED, Modifier.ABSTRACT)
-                    .returns(TypeName.VOID)
-                    .addParameter(
-                        ParameterSpec
-                            .builder(
-                                ClassName.get(adaptation.topLevelModel),
-                                "model")
-                            .build())
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("runWith")
-                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                    .returns(TypeName.VOID)
-                    .addParameter(
-                        ParameterSpec
-                            .builder(
-                                ParameterizedTypeName.get(
-                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Context.class),
-                                    WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
-                                "context")
-                            .build())
-                    .addParameter(
-                        ParameterSpec
-                            .builder(
-                                ClassName.get(adaptation.topLevelModel),
-                                "model")
-                            .build())
-                    .addStatement(
-                        "this.$L.setWithin($L, () -> this.run($L))",
-                        "context",
-                        "context",
-                        "model")
-                    .build())
             .build();
 
     return JavaFile
@@ -963,21 +855,61 @@ public final class AdaptationProcessor implements Processor {
                         gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
                         "schemaBuilder")
                     .addStatement(
-                        "final var $L = new $T($L, $L.getRootContext(), \"\")",
+                        "final var $L = new $T($L)",
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
-                        "builder",
                         "builder")
                     .addStatement(
                         "final var $L = new $T($L)",
                         "model",
                         ClassName.get(adaptation.topLevelModel),
                         "registrar")
-                    .addStatement(
-                        "$T.register($L, $L)",
-                        adaptation.getMasterActivityTypesName(),
-                        "builder",
-                        "model")
+                    .addCode("\n")
+                    .addCode(
+                        adaptation.activityTypes
+                            .stream()
+                            .map(activityType -> {
+                              if (activityType.effectModel.isEmpty()) {
+                                return CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        "$L.noopTask(new $T())",
+                                        "builder",
+                                        activityType.mapper.name);
+                              }
+                              final var effectModel = activityType.effectModel.get();
+
+                              if (effectModel.getRight() == ActivityType.Executor.Threaded) {
+                                return CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        "$L.threadedTask("
+                                        + "\n" + "new $T(),"
+                                        + "\n" + "activity -> activity.$L($L))",
+                                        "builder",
+                                        activityType.mapper.name,
+                                        effectModel.getLeft(),
+                                        "model");
+                              } else if (effectModel.getRight() == ActivityType.Executor.Replaying) {
+                                return CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        "$L.replayingTask("
+                                        + "\n" + "new $T(),"
+                                        + "\n" + "activity -> activity.$L($L))",
+                                        "builder",
+                                        activityType.mapper.name,
+                                        effectModel.getLeft(),
+                                        "model");
+                              } else {
+                                messager.printMessage(
+                                    Diagnostic.Kind.ERROR,
+                                    "Internal error: unknown executor type " + effectModel.getRight());
+                                return CodeBlock.builder();
+                              }
+                            })
+                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                            .build())
                     .addCode("\n")
                     .addStatement(
                         "return $L.build()",

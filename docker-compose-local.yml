@@ -26,8 +26,18 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
+  postgres:
+    image: postgres
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: aerie
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_USER: aerie
+    restart: always
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
 
 volumes:
   adaptation_files:
   adaptation_mongo_data:
   plan_mongo_data:
+  postgres_data:
