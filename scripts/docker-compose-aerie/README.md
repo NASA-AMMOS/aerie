@@ -22,6 +22,13 @@ Goto [http://localhost:8080/](http://localhost:8080/)
 docker-compose down
 ```
 
+## Environment Variables (.env)
+
+| Variable | Description |
+| - | - |
+| AERIE_DOCKER_URL | URL of the Aerie Docker repository. Defaults to docker-release-local. |
+| DOCKER_TAG | Version tag of the Aerie version you want to deploy. |
+
 ## Troubleshooting
 
 - When logging into Docker Artifactory you need to specify your JPL username/password. If you don't have access please contact someone from the Aerie team via the [#mpsa-aerie-users](https://app.slack.com/client/T024LMMEZ/C0163E42UBF) Slack channel.
