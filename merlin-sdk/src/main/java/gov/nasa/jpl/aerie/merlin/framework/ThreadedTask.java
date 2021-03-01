@@ -9,17 +9,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public final class ThreadedTask<$Schema, $Timeline extends $Schema>
-    implements Task<$Timeline>
-{
+public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   private final Thread thread;
   private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
 
   private final ArrayBlockingQueue<Scheduler<$Timeline>> hostToTask = new ArrayBlockingQueue<>(1);
   private final ArrayBlockingQueue<TaskStatus<$Timeline>> taskToHost = new ArrayBlockingQueue<>(1);
   private boolean done = false;
+  private Throwable failure = null;
 
-  public ThreadedTask(final Scoped<Context<$Schema>> rootContext, final Runnable task) {
+  public ThreadedTask(final Scoped<Context> rootContext, final Runnable task) {
     Objects.requireNonNull(rootContext);
     Objects.requireNonNull(task);
 
@@ -27,11 +26,15 @@ public final class ThreadedTask<$Schema, $Timeline extends $Schema>
 
     this.thread = new Thread(() -> {
       try {
-        final var scheduler = this.hostToTask.take();
-        this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
+        try {
+          final var scheduler = this.hostToTask.take();
+          this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
 
-        final var context = new ReactionContext<>(rootContext, this.breadcrumbs, scheduler, handle);
-        rootContext.setWithin(context, task::run);
+          final var context = new ReactionContext<>(rootContext, this.breadcrumbs, scheduler, handle);
+          rootContext.setWithin(context, task::run);
+        } catch (final Throwable ex) {
+          this.failure = ex;
+        }
 
         this.done = true;
         this.taskToHost.put(TaskStatus.completed());
@@ -52,6 +55,9 @@ public final class ThreadedTask<$Schema, $Timeline extends $Schema>
       final var status = this.taskToHost.take();
 
       if (this.done) this.thread.join();
+
+      // TODO: Propagate task errors better.
+      if (this.failure != null) throw new Error(this.failure);
 
       return status;
     } catch (final InterruptedException ex) {

@@ -1,18 +1,19 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
-import gov.nasa.jpl.aerie.merlin.framework.Model;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+
 /**
  * Model for a three-dimensional vector.
  * Each component contains a value and rate <code>Accumulator</code>, which exposes an underlying resource and
  * convenience methods.
  */
-public final class Pointing extends Model {
+public final class Pointing {
   public final Component x, y, z;
 
   public Pointing(final Registrar registrar, final Vector3D initialVec) {
@@ -20,8 +21,6 @@ public final class Pointing extends Model {
   }
 
   public Pointing(final Registrar registrar, final Vector3D initialVec, final Vector3D initialRate) {
-    super(registrar);
-
     this.x = new Component(registrar, initialVec.getX(), initialRate.getX());
     this.y = new Component(registrar, initialVec.getY(), initialRate.getY());
     this.z = new Component(registrar, initialVec.getZ(), initialRate.getZ());

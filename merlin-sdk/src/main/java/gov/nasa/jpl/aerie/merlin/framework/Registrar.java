@@ -6,18 +6,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.Objects;
-import java.util.function.Supplier;
 
 public final class Registrar {
   private final AdaptationBuilder<?> builder;
 
   public Registrar(final AdaptationBuilder<?> builder) {
     this.builder = Objects.requireNonNull(builder);
-  }
-
-  /*package-local*/
-  Supplier<? extends Context<?>> getRootContext() {
-    return this.builder.getRootContext();
   }
 
   public boolean isInitializationComplete() {

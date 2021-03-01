@@ -1,8 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import org.apache.commons.lang3.tuple.Pair;
+
 import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class ActivityTypeRecord {
   public final TypeElement declaration;
@@ -10,7 +14,7 @@ public final class ActivityTypeRecord {
   public final ActivityMapperRecord mapper;
   public final List<ActivityValidationRecord> validations;
   public final List<ActivityParameterRecord> parameters;
-  public final ActivityExecutionType effectModel;
+  public final Optional<Pair<String, ActivityType.Executor>> effectModel;
 
   public ActivityTypeRecord(
       final TypeElement declaration,
@@ -18,7 +22,7 @@ public final class ActivityTypeRecord {
       final ActivityMapperRecord mapper,
       final List<ActivityValidationRecord> validations,
       final List<ActivityParameterRecord> parameters,
-      final ActivityExecutionType effectModel)
+      final Optional<Pair<String, ActivityType.Executor>> effectModel)
   {
     this.declaration = Objects.requireNonNull(declaration);
     this.name = Objects.requireNonNull(name);

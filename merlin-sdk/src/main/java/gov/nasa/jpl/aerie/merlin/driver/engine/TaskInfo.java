@@ -8,12 +8,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 public final class TaskInfo<$Timeline> {
   public final String id;
   public final Optional<String> parent;
+  public final List<String> children = new ArrayList<>();
   public boolean isDaemon = false;
 
   // The remaining work to perform.
@@ -46,6 +49,10 @@ public final class TaskInfo<$Timeline> {
         return Window.between(startTime, endTime);
       });
     });
+  }
+
+  public boolean isDone() {
+    return this.endTime.isPresent();
   }
 
   public TaskStatus<$Timeline> step(final Duration atTime, final Scheduler<$Timeline> scheduler) {

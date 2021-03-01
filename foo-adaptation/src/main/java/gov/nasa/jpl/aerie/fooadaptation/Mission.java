@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
-import gov.nasa.jpl.aerie.fooadaptation.generated.Model;
 import gov.nasa.jpl.aerie.fooadaptation.models.Imager;
 import gov.nasa.jpl.aerie.fooadaptation.models.ImagerMode;
 import gov.nasa.jpl.aerie.fooadaptation.models.SimpleData;
@@ -16,7 +15,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
 import java.time.Instant;
 
-public final class Mission extends Model {
+public final class Mission {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
   // Need to generalize RealDynamics to nonlinear polynomials.
@@ -35,7 +34,6 @@ public final class Mission extends Model {
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
   public Mission(final Registrar registrar) {
-    super(registrar);
     this.cachedRegistrar = registrar;
 
     this.foo = Register.create(registrar, 0.0);

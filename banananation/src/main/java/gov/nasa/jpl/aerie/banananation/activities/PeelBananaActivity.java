@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.banananation.Mission;
-import gov.nasa.jpl.aerie.banananation.generated.Task;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
 
@@ -30,12 +30,11 @@ public final class PeelBananaActivity {
     return List.of("fromStem", "fromTip").contains(this.peelDirection);
   }
 
-  public final class EffectModel extends Task {
-    public void run(final Mission mission) {
-      if (peelDirection.equals("fromStem")) {
-        mission.fruit.subtract(MASHED_BANANA_AMOUNT);
-      }
-      mission.peel.subtract(1.0);
+  @EffectModel
+  public void run(final Mission mission) {
+    if (peelDirection.equals("fromStem")) {
+      mission.fruit.subtract(MASHED_BANANA_AMOUNT);
     }
+    mission.peel.subtract(1.0);
   }
 }

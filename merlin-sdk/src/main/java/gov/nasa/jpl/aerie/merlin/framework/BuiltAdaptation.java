@@ -13,14 +13,14 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
-  private final Scoped<Context<$Schema>> rootContext;
+  private final Scoped<Context> rootContext;
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies;
   private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
   private final List<Runnable> daemons;
 
   public BuiltAdaptation(
-      final Scoped<Context<$Schema>> rootContext,
+      final Scoped<Context> rootContext,
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies,
       final List<Runnable> daemons,
@@ -41,8 +41,7 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
   @Override
   public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {
     return new ThreadedTask<>(this.rootContext, () -> {
-      final var ctx = this.rootContext.get();
-      this.daemons.forEach(ctx::spawn);
+      this.daemons.forEach(ModelActions::spawn);
     });
   }
 

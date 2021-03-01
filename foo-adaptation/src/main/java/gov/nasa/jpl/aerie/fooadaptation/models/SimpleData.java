@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.fooadaptation.models;
 
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
-import gov.nasa.jpl.aerie.fooadaptation.generated.Model;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
@@ -10,13 +9,11 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import java.util.List;
 
 /** Simple data model inspired by Clipper's example data system model diagrams. */
-public final class SimpleData extends Model {
+public final class SimpleData {
   public final InstrumentData a, b;
   public final RealResource totalVolume;
 
   public SimpleData(final Registrar registrar) {
-    super(registrar);
-
     this.a = new InstrumentData(10.0, registrar.cell(new LinearIntegrationCell(0, 0)));
     this.b = new InstrumentData(5.0, registrar.cell(new LinearIntegrationCell(0, 0)));
     this.totalVolume = RealResource.add(this.a.volume, this.b.volume);

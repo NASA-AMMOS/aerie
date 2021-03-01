@@ -6,9 +6,9 @@ import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 
-public interface Context<$Schema> {
-  <CellType> CellType ask(Query<? super $Schema, ?, CellType> query);
-  <Event> void emit(Event event, Query<? super $Schema, Event, ?> query);
+public interface Context {
+  <CellType> CellType ask(Query<?, ?, CellType> query);
+  <Event> void emit(Event event, Query<?, Event, ?> query);
 
   String spawn(Runnable task);
   String spawn(String type, Map<String, SerializedValue> arguments);
