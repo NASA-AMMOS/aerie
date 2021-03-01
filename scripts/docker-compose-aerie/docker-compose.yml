@@ -30,14 +30,25 @@ services:
     volumes: ["rabbitmq_data:/data/rabbitmq"]
   aerie_ui:
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
+    depends_on: ["postgres"]
     ports: ["8080:80"]
   aerie_apollo:
     command: ["npm", "run", "start:docker"]
     image: "${AERIE_DOCKER_URL}/aerie-apollo:${DOCKER_TAG}"
     ports: ["27184:27184"]
+  postgres:
+    image: postgres
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: aerie
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_USER: aerie
+    restart: always
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
 
 volumes:
   adaptation_files:
   adaptation_mongo_data:
   plan_mongo_data:
   rabbitmq_data:
+  postgres_data:
