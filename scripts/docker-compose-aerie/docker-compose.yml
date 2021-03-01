@@ -21,13 +21,6 @@ services:
     image: mongo:3.2
     ports: ["27018:27018"]
     volumes: ["plan_mongo_data:/data/db"]
-  rabbitmq:
-    image: "rabbitmq:3-management"
-    hostname: "rabbit"
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    volumes: ["rabbitmq_data:/data/rabbitmq"]
   aerie_ui:
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     depends_on: ["postgres"]
@@ -50,5 +43,4 @@ volumes:
   adaptation_files:
   adaptation_mongo_data:
   plan_mongo_data:
-  rabbitmq_data:
   postgres_data:
