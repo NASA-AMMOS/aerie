@@ -275,7 +275,7 @@ public final class SimulationDriver {
     // Collect samples for all resources.
     final var resourceSamples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
     profiles.forEach((name, profile) -> {
-      resourceSamples.put(name, SampleTaker.sample(profile, timestamps));
+      resourceSamples.put(name, SampleTaker.sample(profile));
     });
 
     // Use the map of task id to activity id to replace task ids with the corresponding
