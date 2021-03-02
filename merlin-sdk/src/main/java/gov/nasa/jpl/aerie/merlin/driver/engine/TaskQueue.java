@@ -24,33 +24,48 @@ public final class TaskQueue<Task> {
     this.queue.add(Pair.of(resumptionTime, task));
   }
 
-  public <$Timeline> Optional<TaskFrame<$Timeline, Task>>
-  popNextFrame(final History<$Timeline> tip, final Duration maximum) {
-    if (this.queue.isEmpty() && this.elapsedTime.noShorterThan(maximum)) {
-      return Optional.empty();
+  private Optional<Duration> nextStepTime(final Duration maximum) {
+    // Is there a pending job before the maximum?
+    if (!this.queue.isEmpty()) {
+      final var nextJobTime = this.queue.peek().getLeft();
+      if (nextJobTime.noLongerThan(maximum)) {
+        return Optional.of(nextJobTime);
+      }
     }
 
-    // Step up to either the given maximum or to the next task.
-    final var nextJobTime = (this.queue.isEmpty()) ? maximum : this.queue.peek().getLeft();
-    final var resumptionTime = tip.wait(nextJobTime.minus(this.elapsedTime));
-    this.elapsedTime = nextJobTime;
+    // Do we at least need to step forward in time?
+    if (this.elapsedTime.shorterThan(maximum)) {
+      return Optional.of(maximum);
+    }
 
-    // Extract any tasks at this time.
-    return Optional.of(TaskFrame.of(resumptionTime, builder -> {
-      final var iter = this.queue.iterator();
+    // There's nothing to do.
+    return Optional.empty();
+  }
 
-      if (!iter.hasNext()) return;
-      var entry = iter.next();
+  public <$Timeline> Optional<TaskFrame<$Timeline, Task>>
+  popNextFrame(final History<$Timeline> tip, final Duration maximum) {
+    return nextStepTime(maximum).map(nextJobTime -> {
+      // Step up to the next job time.
+      final var resumptionTime = tip.wait(nextJobTime.minus(this.elapsedTime));
+      this.elapsedTime = nextJobTime;
 
-      while (entry.getLeft().noLongerThan(nextJobTime)) {
-        iter.remove();
+      // Extract any tasks at this time.
+      return TaskFrame.of(resumptionTime, builder -> {
+        final var iter = this.queue.iterator();
 
-        builder.signal(entry.getRight());
+        if (!iter.hasNext()) return;
+        var entry = iter.next();
 
-        if (!iter.hasNext()) break;
-        entry = iter.next();
-      }
-    }));
+        while (entry.getLeft().noLongerThan(nextJobTime)) {
+          iter.remove();
+
+          builder.signal(entry.getRight());
+
+          if (!iter.hasNext()) break;
+          entry = iter.next();
+        }
+      });
+    });
   }
 
   public interface Executor<$Timeline, Task> {
