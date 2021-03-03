@@ -31,26 +31,14 @@ public final class SampleTakerTest {
             Window.between(duration(1, SECOND), duration(2, SECONDS)),
             RealDynamics.linear(8.0, 0.0)));
 
-    final var timestamps = List.of(
-        duration(0, MILLISECONDS),
-        duration(250, MILLISECONDS),
-        duration(500, MILLISECONDS),
-        duration(750, MILLISECONDS),
-        duration(1000, MILLISECONDS),
-        duration(1250, MILLISECONDS));
-
     final var expected = List.of(
         Pair.of(duration(0, MILLISECONDS), SerializedValue.of(5.0)),
         Pair.of(duration(0, MILLISECONDS), SerializedValue.of(0.0)),
-        Pair.of(duration(250, MILLISECONDS), SerializedValue.of(1.0)),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of(2.0)),
-        Pair.of(duration(750, MILLISECONDS), SerializedValue.of(3.0)),
         Pair.of(duration(1000, MILLISECONDS), SerializedValue.of(4.0)),
         Pair.of(duration(1000, MILLISECONDS), SerializedValue.of(8.0)),
-        Pair.of(duration(1250, MILLISECONDS), SerializedValue.of(8.0)),
         Pair.of(duration(2000, MILLISECONDS), SerializedValue.of(8.0)));
 
-    final var samples = SampleTaker.sample(profile, new RealResourceSolver<>(Scoped.create()), timestamps);
+    final var samples = SampleTaker.sample(profile, new RealResourceSolver<>(Scoped.create()));
 
     assertEquals(expected, samples);
   }

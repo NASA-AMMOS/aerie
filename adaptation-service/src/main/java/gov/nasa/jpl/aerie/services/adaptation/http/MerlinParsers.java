@@ -31,7 +31,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry5;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
 
 public abstract class MerlinParsers {
   private MerlinParsers() {}
@@ -91,8 +91,7 @@ public abstract class MerlinParsers {
       . field("adaptationId", stringP)
       . field("startTime", instantP)
       . field("samplingDuration", durationP)
-      . field("samplingPeriod", durationP)
       . field("activities", mapP(scheduledActivityP))
-      . map(uncurry5(adaptationId -> startTime -> samplingDuration -> samplingPeriod -> activities ->
-          new CreateSimulationMessage(adaptationId, startTime, samplingDuration, samplingPeriod, activities)));
+      . map(uncurry4(adaptationId -> startTime -> samplingDuration -> activities ->
+          new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities)));
 }

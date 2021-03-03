@@ -25,5 +25,5 @@ public interface App {
   void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
   void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException;
 
-  SimulationResults getSimulationResultsForPlan(String planId, long samplingPeriod) throws NoSuchPlanException;
+  SimulationResults getSimulationResultsForPlan(String planId) throws NoSuchPlanException;
 }

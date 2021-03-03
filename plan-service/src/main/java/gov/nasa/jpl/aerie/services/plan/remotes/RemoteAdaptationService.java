@@ -93,7 +93,7 @@ public final class RemoteAdaptationService implements AdaptationService {
   }
 
   @Override
-  public SimulationResults simulatePlan(final Plan plan, final long samplingPeriod) throws NoSuchAdaptationException {
+  public SimulationResults simulatePlan(final Plan plan) throws NoSuchAdaptationException {
     final var startTime = plan.startTimestamp.toInstant();
 
     final HttpResponse<String> response;
@@ -104,7 +104,6 @@ public final class RemoteAdaptationService implements AdaptationService {
           .add("adaptationId", plan.adaptationId)
           .add("startTime", plan.startTimestamp.toString())
           .add("samplingDuration", samplingDuration)
-          .add("samplingPeriod", samplingPeriod)
           .add("activities", serializeScheduledActivities(plan))
           .build();
 

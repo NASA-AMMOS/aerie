@@ -80,7 +80,6 @@ public final class MerlinParsersTest {
         . add("adaptationId", "hello")
         . add("startTime", "1992-224T01:30:00")
         . add("samplingDuration", 5_000_000 /* microseconds */)
-        . add("samplingPeriod", 500_000 /* microseconds */)
         . add("activities", Json
             . createObjectBuilder()
             . add("0", Json
@@ -104,7 +103,6 @@ public final class MerlinParsersTest {
         "hello",
         Instant.parse("1992-08-11T01:30:00Z"),
         Duration.of(5, Duration.SECONDS),
-        Duration.of(500, Duration.MILLISECONDS),
         Map.of(
             "0", Pair.of(
                 Duration.of(10, Duration.SECONDS),
