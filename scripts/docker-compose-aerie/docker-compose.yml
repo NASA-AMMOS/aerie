@@ -25,7 +25,7 @@ services:
     command: ["npm", "run", "start:production"]
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     depends_on: ["postgres"]
-    ports: ["8080:80"]
+    ports: ["80:80"]
   aerie_apollo:
     command: ["npm", "run", "start:docker"]
     image: "${AERIE_DOCKER_URL}/aerie-apollo:${DOCKER_TAG}"
