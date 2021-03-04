@@ -35,15 +35,15 @@ def getArtifactoryUrl() {
 
   if (GIT_BRANCH ==~ /release-.*/){
     echo "Publishing to 16003-RELEASE-LOCAL"
-    return "cae-artifactory.jpl.nasa.gov:16003"
+    return "artifactory.jpl.nasa.gov:16003"
   }
   else if (GIT_BRANCH ==~ /staging/) {
     echo "Publishing to 16002-STAGE-LOCAL"
-    return "cae-artifactory.jpl.nasa.gov:16002"
+    return "artifactory.jpl.nasa.gov:16002"
   }
   else {
     echo "Publishing to 16001-DEVELOP-LOCAL"
-    return "cae-artifactory.jpl.nasa.gov:16001"
+    return "artifactory.jpl.nasa.gov:16001"
   }
 }
 
@@ -128,7 +128,7 @@ pipeline {
       agent {
         docker {
           reuseNode true
-          registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+          registryUrl 'https://artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
           image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/aerie:latest'
           alwaysPull true
@@ -205,7 +205,7 @@ pipeline {
           steps {
             script {
               try {
-                def server = Artifactory.newServer url: 'https://cae-artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
+                def server = Artifactory.newServer url: 'https://artifactory.jpl.nasa.gov/artifactory', credentialsId: '9db65bd3-f8f0-4de0-b344-449ae2782b86'
                 def uploadSpec =
                 """
                 {

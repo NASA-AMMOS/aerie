@@ -46,7 +46,7 @@ publishing {
       if (project.hasProperty('jplArtifactoryUsername')) {
         maven {
           name = 'jplSnapshots'
-          url = "https://cae-artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local"
+          url = "https://artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local"
           credentials {
             username jplArtifactoryUsername
             password jplArtifactoryPassword

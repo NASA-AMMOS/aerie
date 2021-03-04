@@ -24,12 +24,12 @@ Use the following command to confirm the Docker server is running on your target
 docker info
 ```
 
-2. Download and extract the [aerie-docker-compose.tar.gz](https://cae-artifactory.jpl.nasa.gov:16003/artifactory/webapp/#/artifacts/browse/tree/General/general/gov/nasa/jpl/aerie/aerie-docker-compose.tar.gz) archive into a directory called `aerie-docker-compose`. This directory contains the example deployment [docker-compose.yml](../scripts/docker-compose-aerie/docker-compose.yml) and [.env](../scripts/docker-compose-aerie/.env) files. You can change these files to taylor the deployment to your requirements as needed.
+2. Download and extract the [aerie-docker-compose.tar.gz](https://artifactory.jpl.nasa.gov:16003/artifactory/webapp/#/artifacts/browse/tree/General/general/gov/nasa/jpl/aerie/aerie-docker-compose.tar.gz) archive into a directory called `aerie-docker-compose`. This directory contains the example deployment [docker-compose.yml](../scripts/docker-compose-aerie/docker-compose.yml) and [.env](../scripts/docker-compose-aerie/.env) files. You can change these files to taylor the deployment to your requirements as needed.
 
-3. Log into the [Artifactory](https://cae-artifactory.jpl.nasa.gov) Docker repository:
+3. Log into the [Artifactory](https://artifactory.jpl.nasa.gov) Docker repository:
 
 ```bash
-docker login cae-artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie
+docker login artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie
 ```
 
 5. Use Docker Compose to start Aerie.
