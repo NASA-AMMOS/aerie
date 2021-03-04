@@ -10,7 +10,7 @@ First make sure you have [Docker](https://docs.docker.com/get-docker/) installed
 ## Start
 
 ```sh
-docker login cae-artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie
+docker login artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie
 docker-compose up --detach
 ```
 

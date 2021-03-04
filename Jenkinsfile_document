@@ -31,7 +31,7 @@ pipeline {
       agent {
         docker {
           reuseNode true
-          registryUrl 'https://cae-artifactory.jpl.nasa.gov:16001'
+          registryUrl 'https://artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
           image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/aerie-gh-pages:latest'
           alwaysPull true
