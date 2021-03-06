@@ -831,17 +831,18 @@ public final class AdaptationProcessor implements Processor {
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.Adaptation.class),
                             WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))
                     .addStatement(
-                        "return this.instantiate($T.builder())",
+                        "return this.makeBuilder($T.builder()).build()",
                         gov.nasa.jpl.aerie.merlin.timeline.Schema.class)
                     .build())
             .addMethod(
                 MethodSpec
-                    .methodBuilder("instantiate")
+                    .methodBuilder("makeBuilder")
                     .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .returns(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.Adaptation.class),
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
                             TypeVariableName.get("$Schema")))
                     .addParameter(
                         ParameterizedTypeName.get(
@@ -912,7 +913,7 @@ public final class AdaptationProcessor implements Processor {
                             .build())
                     .addCode("\n")
                     .addStatement(
-                        "return $L.build()",
+                        "return $L",
                         "builder")
                     .build())
             .build();
