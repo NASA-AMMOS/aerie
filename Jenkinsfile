@@ -175,11 +175,6 @@ pipeline {
                adaptation-service/build/distributions/*.tar \
                ${ASSEMBLE_PREP_DIR}/services/
 
-            # For merlin-cli
-            mkdir -p ${ASSEMBLE_PREP_DIR}/merlin-cli
-            cp merlin-cli/build/distributions/*.tar \
-               ${ASSEMBLE_PREP_DIR}/merlin-cli/
-
             # For docker-compose
             cp -r ./scripts/docker-compose-aerie ${STAGING_DIR}
 
