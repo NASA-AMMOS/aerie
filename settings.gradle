@@ -18,4 +18,3 @@ include 'adaptation-service'
 
 // Command-line interface direct to services
 include 'apgen-parser'
-include 'merlin-cli'
