@@ -156,10 +156,10 @@ public final class Window {
   public static final Window FOREVER = new Window(Duration.MIN_VALUE, Duration.MAX_VALUE);
 
   public boolean isEmpty() {
-    return (
-        this.end.shorterThan(this.start) ||
-        ( this.end.isEqualTo(this.start) && !(this.includesStart() && this.includesEnd()) )
-    );
+    if (this.end.shorterThan(this.start)) return true;
+    if (this.end.longerThan(this.start)) return false;
+
+    return !(this.includesStart() && this.includesEnd());
   }
 
   public Duration duration() {
@@ -300,10 +300,10 @@ public final class Window {
         return Window.EMPTY;
       } else if (other.start.noLongerThan(self.start) && self.start.noLongerThan(other.end) && other.end.shorterThan(self.end)) {
         // This interval is cut on the left by the other.
-        return Window.between(other.end, other.startInclusivity.opposite(), self.end, self.endInclusivity);
+        return Window.between(other.end, other.endInclusivity.opposite(), self.end, self.endInclusivity);
       } else if (self.start.shorterThan(other.start) && other.start.noLongerThan(self.end) && self.end.noLongerThan(other.end)) {
         // This interval is cut on the right by the other.
-        return Window.between(self.start, self.startInclusivity, other.start, other.endInclusivity.opposite());
+        return Window.between(self.start, self.startInclusivity, other.start, other.startInclusivity.opposite());
       } else /* other.start <= self.start && this.end <= other.end */ {
         // This interval is fully contained by the other.
         return Window.EMPTY;
