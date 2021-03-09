@@ -29,7 +29,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
-import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -184,6 +183,7 @@ public final class ResponseSerializers {
 
     return Json
         .createObjectBuilder()
+        .add("start", serializeTimestamp(results.startTime))
         .add("resources", serializeMap(
             elements -> serializeIterable(gov.nasa.jpl.aerie.services.plan.http.ResponseSerializers::serializeSample, elements),
             results.resourceSamples))
@@ -250,15 +250,6 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeConstraintTypes(List<ViolableConstraint> constraintTypes) {
     return serializeIterable(ResponseSerializers::serializeConstraintType, constraintTypes);
-  }
-
-  public static JsonValue serializeSimulationResults(final Pair<Instant, JsonValue> results) {
-    if (results == null) return JsonValue.NULL;
-
-    return Json
-        .createObjectBuilder(results.getRight().asJsonObject())
-        .add("start", serializeTimestamp(results.getLeft()))
-        .build();
   }
 
   private static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {

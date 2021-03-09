@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.services.plan.http.AdaptationRepositoryExceptionBindin
 import gov.nasa.jpl.aerie.services.plan.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.MerlinBindings;
-import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemotePlanRepository;
 import io.javalin.Javalin;
 
@@ -33,9 +32,8 @@ public final class AerieAppDriver {
     final var adaptationRepository = new RemoteAdaptationRepository(
         mongoDatabase,
         configuration.MONGO_ADAPTATION_COLLECTION);
-    final var adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
-    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(planRepository, adaptationService);
     final var adaptationController = new gov.nasa.jpl.aerie.services.adaptation.app.LocalApp(adaptationRepository);
+    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(planRepository, adaptationController);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {

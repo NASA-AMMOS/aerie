@@ -168,7 +168,7 @@ public final class StubApp implements App {
       throw new NoSuchAdaptationException(adaptationId);
     }
 
-    if (Objects.equals(activityParameters, NONEXISTENT_ACTIVITY_INSTANCE)) {
+    if (Objects.equals(activityParameters.getTypeName(), NONEXISTENT_ACTIVITY_INSTANCE.getTypeName())) {
       return NO_SUCH_ACTIVITY_TYPE_FAILURES;
     } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
       return UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES;

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.controllers;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
@@ -8,8 +9,6 @@ import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.JsonValue;
-import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -26,5 +25,6 @@ public interface App {
   void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
   void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException;
 
-  Pair<Instant, JsonValue> getSimulationResultsForPlan(String planId) throws NoSuchPlanException;
+  SimulationResults getSimulationResultsForPlan(String planId)
+  throws NoSuchPlanException;
 }

@@ -1,30 +1,37 @@
 package gov.nasa.jpl.aerie.services.plan.controllers;
 
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
-import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationService;
 import gov.nasa.jpl.aerie.services.plan.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.services.plan.remotes.PlanRepository.PlanTransaction;
+import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
-import javax.json.JsonValue;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class LocalApp implements App {
   private final PlanRepository planRepository;
-  private final AdaptationService adaptationService;
+  private final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationService;
 
   public LocalApp(
       final PlanRepository planRepository,
-      final AdaptationService adaptationService
+      final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationService
   ) {
     this.planRepository = planRepository;
     this.adaptationService = adaptationService;
@@ -129,14 +136,40 @@ public final class LocalApp implements App {
   }
 
   @Override
-  public Pair<Instant, JsonValue> getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
+  public SimulationResults getSimulationResultsForPlan(final String planId)
+  throws NoSuchPlanException
+  {
     final var plan = this.planRepository.getPlan(planId);
 
     try {
-      return this.adaptationService.simulatePlan(plan);
-    } catch (AdaptationService.NoSuchAdaptationException e) {
+      return this.adaptationService.runSimulation(new CreateSimulationMessage(
+          plan.adaptationId,
+          plan.startTimestamp.toInstant(),
+          Duration.of(
+              plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
+              Duration.MICROSECONDS),
+          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances)));
+    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
       throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
+    } catch (final SimulationDriver.TaskSpecInstantiationException | AdaptationFacade.NoSuchActivityTypeException ex) {
+      throw new RuntimeException("Assumption falsified -- activity could not be instantiated");
     }
+  }
+
+  private Map<String, Pair<Duration, SerializedActivity>>
+  serializeScheduledActivities(final Instant startTime, final Map<String, ActivityInstance> activityInstances) {
+    final var scheduledActivities = new HashMap<String, Pair<Duration, SerializedActivity>>();
+
+    for (final var entry : activityInstances.entrySet()) {
+      final var id = entry.getKey();
+      final var activity = entry.getValue();
+
+      scheduledActivities.put(id, Pair.of(
+          Duration.of(startTime.until(activity.startTimestamp.toInstant(), ChronoUnit.MICROS), Duration.MICROSECONDS),
+          new SerializedActivity(activity.type, activity.parameters)));
+    }
+
+    return scheduledActivities;
   }
 
   private <T extends Throwable> void withValidator(final ValidationScope<T> block) throws ValidationException, T {

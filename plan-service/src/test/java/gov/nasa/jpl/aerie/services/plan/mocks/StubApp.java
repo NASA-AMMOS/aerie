@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.mocks;
 
+import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.services.plan.controllers.App;
 import gov.nasa.jpl.aerie.services.plan.controllers.Breadcrumb;
@@ -16,6 +17,7 @@ import javax.json.Json;
 import javax.json.JsonValue;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -230,11 +232,16 @@ public final class StubApp implements App {
   }
 
   @Override
-  public Pair<Instant, JsonValue> getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
+  public SimulationResults getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }
 
-    return Pair.of(Instant.EPOCH, JsonValue.EMPTY_JSON_OBJECT);
+    return new SimulationResults(
+        Collections.emptyMap(),
+        Collections.emptyList(),
+        Collections.emptyMap(),
+        Collections.emptyMap(),
+        Instant.EPOCH);
   }
 }

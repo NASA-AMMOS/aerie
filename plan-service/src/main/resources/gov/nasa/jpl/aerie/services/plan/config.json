@@ -1,6 +1,5 @@
 {
   "HTTP_PORT": 27183,
-  "ADAPTATION_URI": "http://localhost:27183",
   "MONGO_URI": "mongodb://plan_mongo:27018",
   "MONGO_DATABASE": "plan-service",
   "MONGO_PLAN_COLLECTION": "plans",

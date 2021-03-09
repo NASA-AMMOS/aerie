@@ -14,8 +14,8 @@ public final class DevAppDriver {
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
-    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(fixtures.planRepository, fixtures.adaptationService);
     final var adaptationController = new gov.nasa.jpl.aerie.services.adaptation.app.LocalApp(new MockAdaptationRepository());
+    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(fixtures.planRepository, adaptationController);
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> config

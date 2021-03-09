@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.services.plan.controllers;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.services.adaptation.app.App;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
-import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationService;
 import gov.nasa.jpl.aerie.services.plan.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -20,12 +20,12 @@ import static java.util.Collections.unmodifiableList;
 
 public final class PlanValidator {
   private final PlanRepository planRepository;
-  private final AdaptationService adaptationService;
+  private final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationService;
 
   private final BreadcrumbCursor breadcrumbCursor = new BreadcrumbCursor();
   private final List<Pair<List<Breadcrumb>, String>> messages = new ArrayList<>();
 
-  public PlanValidator(final PlanRepository planRepository, final AdaptationService adaptationService) {
+  public PlanValidator(final PlanRepository planRepository, final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationService) {
     this.planRepository = planRepository;
     this.adaptationService = adaptationService;
   }
@@ -33,9 +33,10 @@ public final class PlanValidator {
   public void validateActivity(final String adaptationId, final ActivityInstance activityInstance) {
     final List<String> validationFailures;
     try {
-      validationFailures = this.adaptationService
-          .areActivityParametersValid(adaptationId, new SerializedActivity(activityInstance.type, activityInstance.parameters));
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      validationFailures = this.adaptationService.validateActivityParameters(
+          adaptationId,
+          new SerializedActivity(activityInstance.type, activityInstance.parameters));
+    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
       throw new Error("Unexpectedly nonexistent adaptation, when this should have been validated earlier.", ex);
     }
 
@@ -67,10 +68,19 @@ public final class PlanValidator {
     if (plan.endTimestamp == null) with("endTimestamp", () -> addError("must be non-null"));
     if (plan.adaptationId == null) {
       with("adaptationId", () -> addError("must be non-null"));
-    } else if (!this.adaptationService.isMissionModelDefined(plan.adaptationId)) {
+    } else if (!adaptationExists(plan.adaptationId)) {
       with("adaptationId", () -> addError("is not a defined mission model"));
     } else if (plan.activityInstances != null) {
       with("activityInstances", () -> validateActivityList(plan.adaptationId, plan.activityInstances));
+    }
+  }
+
+  private boolean adaptationExists(final String adaptationId) {
+    try {
+      this.adaptationService.getAdaptationById(adaptationId);
+      return true;
+    } catch (final App.NoSuchAdaptationException ex) {
+      return false;
     }
   }
 

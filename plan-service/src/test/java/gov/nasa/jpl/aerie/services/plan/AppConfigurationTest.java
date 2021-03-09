@@ -14,7 +14,6 @@ public class AppConfigurationTest {
     public void testParseProperties() {
         // Create JsonObject with expected properties
         int http_port = 7654;
-        URI adaptation_uri = URI.create("http://localhost.adaptation.test");
         URI mongo_uri = URI.create("http://localhost.mongo.test");
         String mongo_database = "mongo_database_test";
         String mongo_plan_collection = "mongo_plan_collection_test";
@@ -23,7 +22,6 @@ public class AppConfigurationTest {
 
         AppConfiguration expected = AppConfiguration.builder()
                 .setHttpPort(http_port)
-                .setAdaptationServiceUri(adaptation_uri)
                 .setMongoUri(mongo_uri)
                 .setMongoDatabase(mongo_database)
                 .setMongoPlanCollection(mongo_plan_collection)
@@ -33,7 +31,6 @@ public class AppConfigurationTest {
 
         JsonObject config = Json.createObjectBuilder()
                 .add("HTTP_PORT", http_port)
-                .add("ADAPTATION_URI", adaptation_uri.toString())
                 .add("MONGO_URI", mongo_uri.toString())
                 .add("MONGO_DATABASE", mongo_database)
                 .add("MONGO_PLAN_COLLECTION", mongo_plan_collection)

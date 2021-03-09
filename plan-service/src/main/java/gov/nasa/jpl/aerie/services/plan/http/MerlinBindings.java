@@ -137,7 +137,7 @@ public final class MerlinBindings implements Plugin {
 
   private void getSimulationResults(final Context ctx) {
     try {
-      final String planId = ctx.pathParam("planId");
+      final var planId = ctx.pathParam("planId");
 
       final var results = this.planApp.getSimulationResultsForPlan(planId);
 

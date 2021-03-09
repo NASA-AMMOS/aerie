@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.mocks;
 
+import gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 
 public final class Fixtures {
   public final MockPlanRepository planRepository;
-  public final StubAdaptationService adaptationService;
+  public final StubApp adaptationService;
 
   public final String EXISTENT_ADAPTATION_ID;
   public final String EXISTENT_PLAN_ID;
@@ -24,13 +25,13 @@ public final class Fixtures {
   public Fixtures() {
     try {
       this.planRepository = new MockPlanRepository();
-      this.adaptationService = new StubAdaptationService();
+      this.adaptationService = new StubApp();
 
-      this.NONEXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.NONEXISTENT_ACTIVITY_TYPE_ID;
-      this.EXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.EXISTENT_ACTIVITY_TYPE_ID;
+      this.NONEXISTENT_ACTIVITY_TYPE_ID = StubApp.NONEXISTENT_ACTIVITY_TYPE;
+      this.EXISTENT_ACTIVITY_TYPE_ID = StubApp.EXISTENT_ACTIVITY_TYPE;
 
-      this.NONEXISTENT_ADAPTATION_ID = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
-      this.EXISTENT_ADAPTATION_ID = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+      this.NONEXISTENT_ADAPTATION_ID = StubApp.NONEXISTENT_ADAPTATION_ID;
+      this.EXISTENT_ADAPTATION_ID = StubApp.EXISTENT_ADAPTATION_ID;
 
       this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1"));
       this.NONEXISTENT_PLAN_ID = "nonexistent plan";
@@ -67,7 +68,7 @@ public final class Fixtures {
 
     activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
     activityInstance.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
-    activityInstance.parameters = StubAdaptationService.VALID_ACTIVITY_PARAMETERS.getParameters();
+    activityInstance.parameters = StubApp.VALID_ACTIVITY_INSTANCE.getParameters();
 
     return activityInstance;
   }
