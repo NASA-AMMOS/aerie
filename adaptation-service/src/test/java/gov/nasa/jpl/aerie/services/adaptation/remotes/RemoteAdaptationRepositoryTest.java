@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.services.adaptation.remotes;
 
+import com.mongodb.client.MongoClients;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Tag;
 
@@ -12,7 +13,11 @@ public final class RemoteAdaptationRepositoryTest extends AdaptationRepositoryCo
     private static final String MONGO_DATABASE = "adaptation-service";
     private static final String MONGO_ADAPTATION_COLLECTION = "adaptations";
 
-    private static final RemoteAdaptationRepository remoteRepository = new RemoteAdaptationRepository(MONGO_URI, MONGO_DATABASE, MONGO_ADAPTATION_COLLECTION);
+    private static final RemoteAdaptationRepository remoteRepository = new RemoteAdaptationRepository(
+        MongoClients
+            .create(MONGO_URI.toString())
+            .getDatabase(MONGO_DATABASE),
+        MONGO_ADAPTATION_COLLECTION);
 
     @Override
     protected void resetRepository() {

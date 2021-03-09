@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.services.adaptation;
 
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import gov.nasa.jpl.aerie.services.adaptation.app.App;
 import gov.nasa.jpl.aerie.services.adaptation.app.LocalApp;
 import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationBindings;
@@ -23,9 +25,11 @@ public final class AerieAppDriver {
         final AppConfiguration configuration = loadConfiguration(args);
 
         // Assemble the core domain object graph.
+        final MongoDatabase mongoDatabase = MongoClients
+            .create(configuration.MONGO_URI.toString())
+            .getDatabase(configuration.MONGO_DATABASE);
         final AdaptationRepository adaptationRepository = new RemoteAdaptationRepository(
-            configuration.MONGO_URI,
-            configuration.MONGO_DATABASE,
+            mongoDatabase,
             configuration.MONGO_ADAPTATION_COLLECTION);
         final App app = new LocalApp(adaptationRepository);
 

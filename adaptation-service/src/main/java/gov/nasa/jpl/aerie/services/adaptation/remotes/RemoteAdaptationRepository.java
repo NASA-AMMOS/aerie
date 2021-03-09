@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.services.adaptation.remotes;
 
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -13,7 +12,6 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
@@ -26,14 +24,9 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     private final MongoCollection<Document> adaptationCollection;
 
     public RemoteAdaptationRepository(
-            final URI serverAddress,
-            final String databaseName,
+            final MongoDatabase database,
             final String adaptationCollectionName
     ) {
-        final MongoDatabase database = MongoClients
-                .create(serverAddress.toString())
-                .getDatabase(databaseName);
-
         this.adaptationCollection = database.getCollection(adaptationCollectionName);
     }
 
