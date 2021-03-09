@@ -172,7 +172,6 @@ pipeline {
             # For services
             mkdir -p ${ASSEMBLE_PREP_DIR}/services
             cp plan-service/build/distributions/*.tar \
-               adaptation-service/build/distributions/*.tar \
                ${ASSEMBLE_PREP_DIR}/services/
 
             # For docker-compose

@@ -14,7 +14,6 @@ include 'parsing-utilities'
 
 // Services for deployment within the Aerie infrastructure
 include 'plan-service'
-include 'adaptation-service'
 
 // Command-line interface direct to services
 include 'apgen-parser'
