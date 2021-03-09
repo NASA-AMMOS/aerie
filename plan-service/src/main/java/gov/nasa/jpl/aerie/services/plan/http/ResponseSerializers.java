@@ -9,7 +9,9 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.aerie.services.adaptation.app.AdaptationService;
 import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.services.adaptation.app.LocalAdaptationService;
 import gov.nasa.jpl.aerie.services.adaptation.models.ActivityType;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
@@ -341,7 +343,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeAdaptationRejectedException(
-      final gov.nasa.jpl.aerie.services.adaptation.app.App.AdaptationRejectedException ex)
+      final AdaptationService.AdaptationRejectedException ex)
   {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
@@ -357,7 +359,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeAdaptationLoadException(
-      final gov.nasa.jpl.aerie.services.adaptation.app.LocalApp.AdaptationLoadException ex)
+      final LocalAdaptationService.AdaptationLoadException ex)
   {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()

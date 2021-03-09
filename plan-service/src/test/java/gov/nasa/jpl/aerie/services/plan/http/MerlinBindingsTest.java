@@ -4,7 +4,8 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.services.adaptation.mocks.FakeFile;
-import gov.nasa.jpl.aerie.services.plan.mocks.StubApp;
+import gov.nasa.jpl.aerie.services.adaptation.mocks.StubAdaptationService;
+import gov.nasa.jpl.aerie.services.plan.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.utils.HttpRequester;
 import gov.nasa.jpl.aerie.time.Duration;
@@ -42,8 +43,8 @@ public final class MerlinBindingsTest {
 
   @BeforeClass
   public static void setupServer() {
-    final var planApp = new gov.nasa.jpl.aerie.services.plan.mocks.StubApp();
-    final var adaptationApp = new gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp();
+    final var planApp = new StubPlanService();
+    final var adaptationApp = new StubAdaptationService();
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
@@ -109,7 +110,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldGetPlanById() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId);
@@ -123,7 +124,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldReturn404OnNonexistentPlanById() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId);
@@ -135,13 +136,13 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldAddValidPlan() throws IOException, InterruptedException {
     // GIVEN
-    final JsonValue plan = StubApp.VALID_NEW_PLAN_JSON;
+    final JsonValue plan = StubPlanService.VALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans", plan);
 
     // THEN
-    final String expectedPlanId = StubApp.EXISTENT_PLAN_ID;
+    final String expectedPlanId = StubPlanService.EXISTENT_PLAN_ID;
 
     assertThat(response.statusCode()).isEqualTo(201);
     assertThat(response.headers().firstValue("Location")).get().isEqualTo("/plans/" + expectedPlanId);
@@ -153,7 +154,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotAddInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
-    final JsonValue plan = StubApp.INVALID_NEW_PLAN_JSON;
+    final JsonValue plan = StubPlanService.INVALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans", plan);
@@ -167,8 +168,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldReplaceExistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final JsonValue plan = StubApp.VALID_NEW_PLAN_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final JsonValue plan = StubPlanService.VALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId, plan);
@@ -180,8 +181,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotReplaceNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final JsonValue plan = StubApp.VALID_NEW_PLAN_JSON;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final JsonValue plan = StubPlanService.VALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId, plan);
@@ -193,8 +194,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotReplaceInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final JsonValue plan = StubApp.INVALID_NEW_PLAN_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final JsonValue plan = StubPlanService.INVALID_NEW_PLAN_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId, plan);
@@ -208,8 +209,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldPatchExistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final JsonValue patch = StubApp.VALID_PATCH_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final JsonValue patch = StubPlanService.VALID_PATCH_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
@@ -221,8 +222,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotPatchNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final JsonValue patch = StubApp.VALID_PATCH_JSON;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final JsonValue patch = StubPlanService.VALID_PATCH_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
@@ -234,8 +235,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotPatchInvalidPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final JsonValue patch = StubApp.INVALID_PATCH_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final JsonValue patch = StubPlanService.INVALID_PATCH_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId, patch);
@@ -244,14 +245,14 @@ public final class MerlinBindingsTest {
     assertThat(response.statusCode()).isEqualTo(422);
 
     final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
-    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubApp.VALIDATION_ERRORS);
+    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubPlanService.VALIDATION_ERRORS);
     assertThat(responseJson).isEqualTo(expectedJson);
   }
 
   @Test
   public void shouldRemoveExistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId);
@@ -263,7 +264,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotRemoveNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId);
@@ -275,9 +276,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldGetActivityInstances() throws IOException, InterruptedException, InvalidEntityException, InvalidJsonException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance activity = StubApp.EXISTENT_ACTIVITY;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance activity = StubPlanService.EXISTENT_ACTIVITY;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId + "/activity_instances");
@@ -294,7 +295,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotGetActivityInstancesForNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId + "/activity_instances");
@@ -306,9 +307,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldGetActivityInstanceById() throws IOException, InterruptedException, InvalidEntityException, InvalidJsonException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final ActivityInstance expectedActivityInstance = StubApp.EXISTENT_ACTIVITY;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final ActivityInstance expectedActivityInstance = StubPlanService.EXISTENT_ACTIVITY;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
@@ -324,8 +325,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotGetActivityInstanceFromNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
@@ -337,8 +338,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotGetNonexistentActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.NONEXISTENT_ACTIVITY_ID;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.NONEXISTENT_ACTIVITY_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
@@ -350,8 +351,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldAddActivityInstancesToPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final JsonValue activityInstanceList = StubApp.VALID_ACTIVITY_LIST_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final JsonValue activityInstanceList = StubPlanService.VALID_ACTIVITY_LIST_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", activityInstanceList);
@@ -365,8 +366,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotAddActivityInstancesToNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final JsonValue activityInstanceList = StubApp.VALID_ACTIVITY_LIST_JSON;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final JsonValue activityInstanceList = StubPlanService.VALID_ACTIVITY_LIST_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", activityInstanceList);
@@ -378,8 +379,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotAddInvalidActivityInstancesToPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final JsonValue activityInstanceList = StubApp.INVALID_ACTIVITY_LIST_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final JsonValue activityInstanceList = StubPlanService.INVALID_ACTIVITY_LIST_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("POST", "/plans/" + planId + "/activity_instances", activityInstanceList);
@@ -391,8 +392,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldDeleteActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
@@ -404,8 +405,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotDeleteActivityInstanceFromNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
@@ -417,8 +418,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotDeleteNonexistentActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.NONEXISTENT_ACTIVITY_ID;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.NONEXISTENT_ACTIVITY_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/plans/" + planId + "/activity_instances/" + activityInstanceId);
@@ -430,9 +431,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldPatchActivityInstanceById() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final JsonValue patch = StubApp.VALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final JsonValue patch = StubPlanService.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -444,9 +445,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotPatchActivityInstanceInNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final JsonValue patch = StubApp.VALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final JsonValue patch = StubPlanService.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -458,9 +459,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotPatchNonexistentActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.NONEXISTENT_ACTIVITY_ID;
-    final JsonValue patch = StubApp.VALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.NONEXISTENT_ACTIVITY_ID;
+    final JsonValue patch = StubPlanService.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -472,9 +473,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotPatchInvalidActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final JsonValue patch = StubApp.INVALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final JsonValue patch = StubPlanService.INVALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PATCH", "/plans/" + planId + "/activity_instances/" + activityInstanceId, patch);
@@ -483,16 +484,16 @@ public final class MerlinBindingsTest {
     assertThat(response.statusCode()).isEqualTo(422);
 
     final JsonValue responseJson = JsonbBuilder.create().fromJson(response.body(), JsonValue.class);
-    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubApp.VALIDATION_ERRORS);
+    final JsonValue expectedJson = ResponseSerializers.serializeValidationMessages(StubPlanService.VALIDATION_ERRORS);
     assertThat(responseJson).isEqualTo(expectedJson);
   }
 
   @Test
   public void shouldReplaceActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final JsonValue activityInstance = StubApp.VALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final JsonValue activityInstance = StubPlanService.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -504,9 +505,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotReplaceActivityInstanceOfNonexistentPlan() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.NONEXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final JsonValue activityInstance = StubApp.VALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.NONEXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final JsonValue activityInstance = StubPlanService.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -518,9 +519,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotReplaceNonexistentActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.NONEXISTENT_ACTIVITY_ID;
-    final JsonValue activityInstance = StubApp.VALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.NONEXISTENT_ACTIVITY_ID;
+    final JsonValue activityInstance = StubPlanService.VALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -532,9 +533,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotReplaceInvalidActivityInstance() throws IOException, InterruptedException {
     // GIVEN
-    final String planId = StubApp.EXISTENT_PLAN_ID;
-    final String activityInstanceId = StubApp.EXISTENT_ACTIVITY_ID;
-    final JsonValue activityInstance = StubApp.INVALID_ACTIVITY_JSON;
+    final String planId = StubPlanService.EXISTENT_PLAN_ID;
+    final String activityInstanceId = StubPlanService.EXISTENT_ACTIVITY_ID;
+    final JsonValue activityInstance = StubPlanService.INVALID_ACTIVITY_JSON;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("PUT", "/plans/" + planId + "/activity_instances/" + activityInstanceId, activityInstance);
@@ -549,8 +550,8 @@ public final class MerlinBindingsTest {
   public void shouldGetAdaptations() throws IOException, InterruptedException {
     // GIVEN
     final JsonValue expectedResponse = ResponseSerializers.serializeAdaptations(Map.of(
-        gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID,
-        gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION
+        StubAdaptationService.EXISTENT_ADAPTATION_ID,
+        StubAdaptationService.EXISTENT_ADAPTATION
     ));
 
     // WHEN
@@ -566,8 +567,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldGetAdaptationById() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final JsonValue expectedResponse = ResponseSerializers.serializeAdaptation(gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION);
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final JsonValue expectedResponse = ResponseSerializers.serializeAdaptation(StubAdaptationService.EXISTENT_ADAPTATION);
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId);
@@ -582,7 +583,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldReturn404OnNonexistentAdaptationById() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ADAPTATION_ID;
+    final String adaptationId = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId);
@@ -594,7 +595,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldConfirmAdaptationExists() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId);
@@ -606,7 +607,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldDenyNonexistentAdaptationExists() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ADAPTATION_ID;
+    final String adaptationId = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId);
@@ -618,7 +619,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldAddValidAdaptation() throws IOException, InterruptedException {
     // GIVEN
-    final Map<String, Object> adaptationRequest = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.VALID_NEW_ADAPTATION;
+    final Map<String, Object> adaptationRequest = StubAdaptationService.VALID_NEW_ADAPTATION;
 
     // WHEN
     final HttpResponse<String> response = sendRequest("POST", "/adaptations", adaptationRequest);
@@ -630,7 +631,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotAddInvalidAdaptation() throws IOException, InterruptedException {
     // GIVEN
-    final Map<String, Object> adaptationRequest = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.INVALID_NEW_ADAPTATION;
+    final Map<String, Object> adaptationRequest = StubAdaptationService.INVALID_NEW_ADAPTATION;
 
     // WHEN
     final HttpResponse<String> response = sendRequest("POST", "/adaptations", adaptationRequest);
@@ -642,7 +643,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldRemoveExistentAdaptation() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/adaptations/" + adaptationId);
@@ -654,7 +655,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotRemoveNonexistentAdaptation() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ADAPTATION_ID;
+    final String adaptationId = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("DELETE", "/adaptations/" + adaptationId);
@@ -666,9 +667,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldGetActivityTypeList() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY_TYPE;
-    final JsonValue expectedResponse = ResponseSerializers.serializeActivityTypes(Map.of(activityId, gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY));
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
+    final JsonValue expectedResponse = ResponseSerializers.serializeActivityTypes(Map.of(activityId, StubAdaptationService.EXISTENT_ACTIVITY));
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
@@ -683,7 +684,7 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotGetActivityTypeListForNonexistentAdaptation() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ADAPTATION_ID;
+    final String adaptationId = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities");
@@ -695,9 +696,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldGetActivityTypeById() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY_TYPE;
-    final JsonValue expectedResponse = ResponseSerializers.serializeActivityType(gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY);
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
+    final JsonValue expectedResponse = ResponseSerializers.serializeActivityType(StubAdaptationService.EXISTENT_ACTIVITY);
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -712,8 +713,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotGetActivityTypeByIdForNonexistentAdaptation() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY_TYPE;
+    final String adaptationId = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -725,8 +726,8 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldNotGetActivityTypeByIdForNonexistentActivityType() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ACTIVITY_TYPE;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.NONEXISTENT_ACTIVITY_TYPE;
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest("GET", "/adaptations/" + adaptationId + "/activities/" + activityId);
@@ -738,9 +739,9 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldValidateValidActivityParameters() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY_TYPE;
-    final SerializedActivity activityParameters = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.VALID_ACTIVITY_INSTANCE;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
+    final SerializedActivity activityParameters = StubAdaptationService.VALID_ACTIVITY_INSTANCE;
 
     final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(List.of());
 
@@ -760,11 +761,11 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldRejectActivityParametersForNonexistentActivityType() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ACTIVITY_TYPE;
-    final SerializedActivity activityParameters = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NONEXISTENT_ACTIVITY_INSTANCE;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.NONEXISTENT_ACTIVITY_TYPE;
+    final SerializedActivity activityParameters = StubAdaptationService.NONEXISTENT_ACTIVITY_INSTANCE;
 
-    final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.NO_SUCH_ACTIVITY_TYPE_FAILURES);
+    final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubAdaptationService.NO_SUCH_ACTIVITY_TYPE_FAILURES);
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest(
@@ -782,11 +783,11 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldRejectInvalidActivityParameters() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY_TYPE;
-    final SerializedActivity activityParameters = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.INVALID_ACTIVITY_INSTANCE;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
+    final SerializedActivity activityParameters = StubAdaptationService.INVALID_ACTIVITY_INSTANCE;
 
-    final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.INVALID_ACTIVITY_INSTANCE_FAILURES);
+    final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubAdaptationService.INVALID_ACTIVITY_INSTANCE_FAILURES);
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest(
@@ -804,11 +805,11 @@ public final class MerlinBindingsTest {
   @Test
   public void shouldRejectUnconstructableActivityParameters() throws IOException, InterruptedException {
     // GIVEN
-    final String adaptationId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID;
-    final String activityId = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ACTIVITY_TYPE;
-    final SerializedActivity activityParameters = gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.UNCONSTRUCTABLE_ACTIVITY_INSTANCE;
+    final String adaptationId = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+    final String activityId = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
+    final SerializedActivity activityParameters = StubAdaptationService.UNCONSTRUCTABLE_ACTIVITY_INSTANCE;
 
-    final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES);
+    final JsonValue expectedResponse = ResponseSerializers.serializeFailureList(StubAdaptationService.UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES);
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest(
@@ -827,15 +828,15 @@ public final class MerlinBindingsTest {
   public void shouldRunSimulation() throws IOException, InterruptedException {
     // GIVEN
     final CreateSimulationMessage message = new CreateSimulationMessage(
-        gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.EXISTENT_ADAPTATION_ID,
+        StubAdaptationService.EXISTENT_ADAPTATION_ID,
         Instant.EPOCH,
         Duration.ZERO,
         Map.of(
-            "0", Pair.of(Duration.ZERO, gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.VALID_ACTIVITY_INSTANCE)
+            "0", Pair.of(Duration.ZERO, StubAdaptationService.VALID_ACTIVITY_INSTANCE)
         )
     );
 
-    final JsonValue expectedResponse = ResponseSerializers.serializeSimulationResults(gov.nasa.jpl.aerie.services.adaptation.mocks.StubApp.SUCCESSFUL_SIMULATION_RESULTS);
+    final JsonValue expectedResponse = ResponseSerializers.serializeSimulationResults(StubAdaptationService.SUCCESSFUL_SIMULATION_RESULTS);
 
     // WHEN
     final HttpResponse<String> response = client.sendRequest(

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.services.plan.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.services.plan.services.App;
+import gov.nasa.jpl.aerie.services.plan.services.PlanService;
 import gov.nasa.jpl.aerie.services.plan.services.Breadcrumb;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public final class StubApp implements App {
+public final class StubPlanService implements PlanService {
   public static final String EXISTENT_PLAN_ID = "abc";
   public static final String NONEXISTENT_PLAN_ID = "def";
   public static final Plan EXISTENT_PLAN;

@@ -3,9 +3,10 @@ package gov.nasa.jpl.aerie.services.plan.http;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
+import gov.nasa.jpl.aerie.services.adaptation.app.AdaptationService;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.services.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.aerie.services.plan.services.App;
+import gov.nasa.jpl.aerie.services.plan.services.PlanService;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
@@ -53,20 +54,20 @@ import static io.javalin.apibuilder.ApiBuilder.put;
  * translating HTTP request bodies into native Java domain objects, and translating native Java domain objects
  * (including thrown exceptions) into HTTP response bodies.
  *
- * The object to be lifted must implement the {@link App} interface. Formally, it is
+ * The object to be lifted must implement the {@link PlanService} interface. Formally, it is
  * this interface that the {@code MerlinBindings} class lifts into the domain of HTTP; an object implementing
  * this interface defines the action to take for each HTTP request in an HTTP-independent way.
  */
 public final class MerlinBindings implements Plugin {
-  private final gov.nasa.jpl.aerie.services.plan.services.App planApp;
-  private final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationApp;
+  private final PlanService planService;
+  private final AdaptationService adaptationService;
 
   public MerlinBindings(
-      final gov.nasa.jpl.aerie.services.plan.services.App planApp,
-      final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationApp)
+      final PlanService planService,
+      final AdaptationService adaptationService)
   {
-    this.planApp = planApp;
-    this.adaptationApp = adaptationApp;
+    this.planService = planService;
+    this.adaptationService = adaptationService;
   }
 
   @Override
@@ -139,7 +140,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var planId = ctx.pathParam("planId");
 
-      final var results = this.planApp.getSimulationResultsForPlan(planId);
+      final var results = this.planService.getSimulationResultsForPlan(planId);
 
       ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
     } catch (final NoSuchPlanException ex) {
@@ -148,7 +149,7 @@ public final class MerlinBindings implements Plugin {
   }
 
   private void getPlans(final Context ctx) {
-    final Map<String, Plan> plans = this.planApp
+    final Map<String, Plan> plans = this.planService
         .getPlans()
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
 
@@ -159,7 +160,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final String planId = ctx.pathParam("planId");
 
-      final Plan plan = this.planApp.getPlanById(planId);
+      final Plan plan = this.planService.getPlanById(planId);
 
       ctx.result(ResponseSerializers.serializePlan(plan).toString());
     } catch (final NoSuchPlanException ex) {
@@ -171,7 +172,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final NewPlan plan = parseJson(ctx.body(), newPlanP);
 
-      final String planId = this.planApp.addPlan(plan);
+      final String planId = this.planService.addPlan(plan);
 
       ctx
           .status(201)
@@ -191,7 +192,7 @@ public final class MerlinBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final NewPlan plan = parseJson(ctx.body(), newPlanP);
 
-      this.planApp.replacePlan(planId, plan);
+      this.planService.replacePlan(planId, plan);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
@@ -208,7 +209,7 @@ public final class MerlinBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final Plan patch = parseJson(ctx.body(), planPatchP);
 
-      this.planApp.updatePlan(planId, patch);
+      this.planService.updatePlan(planId, patch);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
@@ -226,7 +227,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final String planId = ctx.pathParam("planId");
 
-      this.planApp.removePlan(planId);
+      this.planService.removePlan(planId);
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     }
@@ -236,7 +237,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final String planId = ctx.pathParam("planId");
 
-      final Plan plan = this.planApp.getPlanById(planId);
+      final Plan plan = this.planService.getPlanById(planId);
 
       ctx.result(ResponseSerializers.serializeActivityInstanceMap(plan.activityInstances).toString());
     } catch (final NoSuchPlanException ex) {
@@ -249,7 +250,7 @@ public final class MerlinBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final List<ActivityInstance> activityInstances = parseJson(ctx.body(), listP(activityInstanceP));
 
-      final List<String> activityInstanceIds = this.planApp.addActivityInstancesToPlan(planId, activityInstances);
+      final List<String> activityInstanceIds = this.planService.addActivityInstancesToPlan(planId, activityInstances);
 
       ctx.result(ResponseSerializers.serializeStringList(activityInstanceIds).toString());
     } catch (final InvalidJsonException ex) {
@@ -268,7 +269,7 @@ public final class MerlinBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
 
-      final ActivityInstance activityInstance = this.planApp.getActivityInstanceById(planId, activityInstanceId);
+      final ActivityInstance activityInstance = this.planService.getActivityInstanceById(planId, activityInstanceId);
 
       ctx.result(ResponseSerializers.serializeActivityInstance(activityInstance).toString());
     } catch (final NoSuchPlanException ex) {
@@ -284,7 +285,7 @@ public final class MerlinBindings implements Plugin {
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
       final ActivityInstance activityInstance = parseJson(ctx.body(), activityInstanceP);
 
-      this.planApp.replaceActivityInstance(planId, activityInstanceId, activityInstance);
+      this.planService.replaceActivityInstance(planId, activityInstanceId, activityInstance);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
@@ -304,7 +305,7 @@ public final class MerlinBindings implements Plugin {
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
       final ActivityInstance activityInstance = parseJson(ctx.body(), activityInstancePatchP);
 
-      this.planApp.updateActivityInstance(planId, activityInstanceId, activityInstance);
+      this.planService.updateActivityInstance(planId, activityInstanceId, activityInstance);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
@@ -323,7 +324,7 @@ public final class MerlinBindings implements Plugin {
       final String planId = ctx.pathParam("planId");
       final String activityInstanceId = ctx.pathParam("activityInstanceId");
 
-      this.planApp.removeActivityInstanceById(planId, activityInstanceId);
+      this.planService.removeActivityInstanceById(planId, activityInstanceId);
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final NoSuchActivityInstanceException ex) {
@@ -332,7 +333,7 @@ public final class MerlinBindings implements Plugin {
   }
 
   private void getAdaptations(final Context ctx) {
-    final var adaptations = this.adaptationApp.getAdaptations();
+    final var adaptations = this.adaptationService.getAdaptations();
 
     ctx.result(ResponseSerializers.serializeAdaptations(adaptations).toString());
   }
@@ -341,12 +342,12 @@ public final class MerlinBindings implements Plugin {
     try {
       final var newAdaptation = readNewAdaptation(ctx);
 
-      final var adaptationId = this.adaptationApp.addAdaptation(newAdaptation);
+      final var adaptationId = this.adaptationService.addAdaptation(newAdaptation);
 
       ctx.status(201)
          .header("Location", "/adaptations/" + adaptationId)
          .result(ResponseSerializers.serializedCreatedId(adaptationId).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.AdaptationRejectedException ex) {
+    } catch (final AdaptationService.AdaptationRejectedException ex) {
       ctx.status(400).result(ResponseSerializers.serializeAdaptationRejectedException(ex).toString());
     } catch (final NewAdaptationValidationException ex) {
       ctx.status(400).result(ResponseSerializers.serializeValidationException(ex).toString());
@@ -357,10 +358,10 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      this.adaptationApp.getAdaptationById(adaptationId);
+      this.adaptationService.getAdaptationById(adaptationId);
 
       ctx.status(200);
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -369,10 +370,10 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var adaptationJar = this.adaptationApp.getAdaptationById(adaptationId);
+      final var adaptationJar = this.adaptationService.getAdaptationById(adaptationId);
 
       ctx.result(ResponseSerializers.serializeAdaptation(adaptationJar).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -381,8 +382,8 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      this.adaptationApp.removeAdaptation(adaptationId);
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+      this.adaptationService.removeAdaptation(adaptationId);
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -391,10 +392,10 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var constraintTypes = this.adaptationApp.getConstraintTypes(adaptationId);
+      final var constraintTypes = this.adaptationService.getConstraintTypes(adaptationId);
 
       ctx.result(ResponseSerializers.serializeConstraintTypes(constraintTypes).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -403,10 +404,10 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var schemaMap = this.adaptationApp.getStatesSchemas(adaptationId);
+      final var schemaMap = this.adaptationService.getStatesSchemas(adaptationId);
 
       ctx.result(ResponseSerializers.serializeParameterSchemas(schemaMap).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -415,10 +416,10 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var activityTypes = this.adaptationApp.getActivityTypes(adaptationId);
+      final var activityTypes = this.adaptationService.getActivityTypes(adaptationId);
 
       ctx.result(ResponseSerializers.serializeActivityTypes(activityTypes).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -428,11 +429,11 @@ public final class MerlinBindings implements Plugin {
       final var adaptationId = ctx.pathParam("adaptationId");
       final var activityTypeId = ctx.pathParam("activityTypeId");
 
-      final var activityType = this.adaptationApp.getActivityType(adaptationId, activityTypeId);
+      final var activityType = this.adaptationService.getActivityType(adaptationId, activityTypeId);
 
       ctx.result(ResponseSerializers.serializeActivityType(activityType).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException
-        | gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchActivityTypeException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException
+        | AdaptationService.NoSuchActivityTypeException ex) {
       ctx.status(404);
     }
   }
@@ -445,10 +446,10 @@ public final class MerlinBindings implements Plugin {
       final var activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
       final var serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
-      final var failures = this.adaptationApp.validateActivityParameters(adaptationId, serializedActivity);
+      final var failures = this.adaptationService.validateActivityParameters(adaptationId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailureList(failures).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
@@ -461,7 +462,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var message = parseJson(ctx.body(), createSimulationMessageP);
 
-      final var results = this.adaptationApp.runSimulation(message);
+      final var results = this.adaptationService.runSimulation(message);
 
       ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
     } catch (final JsonParsingException ex) {
@@ -474,7 +475,7 @@ public final class MerlinBindings implements Plugin {
     } catch (final InvalidEntityException ex) {
       // Request entity does not have the expected shape
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       // The requested adaptation does not exist.
       ctx.status(404);
     } catch (final SimulationDriver.TaskSpecInstantiationException e) {

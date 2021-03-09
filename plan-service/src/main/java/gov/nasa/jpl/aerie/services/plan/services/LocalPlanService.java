@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.services.plan.services;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.services.adaptation.app.AdaptationService;
 import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
@@ -25,13 +26,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public final class LocalApp implements App {
+public final class LocalPlanService implements PlanService {
   private final PlanRepository planRepository;
-  private final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationService;
+  private final AdaptationService adaptationService;
 
-  public LocalApp(
+  public LocalPlanService(
       final PlanRepository planRepository,
-      final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationService
+      final AdaptationService adaptationService
   ) {
     this.planRepository = planRepository;
     this.adaptationService = adaptationService;
@@ -149,7 +150,7 @@ public final class LocalApp implements App {
               plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
               Duration.MICROSECONDS),
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances)));
-    } catch (final gov.nasa.jpl.aerie.services.adaptation.app.App.NoSuchAdaptationException ex) {
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
       throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
     } catch (final SimulationDriver.TaskSpecInstantiationException | AdaptationFacade.NoSuchActivityTypeException ex) {
       throw new RuntimeException("Assumption falsified -- activity could not be instantiated");

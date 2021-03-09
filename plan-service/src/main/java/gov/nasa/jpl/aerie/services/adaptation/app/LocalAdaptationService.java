@@ -30,17 +30,17 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 /**
- * Implements the plan service {@link App} interface on a set of local domain objects.
+ * Implements the plan service {@link AdaptationService} interface on a set of local domain objects.
  *
  * May throw unchecked exceptions:
- * * {@link LocalApp.AdaptationLoadException}: When an adaptation cannot be loaded from the JAR provided by the
+ * * {@link LocalAdaptationService.AdaptationLoadException}: When an adaptation cannot be loaded from the JAR provided by the
  * connected
  * adaptation repository.
  */
-public final class LocalApp implements App {
+public final class LocalAdaptationService implements AdaptationService {
   private final AdaptationRepository adaptationRepository;
 
-  public LocalApp(final AdaptationRepository adaptationRepository) {
+  public LocalAdaptationService(final AdaptationRepository adaptationRepository) {
     this.adaptationRepository = adaptationRepository;
   }
 

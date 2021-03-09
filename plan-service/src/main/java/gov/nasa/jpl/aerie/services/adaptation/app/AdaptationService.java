@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.services.adaptation.models.NewAdaptation;
 import java.util.List;
 import java.util.Map;
 
-public interface App {
+public interface AdaptationService {
   Map<String, AdaptationJar> getAdaptations();
 
   String addAdaptation(NewAdaptation adaptation)

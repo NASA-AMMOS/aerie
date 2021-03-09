@@ -8,7 +8,7 @@ import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AppConfigurationTest {
+public class AdaptationServiceConfigurationTest {
 
     @Test
     public void testParseProperties() {

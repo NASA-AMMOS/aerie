@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.services.adaptation.app.App;
+import gov.nasa.jpl.aerie.services.adaptation.app.AdaptationService;
 import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.services.adaptation.models.ActivityType;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class StubApp implements App {
+public final class StubAdaptationService implements AdaptationService {
   public static final String EXISTENT_ADAPTATION_ID = "abc";
   public static final String NONEXISTENT_ADAPTATION_ID = "def";
   public static final AdaptationJar EXISTENT_ADAPTATION;
