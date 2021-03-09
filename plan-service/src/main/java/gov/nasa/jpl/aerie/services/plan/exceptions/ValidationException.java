@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.exceptions;
 
-import gov.nasa.jpl.aerie.services.plan.controllers.Breadcrumb;
+import gov.nasa.jpl.aerie.services.plan.services.Breadcrumb;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collections;

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.plan.controllers;
+package gov.nasa.jpl.aerie.services.plan.services;
 
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;

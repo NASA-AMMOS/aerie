@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.services.plan.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.services.plan.controllers.App;
-import gov.nasa.jpl.aerie.services.plan.controllers.Breadcrumb;
+import gov.nasa.jpl.aerie.services.plan.services.App;
+import gov.nasa.jpl.aerie.services.plan.services.Breadcrumb;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;

@@ -14,7 +14,7 @@ import gov.nasa.jpl.aerie.services.adaptation.models.ActivityType;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
 import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
-import gov.nasa.jpl.aerie.services.plan.controllers.Breadcrumb;
+import gov.nasa.jpl.aerie.services.plan.services.Breadcrumb;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
@@ -153,10 +153,6 @@ public final class ResponseSerializers {
             .build())
         .add("windows", serializeIterable(ResponseSerializers::serializeWindow, violation.violationWindows))
         .build();
-  }
-
-  public static JsonValue serializeStatesSchemas(Map<String, ValueSchema> schemaMap) {
-    return serializeMap(gov.nasa.jpl.aerie.services.plan.http.ResponseSerializers::serializeParameterSchema, schemaMap);
   }
 
   public static JsonValue serializeWindow(final Window window) {

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.plan.controllers;
+package gov.nasa.jpl.aerie.services.plan.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.services.adaptation.app.App;
@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,15 +49,6 @@ public final class PlanValidator {
     int index = 0;
     for (final ActivityInstance activityInstance : activityInstances) {
       with(index++, () -> validateActivity(adaptationId, activityInstance));
-    }
-  }
-
-  public void validateActivityMap(final String adaptationId, final Map<String, ActivityInstance> activityInstances) {
-    for (final var entry : activityInstances.entrySet()) {
-      final String activityId = entry.getKey();
-      final ActivityInstance activityInstance = entry.getValue();
-
-      with(activityId, () -> validateActivity(adaptationId, activityInstance));
     }
   }
 

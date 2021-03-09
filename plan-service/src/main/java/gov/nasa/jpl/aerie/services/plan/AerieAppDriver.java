@@ -33,7 +33,7 @@ public final class AerieAppDriver {
         mongoDatabase,
         configuration.MONGO_ADAPTATION_COLLECTION);
     final var adaptationController = new gov.nasa.jpl.aerie.services.adaptation.app.LocalApp(adaptationRepository);
-    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(planRepository, adaptationController);
+    final var planController = new gov.nasa.jpl.aerie.services.plan.services.LocalApp(planRepository, adaptationController);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {

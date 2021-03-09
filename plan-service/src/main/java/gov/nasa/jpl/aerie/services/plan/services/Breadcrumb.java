@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.plan.controllers;
+package gov.nasa.jpl.aerie.services.plan.services;
 
 import java.util.Objects;
 

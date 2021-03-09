@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.services.adaptation.models.NewAdaptation;
-import gov.nasa.jpl.aerie.services.plan.controllers.App;
+import gov.nasa.jpl.aerie.services.plan.services.App;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
@@ -58,11 +58,11 @@ import static io.javalin.apibuilder.ApiBuilder.put;
  * this interface defines the action to take for each HTTP request in an HTTP-independent way.
  */
 public final class MerlinBindings implements Plugin {
-  private final gov.nasa.jpl.aerie.services.plan.controllers.App planApp;
+  private final gov.nasa.jpl.aerie.services.plan.services.App planApp;
   private final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationApp;
 
   public MerlinBindings(
-      final gov.nasa.jpl.aerie.services.plan.controllers.App planApp,
+      final gov.nasa.jpl.aerie.services.plan.services.App planApp,
       final gov.nasa.jpl.aerie.services.adaptation.app.App adaptationApp)
   {
     this.planApp = planApp;
