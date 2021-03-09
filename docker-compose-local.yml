@@ -1,31 +1,19 @@
 version: "3.7"
 services:
-  adaptation:
-    build:
-      context: .
-      dockerfile: scripts/dockerfiles/adaptation.Dockerfile
-    depends_on: ["adaptation_mongo"]
-    ports: ["27182:27182"]
-    restart: always
-    volumes:
-      - adaptation_files:/usr/src/app/adaptation_files
-  adaptation_mongo:
+  merlin_mongo:
     command: ["mongod", "--port", "27020", "--smallfiles"]
     image: mongo:3.2
     ports: ["27020:27020"]
-    volumes: ["adaptation_mongo_data:/data/db"]
-  plan:
+    volumes: ["merlin_mongo_data:/data/db"]
+  merlin:
     build:
       context: .
-      dockerfile: scripts/dockerfiles/plan.Dockerfile
-    depends_on: ["plan_mongo"]
+      dockerfile: scripts/dockerfiles/merlin.Dockerfile
+    depends_on: ["merlin_mongo"]
     ports: ["27183:27183"]
     restart: always
-  plan_mongo:
-    command: ["mongod", "--port", "27018", "--smallfiles"]
-    image: mongo:3.2
-    ports: ["27018:27018"]
-    volumes: ["plan_mongo_data:/data/db"]
+    volumes:
+      - adaptation_files:/usr/src/app/adaptation_files
   postgres:
     image: postgres
     ports: ["5432:5432"]
@@ -38,6 +26,5 @@ services:
 
 volumes:
   adaptation_files:
-  adaptation_mongo_data:
-  plan_mongo_data:
+  merlin_mongo_data:
   postgres_data:

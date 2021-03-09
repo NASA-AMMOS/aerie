@@ -1,26 +1,17 @@
 version: "3.7"
 services:
-  adaptation:
-    image: "${AERIE_DOCKER_URL}/adaptation:${DOCKER_TAG}"
-    ports: ["27182:27182"]
-    depends_on: ["adaptation_mongo"]
-    volumes:
-      - adaptation_files:/usr/src/app/adaptation_files
-  adaptation_mongo:
-    command: ["mongod", "--port", "27020", "--smallfiles"]
-    image: mongo:3.2
-    ports: ["27020:27020"]
-    volumes: ["adaptation_mongo_data:/data/db"]
-  plan:
-    image: "${AERIE_DOCKER_URL}/plan:${DOCKER_TAG}"
-    depends_on: ["plan_mongo"]
+  merlin:
+    image: "${AERIE_DOCKER_URL}/merlin:${DOCKER_TAG}"
+    depends_on: ["merlin_mongo"]
     ports: ["27183:27183"]
     restart: always
-  plan_mongo:
+    volumes:
+      - adaptation_files:/usr/src/app/adaptation_files
+  merlin_mongo:
     command: ["mongod", "--port", "27018", "--smallfiles"]
     image: mongo:3.2
     ports: ["27018:27018"]
-    volumes: ["plan_mongo_data:/data/db"]
+    volumes: ["merlin_mongo_data:/data/db"]
   aerie_ui:
     command: ["npm", "run", "start:production"]
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
@@ -42,6 +33,5 @@ services:
 
 volumes:
   adaptation_files:
-  adaptation_mongo_data:
-  plan_mongo_data:
+  merlin_mongo_data:
   postgres_data:

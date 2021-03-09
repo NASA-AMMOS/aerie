@@ -13,8 +13,7 @@ include 'foo-adaptation'
 include 'parsing-utilities'
 
 // Services for deployment within the Aerie infrastructure
-include 'plan-service'
-include 'adaptation-service'
+include 'merlin-server'
 
 // Command-line interface direct to services
 include 'apgen-parser'
