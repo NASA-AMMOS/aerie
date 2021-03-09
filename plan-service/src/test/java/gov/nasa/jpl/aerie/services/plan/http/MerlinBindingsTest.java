@@ -37,7 +37,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.services.plan.http.MerlinParsers.activityInstanceP;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class PlanBindingsTest {
+public final class MerlinBindingsTest {
   private static Javalin SERVER = null;
 
   @BeforeClass
@@ -48,7 +48,7 @@ public final class PlanBindingsTest {
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.enableCorsForAllOrigins();
-      config.registerPlugin(new PlanBindings(planApp, adaptationApp));
+      config.registerPlugin(new MerlinBindings(planApp, adaptationApp));
     });
 
     SERVER.start();

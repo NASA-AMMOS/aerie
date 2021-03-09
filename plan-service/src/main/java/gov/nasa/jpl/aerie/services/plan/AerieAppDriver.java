@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.services.plan.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.services.plan.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.services.plan.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
-import gov.nasa.jpl.aerie.services.plan.http.PlanBindings;
+import gov.nasa.jpl.aerie.services.plan.http.MerlinBindings;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemotePlanRepository;
 import io.javalin.Javalin;
@@ -43,7 +43,7 @@ public final class AerieAppDriver {
       if (configuration.enableJavalinLogging) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new PlanBindings(planController, adaptationController))
+          .registerPlugin(new MerlinBindings(planController, adaptationController))
           .registerPlugin(new LocalAppExceptionBindings())
           .registerPlugin(new AdaptationRepositoryExceptionBindings())
           .registerPlugin(new AdaptationExceptionBindings());
