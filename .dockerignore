@@ -2,5 +2,4 @@
 *
 
 # Explicitly whitelist files relevant to image creation.
-!plan-service/build/distributions/*.tar
-!adaptation-service/build/distributions/*.tar
+!merlin-server/build/distributions/*.tar
