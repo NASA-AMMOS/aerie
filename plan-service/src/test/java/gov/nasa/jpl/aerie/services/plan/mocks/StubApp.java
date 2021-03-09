@@ -9,7 +9,6 @@ import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
-import gov.nasa.jpl.aerie.services.plan.models.SimulationResults;
 import gov.nasa.jpl.aerie.services.plan.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -231,11 +230,11 @@ public final class StubApp implements App {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
+  public Pair<Instant, JsonValue> getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }
 
-    return new SimulationResults(Instant.EPOCH, Map.of(), JsonValue.EMPTY_JSON_ARRAY, JsonValue.EMPTY_JSON_OBJECT);
+    return Pair.of(Instant.EPOCH, JsonValue.EMPTY_JSON_OBJECT);
   }
 }

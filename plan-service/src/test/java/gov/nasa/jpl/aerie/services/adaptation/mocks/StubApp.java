@@ -56,7 +56,7 @@ public final class StubApp implements App {
       List.of(),
       Map.of(),
       Map.of(),
-      Instant.MIN);
+      Instant.EPOCH);
 
   static {
     VALID_NEW_ADAPTATION = new HashMap<>();

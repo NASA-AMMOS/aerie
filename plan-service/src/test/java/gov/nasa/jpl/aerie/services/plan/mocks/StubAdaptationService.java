@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.services.plan.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
-import gov.nasa.jpl.aerie.services.plan.models.SimulationResults;
 import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationService;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.JsonValue;
 import java.time.Instant;
@@ -39,9 +39,9 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public SimulationResults simulatePlan(final Plan plan) throws NoSuchAdaptationException {
+  public Pair<Instant, JsonValue> simulatePlan(final Plan plan) throws NoSuchAdaptationException {
     if (!Objects.equals(plan.adaptationId, EXISTENT_ADAPTATION_ID)) throw new NoSuchAdaptationException();
 
-    return new SimulationResults(Instant.EPOCH, Map.of(), JsonValue.EMPTY_JSON_ARRAY, JsonValue.EMPTY_JSON_OBJECT);
+    return Pair.of(Instant.EPOCH, JsonValue.EMPTY_JSON_OBJECT);
   }
 }

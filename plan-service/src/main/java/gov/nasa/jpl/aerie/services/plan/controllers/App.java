@@ -6,9 +6,10 @@ import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
-import gov.nasa.jpl.aerie.services.plan.models.SimulationResults;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.JsonValue;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -25,5 +26,5 @@ public interface App {
   void updateActivityInstance(String planId, String activityInstanceId, ActivityInstance patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
   void replaceActivityInstance(String planId, String activityInstanceId, ActivityInstance activityInstance) throws NoSuchPlanException, ValidationException, NoSuchActivityInstanceException;
 
-  SimulationResults getSimulationResultsForPlan(String planId) throws NoSuchPlanException;
+  Pair<Instant, JsonValue> getSimulationResultsForPlan(String planId) throws NoSuchPlanException;
 }

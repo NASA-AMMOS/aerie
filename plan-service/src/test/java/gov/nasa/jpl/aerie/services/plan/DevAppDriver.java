@@ -1,9 +1,8 @@
 package gov.nasa.jpl.aerie.services.plan;
 
-import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationBindings;
-import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationExceptionBindings;
-import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationRepositoryExceptionBindings;
-import gov.nasa.jpl.aerie.services.adaptation.http.LocalAppExceptionBindings;
+import gov.nasa.jpl.aerie.services.plan.http.AdaptationExceptionBindings;
+import gov.nasa.jpl.aerie.services.plan.http.AdaptationRepositoryExceptionBindings;
+import gov.nasa.jpl.aerie.services.plan.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.services.adaptation.mocks.MockAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.PlanBindings;
 import gov.nasa.jpl.aerie.services.plan.mocks.Fixtures;
@@ -22,8 +21,7 @@ public final class DevAppDriver {
     final Javalin javalin = Javalin.create(config -> config
         .enableDevLogging()
         .enableCorsForAllOrigins()
-        .registerPlugin(new PlanBindings(planController))
-        .registerPlugin(new AdaptationBindings(adaptationController))
+        .registerPlugin(new PlanBindings(planController, adaptationController))
         .registerPlugin(new LocalAppExceptionBindings())
         .registerPlugin(new AdaptationRepositoryExceptionBindings())
         .registerPlugin(new AdaptationExceptionBindings()));

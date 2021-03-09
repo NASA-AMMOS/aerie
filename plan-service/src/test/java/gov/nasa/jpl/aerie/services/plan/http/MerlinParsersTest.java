@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.http;
+package gov.nasa.jpl.aerie.services.plan.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -16,8 +16,8 @@ import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
-import static gov.nasa.jpl.aerie.services.adaptation.http.MerlinParsers.createSimulationMessageP;
-import static gov.nasa.jpl.aerie.services.adaptation.http.MerlinParsersTest.NestedLists.nestedList;
+import static gov.nasa.jpl.aerie.services.plan.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.aerie.services.plan.http.MerlinParsersTest.NestedLists.nestedList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class MerlinParsersTest {

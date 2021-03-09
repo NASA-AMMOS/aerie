@@ -6,12 +6,13 @@ import gov.nasa.jpl.aerie.services.plan.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
-import gov.nasa.jpl.aerie.services.plan.models.SimulationResults;
 import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationService;
 import gov.nasa.jpl.aerie.services.plan.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.services.plan.remotes.PlanRepository.PlanTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.JsonValue;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -128,7 +129,7 @@ public final class LocalApp implements App {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
+  public Pair<Instant, JsonValue> getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
     final var plan = this.planRepository.getPlan(planId);
 
     try {

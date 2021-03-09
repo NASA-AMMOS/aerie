@@ -1,10 +1,9 @@
 package gov.nasa.jpl.aerie.services.plan;
 
 import com.mongodb.client.MongoClients;
-import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationBindings;
-import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationExceptionBindings;
-import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationRepositoryExceptionBindings;
-import gov.nasa.jpl.aerie.services.adaptation.http.LocalAppExceptionBindings;
+import gov.nasa.jpl.aerie.services.plan.http.AdaptationExceptionBindings;
+import gov.nasa.jpl.aerie.services.plan.http.AdaptationRepositoryExceptionBindings;
+import gov.nasa.jpl.aerie.services.plan.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.PlanBindings;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationService;
@@ -44,8 +43,7 @@ public final class AerieAppDriver {
       if (configuration.enableJavalinLogging) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new PlanBindings(planController))
-          .registerPlugin(new AdaptationBindings(adaptationController))
+          .registerPlugin(new PlanBindings(planController, adaptationController))
           .registerPlugin(new LocalAppExceptionBindings())
           .registerPlugin(new AdaptationRepositoryExceptionBindings())
           .registerPlugin(new AdaptationExceptionBindings());

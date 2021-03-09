@@ -3,15 +3,20 @@ package gov.nasa.jpl.aerie.services.plan.http;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;
 import gov.nasa.jpl.aerie.services.plan.models.Timestamp;
+import gov.nasa.jpl.aerie.time.Duration;
+import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.JsonString;
 import javax.json.JsonValue.ValueType;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
@@ -25,6 +30,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry5;
 
 public abstract class MerlinParsers {
@@ -38,6 +44,10 @@ public abstract class MerlinParsers {
       return JsonParseResult.failure("invalid timestamp format");
     }
   };
+
+  public static final JsonParser<Duration> durationP
+      = longP
+      . map(microseconds -> Duration.of(microseconds, Duration.MICROSECONDS));
 
   public static final JsonParser<SerializedValue> serializedParameterP =
       recursiveP(selfP -> BasicParsers
@@ -98,4 +108,21 @@ public abstract class MerlinParsers {
               startTimestamp.orElse(null),
               endTimestamp.orElse(null),
               activityInstances.orElse(null))));
+
+  public static final JsonParser<Pair<Duration, SerializedActivity>> scheduledActivityP
+      = productP
+      . field("defer", durationP)
+      . field("type", stringP)
+      . optionalField("parameters", mapP(serializedParameterP))
+      . map(uncurry3(defer -> type -> parameters ->
+          Pair.of(defer, new SerializedActivity(type, parameters.orElse(Collections.emptyMap())))));
+
+  public static final JsonParser<CreateSimulationMessage> createSimulationMessageP
+      = productP
+      . field("adaptationId", stringP)
+      . field("startTime", timestampP.map(Timestamp::toInstant))
+      . field("samplingDuration", durationP)
+      . field("activities", mapP(scheduledActivityP))
+      . map(uncurry4(adaptationId -> startTime -> samplingDuration -> activities ->
+          new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities)));
 }

@@ -1,11 +1,11 @@
-package gov.nasa.jpl.aerie.services.adaptation.http;
+package gov.nasa.jpl.aerie.services.plan.http;
 
 import java.util.List;
 
-public class ValidationException extends Exception {
+public class NewAdaptationValidationException extends Exception {
     private final List<String> errors;
 
-    public ValidationException(final String message, final List<String> errors) {
+    public NewAdaptationValidationException(final String message, final List<String> errors) {
         super(message + ": " + errors.toString());
         this.errors = List.copyOf(errors);
     }
