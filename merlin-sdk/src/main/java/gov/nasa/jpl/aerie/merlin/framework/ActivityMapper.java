@@ -9,7 +9,7 @@ import java.util.Map;
 
 public interface ActivityMapper<Instance> {
   String getName();
-  Map<String, ValueSchema> getParameters();
+  List<ParameterSchema> getParameters();
   Map<String, SerializedValue> getArguments(Instance activity);
 
   Instance instantiateDefault();

@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
+
 import java.util.List;
 import java.util.Map;
 
 public interface TaskSpecType<$Schema, Specification> {
   String getName();
-  Map<String, ValueSchema> getParameters();
+  List<ParameterSchema> getParameters();
 
   Specification instantiateDefault();
   Specification instantiate(Map<String, SerializedValue> arguments)

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import org.junit.Before;
@@ -27,10 +28,10 @@ public final class AdaptationTest {
         final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
                 "foo",
-                Map.of(
-                    "x", ValueSchema.INT,
-                    "y", ValueSchema.STRING,
-                    "vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))),
+                List.of(
+                    new ParameterSchema("x", ValueSchema.INT),
+                    new ParameterSchema("y", ValueSchema.STRING),
+                    new ParameterSchema("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 Map.of(
                     "x", SerializedValue.of(0),
                     "y", SerializedValue.of("test"),
@@ -41,7 +42,6 @@ public final class AdaptationTest {
                                     SerializedValue.of(0.0),
                                     SerializedValue.of(0.0),
                                     SerializedValue.of(0.0))))))));
-
         // WHEN
         final Map<String, ActivityType> typeList = adaptation.getActivityTypes();
 
@@ -54,10 +54,10 @@ public final class AdaptationTest {
         // GIVEN
         final ActivityType expectedType = new ActivityType(
             "foo",
-            Map.of(
-                "x", ValueSchema.INT,
-                "y", ValueSchema.STRING,
-                "vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))),
+            List.of(
+                new ParameterSchema("x", ValueSchema.INT),
+                new ParameterSchema("y", ValueSchema.STRING),
+                new ParameterSchema("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             Map.of(
                 "x", SerializedValue.of(0),
                 "y", SerializedValue.of("test"),

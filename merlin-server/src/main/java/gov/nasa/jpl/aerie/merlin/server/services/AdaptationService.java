@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
@@ -25,7 +26,7 @@ public interface AdaptationService {
 
   List<ViolableConstraint> getConstraintTypes(String adaptationID)
   throws NoSuchAdaptationException;
-  Map<String, ValueSchema> getStatesSchemas(String adaptationId)
+  List<ParameterSchema> getStatesSchemas(String adaptationId)
   throws NoSuchAdaptationException;
   Map<String, ActivityType> getActivityTypes(String adaptationId)
   throws NoSuchAdaptationException;

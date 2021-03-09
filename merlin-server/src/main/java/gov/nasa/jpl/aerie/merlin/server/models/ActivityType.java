@@ -1,23 +1,25 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public final class ActivityType {
     public final String name;
-    public final Map<String, ValueSchema> parameters;
+    public final List<ParameterSchema> parameters;
     public final Map<String, SerializedValue> defaults;
 
     public ActivityType(
         final String name,
-        final Map<String, ValueSchema> parameterSchema,
+        final List<ParameterSchema> parameterSchema,
         final Map<String, SerializedValue> defaults
     ) {
         this.name = name;
-        this.parameters = Map.copyOf(parameterSchema);
+        this.parameters = List.copyOf(parameterSchema);
         this.defaults = Map.copyOf(defaults);
     }
 

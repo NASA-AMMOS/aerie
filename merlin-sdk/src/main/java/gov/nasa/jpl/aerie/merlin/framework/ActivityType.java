@@ -23,7 +23,7 @@ public abstract class ActivityType<$Schema, Activity>
   }
 
   @Override
-  public final Map<String, ValueSchema> getParameters() {
+  public final List<ParameterSchema> getParameters() {
     return this.mapper.getParameters();
   }
 

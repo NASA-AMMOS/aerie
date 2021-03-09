@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
@@ -54,6 +55,16 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
+  public static JsonValue serializeParameterSchema(final ParameterSchema element) {
+    if (element == null) return JsonValue.NULL;
+
+    return Json
+        .createObjectBuilder()
+        .add("name", element.name)
+        .add("schema", serializeValueSchema(element.schema))
+        .build();
+  }
+
   public static <T> JsonValue serializeMap(final Function<T, JsonValue> fieldSerializer, final Map<String, T> fields) {
     if (fields == null) return JsonValue.NULL;
 
@@ -62,14 +73,14 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
-  public static JsonValue serializeParameterSchema(final ValueSchema schema) {
+  public static JsonValue serializeValueSchema(final ValueSchema schema) {
     if (schema == null) return JsonValue.NULL;
 
     return schema.match(new ValueSchemaSerializer());
   }
 
-  public static JsonValue serializeParameterSchemas(final Map<String, ValueSchema> schemas) {
-    return serializeMap(ResponseSerializers::serializeParameterSchema, schemas);
+  public static JsonValue serializeParameterSchemas(final List<ParameterSchema> schemas) {
+    return serializeIterable(ResponseSerializers::serializeParameterSchema, schemas);
   }
 
   public static JsonValue serializeSample(final Pair<Duration, SerializedValue> element) {
