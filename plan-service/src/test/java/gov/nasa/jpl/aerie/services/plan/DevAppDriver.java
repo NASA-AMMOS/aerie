@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.services.plan;
 
-import gov.nasa.jpl.aerie.services.plan.controllers.App;
-import gov.nasa.jpl.aerie.services.plan.controllers.LocalApp;
+import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationBindings;
+import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationExceptionBindings;
+import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationRepositoryExceptionBindings;
+import gov.nasa.jpl.aerie.services.adaptation.http.LocalAppExceptionBindings;
+import gov.nasa.jpl.aerie.services.adaptation.mocks.MockAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.PlanBindings;
 import gov.nasa.jpl.aerie.services.plan.mocks.Fixtures;
 import io.javalin.Javalin;
@@ -11,14 +14,19 @@ public final class DevAppDriver {
 
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
-    final Fixtures fixtures = new Fixtures();
-    final App controller = new LocalApp(fixtures.planRepository, fixtures.adaptationService);
+    final var fixtures = new Fixtures();
+    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(fixtures.planRepository, fixtures.adaptationService);
+    final var adaptationController = new gov.nasa.jpl.aerie.services.adaptation.app.LocalApp(new MockAdaptationRepository());
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> config
         .enableDevLogging()
         .enableCorsForAllOrigins()
-        .registerPlugin(new PlanBindings(controller)));
+        .registerPlugin(new PlanBindings(planController))
+        .registerPlugin(new AdaptationBindings(adaptationController))
+        .registerPlugin(new LocalAppExceptionBindings())
+        .registerPlugin(new AdaptationRepositoryExceptionBindings())
+        .registerPlugin(new AdaptationExceptionBindings()));
 
     // Start the HTTP server.
     javalin.start(HTTP_PORT);

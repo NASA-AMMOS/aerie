@@ -1,11 +1,12 @@
 package gov.nasa.jpl.aerie.services.plan;
 
 import com.mongodb.client.MongoClients;
-import gov.nasa.jpl.aerie.services.plan.controllers.App;
-import gov.nasa.jpl.aerie.services.plan.controllers.LocalApp;
+import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationBindings;
+import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationExceptionBindings;
+import gov.nasa.jpl.aerie.services.adaptation.http.AdaptationRepositoryExceptionBindings;
+import gov.nasa.jpl.aerie.services.adaptation.http.LocalAppExceptionBindings;
+import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.PlanBindings;
-import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationService;
-import gov.nasa.jpl.aerie.services.plan.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemotePlanRepository;
 import io.javalin.Javalin;
@@ -20,20 +21,34 @@ import java.nio.file.Path;
 public final class AerieAppDriver {
   public static void main(final String[] args) {
     // Fetch application configuration properties.
-    final AppConfiguration configuration = loadConfiguration(args);
+    final var configuration = loadConfiguration(args);
 
     // Assemble the core non-web object graph.
-    final PlanRepository planRepository = loadPlanRepository(configuration);
-    final AdaptationService adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
-    final App controller = new LocalApp(planRepository, adaptationService);
+    final var mongoDatabase = MongoClients
+        .create(configuration.MONGO_URI.toString())
+        .getDatabase(configuration.MONGO_DATABASE);
+    final var planRepository = new RemotePlanRepository(
+        mongoDatabase,
+        configuration.MONGO_PLAN_COLLECTION,
+        configuration.MONGO_ACTIVITY_COLLECTION);
+    final var adaptationRepository = new RemoteAdaptationRepository(
+        mongoDatabase,
+        configuration.MONGO_ADAPTATION_COLLECTION);
+    final var adaptationService = new RemoteAdaptationService(configuration.ADAPTATION_URI);
+    final var planController = new gov.nasa.jpl.aerie.services.plan.controllers.LocalApp(planRepository, adaptationService);
+    final var adaptationController = new gov.nasa.jpl.aerie.services.adaptation.app.LocalApp(adaptationRepository);
 
     // Configure an HTTP server.
-    final Javalin javalin = Javalin.create(config -> {
+    final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
       if (configuration.enableJavalinLogging) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new PlanBindings(controller));
+          .registerPlugin(new PlanBindings(planController))
+          .registerPlugin(new AdaptationBindings(adaptationController))
+          .registerPlugin(new LocalAppExceptionBindings())
+          .registerPlugin(new AdaptationRepositoryExceptionBindings())
+          .registerPlugin(new AdaptationExceptionBindings());
     });
 
     // Start the HTTP server.
@@ -56,18 +71,7 @@ public final class AerieAppDriver {
     }
 
     // Read and process the configuration source.
-    final JsonObject config = (JsonObject)(Json.createReader(configStream).readValue());
+    final var config = (JsonObject)(Json.createReader(configStream).readValue());
     return AppConfiguration.parseProperties(config);
-  }
-
-  private static PlanRepository loadPlanRepository(final AppConfiguration configuration) {
-    final var mongoDatabase = MongoClients
-        .create(configuration.MONGO_URI.toString())
-        .getDatabase(configuration.MONGO_DATABASE);
-
-    return new RemotePlanRepository(
-        mongoDatabase,
-        configuration.MONGO_PLAN_COLLECTION,
-        configuration.MONGO_ACTIVITY_COLLECTION);
   }
 }

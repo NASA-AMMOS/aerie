@@ -19,6 +19,7 @@ public class AppConfigurationTest {
         String mongo_database = "mongo_database_test";
         String mongo_plan_collection = "mongo_plan_collection_test";
         String mongo_activity_collection = "mongo_activity_collection_test";
+        String mongo_adaptation_collection = "mongo_adaptation_collection_test";
 
         AppConfiguration expected = AppConfiguration.builder()
                 .setHttpPort(http_port)
@@ -27,6 +28,7 @@ public class AppConfigurationTest {
                 .setMongoDatabase(mongo_database)
                 .setMongoPlanCollection(mongo_plan_collection)
                 .setMongoActivityCollection(mongo_activity_collection)
+                .setMongoAdaptationCollection(mongo_adaptation_collection)
                 .build();
 
         JsonObject config = Json.createObjectBuilder()
@@ -36,6 +38,7 @@ public class AppConfigurationTest {
                 .add("MONGO_DATABASE", mongo_database)
                 .add("MONGO_PLAN_COLLECTION", mongo_plan_collection)
                 .add("MONGO_ACTIVITY_COLLECTION", mongo_activity_collection)
+                .add("MONGO_ADAPTATION_COLLECTION", mongo_adaptation_collection)
                 .build();
 
         // Parse the JsonObject with parseProperties

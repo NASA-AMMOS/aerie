@@ -12,6 +12,7 @@ public final class AppConfiguration {
     public final String MONGO_DATABASE;
     public final String MONGO_PLAN_COLLECTION;
     public final String MONGO_ACTIVITY_COLLECTION;
+    public final String MONGO_ADAPTATION_COLLECTION;
     public final boolean enableJavalinLogging;
 
     private AppConfiguration(final Builder builder) {
@@ -21,6 +22,7 @@ public final class AppConfiguration {
         this.MONGO_DATABASE = Objects.requireNonNull(builder.mongoDatabase.orElse(null));
         this.MONGO_PLAN_COLLECTION = Objects.requireNonNull(builder.mongoPlanCollection.orElse(null));
         this.MONGO_ACTIVITY_COLLECTION = Objects.requireNonNull(builder.mongoActivityCollection.orElse(null));
+        this.MONGO_ADAPTATION_COLLECTION = Objects.requireNonNull(builder.mongoAdaptationCollection.orElse(null));
         this.enableJavalinLogging = builder.enableJavalinLogging.orElse(false);
     }
 
@@ -36,6 +38,7 @@ public final class AppConfiguration {
             .setMongoDatabase(config.getString("MONGO_DATABASE"))
             .setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"))
             .setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"))
+            .setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"))
             .setJavalinLogging(config.getBoolean("enable-javalin-logging", false))
             .build();
     }
@@ -52,6 +55,7 @@ public final class AppConfiguration {
                 && Objects.equals(this.MONGO_DATABASE, other.MONGO_DATABASE)
                 && Objects.equals(this.MONGO_PLAN_COLLECTION, other.MONGO_PLAN_COLLECTION)
                 && Objects.equals(this.MONGO_ACTIVITY_COLLECTION, other.MONGO_ACTIVITY_COLLECTION)
+                && Objects.equals(this.MONGO_ADAPTATION_COLLECTION, other.MONGO_ADAPTATION_COLLECTION)
                 && (this.enableJavalinLogging == other.enableJavalinLogging) );
     }
 
@@ -64,6 +68,7 @@ public final class AppConfiguration {
             this.MONGO_DATABASE,
             this.MONGO_PLAN_COLLECTION,
             this.MONGO_ACTIVITY_COLLECTION,
+            this.MONGO_ADAPTATION_COLLECTION,
             this.enableJavalinLogging);
     }
 
@@ -76,6 +81,7 @@ public final class AppConfiguration {
                 "  MONGO_DATABASE = " + this.MONGO_DATABASE + ",\n" +
                 "  MONGO_PLAN_COLLECTION = " + this.MONGO_PLAN_COLLECTION + ",\n" +
                 "  MONGO_ACTIVITY_COLLECTION = " + this.MONGO_ACTIVITY_COLLECTION + ",\n" +
+                "  MONGO_ADAPTATION_COLLECTION = " + this.MONGO_ADAPTATION_COLLECTION + ",\n" +
                 "  enableJavalinLogging = " + this.enableJavalinLogging + ",\n" +
                 "}";
     }
@@ -87,6 +93,7 @@ public final class AppConfiguration {
         private Optional<String> mongoDatabase = Optional.empty();
         private Optional<String> mongoPlanCollection = Optional.empty();
         private Optional<String> mongoActivityCollection = Optional.empty();
+        private Optional<String> mongoAdaptationCollection = Optional.empty();
         private Optional<Boolean> enableJavalinLogging = Optional.empty();
 
         private Builder() {}
@@ -113,6 +120,10 @@ public final class AppConfiguration {
         }
         public Builder setMongoActivityCollection(String mongoActivityCollection) {
             this.mongoActivityCollection = Optional.of(mongoActivityCollection);
+            return this;
+        }
+        public Builder setMongoAdaptationCollection(String mongoAdaptationCollection) {
+            this.mongoAdaptationCollection = Optional.of(mongoAdaptationCollection);
             return this;
         }
         public Builder setJavalinLogging(boolean enableJavalinLogging) {
