@@ -1,6 +1,6 @@
-package gov.nasa.jpl.aerie.services.adaptation.remotes;
+package gov.nasa.jpl.aerie.services.plan.remotes;
 
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationJar;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

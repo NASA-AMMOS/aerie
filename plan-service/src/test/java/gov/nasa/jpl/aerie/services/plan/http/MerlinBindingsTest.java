@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.services.plan.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
-import gov.nasa.jpl.aerie.services.adaptation.mocks.FakeFile;
-import gov.nasa.jpl.aerie.services.adaptation.mocks.StubAdaptationService;
+import gov.nasa.jpl.aerie.services.plan.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.services.plan.mocks.FakeFile;
+import gov.nasa.jpl.aerie.services.plan.mocks.StubAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.utils.HttpRequester;

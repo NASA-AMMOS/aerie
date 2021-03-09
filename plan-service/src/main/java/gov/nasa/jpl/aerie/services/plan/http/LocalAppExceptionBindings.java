@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.http;
 
-import gov.nasa.jpl.aerie.services.adaptation.app.LocalAdaptationService;
+import gov.nasa.jpl.aerie.services.plan.services.LocalAdaptationService;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 

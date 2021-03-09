@@ -1,11 +1,11 @@
-package gov.nasa.jpl.aerie.services.adaptation.remotes;
+package gov.nasa.jpl.aerie.services.plan.remotes;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.aerie.services.adaptation.utilities.FileUtils;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationJar;
+import gov.nasa.jpl.aerie.services.plan.utilities.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;

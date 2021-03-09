@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.services.plan.http;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.services.plan.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;

@@ -1,6 +1,6 @@
-package gov.nasa.jpl.aerie.services.adaptation.mocks;
+package gov.nasa.jpl.aerie.services.plan.mocks;
 
-import gov.nasa.jpl.aerie.services.adaptation.remotes.AdaptationRepositoryContractTest;
+import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationRepositoryContractTest;
 
 public final class MockAdaptationRepositoryTest extends AdaptationRepositoryContractTest {
     @Override

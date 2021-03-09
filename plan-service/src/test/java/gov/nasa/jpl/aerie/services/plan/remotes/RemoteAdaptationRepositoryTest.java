@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.remotes;
+package gov.nasa.jpl.aerie.services.plan.remotes;
 
 import com.mongodb.client.MongoClients;
 import org.junit.Ignore;

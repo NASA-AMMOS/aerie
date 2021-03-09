@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.models;
+package gov.nasa.jpl.aerie.services.plan.models;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;

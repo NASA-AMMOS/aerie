@@ -1,8 +1,8 @@
-package gov.nasa.jpl.aerie.services.adaptation.mocks;
+package gov.nasa.jpl.aerie.services.plan.mocks;
 
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.aerie.services.adaptation.remotes.AdaptationRepository;
-import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationJar;
+import gov.nasa.jpl.aerie.services.plan.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static gov.nasa.jpl.aerie.services.adaptation.utilities.FileUtils.getUniqueFilePath;
+import static gov.nasa.jpl.aerie.services.plan.utilities.FileUtils.getUniqueFilePath;
 
 public final class MockAdaptationRepository implements AdaptationRepository {
     private final Path ADAPTATION_FILE_PATH;

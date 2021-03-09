@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.utilities;
+package gov.nasa.jpl.aerie.services.plan.utilities;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;

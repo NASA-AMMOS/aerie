@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.services.plan.mocks;
 
-import gov.nasa.jpl.aerie.services.adaptation.mocks.StubAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;

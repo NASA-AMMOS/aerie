@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.services.plan;
 
-import gov.nasa.jpl.aerie.services.adaptation.app.LocalAdaptationService;
+import gov.nasa.jpl.aerie.services.plan.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.services.plan.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.services.plan.http.LocalAppExceptionBindings;
-import gov.nasa.jpl.aerie.services.adaptation.mocks.MockAdaptationRepository;
+import gov.nasa.jpl.aerie.services.plan.mocks.MockAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.MerlinBindings;
 import gov.nasa.jpl.aerie.services.plan.mocks.Fixtures;
 import gov.nasa.jpl.aerie.services.plan.services.LocalPlanService;

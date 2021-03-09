@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.services.plan;
 
 import com.mongodb.client.MongoClients;
-import gov.nasa.jpl.aerie.services.adaptation.app.LocalAdaptationService;
+import gov.nasa.jpl.aerie.services.plan.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.services.plan.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.services.plan.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.services.plan.http.LocalAppExceptionBindings;
-import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.services.plan.http.MerlinBindings;
 import gov.nasa.jpl.aerie.services.plan.remotes.RemotePlanRepository;
 import gov.nasa.jpl.aerie.services.plan.services.LocalPlanService;

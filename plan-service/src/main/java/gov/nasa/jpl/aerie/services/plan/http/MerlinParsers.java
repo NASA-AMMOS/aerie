@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.services.plan.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;
 import gov.nasa.jpl.aerie.services.plan.models.Plan;

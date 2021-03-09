@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.app;
+package gov.nasa.jpl.aerie.services.plan.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.time.Duration;

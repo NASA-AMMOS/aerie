@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.models;
+package gov.nasa.jpl.aerie.services.plan.models;
 
 import java.nio.file.Path;
 import java.util.Objects;

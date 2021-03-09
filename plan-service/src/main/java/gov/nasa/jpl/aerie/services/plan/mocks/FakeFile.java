@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.services.adaptation.mocks;
+package gov.nasa.jpl.aerie.services.plan.mocks;
 
 public final class FakeFile {
     public final String filename;

@@ -1,6 +1,6 @@
-package gov.nasa.jpl.aerie.services.adaptation.utilities;
+package gov.nasa.jpl.aerie.services.plan.utilities;
 
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationJar;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -1,14 +1,14 @@
-package gov.nasa.jpl.aerie.services.adaptation.app;
+package gov.nasa.jpl.aerie.services.plan.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.services.adaptation.models.ActivityType;
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.aerie.services.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.aerie.services.plan.models.ActivityType;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationJar;
+import gov.nasa.jpl.aerie.services.plan.models.NewAdaptation;
 
 import java.util.List;
 import java.util.Map;

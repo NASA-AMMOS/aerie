@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.http;
 
-import gov.nasa.jpl.aerie.services.adaptation.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.services.plan.remotes.RemoteAdaptationRepository;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 

@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.services.plan.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.services.adaptation.app.AdaptationService;
 import gov.nasa.jpl.aerie.services.plan.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.services.plan.models.ActivityInstance;
 import gov.nasa.jpl.aerie.services.plan.models.NewPlan;

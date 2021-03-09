@@ -1,15 +1,15 @@
-package gov.nasa.jpl.aerie.services.adaptation.mocks;
+package gov.nasa.jpl.aerie.services.plan.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.services.adaptation.app.AdaptationService;
-import gov.nasa.jpl.aerie.services.adaptation.app.CreateSimulationMessage;
-import gov.nasa.jpl.aerie.services.adaptation.models.ActivityType;
-import gov.nasa.jpl.aerie.services.adaptation.models.AdaptationJar;
-import gov.nasa.jpl.aerie.services.adaptation.models.NewAdaptation;
+import gov.nasa.jpl.aerie.services.plan.services.AdaptationService;
+import gov.nasa.jpl.aerie.services.plan.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.services.plan.models.ActivityType;
+import gov.nasa.jpl.aerie.services.plan.models.AdaptationJar;
+import gov.nasa.jpl.aerie.services.plan.models.NewAdaptation;
 
 import java.nio.file.Path;
 import java.time.Instant;
