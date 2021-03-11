@@ -14,14 +14,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public final class ProfileBuilder<$Schema, Resource, Dynamics, Condition> {
-  public final ResourceSolver<$Schema, Resource, Dynamics, Condition> solver;
+public final class ProfileBuilder<$Schema, Resource, Dynamics> {
+  public final ResourceSolver<$Schema, Resource, Dynamics> solver;
   public final Resource resource;
   public final List<Pair<Window, Dynamics>> pieces;
   public final Set<Query<? super $Schema, ?, ?>> lastDependencies;
 
   public ProfileBuilder(
-      final ResourceSolver<$Schema, Resource, Dynamics, Condition> solver,
+      final ResourceSolver<$Schema, Resource, Dynamics> solver,
       final Resource resource)
   {
     this.solver = solver;

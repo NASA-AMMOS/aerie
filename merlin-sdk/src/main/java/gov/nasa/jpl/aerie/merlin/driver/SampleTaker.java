@@ -28,14 +28,14 @@ public final class SampleTaker<Dynamics>
   public static <Dynamics>
   List<Pair<Duration, SerializedValue>> sample(
       final Iterable<Pair<Window, Dynamics>> profile,
-      final ResourceSolver<?, ?, Dynamics, ?> solver)
+      final ResourceSolver<?, ?, Dynamics> solver)
   {
     return solver.approximate(new SampleTaker<>(profile));
   }
 
   public static <Dynamics>
   List<Pair<Duration, SerializedValue>> sample(
-      final ProfileBuilder<?, ?, Dynamics, ?> profile)
+      final ProfileBuilder<?, ?, Dynamics> profile)
   {
     return sample(profile.pieces, profile.solver);
   }

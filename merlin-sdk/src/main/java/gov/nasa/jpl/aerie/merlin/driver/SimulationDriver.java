@@ -92,7 +92,7 @@ public final class SimulationDriver {
     }
 
     // Collect profiles for all resources.
-    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?, ?>>();
+    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?>>();
     for (final var family : adaptation.getResourceFamilies()) createProfilesForFamily(family, profiles::put);
 
     var now = database.origin();
@@ -484,11 +484,11 @@ public final class SimulationDriver {
     });
   }
 
-  private static <$Schema, Resource, Condition>
+  private static <$Schema, Resource>
   void
   createProfilesForFamily(
-      final ResourceFamily<$Schema, Resource, Condition> family,
-      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?, ?>> handler)
+      final ResourceFamily<$Schema, Resource> family,
+      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?>> handler)
   {
     final var solver = family.getSolver();
 
