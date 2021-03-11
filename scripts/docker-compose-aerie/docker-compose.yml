@@ -13,7 +13,7 @@ services:
     ports: ["27018:27018"]
     volumes: ["merlin_mongo_data:/data/db"]
   aerie_ui:
-    command: ["npm", "run", "start:production"]
+    command: ["npm", "run", "start:docker"]
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     depends_on: ["postgres"]
     ports: ["80:80"]
