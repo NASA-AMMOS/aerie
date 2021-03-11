@@ -1,9 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.time.Window;
-import gov.nasa.jpl.aerie.time.Windows;
 
 import java.util.Optional;
 
@@ -45,55 +43,64 @@ public final class RealDynamics {
   }
 
 
-  public Optional<Duration> whenSatisfies(final RealCondition condition, final Window selection) {
-    for (final var window : this.getSatisfyingWindows(condition, selection)) {
-      return Optional.of(window.start);
-    }
-
-    return Optional.empty();
-  }
-
-  public Optional<Duration> whenDissatisfies(final RealCondition condition, final Window selection) {
-    final var results = new Windows(selection);
-    results.subtractAll(this.getSatisfyingWindows(condition, selection));
-
-    for (final var window : results) {
-      return Optional.of(window.start);
-    }
-
-    return Optional.empty();
-  }
-
-  public Windows getSatisfyingWindows(final RealCondition condition, final Window selection) {
-    final var windows = new Windows();
-
+  public Optional<Duration> whenBetween(final double min, final double max, final Window scope) {
+    final Window solution;
     if (this.rate == 0) {
-      windows.add((condition.includesPoint(this.initial)) ? selection : Window.EMPTY);
-    } else if (this.rate > 0) {
-      for (final var interval : condition.ascendingOrder()) {
-        // It starts too high (and it's going higher); no intersection.
-        if (this.initial > interval.max) continue;
-
-        final var start = (interval.min - this.initial) / this.rate;
-        final var end = (interval.max - this.initial) / this.rate;
-        final var window = Window.roundIn(start, end, Duration.SECONDS);
-
-        windows.add(Window.greatestLowerBound(window, selection));
+      if (min <= this.initial && this.initial <= max) {
+        solution = Window.FOREVER;
+      } else {
+        solution = Window.EMPTY;
       }
-    } else {
-      for (final var interval : condition.descendingOrder()) {
-        // It starts too low (and it's going lower); no intersection.
-        if (this.initial < interval.min) continue;
+    } else if (this.rate > 0) {
+      solution = Window.between(
+          Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS),
+          Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS));
+    } else /* this.rate < 0 */ {
+      solution = Window.between(
+          Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS),
+          Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS));
+    }
 
-        final var start = (interval.max - this.initial) / this.rate;
-        final var end = (interval.min - this.initial) / this.rate;
-        final var window = Window.roundIn(start, end, Duration.SECONDS);
+    final var window = Window.greatestLowerBound(scope, solution);
 
-        windows.add(Window.greatestLowerBound(window, selection));
+    return (window.isEmpty())
+        ? Optional.empty()
+        : Optional.of(window.start);
+  }
+
+  public Optional<Duration> whenNotBetween(final double min, final double max, final Window scope) {
+    if (this.rate == 0) {
+      if (min <= this.initial && this.initial <= max) {
+        return Optional.empty();
+      } else {
+        return Optional.of(scope.start);
       }
     }
 
-    return windows;
+    final Window beforeSolution, afterSolution;
+    if (this.rate > 0) {
+      beforeSolution = Window.between(
+          Duration.MIN_VALUE,
+          Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS));
+      afterSolution = Window.between(
+          Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS),
+          Duration.MAX_VALUE);
+    } else /* this.rate < 0 */ {
+      beforeSolution = Window.between(
+          Duration.MIN_VALUE,
+          Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS));
+      afterSolution = Window.between(
+          Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS),
+          Duration.MAX_VALUE);
+    }
+
+    final var beforeWindow = Window.greatestLowerBound(scope, beforeSolution);
+    if (!beforeWindow.isEmpty()) return Optional.of(beforeWindow.start);
+
+    final var afterWindow = Window.greatestLowerBound(scope, afterSolution);
+    if (!afterWindow.isEmpty()) return Optional.of(afterWindow.start);
+
+    return Optional.empty();
   }
 
 

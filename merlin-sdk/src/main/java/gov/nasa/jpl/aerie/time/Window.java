@@ -118,40 +118,6 @@ public final class Window {
     return at(Duration.of(quantity, unit));
   }
 
-  public static Window roundOut(
-      final double start,
-      final Inclusivity startInclusivity,
-      final double end,
-      final Inclusivity endInclusivity,
-      final Duration unit
-  ) {
-    return between(Duration.roundDownward(start, unit),
-                   startInclusivity,
-                   Duration.roundUpward(end, unit),
-                   endInclusivity);
-  }
-
-  public static Window roundOut(final double start, final double end, final Duration unit) {
-    return roundOut(start, Inclusive, end, Inclusive, unit);
-  }
-
-  public static Window roundIn(
-      final double start,
-      final Inclusivity startInclusivity,
-      final double end,
-      final Inclusivity endInclusivity,
-      final Duration unit
-  ) {
-    return between(Duration.roundUpward(start, unit),
-                   startInclusivity,
-                   Duration.roundDownward(end, unit),
-                   endInclusivity);
-  }
-
-  public static Window roundIn(final double start, final double end, final Duration unit) {
-    return roundIn(start, Inclusive, end, Inclusive, unit);
-  }
-
   public static final Window EMPTY = new Window(Duration.ZERO, Duration.ZERO.minus(Duration.EPSILON));
   public static final Window FOREVER = new Window(Duration.MIN_VALUE, Duration.MAX_VALUE);
 
