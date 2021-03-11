@@ -291,7 +291,6 @@ public final class SimulationDriver {
 
     return new SimulationResults(
         resourceSamples,
-        new ArrayList<>(),
         taskIdToActivityId,
         taskInfo,
         startTime);

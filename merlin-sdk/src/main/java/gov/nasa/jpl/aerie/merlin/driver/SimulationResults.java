@@ -14,20 +14,17 @@ import java.util.Map;
 public final class SimulationResults {
   public final Instant startTime;
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
-  public final List<ConstraintViolation> constraintViolations;
   public final Map<String, SimulatedActivity> simulatedActivities;
   public final Map<String, SerializedActivity> unfinishedActivities = new HashMap<>();
 
   public SimulationResults(
       final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples,
-      final List<ConstraintViolation> constraintViolations,
       final Map<String, String> taskIdToActivityId,
       final Map<String, TaskInfo<?>> activityRecords,
       final Instant startTime)
   {
     this.startTime = startTime;
     this.resourceSamples = resourceSamples;
-    this.constraintViolations = constraintViolations;
     this.simulatedActivities = buildSimulatedActivities(startTime, taskIdToActivityId, activityRecords);
   }
 
