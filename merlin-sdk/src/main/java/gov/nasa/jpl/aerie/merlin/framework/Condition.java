@@ -26,6 +26,7 @@ public interface Condition {
 
   static Condition or(final Condition left, final Condition right) {
     return (scope, positive) -> {
+      if (scope.isEmpty()) return Optional.empty();
       if (!positive) return and(not(left), not(right)).nextSatisfied(scope, positive);
 
       final var left$ = left.nextSatisfied(scope, positive);
@@ -39,6 +40,7 @@ public interface Condition {
 
   static Condition and(final Condition left, final Condition right) {
     return (scope, positive) -> {
+      if (scope.isEmpty()) return Optional.empty();
       if (!positive) return or(not(left), not(right)).nextSatisfied(scope, positive);
 
       Optional<Duration> left$, right$;
@@ -47,14 +49,14 @@ public interface Condition {
       if (left$.isEmpty()) return Optional.empty();
 
       while (true) {
-        scope = Window.greatestLowerBound(scope, Window.between(left$.get(), Duration.MAX_VALUE));
+        scope = Window.between(left$.get(), scope.end);
         if (scope.isEmpty()) break;
 
         right$ = right.nextSatisfied(scope, positive);
         if (right$.isEmpty()) break;
         if (right$.get().isEqualTo(left$.get())) return left$;
 
-        scope = Window.greatestLowerBound(scope, Window.between(right$.get(), Duration.MAX_VALUE));
+        scope = Window.between(right$.get(), scope.end);
         if (scope.isEmpty()) break;
 
         left$ = left.nextSatisfied(scope, positive);
