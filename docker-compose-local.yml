@@ -23,6 +23,15 @@ services:
       POSTGRES_USER: aerie
     restart: always
     volumes: ["postgres_data:/var/lib/postgresql/data"]
+  aerie_ui:
+    command: ["npm", "run", "start:docker"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
+    depends_on: ["postgres"]
+    ports: ["80:80"]
+  aerie_apollo:
+    command: ["npm", "run", "start:docker"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-apollo:develop"
+    ports: ["27184:27184"]
 
 volumes:
   adaptation_files:
