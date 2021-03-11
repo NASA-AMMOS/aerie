@@ -36,6 +36,7 @@ public abstract class BasicParsers {
 
   public static final JsonParser<Long> longP = json -> {
     if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected long");
+    if (!((JsonNumber) json).isIntegral()) return JsonParseResult.failure("expected integral number");
 
     return JsonParseResult.success(((JsonNumber) json).longValue());
   };
