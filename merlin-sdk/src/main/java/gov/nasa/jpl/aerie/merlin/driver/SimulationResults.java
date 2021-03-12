@@ -76,17 +76,14 @@ public final class SimulationResults {
 
       final var specification = activityRecord.specification.get();
 
-      final var window$ = activityRecord.getWindow();
-      if (window$.isEmpty()) {
+      if (activityRecord.endTime.isEmpty()) {
         this.unfinishedActivities.put(activityId, specification);
       } else {
-        final var window = window$.get();
-
         simulatedActivities.put(activityId, new SimulatedActivity(
             specification.getTypeName(),
             specification.getParameters(),
-            Duration.addToInstant(startTime, window.start),
-            window.duration(),
+            Duration.addToInstant(startTime, activityRecord.startTime.get()),
+            activityRecord.endTime.get().minus(activityRecord.startTime.get()),
             activityParents.getOrDefault(taskId, null),
             activityChildren.get(taskId)
         ));
