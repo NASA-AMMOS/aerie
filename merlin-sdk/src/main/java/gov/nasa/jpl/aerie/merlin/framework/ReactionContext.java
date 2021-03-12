@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.time.Window;
 
 import java.util.List;
 import java.util.Map;
@@ -153,11 +154,11 @@ final class ReactionContext<$Timeline> implements Context {
     if (this.history.isEmpty()) {
       // We're running normally.
 
-      this.scheduler = this.handle.yield(TaskStatus.awaiting((now, scope) -> {
+      this.scheduler = this.handle.yield(TaskStatus.awaiting((now, atLatest) -> {
         // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
         return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(
             new QueryContext<>(now),
-            () -> condition.nextSatisfied(scope, true));
+            () -> condition.nextSatisfied(Window.between(Duration.ZERO, atLatest), true));
       }));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
