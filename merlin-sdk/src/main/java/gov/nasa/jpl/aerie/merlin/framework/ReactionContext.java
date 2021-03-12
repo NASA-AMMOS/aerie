@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 
 import java.util.List;
 import java.util.Map;
@@ -158,7 +157,7 @@ final class ReactionContext<$Timeline> implements Context {
         // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
         return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(
             new QueryContext<>(now),
-            () -> condition.nextSatisfied(true, Window.between(Duration.ZERO, atLatest)));
+            () -> condition.nextSatisfied(true, Duration.ZERO, atLatest));
       }));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));

@@ -1,12 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 
 import java.util.Optional;
 
 public interface Condition {
-  Optional<Duration> nextSatisfied(boolean positive, Window scope);
+  Optional<Duration> nextSatisfied(boolean positive, Duration atEarliest, Duration atLatest);
 
   default Condition and(final Condition other) {
     return and(this, other);
@@ -21,16 +20,16 @@ public interface Condition {
   }
 
 
-  Condition TRUE = (positive, scope) -> Optional.of(scope.start);
-  Condition FALSE = (positive, scope) -> Optional.empty();
+  Condition TRUE = (positive, atEarliest, atLatest) -> Optional.of(atEarliest);
+  Condition FALSE = (positive, atEarliest, atLatest) -> Optional.empty();
 
   static Condition or(final Condition left, final Condition right) {
-    return (positive, scope) -> {
-      if (scope.isEmpty()) return Optional.empty();
-      if (!positive) return and(not(left), not(right)).nextSatisfied(positive, scope);
+    return (positive, atEarliest, atLatest) -> {
+      if (atLatest.shorterThan(atEarliest)) return Optional.empty();
+      if (!positive) return and(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
 
-      final var left$ = left.nextSatisfied(positive, scope);
-      final var right$ = right.nextSatisfied(positive, scope);
+      final var left$ = left.nextSatisfied(positive, atEarliest, atLatest);
+      final var right$ = right.nextSatisfied(positive, atEarliest, atLatest);
 
       if (left$.isEmpty()) return right$;
       if (right$.isEmpty()) return left$;
@@ -39,27 +38,27 @@ public interface Condition {
   }
 
   static Condition and(final Condition left, final Condition right) {
-    return (positive, scope) -> {
-      if (scope.isEmpty()) return Optional.empty();
-      if (!positive) return or(not(left), not(right)).nextSatisfied(positive, scope);
+    return (positive, atEarliest, atLatest) -> {
+      if (atLatest.shorterThan(atEarliest)) return Optional.empty();
+      if (!positive) return or(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
 
       Optional<Duration> left$, right$;
 
-      left$ = left.nextSatisfied(positive, scope);
+      left$ = left.nextSatisfied(positive, atEarliest, atLatest);
       if (left$.isEmpty()) return Optional.empty();
 
       while (true) {
-        scope = Window.between(left$.get(), scope.end);
-        if (scope.isEmpty()) break;
+        atEarliest = left$.get();
+        if (atLatest.shorterThan(atEarliest)) break;
 
-        right$ = right.nextSatisfied(positive, scope);
+        right$ = right.nextSatisfied(positive, atEarliest, atLatest);
         if (right$.isEmpty()) break;
         if (right$.get().isEqualTo(left$.get())) return left$;
 
-        scope = Window.between(right$.get(), scope.end);
-        if (scope.isEmpty()) break;
+        atEarliest = right$.get();
+        if (atLatest.shorterThan(atEarliest)) break;
 
-        left$ = left.nextSatisfied(positive, scope);
+        left$ = left.nextSatisfied(positive, atEarliest, atLatest);
         if (left$.isEmpty()) break;
         if (left$.get().isEqualTo(right$.get())) return right$;
       }
@@ -69,7 +68,7 @@ public interface Condition {
   }
 
   static Condition not(final Condition base) {
-    return (positive, scope) ->
-        base.nextSatisfied(!positive, scope);
+    return (positive, atEarlist, atLatest) ->
+        base.nextSatisfied(!positive, atEarlist, atLatest);
   }
 }

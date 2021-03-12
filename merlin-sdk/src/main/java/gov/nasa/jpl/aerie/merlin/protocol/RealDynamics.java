@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 
 import java.util.Optional;
 
@@ -43,64 +42,54 @@ public final class RealDynamics {
   }
 
 
-  public Optional<Duration> whenBetween(final double min, final double max, final Window scope) {
-    final Window solution;
+  public Optional<Duration>
+  whenBetween(final double min, final double max, final Duration atEarliest, final Duration atLatest) {
     if (this.rate == 0) {
-      if (min <= this.initial && this.initial <= max) {
-        solution = Window.FOREVER;
+      if (this.initial < min || max < this.initial) {
+        return Optional.empty();
       } else {
-        solution = Window.EMPTY;
+        return Optional.of(atEarliest);
       }
-    } else if (this.rate > 0) {
-      solution = Window.between(
-          Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS),
-          Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS));
-    } else /* this.rate < 0 */ {
-      solution = Window.between(
-          Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS),
-          Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS));
     }
 
-    final var window = Window.greatestLowerBound(scope, solution);
+    // entry < exit
+    final Duration entry, exit;
+    if (this.rate > 0) {
+      entry = Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS);
+      exit = Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS);
+    } else /* this.rate < 0 */ {
+      entry = Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS);
+      exit = Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS);
+    }
 
-    return (window.isEmpty())
-        ? Optional.empty()
-        : Optional.of(window.start);
+    if (atEarliest.longerThan(exit)) return Optional.empty();
+    else if (atLatest.shorterThan(entry)) return Optional.empty();
+    else return Optional.of(Duration.max(atEarliest, entry));
   }
 
-  public Optional<Duration> whenNotBetween(final double min, final double max, final Window scope) {
+  public Optional<Duration>
+  whenNotBetween(final double min, final double max, final Duration atEarliest, final Duration atLatest) {
     if (this.rate == 0) {
       if (min <= this.initial && this.initial <= max) {
         return Optional.empty();
       } else {
-        return Optional.of(scope.start);
+        return Optional.of(atEarliest);
       }
     }
 
-    final Window beforeSolution, afterSolution;
+    // exit < entry
+    final Duration exit, entry;
     if (this.rate > 0) {
-      beforeSolution = Window.between(
-          Duration.MIN_VALUE,
-          Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS));
-      afterSolution = Window.between(
-          Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS),
-          Duration.MAX_VALUE);
+      exit = Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS);
+      entry = Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS);
     } else /* this.rate < 0 */ {
-      beforeSolution = Window.between(
-          Duration.MIN_VALUE,
-          Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS));
-      afterSolution = Window.between(
-          Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS),
-          Duration.MAX_VALUE);
+      exit = Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS);
+      entry = Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS);
     }
 
-    final var beforeWindow = Window.greatestLowerBound(scope, beforeSolution);
-    if (!beforeWindow.isEmpty()) return Optional.of(beforeWindow.start);
-
-    final var afterWindow = Window.greatestLowerBound(scope, afterSolution);
-    if (!afterWindow.isEmpty()) return Optional.of(afterWindow.start);
-
-    return Optional.empty();
+    if (atEarliest.noLongerThan(exit)) return Optional.of(atEarliest);
+    else if (atLatest.noShorterThan(entry)) return Optional.of(Duration.max(atEarliest, entry));
+    else return Optional.empty();
   }
 
 

@@ -28,11 +28,11 @@ public interface DiscreteResource<T> extends Resource<T> {
 
 
   default Condition isOneOf(final Set<T> values) {
-    return (positive, scope) -> {
+    return (positive, atEarliest, atLatest) -> {
       final var dynamics = this.getDynamics();
 
       return (positive == values.contains(dynamics))
-          ? Optional.of(scope.start)
+          ? Optional.of(atEarliest)
           : Optional.empty();
     };
   }

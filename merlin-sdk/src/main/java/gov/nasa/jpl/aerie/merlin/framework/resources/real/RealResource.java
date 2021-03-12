@@ -46,12 +46,12 @@ public interface RealResource extends Resource<RealDynamics> {
   }
 
   default Condition isBetween(final double lower, final double upper) {
-    return (positive, scope) -> {
+    return (positive, atEarliest, atLatest) -> {
       final var dynamics = this.getDynamics();
 
       return (positive)
-          ? dynamics.whenBetween(lower, upper, scope)
-          : dynamics.whenNotBetween(lower, upper, scope);
+          ? dynamics.whenBetween(lower, upper, atEarliest, atLatest)
+          : dynamics.whenNotBetween(lower, upper, atEarliest, atLatest);
     };
   }
 }
