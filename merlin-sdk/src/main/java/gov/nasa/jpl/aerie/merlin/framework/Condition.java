@@ -29,7 +29,7 @@ public interface Condition {
       if (!positive) return and(not(left), not(right)).nextSatisfied(positive, atEarliest, atLatest);
 
       final var left$ = left.nextSatisfied(positive, atEarliest, atLatest);
-      final var right$ = right.nextSatisfied(positive, atEarliest, atLatest);
+      final var right$ = right.nextSatisfied(positive, atEarliest, left$.orElse(atLatest));
 
       if (left$.isEmpty()) return right$;
       if (right$.isEmpty()) return left$;
