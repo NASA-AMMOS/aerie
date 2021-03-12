@@ -150,8 +150,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/protocol/AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="typeNameLink">AdaptationFactory</span></a> - Interface in <a href="gov/nasa/jpl/aerie/merlin/protocol/package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#add(long,long,gov.nasa.jpl.aerie.time.Duration)">add(long, long, Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html#add(gov.nasa.jpl.aerie.merlin.framework.resources.real.ClosedInterval)">add(ClosedInterval)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealResource.html#add(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource)">add(RealResource, RealResource)</a></span> - Static method in interface gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a></dt>
@@ -160,8 +158,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Add two durations.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#add(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">add(Duration, Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#add(gov.nasa.jpl.aerie.time.Window)">add(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalSet.html#add(I)">add(I)</a></span> - Method in class gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalSet.html" title="class in gov.nasa.jpl.aerie.utilities">IntervalSet</a></dt>
@@ -324,7 +320,11 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#between(long,long,gov.nasa.jpl.aerie.time.Duration)">between(long, long, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#between(long,gov.nasa.jpl.aerie.time.Window.Inclusivity,long,gov.nasa.jpl.aerie.time.Window.Inclusivity,gov.nasa.jpl.aerie.time.Duration)">between(long, Window.Inclusivity, long, Window.Inclusivity, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#between(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">between(Duration, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#between(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Window.Inclusivity,gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Window.Inclusivity)">between(Duration, Window.Inclusivity, Duration, Window.Inclusivity)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>
 <div class="block">Constructs a window between two durations based on a common instant.</div>
 </dd>
@@ -382,6 +382,14 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real"><span class="typeNameLink">ClosedInterval</span></a> - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/package-summary.html">gov.nasa.jpl.aerie.merlin.framework.resources.real</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#compareEndToEnd(gov.nasa.jpl.aerie.time.Window)">compareEndToEnd(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#compareEndToStart(gov.nasa.jpl.aerie.time.Window)">compareEndToStart(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#compareStartToEnd(gov.nasa.jpl.aerie.time.Window)">compareStartToEnd(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#compareStartToStart(gov.nasa.jpl.aerie.time.Window)">compareStartToStart(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#compareTo(gov.nasa.jpl.aerie.time.Duration)">compareTo(Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
 <div class="block">Determine whether this duration is greater than, less than, or equal to another duration.</div>
@@ -429,8 +437,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html#ContainedBy">ContainedBy</a></span> - gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html" title="enum in gov.nasa.jpl.aerie.utilities">IntervalAlgebra.Relation</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html#contains(gov.nasa.jpl.aerie.merlin.framework.resources.real.ClosedInterval)">contains(ClosedInterval)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">ClosedInterval</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#contains(gov.nasa.jpl.aerie.time.Window)">contains(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#contains(I,I)">contains(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
@@ -624,9 +630,13 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#end">end</a></span> - Variable in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#endInclusivity">endInclusivity</a></span> - Variable in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#endsAfter(I,I)">endsAfter(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#endsBefore(I,I)">endsBefore(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#endsStrictlyBefore(I,I)">endsStrictlyBefore(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/engine/TaskInfo.html#endTime">endTime</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.engine.<a href="gov/nasa/jpl/aerie/merlin/driver/engine/TaskInfo.html" title="class in gov.nasa.jpl.aerie.merlin.driver.engine">TaskInfo</a></dt>
 <dd>&nbsp;</dd>
@@ -683,6 +693,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/timeline/EventGraphProjection.html#%3Cinit%3E()">EventGraphProjection()</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.timeline.<a href="gov/nasa/jpl/aerie/merlin/timeline/EventGraphProjection.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">EventGraphProjection</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html#EVERYTHING">EVERYTHING</a></span> - Static variable in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">ClosedInterval</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html#Exclusive">Exclusive</a></span> - gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html" title="enum in gov.nasa.jpl.aerie.time">Window.Inclusivity</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/engine/TaskQueue.Executor.html#execute(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame)">execute(Duration, TaskFrame&lt;$Timeline, Task&gt;)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.driver.engine.<a href="gov/nasa/jpl/aerie/merlin/driver/engine/TaskQueue.Executor.html" title="interface in gov.nasa.jpl.aerie.merlin.driver.engine">TaskQueue.Executor</a></dt>
 <dd>&nbsp;</dd>
@@ -975,9 +987,15 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalSet.html#includesAll(gov.nasa.jpl.aerie.utilities.IntervalSet)">includesAll(IntervalSet&lt;Alg, I&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalSet.html" title="class in gov.nasa.jpl.aerie.utilities">IntervalSet</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#includesEnd()">includesEnd()</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html#includesPoint(double)">includesPoint(double)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#includesPoint(long,gov.nasa.jpl.aerie.time.Duration)">includesPoint(long, Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#includesStart()">includesStart()</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html#Inclusive">Inclusive</a></span> - gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html" title="enum in gov.nasa.jpl.aerie.time">Window.Inclusivity</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/protocol/RealDynamics.html#initial">initial</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a></dt>
 <dd>&nbsp;</dd>
@@ -1018,8 +1036,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html#intersectWith(gov.nasa.jpl.aerie.merlin.framework.resources.real.ClosedInterval)">intersectWith(ClosedInterval)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html#intersectWith(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition)">intersectWith(RealCondition)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealCondition.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealCondition</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#intersectWith(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">intersectWith(Duration, Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#intersectWith(gov.nasa.jpl.aerie.time.Window)">intersectWith(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
 <dd>&nbsp;</dd>
@@ -1070,6 +1086,8 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#isEqualTo(gov.nasa.jpl.aerie.time.Duration)">isEqualTo(Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html#isInitializationComplete()">isInitializationComplete()</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#isMetBy(I,I)">isMetBy(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#isNegative()">isNegative()</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
@@ -1189,9 +1207,15 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">The largest observable positive span of time.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#meets(I,I)">meets(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html#Meets">Meets</a></span> - gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html" title="enum in gov.nasa.jpl.aerie.utilities">IntervalAlgebra.Relation</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/ConstraintViolation.html#message">message</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/ConstraintViolation.html" title="class in gov.nasa.jpl.aerie.merlin.driver">ConstraintViolation</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/ViolableConstraint.html#message">message</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/ViolableConstraint.html" title="class in gov.nasa.jpl.aerie.merlin.driver">ViolableConstraint</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html#MetBy">MetBy</a></span> - gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html" title="enum in gov.nasa.jpl.aerie.utilities">IntervalAlgebra.Relation</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#MICROSECOND">MICROSECOND</a></span> - Static variable in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
@@ -1443,8 +1467,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html#overlaps(gov.nasa.jpl.aerie.merlin.framework.resources.real.ClosedInterval)">overlaps(ClosedInterval)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/ClosedInterval.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">ClosedInterval</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#overlaps(gov.nasa.jpl.aerie.time.Window)">overlaps(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#overlaps(I,I)">overlaps(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
 </dl>
@@ -1611,12 +1633,16 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#roundIn(double,double,gov.nasa.jpl.aerie.time.Duration)">roundIn(double, double, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#roundIn(double,gov.nasa.jpl.aerie.time.Window.Inclusivity,double,gov.nasa.jpl.aerie.time.Window.Inclusivity,gov.nasa.jpl.aerie.time.Duration)">roundIn(double, Window.Inclusivity, double, Window.Inclusivity, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#roundNearest(double,gov.nasa.jpl.aerie.time.Duration)">roundNearest(double, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
 <div class="block">Construct a duration in terms of a real quantity of some unit,
  rounding to the nearest representable value.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#roundOut(double,double,gov.nasa.jpl.aerie.time.Duration)">roundOut(double, double, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#roundOut(double,gov.nasa.jpl.aerie.time.Window.Inclusivity,double,gov.nasa.jpl.aerie.time.Window.Inclusivity,gov.nasa.jpl.aerie.time.Duration)">roundOut(double, Window.Inclusivity, double, Window.Inclusivity, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Duration.html#roundUpward(double,gov.nasa.jpl.aerie.time.Duration)">roundUpward(double, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
@@ -1787,9 +1813,13 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#start">start</a></span> - Variable in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#startInclusivity">startInclusivity</a></span> - Variable in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#startsAfter(I,I)">startsAfter(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#startsBefore(I,I)">startsBefore(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html#startsStrictlyAfter(I,I)">startsStrictlyAfter(I, I)</a></span> - Method in interface gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.html" title="interface in gov.nasa.jpl.aerie.utilities">IntervalAlgebra</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/driver/engine/TaskInfo.html#startTime">startTime</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.engine.<a href="gov/nasa/jpl/aerie/merlin/driver/engine/TaskInfo.html" title="class in gov.nasa.jpl.aerie.merlin.driver.engine">TaskInfo</a></dt>
 <dd>&nbsp;</dd>
@@ -1829,8 +1859,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Subtract one duration from another.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#subtract(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">subtract(Duration, Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Windows.html#subtract(gov.nasa.jpl.aerie.time.Window)">subtract(Window)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#subtract(gov.nasa.jpl.aerie.time.Window,gov.nasa.jpl.aerie.time.Window)">subtract(Window, Window)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
@@ -2010,6 +2038,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
 </dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html#valueOf(java.lang.String)">valueOf(String)</a></span> - Static method in enum gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html" title="enum in gov.nasa.jpl.aerie.time">Window.Inclusivity</a></dt>
+<dd>
+<div class="block">Returns the enum constant of this type with the specified name.</div>
+</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html#valueOf(java.lang.String)">valueOf(String)</a></span> - Static method in enum gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/IntervalAlgebra.Relation.html" title="enum in gov.nasa.jpl.aerie.utilities">IntervalAlgebra.Relation</a></dt>
 <dd>
 <div class="block">Returns the enum constant of this type with the specified name.</div>
@@ -2024,6 +2056,11 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 the order they are declared.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/merlin/protocol/ValueSchema.Unit.html#values()">values()</a></span> - Static method in enum gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/ValueSchema.Unit.html" title="enum in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.Unit</a></dt>
+<dd>
+<div class="block">Returns an array containing the constants of this enum type, in
+the order they are declared.</div>
+</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html#values()">values()</a></span> - Static method in enum gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html" title="enum in gov.nasa.jpl.aerie.time">Window.Inclusivity</a></dt>
 <dd>
 <div class="block">Returns an array containing the constants of this enum type, in
 the order they are declared.</div>
@@ -2094,9 +2131,15 @@ the order they are declared.</div>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#window(long,long,gov.nasa.jpl.aerie.time.Duration)">window(long, long, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#window(long,gov.nasa.jpl.aerie.time.Window.Inclusivity,long,gov.nasa.jpl.aerie.time.Window.Inclusivity,gov.nasa.jpl.aerie.time.Duration)">window(long, Window.Inclusivity, long, Window.Inclusivity, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#window(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">window(Duration, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="memberNameLink"><a href="gov/nasa/jpl/aerie/time/Window.html#window(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Window.Inclusivity,gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Window.Inclusivity)">window(Duration, Window.Inclusivity, Duration, Window.Inclusivity)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/time/Window.html" title="class in gov.nasa.jpl.aerie.time"><span class="typeNameLink">Window</span></a> - Class in <a href="gov/nasa/jpl/aerie/time/package-summary.html">gov.nasa.jpl.aerie.time</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/time/Window.Inclusivity.html" title="enum in gov.nasa.jpl.aerie.time"><span class="typeNameLink">Window.Inclusivity</span></a> - Enum in <a href="gov/nasa/jpl/aerie/time/package-summary.html">gov.nasa.jpl.aerie.time</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/time/Windows.html" title="class in gov.nasa.jpl.aerie.time"><span class="typeNameLink">Windows</span></a> - Class in <a href="gov/nasa/jpl/aerie/time/package-summary.html">gov.nasa.jpl.aerie.time</a></dt>
 <dd>&nbsp;</dd>
