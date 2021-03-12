@@ -158,7 +158,7 @@ final class ReactionContext<$Timeline> implements Context {
         // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
         return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(
             new QueryContext<>(now),
-            () -> condition.nextSatisfied(Window.between(Duration.ZERO, atLatest), true));
+            () -> condition.nextSatisfied(true, Window.between(Duration.ZERO, atLatest)));
       }));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));

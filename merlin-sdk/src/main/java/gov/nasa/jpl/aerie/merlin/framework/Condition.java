@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.time.Window;
 import java.util.Optional;
 
 public interface Condition {
-  Optional<Duration> nextSatisfied(Window scope, boolean positive);
+  Optional<Duration> nextSatisfied(boolean positive, Window scope);
 
   default Condition and(final Condition other) {
     return and(this, other);
@@ -21,16 +21,16 @@ public interface Condition {
   }
 
 
-  Condition TRUE = (scope, positive) -> Optional.of(scope.start);
-  Condition FALSE = (scope, positive) -> Optional.empty();
+  Condition TRUE = (positive, scope) -> Optional.of(scope.start);
+  Condition FALSE = (positive, scope) -> Optional.empty();
 
   static Condition or(final Condition left, final Condition right) {
-    return (scope, positive) -> {
+    return (positive, scope) -> {
       if (scope.isEmpty()) return Optional.empty();
-      if (!positive) return and(not(left), not(right)).nextSatisfied(scope, positive);
+      if (!positive) return and(not(left), not(right)).nextSatisfied(positive, scope);
 
-      final var left$ = left.nextSatisfied(scope, positive);
-      final var right$ = right.nextSatisfied(scope, positive);
+      final var left$ = left.nextSatisfied(positive, scope);
+      final var right$ = right.nextSatisfied(positive, scope);
 
       if (left$.isEmpty()) return right$;
       if (right$.isEmpty()) return left$;
@@ -39,27 +39,27 @@ public interface Condition {
   }
 
   static Condition and(final Condition left, final Condition right) {
-    return (scope, positive) -> {
+    return (positive, scope) -> {
       if (scope.isEmpty()) return Optional.empty();
-      if (!positive) return or(not(left), not(right)).nextSatisfied(scope, positive);
+      if (!positive) return or(not(left), not(right)).nextSatisfied(positive, scope);
 
       Optional<Duration> left$, right$;
 
-      left$ = left.nextSatisfied(scope, positive);
+      left$ = left.nextSatisfied(positive, scope);
       if (left$.isEmpty()) return Optional.empty();
 
       while (true) {
         scope = Window.between(left$.get(), scope.end);
         if (scope.isEmpty()) break;
 
-        right$ = right.nextSatisfied(scope, positive);
+        right$ = right.nextSatisfied(positive, scope);
         if (right$.isEmpty()) break;
         if (right$.get().isEqualTo(left$.get())) return left$;
 
         scope = Window.between(right$.get(), scope.end);
         if (scope.isEmpty()) break;
 
-        left$ = left.nextSatisfied(scope, positive);
+        left$ = left.nextSatisfied(positive, scope);
         if (left$.isEmpty()) break;
         if (left$.get().isEqualTo(right$.get())) return right$;
       }
@@ -69,7 +69,7 @@ public interface Condition {
   }
 
   static Condition not(final Condition base) {
-    return (scope, positive) ->
-        base.nextSatisfied(scope, !positive);
+    return (positive, scope) ->
+        base.nextSatisfied(!positive, scope);
   }
 }

@@ -46,7 +46,7 @@ public interface RealResource extends Resource<RealDynamics> {
   }
 
   default Condition isBetween(final double lower, final double upper) {
-    return (scope, positive) -> {
+    return (positive, scope) -> {
       final var dynamics = this.getDynamics();
 
       return (positive)
