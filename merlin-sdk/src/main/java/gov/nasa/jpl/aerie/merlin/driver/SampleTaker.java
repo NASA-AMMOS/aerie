@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -19,15 +18,15 @@ import java.util.function.Function;
 public final class SampleTaker<Dynamics>
     implements ResourceSolver.ApproximatorVisitor<Dynamics, List<Pair<Duration, SerializedValue>>>
 {
-  private final Iterable<Pair<Window, Dynamics>> profile;
+  private final Iterable<Pair<Duration, Dynamics>> profile;
 
-  private SampleTaker(final Iterable<Pair<Window, Dynamics>> profile) {
+  private SampleTaker(final Iterable<Pair<Duration, Dynamics>> profile) {
     this.profile = Objects.requireNonNull(profile);
   }
 
   public static <Dynamics>
   List<Pair<Duration, SerializedValue>> sample(
-      final Iterable<Pair<Window, Dynamics>> profile,
+      final Iterable<Pair<Duration, Dynamics>> profile,
       final ResourceSolver<?, ?, Dynamics> solver)
   {
     return solver.approximate(new SampleTaker<>(profile));
@@ -63,22 +62,23 @@ public final class SampleTaker<Dynamics>
   {
     final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
 
+    var dynamicsStart = Duration.ZERO;
     final var dynamicsIter = this.profile.iterator();
     while (dynamicsIter.hasNext()) {
       final var entry = dynamicsIter.next();
 
-      final var window = entry.getLeft();
+      final var dynamicsEnd = dynamicsStart.plus(entry.getLeft());
       final var dynamics = entry.getRight();
       final var dynamicsOwnsEndpoint = !dynamicsIter.hasNext();
 
       final var approximation = approximate.apply(dynamics);
 
-      var partStart = window.start;
+      var partStart = dynamicsStart;
       do {
         final var part = approximation.next();
         final var partEnd = Duration.min(
             (part.isPersistent()) ? Duration.MAX_VALUE : partStart.plus(part.extent),
-            window.end);
+            dynamicsEnd);
 
         timeline.add(Pair.of(partStart, takeSample.apply(part.dynamics, Duration.ZERO)));
 
@@ -87,7 +87,9 @@ public final class SampleTaker<Dynamics>
         }
 
         partStart = partEnd;
-      } while (approximation.hasNext() && (partStart.shorterThan(window.end) || dynamicsOwnsEndpoint));
+      } while (approximation.hasNext() && (partStart.shorterThan(dynamicsEnd) || dynamicsOwnsEndpoint));
+
+      dynamicsStart = dynamicsEnd;
     }
 
     return timeline;
