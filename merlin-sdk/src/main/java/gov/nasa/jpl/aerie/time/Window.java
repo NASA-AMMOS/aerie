@@ -25,11 +25,11 @@ public final class Window {
   }
 
   public boolean includesStart() {
-    return this.startInclusivity == Inclusive;
+    return (this.startInclusivity == Inclusive);
   }
 
   public boolean includesEnd() {
-    return this.endInclusivity == Inclusive;
+    return (this.endInclusivity == Inclusive);
   }
 
   private Window(
@@ -56,9 +56,9 @@ public final class Window {
    */
   public static Window between(
       final Duration start,
-      Inclusivity startInclusivity,
+      final Inclusivity startInclusivity,
       final Duration end,
-      Inclusivity endInclusivity
+      final Inclusivity endInclusivity
   ) {
     return (end.shorterThan(start))
       ? Window.EMPTY
@@ -131,150 +131,6 @@ public final class Window {
   public Duration duration() {
     if (this.isEmpty()) return Duration.ZERO;
     return this.end.minus(this.start);
-  }
-
-  public int compareStartToStart(final Window other) {
-    // First, order by absolute time.
-    if (!this.start.isEqualTo(other.start)) {
-      return this.start.compareTo(other.start);
-    }
-
-    // Second, order by whichever one includes the point.
-    if (this.includesStart() != other.includesStart()) {
-      return (this.includesStart()) ? -1 : 1;
-    }
-
-    return 0;
-  }
-
-  public int compareStartToEnd(final Window other) {
-    // First, order by absolute time.
-    if (!this.start.isEqualTo(other.end)) {
-      return this.start.compareTo(other.end);
-    }
-
-    // Second, order by whichever one includes the point
-    if (!other.includesEnd()) return 1;
-    if (!this.includesStart()) return 1;
-
-    return 0;
-  }
-
-  public int compareEndToStart(final Window other) {
-    return -other.compareStartToEnd(this);
-  }
-
-  public int compareEndToEnd(final Window other) {
-    // First, order by absolute time.
-    if (!this.end.isEqualTo(other.end)) {
-      return this.end.compareTo(other.end);
-    }
-
-    // Second, order by whichever one includes the point
-    if (this.includesEnd() != other.includesEnd()) {
-      return (this.includesEnd()) ? -1 : 1;
-    }
-
-    return 0;
-  }
-
-  /**
-   * Returns the largest window contained by both `x` and `y`.
-   */
-  public static Window greatestLowerBound(final Window x, final Window y) {
-    final Duration start;
-    final Inclusivity startInclusivity;
-    final Duration end;
-    final Inclusivity endInclusivity;
-
-    if (x.start.longerThan(y.start)) {
-      start = x.start;
-      startInclusivity = x.startInclusivity;
-    } else if (y.start.longerThan(x.start)) {
-      start = y.start;
-      startInclusivity = y.startInclusivity;
-    } else {
-      start = x.start;
-      startInclusivity = (x.includesStart() && y.includesStart()) ? Inclusive : Exclusive;
-    }
-
-    if (x.end.shorterThan(y.end)) {
-      end = x.end;
-      endInclusivity = x.endInclusivity;
-    } else if (y.end.shorterThan(x.end)) {
-      end = y.end;
-      endInclusivity = y.endInclusivity;
-    } else {
-      end = x.end;
-      endInclusivity = (x.includesEnd() && y.includesEnd()) ? Inclusive : Exclusive;
-    }
-    return new Window(start, startInclusivity, end, endInclusivity);
-  }
-
-  /**
-   * Returns the smallest window containing both `x` and `y`.
-   */
-  public static Window leastUpperBound(final Window x, final Window y) {
-    final Duration start;
-    final Inclusivity startInclusivity;
-    final Duration end;
-    final Inclusivity endInclusivity;
-
-    if (x.start.shorterThan(y.start)) {
-      start = x.start;
-      startInclusivity = x.startInclusivity;
-    } else if (y.start.shorterThan(x.start)) {
-      start = y.start;
-      startInclusivity = y.startInclusivity;
-    } else {
-      start = x.start;
-      startInclusivity = (x.includesStart() || y.includesStart()) ? Inclusive : Exclusive;
-    }
-
-    if (x.end.longerThan(y.end)) {
-      end = x.end;
-      endInclusivity = x.endInclusivity;
-    } else if (y.end.longerThan(x.end)) {
-      end = y.end;
-      endInclusivity = y.endInclusivity;
-    } else {
-      end = x.end;
-      endInclusivity = (x.includesEnd() || y.includesEnd()) ? Inclusive : Exclusive;
-    }
-
-    return new Window(start, startInclusivity, end, endInclusivity);
-  }
-
-  /**
-   * Returns the largest window containing `self` but not `other`.
-   */
-  public static Window subtract(final Window self, final Window other) {
-    if (other.end.shorterThan(other.start)) {
-      // Trivial intersection: nothing to subtract.
-      return other;
-    } else if (self.end.shorterThan(self.start)) {
-      // Trivial intersection: subtract everything! (Of which there are no things.)
-      return self;
-    } else if (self.end.shorterThan(other.start) || other.end.shorterThan(self.start)) {
-      // Trivial intersections: no overlap.
-      return self;
-    } else {
-      // The intervals non-trivially intersect.
-      if (self.start.shorterThan(other.start) && other.end.shorterThan(self.end)) {
-        // This interval fully contains the other, splitting into two disjoint intervals.
-        // The largest interval containing these intervals is the empty interval.
-        return Window.EMPTY;
-      } else if (other.start.noLongerThan(self.start) && self.start.noLongerThan(other.end) && other.end.shorterThan(self.end)) {
-        // This interval is cut on the left by the other.
-        return Window.between(other.end, other.endInclusivity.opposite(), self.end, self.endInclusivity);
-      } else if (self.start.shorterThan(other.start) && other.start.noLongerThan(self.end) && self.end.noLongerThan(other.end)) {
-        // This interval is cut on the right by the other.
-        return Window.between(self.start, self.startInclusivity, other.start, other.startInclusivity.opposite());
-      } else /* other.start <= self.start && this.end <= other.end */ {
-        // This interval is fully contained by the other.
-        return Window.EMPTY;
-      }
-    }
   }
 
   @Override
