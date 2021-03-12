@@ -5,15 +5,15 @@ import gov.nasa.jpl.aerie.time.Duration;
 import java.util.Objects;
 
 public final class DelimitedDynamics<Dynamics> {
-  public final Duration endTime;
+  public final Duration extent;
   public final Dynamics dynamics;
 
   public boolean isPersistent() {
-    return (this.endTime.isEqualTo(Duration.MAX_VALUE));
+    return (this.extent.isEqualTo(Duration.MAX_VALUE));
   }
 
-  private DelimitedDynamics(final Duration endTime, final Dynamics dynamics) {
-    this.endTime = Objects.requireNonNull(endTime);
+  private DelimitedDynamics(final Duration extent, final Dynamics dynamics) {
+    this.extent = Objects.requireNonNull(extent);
     this.dynamics = Objects.requireNonNull(dynamics);
   }
 
@@ -27,6 +27,6 @@ public final class DelimitedDynamics<Dynamics> {
 
   @Override
   public final String toString() {
-    return String.format("(%s, %s)", this.endTime, this.dynamics);
+    return String.format("(%s, %s)", this.extent, this.dynamics);
   }
 }

@@ -77,7 +77,7 @@ public final class SampleTaker<Dynamics>
       do {
         final var part = approximation.next();
         final var partEnd = Duration.min(
-            (part.isPersistent()) ? Duration.MAX_VALUE : partStart.plus(part.endTime),
+            (part.isPersistent()) ? Duration.MAX_VALUE : partStart.plus(part.extent),
             window.end);
 
         timeline.add(Pair.of(partStart, takeSample.apply(part.dynamics, Duration.ZERO)));
