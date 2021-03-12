@@ -244,8 +244,7 @@ public final class SimulationDriver {
           final var triggerTime$ = condition
               .nextSatisfied(
                   yieldTime::ask,
-                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
-                  true)
+                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())))
               .map(queue.getElapsedTime()::plus);
 
           if (triggerTime$.isEmpty()) continue;
@@ -461,8 +460,7 @@ public final class SimulationDriver {
           final var triggerTime$ = condition
               .nextSatisfied(
                   yieldTime::ask,
-                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
-                  true)
+                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())))
               .map(queue.getElapsedTime()::plus);
 
           if (triggerTime$.isEmpty()) continue;

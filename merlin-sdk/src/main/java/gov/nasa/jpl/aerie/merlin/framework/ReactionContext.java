@@ -153,11 +153,11 @@ final class ReactionContext<$Timeline> implements Context {
     if (this.history.isEmpty()) {
       // We're running normally.
 
-      this.scheduler = this.handle.yield(TaskStatus.awaiting((now, scope, positive) -> {
+      this.scheduler = this.handle.yield(TaskStatus.awaiting((now, scope) -> {
         // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
         return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(
             new QueryContext<>(now),
-            () -> condition.nextSatisfied(scope, positive));
+            () -> condition.nextSatisfied(scope, true));
       }));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
