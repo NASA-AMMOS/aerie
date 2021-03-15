@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -15,8 +16,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.serializedParameterP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -121,5 +124,18 @@ public final class MerlinParsersTest {
     ).isEqualTo(
         expected
     );
+  }
+
+  @Test
+  public void testSerializedReal() {
+    final var expected = SerializedValue.of(3.14);
+    final var actual = serializedParameterP.parse(Json.createValue(3.14)).getSuccessOrThrow();
+
+    assertThat(expected).isEqualTo(actual);
+  }
+
+  @Test
+  public void testRealIsNotALong() {
+    assertThat(longP.parse(Json.createValue(3.14))).matches(JsonParseResult::isFailure);
   }
 }
