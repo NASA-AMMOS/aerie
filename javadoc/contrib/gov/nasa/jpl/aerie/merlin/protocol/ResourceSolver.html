@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":6,"i1":6,"i2":6,"i3":6};
+var data = {"i0":6,"i1":6};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],4:["t3","Abstract Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -115,7 +115,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <main role="main">
 <div class="header">
 <div class="subTitle"><span class="packageLabelInType">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></div>
-<h2 title="Interface ResourceSolver" class="title">Interface ResourceSolver&lt;$Schema,&#8203;Resource,&#8203;Dynamics,&#8203;Condition&gt;</h2>
+<h2 title="Interface ResourceSolver" class="title">Interface ResourceSolver&lt;$Schema,&#8203;Resource,&#8203;Dynamics&gt;</h2>
 </div>
 <div class="contentContainer">
 <div class="description">
@@ -125,26 +125,19 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <dt><span class="paramLabel">Type Parameters:</span></dt>
 <dd><code>Resource</code> - The topological space of resource values under discussion.</dd>
 <dd><code>Dynamics</code> - The type of continuous time-dependent resource behaviors.</dd>
-<dd><code>Condition</code> - The type of Boolean conditions on resource values.</dd>
 </dl>
 <dl>
 <dt>All Known Implementing Classes:</dt>
 <dd><code><a href="../framework/resources/discrete/DiscreteResourceSolver.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResourceSolver</a></code>, <code><a href="../framework/resources/real/RealResourceSolver.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResourceSolver</a></code></dd>
 </dl>
 <hr>
-<pre>public interface <span class="typeNameLabel">ResourceSolver&lt;$Schema,&#8203;Resource,&#8203;Dynamics,&#8203;Condition&gt;</span></pre>
-<div class="block">A solver over a continuous dynamics for a resource type and conditions against that resource.
+<pre>public interface <span class="typeNameLabel">ResourceSolver&lt;$Schema,&#8203;Resource,&#8203;Dynamics&gt;</span></pre>
+<div class="block">A solver over a continuous dynamics for a resource type.
 
  <p>
    A dynamics is a continuous function from time (the real line) into a space of resource values (the resource type).
    A condition is a continuous function from the resource space into the space of boolean valuations,
    also called <a href="https://en.wikipedia.org/wiki/Sierpi%C5%84ski_space">Sierpiński space</a>.
- </p>
-
- <p>
-   A solver is able to perform two kinds of computations: solve a dynamics for its value at a time,
-   and solve the composition of a dynamics and a condition -- in sum, a continuous function from time to truth values
-   -- for the windows of time over which the condition is true.
  </p></div>
 </li>
 </ul>
@@ -195,20 +188,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#firstDissatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstDissatisfied</a></span>&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
-                 <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
-                 <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#firstSatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">firstSatisfied</a></span>&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
-              <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
-              <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDynamics(Resource,gov.nasa.jpl.aerie.merlin.protocol.Checkpoint)">getDynamics</a></span>&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Resource</a>&nbsp;resource,
            <a href="Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Checkpoint</a>&lt;? extends <a href="ResourceSolver.html" title="type parameter in ResourceSolver">$Schema</a>&gt;&nbsp;now)</code></th>
@@ -246,36 +225,10 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <a id="approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">
 <!--   -->
 </a>
-<ul class="blockList">
+<ul class="blockListLast">
 <li class="blockList">
 <h4>approximate</h4>
 <pre class="methodSignature">&lt;Result&gt;&nbsp;Result&nbsp;approximate&#8203;(<a href="ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver.ApproximatorVisitor</a>&lt;<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>,&#8203;Result&gt;&nbsp;visitor)</pre>
-</li>
-</ul>
-<a id="firstSatisfied(java.lang.Object,java.lang.Object,gov.nasa.jpl.aerie.time.Window)">
-<!--   -->
-</a><a id="firstSatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>firstSatisfied</h4>
-<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;&nbsp;firstSatisfied&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
-                                  <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
-                                  <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
-</li>
-</ul>
-<a id="firstDissatisfied(java.lang.Object,java.lang.Object,gov.nasa.jpl.aerie.time.Window)">
-<!--   -->
-</a><a id="firstDissatisfied(Dynamics,Condition,gov.nasa.jpl.aerie.time.Window)">
-<!--   -->
-</a>
-<ul class="blockListLast">
-<li class="blockList">
-<h4>firstDissatisfied</h4>
-<pre class="methodSignature"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html?is-external=true" title="class or interface in java.util" class="externalLink">Optional</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&gt;&nbsp;firstDissatisfied&#8203;(<a href="ResourceSolver.html" title="type parameter in ResourceSolver">Dynamics</a>&nbsp;dynamics,
-                                     <a href="ResourceSolver.html" title="type parameter in ResourceSolver">Condition</a>&nbsp;condition,
-                                     <a href="../../time/Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;selection)</pre>
 </li>
 </ul>
 </li>

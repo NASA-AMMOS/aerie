@@ -117,15 +117,7 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<th class="colFirst" scope="row"><a href="CompoundCondition.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">CompoundCondition.Visitor</a>&lt;$Schema,&#8203;Result&gt;</th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="altColor">
 <th class="colFirst" scope="row"><a href="Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;$Schema&gt;</th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="rowColor">
-<th class="colFirst" scope="row"><a href="ConditionType.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ConditionType</a>&lt;Condition&gt;</th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
@@ -137,13 +129,13 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="altColor">
-<th class="colFirst" scope="row"><a href="ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;$Schema,&#8203;Resource,&#8203;Condition&gt;</th>
+<th class="colFirst" scope="row"><a href="ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;$Schema,&#8203;Resource&gt;</th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr class="rowColor">
-<th class="colFirst" scope="row"><a href="ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;$Schema,&#8203;Resource,&#8203;Dynamics,&#8203;Condition&gt;</th>
+<th class="colFirst" scope="row"><a href="ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver</a>&lt;$Schema,&#8203;Resource,&#8203;Dynamics&gt;</th>
 <td class="colLast">
-<div class="block">A solver over a continuous dynamics for a resource type and conditions against that resource.</div>
+<div class="block">A solver over a continuous dynamics for a resource type.</div>
 </td>
 </tr>
 <tr class="altColor">
@@ -197,54 +189,50 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tbody>
 <tr class="altColor">
-<th class="colFirst" scope="row"><a href="CompoundCondition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">CompoundCondition</a>&lt;$Schema&gt;</th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <th class="colFirst" scope="row"><a href="DelimitedDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">DelimitedDynamics</a>&lt;Dynamics&gt;</th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <th class="colFirst" scope="row"><a href="RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a></th>
 <td class="colLast">
 <div class="block">A description of a time-dependent behavior for real-valued resources that may vary continuously.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <th class="colFirst" scope="row"><a href="SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a></th>
 <td class="colLast">
 <div class="block">A serializable representation of an adaptation-specific activity parameter domain object.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <th class="colFirst" scope="row"><a href="SerializedValue.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.DefaultVisitor</a>&lt;T&gt;</th>
 <td class="colLast">
 <div class="block">Provides a default case on top of the base Visitor.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <th class="colFirst" scope="row"><a href="SerializedValue.OptionalVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.OptionalVisitor</a>&lt;T&gt;</th>
 <td class="colLast">
 <div class="block">A helper base class implementing <code>Visitor&lt;Optional&lt;T&gt;&gt;</code> for any result type <code>T</code>.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <th class="colFirst" scope="row"><a href="TaskStatus.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">TaskStatus</a>&lt;$Timeline&gt;</th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <th class="colFirst" scope="row"><a href="ValueSchema.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema</a></th>
 <td class="colLast">
 <div class="block">A serializable description of the structure of a value such as an activity parameter.</div>
 </td>
 </tr>
-<tr class="altColor">
+<tr class="rowColor">
 <th class="colFirst" scope="row"><a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.DefaultVisitor</a>&lt;T&gt;</th>
 <td class="colLast">
 <div class="block">Provides a default case on top of the base Visitor.</div>
 </td>
 </tr>
-<tr class="rowColor">
+<tr class="altColor">
 <th class="colFirst" scope="row"><a href="ValueSchema.OptionalVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.OptionalVisitor</a>&lt;T&gt;</th>
 <td class="colLast">
 <div class="block">A helper base class implementing <code>Visitor&lt;Optional&lt;T&gt;&gt;</code> for any result type <code>T</code>.</div>
@@ -277,10 +265,6 @@ $('.navPadding').css('padding-top', $('.fixedNav').css("height"));
 </tr>
 <tbody>
 <tr class="altColor">
-<th class="colFirst" scope="row"><a href="ConditionType.UnconstructablelConditionException.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ConditionType.UnconstructablelConditionException</a></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr class="rowColor">
 <th class="colFirst" scope="row"><a href="TaskSpecType.UnconstructableTaskSpecException.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType.UnconstructableTaskSpecException</a></th>
 <td class="colLast">&nbsp;</td>
 </tr>

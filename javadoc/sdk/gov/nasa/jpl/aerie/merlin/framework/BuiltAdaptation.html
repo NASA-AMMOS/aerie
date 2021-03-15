@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10};
 var tabs = {65535:["t0","All Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -159,7 +159,7 @@ implements <a href="../protocol/Adaptation.html" title="interface in gov.nasa.jp
 <tr class="altColor">
 <th class="colConstructorName" scope="row"><code><span class="memberNameLink"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,gov.nasa.jpl.aerie.merlin.timeline.Schema,java.util.List,java.util.List,java.util.Map)">BuiltAdaptation</a></span>&#8203;(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&gt;&nbsp;rootContext,
                <a href="../timeline/Schema.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;&nbsp;schema,
-               <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?,&#8203;?&gt;&gt;&nbsp;resourceFamilies,
+               <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resourceFamilies,
                <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&gt;&nbsp;daemons,
                <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;&nbsp;taskSpecTypes)</code></th>
 <td class="colLast">&nbsp;</td>
@@ -183,26 +183,21 @@ implements <a href="../protocol/Adaptation.html" title="interface in gov.nasa.jp
 <th class="colLast" scope="col">Description</th>
 </tr>
 <tr id="i0" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/CompoundCondition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">CompoundCondition</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;&gt;</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getConstraints()">getConstraints</a></span>()</code></th>
-<td class="colLast">&nbsp;</td>
-</tr>
-<tr id="i1" class="rowColor">
 <td class="colFirst"><code>&lt;$Timeline extends <a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;<br><a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getDaemon()">getDaemon</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i2" class="altColor">
-<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?,&#8203;?&gt;&gt;</code></td>
+<tr id="i1" class="rowColor">
+<td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getResourceFamilies()">getResourceFamilies</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i2" class="altColor">
 <td class="colFirst"><code><a href="../timeline/Schema.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getSchema()">getSchema</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i3" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#getTaskSpecificationTypes()">getTaskSpecificationTypes</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
@@ -239,7 +234,7 @@ implements <a href="../protocol/Adaptation.html" title="interface in gov.nasa.jp
 <h4>BuiltAdaptation</h4>
 <pre>public&nbsp;BuiltAdaptation&#8203;(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&gt;&nbsp;rootContext,
                        <a href="../timeline/Schema.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Schema</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;&nbsp;schema,
-                       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?,&#8203;?&gt;&gt;&nbsp;resourceFamilies,
+                       <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;&nbsp;resourceFamilies,
                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html?is-external=true" title="class or interface in java.util" class="externalLink">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Runnable</a>&gt;&nbsp;daemons,
                        <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;&nbsp;taskSpecTypes)</pre>
 </li>
@@ -286,23 +281,10 @@ implements <a href="../protocol/Adaptation.html" title="interface in gov.nasa.jp
 <ul class="blockList">
 <li class="blockList">
 <h4>getResourceFamilies</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?,&#8203;?&gt;&gt;&nbsp;getResourceFamilies()</pre>
+<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Iterable.html?is-external=true" title="class or interface in java.lang" class="externalLink">Iterable</a>&lt;<a href="../protocol/ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceFamily</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>,&#8203;?&gt;&gt;&nbsp;getResourceFamilies()</pre>
 <dl>
 <dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
 <dd><code><a href="../protocol/Adaptation.html#getResourceFamilies()">getResourceFamilies</a></code>&nbsp;in interface&nbsp;<code><a href="../protocol/Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;</code></dd>
-</dl>
-</li>
-</ul>
-<a id="getConstraints()">
-<!--   -->
-</a>
-<ul class="blockList">
-<li class="blockList">
-<h4>getConstraints</h4>
-<pre class="methodSignature">public&nbsp;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html?is-external=true" title="class or interface in java.util" class="externalLink">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a>,&#8203;<a href="../protocol/CompoundCondition.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">CompoundCondition</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;&gt;&nbsp;getConstraints()</pre>
-<dl>
-<dt><span class="overrideSpecifyLabel">Specified by:</span></dt>
-<dd><code><a href="../protocol/Adaptation.html#getConstraints()">getConstraints</a></code>&nbsp;in interface&nbsp;<code><a href="../protocol/Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;<a href="BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt;</code></dd>
 </dl>
 </li>
 </ul>
