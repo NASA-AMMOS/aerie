@@ -53,7 +53,6 @@ public final class StubAdaptationService implements AdaptationService {
 
   public static final SimulationResults SUCCESSFUL_SIMULATION_RESULTS = new SimulationResults(
       Map.of(),
-      List.of(),
       Map.of(),
       Map.of(),
       Instant.EPOCH);

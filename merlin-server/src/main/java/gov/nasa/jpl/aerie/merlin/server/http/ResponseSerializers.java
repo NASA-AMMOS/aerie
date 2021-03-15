@@ -185,7 +185,7 @@ public final class ResponseSerializers {
         .add("resources", serializeMap(
             elements -> serializeIterable(gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers::serializeSample, elements),
             results.resourceSamples))
-        .add("constraints", serializeIterable(ResponseSerializers::serializeConstraintViolation, results.constraintViolations))
+        .add("constraints", JsonValue.EMPTY_JSON_ARRAY)
         .add("activities", serializeMap(ResponseSerializers::serializeSimulatedActivity, results.simulatedActivities))
         .build();
   }

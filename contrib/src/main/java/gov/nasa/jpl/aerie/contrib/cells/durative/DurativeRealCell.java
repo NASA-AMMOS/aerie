@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
@@ -15,11 +14,11 @@ import java.util.PriorityQueue;
 import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.delimited;
 
 public final class DurativeRealCell implements Cell<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell> {
-  private final PriorityQueue<Pair<Window, RealDynamics>> activeEffects;
+  private final PriorityQueue<Pair<Duration, RealDynamics>> activeEffects;
   private Duration elapsedTime;
 
   public DurativeRealCell() {
-    this.activeEffects = new PriorityQueue<>(Comparator.comparing(x -> x.getLeft().end));
+    this.activeEffects = new PriorityQueue<>(Comparator.comparing(Pair::getLeft));
     this.elapsedTime = Duration.ZERO;
   }
 
@@ -42,7 +41,7 @@ public final class DurativeRealCell implements Cell<Collection<Pair<Duration, Re
   public void react(final Collection<Pair<Duration, RealDynamics>> effects) {
     for (final var effect : effects) {
       this.activeEffects.add(Pair.of(
-          Window.between(this.elapsedTime, this.elapsedTime.plus(effect.getLeft())),
+          this.elapsedTime.plus(effect.getLeft()),
           effect.getRight()));
     }
   }
@@ -54,7 +53,7 @@ public final class DurativeRealCell implements Cell<Collection<Pair<Duration, Re
     final var iter = this.activeEffects.iterator();
     while (iter.hasNext()) {
       final var entry = iter.next();
-      if (this.elapsedTime.shorterThan(entry.getLeft().end)) break;
+      if (this.elapsedTime.shorterThan(entry.getLeft())) break;
       iter.remove();
     }
 
@@ -68,7 +67,7 @@ public final class DurativeRealCell implements Cell<Collection<Pair<Duration, Re
     var dynamics = RealDynamics.constant(0.0);
 
     for (final var entry : this.activeEffects) {
-      duration = entry.getLeft().end.minus(this.elapsedTime);
+      duration = entry.getLeft().minus(this.elapsedTime);
       dynamics = dynamics.plus(entry.getRight());
     }
 

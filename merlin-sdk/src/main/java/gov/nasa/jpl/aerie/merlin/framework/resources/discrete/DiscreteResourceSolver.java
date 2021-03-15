@@ -10,16 +10,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 
 public final class DiscreteResourceSolver<$Schema, Resource>
-    implements ResourceSolver<$Schema, DiscreteResource<Resource>, Resource, Set<Resource>>
+    implements ResourceSolver<$Schema, DiscreteResource<Resource>, Resource>
 {
   private final Scoped<Context> rootContext;
   private final ValueMapper<Resource> mapper;
@@ -50,23 +46,5 @@ public final class DiscreteResourceSolver<$Schema, Resource>
         return DiscreteResourceSolver.this.mapper.getValueSchema();
       }
     });
-  }
-
-  @Override
-  public Optional<Duration> firstSatisfied(final Resource value, final Set<Resource> values, final Window selection) {
-    if (values.contains(value)) {
-      return Optional.of(selection.start);
-    } else {
-      return Optional.empty();
-    }
-  }
-
-  @Override
-  public Optional<Duration> firstDissatisfied(final Resource value, final Set<Resource> values, final Window selection) {
-    if (values.contains(value)) {
-      return Optional.empty();
-    } else {
-      return Optional.of(selection.start);
-    }
   }
 }

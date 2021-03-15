@@ -11,11 +11,8 @@ public interface Adaptation<$Schema> {
   /* Produce */ <$Timeline extends $Schema> Task<$Timeline>
   /* Given   */ getDaemon();
 
-  /* Produce */ Iterable<ResourceFamily<$Schema, ?, ?>>
+  /* Produce */ Iterable<ResourceFamily<$Schema, ?>>
   /* Given   */ getResourceFamilies();
-
-  /* Produce */ Map<String, CompoundCondition<$Schema>>
-  /* Given   */ getConstraints();
 
   /* Produce */ Schema<$Schema>
   /* Given   */ getSchema();

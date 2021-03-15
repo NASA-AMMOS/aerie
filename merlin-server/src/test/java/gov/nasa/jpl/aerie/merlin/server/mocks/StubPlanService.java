@@ -239,7 +239,6 @@ public final class StubPlanService implements PlanService {
 
     return new SimulationResults(
         Collections.emptyMap(),
-        Collections.emptyList(),
         Collections.emptyMap(),
         Collections.emptyMap(),
         Instant.EPOCH);

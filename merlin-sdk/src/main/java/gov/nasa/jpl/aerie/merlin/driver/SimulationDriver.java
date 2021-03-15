@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -92,7 +91,7 @@ public final class SimulationDriver {
     }
 
     // Collect profiles for all resources.
-    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?, ?>>();
+    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?>>();
     for (final var family : adaptation.getResourceFamilies()) createProfilesForFamily(family, profiles::put);
 
     var now = database.origin();
@@ -242,10 +241,7 @@ public final class SimulationDriver {
           final var condition = entry.getValue();
 
           final var triggerTime$ = condition
-              .nextSatisfied(
-                  yieldTime::ask,
-                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
-                  true)
+              .nextSatisfied(yieldTime::ask, maxBound.minus(queue.getElapsedTime()))
               .map(queue.getElapsedTime()::plus);
 
           if (triggerTime$.isEmpty()) continue;
@@ -291,7 +287,6 @@ public final class SimulationDriver {
 
     return new SimulationResults(
         resourceSamples,
-        new ArrayList<>(),
         taskIdToActivityId,
         taskInfo,
         startTime);
@@ -460,10 +455,7 @@ public final class SimulationDriver {
           final var condition = entry.getValue();
 
           final var triggerTime$ = condition
-              .nextSatisfied(
-                  yieldTime::ask,
-                  Window.between(Duration.ZERO, maxBound.minus(queue.getElapsedTime())),
-                  true)
+              .nextSatisfied(yieldTime::ask, maxBound.minus(queue.getElapsedTime()))
               .map(queue.getElapsedTime()::plus);
 
           if (triggerTime$.isEmpty()) continue;
@@ -484,11 +476,11 @@ public final class SimulationDriver {
     });
   }
 
-  private static <$Schema, Resource, Condition>
+  private static <$Schema, Resource>
   void
   createProfilesForFamily(
-      final ResourceFamily<$Schema, Resource, Condition> family,
-      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?, ?>> handler)
+      final ResourceFamily<$Schema, Resource> family,
+      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?>> handler)
   {
     final var solver = family.getSolver();
 

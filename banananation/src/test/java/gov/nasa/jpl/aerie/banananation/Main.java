@@ -10,9 +10,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.nasa.jpl.aerie.time.Duration.MILLISECOND;
 import static gov.nasa.jpl.aerie.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
 import static gov.nasa.jpl.aerie.time.Duration.duration;
 
@@ -47,6 +45,5 @@ public final class Main {
         simulationDuration);
 
     System.out.println(simulationResults.resourceSamples);
-    System.out.println(simulationResults.constraintViolations);
   }
 }

@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,14 +40,6 @@ public final class TaskInfo<$Timeline> {
     this.parent = Objects.requireNonNull(parent);
     this.task = Objects.requireNonNull(task);
     this.specification = Objects.requireNonNull(specification);
-  }
-
-  public Optional<Window> getWindow() {
-    return this.startTime.flatMap(startTime -> {
-      return this.endTime.map(endTime -> {
-        return Window.between(startTime, endTime);
-      });
-    });
   }
 
   public boolean isDone() {
