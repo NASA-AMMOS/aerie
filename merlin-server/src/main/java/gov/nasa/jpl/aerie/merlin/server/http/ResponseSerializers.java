@@ -79,6 +79,12 @@ public final class ResponseSerializers {
     return schema.match(new ValueSchemaSerializer());
   }
 
+  public static JsonValue serializeValueSchemas(final Map<String, ValueSchema> schemas) {
+    if (schemas == null) return JsonValue.NULL;
+
+    return serializeMap(ResponseSerializers::serializeValueSchema, schemas);
+  }
+
   public static JsonValue serializeParameterSchemas(final List<ParameterSchema> schemas) {
     return serializeIterable(ResponseSerializers::serializeParameterSchema, schemas);
   }

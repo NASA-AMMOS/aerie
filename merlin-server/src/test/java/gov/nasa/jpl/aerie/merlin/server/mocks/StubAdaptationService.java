@@ -128,12 +128,12 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ParameterSchema> getStatesSchemas(final String adaptationId) throws NoSuchAdaptationException {
+  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId) throws NoSuchAdaptationException {
     if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
       throw new NoSuchAdaptationException(adaptationId);
     }
 
-    return List.of();
+    return Map.of();
   }
 
   @Override

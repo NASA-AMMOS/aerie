@@ -122,7 +122,7 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ParameterSchema> getStatesSchemas(final String adaptationId)
+  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     return loadAdaptation(adaptationId).getStateSchemas();
