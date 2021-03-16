@@ -17,6 +17,7 @@ jacocoTestReport.dependsOn test
 // Link references to standard Java classes to the official Java 11 documentation.
 javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
 javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
   api 'JNISpice:JNISpice:1.0-20190517.205223-2'
