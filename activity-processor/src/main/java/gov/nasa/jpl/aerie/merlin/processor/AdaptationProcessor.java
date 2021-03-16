@@ -12,6 +12,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
@@ -515,24 +516,23 @@ public final class AdaptationProcessor implements Processor {
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(
-                        java.util.Map.class,
-                        String.class,
-                        gov.nasa.jpl.aerie.merlin.protocol.ValueSchema.class))
+                        java.util.ArrayList.class,
+                        ParameterSchema.class))
                     .addStatement(
                         "final var $L = new $T()",
                         "parameters",
                         ParameterizedTypeName.get(
-                            java.util.HashMap.class,
-                            String.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.ValueSchema.class))
+                            java.util.ArrayList.class,
+                            ParameterSchema.class))
                     .addCode(
                         activityType.parameters
                             .stream()
                             .map(parameter -> CodeBlock
                                 .builder()
                                 .addStatement(
-                                    "$L.put($S, this.mapper_$L.getValueSchema())",
+                                    "$L.add(new $T( $S, this.mapper_$L.getValueSchema()))",
                                     "parameters",
+                                    ParameterSchema.class,
                                     parameter.name,
                                     parameter.name))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))

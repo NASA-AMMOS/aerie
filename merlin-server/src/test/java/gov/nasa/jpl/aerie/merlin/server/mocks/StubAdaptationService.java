@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
@@ -30,7 +31,7 @@ public final class StubAdaptationService implements AdaptationService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      Map.of("Param", ValueSchema.STRING),
+      List.of(new ParameterSchema("Param", ValueSchema.STRING)),
       Map.of("Param", SerializedValue.of("Default")));
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
@@ -127,12 +128,12 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId) throws NoSuchAdaptationException {
+  public List<ParameterSchema> getStatesSchemas(final String adaptationId) throws NoSuchAdaptationException {
     if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
       throw new NoSuchAdaptationException(adaptationId);
     }
 
-    return Map.of();
+    return List.of();
   }
 
   @Override

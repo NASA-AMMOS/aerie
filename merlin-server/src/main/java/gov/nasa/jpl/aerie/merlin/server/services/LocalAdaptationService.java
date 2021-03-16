@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
+import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
@@ -121,7 +122,7 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
+  public List<ParameterSchema> getStatesSchemas(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     return loadAdaptation(adaptationId).getStateSchemas();
