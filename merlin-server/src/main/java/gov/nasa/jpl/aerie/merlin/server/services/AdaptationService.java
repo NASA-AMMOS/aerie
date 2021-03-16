@@ -26,7 +26,7 @@ public interface AdaptationService {
 
   List<ViolableConstraint> getConstraintTypes(String adaptationID)
   throws NoSuchAdaptationException;
-  List<ParameterSchema> getStatesSchemas(String adaptationId)
+  Map<String, ValueSchema> getStatesSchemas(String adaptationId)
   throws NoSuchAdaptationException;
   Map<String, ActivityType> getActivityTypes(String adaptationId)
   throws NoSuchAdaptationException;

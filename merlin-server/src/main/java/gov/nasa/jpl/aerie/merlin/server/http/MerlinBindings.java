@@ -406,7 +406,7 @@ public final class MerlinBindings implements Plugin {
 
       final var schemaMap = this.adaptationService.getStatesSchemas(adaptationId);
 
-      ctx.result(ResponseSerializers.serializeParameterSchemas(schemaMap).toString());
+      ctx.result(ResponseSerializers.serializeValueSchemas(schemaMap).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
