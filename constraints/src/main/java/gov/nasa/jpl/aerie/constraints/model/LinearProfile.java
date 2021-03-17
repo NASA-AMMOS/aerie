@@ -31,6 +31,22 @@ public final class LinearProfile implements Profile<LinearProfile> {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::notEqualTo);
   }
 
+  public Windows lessThan(final LinearProfile other, final Window bounds) {
+    return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::lessThan);
+  }
+
+  public Windows lessThanOrEqualTo(final LinearProfile other, final Window bounds) {
+    return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::lessThanOrEqualTo);
+  }
+
+  public Windows greaterThan(final LinearProfile other, final Window bounds) {
+    return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThan);
+  }
+
+  public Windows greaterThanOrEqualTo(final LinearProfile other, final Window bounds) {
+    return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThanOrEqualTo);
+  }
+
   private Windows getWindowsSatisfying(final LinearProfile other, final Window bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
     final var windows = new Windows();
     for (final var satisfying : processIntersections(this, other, condition)) {
