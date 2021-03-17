@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.time;
+package gov.nasa.jpl.aerie.constraints.time;
 
 import org.junit.Test;
 
@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Objects;
 
 import static gov.nasa.jpl.aerie.time.Duration.MICROSECONDS;
-import static gov.nasa.jpl.aerie.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.time.Window.window;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Window.window;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

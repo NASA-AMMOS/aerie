@@ -1,8 +1,10 @@
-package gov.nasa.jpl.aerie.time;
+package gov.nasa.jpl.aerie.constraints.time;
+
+import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Objects;
 
-import static gov.nasa.jpl.aerie.time.Window.Inclusivity.*;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.*;
 
 public final class Window {
   // If end.shorterThan(start), this is the empty window.
@@ -140,12 +142,14 @@ public final class Window {
 
     return ( (this.isEmpty() && other.isEmpty())
           || ( Objects.equals(this.start, other.start)
-            && Objects.equals(this.end, other.end) ) );
+            && Objects.equals(this.startInclusivity, other.startInclusivity)
+            && Objects.equals(this.end, other.end)
+            && Objects.equals(this.endInclusivity, other.endInclusivity) ) );
   }
 
   @Override
   public int hashCode() {
-    return (this.isEmpty()) ? Objects.hash(0L, -1L) : Objects.hash(this.start, this.end);
+    return (this.isEmpty()) ? Objects.hash(0L, -1L) : Objects.hash(this.start, this.startInclusivity, this.end, this.endInclusivity);
   }
 
   @Override

@@ -1,6 +1,7 @@
-package gov.nasa.jpl.aerie.merlin.driver;
+package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Set;
 
