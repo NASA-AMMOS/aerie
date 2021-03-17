@@ -47,6 +47,43 @@ public final class LinearProfile implements Profile<LinearProfile> {
     return this.getWindowsSatisfying(other, bounds, LinearProfilePiece::greaterThanOrEqualTo);
   }
 
+  public LinearProfile plus(final LinearProfile other) {
+    final var profilePieces = processIntersections(
+        this,
+        other,
+        (p, o) -> {
+          final var intersection = Window.intersect(p.window, o.window);
+          return new LinearProfilePiece(
+              intersection,
+              p.valueAt(intersection.start) + o.valueAt(intersection.start),
+              p.rate + o.rate
+          );
+        }
+    );
+
+    return new LinearProfile(profilePieces);
+  }
+
+  public LinearProfile times(final double multiplier) {
+    return transformProfile(
+        p -> new LinearProfilePiece(
+            p.window,
+            p.initialValue * multiplier,
+            p.rate * multiplier
+        )
+    );
+  }
+
+  public LinearProfile rate() {
+    return transformProfile(
+        p -> new LinearProfilePiece(
+            p.window,
+            p.rate,
+            0.0
+        )
+    );
+  }
+
   private Windows getWindowsSatisfying(final LinearProfile other, final Window bounds, final BiFunction<LinearProfilePiece, LinearProfilePiece, Windows> condition) {
     final var windows = new Windows();
     for (final var satisfying : processIntersections(this, other, condition)) {
@@ -110,6 +147,21 @@ public final class LinearProfile implements Profile<LinearProfile> {
     }
 
     return processedIntersections;
+  }
+
+  /**
+   * Apply a transformation to each piece of this profile
+   * @param transformation - function to transform a single piece of this profile into the desired form
+   * @return a new LinearProfile representing the transformation of this profile
+   */
+  private LinearProfile transformProfile(final Function<LinearProfilePiece, LinearProfilePiece> transformation) {
+    final var profilePieces = new ArrayList<LinearProfilePiece>(this.profilePieces.size());
+
+    for (final var piece : this.profilePieces) {
+      profilePieces.add(transformation.apply(piece));
+    }
+
+    return new LinearProfile(profilePieces);
   }
 
   public String toString() {
