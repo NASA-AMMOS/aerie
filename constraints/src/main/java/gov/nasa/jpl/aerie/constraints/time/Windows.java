@@ -142,66 +142,12 @@ public final class Windows implements Iterable<Window> {
 
     @Override
     public final Window unify(final Window x, final Window y) {
-      final Duration start;
-      final Inclusivity startInclusivity;
-
-      if (x.start.shorterThan(y.start)) {
-        start = x.start;
-        startInclusivity = x.startInclusivity;
-      } else if (y.start.shorterThan(x.start)) {
-        start = y.start;
-        startInclusivity = y.startInclusivity;
-      } else {
-        start = x.start;
-        startInclusivity = (x.includesStart() || y.includesStart()) ? Inclusive : Exclusive;
-      }
-
-      final Duration end;
-      final Inclusivity endInclusivity;
-      if (x.end.longerThan(y.end)) {
-        end = x.end;
-        endInclusivity = x.endInclusivity;
-      } else if (y.end.longerThan(x.end)) {
-        end = y.end;
-        endInclusivity = y.endInclusivity;
-      } else {
-        end = x.end;
-        endInclusivity = (x.includesEnd() || y.includesEnd()) ? Inclusive : Exclusive;
-      }
-
-      return Window.between(start, startInclusivity, end, endInclusivity);
+      return Window.unify(x, y);
     }
 
     @Override
     public final Window intersect(final Window x, final Window y) {
-      final Duration start;
-      final Inclusivity startInclusivity;
-
-      if (x.start.longerThan(y.start)) {
-        start = x.start;
-        startInclusivity = x.startInclusivity;
-      } else if (y.start.longerThan(x.start)) {
-        start = y.start;
-        startInclusivity = y.startInclusivity;
-      } else {
-        start = x.start;
-        startInclusivity = (x.includesStart() && y.includesStart()) ? Inclusive : Exclusive;
-      }
-
-      final Duration end;
-      final Inclusivity endInclusivity;
-      if (x.end.shorterThan(y.end)) {
-        end = x.end;
-        endInclusivity = x.endInclusivity;
-      } else if (y.end.shorterThan(x.end)) {
-        end = y.end;
-        endInclusivity = y.endInclusivity;
-      } else {
-        end = x.end;
-        endInclusivity = (x.includesEnd() && y.includesEnd()) ? Inclusive : Exclusive;
-      }
-
-      return Window.between(start, startInclusivity, end, endInclusivity);
+      return Window.intersect(x, y);
     }
 
     @Override
@@ -273,12 +219,12 @@ public final class Windows implements Iterable<Window> {
                        **************
       */
 
-      if (compareStartToStart(x, y) == 0 && compareEndToEnd(x, y) == 0) return Relation.Equals;
-      if (compareStartToStart(x, y) <= 0 && compareEndToEnd(y, x) <= 0) return Relation.Contains;
-      if (compareStartToStart(y, x) <= 0 && compareEndToEnd(x, y) <= 0) return Relation.ContainedBy;
+      if (Window.compareStartToStart(x, y) == 0 && Window.compareEndToEnd(x, y) == 0) return Relation.Equals;
+      if (Window.compareStartToStart(x, y) <= 0 && Window.compareEndToEnd(y, x) <= 0) return Relation.Contains;
+      if (Window.compareStartToStart(y, x) <= 0 && Window.compareEndToEnd(x, y) <= 0) return Relation.ContainedBy;
 
-      if (x.end.isEqualTo(y.start) && y.includesStart() != x.includesEnd()) return Relation.Meets;
-      if (y.end.isEqualTo(x.start) && x.includesStart() != y.includesEnd()) return Relation.MetBy;
+      if (Window.meets(x, y)) return Relation.Meets;
+      if (Window.metBy(x, y)) return Relation.MetBy;
 
       if (x.end.isEqualTo(y.start) && y.includesStart()) return Relation.LeftOverhang;
       if (y.end.isEqualTo(x.start) && x.includesStart()) return Relation.RightOverhang;
@@ -288,34 +234,6 @@ public final class Windows implements Iterable<Window> {
 
       if (x.start.shorterThan(y.start)) return Relation.LeftOverhang;
       else return Relation.RightOverhang;
-    }
-
-    private int compareStartToStart(final Window x, final Window y) {
-      // First, order by absolute time.
-      if (!x.start.isEqualTo(y.start)) {
-        return x.start.compareTo(y.start);
-      }
-
-      // Second, order by whichever one includes the point.
-      if (x.includesStart() != y.includesStart()) {
-        return (x.includesStart()) ? -1 : 1;
-      }
-
-      return 0;
-    }
-
-    private int compareEndToEnd(final Window x, final Window y) {
-      // First, order by absolute time.
-      if (!x.end.isEqualTo(y.end)) {
-        return x.end.compareTo(y.end);
-      }
-
-      // Second, order by whichever one includes the point
-      if (x.includesEnd() != y.includesEnd()) {
-        return (x.includesEnd()) ? -1 : 1;
-      }
-
-      return 0;
     }
   }
 }
