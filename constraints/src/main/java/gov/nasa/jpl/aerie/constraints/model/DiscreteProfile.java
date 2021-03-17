@@ -92,4 +92,31 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     changePoints.intersectWith(bounds);
     return changePoints;
   }
+
+  // TODO: Gaps in profiles will cause an error
+  //       We may want to deal with gaps someday
+  public Windows transitions(final SerializedValue oldState, final SerializedValue newState, final Window bounds) {
+    final var transitionPoints = new Windows();
+    if (this.profilePieces.size() == 0) return transitionPoints;
+
+    final var iter = this.profilePieces.iterator();
+    var prev = iter.next();
+
+    while (iter.hasNext()) {
+      final var curr = iter.next();
+
+      if (Window.meets(prev.window, curr.window)) {
+        if (prev.value.equals(oldState) && curr.value.equals(newState)) {
+          transitionPoints.add(Window.at(prev.window.end));
+        }
+      } else {
+        throw new Error("Unexpected gap in profile pieces not allowed");
+      }
+
+      prev = curr;
+    }
+
+    transitionPoints.intersectWith(bounds);
+    return transitionPoints;
+  }
 }
