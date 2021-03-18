@@ -2,11 +2,13 @@ package gov.nasa.jpl.aerie.constraints;
 
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
@@ -26,6 +28,13 @@ public class Utilities {
     assertTrue(areEquivalent(expected.profilePieces, actual.profilePieces));
   }
 
+  public static void assertEquivalent(final Violation expected, final Violation actual) {
+    assertEquals(expected, actual);
+
+    assertTrue(areEquivalent(expected.activityInstanceIds, actual.activityInstanceIds));
+    assertTrue(areEquivalent(expected.violationWindows, actual.violationWindows));
+  }
+
   public static void assertEquivalent(final Windows expected, final Windows actual) {
     assertEquals(expected, actual);
 
@@ -35,6 +44,10 @@ public class Utilities {
 
   public static void assertEquivalent(final Collection<Window> expected, final Windows actual) {
     assertTrue(areEquivalent(expected.iterator(), actual.iterator()));
+  }
+
+  public static <T> void assertEquivalent(final Iterable<T> xs, final Iterable<T> ys) {
+    assertTrue(areEquivalent(xs, ys));
   }
 
   private static <T> boolean areEquivalent(final Iterable<T> xs, final Iterable<T> ys) {
