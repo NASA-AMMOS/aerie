@@ -55,18 +55,6 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
     return Windows.intersection(windows, new Windows(bounds));
   }
 
-  @Override
-  public boolean equals(final Object obj) {
-    if (!(obj instanceof DiscreteProfile)) return false;
-    final var other = (DiscreteProfile)obj;
-    return Objects.equals(this.profilePieces, other.profilePieces);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.profilePieces);
-  }
-
   // TODO: Gaps in profiles will cause an error
   //       We may want to deal with gaps someday
   @Override
@@ -118,5 +106,17 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
 
     transitionPoints.intersectWith(bounds);
     return transitionPoints;
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if (!(obj instanceof DiscreteProfile)) return false;
+    final var other = (DiscreteProfile)obj;
+    return Objects.equals(this.profilePieces, other.profilePieces);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.profilePieces);
   }
 }

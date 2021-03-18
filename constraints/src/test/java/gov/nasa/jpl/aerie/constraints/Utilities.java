@@ -20,6 +20,12 @@ public class Utilities {
     assertTrue(areEquivalent(expected.profilePieces, actual.profilePieces));
   }
 
+  public static void assertEquivalent(final DiscreteProfile expected, final DiscreteProfile actual) {
+    assertEquals(expected, actual);
+
+    assertTrue(areEquivalent(expected.profilePieces, actual.profilePieces));
+  }
+
   public static void assertEquivalent(final Windows expected, final Windows actual) {
     assertEquals(expected, actual);
 
