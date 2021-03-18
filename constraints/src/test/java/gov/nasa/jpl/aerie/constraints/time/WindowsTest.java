@@ -3,12 +3,10 @@ package gov.nasa.jpl.aerie.constraints.time;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
+import static gov.nasa.jpl.aerie.constraints.Utilities.assertEquivalent;
 import static gov.nasa.jpl.aerie.time.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
@@ -541,33 +539,5 @@ public class WindowsTest {
     final var expected = List.of(window(0, 5, MICROSECONDS));
 
     assertEquals(expected, windowList);
-  }
-
-  private static void assertEquivalent(final Windows expected, final Windows actual) {
-    assertEquals(expected, actual);
-
-    // Things that are equal ought to be observationally equivalent.
-    assertTrue(areEquivalent(expected, actual));
-  }
-
-  private static void assertEquivalent(final Collection<Window> expected, final Windows actual) {
-    assertTrue(areEquivalent(expected.iterator(), actual.iterator()));
-  }
-
-  // Two window lists are equivalent iff they provide the same windows.
-  // Window lists are ordered, so equivalence is defined by iteration.
-  private static boolean areEquivalent(final Windows xs, final Windows ys) {
-    return areEquivalent(xs.iterator(), ys.iterator());
-  }
-
-  private static boolean areEquivalent( final Iterator<Window> xsIter, final Iterator<Window> ysIter) {
-    while (true) {
-      if (!xsIter.hasNext()) return !ysIter.hasNext();
-      if (!ysIter.hasNext()) return false;
-
-      final var x = xsIter.next();
-      final var y = ysIter.next();
-      if (!Objects.equals(x, y)) return false;
-    }
   }
 }
