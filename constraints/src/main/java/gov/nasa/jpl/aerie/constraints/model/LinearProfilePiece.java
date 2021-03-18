@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.time.Duration;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
@@ -211,5 +212,20 @@ public final class LinearProfilePiece {
             this.initialValue,
             this.rate
     );
+  }
+
+  @Override
+  public boolean equals(final Object obj) {
+    if(!(obj instanceof LinearProfilePiece)) return false;
+    final var other = (LinearProfilePiece)obj;
+
+    return this.window.equals(other.window) &&
+           this.initialValue == other.initialValue &&
+           this.rate == other.rate;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.initialValue, this.window, this.rate);
   }
 }

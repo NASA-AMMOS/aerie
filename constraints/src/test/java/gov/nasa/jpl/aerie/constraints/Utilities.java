@@ -13,6 +13,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class Utilities {
+
+  public static void assertEquivalent(final LinearProfile expected, final LinearProfile actual) {
+    assertEquals(expected, actual);
+
+    assertTrue(areEquivalent(expected.profilePieces, actual.profilePieces));
+  }
+
   public static void assertEquivalent(final Windows expected, final Windows actual) {
     assertEquals(expected, actual);
 
