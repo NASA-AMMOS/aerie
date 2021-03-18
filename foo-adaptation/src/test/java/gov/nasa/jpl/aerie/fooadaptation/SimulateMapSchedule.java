@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.fooadaptation;
 
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
@@ -35,8 +36,9 @@ public class SimulateMapSchedule {
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
 
+    final var config = new Configuration();
     final var simulationResults = SimulationDriver.simulate(
-        new GeneratedAdaptationFactory().instantiate(),
+        new GeneratedAdaptationFactory().instantiate(FooValueMappers.configuration().serializeValue(config)),
         schedule,
         startTime,
         simulationDuration);

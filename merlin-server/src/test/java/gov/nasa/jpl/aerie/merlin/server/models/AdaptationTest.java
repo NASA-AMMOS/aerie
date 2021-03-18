@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
-import gov.nasa.jpl.aerie.fooadaptation.mappers.ConfigurationMappers;
+import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
@@ -23,7 +23,7 @@ public final class AdaptationTest {
     @Before
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
-        final var serializedConfig = ConfigurationMappers.configuration().serializeValue(configuration);
+        final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
         this.adaptation = new AdaptationFacade<>(new GeneratedAdaptationFactory().instantiate(serializedConfig));
     }
 
