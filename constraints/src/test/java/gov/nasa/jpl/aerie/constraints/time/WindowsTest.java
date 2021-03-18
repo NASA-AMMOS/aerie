@@ -19,6 +19,16 @@ import static org.junit.Assert.assertTrue;
 
 public class WindowsTest {
   @Test
+  public void addEmpty() {
+    final var windows = new Windows();
+    windows.add(Window.EMPTY);
+
+    final var expected = new Windows();
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
   public void addOpenPoint() {
     final var windows = new Windows();
     windows.add(window(1, Exclusive, 1, Exclusive, MICROSECONDS));
@@ -255,6 +265,17 @@ public class WindowsTest {
   }
 
   @Test
+  public void subtractAllButPoint() {
+    final var windows = new Windows(Window.between(0, Inclusive, 1, Exclusive, MICROSECONDS));
+    windows.subtract(Window.between(0, Exclusive, 1, Inclusive, MICROSECONDS));
+
+    final var expected = new Windows();
+    expected.add(Window.at(0, MICROSECONDS));
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
   public void subtractOpen() {
     final var windows = new Windows();
     windows.add(window(1,4, MICROSECONDS));
@@ -375,6 +396,54 @@ public class WindowsTest {
     final var expected = new Windows();
     expected.addPoint(1, MICROSECONDS);
     expected.add(window(2,  3, MICROSECONDS));
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
+  public void intersectMultiple() {
+    final var windows = new Windows();
+    windows.add(window(0, 20, MICROSECONDS));
+
+    final var mask = new Windows();
+    mask.add(window(0, 5, MICROSECONDS));
+    mask.add(window(6, Inclusive,7, Exclusive, MICROSECONDS));
+    mask.add(window(7, Exclusive, 8, Inclusive, MICROSECONDS));
+    windows.intersectWith(mask);
+
+    final var expected = new Windows();
+    expected.add(window(0, 5, MICROSECONDS));
+    expected.add(window(6, Inclusive,7, Exclusive, MICROSECONDS));
+    expected.add(window(7, Exclusive, 8, Inclusive, MICROSECONDS));
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
+  public void intersectSinglePoint() {
+    final var windows = new Windows();
+    windows.add(window(0, 1, MICROSECONDS));
+
+    final var mask = new Windows();
+    mask.add(window(1, 2, MICROSECONDS));
+    windows.intersectWith(mask);
+
+    final var expected = new Windows();
+    expected.addPoint(1, MICROSECONDS);
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
+  public void intersectMeeting() {
+    final var windows = new Windows();
+    windows.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
+
+    final var mask = new Windows();
+    mask.add(window(1, Inclusive, 2, Inclusive, MICROSECONDS));
+    windows.intersectWith(mask);
+
+    final var expected = new Windows();
 
     assertEquivalent(expected, windows);
   }
