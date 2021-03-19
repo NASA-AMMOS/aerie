@@ -96,6 +96,33 @@ public final class LinearProfile implements Profile<LinearProfile> {
     );
   }
 
+    // TODO: Gaps in profiles will cause an error
+    //       We may want to deal with gaps someday
+    @Override
+    public Windows changePoints(final Window bounds) {
+      final var changePoints = new Windows();
+      if (this.profilePieces.size() == 0) return changePoints;
+
+      final var iter = this.profilePieces.iterator();
+      var prev = iter.next();
+      changePoints.add(prev.changePoints());
+
+      while (iter.hasNext()) {
+        final var curr = iter.next();
+        changePoints.add(curr.changePoints());
+
+        if (Window.meets(prev.window, curr.window)) {
+          if (prev.finalValue() != curr.initialValue) changePoints.add(Window.at(prev.window.end));
+        } else {
+          throw new Error("Unexpected gap in profile pieces not allowed");
+        }
+
+        prev = curr;
+      }
+
+      return changePoints;
+    }
+
   /**
    * Process each pair of intersecting profile pieces to build a list of results
    *

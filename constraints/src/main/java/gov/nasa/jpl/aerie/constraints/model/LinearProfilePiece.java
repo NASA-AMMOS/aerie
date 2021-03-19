@@ -20,8 +20,16 @@ public final class LinearProfilePiece {
     this.rate = rate;
   }
 
+  public double finalValue() {
+    return this.valueAt(this.window.end);
+  }
+
   public double valueAt(final Duration time) {
     return this.initialValue + this.rate*(time.minus(this.window.start)).ratioOver(Duration.SECOND);
+  }
+
+  public Window changePoints() {
+    return (this.rate == 0.0) ? Window.EMPTY : this.window;
   }
 
   private Optional<Duration> intersectionPointWith(final LinearProfilePiece other) {

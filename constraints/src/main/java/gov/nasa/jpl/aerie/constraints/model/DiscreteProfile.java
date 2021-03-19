@@ -66,4 +66,30 @@ public final class DiscreteProfile implements Profile<DiscreteProfile> {
   public int hashCode() {
     return Objects.hash(this.profilePieces);
   }
+
+  // TODO: Gaps in profiles will cause an error
+  //       We may want to deal with gaps someday
+  @Override
+  public Windows changePoints(final Window bounds) {
+    final var changePoints = new Windows();
+    if (this.profilePieces.size() == 0) return changePoints;
+
+    final var iter = this.profilePieces.iterator();
+    var prev = iter.next();
+
+    while (iter.hasNext()) {
+      final var curr = iter.next();
+
+      if (Window.meets(prev.window, curr.window)) {
+        if (prev.value != curr.value) changePoints.add(Window.at(prev.window.end));
+      } else {
+        throw new Error("Unexpected gap in profile pieces not allowed");
+      }
+
+      prev = curr;
+    }
+
+    changePoints.intersectWith(bounds);
+    return changePoints;
+  }
 }
