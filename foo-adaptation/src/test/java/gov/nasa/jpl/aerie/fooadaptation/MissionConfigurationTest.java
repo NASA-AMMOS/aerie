@@ -6,7 +6,7 @@ import static org.junit.Assert.*;
 
 import gov.nasa.jpl.aerie.fooadaptation.activities.FooActivity;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
-import gov.nasa.jpl.aerie.fooadaptation.mappers.ConfigurationMappers;
+import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.ModelTestFramework;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class MissionConfigurationTest {
 
     ModelTestFramework.test(
       new GeneratedAdaptationFactory(),
-      ConfigurationMappers.configuration().serializeValue(config),
+      FooValueMappers.configuration().serializeValue(config),
       registrar -> new Mission(registrar, config),
       model -> {
         spawn(new FooActivity());
@@ -36,7 +36,7 @@ public class MissionConfigurationTest {
 
     ModelTestFramework.test(
       new GeneratedAdaptationFactory(),
-      ConfigurationMappers.configuration().serializeValue(config),
+      FooValueMappers.configuration().serializeValue(config),
       registrar -> new Mission(registrar, config),
       model -> {
         spawn(new FooActivity());
