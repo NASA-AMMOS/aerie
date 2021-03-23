@@ -26,7 +26,7 @@
     catch(err) {
     }
 //-->
-var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":9,"i10":10,"i11":10,"i12":10,"i13":10,"i14":10,"i15":9,"i16":10,"i17":10,"i18":10,"i19":10,"i20":10,"i21":9};
+var data = {"i0":10,"i1":10,"i2":10,"i3":10,"i4":10,"i5":10,"i6":10,"i7":10,"i8":10,"i9":10,"i10":10,"i11":9,"i12":10,"i13":10,"i14":10,"i15":10,"i16":10,"i17":10,"i18":9,"i19":10,"i20":10,"i21":10,"i22":10,"i23":10,"i24":10,"i25":9};
 var tabs = {65535:["t0","All Methods"],1:["t1","Static Methods"],2:["t2","Instance Methods"],8:["t4","Concrete Methods"]};
 var altColor = "altColor";
 var rowColor = "rowColor";
@@ -192,121 +192,146 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 </tr>
 <tr id="i0" class="altColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#add(gov.nasa.jpl.aerie.time.Window)">add</a></span>&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;window)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#add(long,long,gov.nasa.jpl.aerie.time.Duration)">add</a></span>&#8203;(long&nbsp;start,
+   long&nbsp;end,
+   <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i1" class="rowColor">
 <td class="colFirst"><code>void</code></td>
-<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addAll(gov.nasa.jpl.aerie.time.Windows)">addAll</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</code></th>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#add(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">add</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
+   <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
 <tr id="i2" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#add(gov.nasa.jpl.aerie.time.Window)">add</a></span>&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;window)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i3" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addAll(gov.nasa.jpl.aerie.time.Windows)">addAll</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i4" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#addPoint(long,gov.nasa.jpl.aerie.time.Duration)">addPoint</a></span>&#8203;(long&nbsp;quantity,
         <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i3" class="rowColor">
+<tr id="i5" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#equals(java.lang.Object)">equals</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html?is-external=true" title="class or interface in java.lang" class="externalLink">Object</a>&nbsp;obj)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i4" class="altColor">
+<tr id="i6" class="altColor">
 <td class="colFirst"><code>int</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#hashCode()">hashCode</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i5" class="rowColor">
+<tr id="i7" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#includes(long,long,gov.nasa.jpl.aerie.time.Duration)">includes</a></span>&#8203;(long&nbsp;start,
         long&nbsp;end,
         <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i6" class="altColor">
+<tr id="i8" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#includes(gov.nasa.jpl.aerie.time.Window)">includes</a></span>&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;probe)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i7" class="rowColor">
+<tr id="i9" class="rowColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#includes(gov.nasa.jpl.aerie.time.Windows)">includes</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i8" class="altColor">
+<tr id="i10" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#includesPoint(long,gov.nasa.jpl.aerie.time.Duration)">includesPoint</a></span>&#8203;(long&nbsp;quantity,
              <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i9" class="rowColor">
+<tr id="i11" class="rowColor">
 <td class="colFirst"><code>static <a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersection(gov.nasa.jpl.aerie.time.Windows,gov.nasa.jpl.aerie.time.Windows)">intersection</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;left,
             <a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;right)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i10" class="altColor">
+<tr id="i12" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersectWith(long,long,gov.nasa.jpl.aerie.time.Duration)">intersectWith</a></span>&#8203;(long&nbsp;start,
              long&nbsp;end,
              <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i11" class="rowColor">
+<tr id="i13" class="rowColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersectWith(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">intersectWith</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
+             <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i14" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersectWith(gov.nasa.jpl.aerie.time.Window)">intersectWith</a></span>&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;window)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i12" class="altColor">
+<tr id="i15" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#intersectWith(gov.nasa.jpl.aerie.time.Windows)">intersectWith</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i13" class="rowColor">
+<tr id="i16" class="altColor">
 <td class="colFirst"><code>boolean</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#isEmpty()">isEmpty</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i14" class="altColor">
+<tr id="i17" class="rowColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Iterator.html?is-external=true" title="class or interface in java.util" class="externalLink">Iterator</a>&lt;<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&gt;</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#iterator()">iterator</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i15" class="rowColor">
+<tr id="i18" class="altColor">
 <td class="colFirst"><code>static <a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#minus(gov.nasa.jpl.aerie.time.Windows,gov.nasa.jpl.aerie.time.Windows)">minus</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;left,
      <a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;right)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i16" class="altColor">
+<tr id="i19" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(long,long,gov.nasa.jpl.aerie.time.Duration)">subtract</a></span>&#8203;(long&nbsp;start,
         long&nbsp;end,
         <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i17" class="rowColor">
+<tr id="i20" class="altColor">
+<td class="colFirst"><code>void</code></td>
+<th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">subtract</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
+        <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</code></th>
+<td class="colLast">&nbsp;</td>
+</tr>
+<tr id="i21" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtract(gov.nasa.jpl.aerie.time.Window)">subtract</a></span>&#8203;(<a href="Window.html" title="class in gov.nasa.jpl.aerie.time">Window</a>&nbsp;window)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i18" class="altColor">
+<tr id="i22" class="altColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtractAll(gov.nasa.jpl.aerie.time.Windows)">subtractAll</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i19" class="rowColor">
+<tr id="i23" class="rowColor">
 <td class="colFirst"><code>void</code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#subtractPoint(long,gov.nasa.jpl.aerie.time.Duration)">subtractPoint</a></span>&#8203;(long&nbsp;quantity,
              <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i20" class="altColor">
+<tr id="i24" class="altColor">
 <td class="colFirst"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html?is-external=true" title="class or interface in java.lang" class="externalLink">String</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#toString()">toString</a></span>()</code></th>
 <td class="colLast">&nbsp;</td>
 </tr>
-<tr id="i21" class="rowColor">
+<tr id="i25" class="rowColor">
 <td class="colFirst"><code>static <a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a></code></td>
 <th class="colSecond" scope="row"><code><span class="memberNameLink"><a href="#union(gov.nasa.jpl.aerie.time.Windows,gov.nasa.jpl.aerie.time.Windows)">union</a></span>&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;left,
      <a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;right)</code></th>
@@ -407,6 +432,27 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <pre class="methodSignature">public&nbsp;void&nbsp;addAll&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</pre>
 </li>
 </ul>
+<a id="add(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>add</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;add&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
+                <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</pre>
+</li>
+</ul>
+<a id="add(long,long,gov.nasa.jpl.aerie.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>add</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;add&#8203;(long&nbsp;start,
+                long&nbsp;end,
+                <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</pre>
+</li>
+</ul>
 <a id="addPoint(long,gov.nasa.jpl.aerie.time.Duration)">
 <!--   -->
 </a>
@@ -443,6 +489,16 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <li class="blockList">
 <h4>subtractAll</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;subtractAll&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</pre>
+</li>
+</ul>
+<a id="subtract(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>subtract</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;subtract&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
+                     <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
 <a id="subtract(long,long,gov.nasa.jpl.aerie.time.Duration)">
@@ -492,6 +548,16 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <li class="blockList">
 <h4>intersectWith</h4>
 <pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(<a href="Windows.html" title="class in gov.nasa.jpl.aerie.time">Windows</a>&nbsp;other)</pre>
+</li>
+</ul>
+<a id="intersectWith(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">
+<!--   -->
+</a>
+<ul class="blockList">
+<li class="blockList">
+<h4>intersectWith</h4>
+<pre class="methodSignature">public&nbsp;void&nbsp;intersectWith&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;start,
+                          <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;end)</pre>
 </li>
 </ul>
 <a id="intersectWith(long,long,gov.nasa.jpl.aerie.time.Duration)">
