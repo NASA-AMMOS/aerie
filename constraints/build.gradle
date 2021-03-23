@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
   implementation project(':merlin-sdk')
+  implementation project(':parsing-utilities')
 
   testCompile group: 'junit', name: 'junit', version: '4.12'
 }
