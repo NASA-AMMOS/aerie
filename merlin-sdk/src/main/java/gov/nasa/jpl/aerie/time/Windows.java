@@ -1,11 +1,14 @@
 package gov.nasa.jpl.aerie.time;
 
+import gov.nasa.jpl.aerie.time.Window.Inclusivity;
 import gov.nasa.jpl.aerie.utilities.IntervalAlgebra;
 import gov.nasa.jpl.aerie.utilities.IntervalSet;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+
+import static gov.nasa.jpl.aerie.time.Window.Inclusivity.*;
 
 public final class Windows implements Iterable<Window> {
   private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
@@ -33,14 +36,6 @@ public final class Windows implements Iterable<Window> {
     this.windows.addAll(other.windows);
   }
 
-  public void add(final Duration start, final Duration end) {
-    this.add(Window.between(start, end));
-  }
-
-  public void add(final long start, final long end, final Duration unit) {
-    this.add(Window.between(start, end, unit));
-  }
-
   public void addPoint(final long quantity, final Duration unit) {
     this.add(Window.at(quantity, unit));
   }
@@ -58,10 +53,6 @@ public final class Windows implements Iterable<Window> {
 
   public void subtractAll(final Windows other) {
     this.windows.subtractAll(other.windows);
-  }
-
-  public void subtract(final Duration start, final Duration end) {
-    this.subtract(Window.between(start, end));
   }
 
   public void subtract(final long start, final long end, final Duration unit) {
@@ -84,10 +75,6 @@ public final class Windows implements Iterable<Window> {
 
   public void intersectWith(final Windows other) {
     this.windows.intersectWithAll(other.windows);
-  }
-
-  public void intersectWith(final Duration start, final Duration end) {
-    this.intersectWith(Window.between(start, end));
   }
 
   public void intersectWith(final long start, final long end, final Duration unit) {
@@ -148,54 +135,117 @@ public final class Windows implements Iterable<Window> {
 
   private static class WindowAlgebra implements IntervalAlgebra<WindowAlgebra, Window> {
     @Override
-    public boolean isEmpty(Window x) {
+    public final boolean isEmpty(Window x) {
       return x.isEmpty();
     }
 
     @Override
-    public Window unify(final Window x, final Window y) {
-      return Window.leastUpperBound(x, y);
+    public final Window unify(final Window x, final Window y) {
+      final Duration start;
+      final Inclusivity startInclusivity;
+
+      if (x.start.shorterThan(y.start)) {
+        start = x.start;
+        startInclusivity = x.startInclusivity;
+      } else if (y.start.shorterThan(x.start)) {
+        start = y.start;
+        startInclusivity = y.startInclusivity;
+      } else {
+        start = x.start;
+        startInclusivity = (x.includesStart() || y.includesStart()) ? Inclusive : Exclusive;
+      }
+
+      final Duration end;
+      final Inclusivity endInclusivity;
+      if (x.end.longerThan(y.end)) {
+        end = x.end;
+        endInclusivity = x.endInclusivity;
+      } else if (y.end.longerThan(x.end)) {
+        end = y.end;
+        endInclusivity = y.endInclusivity;
+      } else {
+        end = x.end;
+        endInclusivity = (x.includesEnd() || y.includesEnd()) ? Inclusive : Exclusive;
+      }
+
+      return Window.between(start, startInclusivity, end, endInclusivity);
     }
 
     @Override
-    public Window intersect(final Window x, final Window y) {
-      return Window.greatestLowerBound(x, y);
+    public final Window intersect(final Window x, final Window y) {
+      final Duration start;
+      final Inclusivity startInclusivity;
+
+      if (x.start.longerThan(y.start)) {
+        start = x.start;
+        startInclusivity = x.startInclusivity;
+      } else if (y.start.longerThan(x.start)) {
+        start = y.start;
+        startInclusivity = y.startInclusivity;
+      } else {
+        start = x.start;
+        startInclusivity = (x.includesStart() && y.includesStart()) ? Inclusive : Exclusive;
+      }
+
+      final Duration end;
+      final Inclusivity endInclusivity;
+      if (x.end.shorterThan(y.end)) {
+        end = x.end;
+        endInclusivity = x.endInclusivity;
+      } else if (y.end.shorterThan(x.end)) {
+        end = y.end;
+        endInclusivity = y.endInclusivity;
+      } else {
+        end = x.end;
+        endInclusivity = (x.includesEnd() && y.includesEnd()) ? Inclusive : Exclusive;
+      }
+
+      return Window.between(start, startInclusivity, end, endInclusivity);
     }
 
     @Override
-    public Window lowerBoundsOf(final Window x) {
+    public final Window lowerBoundsOf(final Window x) {
+      if (x.isEmpty()) return Window.FOREVER;
       return Window.between(
           Duration.MIN_VALUE,
-          (x.isEmpty()) ? Duration.MAX_VALUE : x.start.minus(Duration.EPSILON));
+          Inclusive, x.start,
+          x.startInclusivity.opposite()
+      );
     }
 
     @Override
-    public Window upperBoundsOf(final Window x) {
+    public final Window upperBoundsOf(final Window x) {
+      if (x.isEmpty()) return Window.FOREVER;
       return Window.between(
-          (x.isEmpty()) ? Duration.MIN_VALUE : x.end.plus(Duration.EPSILON),
-          Duration.MAX_VALUE);
+          x.end,
+          x.endInclusivity.opposite(), Duration.MAX_VALUE,
+          Inclusive
+      );
     }
 
     @Override
-    public Relation relationBetween(final Window x, final Window y) {
+    public final Relation relationBetween(final Window x, final Window y) {
       /*
         y -----|-----  **************
-        x  |           * Before
-               |       * Equals
+        x      |       * Equals
+           |           * Before
+           [   )       * Meets
+               (   ]   * MetBy
                    |   * After
            [   ]       * Contains
            [       ]   * Contains
                [   ]   * Contains
-
         y ---[---]---  **************
-        x  |           * Before
-             [   ]     * Equals
-                   |   * After
+        x    [   ]     * Equals
+           |           * Before
+           [ )         * Meets
              |         * ContainedBy
              [ ]       * ContainedBy
                |       * ContainedBy
                [ ]     * ContainedBy
                  |     * ContainedBy
+                 ( ]   * MetBy
+                   |   * After
            [ ]         * LeftOverhang
            [   ]       * LeftOverhang
            [     ]     * Contains
@@ -203,21 +253,68 @@ public final class Windows implements Iterable<Window> {
              [     ]   * Contains
                [   ]   * RightOverhang
                  [ ]   * RightOverhang
+        y ---(---)---  **************
+        x    (   )     * Equals
+           |           * Before
+           [ )         * Before
+           [ ]         * Meets
+             ( ]       * ContainedBy
+               |       * ContainedBy
+               [ )     * ContainedBy
+                 [ ]   * MetBy
+                 ( ]   * After
+                   |   * After
+           [   ]       * LeftOverhang
+           [     ]     * Contains
+           [       ]   * Contains
+             [     ]   * Contains
+               [   ]   * RightOverhang
                        **************
       */
 
-      if (x.isEmpty()) return (y.isEmpty()) ? Relation.Equals : Relation.ContainedBy;
-      if (y.isEmpty()) return Relation.Contains;
+      if (compareStartToStart(x, y) == 0 && compareEndToEnd(x, y) == 0) return Relation.Equals;
+      if (compareStartToStart(x, y) <= 0 && compareEndToEnd(y, x) <= 0) return Relation.Contains;
+      if (compareStartToStart(y, x) <= 0 && compareEndToEnd(x, y) <= 0) return Relation.ContainedBy;
 
-      if (y.start.compareTo(x.start) == 0 && x.end.compareTo(y.end) == 0) return Relation.Equals;
-      if (x.end.compareTo(y.start) < 0) return Relation.Before;
-      if (y.end.compareTo(x.start) < 0) return Relation.After;
+      if (x.end.isEqualTo(y.start) && y.includesStart() != x.includesEnd()) return Relation.Meets;
+      if (y.end.isEqualTo(x.start) && x.includesStart() != y.includesEnd()) return Relation.MetBy;
 
-      if (y.start.compareTo(x.start) <= 0 && x.end.compareTo(y.end) <= 0) return Relation.ContainedBy;
-      if (x.end.compareTo(y.end) < 0) return Relation.LeftOverhang;
-      if (y.start.compareTo(x.start) < 0) return Relation.RightOverhang;
+      if (x.end.isEqualTo(y.start) && y.includesStart()) return Relation.LeftOverhang;
+      if (y.end.isEqualTo(x.start) && x.includesStart()) return Relation.RightOverhang;
 
-      return Relation.Contains;
+      if (x.end.noLongerThan(y.start)) return Relation.Before;
+      if (y.end.noLongerThan(x.start)) return Relation.After;
+
+      if (x.start.shorterThan(y.start)) return Relation.LeftOverhang;
+      else return Relation.RightOverhang;
+    }
+
+    private int compareStartToStart(final Window x, final Window y) {
+      // First, order by absolute time.
+      if (!x.start.isEqualTo(y.start)) {
+        return x.start.compareTo(y.start);
+      }
+
+      // Second, order by whichever one includes the point.
+      if (x.includesStart() != y.includesStart()) {
+        return (x.includesStart()) ? -1 : 1;
+      }
+
+      return 0;
+    }
+
+    private int compareEndToEnd(final Window x, final Window y) {
+      // First, order by absolute time.
+      if (!x.end.isEqualTo(y.end)) {
+        return x.end.compareTo(y.end);
+      }
+
+      // Second, order by whichever one includes the point
+      if (x.includesEnd() != y.includesEnd()) {
+        return (x.includesEnd()) ? -1 : 1;
+      }
+
+      return 0;
     }
   }
 }

@@ -1,0 +1,39 @@
+version: "3.7"
+services:
+  merlin_mongo:
+    command: ["mongod", "--port", "27020", "--smallfiles"]
+    image: mongo:3.2
+    ports: ["27020:27020"]
+    volumes: ["merlin_mongo_data:/data/db"]
+  merlin:
+    build:
+      context: .
+      dockerfile: scripts/dockerfiles/merlin.Dockerfile
+    depends_on: ["merlin_mongo"]
+    ports: ["27183:27183"]
+    restart: always
+    volumes:
+      - adaptation_files:/usr/src/app/adaptation_files
+  postgres:
+    image: postgres
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_DB: aerie
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_USER: aerie
+    restart: always
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+  aerie_ui:
+    command: ["npm", "run", "start:docker"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
+    depends_on: ["postgres"]
+    ports: ["80:80"]
+  aerie_apollo:
+    command: ["npm", "run", "start:docker"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-apollo:develop"
+    ports: ["27184:27184"]
+
+volumes:
+  adaptation_files:
+  merlin_mongo_data:
+  postgres_data:

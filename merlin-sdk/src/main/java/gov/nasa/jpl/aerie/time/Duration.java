@@ -22,6 +22,23 @@ import java.util.List;
  *   Multiply an existing duration by a quantity, e.g. {@code SECOND.times(5)}
  * </ul>
  *
+ * <p>Durations are internally represented as a fixed-point data type. The fixed-point representation preserves
+ * accuracy unlike floating-point arithmetic, which becomes less precise further from zero. Preserving accuracy is
+ * necessary in the domain of discrete event simulation. To ensure that causal/temporal orderings between timed
+ * elements in a simulation are preserved, it is necessary that operations on time quantities are exact. Arithmetic
+ * between fixed-point representations preserves such temporal orderings.</p>
+ *
+ * <p>The internal fixed-point representation of a Duration is a {@code long}. This representation is evident in
+ * the API where creating Durations and performing arithmetic operations often take a {@code long} as a parameter.
+ * As a result, any custom unit such as {@code DAY = duration(24, HOURS)} can be used directly with other
+ * Merlin-provided units like {@code SECONDS}.</p>
+ *
+ * <p>A time value is represented as a {@code long} where an increment maps to number a specific time unit. Currently,
+ * the underlying time unit is microseconds, however, one should not rely on this always being the case. The maximum
+ * value of a fixed-point type is simply the largest value that can be represented by the underlying integer type.
+ * For a {@code long} this yields a range of (-2^63) to (2^63 - 1), or almost 600,000 years, at microsecond
+ * resolution.</p>
+
  * <p>
  * Note that derived units such as DAY, WEEK, MONTH, and YEAR are <em>not</em> included, because their values
  * depend on properties of the particular calendrical system in use. For example:

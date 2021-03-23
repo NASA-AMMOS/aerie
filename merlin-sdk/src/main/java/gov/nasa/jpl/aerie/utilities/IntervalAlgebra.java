@@ -47,7 +47,7 @@ public interface IntervalAlgebra<Alg, I> {
 
   default boolean startsBefore(I x, I y) {
     switch (relationBetween(x, y)) {
-      case Before: case LeftOverhang: case Contains:
+      case Before: case Meets: case LeftOverhang: case Contains:
         return true;
       default:
         return false;
@@ -55,12 +55,29 @@ public interface IntervalAlgebra<Alg, I> {
   }
 
   default boolean endsBefore(I x, I y) {
-    return (relationBetween(x, y) == IntervalAlgebra.Relation.Before);
+    switch(relationBetween(x, y)) {
+      case Before: case Meets:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  default boolean endsStrictlyBefore(I x, I y) {
+    return relationBetween(x, y) == IntervalAlgebra.Relation.Before;
+  }
+
+  default boolean meets(I x, I y) {
+    return relationBetween(x, y) == IntervalAlgebra.Relation.Meets;
+  }
+
+  default boolean isMetBy(I x, I y) {
+    return relationBetween(x, y) == IntervalAlgebra.Relation.MetBy;
   }
 
   default boolean endsAfter(I x, I y) {
     switch (relationBetween(x, y)) {
-      case After: case RightOverhang: case Contains:
+      case After: case MetBy: case RightOverhang: case Contains:
         return true;
       default:
         return false;
@@ -68,16 +85,27 @@ public interface IntervalAlgebra<Alg, I> {
   }
 
   default boolean startsAfter(I x, I y) {
-    return (relationBetween(x, y) == IntervalAlgebra.Relation.After);
+    switch (relationBetween(x, y)) {
+      case After: case MetBy:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  default boolean startsStrictlyAfter(I x, I y) {
+    return relationBetween(x, y) == IntervalAlgebra.Relation.After;
   }
 
   enum Relation {
     Before,
+    Meets,
     LeftOverhang,
     Contains,
     Equals,
     ContainedBy,
     RightOverhang,
+    MetBy,
     After,
   }
 }

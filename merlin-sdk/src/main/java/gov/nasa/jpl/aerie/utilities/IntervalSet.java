@@ -28,7 +28,10 @@ public class IntervalSet<Alg, I> {
     // OPTIMIZATION: If this interval fits at the end of our list, just do that.
     // Common case for building up a set of intervals.
     // This whole clause can be removed without affecting correctness.
-    if (this.intervals.size() == 0 || this.alg.endsBefore(this.intervals.get(this.intervals.size() - 1), interval)) {
+    if (
+        this.intervals.size() == 0 ||
+        this.alg.endsStrictlyBefore(this.intervals.get(this.intervals.size() - 1), interval)
+    ) {
       this.intervals.add(interval);
       return;
     } else if (!this.alg.startsBefore(interval, this.intervals.get(this.intervals.size() - 1))) {
@@ -53,13 +56,19 @@ public class IntervalSet<Alg, I> {
 
     for (final var window : other) {
       // Skip windows that end before this one starts.
-      while (index < this.intervals.size() && this.alg.endsBefore(this.intervals.get(index), window)) {
+      while (
+          index < this.intervals.size() &&
+          this.alg.endsStrictlyBefore(this.intervals.get(index), window)
+      ) {
         index += 1;
       }
 
       // Remove and join with any windows that overlap this window.
       var joined = window;
-      while (index < this.intervals.size() && !this.alg.endsBefore(window, this.intervals.get(index))) {
+      while (
+          index < this.intervals.size() &&
+          !this.alg.endsStrictlyBefore(window, this.intervals.get(index))
+      ) {
         joined = this.alg.unify(joined, this.intervals.remove(index));
       }
 
@@ -87,7 +96,7 @@ public class IntervalSet<Alg, I> {
     for (final var window : other) {
       // Look for the first window ending at or after this one starts.
       // Skip these cases: --[---]---<--->--
-      while (index < this.intervals.size() && this.alg.endsBefore(this.intervals.get(index), window)) {
+      while (index < this.intervals.size() && this.alg.endsStrictlyBefore(this.intervals.get(index), window)) {
         index += 1;
       }
 
@@ -115,7 +124,7 @@ public class IntervalSet<Alg, I> {
       // Clip the window at the end of this range.
       // Handle these cases: --<---[--->---]--
       // Replace them with:  -----------[--]--
-      if (index < this.intervals.size() && !this.alg.startsAfter(this.intervals.get(index), window)) {
+      if (index < this.intervals.size() && !this.alg.startsStrictlyAfter(this.intervals.get(index), window)) {
         this.intervals.set(index, this.alg.intersect(this.intervals.get(index), this.alg.upperBoundsOf(window)));
         // This interval might also be clipped by the next window.
       }
@@ -195,7 +204,7 @@ public class IntervalSet<Alg, I> {
 
     for (final var window : other) {
       // Skip any windows that fully precede this one.
-      while (index < this.intervals.size() && this.alg.endsBefore(this.intervals.get(index), window)) {
+      while (index < this.intervals.size() && this.alg.endsStrictlyBefore(this.intervals.get(index), window)) {
         index += 1;
       }
 

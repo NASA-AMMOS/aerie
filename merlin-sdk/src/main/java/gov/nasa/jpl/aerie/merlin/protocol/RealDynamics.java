@@ -1,9 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealCondition;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
-import gov.nasa.jpl.aerie.time.Windows;
 
 import java.util.Optional;
 
@@ -45,55 +42,54 @@ public final class RealDynamics {
   }
 
 
-  public Optional<Duration> whenSatisfies(final RealCondition condition, final Window selection) {
-    for (final var window : this.getSatisfyingWindows(condition, selection)) {
-      return Optional.of(window.start);
-    }
-
-    return Optional.empty();
-  }
-
-  public Optional<Duration> whenDissatisfies(final RealCondition condition, final Window selection) {
-    final var results = new Windows(selection);
-    results.subtractAll(this.getSatisfyingWindows(condition, selection));
-
-    for (final var window : results) {
-      return Optional.of(window.start);
-    }
-
-    return Optional.empty();
-  }
-
-  public Windows getSatisfyingWindows(final RealCondition condition, final Window selection) {
-    final var windows = new Windows();
-
+  public Optional<Duration>
+  whenBetween(final double min, final double max, final Duration atEarliest, final Duration atLatest) {
     if (this.rate == 0) {
-      windows.add((condition.includesPoint(this.initial)) ? selection : Window.EMPTY);
-    } else if (this.rate > 0) {
-      for (final var interval : condition.ascendingOrder()) {
-        // It starts too high (and it's going higher); no intersection.
-        if (this.initial > interval.max) continue;
-
-        final var start = (interval.min - this.initial) / this.rate;
-        final var end = (interval.max - this.initial) / this.rate;
-        final var window = Window.roundIn(start, end, Duration.SECONDS);
-
-        windows.add(Window.greatestLowerBound(window, selection));
-      }
-    } else {
-      for (final var interval : condition.descendingOrder()) {
-        // It starts too low (and it's going lower); no intersection.
-        if (this.initial < interval.min) continue;
-
-        final var start = (interval.max - this.initial) / this.rate;
-        final var end = (interval.min - this.initial) / this.rate;
-        final var window = Window.roundIn(start, end, Duration.SECONDS);
-
-        windows.add(Window.greatestLowerBound(window, selection));
+      if (this.initial < min || max < this.initial) {
+        return Optional.empty();
+      } else {
+        return Optional.of(atEarliest);
       }
     }
 
-    return windows;
+    // entry < exit
+    final Duration entry, exit;
+    if (this.rate > 0) {
+      entry = Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS);
+      exit = Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS);
+    } else /* this.rate < 0 */ {
+      entry = Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS);
+      exit = Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS);
+    }
+
+    if (atEarliest.longerThan(exit)) return Optional.empty();
+    else if (atLatest.shorterThan(entry)) return Optional.empty();
+    else return Optional.of(Duration.max(atEarliest, entry));
+  }
+
+  public Optional<Duration>
+  whenNotBetween(final double min, final double max, final Duration atEarliest, final Duration atLatest) {
+    if (this.rate == 0) {
+      if (min <= this.initial && this.initial <= max) {
+        return Optional.empty();
+      } else {
+        return Optional.of(atEarliest);
+      }
+    }
+
+    // exit < entry
+    final Duration exit, entry;
+    if (this.rate > 0) {
+      exit = Duration.roundDownward((min - this.initial) / this.rate, Duration.SECONDS);
+      entry = Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS);
+    } else /* this.rate < 0 */ {
+      exit = Duration.roundDownward((max - this.initial) / this.rate, Duration.SECONDS);
+      entry = Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS);
+    }
+
+    if (atEarliest.noLongerThan(exit)) return Optional.of(atEarliest);
+    else if (atLatest.noShorterThan(entry)) return Optional.of(Duration.max(atEarliest, entry));
+    else return Optional.empty();
   }
 
 

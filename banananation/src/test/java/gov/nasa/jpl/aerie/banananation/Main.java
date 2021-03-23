@@ -10,9 +10,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.nasa.jpl.aerie.time.Duration.MILLISECOND;
 import static gov.nasa.jpl.aerie.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.SECOND;
 import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
 import static gov.nasa.jpl.aerie.time.Duration.duration;
 
@@ -39,16 +37,13 @@ public final class Main {
 
     final var startTime = Instant.now();
     final var simulationDuration = duration(5, SECONDS);
-    final var samplingPeriod = duration(100, MILLISECOND);
 
     final var simulationResults = SimulationDriver.simulate(
         adaptation,
         schedule,
         startTime,
-        simulationDuration,
-        samplingPeriod);
+        simulationDuration);
 
     System.out.println(simulationResults.resourceSamples);
-    System.out.println(simulationResults.constraintViolations);
   }
 }

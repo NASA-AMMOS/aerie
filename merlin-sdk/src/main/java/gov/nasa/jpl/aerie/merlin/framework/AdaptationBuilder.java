@@ -117,7 +117,7 @@ public final class AdaptationBuilder<$Schema> {
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
-    private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies = new ArrayList<>();
+    private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
     private final List<Runnable> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();

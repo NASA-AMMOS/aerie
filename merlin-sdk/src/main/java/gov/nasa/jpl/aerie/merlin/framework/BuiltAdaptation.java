@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
-import gov.nasa.jpl.aerie.merlin.protocol.CompoundCondition;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
@@ -15,14 +14,14 @@ import java.util.Objects;
 public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
   private final Scoped<Context> rootContext;
   private final Schema<$Schema> schema;
-  private final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies;
+  private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
   private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
   private final List<Runnable> daemons;
 
   public BuiltAdaptation(
       final Scoped<Context> rootContext,
       final Schema<$Schema> schema,
-      final List<ResourceFamily<$Schema, ?, ?>> resourceFamilies,
+      final List<ResourceFamily<$Schema, ?>> resourceFamilies,
       final List<Runnable> daemons,
       final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes)
   {
@@ -46,13 +45,8 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
   }
 
   @Override
-  public Iterable<ResourceFamily<$Schema, ?, ?>> getResourceFamilies() {
+  public Iterable<ResourceFamily<$Schema, ?>> getResourceFamilies() {
     return this.resourceFamilies;
-  }
-
-  @Override
-  public Map<String, CompoundCondition<$Schema>> getConstraints() {
-    return Collections.emptyMap();
   }
 
   @Override
