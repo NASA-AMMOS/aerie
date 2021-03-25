@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,7 +17,7 @@ public final class AdaptationLoader {
     {
         return loadAdaptationProvider(path, name, version)
             .get()
-            .instantiate();
+            .instantiate(SerializedValue.NULL); // TODO placeholder, will eventually want to pass in an actual config
     }
 
     public static Provider<AdaptationFactory> loadAdaptationProvider(final Path path, final String name, final String version)

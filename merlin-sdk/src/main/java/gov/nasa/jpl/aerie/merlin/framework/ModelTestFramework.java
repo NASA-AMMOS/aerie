@@ -2,8 +2,10 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.time.Duration;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -22,6 +24,9 @@ public class ModelTestFramework {
     builder.daemon(taskWrapper);
 
     try {
+      // TODO need to not hardcode 1 second sim duration here.
+      //  Since the sim duration is 1 second, currently tests with a duration longer than 1 second will not execute properly.
+      //  Try using `Duration.MAX_VALUE`.
       SimulationDriver.simulateTask(builder.build(), Duration.SECOND);
     } catch (final SimulationDriver.TaskSpecInstantiationException e) {
       throw new Error(e);
@@ -41,7 +46,12 @@ public class ModelTestFramework {
   }
 
   /** Test with adaptation builder provided by adaptation factory. */
-  public static <M> void test(final AdaptationFactory adaptationFactory, final Function<Registrar, M> makeModel, final Consumer<M> task) {
-    test(adaptationFactory.makeBuilder(Schema.builder()), makeModel, task);
+  public static <M> void test(
+      final AdaptationFactory adaptationFactory,
+      final SerializedValue configuration,
+      final Function<Registrar, M> makeModel,
+      final Consumer<M> task)
+  {
+    test(adaptationFactory.makeBuilder(Schema.builder(), configuration), makeModel, task);
   }
 }

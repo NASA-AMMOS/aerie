@@ -176,6 +176,7 @@ public final class AdaptationProcessor implements Processor {
   parseAdaptation(final PackageElement adaptationElement)
   throws InvalidAdaptationException {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
+    final var modelConfiguration = this.getAdaptationConfiguration(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     final var typeRules = new ArrayList<TypeRule>();
 
@@ -187,7 +188,7 @@ public final class AdaptationProcessor implements Processor {
       activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
     }
 
-    return new AdaptationRecord(adaptationElement, topLevelModel, typeRules, activityTypes);
+    return new AdaptationRecord(adaptationElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
   }
 
   private List<TypeRule>
@@ -370,7 +371,7 @@ public final class AdaptationProcessor implements Processor {
       mapperClassElements.add((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
     }
 
-      return mapperClassElements;
+    return mapperClassElements;
   }
 
   private List<TypeElement>
@@ -426,6 +427,22 @@ public final class AdaptationProcessor implements Processor {
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
+  private Optional<TypeElement> getAdaptationConfiguration(final PackageElement adaptationElement) throws InvalidAdaptationException {
+    final var annotationMirror = this.getAnnotationMirrorByType(adaptationElement, Adaptation.WithConfiguration.class);
+    if (annotationMirror.isEmpty()) return Optional.empty();
+
+    final var attribute = getAnnotationAttribute(annotationMirror.get(), "value").orElseThrow();
+    if (!(attribute.getValue() instanceof DeclaredType)) {
+      throw new InvalidAdaptationException(
+          "Adaptation configuration type not yet defined",
+          adaptationElement,
+          annotationMirror.get(),
+          attribute);
+    }
+
+    return Optional.of((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
+  }
+
   private Optional<Map<String, CodeBlock>> buildParameterMapperBlocks(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
     var failed = false;
@@ -443,6 +460,15 @@ public final class AdaptationProcessor implements Processor {
 
     if (failed) return Optional.empty();
     return Optional.of(mapperBlocks);
+  }
+
+  private CodeBlock buildConfigurationMapperBlock(final AdaptationRecord adaptation, final TypeElement typeElem) {
+    final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
+    final var mapperBlock = resolver.instantiateMapperFor(typeElem.asType());
+    if (mapperBlock.isEmpty()) {
+      messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for configuration", typeElem);
+    }
+    return mapperBlock.get();
   }
 
   private Optional<JavaFile> generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
@@ -830,9 +856,14 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.Adaptation.class),
                             WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))
+                    .addParameter(
+                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
+                        "configuration",
+                        Modifier.FINAL)
                     .addStatement(
-                        "return this.makeBuilder($T.builder()).build()",
-                        gov.nasa.jpl.aerie.merlin.timeline.Schema.class)
+                        "return this.makeBuilder($T.builder(), $L).build()",
+                        gov.nasa.jpl.aerie.merlin.timeline.Schema.class,
+                        "configuration")
                     .build())
             .addMethod(
                 MethodSpec
@@ -850,6 +881,10 @@ public final class AdaptationProcessor implements Processor {
                             TypeVariableName.get("$Schema")),
                         "schemaBuilder",
                         Modifier.FINAL)
+                    .addParameter(
+                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
+                        "configuration",
+                        Modifier.FINAL)
                     .addStatement(
                         "final var $L = new $T<>($L)",
                         "builder",
@@ -860,11 +895,36 @@ public final class AdaptationProcessor implements Processor {
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
                         "builder")
-                    .addStatement(
-                        "final var $L = new $T($L)",
-                        "model",
-                        ClassName.get(adaptation.topLevelModel),
-                        "registrar")
+                    .addCode(
+                        adaptation.modelConfiguration.map(configElem -> // if configuration is provided
+                        {
+                          final var mapperBlock = buildConfigurationMapperBlock(adaptation, configElem);
+                          return CodeBlock
+                              .builder()
+                              .addStatement(
+                                  "final var $L = $L",
+                                  "configMapper",
+                                  mapperBlock.toString())
+                              .addStatement(
+                                  "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
+                                  "deserializedConfig",
+                                  "configMapper",
+                                  "configuration")
+                              .addStatement(
+                                  "final var $L = new $T($L, $L)",
+                                  "model",
+                                  ClassName.get(adaptation.topLevelModel),
+                                  "registrar",
+                                  "deserializedConfig").build();
+                        }).orElseGet(() -> // if configuration is not provided
+                          CodeBlock
+                              .builder()
+                              .addStatement(
+                                "final var $L = new $T($L)",
+                                "model",
+                                ClassName.get(adaptation.topLevelModel),
+                                "registrar").build()
+                        ))
                     .addCode("\n")
                     .addCode(
                         adaptation.activityTypes

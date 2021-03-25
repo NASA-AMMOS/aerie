@@ -33,7 +33,7 @@ public final class Mission {
   public final Clock utcClock;
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
-  public Mission(final Registrar registrar) {
+  public Mission(final Registrar registrar, final Configuration config) {
     this.cachedRegistrar = registrar;
 
     this.foo = Register.create(registrar, 0.0);
@@ -41,7 +41,7 @@ public final class Mission {
     this.combo = this.data.plus(this.data.rate);
 
     this.source = new Accumulator(registrar, 100.0, 1.0);
-    this.sink = new Accumulator(registrar, 0.0, 0.5);
+    this.sink = new Accumulator(registrar, 0.0, config.sinkRate);
 
     this.activitiesExecuted = Counter.ofInteger(registrar, 0);
 

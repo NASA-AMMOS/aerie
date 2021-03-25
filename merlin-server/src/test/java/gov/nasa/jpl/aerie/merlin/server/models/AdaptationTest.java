@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
+import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
@@ -15,11 +17,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class AdaptationTest {
+
     private AdaptationFacade<?> adaptation;
 
     @Before
     public void initialize() throws AdaptationFacade.AdaptationContractException {
-        this.adaptation = new AdaptationFacade<>(new GeneratedAdaptationFactory().instantiate());
+        final var configuration = new Configuration();
+        final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
+        this.adaptation = new AdaptationFacade<>(new GeneratedAdaptationFactory().instantiate(serializedConfig));
     }
 
     @Test

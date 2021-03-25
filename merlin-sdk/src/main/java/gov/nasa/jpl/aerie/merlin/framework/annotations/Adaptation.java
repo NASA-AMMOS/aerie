@@ -13,6 +13,12 @@ public @interface Adaptation {
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
+  @interface WithConfiguration {
+    Class<?> value();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
   @interface AllActivityTypes {
     WithActivityType[] value();
   }
