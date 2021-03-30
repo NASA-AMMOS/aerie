@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class Plus implements Expression<LinearProfile> {
   private final Expression<LinearProfile> left;
@@ -29,5 +30,19 @@ public final class Plus implements Expression<LinearProfile> {
         this.left.prettyPrint(prefix + "  "),
         this.right.prettyPrint(prefix + "  ")
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Plus)) return false;
+    final var o = (Plus)obj;
+
+    return Objects.equals(this.left, o.left) &&
+           Objects.equals(this.right, o.right);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.left, this.right);
   }
 }

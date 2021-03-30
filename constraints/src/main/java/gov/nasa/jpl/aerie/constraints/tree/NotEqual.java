@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class NotEqual<P extends Profile<P>> implements Expression<Windows> {
   private final Expression<P> left;
@@ -32,5 +33,19 @@ public final class NotEqual<P extends Profile<P>> implements Expression<Windows>
         this.left.prettyPrint(prefix + "  "),
         this.right.prettyPrint(prefix + "  ")
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof NotEqual)) return false;
+    final var o = (NotEqual<?>)obj;
+
+    return Objects.equals(this.left, o.left) &&
+           Objects.equals(this.right, o.right);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.left, this.right);
   }
 }

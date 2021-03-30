@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class ForEachActivity implements Expression<List<Violation>> {
   public final String activityType;
@@ -59,5 +60,20 @@ public final class ForEachActivity implements Expression<List<Violation>> {
         this.alias,
         this.expression.prettyPrint(prefix + "  ")
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof ForEachActivity)) return false;
+    final var o = (ForEachActivity)obj;
+
+    return Objects.equals(this.activityType, o.activityType) &&
+           Objects.equals(this.alias, o.alias) &&
+           Objects.equals(this.expression, o.expression);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.activityType, this.alias, this.expression);
   }
 }

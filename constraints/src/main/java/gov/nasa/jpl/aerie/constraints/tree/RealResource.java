@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class RealResource implements Expression<LinearProfile> {
   public final String name;
@@ -25,5 +26,18 @@ public final class RealResource implements Expression<LinearProfile> {
         prefix,
         this.name
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof RealResource)) return false;
+    final var o = (RealResource)obj;
+
+    return Objects.equals(this.name, o.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.name);
   }
 }

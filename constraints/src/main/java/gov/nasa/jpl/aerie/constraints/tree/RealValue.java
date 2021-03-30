@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class RealValue implements Expression<LinearProfile> {
   private final double value;
@@ -31,5 +32,18 @@ public final class RealValue implements Expression<LinearProfile> {
         prefix,
         this.value
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof RealValue)) return false;
+    final var o = (RealValue)obj;
+
+    return Objects.equals(this.value, o.value);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.value);
   }
 }

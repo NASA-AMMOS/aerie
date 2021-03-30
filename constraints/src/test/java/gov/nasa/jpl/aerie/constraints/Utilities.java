@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.constraints.tree.Expression;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -15,6 +16,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class Utilities {
+
+  public static <T> void assertEquivalent(final Expression<T> expected, Expression<T> result) {
+    assertEquals(expected, result);
+  }
 
   public static void assertEquivalent(final LinearProfile expected, final LinearProfile actual) {
     assertEquals(expected, actual);

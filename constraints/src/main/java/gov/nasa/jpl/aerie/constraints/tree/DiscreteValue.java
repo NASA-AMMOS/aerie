@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class DiscreteValue implements Expression<DiscreteProfile> {
   private final SerializedValue value;
@@ -28,5 +29,18 @@ public final class DiscreteValue implements Expression<DiscreteProfile> {
         prefix,
         this.value
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof DiscreteValue)) return false;
+    final var o = (DiscreteValue)obj;
+
+    return Objects.equals(this.value, o.value);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.value);
   }
 }

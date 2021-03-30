@@ -5,13 +5,18 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Or implements Expression<Windows> {
   public final List<Expression<Windows>> expressions;
 
+  public Or(final List<Expression<Windows>> expressions) {
+    this.expressions = expressions;
+  }
+
   @SafeVarargs
   public Or(final Expression<Windows>... expressions) {
-    this.expressions = List.of(expressions);
+    this(List.of(expressions));
   }
 
   @Override
@@ -40,5 +45,18 @@ public final class Or implements Expression<Windows> {
 
     builder.append(")");
     return builder.toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Or)) return false;
+    Or o = (Or)obj;
+
+    return Objects.equals(this.expressions, o.expressions);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.expressions);
   }
 }

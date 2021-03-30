@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
-import gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity;
 import gov.nasa.jpl.aerie.time.Duration;
 import gov.nasa.jpl.aerie.utilities.IntervalAlgebra;
 import gov.nasa.jpl.aerie.utilities.IntervalSet;
@@ -9,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.*;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
 public final class Windows implements Iterable<Window> {
   private final IntervalSet<WindowAlgebra, Window> windows = new IntervalSet<>(new WindowAlgebra());
