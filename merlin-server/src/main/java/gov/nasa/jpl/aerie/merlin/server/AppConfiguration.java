@@ -84,7 +84,7 @@ public final class AppConfiguration {
                 "  MONGO_ACTIVITY_COLLECTION = " + this.MONGO_ACTIVITY_COLLECTION + ",\n" +
                 "  MONGO_ADAPTATION_COLLECTION = " + this.MONGO_ADAPTATION_COLLECTION + ",\n" +
                 "  enableJavalinLogging = " + this.enableJavalinLogging + ",\n" +
-                (this.MISSION_MODEL_CONFIG_PATH.map(s -> "  MISSION_MODEL_CONFIG_PATH = " + s + ",\n").orElse("")) +
+                "  MISSION_MODEL_CONFIG_PATH = " + this.MISSION_MODEL_CONFIG_PATH + ",\n" +
                 "}";
     }
 
