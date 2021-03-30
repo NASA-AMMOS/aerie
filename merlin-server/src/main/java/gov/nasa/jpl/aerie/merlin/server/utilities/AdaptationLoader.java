@@ -1,16 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.utilities;
 
-import javax.json.Json;
-import javax.json.JsonException;
-
-import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.AppConfiguration;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -19,21 +11,12 @@ import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 
 public final class AdaptationLoader {
-    public static Adaptation<?> loadAdaptation(final Path path, final String name, final String version)
+    public static Adaptation<?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
-        // Deserialize JSON configuration to a serialized configuration
-        final SerializedValue serializedConfig;
-        try {
-            final var fs = new FileInputStream(AppConfiguration.DEFAULT_MISSION_MODEL_CONFIG_PATH);
-            serializedConfig = JsonEncoding.decode(Json.createReader(fs).read());
-        } catch (final FileNotFoundException ex) {
-            throw new Error(ex);
-        }
-
         return loadAdaptationProvider(path, name, version)
             .get()
-            .instantiate(serializedConfig);
+            .instantiate(missionModelConfig);
     }
 
     public static Provider<AdaptationFactory> loadAdaptationProvider(final Path path, final String name, final String version)
