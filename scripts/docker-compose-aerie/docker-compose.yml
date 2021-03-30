@@ -8,9 +8,9 @@ services:
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
   merlin_mongo:
-    command: ["mongod", "--port", "27018", "--smallfiles"]
+    command: ["mongod", "--port", "27020", "--smallfiles"]
     image: mongo:3.2
-    ports: ["27018:27018"]
+    ports: ["27020:27020"]
     volumes: ["merlin_mongo_data:/data/db"]
   aerie_ui:
     command: ["npm", "run", "start:docker"]
