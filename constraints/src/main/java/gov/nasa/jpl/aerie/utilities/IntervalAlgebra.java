@@ -25,87 +25,47 @@ public interface IntervalAlgebra<Alg, I> {
   I lowerBoundsOf(I x);
   I upperBoundsOf(I x);
 
-  IntervalAlgebra.Relation relationBetween(I x, I y);
 
   default boolean overlaps(I x, I y) {
-    switch (relationBetween(x, y)) {
-      case Before: case After:
-        return true;
-      default:
-        return false;
-    }
+    return !isEmpty(intersect(x, y));
   }
-
   default boolean contains(I outer, I inner) {
-    switch (relationBetween(outer, inner)) {
-      case Contains: case Equals:
-        return true;
-      default:
-        return false;
-    }
+    // If `inner` doesn't overlap with the complement of `outer`,
+    // then `inner` must exist entirely within `outer`.
+    return !(overlaps(inner, upperBoundsOf(outer)) || overlaps(inner, lowerBoundsOf(outer)));
+  }
+  default boolean strictlyContains(I outer, I inner) {
+    return contains(outer, inner) && !contains(inner, outer);
+  }
+  default boolean equals(I x, I y) {
+    return contains(x, y) && contains(y, x);
   }
 
   default boolean startsBefore(I x, I y) {
-    switch (relationBetween(x, y)) {
-      case Before: case Meets: case LeftOverhang: case Contains:
-        return true;
-      default:
-        return false;
-    }
+    return strictlyContains(lowerBoundsOf(y), lowerBoundsOf(x));
   }
-
-  default boolean endsBefore(I x, I y) {
-    switch(relationBetween(x, y)) {
-      case Before: case Meets:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  default boolean endsStrictlyBefore(I x, I y) {
-    return relationBetween(x, y) == IntervalAlgebra.Relation.Before;
-  }
-
-  default boolean meets(I x, I y) {
-    return relationBetween(x, y) == IntervalAlgebra.Relation.Meets;
-  }
-
-  default boolean isMetBy(I x, I y) {
-    return relationBetween(x, y) == IntervalAlgebra.Relation.MetBy;
-  }
-
   default boolean endsAfter(I x, I y) {
-    switch (relationBetween(x, y)) {
-      case After: case MetBy: case RightOverhang: case Contains:
-        return true;
-      default:
-        return false;
-    }
+    return strictlyContains(upperBoundsOf(y), upperBoundsOf(x));
   }
 
   default boolean startsAfter(I x, I y) {
-    switch (relationBetween(x, y)) {
-      case After: case MetBy:
-        return true;
-      default:
-        return false;
-    }
+    return endsBefore(y, x);
+  }
+  default boolean endsBefore(I x, I y) {
+    return endsStrictlyBefore(x, y) || meets(x, y);
   }
 
+  default boolean endsStrictlyBefore(I x, I y) {
+    return !isEmpty(intersect(upperBoundsOf(x), lowerBoundsOf(y)));
+  }
   default boolean startsStrictlyAfter(I x, I y) {
-    return relationBetween(x, y) == IntervalAlgebra.Relation.After;
+    return endsStrictlyBefore(y, x);
   }
 
-  enum Relation {
-    Before,
-    Meets,
-    LeftOverhang,
-    Contains,
-    Equals,
-    ContainedBy,
-    RightOverhang,
-    MetBy,
-    After,
+  default boolean meets(I x, I y) {
+    return equals(upperBoundsOf(x), upperBoundsOf(lowerBoundsOf(y)));
+  }
+  default boolean isMetBy(I x, I y) {
+    return meets(y, x);
   }
 }

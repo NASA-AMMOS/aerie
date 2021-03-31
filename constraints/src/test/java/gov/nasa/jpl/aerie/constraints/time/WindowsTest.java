@@ -1,23 +1,31 @@
-package gov.nasa.jpl.aerie.time;
+package gov.nasa.jpl.aerie.constraints.time;
 
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
+import static gov.nasa.jpl.aerie.constraints.Utilities.assertEquivalent;
 import static gov.nasa.jpl.aerie.time.Duration.MICROSECONDS;
-import static gov.nasa.jpl.aerie.time.Window.Inclusivity.Exclusive;
-import static gov.nasa.jpl.aerie.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.time.Window.window;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Window.window;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class WindowsTest {
+  @Test
+  public void addEmpty() {
+    final var windows = new Windows();
+    windows.add(Window.EMPTY);
+
+    final var expected = new Windows();
+
+    assertEquivalent(expected, windows);
+  }
+
   @Test
   public void addOpenPoint() {
     final var windows = new Windows();
@@ -255,6 +263,17 @@ public class WindowsTest {
   }
 
   @Test
+  public void subtractAllButPoint() {
+    final var windows = new Windows(Window.between(0, Inclusive, 1, Exclusive, MICROSECONDS));
+    windows.subtract(Window.between(0, Exclusive, 1, Inclusive, MICROSECONDS));
+
+    final var expected = new Windows();
+    expected.add(Window.at(0, MICROSECONDS));
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
   public void subtractOpen() {
     final var windows = new Windows();
     windows.add(window(1,4, MICROSECONDS));
@@ -380,6 +399,54 @@ public class WindowsTest {
   }
 
   @Test
+  public void intersectMultiple() {
+    final var windows = new Windows();
+    windows.add(window(0, 20, MICROSECONDS));
+
+    final var mask = new Windows();
+    mask.add(window(0, 5, MICROSECONDS));
+    mask.add(window(6, Inclusive,7, Exclusive, MICROSECONDS));
+    mask.add(window(7, Exclusive, 8, Inclusive, MICROSECONDS));
+    windows.intersectWith(mask);
+
+    final var expected = new Windows();
+    expected.add(window(0, 5, MICROSECONDS));
+    expected.add(window(6, Inclusive,7, Exclusive, MICROSECONDS));
+    expected.add(window(7, Exclusive, 8, Inclusive, MICROSECONDS));
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
+  public void intersectSinglePoint() {
+    final var windows = new Windows();
+    windows.add(window(0, 1, MICROSECONDS));
+
+    final var mask = new Windows();
+    mask.add(window(1, 2, MICROSECONDS));
+    windows.intersectWith(mask);
+
+    final var expected = new Windows();
+    expected.addPoint(1, MICROSECONDS);
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
+  public void intersectMeeting() {
+    final var windows = new Windows();
+    windows.add(window(0, Inclusive, 1, Exclusive, MICROSECONDS));
+
+    final var mask = new Windows();
+    mask.add(window(1, Inclusive, 2, Inclusive, MICROSECONDS));
+    windows.intersectWith(mask);
+
+    final var expected = new Windows();
+
+    assertEquivalent(expected, windows);
+  }
+
+  @Test
   public void includesEmpty() {
     final var x = new Windows();
 
@@ -472,33 +539,5 @@ public class WindowsTest {
     final var expected = List.of(window(0, 5, MICROSECONDS));
 
     assertEquals(expected, windowList);
-  }
-
-  private static void assertEquivalent(final Windows expected, final Windows actual) {
-    assertEquals(expected, actual);
-
-    // Things that are equal ought to be observationally equivalent.
-    assertTrue(areEquivalent(expected, actual));
-  }
-
-  private static void assertEquivalent(final Collection<Window> expected, final Windows actual) {
-    assertTrue(areEquivalent(expected.iterator(), actual.iterator()));
-  }
-
-  // Two window lists are equivalent iff they provide the same windows.
-  // Window lists are ordered, so equivalence is defined by iteration.
-  private static boolean areEquivalent(final Windows xs, final Windows ys) {
-    return areEquivalent(xs.iterator(), ys.iterator());
-  }
-
-  private static boolean areEquivalent( final Iterator<Window> xsIter, final Iterator<Window> ysIter) {
-    while (true) {
-      if (!xsIter.hasNext()) return !ysIter.hasNext();
-      if (!ysIter.hasNext()) return false;
-
-      final var x = xsIter.next();
-      final var y = ysIter.next();
-      if (!Objects.equals(x, y)) return false;
-    }
   }
 }
