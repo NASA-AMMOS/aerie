@@ -116,7 +116,7 @@ public final class MerlinBindings implements Plugin {
             });
           });
           path("constraints", () -> {
-            get(this::getConstraintTypes);
+            get(this::getConstraints);
           });
           path("stateSchemas", () -> {
             get(this::getStateSchemas);
@@ -388,13 +388,13 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
-  private void getConstraintTypes(final Context ctx) {
+  private void getConstraints(final Context ctx) {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var constraintTypes = this.adaptationService.getConstraintTypes(adaptationId);
+      final var constraints = this.adaptationService.getConstraints(adaptationId);
 
-      ctx.result(ResponseSerializers.serializeConstraintTypes(constraintTypes).toString());
+      ctx.result(ResponseSerializers.serializeConstraints(constraints).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }

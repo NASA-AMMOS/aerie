@@ -14,6 +14,8 @@ import org.bson.types.ObjectId;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -61,6 +63,29 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         }
 
         return adaptationFromDocuments(adaptationDocument);
+    }
+
+    @Override
+    public Map<String, String> getConstraints(final String id) throws NoSuchAdaptationException {
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException();
+        }
+
+        if (adaptationDocument == null) {
+            throw new NoSuchAdaptationException();
+        }
+
+        final var constraints = new HashMap<String, String>();
+
+        final var constraintsDocument = adaptationDocument.get("constraints", Document.class);
+        for (final var key : constraintsDocument.keySet()) {
+            constraints.put(key, constraintsDocument.getString(key));
+        }
+
+        return constraints;
     }
 
     @Override
@@ -116,6 +141,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         adaptationDocument.put("mission", adaptationJar.mission);
         adaptationDocument.put("owner", adaptationJar.owner);
         adaptationDocument.put("path", adaptationJar.path.toString());
+        adaptationDocument.put("constraints", new Document());
 
         return adaptationDocument;
     }

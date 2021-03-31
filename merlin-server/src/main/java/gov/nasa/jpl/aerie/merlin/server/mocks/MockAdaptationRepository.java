@@ -72,6 +72,11 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
+    public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+      return Map.of();
+    }
+
+    @Override
     public Stream<Pair<String, AdaptationJar>> getAllAdaptations() {
         return this.adaptations
                 .entrySet()

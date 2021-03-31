@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
@@ -252,19 +251,8 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
   }
 
-  public static JsonValue serializeConstraintType(final ViolableConstraint constraintType) {
-    return Json
-        .createObjectBuilder()
-        .add("name", constraintType.name)
-        .add("message", constraintType.message)
-        .add("category", constraintType.category)
-        .add("stateIDs", serializeIterable(Json::createValue, constraintType.stateIds))
-        .add("activityTypes", serializeIterable(Json::createValue, constraintType.activityTypes))
-        .build();
-  }
-
-  public static JsonValue serializeConstraintTypes(List<ViolableConstraint> constraintTypes) {
-    return serializeIterable(ResponseSerializers::serializeConstraintType, constraintTypes);
+  public static JsonValue serializeConstraints(Map<String, String> constraints) {
+    return serializeMap(Json::createValue, constraints);
   }
 
   private static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {

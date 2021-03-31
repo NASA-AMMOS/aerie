@@ -3,8 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
-import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -120,10 +118,12 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ViolableConstraint> getConstraintTypes(final String adaptationID)
-  throws NoSuchAdaptationException, AdaptationLoadException
-  {
-    return loadAdaptation(adaptationID).getConstraintTypes();
+  public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+    try {
+      return this.adaptationRepository.getConstraints(adaptationId);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
   }
 
   @Override
