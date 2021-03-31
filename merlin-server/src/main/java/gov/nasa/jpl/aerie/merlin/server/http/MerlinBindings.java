@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
@@ -117,6 +118,7 @@ public final class MerlinBindings implements Plugin {
           });
           path("constraints", () -> {
             get(this::getConstraints);
+            post(this::postModelConstraints);
           });
           path("stateSchemas", () -> {
             get(this::getStateSchemas);
@@ -395,6 +397,23 @@ public final class MerlinBindings implements Plugin {
       final var constraints = this.adaptationService.getConstraints(adaptationId);
 
       ctx.result(ResponseSerializers.serializeConstraints(constraints).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void postModelConstraints(final Context ctx) {
+    try {
+      final var adaptationId = ctx.pathParam("adaptationId");
+      final var constraints = parseJson(ctx.body(), mapP(stringP));
+
+      this.adaptationService.replaceConstraints(adaptationId, constraints);
+
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }

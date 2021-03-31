@@ -127,6 +127,17 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
+  public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+  throws NoSuchAdaptationException
+  {
+    try {
+      this.adaptationRepository.replaceConstraints(adaptationId, constraints);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
+  }
+
+  @Override
   public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {

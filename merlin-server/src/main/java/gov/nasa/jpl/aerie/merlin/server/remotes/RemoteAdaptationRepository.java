@@ -123,6 +123,31 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         this.adaptationCollection.deleteOne(eq("_id", new ObjectId(adaptationId)));
     }
 
+    @Override
+    public void replaceConstraints(final String id, final Map<String, String> newConstraints)
+    throws NoSuchAdaptationException
+    {
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException();
+        }
+
+        if (adaptationDocument == null) {
+            throw new NoSuchAdaptationException();
+        }
+
+        final var constraints = adaptationDocument.get("constraints", Document.class);
+        for (final var entry : newConstraints.entrySet()) {
+          constraints.put(entry.getKey(), entry.getValue());
+        }
+
+        adaptationDocument.put("constraints", constraints);
+
+        this.adaptationCollection.replaceOne(adaptationById(id), adaptationDocument);
+    }
+
     private AdaptationJar adaptationFromDocuments(final Document adaptationDocument) {
         final AdaptationJar adaptationJar = new AdaptationJar();
         adaptationJar.name = adaptationDocument.getString("name");
