@@ -120,7 +120,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
             throw new AdaptationAccessException(adaptationJar.path, e);
         }
 
-        this.adaptationCollection.deleteOne(eq("_id", new ObjectId(adaptationId)));
+        this.adaptationCollection.deleteOne(adaptationById(adaptationId));
     }
 
     @Override
@@ -146,6 +146,28 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         adaptationDocument.put("constraints", constraints);
 
         this.adaptationCollection.replaceOne(adaptationById(id), adaptationDocument);
+    }
+
+    @Override
+    public void deleteConstraint(final String adaptationId, final String constraintName)
+    throws NoSuchAdaptationException
+    {
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(adaptationId)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException();
+        }
+
+        if (adaptationDocument == null) {
+            throw new NoSuchAdaptationException();
+        }
+
+        final var constraints = adaptationDocument.get("constraints", Document.class);
+        constraints.remove(constraintName);
+        adaptationDocument.put("constraints", constraints);
+
+        this.adaptationCollection.replaceOne(adaptationById(adaptationId), adaptationDocument);
     }
 
     private AdaptationJar adaptationFromDocuments(final Document adaptationDocument) {

@@ -138,6 +138,17 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
+  public void deleteConstraint(final String adaptationId, final String constraintName)
+  throws NoSuchAdaptationException
+  {
+    try {
+      this.adaptationRepository.deleteConstraint(adaptationId, constraintName);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
+  }
+
+  @Override
   public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {

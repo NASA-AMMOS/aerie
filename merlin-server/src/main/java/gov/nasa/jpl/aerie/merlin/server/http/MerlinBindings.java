@@ -119,6 +119,7 @@ public final class MerlinBindings implements Plugin {
           path("constraints", () -> {
             get(this::getConstraints);
             post(this::postModelConstraints);
+            delete(this::deleteModelConstraint);
           });
           path("stateSchemas", () -> {
             get(this::getStateSchemas);
@@ -414,6 +415,19 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void deleteModelConstraint(final Context ctx) {
+    try {
+      final var adaptationId = ctx.pathParam("adaptationId");
+      final var constraintName = ctx.queryParam("name");
+
+      this.adaptationService.deleteConstraint(adaptationId, constraintName);
+
+      ctx.status(200);
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }

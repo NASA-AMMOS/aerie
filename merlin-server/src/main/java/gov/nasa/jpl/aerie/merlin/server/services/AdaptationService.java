@@ -26,6 +26,8 @@ public interface AdaptationService {
   throws NoSuchAdaptationException;
   void replaceConstraints(String adaptationId, Map<String, String> constraints)
   throws NoSuchAdaptationException;
+  void deleteConstraint(String adaptationId, String constraintName)
+  throws NoSuchAdaptationException;
 
   Map<String, ValueSchema> getStatesSchemas(String adaptationId)
   throws NoSuchAdaptationException;

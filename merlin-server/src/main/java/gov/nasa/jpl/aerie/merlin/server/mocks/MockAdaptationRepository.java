@@ -69,6 +69,12 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
+    public void deleteConstraint(final String adaptationId, final String constraintName)
+    throws NoSuchAdaptationException
+    {
+    }
+
+    @Override
     public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
         final AdaptationJar adaptation = Optional
                 .ofNullable(this.adaptations.get(adaptationId))
