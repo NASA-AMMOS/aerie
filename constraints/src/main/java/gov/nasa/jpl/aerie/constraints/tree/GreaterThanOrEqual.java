@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class GreaterThanOrEqual implements Expression<Windows> {
   public final Expression<LinearProfile> left;
@@ -32,5 +33,19 @@ public final class GreaterThanOrEqual implements Expression<Windows> {
         this.left.prettyPrint(prefix + "  "),
         this.right.prettyPrint(prefix + "  ")
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof GreaterThanOrEqual)) return false;
+    final var o = (GreaterThanOrEqual)obj;
+
+    return Objects.equals(this.left, o.left) &&
+           Objects.equals(this.right, o.right);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.left, this.right);
   }
 }

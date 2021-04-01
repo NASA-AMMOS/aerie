@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class Transition implements Expression<Windows> {
   private final Expression<DiscreteProfile> profile;
@@ -35,5 +36,20 @@ public final class Transition implements Expression<Windows> {
       prefix,
       newState
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Transition)) return false;
+    final var o = (Transition)obj;
+
+    return Objects.equals(this.profile, o.profile) &&
+           Objects.equals(this.oldState, o.oldState) &&
+           Objects.equals(this.newState, o.newState);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.profile, this.oldState, this.newState);
   }
 }

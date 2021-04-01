@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class Parameter implements Expression<DiscreteProfile> {
   private final String activityAlias;
@@ -33,5 +34,19 @@ public final class Parameter implements Expression<DiscreteProfile> {
         this.activityAlias,
         this.parameterName
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Parameter)) return false;
+    final var o = (Parameter)obj;
+
+    return Objects.equals(this.activityAlias, o.activityAlias) &&
+           Objects.equals(this.parameterName, o.parameterName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.activityAlias, this.parameterName);
   }
 }

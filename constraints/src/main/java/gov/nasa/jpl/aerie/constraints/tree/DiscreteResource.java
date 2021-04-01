@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class DiscreteResource implements Expression<DiscreteProfile> {
   public final String name;
@@ -25,5 +26,18 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
         prefix,
         this.name
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof DiscreteResource)) return false;
+    final var o = (DiscreteResource)obj;
+
+    return Objects.equals(this.name, o.name);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.name);
   }
 }

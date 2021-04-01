@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class EndOf implements Expression<Windows> {
   private final String activityAlias;
@@ -27,5 +28,18 @@ public final class EndOf implements Expression<Windows> {
         prefix,
         this.activityAlias
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof EndOf)) return false;
+    final var o = (EndOf)obj;
+
+    return Objects.equals(this.activityAlias, o.activityAlias);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.activityAlias);
   }
 }

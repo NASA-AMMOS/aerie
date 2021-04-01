@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
+import java.util.Objects;
 
 public final class Not implements Expression<Windows> {
   public final Expression<Windows> expression;
@@ -27,5 +28,18 @@ public final class Not implements Expression<Windows> {
         prefix,
         this.expression.prettyPrint(prefix + "  ")
     );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof Not)) return false;
+    final var o = (Not)obj;
+
+    return Objects.equals(this.expression, o.expression);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.expression);
   }
 }
