@@ -47,10 +47,6 @@ public final class ForEachActivity implements Expression<List<Violation>> {
     return violations;
   }
 
-  public List<Violation> evaluate(final SimulationResults results) {
-    return this.evaluate(results, Map.of());
-  }
-
   @Override
   public String prettyPrint(final String prefix) {
     return String.format(

@@ -23,10 +23,6 @@ public final class ViolationsOf implements Expression<List<Violation>> {
     return List.of(new Violation(Windows.minus(bounds, satisfiedWindows)));
   }
 
-  public List<Violation> evaluate(SimulationResults results) {
-    return evaluate(results, Map.of());
-  }
-
   @Override
   public String prettyPrint(final String prefix) {
     return this.expression.prettyPrint(prefix);
