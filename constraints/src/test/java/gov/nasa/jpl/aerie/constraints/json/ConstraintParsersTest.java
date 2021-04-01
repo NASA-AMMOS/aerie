@@ -31,7 +31,7 @@ import org.junit.Test;
 
 import javax.json.Json;
 
-import static gov.nasa.jpl.aerie.constraints.Utilities.assertEquivalent;
+import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.discreteProfileExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.linearProfileExpressionP;
 import static gov.nasa.jpl.aerie.constraints.json.ConstraintParsers.violationListExpressionP;
