@@ -22,11 +22,12 @@ public class FooActivityTest {
       new GeneratedAdaptationFactory(),
       FooValueMappers.configuration().serializeValue(config),
       registrar -> new Mission(registrar, new Configuration()),
-      (model) ->
-      {
+      (model) -> {
         spawn(new FooActivity());
         delay(Duration.SECOND);
         assertEquals(15.0, model.simpleData.totalVolume.get(), 1e-9);
+        delay(10, Duration.SECOND);
+        assertEquals(165.0, model.simpleData.totalVolume.get(), 1e-9);
       });
   }
 }
