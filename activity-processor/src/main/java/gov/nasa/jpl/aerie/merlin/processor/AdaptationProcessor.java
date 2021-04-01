@@ -449,7 +449,7 @@ public final class AdaptationProcessor implements Processor {
     final var mapperBlocks = new HashMap<String, CodeBlock>();
 
     for (final var parameter : activityType.parameters) {
-      final var mapperBlock = resolver.instantiateMapperFor(parameter.type);
+      final var mapperBlock = resolver.instantiateNullableMapperFor(parameter.type);
       if (mapperBlock.isPresent()) {
         mapperBlocks.put(parameter.name, mapperBlock.get());
       } else {

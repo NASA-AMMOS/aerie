@@ -33,6 +33,17 @@ public final class Resolver {
 
     // TODO: Do away with this null-checking stuff, somehow.
     if (mirror.getKind() == TypeKind.DECLARED || mirror.getKind() == TypeKind.ARRAY) {
+      return mapperCode.map($ -> CodeBlock.of("$L", $));
+    } else {
+      return mapperCode;
+    }
+  }
+
+  public Optional<CodeBlock> instantiateNullableMapperFor(final TypeMirror mirror) {
+    final var mapperCode = applyRules(createInitialGoal(mirror));
+
+    // TODO: Do away with this null-checking stuff, somehow.
+    if (mirror.getKind() == TypeKind.DECLARED || mirror.getKind() == TypeKind.ARRAY) {
       return mapperCode.map($ -> CodeBlock.of(
           "new $T<>(\n$>$>$L$<$<)",
           gov.nasa.jpl.aerie.contrib.serialization.mappers.NullableValueMapper.class,
