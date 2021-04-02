@@ -126,10 +126,6 @@ public final class MerlinBindings implements Plugin {
           });
         });
       });
-
-      path("simulations", () -> {
-        post(this::runSimulation);
-      });
     });
 
     // This exception is expected when the request body entity is not a legal JsonValue.
@@ -488,36 +484,6 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    }
-  }
-
-  private void runSimulation(final Context ctx) {
-    try {
-      final var message = parseJson(ctx.body(), createSimulationMessageP);
-
-      final var results = this.adaptationService.runSimulation(message);
-
-      ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
-    } catch (final JsonParsingException ex) {
-      // Request entity is not valid JSON.
-      // TODO: report this failure with a better response body
-      ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-json").build().toString());
-    } catch (final InvalidJsonException ex) {
-      // Request body is invalid json
-      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
-    } catch (final InvalidEntityException ex) {
-      // Request entity does not have the expected shape
-      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
-      // The requested adaptation does not exist.
-      ctx.status(404);
-    } catch (final SimulationDriver.TaskSpecInstantiationException e) {
-      // The schedule contained an invalid activity instance
-      ctx.status(400).result(ResponseSerializers.serializeTaskSpecInstantiationException(e).toString());
-    } catch (final AdaptationFacade.NoSuchActivityTypeException e) {
-      // The adaptation could not instantiate the provided activities.
-      // TODO: report these failures with a better response body
-      ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-activities").build().toString());
     }
   }
 
