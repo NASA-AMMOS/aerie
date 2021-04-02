@@ -7,11 +7,16 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
+import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
+import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
+import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
@@ -29,6 +34,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 public final class SimulationDriver {
   public static <$Schema> SimulationResults simulate(
@@ -261,17 +267,82 @@ public final class SimulationDriver {
       return yieldTime;
     });
 
-    // Identify all sample times.
-    final var timestamps = new ArrayList<Duration>();
-    {
-      timestamps.add(Duration.ZERO);
-      timestamps.add(simulationDuration);
-    }
+    final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
+    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
+    profiles.forEach(new BiConsumer<String, ProfileBuilder<?, ?, ?>>() {
+      @Override
+      public void accept(final String name, final ProfileBuilder<?, ?, ?> profileBuilder) {
+        acceptHelper(name, profileBuilder);
+      }
 
-    // Collect samples for all resources.
-    final var resourceSamples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
-    profiles.forEach((name, profile) -> {
-      resourceSamples.put(name, SampleTaker.sample(profile));
+      <Dynamics> void acceptHelper(final String name, final ProfileBuilder<?, ?, Dynamics> profile) {
+        final var solver = profile.solver;
+        solver.approximate(new ResourceSolver.ApproximatorVisitor<Dynamics, Void>() {
+          @Override
+          public Void real(final RealApproximator<Dynamics> approximator) {
+            final var realProfile = new ArrayList<Pair<Duration, RealDynamics>>();
+
+            var dynamicsStart = Duration.ZERO;
+            final var dynamicsIter = profile.build().iterator();
+            while (dynamicsIter.hasNext()) {
+              final var entry = dynamicsIter.next();
+
+              final var dynamicsDuration = entry.getLeft();
+              final var dynamics = entry.getRight();
+              final var dynamicsOwnsEndpoint = !dynamicsIter.hasNext();
+
+              final var approximation = approximator.approximate(dynamics).iterator();
+
+              var partStart = Duration.ZERO;
+              do {
+                final var part = approximation.next();
+                final var partExtent = Duration.min(part.extent, dynamicsDuration);
+
+                realProfile.add(Pair.of(partExtent, part.dynamics));
+                partStart = partStart.plus(partExtent);
+              } while (approximation.hasNext() && (partStart.shorterThan(dynamicsDuration) || dynamicsOwnsEndpoint));
+
+              dynamicsStart = dynamicsStart.plus(dynamicsDuration);
+            }
+
+            realProfiles.put(name, realProfile);
+
+            return null;
+          }
+
+          @Override
+          public Void discrete(final DiscreteApproximator<Dynamics> approximator) {
+            final var discreteProfile = new ArrayList<Pair<Duration, SerializedValue>>();
+
+            var dynamicsStart = Duration.ZERO;
+            final var dynamicsIter = profile.build().iterator();
+            while (dynamicsIter.hasNext()) {
+              final var entry = dynamicsIter.next();
+
+              final var dynamicsDuration = entry.getLeft();
+              final var dynamics = entry.getRight();
+              final var dynamicsOwnsEndpoint = !dynamicsIter.hasNext();
+
+              final var approximation = approximator.approximate(dynamics).iterator();
+
+              var partStart = Duration.ZERO;
+              do {
+                final var part = approximation.next();
+                final var partExtent = Duration.min(part.extent, dynamicsDuration);
+
+                discreteProfile.add(Pair.of(partExtent, part.dynamics));
+                partStart = partStart.plus(partExtent);
+              } while (approximation.hasNext() && (partStart.shorterThan(dynamicsDuration) || dynamicsOwnsEndpoint));
+
+              dynamicsStart = dynamicsStart.plus(dynamicsDuration);
+            }
+
+            discreteProfiles.put(name, Pair.of(approximator.getSchema(), discreteProfile));
+
+            return null;
+          }
+        });
+      }
     });
 
     // Use the map of task id to activity id to replace task ids with the corresponding
@@ -286,7 +357,8 @@ public final class SimulationDriver {
     });
 
     return new SimulationResults(
-        resourceSamples,
+        realProfiles,
+        discreteProfiles,
         taskIdToActivityId,
         taskInfo,
         startTime);
