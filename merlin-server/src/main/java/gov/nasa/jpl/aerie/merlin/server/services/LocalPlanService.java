@@ -144,7 +144,7 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(final String planId)
+  public Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(final String planId)
   throws NoSuchPlanException
   {
     try {
@@ -236,7 +236,7 @@ public final class LocalPlanService implements PlanService {
             constraint.getSuccessOrThrow().evaluate(preparedResults));
       }
 
-      return results;
+      return Pair.of(results, violations);
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
     } catch (final SimulationDriver.TaskSpecInstantiationException | AdaptationFacade.NoSuchActivityTypeException ex) {
