@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
@@ -27,6 +28,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
@@ -39,9 +42,11 @@ import java.util.stream.Collectors;
  * adaptation repository.
  */
 public final class LocalAdaptationService implements AdaptationService {
+  private final Supplier<SerializedValue> missionModelConfigGet;
   private final AdaptationRepository adaptationRepository;
 
-  public LocalAdaptationService(final AdaptationRepository adaptationRepository) {
+  public LocalAdaptationService(final Supplier<SerializedValue> missionModelConfigGet, final AdaptationRepository adaptationRepository) {
+    this.missionModelConfigGet = missionModelConfigGet;
     this.adaptationRepository = adaptationRepository;
   }
 
@@ -250,7 +255,7 @@ public final class LocalAdaptationService implements AdaptationService {
     try {
       final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
       final var adaptation =
-          AdaptationLoader.loadAdaptation(adaptationJar.path, adaptationJar.name, adaptationJar.version);
+          AdaptationLoader.loadAdaptation(missionModelConfigGet.get(), adaptationJar.path, adaptationJar.name, adaptationJar.version);
       return new AdaptationFacade<>(adaptation);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);

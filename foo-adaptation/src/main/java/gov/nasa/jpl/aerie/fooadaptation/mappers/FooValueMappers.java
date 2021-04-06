@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.fooadaptation.mappers;
 
+import java.util.Map;
 import java.util.function.Function;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.Vector3DValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.Configuration;
@@ -24,15 +25,16 @@ public class FooValueMappers {
       @Override
       public Result<Configuration, String> deserializeValue(final SerializedValue serializedValue) {
         return serializedValue
-            .asReal()
-            .map(Configuration::new)
+            .asMap()
+            .map(m -> m.get("sinkRate").asReal())
+            .map(m -> new Configuration(m.get()))
             .map((Function<Configuration, Result<Configuration, String>>) Result::success)
             .orElseGet(() -> Result.failure("Expected string, got " + serializedValue.toString()));
       }
 
       @Override
       public SerializedValue serializeValue(final Configuration value) {
-        return SerializedValue.of(value.sinkRate);
+        return SerializedValue.of(Map.of("sinkRate", SerializedValue.of(value.sinkRate)));
       }
     };
   }
