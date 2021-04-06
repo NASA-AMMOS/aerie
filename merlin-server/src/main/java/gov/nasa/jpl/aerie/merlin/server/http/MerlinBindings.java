@@ -2,18 +2,16 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
-import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
+import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -30,9 +28,9 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.serializedParameterP;
@@ -116,16 +114,14 @@ public final class MerlinBindings implements Plugin {
             });
           });
           path("constraints", () -> {
-            get(this::getConstraintTypes);
+            get(this::getConstraints);
+            post(this::postModelConstraints);
+            delete(this::deleteModelConstraint);
           });
           path("stateSchemas", () -> {
             get(this::getStateSchemas);
           });
         });
-      });
-
-      path("simulations", () -> {
-        post(this::runSimulation);
       });
     });
 
@@ -388,13 +384,43 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
-  private void getConstraintTypes(final Context ctx) {
+  private void getConstraints(final Context ctx) {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var constraintTypes = this.adaptationService.getConstraintTypes(adaptationId);
+      final var constraints = this.adaptationService.getConstraints(adaptationId);
 
-      ctx.result(ResponseSerializers.serializeConstraintTypes(constraintTypes).toString());
+      ctx.result(ResponseSerializers.serializeConstraints(constraints).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void postModelConstraints(final Context ctx) {
+    try {
+      final var adaptationId = ctx.pathParam("adaptationId");
+      final var constraints = parseJson(ctx.body(), mapP(stringP));
+
+      this.adaptationService.replaceConstraints(adaptationId, constraints);
+
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void deleteModelConstraint(final Context ctx) {
+    try {
+      final var adaptationId = ctx.pathParam("adaptationId");
+      final var constraintName = ctx.queryParam("name");
+
+      this.adaptationService.deleteConstraint(adaptationId, constraintName);
+
+      ctx.status(200);
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
@@ -455,36 +481,6 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    }
-  }
-
-  private void runSimulation(final Context ctx) {
-    try {
-      final var message = parseJson(ctx.body(), createSimulationMessageP);
-
-      final var results = this.adaptationService.runSimulation(message);
-
-      ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
-    } catch (final JsonParsingException ex) {
-      // Request entity is not valid JSON.
-      // TODO: report this failure with a better response body
-      ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-json").build().toString());
-    } catch (final InvalidJsonException ex) {
-      // Request body is invalid json
-      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
-    } catch (final InvalidEntityException ex) {
-      // Request entity does not have the expected shape
-      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
-      // The requested adaptation does not exist.
-      ctx.status(404);
-    } catch (final SimulationDriver.TaskSpecInstantiationException e) {
-      // The schedule contained an invalid activity instance
-      ctx.status(400).result(ResponseSerializers.serializeTaskSpecInstantiationException(e).toString());
-    } catch (final AdaptationFacade.NoSuchActivityTypeException e) {
-      // The adaptation could not instantiate the provided activities.
-      // TODO: report these failures with a better response body
-      ctx.status(400).result(Json.createObjectBuilder().add("kind", "invalid-activities").build().toString());
     }
   }
 

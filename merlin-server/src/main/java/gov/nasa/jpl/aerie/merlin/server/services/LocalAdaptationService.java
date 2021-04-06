@@ -3,8 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
-import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -120,10 +118,34 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ViolableConstraint> getConstraintTypes(final String adaptationID)
-  throws NoSuchAdaptationException, AdaptationLoadException
+  public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+    try {
+      return this.adaptationRepository.getConstraints(adaptationId);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
+  }
+
+  @Override
+  public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+  throws NoSuchAdaptationException
   {
-    return loadAdaptation(adaptationID).getConstraintTypes();
+    try {
+      this.adaptationRepository.replaceConstraints(adaptationId, constraints);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
+  }
+
+  @Override
+  public void deleteConstraint(final String adaptationId, final String constraintName)
+  throws NoSuchAdaptationException
+  {
+    try {
+      this.adaptationRepository.deleteConstraint(adaptationId, constraintName);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
   }
 
   @Override

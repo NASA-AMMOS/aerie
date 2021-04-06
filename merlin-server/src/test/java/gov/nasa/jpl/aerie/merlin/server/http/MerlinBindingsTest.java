@@ -2,15 +2,12 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.mocks.FakeFile;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.utils.HttpRequester;
-import gov.nasa.jpl.aerie.time.Duration;
 import io.javalin.Javalin;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -28,7 +25,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -816,33 +812,6 @@ public final class MerlinBindingsTest {
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
         ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
-
-    // THEN
-    assertThat(response.statusCode()).isEqualTo(200);
-
-    final JsonValue responseJson = Json.createReader(new StringReader(response.body())).readValue();
-    assertThat(responseJson).isEqualTo(expectedResponse);
-  }
-
-  @Test
-  public void shouldRunSimulation() throws IOException, InterruptedException {
-    // GIVEN
-    final CreateSimulationMessage message = new CreateSimulationMessage(
-        StubAdaptationService.EXISTENT_ADAPTATION_ID,
-        Instant.EPOCH,
-        Duration.ZERO,
-        Map.of(
-            "0", Pair.of(Duration.ZERO, StubAdaptationService.VALID_ACTIVITY_INSTANCE)
-        )
-    );
-
-    final JsonValue expectedResponse = ResponseSerializers.serializeSimulationResults(StubAdaptationService.SUCCESSFUL_SIMULATION_RESULTS);
-
-    // WHEN
-    final HttpResponse<String> response = client.sendRequest(
-        "POST",
-        "/simulations",
-        ResponseSerializers.serializeCreateSimulationMessage(message));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);

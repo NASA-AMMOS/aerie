@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
@@ -15,7 +14,6 @@ import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,10 +33,6 @@ public final class AdaptationFacade<$Schema> {
   ) throws SimulationDriver.TaskSpecInstantiationException
   {
     return SimulationDriver.simulate(this.adaptation, schedule, startTime, simulationDuration);
-  }
-
-  public List<ViolableConstraint> getConstraintTypes() throws AdaptationContractException {
-    return Collections.emptyList();
   }
 
   public Map<String, ValueSchema> getStateSchemas() {

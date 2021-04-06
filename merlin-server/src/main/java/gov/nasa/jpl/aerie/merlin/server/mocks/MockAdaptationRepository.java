@@ -63,12 +63,29 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
+    public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+    throws NoSuchAdaptationException
+    {
+    }
+
+    @Override
+    public void deleteConstraint(final String adaptationId, final String constraintName)
+    throws NoSuchAdaptationException
+    {
+    }
+
+    @Override
     public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
         final AdaptationJar adaptation = Optional
                 .ofNullable(this.adaptations.get(adaptationId))
                 .orElseThrow(NoSuchAdaptationException::new);
 
         return new AdaptationJar(adaptation);
+    }
+
+    @Override
+    public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+      return Map.of();
     }
 
     @Override

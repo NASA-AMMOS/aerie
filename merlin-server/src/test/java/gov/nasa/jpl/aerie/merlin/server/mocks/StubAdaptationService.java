@@ -2,15 +2,14 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
+import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -56,6 +55,7 @@ public final class StubAdaptationService implements AdaptationService {
       Map.of(),
       Map.of(),
       Map.of(),
+      Map.of(),
       Instant.EPOCH);
 
   static {
@@ -90,7 +90,6 @@ public final class StubAdaptationService implements AdaptationService {
   @Override
   public Map<String, AdaptationJar> getAdaptations() {
     return Map.of(EXISTENT_ADAPTATION_ID, EXISTENT_ADAPTATION);
-
   }
 
   @Override
@@ -119,12 +118,20 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ViolableConstraint> getConstraintTypes(final String adaptationID) throws NoSuchAdaptationException {
-    if (!Objects.equals(adaptationID, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationID);
-    }
+  public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+    return Map.of();
+  }
 
-    return List.of();
+  @Override
+  public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+  throws NoSuchAdaptationException
+  {
+  }
+
+  @Override
+  public void deleteConstraint(final String adaptationId, final String constraintName)
+  throws NoSuchAdaptationException
+  {
   }
 
   @Override
