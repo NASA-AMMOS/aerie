@@ -231,9 +231,16 @@ public final class LocalPlanService implements PlanService {
           throw new Error(entry.getValue());
         }
 
-        violations.put(
-            entry.getKey(),
-            constraint.getSuccessOrThrow().evaluate(preparedResults));
+        final var violationEvents = constraint.getSuccessOrThrow().evaluate(preparedResults);
+
+        if (violationEvents.isEmpty()) continue;
+
+        /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
+            which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
+            created to account for refactoring and removing the need for this condition. */
+        if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
+
+        violations.put(entry.getKey(), violationEvents);
       }
 
       return Pair.of(results, violations);
