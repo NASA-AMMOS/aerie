@@ -105,6 +105,7 @@ public final class AdaptationProcessor implements Processor {
         final var generatedFiles = new ArrayList<JavaFile>();
         generatedFiles.add(generateAdaptationFactory(adaptationRecord));
         generatedFiles.add(generateActivityActions(adaptationRecord));
+        generatedFiles.add(generateActivityTypes(adaptationRecord));
         for (final var activityRecord : adaptationRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration);
           if (!activityRecord.mapper.isCustom) {
@@ -926,6 +927,50 @@ public final class AdaptationProcessor implements Processor {
                                 "registrar").build()
                         ))
                     .addCode("\n")
+                    .addStatement(
+                        "$T.register($L, $L)",
+                        adaptation.getTypesName(),
+                        "builder",
+                        "model")
+                    .addCode("\n")
+                    .addStatement(
+                        "return $L",
+                        "builder")
+                    .build())
+            .build();
+
+    return JavaFile
+        .builder(typeName.packageName(), typeSpec)
+        .skipJavaLangImports(true)
+        .build();
+  }
+
+  private JavaFile generateActivityTypes(final AdaptationRecord adaptation) {
+    final var typeName = adaptation.getTypesName();
+
+    final var typeSpec =
+        TypeSpec
+            .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("register")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
+                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
+                        "builder",
+                        Modifier.FINAL)
+                    .addParameter(
+                        ClassName.get(adaptation.topLevelModel),
+                        "model",
+                        Modifier.FINAL)
                     .addCode(
                         adaptation.activityTypes
                             .stream()
@@ -971,10 +1016,6 @@ public final class AdaptationProcessor implements Processor {
                             })
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
-                    .addCode("\n")
-                    .addStatement(
-                        "return $L",
-                        "builder")
                     .build())
             .build();
 

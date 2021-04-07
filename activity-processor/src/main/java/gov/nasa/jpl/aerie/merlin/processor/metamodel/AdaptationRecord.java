@@ -33,11 +33,11 @@ public final class AdaptationRecord {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedAdaptationFactory");
   }
 
-  public ClassName getTaskName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "Task");
-  }
-
   public ClassName getActivityActionsName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityActions");
+  }
+
+  public ClassName getTypesName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "ActivityTypes");
   }
 }
