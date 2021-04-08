@@ -75,12 +75,12 @@ public final class AerieAppDriver {
             log.info(String.format("Successfully loaded mission model configuration from: %s", p));
             return sv;
           } catch (final FileNotFoundException ex) {
-            log.severe(String.format("Unable to find mission model configuration path: \"%s\"", p));
+            log.warning(String.format("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.", p));
             return SerializedValue.NULL;
           }
         })
         .orElseGet(() -> {
-          log.warning("No mission model configuration specified in server configuration");
+          log.warning("No mission model configuration specified in server configuration. Simulations will receive an empty set of configuration arguments.");
           return SerializedValue.NULL;
         });
   }
@@ -92,7 +92,7 @@ public final class AerieAppDriver {
       try {
         configStream = Files.newInputStream(Path.of(args[0]));
       } catch (final IOException ex) {
-        log.severe(String.format("Configuration file \"%s\" could not be loaded: %s", args[0], ex.getMessage()));
+        log.warning(String.format("Configuration file \"%s\" could not be loaded: %s", args[0], ex.getMessage()));
         System.exit(1);
         throw new Error(ex);
       }
