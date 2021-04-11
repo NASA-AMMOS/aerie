@@ -13,8 +13,8 @@ public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
 
-  public SampledResource(final Registrar builder, final Supplier<T> sampler, final T initialValue) {
-    this.result = Register.create(builder, initialValue);
+  public SampledResource(final Registrar builder, final Supplier<T> sampler) {
+    this.result = Register.create(builder, sampler.get());
     this.sampler = Objects.requireNonNull(sampler);
     builder.daemon(this::takeSamples);
   }
