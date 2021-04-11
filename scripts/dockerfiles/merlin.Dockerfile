@@ -1,4 +1,4 @@
-FROM adoptopenjdk:11-jre-hotspot
+FROM adoptopenjdk:16-jre-hotspot
 
 COPY merlin-server/build/distributions/*.tar /usr/src/app/server.tar
 RUN cd /usr/src/app && tar --strip-components 1 -xf server.tar

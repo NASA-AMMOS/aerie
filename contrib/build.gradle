@@ -4,11 +4,17 @@ plugins {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(16)
+    vendor = JvmVendorSpec.ADOPTOPENJDK
+  }
 
   withJavadocJar()
   withSourcesJar()
+}
+
+tasks.withType(JavaCompile) {
+  options.release.set(11)
 }
 
 // Link references to standard Java classes to the official Java 11 documentation.
