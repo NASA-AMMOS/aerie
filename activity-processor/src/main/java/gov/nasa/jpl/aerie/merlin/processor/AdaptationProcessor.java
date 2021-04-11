@@ -887,6 +887,32 @@ public final class AdaptationProcessor implements Processor {
                         "configuration",
                         Modifier.FINAL)
                     .addStatement(
+                        "return $T.initializing(() -> this.$L($L, $L))",
+                        gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                        "makeBuilderHelper",
+                        "schemaBuilder",
+                        "configuration")
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("makeBuilderHelper")
+                    .addModifiers(Modifier.PRIVATE)
+                    .addTypeVariable(TypeVariableName.get("$Schema"))
+                    .returns(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
+                            TypeVariableName.get("$Schema")))
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.timeline.Schema.Builder.class),
+                            TypeVariableName.get("$Schema")),
+                        "schemaBuilder",
+                        Modifier.FINAL)
+                    .addParameter(
+                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
+                        "configuration",
+                        Modifier.FINAL)
+                    .addStatement(
                         "final var $L = new $T<>($L)",
                         "builder",
                         gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
