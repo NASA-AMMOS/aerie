@@ -77,7 +77,7 @@ public final class AdaptationProcessor implements Processor {
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.RELEASE_11;
+    return SourceVersion.latest();
   }
 
   @Override

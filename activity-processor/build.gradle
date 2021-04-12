@@ -4,13 +4,19 @@ plugins {
 }
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(16)
+    vendor = JvmVendorSpec.ADOPTOPENJDK
+  }
+}
+
+tasks.withType(JavaCompile) {
+  options.release.set(11)
 }
 
 dependencies {
   implementation project(':merlin-sdk')
-  // TODO: Remove the "contrib" dependency once the processor can load mapping rules from @WithMappers declarations.
+  // TODO: Generate the NullableValueMapper class so we can remove the "contrib" dependency.
   implementation project(':contrib')
 
   implementation 'org.apache.commons:commons-lang3:3.9'
