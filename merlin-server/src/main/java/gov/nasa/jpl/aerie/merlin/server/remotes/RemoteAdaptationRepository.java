@@ -14,6 +14,8 @@ import org.bson.types.ObjectId;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -64,6 +66,29 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
+    public Map<String, String> getConstraints(final String id) throws NoSuchAdaptationException {
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException();
+        }
+
+        if (adaptationDocument == null) {
+            throw new NoSuchAdaptationException();
+        }
+
+        final var constraints = new HashMap<String, String>();
+
+        final var constraintsDocument = adaptationDocument.get("constraints", Document.class);
+        for (final var key : constraintsDocument.keySet()) {
+            constraints.put(key, constraintsDocument.getString(key));
+        }
+
+        return constraints;
+    }
+
+    @Override
     public String createAdaptation(final AdaptationJar adaptationJar) {
         // Store Adaptation JAR
         final Path location = FileUtils.getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
@@ -95,7 +120,54 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
             throw new AdaptationAccessException(adaptationJar.path, e);
         }
 
-        this.adaptationCollection.deleteOne(eq("_id", new ObjectId(adaptationId)));
+        this.adaptationCollection.deleteOne(adaptationById(adaptationId));
+    }
+
+    @Override
+    public void replaceConstraints(final String id, final Map<String, String> newConstraints)
+    throws NoSuchAdaptationException
+    {
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException();
+        }
+
+        if (adaptationDocument == null) {
+            throw new NoSuchAdaptationException();
+        }
+
+        final var constraints = adaptationDocument.get("constraints", Document.class);
+        for (final var entry : newConstraints.entrySet()) {
+          constraints.put(entry.getKey(), entry.getValue());
+        }
+
+        adaptationDocument.put("constraints", constraints);
+
+        this.adaptationCollection.replaceOne(adaptationById(id), adaptationDocument);
+    }
+
+    @Override
+    public void deleteConstraint(final String adaptationId, final String constraintName)
+    throws NoSuchAdaptationException
+    {
+        final Document adaptationDocument;
+        try {
+            adaptationDocument = this.adaptationCollection.find(adaptationById(adaptationId)).first();
+        } catch (IllegalArgumentException e) {
+            throw new NoSuchAdaptationException();
+        }
+
+        if (adaptationDocument == null) {
+            throw new NoSuchAdaptationException();
+        }
+
+        final var constraints = adaptationDocument.get("constraints", Document.class);
+        constraints.remove(constraintName);
+        adaptationDocument.put("constraints", constraints);
+
+        this.adaptationCollection.replaceOne(adaptationById(adaptationId), adaptationDocument);
     }
 
     private AdaptationJar adaptationFromDocuments(final Document adaptationDocument) {
@@ -116,6 +188,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         adaptationDocument.put("mission", adaptationJar.mission);
         adaptationDocument.put("owner", adaptationJar.owner);
         adaptationDocument.put("path", adaptationJar.path.toString());
+        adaptationDocument.put("constraints", new Document());
 
         return adaptationDocument;
     }

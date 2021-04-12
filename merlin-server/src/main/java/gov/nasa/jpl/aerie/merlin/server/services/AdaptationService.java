@@ -3,8 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
-import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
@@ -24,8 +22,13 @@ public interface AdaptationService {
   void removeAdaptation(String adaptationId)
   throws NoSuchAdaptationException;
 
-  List<ViolableConstraint> getConstraintTypes(String adaptationID)
+  Map<String, String> getConstraints(String adaptationId)
   throws NoSuchAdaptationException;
+  void replaceConstraints(String adaptationId, Map<String, String> constraints)
+  throws NoSuchAdaptationException;
+  void deleteConstraint(String adaptationId, String constraintName)
+  throws NoSuchAdaptationException;
+
   Map<String, ValueSchema> getStatesSchemas(String adaptationId)
   throws NoSuchAdaptationException;
   Map<String, ActivityType> getActivityTypes(String adaptationId)

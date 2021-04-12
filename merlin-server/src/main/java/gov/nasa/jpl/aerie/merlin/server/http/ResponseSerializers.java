@@ -1,32 +1,31 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
-import gov.nasa.jpl.aerie.merlin.driver.ConstraintViolation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.driver.ViolableConstraint;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
-import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
-import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
-import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
+import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
+import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.time.Window;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -155,20 +154,13 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializePlan, fields);
   }
 
-  public static JsonValue serializeConstraintViolation(final ConstraintViolation violation) {
+  public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
         .add("associations", Json
             .createObjectBuilder()
-            .add("activityInstanceIds", serializeIterable(Json::createValue, violation.associatedActivityIds))
-            .add("stateIds", serializeIterable(Json::createValue, violation.associatedStateIds))
-            .build())
-        .add("constraint", Json
-            .createObjectBuilder()
-            .add("id", violation.id)
-            .add("name", violation.name)
-            .add("message", violation.message)
-            .add("category", violation.category)
+            .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))
+            .add("resourceIds", serializeIterable(Json::createValue, List.<String>of()))
             .build())
         .add("windows", serializeIterable(ResponseSerializers::serializeWindow, violation.violationWindows))
         .build();
@@ -193,8 +185,11 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeSimulationResults(final SimulationResults results) {
-    if (results == null) return JsonValue.NULL;
+  public static JsonValue serializeSimulationResults(final Pair<SimulationResults, Map<String, List<Violation>>> p) {
+    if (p == null) return JsonValue.NULL;
+
+    final var results = p.getLeft();
+    final var violations = p.getRight();
 
     return Json
         .createObjectBuilder()
@@ -202,7 +197,7 @@ public final class ResponseSerializers {
         .add("resources", serializeMap(
             elements -> serializeIterable(gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers::serializeSample, elements),
             results.resourceSamples))
-        .add("constraints", JsonValue.EMPTY_JSON_ARRAY)
+        .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeMap(ResponseSerializers::serializeSimulatedActivity, results.simulatedActivities))
         .build();
   }
@@ -252,19 +247,8 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
   }
 
-  public static JsonValue serializeConstraintType(final ViolableConstraint constraintType) {
-    return Json
-        .createObjectBuilder()
-        .add("name", constraintType.name)
-        .add("message", constraintType.message)
-        .add("category", constraintType.category)
-        .add("stateIDs", serializeIterable(Json::createValue, constraintType.stateIds))
-        .add("activityTypes", serializeIterable(Json::createValue, constraintType.activityTypes))
-        .build();
-  }
-
-  public static JsonValue serializeConstraintTypes(List<ViolableConstraint> constraintTypes) {
-    return serializeIterable(ResponseSerializers::serializeConstraintType, constraintTypes);
+  public static JsonValue serializeConstraints(Map<String, String> constraints) {
+    return serializeMap(Json::createValue, constraints);
   }
 
   private static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {

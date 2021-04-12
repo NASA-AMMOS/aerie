@@ -16,7 +16,7 @@ import static gov.nasa.jpl.aerie.time.Duration.duration;
 
 public final class Main {
   public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {
-    final var adaptation = new GeneratedAdaptationFactory().instantiate();
+    final var adaptation = new GeneratedAdaptationFactory().instantiate(SerializedValue.NULL);
     final var schedule = Map.of(
         UUID.randomUUID().toString(), Pair.of(
             duration(0, MILLISECONDS),

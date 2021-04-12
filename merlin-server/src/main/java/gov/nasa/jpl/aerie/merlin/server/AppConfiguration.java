@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 public final class AppConfiguration {
+
     public final int HTTP_PORT;
     public final URI MONGO_URI;
     public final String MONGO_DATABASE;
@@ -13,6 +14,7 @@ public final class AppConfiguration {
     public final String MONGO_ACTIVITY_COLLECTION;
     public final String MONGO_ADAPTATION_COLLECTION;
     public final boolean enableJavalinLogging;
+    public final Optional<String> MISSION_MODEL_CONFIG_PATH;
 
     private AppConfiguration(final Builder builder) {
         this.HTTP_PORT = Objects.requireNonNull(builder.httpPort.orElse(null));
@@ -22,6 +24,7 @@ public final class AppConfiguration {
         this.MONGO_ACTIVITY_COLLECTION = Objects.requireNonNull(builder.mongoActivityCollection.orElse(null));
         this.MONGO_ADAPTATION_COLLECTION = Objects.requireNonNull(builder.mongoAdaptationCollection.orElse(null));
         this.enableJavalinLogging = builder.enableJavalinLogging.orElse(false);
+        this.MISSION_MODEL_CONFIG_PATH = Objects.requireNonNull(builder.missionModelConfigPath);
     }
 
     public static Builder builder() {
@@ -29,15 +32,17 @@ public final class AppConfiguration {
     }
 
     public static AppConfiguration parseProperties(final JsonObject config) {
-        return builder()
+        final var builder = builder()
             .setHttpPort(config.getInt("HTTP_PORT"))
             .setMongoUri(URI.create(config.getString("MONGO_URI")))
             .setMongoDatabase(config.getString("MONGO_DATABASE"))
             .setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"))
             .setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"))
             .setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"))
-            .setJavalinLogging(config.getBoolean("enable-javalin-logging", false))
-            .build();
+            .setJavalinLogging(config.getBoolean("enable-javalin-logging", false));
+
+        Optional.ofNullable(config.getString("MISSION_MODEL_CONFIG_PATH", null)).map(builder::setMissionModelConfigPath);
+        return builder.build();
     }
 
     // SAFETY: When equals is overridden, so too must hashCode
@@ -52,7 +57,8 @@ public final class AppConfiguration {
                 && Objects.equals(this.MONGO_PLAN_COLLECTION, other.MONGO_PLAN_COLLECTION)
                 && Objects.equals(this.MONGO_ACTIVITY_COLLECTION, other.MONGO_ACTIVITY_COLLECTION)
                 && Objects.equals(this.MONGO_ADAPTATION_COLLECTION, other.MONGO_ADAPTATION_COLLECTION)
-                && (this.enableJavalinLogging == other.enableJavalinLogging) );
+                && (this.enableJavalinLogging == other.enableJavalinLogging)
+                && Objects.equals(this.MISSION_MODEL_CONFIG_PATH, other.MISSION_MODEL_CONFIG_PATH) );
     }
 
     @Override
@@ -64,7 +70,8 @@ public final class AppConfiguration {
             this.MONGO_PLAN_COLLECTION,
             this.MONGO_ACTIVITY_COLLECTION,
             this.MONGO_ADAPTATION_COLLECTION,
-            this.enableJavalinLogging);
+            this.enableJavalinLogging,
+            this.MISSION_MODEL_CONFIG_PATH);
     }
 
     @Override
@@ -77,6 +84,7 @@ public final class AppConfiguration {
                 "  MONGO_ACTIVITY_COLLECTION = " + this.MONGO_ACTIVITY_COLLECTION + ",\n" +
                 "  MONGO_ADAPTATION_COLLECTION = " + this.MONGO_ADAPTATION_COLLECTION + ",\n" +
                 "  enableJavalinLogging = " + this.enableJavalinLogging + ",\n" +
+                "  MISSION_MODEL_CONFIG_PATH = " + this.MISSION_MODEL_CONFIG_PATH + ",\n" +
                 "}";
     }
 
@@ -88,6 +96,7 @@ public final class AppConfiguration {
         private Optional<String> mongoActivityCollection = Optional.empty();
         private Optional<String> mongoAdaptationCollection = Optional.empty();
         private Optional<Boolean> enableJavalinLogging = Optional.empty();
+        private Optional<String> missionModelConfigPath = Optional.empty();
 
         private Builder() {}
 
@@ -117,6 +126,10 @@ public final class AppConfiguration {
         }
         public Builder setJavalinLogging(boolean enableJavalinLogging) {
             this.enableJavalinLogging = Optional.of(enableJavalinLogging);
+            return this;
+        }
+        public Builder setMissionModelConfigPath(final String missionModelConfigPath) {
+            this.missionModelConfigPath = Optional.of(missionModelConfigPath);
             return this;
         }
 

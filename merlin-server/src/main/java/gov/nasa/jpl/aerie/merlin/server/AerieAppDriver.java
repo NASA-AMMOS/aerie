@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
 import com.mongodb.client.MongoClients;
+import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
@@ -13,12 +15,18 @@ import io.javalin.Javalin;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 public final class AerieAppDriver {
+  private static final Logger log = Logger.getLogger(AerieAppDriver.class.getName());
+
   public static void main(final String[] args) {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration(args);
@@ -34,7 +42,9 @@ public final class AerieAppDriver {
     final var adaptationRepository = new RemoteAdaptationRepository(
         mongoDatabase,
         configuration.MONGO_ADAPTATION_COLLECTION);
-    final var adaptationController = new LocalAdaptationService(adaptationRepository);
+
+    final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
     final var planController = new LocalPlanService(planRepository, adaptationController);
 
     // Configure an HTTP server.
@@ -53,6 +63,28 @@ public final class AerieAppDriver {
     javalin.start(configuration.HTTP_PORT);
   }
 
+  /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
+  private static Supplier<SerializedValue> makeMissionModelConfigSupplier(final AppConfiguration configuration)
+  {
+    // Try to deserialize JSON configuration to a serialized configuration
+    return () -> configuration.MISSION_MODEL_CONFIG_PATH
+        .map(p -> {
+          try {
+            final var fs = new FileInputStream(p);
+            final var sv = JsonEncoding.decode(Json.createReader(fs).read());
+            log.info(String.format("Successfully loaded mission model configuration from: %s", p));
+            return sv;
+          } catch (final FileNotFoundException ex) {
+            log.warning(String.format("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.", p));
+            return SerializedValue.NULL;
+          }
+        })
+        .orElseGet(() -> {
+          log.warning("No mission model configuration specified in server configuration. Simulations will receive an empty set of configuration arguments.");
+          return SerializedValue.NULL;
+        });
+  }
+
   private static AppConfiguration loadConfiguration(final String[] args) {
     // Determine where we're getting our configuration from.
     final InputStream configStream;
@@ -60,7 +92,7 @@ public final class AerieAppDriver {
       try {
         configStream = Files.newInputStream(Path.of(args[0]));
       } catch (final IOException ex) {
-        System.err.println(String.format("Configuration file \"%s\" could not be loaded: %s", args[0], ex.getMessage()));
+        log.warning(String.format("Configuration file \"%s\" could not be loaded: %s", args[0], ex.getMessage()));
         System.exit(1);
         throw new Error(ex);
       }

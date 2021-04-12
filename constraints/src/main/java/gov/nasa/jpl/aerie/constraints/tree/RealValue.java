@@ -1,0 +1,49 @@
+package gov.nasa.jpl.aerie.constraints.tree;
+
+import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public final class RealValue implements Expression<LinearProfile> {
+  private final double value;
+
+  public RealValue(final double value) {
+    this.value = value;
+  }
+
+  @Override
+  public LinearProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
+    return new LinearProfile(
+        List.of(
+            new LinearProfilePiece(results.bounds, this.value, 0.0)
+        )
+    );
+  }
+
+  @Override
+  public String prettyPrint(final String prefix) {
+    return String.format(
+        "\n%s(value %s)",
+        prefix,
+        this.value
+    );
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (!(obj instanceof RealValue)) return false;
+    final var o = (RealValue)obj;
+
+    return Objects.equals(this.value, o.value);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(this.value);
+  }
+}

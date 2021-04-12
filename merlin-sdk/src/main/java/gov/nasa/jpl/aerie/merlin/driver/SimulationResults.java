@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
+import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -13,19 +15,68 @@ import java.util.Map;
 
 public final class SimulationResults {
   public final Instant startTime;
+  public final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles;
+  public final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles;
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final Map<String, SimulatedActivity> simulatedActivities;
   public final Map<String, SerializedActivity> unfinishedActivities = new HashMap<>();
 
   public SimulationResults(
-      final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples,
+      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
       final Map<String, String> taskIdToActivityId,
       final Map<String, TaskInfo<?>> activityRecords,
       final Instant startTime)
   {
     this.startTime = startTime;
-    this.resourceSamples = resourceSamples;
+    this.realProfiles = realProfiles;
+    this.discreteProfiles = discreteProfiles;
+    this.resourceSamples = takeSamples(realProfiles, discreteProfiles);
     this.simulatedActivities = buildSimulatedActivities(startTime, taskIdToActivityId, activityRecords);
+  }
+
+  private static Map<String, List<Pair<Duration, SerializedValue>>>
+  takeSamples(
+      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles)
+  {
+    final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
+
+    realProfiles.forEach((name, profile) -> {
+      var elapsed = Duration.ZERO;
+
+      final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
+      for (final var piece : profile) {
+        final var extent = piece.getLeft();
+        final var dynamics = piece.getRight();
+
+        timeline.add(Pair.of(elapsed, SerializedValue.of(
+            dynamics.initial)));
+        elapsed = elapsed.plus(extent);
+        timeline.add(Pair.of(elapsed, SerializedValue.of(
+            dynamics.initial + dynamics.rate * extent.ratioOver(Duration.SECONDS))));
+      }
+
+      samples.put(name, timeline);
+    });
+    discreteProfiles.forEach((name, p) -> {
+      var elapsed = Duration.ZERO;
+      var profile = p.getRight();
+
+      final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
+      for (final var piece : profile) {
+        final var extent = piece.getLeft();
+        final var value = piece.getRight();
+
+        timeline.add(Pair.of(elapsed, value));
+        elapsed = elapsed.plus(extent);
+        timeline.add(Pair.of(elapsed, value));
+      }
+
+      samples.put(name, timeline);
+    });
+
+    return samples;
   }
 
   private Map<String, SimulatedActivity> buildSimulatedActivities(

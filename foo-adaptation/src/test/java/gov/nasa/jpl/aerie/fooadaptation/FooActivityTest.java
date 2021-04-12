@@ -6,6 +6,7 @@ import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.spawn;
 
 import gov.nasa.jpl.aerie.fooadaptation.activities.FooActivity;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.ModelTestFramework;
 import gov.nasa.jpl.aerie.time.Duration;
@@ -14,9 +15,13 @@ import org.junit.Test;
 public class FooActivityTest {
   @Test
   public void testActivity() {
+
+    final var config = new Configuration();
+
     ModelTestFramework.test(
       new GeneratedAdaptationFactory(),
-      Mission::new,
+      FooValueMappers.configuration().serializeValue(config),
+      registrar -> new Mission(registrar, new Configuration()),
       (model) ->
       {
         spawn(new FooActivity());

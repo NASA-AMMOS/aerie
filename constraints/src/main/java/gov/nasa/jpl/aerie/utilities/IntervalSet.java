@@ -158,7 +158,11 @@ public class IntervalSet<Alg, I> {
 
       // Clip the first window intersecting this one.
       if (index < this.intervals.size() && this.alg.startsBefore(this.intervals.get(index), window)) {
-        this.intervals.set(index, this.alg.intersect(this.intervals.get(index), window));
+        final var original = this.intervals.get(index);
+        final var remainder = this.alg.intersect(original, this.alg.upperBoundsOf(window));
+        this.intervals.set(index, this.alg.intersect(original, window));
+        index += 1;
+        if (!this.alg.isEmpty(remainder)) this.intervals.add(index, remainder);
       }
 
       // Keep any windows contained within this one.
@@ -168,8 +172,11 @@ public class IntervalSet<Alg, I> {
 
       // Clip the window at the end of this range.
       if (index < this.intervals.size() && !this.alg.startsAfter(this.intervals.get(index), window)) {
-        this.intervals.set(index, this.alg.intersect(this.intervals.get(index), window));
+        final var original = this.intervals.get(index);
+        final var remainder = this.alg.intersect(original, this.alg.upperBoundsOf(window));
+        this.intervals.set(index, this.alg.intersect(original, window));
         index += 1;
+        if (!this.alg.isEmpty(remainder)) this.intervals.add(index, remainder);
       }
     }
 

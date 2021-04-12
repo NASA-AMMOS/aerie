@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
-
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -11,12 +11,12 @@ import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 
 public final class AdaptationLoader {
-    public static Adaptation<?> loadAdaptation(final Path path, final String name, final String version)
+    public static Adaptation<?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         return loadAdaptationProvider(path, name, version)
             .get()
-            .instantiate();
+            .instantiate(missionModelConfig);
     }
 
     public static Provider<AdaptationFactory> loadAdaptationProvider(final Path path, final String name, final String version)

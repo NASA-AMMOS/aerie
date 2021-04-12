@@ -1,5 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.Violation;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -15,6 +22,8 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.PlanTransaction;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.Json;
+import java.io.StringReader;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -135,19 +144,106 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(final String planId)
+  public Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(final String planId)
   throws NoSuchPlanException
   {
-    final var plan = this.planRepository.getPlan(planId);
-
     try {
-      return this.adaptationService.runSimulation(new CreateSimulationMessage(
+      final var plan = this.planRepository.getPlan(planId);
+
+      final var planDuration = Duration.of(
+          plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
+          Duration.MICROSECONDS);
+
+      final var results = this.adaptationService.runSimulation(new CreateSimulationMessage(
           plan.adaptationId,
           plan.startTimestamp.toInstant(),
-          Duration.of(
-              plan.startTimestamp.toInstant().until(plan.endTimestamp.toInstant(), ChronoUnit.MICROS),
-              Duration.MICROSECONDS),
+          planDuration,
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances)));
+
+      final var activities = new ArrayList<gov.nasa.jpl.aerie.constraints.model.ActivityInstance>();
+      for (final var entry : results.simulatedActivities.entrySet()) {
+        final var id = entry.getKey();
+        final var activity = entry.getValue();
+
+        final var activityOffset = Duration.of(
+          plan.startTimestamp.toInstant().until(activity.start, ChronoUnit.MICROS),
+          Duration.MICROSECONDS);
+
+        activities.add(new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
+            id,
+            activity.type,
+            activity.parameters,
+            Window.between(activityOffset, activityOffset.plus(activity.duration))));
+      }
+
+      final var discreteProfiles = new HashMap<String, DiscreteProfile>(results.discreteProfiles.size());
+      for (final var entry : results.discreteProfiles.entrySet()) {
+        final var pieces = new ArrayList<DiscreteProfilePiece>(entry.getValue().getRight().size());
+
+        var elapsed = Duration.ZERO;
+        for (final var piece : entry.getValue().getRight()) {
+          final var extent = piece.getLeft();
+          final var value = piece.getRight();
+
+          pieces.add(new DiscreteProfilePiece(
+              Window.between(elapsed, elapsed.plus(extent)),
+              value));
+
+          elapsed = elapsed.plus(extent);
+        }
+
+        discreteProfiles.put(entry.getKey(), new DiscreteProfile(pieces));
+      }
+
+      final var realProfiles = new HashMap<String, LinearProfile>();
+      for (final var entry : results.realProfiles.entrySet()) {
+        final var pieces = new ArrayList<LinearProfilePiece>(entry.getValue().size());
+
+        var elapsed = Duration.ZERO;
+        for (final var piece : entry.getValue()) {
+          final var extent = piece.getLeft();
+          final var value = piece.getRight();
+
+          pieces.add(new LinearProfilePiece(
+              Window.between(elapsed, elapsed.plus(extent)),
+              value.initial,
+              value.rate));
+
+          elapsed = elapsed.plus(extent);
+        }
+
+        realProfiles.put(entry.getKey(), new LinearProfile(pieces));
+      }
+
+      final var preparedResults = new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
+          Window.between(Duration.ZERO, planDuration),
+          activities,
+          realProfiles,
+          discreteProfiles);
+
+      final var constraintJsons = this.adaptationService.getConstraints(plan.adaptationId);
+      final var violations = new HashMap<String, List<Violation>>();
+      for (final var entry : constraintJsons.entrySet()) {
+        final var subject = Json.createReader(new StringReader(entry.getValue())).readValue();
+        final var constraint = ConstraintParsers.constraintP.parse(subject);
+
+        if (constraint.isFailure()) {
+          throw new Error(entry.getValue());
+        }
+
+        final var violationEvents = constraint.getSuccessOrThrow().evaluate(preparedResults);
+
+        if (violationEvents.isEmpty()) continue;
+
+        /* TODO: constraint.evaluate returns an List<Violations> with a single empty unpopulated Violation
+            which prevents the above condition being sufficient in all cases. A ticket AERIE-1230 has been
+            created to account for refactoring and removing the need for this condition. */
+        if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
+
+        violations.put(entry.getKey(), violationEvents);
+      }
+
+      return Pair.of(results, violations);
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
     } catch (final SimulationDriver.TaskSpecInstantiationException | AdaptationFacade.NoSuchActivityTypeException ex) {

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
@@ -232,15 +233,19 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public SimulationResults getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
+  public Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
     }
 
-    return new SimulationResults(
-        Collections.emptyMap(),
-        Collections.emptyMap(),
-        Collections.emptyMap(),
-        Instant.EPOCH);
+    return Pair.of(
+        new SimulationResults(
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            Collections.emptyMap(),
+            Instant.EPOCH),
+        Map.of()
+    );
   }
 }
