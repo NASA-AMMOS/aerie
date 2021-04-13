@@ -132,9 +132,11 @@ loadScripts(document, 'script');</script>
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html" title="class or interface in java.time" class="external-link">Instant</a>&nbsp;startTime,
  <a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;simulationDuration)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static &lt;$Schema&gt;&nbsp;void</code></div>
-<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#simulateTask(gov.nasa.jpl.aerie.merlin.protocol.Adaptation,gov.nasa.jpl.aerie.time.Duration)">simulateTask</a></span>&#8203;(<a href="../protocol/Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;$Schema&gt;&nbsp;adaptation,
- <a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;simulationDuration)</code></div>
+<div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static &lt;$Schema,&#8203;
+$Timeline extends $Schema&gt;<br>void</code></div>
+<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#simulateTask(gov.nasa.jpl.aerie.merlin.protocol.Adaptation,gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline,gov.nasa.jpl.aerie.merlin.protocol.Task)">simulateTask</a></span>&#8203;(<a href="../protocol/Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;$Schema&gt;&nbsp;adaptation,
+ <a href="../timeline/SimulationTimeline.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">SimulationTimeline</a>&lt;$Timeline&gt;&nbsp;database,
+ <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;&nbsp;task)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
 </div>
@@ -182,11 +184,14 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="simulateTask(gov.nasa.jpl.aerie.merlin.protocol.Adaptation,gov.nasa.jpl.aerie.time.Duration)">
+<section class="detail" id="simulateTask(gov.nasa.jpl.aerie.merlin.protocol.Adaptation,gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline,gov.nasa.jpl.aerie.merlin.protocol.Task)">
 <h3>simulateTask</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;$Schema&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">simulateTask</span>&#8203;<span class="parameters">(<a href="../protocol/Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;$Schema&gt;&nbsp;adaptation,
- <a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;simulationDuration)</span>
-                                   throws <span class="exceptions"><a href="SimulationDriver.TaskSpecInstantiationException.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationDriver.TaskSpecInstantiationException</a></span></div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;$Schema,&#8203;
+$Timeline extends $Schema&gt;</span>
+<span class="return-type">void</span>&nbsp;<span class="element-name">simulateTask</span>&#8203;<span class="parameters">(<a href="../protocol/Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;$Schema&gt;&nbsp;adaptation,
+ <a href="../timeline/SimulationTimeline.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">SimulationTimeline</a>&lt;$Timeline&gt;&nbsp;database,
+ <a href="../protocol/Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Task</a>&lt;$Timeline&gt;&nbsp;task)</span>
+           throws <span class="exceptions"><a href="SimulationDriver.TaskSpecInstantiationException.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationDriver.TaskSpecInstantiationException</a></span></div>
 <dl class="notes">
 <dt>Throws:</dt>
 <dd><code><a href="SimulationDriver.TaskSpecInstantiationException.html" title="class in gov.nasa.jpl.aerie.merlin.driver">SimulationDriver.TaskSpecInstantiationException</a></code></dd>
