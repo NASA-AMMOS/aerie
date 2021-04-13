@@ -4,33 +4,43 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ModelTestFramework {
+  private static <$Schema, $Timeline extends $Schema>
+  void simulate(
+      final BuiltAdaptation<$Schema> adaptation,
+      final SimulationTimeline<$Timeline> timeline,
+      final Runnable taskWrapper)
+  {
+    final var task = new ThreadedTask<$Timeline>(ModelActions.context, taskWrapper);
 
-  private static <M> void test(final AdaptationBuilder<?> builder, final Function<Registrar, M> makeModel, final Consumer<M> task) {
+    try {
+      SimulationDriver.simulateTask(adaptation, timeline, task);
+    } catch (final SimulationDriver.TaskSpecInstantiationException ex) {
+      throw new Error(ex);
+    }
+  }
+
+  private static <$Schema>
+  void simulate(final BuiltAdaptation<$Schema> adaptation, final Runnable taskWrapper) {
+    simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), taskWrapper);
+  }
+
+  private static <M> void test(final AdaptationBuilder<?> builder, final Function<Registrar, M> makeModel, final Consumer<M> modelTask) {
     final var registrar = new Registrar(builder);
     final var model = makeModel.apply(registrar);
 
     final var taskRan = new Object() { boolean value = false; };
     final Runnable taskWrapper = () -> {
-      task.accept(model);
+      modelTask.accept(model);
       taskRan.value = true;
     };
 
-    builder.daemon(taskWrapper);
-
-    try {
-      // TODO need to not hardcode 1 second sim duration here.
-      //  Since the sim duration is 1 second, currently tests with a duration longer than 1 second will not execute properly.
-      //  Try using `Duration.MAX_VALUE`.
-      SimulationDriver.simulateTask(builder.build(), Duration.SECOND);
-    } catch (final SimulationDriver.TaskSpecInstantiationException e) {
-      throw new Error(e);
-    }
+    simulate(builder.build(), taskWrapper);
 
     // Sanity check: assert simulation driver actually ran this task
     // TODO a separate engine test should eventually make this check obsolete.
