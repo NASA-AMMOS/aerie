@@ -10,8 +10,10 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.models.Imager;
 import gov.nasa.jpl.aerie.fooadaptation.models.ImagerMode;
 import gov.nasa.jpl.aerie.fooadaptation.models.SimpleData;
+import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
+import gov.nasa.jpl.aerie.time.Duration;
 
 import java.time.Instant;
 
@@ -75,6 +77,12 @@ public final class Mission {
     registrar.resource("/simple_data/b/volume", this.simpleData.b.volume);
     registrar.resource("/simple_data/b/rate", this.simpleData.b.rate);
     registrar.resource("/simple_data/total_volume", this.simpleData.totalVolume);
+
+    registrar.daemon(() -> { // Register a never-ending daemon task
+      while (true) {
+        ModelActions.delay(Duration.SECOND);
+      }
+    });
   }
 
   public void test() {
