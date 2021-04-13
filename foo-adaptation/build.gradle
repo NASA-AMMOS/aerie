@@ -9,14 +9,19 @@ java {
   }
 }
 
+test {
+  useJUnitPlatform()
+}
+
 dependencies {
   annotationProcessor project(':activity-processor')
   compileOnly project(':merlin-sdk')
   compileOnly project(':contrib')
 
-  testImplementation project(':merlin-sdk')
+  testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.13.2'
   testImplementation 'org.glassfish:javax.json:1.1.4'
-  testImplementation 'junit:junit:4.12'
+
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
 }

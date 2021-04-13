@@ -1,24 +1,25 @@
 package gov.nasa.jpl.aerie.fooadaptation;
 
-import static org.junit.Assert.assertEquals;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
-
 import gov.nasa.jpl.aerie.fooadaptation.models.SimpleData;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.framework.ModelTestFramework;
+import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.time.Duration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public class SimpleDataTest {
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
+
+@ExtendWith(MerlinExtension.class)
+public final class SimpleDataTest {
+  private final SimpleData model = new SimpleData();
+
   @Test
   public void testTotalVolume() {
-    ModelTestFramework.test(
-      r -> new SimpleData(),
-      (model) -> {
-        model.a.activate();
-        model.b.activate();
-        delay(Duration.SECOND);
-        assertEquals(15.0, model.totalVolume.get(), 1e-9);
-      });
+    model.a.activate();
+    model.b.activate();
+    delay(Duration.SECOND);
+
+    assertThat(model.totalVolume.get()).isCloseTo(15.0, within(1e-9));
   }
 }
