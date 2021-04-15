@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
@@ -19,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public final class AdaptationBuilder<$Schema> {
   private final Schema.Builder<$Schema> schemaBuilder;
@@ -57,39 +55,22 @@ public final class AdaptationBuilder<$Schema> {
     this.state.daemon(task);
   }
 
-  public void taskType(final String id, final TaskSpecType<$Schema, ?> taskSpecType) {
-    this.state.taskType(id, taskSpecType);
-  }
-
-  public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
+  public <Activity> void taskType(final ActivityMapper<Activity> mapper, final TaskMaker<Activity> maker) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ThreadedTask<>(ModelActions.context, () -> task.accept(activity));
-      }
-    });
-  }
-
-  public <Activity> void replayingTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
-    this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ReplayingTask<>(ModelActions.context, () -> task.accept(activity));
-      }
-    });
-  }
-
-  public <Activity> void noopTask(final ActivityMapper<Activity> mapper) {
-    this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return $ -> TaskStatus.completed();
+        return maker.make(activity);
       }
     });
   }
 
   public BuiltAdaptation<$Schema> build() {
     return this.state.build(this.schemaBuilder.build());
+  }
+
+
+  public interface TaskMaker<Activity> {
+    <$Timeline> Task<$Timeline> make(Activity activity);
   }
 
 

@@ -957,7 +957,7 @@ public final class AdaptationProcessor implements Processor {
                     .addStatement(
                         "$T.register($L, $L)",
                         adaptation.getTypesName(),
-                        "builder",
+                        "registrar",
                         "model")
                     .addCode("\n")
                     .addStatement(
@@ -989,10 +989,8 @@ public final class AdaptationProcessor implements Processor {
                     .methodBuilder("register")
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                     .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
-                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))),
-                        "builder",
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
+                        "registrar",
                         Modifier.FINAL)
                     .addParameter(
                         ClassName.get(adaptation.topLevelModel),
@@ -1007,7 +1005,7 @@ public final class AdaptationProcessor implements Processor {
                                     .builder()
                                     .addStatement(
                                         "$L.noopTask(new $T())",
-                                        "builder",
+                                        "registrar",
                                         activityType.mapper.name);
                               }
                               final var effectModel = activityType.effectModel.get();
@@ -1019,7 +1017,7 @@ public final class AdaptationProcessor implements Processor {
                                         "$L.threadedTask("
                                         + "\n" + "new $T(),"
                                         + "\n" + "activity -> activity.$L($L))",
-                                        "builder",
+                                        "registrar",
                                         activityType.mapper.name,
                                         effectModel.getLeft(),
                                         "model");
@@ -1030,7 +1028,7 @@ public final class AdaptationProcessor implements Processor {
                                         "$L.replayingTask("
                                         + "\n" + "new $T(),"
                                         + "\n" + "activity -> activity.$L($L))",
-                                        "builder",
+                                        "registrar",
                                         activityType.mapper.name,
                                         effectModel.getLeft(),
                                         "model");
