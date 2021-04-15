@@ -35,12 +35,6 @@ public final class AdaptationBuilder<$Schema> {
   }
 
   public <Event, Effect, CellType>
-  CellRef<Event, CellType>
-  register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return new CellRef<>(this.schemaBuilder.register(projection, applicator));
-  }
-
-  public <Event, Effect, CellType>
   Query<?, Event, CellType>
   allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
     return this.schemaBuilder.register(projection, applicator);

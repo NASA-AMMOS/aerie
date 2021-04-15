@@ -18,15 +18,6 @@ public final class Registrar {
     return this.builder.isBuilt();
   }
 
-  public <Effect, CellType extends Cell<Effect, CellType>>
-  CellRef<Effect, CellType>
-  cell(final CellType initialState)
-  {
-    return this.builder.register(
-        Projection.from(initialState.effectTrait(), ev -> ev),
-        new CellApplicator<>(initialState));
-  }
-
   public <State>
   DiscreteResource<State>
   resource(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {

@@ -14,8 +14,8 @@ public final class SimpleData {
   public final RealResource totalVolume;
 
   public SimpleData(final Registrar registrar) {
-    this.a = new InstrumentData(10.0, registrar.cell(new LinearIntegrationCell(0, 0)));
-    this.b = new InstrumentData(5.0, registrar.cell(new LinearIntegrationCell(0, 0)));
+    this.a = new InstrumentData(10.0, new CellRef<>(new LinearIntegrationCell(0, 0)));
+    this.b = new InstrumentData(5.0, new CellRef<>(new LinearIntegrationCell(0, 0)));
     this.totalVolume = RealResource.add(this.a.volume, this.b.volume);
   }
 

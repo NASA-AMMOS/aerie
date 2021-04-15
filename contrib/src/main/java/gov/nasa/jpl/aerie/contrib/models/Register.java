@@ -10,7 +10,7 @@ public final class Register<Value> implements DiscreteResource<Value> {
   private final CellRef<RegisterEffect<Value>, RegisterCell<Value>> ref;
 
   private Register(final Registrar registrar, final Value initialValue) {
-    this.ref = registrar.cell(new RegisterCell<>(initialValue));
+    this.ref = new CellRef<>(new RegisterCell<>(initialValue));
   }
 
   public static <Value>

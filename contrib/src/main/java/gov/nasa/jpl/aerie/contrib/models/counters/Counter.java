@@ -17,7 +17,7 @@ public final class Counter<T> implements DiscreteResource<T> {
       final T zero,
       final BinaryOperator<T> adder)
   {
-    this.ref = registrar.cell(new CounterCell<>(initialValue, zero, adder));
+    this.ref = new CellRef<>(new CounterCell<>(initialValue, zero, adder));
   }
 
   public static Counter<Integer> ofInteger(final Registrar registrar, final Integer initialValue) {
