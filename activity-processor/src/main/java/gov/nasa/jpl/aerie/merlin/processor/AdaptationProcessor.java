@@ -870,7 +870,6 @@ public final class AdaptationProcessor implements Processor {
                 MethodSpec
                     .methodBuilder("makeBuilder")
                     .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .returns(
                         ParameterizedTypeName.get(
