@@ -13,15 +13,15 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
  * </p>
  *
  * @param <$Schema> The unique type of the schema against which this query has been defined.
- * @param <Model> The type of entity produced by this query.
+ * @param <CellType> The type of entity produced by this query.
  */
-public final class Query<$Schema, Event, Model> {
-  private final Inner<$Schema, Event, ?, Model> inner;
+public final class Query<$Schema, Event, CellType> {
+  private final Inner<$Schema, Event, ?, CellType> inner;
 
   /* package-local */
   <Effect> Query(
       final Projection<Event, Effect> projection,
-      final Applicator<Effect, Model> applicator,
+      final Applicator<Effect, CellType> applicator,
       final int index)
   {
     this.inner = new Inner<>(projection, applicator, index);
@@ -48,6 +48,10 @@ public final class Query<$Schema, Event, Model> {
     database.getTable(this.inner.getTableIndex()).clearCache();
   }
 
+  public CellType getInitialValue() {
+    return this.inner.getInitialValue();
+  }
+
   private static final class Inner<$Schema, Event, Effect, CellType> {
     private final Projection<Event, Effect> projection;
     private final Applicator<Effect, CellType> applicator;
@@ -70,6 +74,10 @@ public final class Query<$Schema, Event, Model> {
 
     public int getTableIndex() {
       return this.tableIndex;
+    }
+
+    public CellType getInitialValue() {
+      return this.applicator.initial();
     }
   }
 }
