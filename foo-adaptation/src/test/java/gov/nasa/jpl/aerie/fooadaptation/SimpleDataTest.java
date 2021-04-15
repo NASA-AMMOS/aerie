@@ -13,9 +13,8 @@ public class SimpleDataTest {
   @Test
   public void testTotalVolume() {
     ModelTestFramework.test(
-      SimpleData::new,
-      (model) ->
-      {
+      r -> new SimpleData(),
+      (model) -> {
         model.a.activate();
         model.b.activate();
         delay(Duration.SECOND);

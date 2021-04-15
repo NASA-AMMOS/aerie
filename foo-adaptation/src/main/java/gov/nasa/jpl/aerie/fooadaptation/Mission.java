@@ -17,6 +17,8 @@ import gov.nasa.jpl.aerie.time.Duration;
 
 import java.time.Instant;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+
 public final class Mission {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
@@ -38,19 +40,19 @@ public final class Mission {
   public Mission(final Registrar registrar, final Configuration config) {
     this.cachedRegistrar = registrar;
 
-    this.foo = Register.create(registrar, 0.0);
-    this.data = new Accumulator(registrar);
+    this.foo = Register.create(0.0);
+    this.data = new Accumulator();
     this.combo = this.data.plus(this.data.rate);
 
-    this.source = new Accumulator(registrar, 100.0, 1.0);
-    this.sink = new Accumulator(registrar, 0.0, config.sinkRate);
+    this.source = new Accumulator(100.0, 1.0);
+    this.sink = new Accumulator(0.0, config.sinkRate);
 
-    this.activitiesExecuted = Counter.ofInteger(registrar, 0);
+    this.activitiesExecuted = Counter.ofInteger(0);
 
-    this.simpleData = new SimpleData(registrar);
-    this.complexData = new Imager(registrar, 5, ImagerMode.LOW_RES, 30);
+    this.simpleData = new SimpleData();
+    this.complexData = new Imager(5, ImagerMode.LOW_RES, 30);
 
-    this.utcClock = new Clock(registrar, Instant.parse("2023-08-18T00:00:00.00Z"));
+    this.utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
 
     spawn(this::test);
 

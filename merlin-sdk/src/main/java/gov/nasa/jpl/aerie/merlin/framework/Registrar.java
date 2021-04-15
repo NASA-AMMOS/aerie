@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.Objects;
 

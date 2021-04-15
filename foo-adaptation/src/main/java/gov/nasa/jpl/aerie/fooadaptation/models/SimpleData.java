@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.fooadaptation.models;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
-import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
 import java.util.List;
@@ -13,7 +12,7 @@ public final class SimpleData {
   public final InstrumentData a, b;
   public final RealResource totalVolume;
 
-  public SimpleData(final Registrar registrar) {
+  public SimpleData() {
     this.a = new InstrumentData(10.0, new CellRef<>(new LinearIntegrationCell(0, 0)));
     this.b = new InstrumentData(5.0, new CellRef<>(new LinearIntegrationCell(0, 0)));
     this.totalVolume = RealResource.add(this.a.volume, this.b.volume);
