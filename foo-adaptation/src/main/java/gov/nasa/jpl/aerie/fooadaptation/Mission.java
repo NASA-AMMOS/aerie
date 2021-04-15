@@ -24,35 +24,23 @@ public final class Mission {
   // Need a clear story for external models.
   // Need to generalize RealDynamics to nonlinear polynomials.
 
-  public final Register<Double> foo;
-  public final Accumulator data;
-  public final Accumulator source;
+  public final Register<Double> foo = Register.create(0.0);
+  public final Accumulator data = new Accumulator();
+  public final Accumulator source = new Accumulator(100.0, 1.0);
   public final Accumulator sink;
-  public final SimpleData simpleData;
-  public final Counter<Integer> activitiesExecuted;
-  public final Imager complexData;
+  public final SimpleData simpleData = new SimpleData();
+  public final Counter<Integer> activitiesExecuted = Counter.ofInteger(0);
+  public final Imager complexData = new Imager(5, ImagerMode.LOW_RES, 30);
 
-  public final RealResource combo;
+  public final RealResource combo = this.data.plus(this.data.rate);
 
-  public final Clock utcClock;
+  public final Clock utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
   public Mission(final Registrar registrar, final Configuration config) {
     this.cachedRegistrar = registrar;
 
-    this.foo = Register.create(0.0);
-    this.data = new Accumulator();
-    this.combo = this.data.plus(this.data.rate);
-
-    this.source = new Accumulator(100.0, 1.0);
     this.sink = new Accumulator(0.0, config.sinkRate);
-
-    this.activitiesExecuted = Counter.ofInteger(0);
-
-    this.simpleData = new SimpleData();
-    this.complexData = new Imager(5, ImagerMode.LOW_RES, 30);
-
-    this.utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
 
     spawn(this::test);
 
