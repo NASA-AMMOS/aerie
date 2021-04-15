@@ -2,19 +2,35 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class InitializationContext implements Context {
-  public static <T> T initializing(final Supplier<T> initializer) {
-    return ModelActions.context.setWithin(new InitializationContext(), initializer::get);
+  private final AdaptationBuilder<?> builder;
+
+  public InitializationContext(final AdaptationBuilder<?> builder) {
+    this.builder = Objects.requireNonNull(builder);
+  }
+
+  public static <T> T initializing(final AdaptationBuilder<?> builder, final Supplier<T> initializer) {
+    return ModelActions.context.setWithin(new InitializationContext(builder), initializer::get);
   }
 
   @Override
   public <CellType> CellType ask(final Query<?, ?, CellType> query) {
     return query.getInitialValue();
+  }
+
+  @Override
+  public <Event, Effect, CellType>
+  Query<?, Event, CellType>
+  allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
+    return this.builder.allocate(projection, applicator);
   }
 
   @Override

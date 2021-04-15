@@ -887,10 +887,16 @@ public final class AdaptationProcessor implements Processor {
                         "configuration",
                         Modifier.FINAL)
                     .addStatement(
-                        "return $T.initializing(() -> this.$L($L, $L))",
+                        "final var $L = new $T<>($L)",
+                        "builder",
+                        gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
+                        "schemaBuilder")
+                    .addStatement(
+                        "return $T.initializing($L, () -> this.$L($L, $L))",
                         gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                        "builder",
                         "makeBuilderHelper",
-                        "schemaBuilder",
+                        "builder",
                         "configuration")
                     .build())
             .addMethod(
@@ -904,19 +910,14 @@ public final class AdaptationProcessor implements Processor {
                             TypeVariableName.get("$Schema")))
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.timeline.Schema.Builder.class),
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
                             TypeVariableName.get("$Schema")),
-                        "schemaBuilder",
+                        "builder",
                         Modifier.FINAL)
                     .addParameter(
                         TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
                         "configuration",
                         Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = new $T<>($L)",
-                        "builder",
-                        gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
-                        "schemaBuilder")
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",

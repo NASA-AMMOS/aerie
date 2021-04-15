@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.List;
@@ -43,6 +45,14 @@ final class ReactionContext<$Timeline> implements Context {
     final var brandedQuery = (Query<? super $Timeline, ?, CellType>) query;
 
     return this.history.orElseGet(this.scheduler::now).ask(brandedQuery);
+  }
+
+  @Override
+  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
+      final Projection<Event, Effect> projection,
+      final Applicator<Effect, CellType> applicator)
+  {
+    throw new IllegalStateException("Cannot allocate during simulation");
   }
 
   @Override

@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
@@ -21,6 +23,14 @@ public final class QueryContext<$Schema> implements Context {
     final var brandedQuery = (Query<? super $Schema, ?, CellType>) query;
 
     return this.history.ask(brandedQuery);
+  }
+
+  @Override
+  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
+      final Projection<Event, Effect> projection,
+      final Applicator<Effect, CellType> applicator)
+  {
+    throw new IllegalStateException("Cannot allocate in a query-only context");
   }
 
   @Override
