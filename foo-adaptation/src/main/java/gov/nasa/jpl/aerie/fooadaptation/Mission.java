@@ -51,8 +51,8 @@ public final class Mission {
     this.complexData = new Imager(registrar, 5, ImagerMode.LOW_RES, 30);
 
     this.utcClock = new Clock(registrar, Instant.parse("2023-08-18T00:00:00.00Z"));
-    // TODO: automatically perform this for each @Daemon annotation
-    registrar.daemon(this::test);
+
+    spawn(this::test);
 
     // Assert adaptation is unbuilt
     if (registrar.isInitializationComplete())
@@ -78,7 +78,7 @@ public final class Mission {
     registrar.resource("/simple_data/b/rate", this.simpleData.b.rate);
     registrar.resource("/simple_data/total_volume", this.simpleData.totalVolume);
 
-    registrar.daemon(() -> { // Register a never-ending daemon task
+    spawn(() -> { // Register a never-ending daemon task
       while (true) {
         ModelActions.delay(Duration.SECOND);
       }

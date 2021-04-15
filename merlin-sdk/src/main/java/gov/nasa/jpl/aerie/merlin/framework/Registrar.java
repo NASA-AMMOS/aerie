@@ -31,8 +31,4 @@ public final class Registrar {
     this.builder.real(name, resource);
     return resource;
   }
-
-  public void daemon(final Runnable task) {
-    this.builder.daemon(task);
-  }
 }
