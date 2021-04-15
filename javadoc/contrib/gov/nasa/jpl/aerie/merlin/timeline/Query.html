@@ -72,19 +72,19 @@ loadScripts(document, 'script');</script>
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="sub-title"><span class="package-label-in-type">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.timeline</a></div>
-<h1 title="Class Query" class="title">Class Query&lt;$Schema,&#8203;Event,&#8203;Model&gt;</h1>
+<h1 title="Class Query" class="title">Class Query&lt;$Schema,&#8203;Event,&#8203;CellType&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
-<div class="inheritance">gov.nasa.jpl.aerie.merlin.timeline.Query&lt;$Schema,&#8203;Event,&#8203;Model&gt;</div>
+<div class="inheritance">gov.nasa.jpl.aerie.merlin.timeline.Query&lt;$Schema,&#8203;Event,&#8203;CellType&gt;</div>
 </div>
 <section class="description">
 <dl class="notes">
 <dt>Type Parameters:</dt>
 <dd><code>$Schema</code> - The unique type of the schema against which this query has been defined.</dd>
-<dd><code>Model</code> - The type of entity produced by this query.</dd>
+<dd><code>CellType</code> - The type of entity produced by this query.</dd>
 </dl>
 <hr>
-<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">Query&lt;$Schema,&#8203;Event,&#8203;Model&gt;</span>
+<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">Query&lt;$Schema,&#8203;Event,&#8203;CellType&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
 <div class="block">A cached query onto a <a href="SimulationTimeline.html" title="class in gov.nasa.jpl.aerie.merlin.timeline"><code>SimulationTimeline</code></a>.
 
@@ -112,9 +112,12 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">
 <div class="block">Clear the model cache.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>int</code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getTableIndex()">getTableIndex</a></span>()</code></div>
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="Query.html" title="type parameter in Query">CellType</a></code></div>
+<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getInitialValue()">getInitialValue</a></span>()</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>int</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getTableIndex()">getTableIndex</a></span>()</code></div>
+<div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -147,6 +150,12 @@ loadScripts(document, 'script');</script>
  <p>
  Calling this may make `getAt` take longer, but it should not affect correctness.
  </p></div>
+</section>
+</li>
+<li>
+<section class="detail" id="getInitialValue()">
+<h3>getInitialValue</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="Query.html" title="type parameter in Query">CellType</a></span>&nbsp;<span class="element-name">getInitialValue</span>()</div>
 </section>
 </li>
 </ul>
