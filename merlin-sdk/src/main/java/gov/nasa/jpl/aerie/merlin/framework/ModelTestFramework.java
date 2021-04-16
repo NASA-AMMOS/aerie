@@ -32,7 +32,7 @@ public class ModelTestFramework {
 
   private static <M> void test(final AdaptationBuilder<?> builder, final Function<Registrar, M> makeModel, final Consumer<M> modelTask) {
     final var registrar = new Registrar(builder);
-    final var model = makeModel.apply(registrar);
+    final var model = InitializationContext.initializing(() -> makeModel.apply(registrar));
 
     final var taskRan = new Object() { boolean value = false; };
     final Runnable taskWrapper = () -> {
