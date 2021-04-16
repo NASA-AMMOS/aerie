@@ -862,14 +862,15 @@ public final class AdaptationProcessor implements Processor {
                         "configuration",
                         Modifier.FINAL)
                     .addStatement(
-                        "return this.makeBuilder($T.builder(), $L).build()",
+                        "return this.$L($T.builder(), $L).build()",
+                        "instantiate",
                         gov.nasa.jpl.aerie.merlin.timeline.Schema.class,
                         "configuration")
                     .build())
             .addMethod(
                 MethodSpec
-                    .methodBuilder("makeBuilder")
-                    .addModifiers(Modifier.PUBLIC)
+                    .methodBuilder("instantiate")
+                    .addModifiers(Modifier.PRIVATE)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .returns(
                         ParameterizedTypeName.get(
@@ -891,67 +892,43 @@ public final class AdaptationProcessor implements Processor {
                         gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
                         "schemaBuilder")
                     .addStatement(
-                        "return $T.initializing($L, () -> this.$L($L, $L))",
-                        gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                        "builder",
-                        "makeBuilderHelper",
-                        "builder",
-                        "configuration")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("makeBuilderHelper")
-                    .addModifiers(Modifier.PRIVATE)
-                    .addTypeVariable(TypeVariableName.get("$Schema"))
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
-                            TypeVariableName.get("$Schema")))
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
-                            TypeVariableName.get("$Schema")),
-                        "builder",
-                        Modifier.FINAL)
-                    .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
-                        "configuration",
-                        Modifier.FINAL)
-                    .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
                         "builder")
+                    .addCode("\n")
                     .addCode(
-                        adaptation.modelConfiguration.map(configElem -> // if configuration is provided
-                        {
-                          final var mapperBlock = buildConfigurationMapperBlock(adaptation, configElem);
-                          return CodeBlock
-                              .builder()
-                              .addStatement(
-                                  "final var $L = $L",
-                                  "configMapper",
-                                  mapperBlock.toString())
-                              .addStatement(
-                                  "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
-                                  "deserializedConfig",
-                                  "configMapper",
-                                  "configuration")
-                              .addStatement(
-                                  "final var $L = new $T($L, $L)",
-                                  "model",
-                                  ClassName.get(adaptation.topLevelModel),
-                                  "registrar",
-                                  "deserializedConfig").build();
-                        }).orElseGet(() -> // if configuration is not provided
-                          CodeBlock
-                              .builder()
-                              .addStatement(
-                                "final var $L = new $T($L)",
-                                "model",
-                                ClassName.get(adaptation.topLevelModel),
-                                "registrar").build()
-                        ))
+                        adaptation.modelConfiguration
+                            .map(configElem -> CodeBlock  // if configuration is provided
+                                .builder()
+                                .addStatement(
+                                    "final var $L = $L",
+                                    "configMapper",
+                                    buildConfigurationMapperBlock(adaptation, configElem))
+                                .addStatement(
+                                    "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
+                                    "deserializedConfig",
+                                    "configMapper",
+                                    "configuration")
+                                .addStatement(
+                                    "final var $L = $T.initializing($L, () -> new $T($L, $L))",
+                                    "model",
+                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                    "builder",
+                                    ClassName.get(adaptation.topLevelModel),
+                                    "registrar",
+                                    "deserializedConfig")
+                                .build())
+                            .orElseGet(() -> CodeBlock  // if configuration is not provided
+                                .builder()
+                                .addStatement(
+                                    "final var $L = $T.initializing($L, () -> new $T($L))",
+                                    "model",
+                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                    "builder",
+                                    ClassName.get(adaptation.topLevelModel),
+                                    "registrar")
+                                .build()))
                     .addCode("\n")
                     .addStatement(
                         "$T.register($L, $L)",
