@@ -39,7 +39,7 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public String spawn(final Runnable task) {
+  public String spawn(final TaskFactory task) {
     this.builder.daemon(task);
     return null;  // TODO: get some way to refer to the daemon task
   }
@@ -50,7 +50,7 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final Runnable task) {
+  public String defer(final Duration duration, final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks during initialization");
   }
 

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.util.Collections;
@@ -12,20 +13,17 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
-  private final Scoped<Context> rootContext;
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
   private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
-  private final List<Runnable> daemons;
+  private final List<Context.TaskFactory> daemons;
 
   public BuiltAdaptation(
-      final Scoped<Context> rootContext,
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
-      final List<Runnable> daemons,
+      final List<Context.TaskFactory> daemons,
       final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes)
   {
-    this.rootContext = Objects.requireNonNull(rootContext);
     this.schema = Objects.requireNonNull(schema);
     this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
@@ -39,9 +37,10 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
 
   @Override
   public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {
-    return new ThreadedTask<>(this.rootContext, () -> {
-      this.daemons.forEach(ModelActions::spawn);
-    });
+    return scheduler -> {
+      this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
+      return TaskStatus.completed();
+    };
   }
 
   @Override

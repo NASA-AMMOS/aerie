@@ -51,7 +51,7 @@ public final class AdaptationBuilder<$Schema> {
     this.state.real(name, resource);
   }
 
-  public void daemon(final Runnable task) {
+  public void daemon(final Context.TaskFactory task) {
     this.state.daemon(task);
   }
 
@@ -88,7 +88,7 @@ public final class AdaptationBuilder<$Schema> {
          RealResource resource);
 
     void
-    daemon(Runnable task);
+    daemon(Context.TaskFactory task);
 
     void
     taskType(String id,
@@ -100,7 +100,7 @@ public final class AdaptationBuilder<$Schema> {
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
-    private final List<Runnable> daemons = new ArrayList<>();
+    private final List<Context.TaskFactory> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
@@ -128,7 +128,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void daemon(final Runnable task) {
+    public void daemon(final Context.TaskFactory task) {
       this.daemons.add(task);
     }
 
@@ -142,7 +142,6 @@ public final class AdaptationBuilder<$Schema> {
       this.resourceFamilies.add(new RealResourceFamily<>(ModelActions.context, this.realResources));
 
       final var adaptation = new BuiltAdaptation<>(
-          ModelActions.context,
           schema,
           this.resourceFamilies,
           this.daemons,
@@ -182,7 +181,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void daemon(final Runnable task) {
+    public void daemon(final Context.TaskFactory task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

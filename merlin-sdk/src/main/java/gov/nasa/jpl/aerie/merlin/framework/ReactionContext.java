@@ -73,10 +73,10 @@ final class ReactionContext<$Timeline> implements Context {
   }
 
   @Override
-  public String spawn(final Runnable task) {
+  public String spawn(final TaskFactory task) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      final var id = this.scheduler.spawn(new ThreadedTask<>(this.rootContext, task));
+      final var id = this.scheduler.spawn(task.create());
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;
@@ -103,10 +103,10 @@ final class ReactionContext<$Timeline> implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final Runnable task) {
+  public String defer(final Duration duration, final TaskFactory task) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      final var id = this.scheduler.defer(duration, new ThreadedTask<>(this.rootContext, task));
+      final var id = this.scheduler.defer(duration, task.create());
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;

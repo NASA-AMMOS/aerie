@@ -39,7 +39,7 @@ public final class QueryContext<$Schema> implements Context {
   }
 
   @Override
-  public String spawn(final Runnable task) {
+  public String spawn(final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
@@ -49,7 +49,7 @@ public final class QueryContext<$Schema> implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final Runnable task) {
+  public String defer(final Duration duration, final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 

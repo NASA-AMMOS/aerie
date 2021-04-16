@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
@@ -22,10 +23,12 @@ public interface Context {
   // Usable during simulation
   <Event> void emit(Event event, Query<?, Event, ?> query);
 
-  String spawn(Runnable task);
+  interface TaskFactory { <$Timeline> Task<$Timeline> create(); }
+
+  String spawn(TaskFactory task);
   String spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration duration, Runnable task);
+  String defer(Duration duration, TaskFactory task);
   String defer(Duration duration, String type, Map<String, SerializedValue> arguments);
 
   void delay(Duration duration);
