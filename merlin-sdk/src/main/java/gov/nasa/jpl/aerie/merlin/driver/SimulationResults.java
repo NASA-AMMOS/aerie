@@ -88,30 +88,30 @@ public final class SimulationResults {
     final var activityChildren = new HashMap<String, List<String>>();
 
     // Create the list of children for every activity
-    for (final var id : activityRecords.keySet()) {
-      activityChildren.put(id, new ArrayList<>());
+    for (final var taskId : activityRecords.keySet()) {
+      activityChildren.put(taskId, new ArrayList<>());
     }
 
     final var activityParents = new HashMap<String, String>();
     for (final var entry : activityRecords.entrySet()) {
-      final var id = entry.getKey();
+      final var taskId = entry.getKey();
       final var activityRecord = entry.getValue();
 
       // An activity may have been spawned by an anonymous task.
       // In this case, we want to find the nearest ancestor that isn't anonymous,
       // and attribute this activity to it as a child.
-      var ancestorId$ = activityRecord.parent;
-      while (ancestorId$.isPresent()) {
-        final var ancestor = activityRecords.get(ancestorId$.get());
+      var ancestorTaskId$ = activityRecord.parent;
+      while (ancestorTaskId$.isPresent()) {
+        final var ancestor = activityRecords.get(ancestorTaskId$.get());
         if (ancestor.specification.isPresent()) break;
 
-        ancestorId$ = ancestor.parent;
+        ancestorTaskId$ = ancestor.parent;
       }
 
-      ancestorId$
-          .ifPresent(ancestorId -> {
-            activityParents.put(id, taskIdToActivityId.get(ancestorId));
-            activityChildren.get(ancestorId).add(id);
+      ancestorTaskId$
+          .ifPresent(ancestorTaskId -> {
+            activityParents.put(taskId, taskIdToActivityId.get(ancestorTaskId));
+            activityChildren.get(ancestorTaskId).add(taskIdToActivityId.get(taskId));
           });
     }
 
