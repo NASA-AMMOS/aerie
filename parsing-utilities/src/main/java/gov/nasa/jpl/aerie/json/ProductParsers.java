@@ -2,11 +2,15 @@ package gov.nasa.jpl.aerie.json;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import static gov.nasa.jpl.aerie.json.BasicParsers.getCachedSchema;
 
 public abstract class ProductParsers {
   private ProductParsers() {}
@@ -23,6 +27,15 @@ public abstract class ProductParsers {
       if (!json.asJsonObject().isEmpty()) return JsonParseResult.failure("expected empty object");
 
       return JsonParseResult.success(Unit.UNIT);
+    }
+
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return Json
+          .createObjectBuilder()
+          .add("type", "object")
+          .add("additionalProperties", JsonValue.FALSE)
+          .build();
     }
 
     public <S> VariadicProductParser<S> field(final String key, final JsonParser<S> valueParser) {
@@ -98,6 +111,28 @@ public abstract class ProductParsers {
         final var tmp = (T) result;
         return tmp;
       });
+    }
+
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      final var fieldSchemas = Json.createObjectBuilder();
+      for (final var field : this.fields) {
+        fieldSchemas.add(field.name, getCachedSchema(anchors, field.valueParser));
+      }
+
+      final var requiredFields = Json.createArrayBuilder();
+      for (final var field : this.fields) {
+        if (!field.isOptional) requiredFields.add(field.name);
+      }
+
+      return Json
+          .createObjectBuilder()
+          // an object containing all and only the listed properties
+          .add("type", "object")
+          .add("properties", fieldSchemas)
+          .add("required", requiredFields)  // all
+          .add("additionalProperties", JsonValue.FALSE)  // only
+          .build();
     }
 
     private Optional<FieldSpec<?>> getFieldSpec(final String name) {
