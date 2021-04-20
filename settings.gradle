@@ -9,6 +9,7 @@ include 'contrib'
 // Adaptations
 include 'banananation'
 include 'foo-adaptation'
+include 'insight'
 
 // Service support
 include 'parsing-utilities'
