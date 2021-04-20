@@ -1,7 +1,12 @@
 package gov.nasa.jpl.aerie.json;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
+import java.util.Map;
+
+import static gov.nasa.jpl.aerie.json.BasicParsers.getCachedSchema;
 
 public abstract class SumParsers {
   private SumParsers() {}
@@ -55,6 +60,23 @@ public abstract class SumParsers {
 
       if (parser == null) return JsonParseResult.failure();
       return parser.parse(json);
+    }
+
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      final var optionSchemas = Json.createArrayBuilder();
+      if (this.nullParser != null) optionSchemas.add(getCachedSchema(anchors, this.nullParser));
+      if (this.trueParser != null) optionSchemas.add(getCachedSchema(anchors, this.trueParser));
+      if (this.falseParser != null) optionSchemas.add(getCachedSchema(anchors, this.falseParser));
+      if (this.stringParser != null) optionSchemas.add(getCachedSchema(anchors, this.stringParser));
+      if (this.numberParser != null) optionSchemas.add(getCachedSchema(anchors, this.numberParser));
+      if (this.arrayParser != null) optionSchemas.add(getCachedSchema(anchors, this.arrayParser));
+      if (this.objectParser != null) optionSchemas.add(getCachedSchema(anchors, this.objectParser));
+
+      return Json
+          .createObjectBuilder()
+          .add("anyOf", optionSchemas)
+          .build();
     }
 
     public VariantJsonParser<T> when(final ValueType valueType, final JsonParser<T> valueParser) {
