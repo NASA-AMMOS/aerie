@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
@@ -24,12 +26,20 @@ public final class QueryContext<$Schema> implements Context {
   }
 
   @Override
+  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
+      final Projection<Event, Effect> projection,
+      final Applicator<Effect, CellType> applicator)
+  {
+    throw new IllegalStateException("Cannot allocate in a query-only context");
+  }
+
+  @Override
   public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
     throw new IllegalStateException("Cannot update simulation state in a query-only context");
   }
 
   @Override
-  public String spawn(final Runnable task) {
+  public String spawn(final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
@@ -39,7 +49,7 @@ public final class QueryContext<$Schema> implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final Runnable task) {
+  public String defer(final Duration duration, final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 

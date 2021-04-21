@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
-import java.util.Objects;
-
-public final class CellRef<Event, CellType> {
+public final class CellRef<Event, CellType extends Cell<Event, CellType>> {
   private final Query<?, Event, CellType> query;
 
-  /*package-local*/
-  CellRef(final Query<?, Event, CellType> query) {
-    this.query = Objects.requireNonNull(query);
+  public CellRef(final CellType initialState) {
+    this.query = ModelActions.context.get().allocate(
+        Projection.from(initialState.effectTrait(), ev -> ev),
+        new CellApplicator<>(initialState));
   }
 
   public CellType get() {

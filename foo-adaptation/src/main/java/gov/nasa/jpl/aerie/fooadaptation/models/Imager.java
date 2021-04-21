@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.fooadaptation.models;
 
 import gov.nasa.jpl.aerie.contrib.models.Accumulator;
 import gov.nasa.jpl.aerie.contrib.models.Register;
-import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -16,12 +15,12 @@ public final class Imager {
   public final RealResource volume;
   public final RealResource rate;
 
-  public Imager(final Registrar registrar, final double bitsPerPixel, final ImagerMode mode, final double frameRate) {
+  public Imager(final double bitsPerPixel, final ImagerMode mode, final double frameRate) {
     this.bitsPerPixel = bitsPerPixel;
 
-    this.mode = Register.create(registrar, mode);
-    this.frameRate = Register.create(registrar, frameRate);
-    this.imagedBits = new Accumulator(registrar);
+    this.mode = Register.create(mode);
+    this.frameRate = Register.create(frameRate);
+    this.imagedBits = new Accumulator();
 
     this.volume = this.imagedBits;
     this.rate = this.imagedBits.rate;

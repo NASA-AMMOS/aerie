@@ -17,42 +17,32 @@ import gov.nasa.jpl.aerie.time.Duration;
 
 import java.time.Instant;
 
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+
 public final class Mission {
   // Need a way to pose constraints against activities, and generally modeling activity behavior with resources.
   // Need a clear story for external models.
   // Need to generalize RealDynamics to nonlinear polynomials.
 
-  public final Register<Double> foo;
-  public final Accumulator data;
-  public final Accumulator source;
+  public final Register<Double> foo = Register.create(0.0);
+  public final Accumulator data = new Accumulator();
+  public final Accumulator source = new Accumulator(100.0, 1.0);
   public final Accumulator sink;
-  public final SimpleData simpleData;
-  public final Counter<Integer> activitiesExecuted;
-  public final Imager complexData;
+  public final SimpleData simpleData = new SimpleData();
+  public final Counter<Integer> activitiesExecuted = Counter.ofInteger(0);
+  public final Imager complexData = new Imager(5, ImagerMode.LOW_RES, 30);
 
-  public final RealResource combo;
+  public final RealResource combo = this.data.plus(this.data.rate);
 
-  public final Clock utcClock;
+  public final Clock utcClock = new Clock(Instant.parse("2023-08-18T00:00:00.00Z"));
   private final Registrar cachedRegistrar; // Normally bad practice, only stored to demonstrate built/unbuilt check
 
   public Mission(final Registrar registrar, final Configuration config) {
     this.cachedRegistrar = registrar;
 
-    this.foo = Register.create(registrar, 0.0);
-    this.data = new Accumulator(registrar);
-    this.combo = this.data.plus(this.data.rate);
+    this.sink = new Accumulator(0.0, config.sinkRate);
 
-    this.source = new Accumulator(registrar, 100.0, 1.0);
-    this.sink = new Accumulator(registrar, 0.0, config.sinkRate);
-
-    this.activitiesExecuted = Counter.ofInteger(registrar, 0);
-
-    this.simpleData = new SimpleData(registrar);
-    this.complexData = new Imager(registrar, 5, ImagerMode.LOW_RES, 30);
-
-    this.utcClock = new Clock(registrar, Instant.parse("2023-08-18T00:00:00.00Z"));
-    // TODO: automatically perform this for each @Daemon annotation
-    registrar.daemon(this::test);
+    spawn(this::test);
 
     // Assert adaptation is unbuilt
     if (registrar.isInitializationComplete())
@@ -78,7 +68,7 @@ public final class Mission {
     registrar.resource("/simple_data/b/rate", this.simpleData.b.rate);
     registrar.resource("/simple_data/total_volume", this.simpleData.totalVolume);
 
-    registrar.daemon(() -> { // Register a never-ending daemon task
+    spawn(() -> { // Register a never-ending daemon task
       while (true) {
         ModelActions.delay(Duration.SECOND);
       }

@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
-import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 import java.util.Objects;
@@ -13,10 +12,11 @@ public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
 
-  public SampledResource(final Registrar builder, final Supplier<T> sampler) {
-    this.result = Register.create(builder, sampler.get());
+  public SampledResource(final Supplier<T> sampler) {
+    this.result = Register.create(sampler.get());
     this.sampler = Objects.requireNonNull(sampler);
-    builder.daemon(this::takeSamples);
+
+    spawn(this::takeSamples);
   }
 
   private void takeSamples() {

@@ -5,6 +5,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.List;
@@ -46,6 +48,14 @@ final class ReactionContext<$Timeline> implements Context {
   }
 
   @Override
+  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
+      final Projection<Event, Effect> projection,
+      final Applicator<Effect, CellType> applicator)
+  {
+    throw new IllegalStateException("Cannot allocate during simulation");
+  }
+
+  @Override
   public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
     if (this.history.isEmpty()) {
       // We're running normally.
@@ -63,10 +73,10 @@ final class ReactionContext<$Timeline> implements Context {
   }
 
   @Override
-  public String spawn(final Runnable task) {
+  public String spawn(final TaskFactory task) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      final var id = this.scheduler.spawn(new ThreadedTask<>(this.rootContext, task));
+      final var id = this.scheduler.spawn(task.create());
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;
@@ -93,10 +103,10 @@ final class ReactionContext<$Timeline> implements Context {
   }
 
   @Override
-  public String defer(final Duration duration, final Runnable task) {
+  public String defer(final Duration duration, final TaskFactory task) {
     if (this.history.isEmpty()) {
       // We're running normally.
-      final var id = this.scheduler.defer(duration, new ThreadedTask<>(this.rootContext, task));
+      final var id = this.scheduler.defer(duration, task.create());
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Spawn<>(id));
       this.nextBreadcrumbIndex += 1;
