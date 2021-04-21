@@ -110,6 +110,8 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.timeline.Schema.Builder)">AdaptationBuilder(Schema.Builder&lt;$Schema&gt;)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.TaskMaker.html" title="interface in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">AdaptationBuilder.TaskMaker</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.TaskMaker.html" title="type parameter in AdaptationBuilder.TaskMaker">Activity</a>&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/protocol/AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">AdaptationFactory</span></a> - Interface in <a href="gov/nasa/jpl/aerie/merlin/protocol/package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealResource.html#add(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource)">add(RealResource, RealResource)</a></span> - Static method in interface gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a></dt>
@@ -123,6 +125,14 @@ loadScripts(document, 'script');</script>
 <div class="block">Apply a duration to a <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/time/Instant.html" title="class or interface in java.time" class="external-link"><code>Instant</code></a>.</div>
 </dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ActivityBreadcrumb.Advance.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.protocol.Checkpoint)">Advance(Checkpoint&lt;$Timeline&gt;)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ActivityBreadcrumb.Advance.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ActivityBreadcrumb.Advance</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#allocate(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">allocate(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#allocate(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">allocate(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#allocate(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">allocate(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html#allocate(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">allocate(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">QueryContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Condition.html#and(gov.nasa.jpl.aerie.merlin.framework.Condition)">and(Condition)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a></dt>
 <dd>&nbsp;</dd>
@@ -251,18 +261,20 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/BuiltAdaptation.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">BuiltAdaptation</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/BuiltAdaptation.html" title="type parameter in BuiltAdaptation">$Schema</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/BuiltAdaptation.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,gov.nasa.jpl.aerie.merlin.timeline.Schema,java.util.List,java.util.List,java.util.Map)">BuiltAdaptation(Scoped&lt;Context&gt;, Schema&lt;$Schema&gt;, List&lt;ResourceFamily&lt;$Schema, ?&gt;&gt;, List&lt;Runnable&gt;, Map&lt;String, TaskSpecType&lt;$Schema, ?&gt;&gt;)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/BuiltAdaptation.html" title="class in gov.nasa.jpl.aerie.merlin.framework">BuiltAdaptation</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/BuiltAdaptation.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.timeline.Schema,java.util.List,java.util.List,java.util.Map)">BuiltAdaptation(Schema&lt;$Schema&gt;, List&lt;ResourceFamily&lt;$Schema, ?&gt;&gt;, List&lt;Context.TaskFactory&gt;, Map&lt;String, TaskSpecType&lt;$Schema, ?&gt;&gt;)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/BuiltAdaptation.html" title="class in gov.nasa.jpl.aerie.merlin.framework">BuiltAdaptation</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:C">C</h2>
 <dl class="index">
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#call(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">call(Context.TaskFactory)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#call(java.lang.Runnable)">call(Runnable)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#call(java.lang.String,java.util.Map)">call(String, Map&lt;String, SerializedValue&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/driver/ViolableConstraint.html#category">category</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/ViolableConstraint.html" title="class in gov.nasa.jpl.aerie.merlin.driver">ViolableConstraint</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html#cell(CellType)">cell(CellType)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.TaskFailureException.html#cause">cause</a></span> - Variable in exception gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.TaskFailureException.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask.TaskFailureException</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">Cell</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="type parameter in Cell">Effect</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="type parameter in Cell">Self</a> extends <a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="type parameter in Cell">Effect</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="type parameter in Cell">Self</a>&gt;&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
@@ -270,7 +282,9 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/CellApplicator.html#%3Cinit%3E(CellType)">CellApplicator(CellType)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/CellApplicator.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellApplicator</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">CellRef</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="type parameter in CellRef">Event</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="type parameter in CellRef">CellType</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">CellRef</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="type parameter in CellRef">Event</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="type parameter in CellRef">CellType</a> extends <a href="gov/nasa/jpl/aerie/merlin/framework/Cell.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Cell</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="type parameter in CellRef">Event</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="type parameter in CellRef">CellType</a>&gt;&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html#%3Cinit%3E(CellType)">CellRef(CellType)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/protocol/Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Checkpoint</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/protocol/Checkpoint.html" title="type parameter in Checkpoint">$Timeline</a>&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/protocol/package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></dt>
 <dd>&nbsp;</dd>
@@ -314,6 +328,10 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">Context</span></a> - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">Context.TaskFactory</span></a> - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html#create()">create()</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.html#create()">create()</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a></dt>
 <dd>
 <div class="block">Create a dynamically-scoped cell containing values of type <a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><code>Scoped</code></a>.</div>
@@ -331,9 +349,7 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:D">D</h2>
 <dl class="index">
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#daemon(java.lang.Runnable)">daemon(Runnable)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html#daemon(java.lang.Runnable)">daemon(Runnable)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#daemon(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">daemon(Context.TaskFactory)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/driver/json/JsonEncoding.html#decode(javax.json.JsonValue)">decode(JsonValue)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.driver.json.<a href="gov/nasa/jpl/aerie/merlin/driver/json/JsonEncoding.html" title="class in gov.nasa.jpl.aerie.merlin.driver.json">JsonEncoding</a></dt>
 <dd>&nbsp;</dd>
@@ -341,19 +357,23 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/protocol/ValueSchema.DefaultVisitor.html#%3Cinit%3E()">DefaultVisitor()</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.DefaultVisitor</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#defer(long,gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer(long, Duration, Context.TaskFactory)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#defer(long,gov.nasa.jpl.aerie.time.Duration,java.lang.Runnable)">defer(long, Duration, Runnable)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#defer(long,gov.nasa.jpl.aerie.time.Duration,java.lang.String,java.util.Map)">defer(long, Duration, String, Map&lt;String, SerializedValue&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#defer(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer(Duration, Context.TaskFactory)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#defer(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer(Duration, Context.TaskFactory)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#defer(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer(Duration, Context.TaskFactory)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html#defer(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer(Duration, Context.TaskFactory)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">QueryContext</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/protocol/Scheduler.html#defer(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.merlin.protocol.Task)">defer(Duration, Task&lt;$Timeline&gt;)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/Scheduler.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Scheduler</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#defer(gov.nasa.jpl.aerie.time.Duration,java.lang.Runnable)">defer(Duration, Runnable)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#defer(gov.nasa.jpl.aerie.time.Duration,java.lang.Runnable)">defer(Duration, Runnable)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#defer(gov.nasa.jpl.aerie.time.Duration,java.lang.Runnable)">defer(Duration, Runnable)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html#defer(gov.nasa.jpl.aerie.time.Duration,java.lang.Runnable)">defer(Duration, Runnable)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">QueryContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#defer(gov.nasa.jpl.aerie.time.Duration,java.lang.String,java.util.Map)">defer(Duration, String, Map&lt;String, SerializedValue&gt;)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
 <dd>&nbsp;</dd>
@@ -751,9 +771,9 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">InitializationContext</span></a> - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#%3Cinit%3E()">InitializationContext()</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder)">InitializationContext(AdaptationBuilder&lt;?&gt;)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#initializing(java.util.function.Supplier)">initializing(Supplier&lt;T&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#initializing(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder,java.util.function.Supplier)">initializing(AdaptationBuilder&lt;?&gt;, Supplier&lt;T&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/protocol/AdaptationFactory.html#instantiate(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue)">instantiate(SerializedValue)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">AdaptationFactory</a></dt>
 <dd>&nbsp;</dd>
@@ -840,7 +860,7 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:M">M</h2>
 <dl class="index">
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/protocol/AdaptationFactory.html#makeBuilder(gov.nasa.jpl.aerie.merlin.timeline.Schema.Builder,gov.nasa.jpl.aerie.merlin.protocol.SerializedValue)">makeBuilder(Schema.Builder&lt;$Schema&gt;, SerializedValue)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">AdaptationFactory</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.TaskMaker.html#make(Activity)">make(Activity)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.TaskMaker.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder.TaskMaker</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/utilities/Result.html#map(gov.nasa.jpl.aerie.utilities.Result.VisitorCase,gov.nasa.jpl.aerie.utilities.Result.VisitorCase)">map(Result.VisitorCase&lt;Success, OutputSuccess, Throws&gt;, Result.VisitorCase&lt;Failure, OutputFailure, Throws&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.utilities.<a href="gov/nasa/jpl/aerie/utilities/Result.html" title="class in gov.nasa.jpl.aerie.utilities">Result</a></dt>
 <dd>&nbsp;</dd>
@@ -932,10 +952,6 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">ModelActions</span></a> - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">ModelTestFramework</span></a> - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html#%3Cinit%3E()">ModelTestFramework()</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelTestFramework</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/time/Duration.html#multiply(long,gov.nasa.jpl.aerie.time.Duration)">multiply(long, Duration)</a></span> - Static method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
 <div class="block">Scale a duration by a multiplier.</div>
@@ -961,7 +977,7 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Determine whether this duration is at most as long than another.</div>
 </dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#noopTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper)">noopTask(ActivityMapper&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html#noopTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper)">noopTask(ActivityMapper&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/time/Duration.html#noShorterThan(gov.nasa.jpl.aerie.time.Duration)">noShorterThan(Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>
@@ -1193,8 +1209,6 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealResourceSolver.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped)">RealResourceSolver(Scoped&lt;Context&gt;)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.resources.real.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/real/RealResourceSolver.html" title="class in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResourceSolver</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#register(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">register(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/timeline/Schema.Builder.html#register(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">register(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.timeline.<a href="gov/nasa/jpl/aerie/merlin/timeline/Schema.Builder.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Schema.Builder</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/timeline/SimulationTimeline.html#register(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">register(Projection&lt;Event, Effect&gt;, Applicator&lt;Effect, CellType&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.timeline.<a href="gov/nasa/jpl/aerie/merlin/timeline/SimulationTimeline.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">SimulationTimeline</a></dt>
@@ -1211,9 +1225,11 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/time/Duration.html#remainderOf(gov.nasa.jpl.aerie.time.Duration)">remainderOf(Duration)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#replaying(java.lang.Runnable)">replaying(Runnable)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/annotations/ActivityType.Executor.html#Replaying">Replaying</a></span> - Enum constant in enum class gov.nasa.jpl.aerie.merlin.framework.annotations.<a href="gov/nasa/jpl/aerie/merlin/framework/annotations/ActivityType.Executor.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework.annotations">ActivityType.Executor</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#replayingTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">replayingTask(ActivityMapper&lt;Activity&gt;, Consumer&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html#replayingTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">replayingTask(ActivityMapper&lt;Activity&gt;, Consumer&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">ReplayingTask</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
@@ -1400,15 +1416,17 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/driver/ProfileBuilder.html#solver">solver</a></span> - Variable in class gov.nasa.jpl.aerie.merlin.driver.<a href="gov/nasa/jpl/aerie/merlin/driver/ProfileBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.driver">ProfileBuilder</a></dt>
 <dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#spawn(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">spawn(Context.TaskFactory)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#spawn(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">spawn(Context.TaskFactory)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#spawn(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">spawn(Context.TaskFactory)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
+<dd>&nbsp;</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html#spawn(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">spawn(Context.TaskFactory)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">QueryContext</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/protocol/Scheduler.html#spawn(gov.nasa.jpl.aerie.merlin.protocol.Task)">spawn(Task&lt;$Timeline&gt;)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.protocol.<a href="gov/nasa/jpl/aerie/merlin/protocol/Scheduler.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Scheduler</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#spawn(java.lang.Runnable)">spawn(Runnable)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#spawn(java.lang.Runnable)">spawn(Runnable)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
-<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#spawn(java.lang.Runnable)">spawn(Runnable)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
-<dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html#spawn(java.lang.Runnable)">spawn(Runnable)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/QueryContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">QueryContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Context.html#spawn(java.lang.String,java.util.Map)">spawn(String, Map&lt;String, SerializedValue&gt;)</a></span> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></dt>
 <dd>&nbsp;</dd>
@@ -1505,23 +1523,19 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/protocol/TaskStatus.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">TaskStatus.Visitor</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/protocol/TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">$Timeline</a>,&#8203;<a href="gov/nasa/jpl/aerie/merlin/protocol/TaskStatus.Visitor.html" title="type parameter in TaskStatus.Visitor">Result</a>&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/protocol/package-summary.html">gov.nasa.jpl.aerie.merlin.protocol</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#taskType(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType)">taskType(String, TaskSpecType&lt;$Schema, ?&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#taskType(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.TaskMaker)">taskType(ActivityMapper&lt;Activity&gt;, AdaptationBuilder.TaskMaker&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html#test(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory,gov.nasa.jpl.aerie.merlin.protocol.SerializedValue,java.util.function.Function,java.util.function.Consumer)">test(AdaptationFactory, SerializedValue, Function&lt;Registrar, M&gt;, Consumer&lt;M&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelTestFramework</a></dt>
-<dd>
-<div class="block">Test with adaptation builder provided by adaptation factory.</div>
-</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html#test(java.util.function.Function,java.util.function.Consumer)">test(Function&lt;Registrar, M&gt;, Consumer&lt;M&gt;)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelTestFramework.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelTestFramework</a></dt>
-<dd>
-<div class="block">Test with default adaptation builder.</div>
-</dd>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#threaded(java.lang.Runnable)">threaded(Runnable)</a></span> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
+<dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/annotations/ActivityType.Executor.html#Threaded">Threaded</a></span> - Enum constant in enum class gov.nasa.jpl.aerie.merlin.framework.annotations.<a href="gov/nasa/jpl/aerie/merlin/framework/annotations/ActivityType.Executor.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework.annotations">ActivityType.Executor</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html#threadedTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">threadedTask(ActivityMapper&lt;Activity&gt;, Consumer&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/AdaptationBuilder.html" title="class in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder</a></dt>
+<dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html#threadedTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">threadedTask(ActivityMapper&lt;Activity&gt;, Consumer&lt;Activity&gt;)</a></span> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Registrar.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Registrar</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">ThreadedTask</span></a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="type parameter in ThreadedTask">$Timeline</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)">ThreadedTask(Scoped&lt;Context&gt;, Runnable)</a></span> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.TaskFailureException.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><span class="type-name-link">ThreadedTask.TaskFailureException</span></a> - Exception in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="member-name-link"><a href="gov/nasa/jpl/aerie/time/Duration.html#times(long)">times(long)</a></span> - Method in class gov.nasa.jpl.aerie.time.<a href="gov/nasa/jpl/aerie/time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></dt>
 <dd>&nbsp;</dd>

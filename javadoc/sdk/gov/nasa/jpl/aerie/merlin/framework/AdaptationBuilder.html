@@ -45,7 +45,7 @@ loadScripts(document, 'script');</script>
 <div>
 <ul class="sub-nav-list">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested.class.summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
@@ -84,6 +84,21 @@ loadScripts(document, 'script');</script>
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<li>
+<section class="nested-class-summary" id="nested.class.summary">
+<h2>Nested Class Summary</h2>
+<div class="caption"><span>Nested Classes</span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Class</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>static interface&nbsp;</code></div>
+<div class="col-second even-row-color"><code><span class="member-name-link"><a href="AdaptationBuilder.TaskMaker.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder.TaskMaker</a>&lt;<a href="AdaptationBuilder.TaskMaker.html" title="type parameter in AdaptationBuilder.TaskMaker">Activity</a>&gt;</span></code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor.summary">
@@ -108,45 +123,34 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="BuiltAdaptation.html" title="class in gov.nasa.jpl.aerie.merlin.framework">BuiltAdaptation</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#build()">build</a></span>()</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Event,&#8203;
+Effect,&#8203;
+CellType&gt;<br><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;?,&#8203;Event,&#8203;CellType&gt;</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#allocate(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">allocate</a></span>&#8203;(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
+ <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;Effect,&#8203;CellType&gt;&nbsp;applicator)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#daemon(java.lang.Runnable)">daemon</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</code></div>
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="BuiltAdaptation.html" title="class in gov.nasa.jpl.aerie.merlin.framework">BuiltAdaptation</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#build()">build</a></span>()</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Resource&gt;&nbsp;void</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#daemon(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">daemon</a></span>&#8203;(<a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a>&nbsp;task)</code></div>
+<div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Resource&gt;&nbsp;void</code></div>
+<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
  <a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Resource&gt;&nbsp;resource,
  <a href="../protocol/ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ValueMapper</a>&lt;Resource&gt;&nbsp;mapper)</code></div>
-<div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#isBuilt()">isBuilt</a></span>()</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Activity&gt;&nbsp;void</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#noopTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper)">noopTask</a></span>&#8203;(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper)</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>boolean</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#isBuilt()">isBuilt</a></span>()</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource)">real</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
  <a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Event,&#8203;
-Effect,&#8203;
-CellType&gt;<br><a href="CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a>&lt;Event,&#8203;CellType&gt;</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#register(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">register</a></span>&#8203;(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
- <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;Effect,&#8203;CellType&gt;&nbsp;applicator)</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Activity&gt;&nbsp;void</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#taskType(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.TaskMaker)">taskType</a></span>&#8203;(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
+ <a href="AdaptationBuilder.TaskMaker.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder.TaskMaker</a>&lt;Activity&gt;&nbsp;maker)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Activity&gt;&nbsp;void</code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#replayingTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">replayingTask</a></span>&#8203;(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;Activity&gt;&nbsp;task)</code></div>
-<div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#taskType(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType)">taskType</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;id,
- <a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>,&#8203;?&gt;&nbsp;taskSpecType)</code></div>
-<div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Activity&gt;&nbsp;void</code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#threadedTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">threadedTask</a></span>&#8203;(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;Activity&gt;&nbsp;task)</code></div>
-<div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -185,12 +189,12 @@ CellType&gt;<br><a href="CellRef.html" title="class in gov.nasa.jpl.aerie.merlin
 </section>
 </li>
 <li>
-<section class="detail" id="register(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">
-<h3>register</h3>
+<section class="detail" id="allocate(gov.nasa.jpl.aerie.merlin.timeline.effects.Projection,gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator)">
+<h3>allocate</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Event,&#8203;
 Effect,&#8203;
 CellType&gt;</span>
-<span class="return-type"><a href="CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a>&lt;Event,&#8203;CellType&gt;</span>&nbsp;<span class="element-name">register</span>&#8203;<span class="parameters">(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
+<span class="return-type"><a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;?,&#8203;Event,&#8203;CellType&gt;</span>&nbsp;<span class="element-name">allocate</span>&#8203;<span class="parameters">(<a href="../timeline/effects/Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Projection</a>&lt;Event,&#8203;Effect&gt;&nbsp;projection,
  <a href="../timeline/effects/Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.timeline.effects">Applicator</a>&lt;Effect,&#8203;CellType&gt;&nbsp;applicator)</span></div>
 </section>
 </li>
@@ -210,36 +214,16 @@ CellType&gt;</span>
 </section>
 </li>
 <li>
-<section class="detail" id="daemon(java.lang.Runnable)">
+<section class="detail" id="daemon(gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">
 <h3>daemon</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">daemon</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">daemon</span>&#8203;<span class="parameters">(<a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a>&nbsp;task)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="taskType(java.lang.String,gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType)">
+<section class="detail" id="taskType(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.TaskMaker)">
 <h3>taskType</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">taskType</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;id,
- <a href="../protocol/TaskSpecType.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType</a>&lt;<a href="AdaptationBuilder.html" title="type parameter in AdaptationBuilder">$Schema</a>,&#8203;?&gt;&nbsp;taskSpecType)</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="threadedTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">
-<h3>threadedTask</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Activity&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">threadedTask</span>&#8203;<span class="parameters">(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;Activity&gt;&nbsp;task)</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="replayingTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">
-<h3>replayingTask</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Activity&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">replayingTask</span>&#8203;<span class="parameters">(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Consumer.html" title="class or interface in java.util.function" class="external-link">Consumer</a>&lt;Activity&gt;&nbsp;task)</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="noopTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper)">
-<h3>noopTask</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Activity&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">noopTask</span>&#8203;<span class="parameters">(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Activity&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">taskType</span>&#8203;<span class="parameters">(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
+ <a href="AdaptationBuilder.TaskMaker.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">AdaptationBuilder.TaskMaker</a>&lt;Activity&gt;&nbsp;maker)</span></div>
 </section>
 </li>
 <li>
