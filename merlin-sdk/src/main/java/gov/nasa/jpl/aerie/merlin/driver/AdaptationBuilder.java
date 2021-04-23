@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.framework;
+package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;

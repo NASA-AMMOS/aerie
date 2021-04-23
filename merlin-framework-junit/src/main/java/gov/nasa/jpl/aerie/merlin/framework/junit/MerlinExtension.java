@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.BuiltAdaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder;
-import gov.nasa.jpl.aerie.merlin.framework.BuiltAdaptation;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
