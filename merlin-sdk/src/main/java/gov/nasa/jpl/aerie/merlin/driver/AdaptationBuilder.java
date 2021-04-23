@@ -47,13 +47,13 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     this.state.taskSpecType(name, type);
   }
 
-  public BuiltAdaptation<$Schema> build() {
+  public Adaptation<$Schema> build() {
     return this.state.build();
   }
 
 
   private interface AdaptationBuilderState<$Schema> extends AdaptationFactory.Builder<$Schema> {
-    BuiltAdaptation<$Schema> build();
+    Adaptation<$Schema> build();
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
@@ -97,8 +97,8 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     }
 
     @Override
-    public BuiltAdaptation<$Schema> build() {
-      final var adaptation = new BuiltAdaptation<>(
+    public Adaptation<$Schema> build() {
+      final var adaptation = new Adaptation<>(
           this.schemaBuilder.build(),
           this.resourceFamilies,
           this.daemons,
@@ -111,9 +111,9 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
   }
 
   private final class BuiltState implements AdaptationBuilderState<$Schema> {
-    private final BuiltAdaptation<$Schema> adaptation;
+    private final Adaptation<$Schema> adaptation;
 
-    public BuiltState(final BuiltAdaptation<$Schema> adaptation) {
+    public BuiltState(final Adaptation<$Schema> adaptation) {
       this.adaptation = adaptation;
     }
 
@@ -146,7 +146,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     }
 
     @Override
-    public BuiltAdaptation<$Schema> build() {
+    public Adaptation<$Schema> build() {
       return this.adaptation;
     }
   }

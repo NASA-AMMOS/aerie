@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
+import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
-import gov.nasa.jpl.aerie.merlin.driver.BuiltAdaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
@@ -23,7 +23,7 @@ import java.lang.reflect.Method;
 public final class MerlinExtension implements ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
   private static final class State {
     public AdaptationBuilder<?> builder = null;
-    public BuiltAdaptation<?> adaptation = null;
+    public Adaptation<?> adaptation = null;
   }
 
   private State getState(final ExtensionContext context) {
@@ -126,13 +126,13 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
 
 
   private static <$Schema>
-  void simulate(final BuiltAdaptation<$Schema> adaptation, final Invocation<Void> invocation) throws Throwable {
+  void simulate(final Adaptation<$Schema> adaptation, final Invocation<Void> invocation) throws Throwable {
     simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), invocation);
   }
 
   private static <$Schema, $Timeline extends $Schema>
   void simulate(
-      final BuiltAdaptation<$Schema> adaptation,
+      final Adaptation<$Schema> adaptation,
       final SimulationTimeline<$Timeline> timeline,
       final Invocation<Void> invocation)
   throws Throwable

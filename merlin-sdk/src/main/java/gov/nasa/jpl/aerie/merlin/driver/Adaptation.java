@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
@@ -13,13 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
+public final class Adaptation<$Schema> {
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
   private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
   private final List<AdaptationFactory.TaskFactory<$Schema>> daemons;
 
-  public BuiltAdaptation(
+  public Adaptation(
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
       final List<AdaptationFactory.TaskFactory<$Schema>> daemons,
@@ -31,12 +30,10 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
     this.daemons = Collections.unmodifiableList(daemons);
   }
 
-  @Override
   public Map<String, TaskSpecType<$Schema, ?>> getTaskSpecificationTypes() {
     return this.taskSpecTypes;
   }
 
-  @Override
   public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {
     return scheduler -> {
       this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
@@ -44,12 +41,10 @@ public final class BuiltAdaptation<$Schema> implements Adaptation<$Schema> {
     };
   }
 
-  @Override
   public Iterable<ResourceFamily<$Schema, ?>> getResourceFamilies() {
     return this.resourceFamilies;
   }
 
-  @Override
   public Schema<$Schema> getSchema() {
     return this.schema;
   }

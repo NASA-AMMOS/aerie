@@ -4,11 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
-import gov.nasa.jpl.aerie.merlin.framework.Context;
-import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
-import gov.nasa.jpl.aerie.merlin.framework.Scoped;
-import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
-import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
@@ -38,7 +33,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public final class SimulationDriver {
   public static <$Schema> SimulationResults simulate(
