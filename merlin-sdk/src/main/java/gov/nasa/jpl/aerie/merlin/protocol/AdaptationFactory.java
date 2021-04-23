@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 public interface AdaptationFactory {
-  Adaptation<?> instantiate(SerializedValue configuration);
   <$Schema> void instantiate(SerializedValue configuration, Builder<$Schema> builder);
 
   interface Builder<$Schema> {

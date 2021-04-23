@@ -853,32 +853,6 @@ public final class AdaptationProcessor implements Processor {
                     .methodBuilder("instantiate")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.Adaptation.class),
-                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))
-                    .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
-                        "configuration",
-                        Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = new $T<>($T.builder())",
-                        "builder",
-                        gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
-                        gov.nasa.jpl.aerie.merlin.timeline.Schema.class)
-                    .addStatement(
-                        "this.instantiate($L, $L)",
-                        "configuration",
-                        "builder")
-                    .addStatement(
-                        "return $L.build()",
-                        "builder")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("instantiate")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .addParameter(
                         TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),

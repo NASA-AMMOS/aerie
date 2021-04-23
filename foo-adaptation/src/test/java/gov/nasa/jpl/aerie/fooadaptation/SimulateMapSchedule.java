@@ -5,7 +5,9 @@ import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
+import gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -32,13 +34,19 @@ public class SimulateMapSchedule {
   void simulateWithMapSchedule()
   throws SimulationDriver.TaskSpecInstantiationException
   {
+    final var config = new Configuration();
+
+    final var factory = new GeneratedAdaptationFactory();
+    final var builder = new AdaptationBuilder<>(Schema.builder());
+    factory.instantiate(FooValueMappers.configuration().serializeValue(config), builder);
+    final var adaptation = builder.build();
+
     final var schedule = loadSchedule();
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
 
-    final var config = new Configuration();
     final var simulationResults = SimulationDriver.simulate(
-        new GeneratedAdaptationFactory().instantiate(FooValueMappers.configuration().serializeValue(config)),
+        adaptation,
         schedule,
         startTime,
         simulationDuration);
