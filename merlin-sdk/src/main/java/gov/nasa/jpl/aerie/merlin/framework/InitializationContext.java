@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
@@ -11,13 +12,13 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class InitializationContext implements Context {
-  private final AdaptationBuilder<?> builder;
+  private final AdaptationFactory.Builder<?> builder;
 
-  public InitializationContext(final AdaptationBuilder<?> builder) {
+  public InitializationContext(final AdaptationFactory.Builder<?> builder) {
     this.builder = Objects.requireNonNull(builder);
   }
 
-  public static <T> T initializing(final AdaptationBuilder<?> builder, final Supplier<T> initializer) {
+  public static <T> T initializing(final AdaptationFactory.Builder<?> builder, final Supplier<T> initializer) {
     return ModelActions.context.setWithin(new InitializationContext(builder), initializer::get);
   }
 
@@ -40,8 +41,7 @@ public final class InitializationContext implements Context {
 
   @Override
   public String spawn(final TaskFactory task) {
-    this.builder.daemon(task);
-    return null;  // TODO: get some way to refer to the daemon task
+    return this.builder.daemon(task::create);
   }
 
   @Override

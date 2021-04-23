@@ -1,13 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
@@ -19,90 +14,58 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class AdaptationBuilder<$Schema> {
-  private final Schema.Builder<$Schema> schemaBuilder;
-
-  private AdaptationBuilderState<$Schema> state = new UnbuiltState();
+public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Builder<$Schema> {
+  private AdaptationBuilderState<$Schema> state;
 
   public AdaptationBuilder(final Schema.Builder<$Schema> schemaBuilder) {
-    this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
+    this.state = new UnbuiltState(schemaBuilder);
   }
 
+  @Override
   public boolean isBuilt() {
     return state.isBuilt();
   }
 
+  @Override
   public <Event, Effect, CellType>
-  Query<?, Event, CellType>
+  Query<$Schema, Event, CellType>
   allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return this.schemaBuilder.register(projection, applicator);
+    return this.state.allocate(projection, applicator);
   }
 
-  public <Resource>
-  void
-  discrete(final String name,
-           final DiscreteResource<Resource> resource,
-           final ValueMapper<Resource> mapper)
-  {
-    this.state.discrete(name, resource, mapper);
+  @Override
+  public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
+    this.state.resourceFamily(resourceFamily);
   }
 
-  public void real(final String name, final RealResource resource) {
-    this.state.real(name, resource);
+  public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
+    return this.state.daemon(task);
   }
 
-  public void daemon(final Context.TaskFactory task) {
-    this.state.daemon(task);
-  }
-
-  public <Activity> void taskType(final ActivityMapper<Activity> mapper, final TaskMaker<Activity> maker) {
-    this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return maker.make(activity);
-      }
-    });
+  @Override
+  public <Activity> void taskSpecType(final String name, final TaskSpecType<$Schema, Activity> type) {
+    this.state.taskSpecType(name, type);
   }
 
   public BuiltAdaptation<$Schema> build() {
-    return this.state.build(this.schemaBuilder.build());
+    return this.state.build();
   }
 
 
-  public interface TaskMaker<Activity> {
-    <$Timeline> Task<$Timeline> make(Activity activity);
-  }
-
-
-  private interface AdaptationBuilderState<$Schema> {
-    boolean isBuilt();
-
-    <Resource>
-    void
-    discrete(String name,
-             DiscreteResource<Resource> resource,
-             ValueMapper<Resource> mapper);
-
-    void
-    real(String name,
-         RealResource resource);
-
-    void
-    daemon(Context.TaskFactory task);
-
-    void
-    taskType(String id,
-             TaskSpecType<$Schema, ?> taskSpecType);
-
-    BuiltAdaptation<$Schema>
-    build(Schema<$Schema> schema);
+  private interface AdaptationBuilderState<$Schema> extends AdaptationFactory.Builder<$Schema> {
+    BuiltAdaptation<$Schema> build();
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
+    private final Schema.Builder<$Schema> schemaBuilder;
+
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
-    private final List<Context.TaskFactory> daemons = new ArrayList<>();
-    private final Map<String, RealResource> realResources = new HashMap<>();
+    private final List<AdaptationFactory.TaskFactory<$Schema>> daemons = new ArrayList<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
+
+    public UnbuiltState(final Schema.Builder<$Schema> schemaBuilder) {
+      this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
+    }
 
     @Override
     public boolean isBuilt() {
@@ -110,39 +73,33 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public <Resource>
-    void discrete(
-        final String name,
-        final DiscreteResource<Resource> resource,
-        final ValueMapper<Resource> mapper)
+    public <Event, Effect, CellType> Query<$Schema, Event, CellType> allocate(
+        final Projection<Event, Effect> projection,
+        final Applicator<Effect, CellType> applicator)
     {
-      this.resourceFamilies.add(new DiscreteResourceFamily<>(
-          ModelActions.context,
-          mapper,
-          Map.of(name, resource)));
+      return this.schemaBuilder.register(projection, applicator);
     }
 
     @Override
-    public void real(final String name, final RealResource resource) {
-      this.realResources.put(name, resource);
+    public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
+      this.resourceFamilies.add(resourceFamily);
     }
 
     @Override
-    public void daemon(final Context.TaskFactory task) {
+    public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
       this.daemons.add(task);
+      return null;  // TODO: get some way to refer to the daemon task
     }
 
     @Override
-    public void taskType(final String id, final TaskSpecType<$Schema, ?> taskSpecType) {
+    public <Activity> void taskSpecType(final String id, final TaskSpecType<$Schema, Activity> taskSpecType) {
       this.taskSpecTypes.put(id, taskSpecType);
     }
 
     @Override
-    public BuiltAdaptation<$Schema> build(final Schema<$Schema> schema) {
-      this.resourceFamilies.add(new RealResourceFamily<>(ModelActions.context, this.realResources));
-
+    public BuiltAdaptation<$Schema> build() {
       final var adaptation = new BuiltAdaptation<>(
-          schema,
+          this.schemaBuilder.build(),
           this.resourceFamilies,
           this.daemons,
           this.taskSpecTypes);
@@ -166,32 +123,30 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public <Resource>
-    void discrete(
-        final String name,
-        final DiscreteResource<Resource> resource,
-        final ValueMapper<Resource> mapper)
+    public <Event, Effect, CellType> Query<$Schema, Event, CellType> allocate(
+        final Projection<Event, Effect> projection,
+        final Applicator<Effect, CellType> applicator)
     {
+      throw new IllegalStateException("Cells cannot be allocated after the schema is built");
+    }
+
+    @Override
+    public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
-    public void real(final String name, final RealResource resource) {
-      throw new IllegalStateException("Resources cannot be added after the schema is built");
-    }
-
-    @Override
-    public void daemon(final Context.TaskFactory task) {
+    public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 
     @Override
-    public void taskType(final String id, final TaskSpecType<$Schema, ?> taskSpecType) {
+    public <Activity> void taskSpecType(final String id, final TaskSpecType<$Schema, Activity> taskSpecType) {
       throw new IllegalStateException("Activity types cannot be added after the schema is built");
     }
 
     @Override
-    public BuiltAdaptation<$Schema> build(final Schema<$Schema> schema) {
+    public BuiltAdaptation<$Schema> build() {
       return this.adaptation;
     }
   }
