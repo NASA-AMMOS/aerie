@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Objects;

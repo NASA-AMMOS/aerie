@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 
 public interface AdaptationFactory {
   <$Schema> void instantiate(SerializedValue configuration, Builder<$Schema> builder);
