@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
 
 public interface Cell<Effect, Self extends Cell<Effect, Self>> {

@@ -1,12 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,7 +77,29 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
         final Projection<Event, Effect> projection,
         final Applicator<Effect, CellType> applicator)
     {
-      return this.schemaBuilder.register(projection, applicator);
+      return this.schemaBuilder.register(
+          new gov.nasa.jpl.aerie.merlin.timeline.effects.Projection<>() {
+            @Override
+            public Effect atom(final Event atom) {
+              return projection.atom(atom);
+            }
+
+            @Override
+            public Effect empty() {
+              return projection.empty();
+            }
+
+            @Override
+            public Effect sequentially(final Effect prefix, final Effect suffix) {
+              return projection.sequentially(prefix, suffix);
+            }
+
+            @Override
+            public Effect concurrently(final Effect left, final Effect right) {
+              return projection.concurrently(left, right);
+            }
+          },
+          applicator);
     }
 
     @Override
