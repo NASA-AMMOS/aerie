@@ -3,10 +3,10 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.List;
@@ -44,7 +44,7 @@ final class ReactionContext<$Timeline> implements Context {
     @SuppressWarnings("unchecked")
     final var brandedQuery = (Query<? super $Timeline, ?, CellType>) query;
 
-    return this.history.orElseGet(this.scheduler::now).ask(brandedQuery);
+    return this.scheduler.getStateAt(this.history.orElseGet(this.scheduler::now), brandedQuery);
   }
 
   @Override

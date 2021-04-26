@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import org.apache.commons.lang3.tuple.Pair;
@@ -91,10 +90,10 @@ public final class TaskFrame<$Timeline, Signal> {
     }
 
 
-    public Checkpoint<$Timeline> now() {
+    public History<$Timeline> now() {
       if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
 
-      return this.tip::ask;
+      return this.tip;
     }
 
     public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {

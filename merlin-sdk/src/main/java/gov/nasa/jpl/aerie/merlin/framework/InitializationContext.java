@@ -3,28 +3,32 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public final class InitializationContext implements Context {
-  private final AdaptationFactory.Builder<?> builder;
+public final class InitializationContext<$Schema> implements Context {
+  private final AdaptationFactory.Builder<$Schema> builder;
 
-  public InitializationContext(final AdaptationFactory.Builder<?> builder) {
+  public InitializationContext(final AdaptationFactory.Builder<$Schema> builder) {
     this.builder = Objects.requireNonNull(builder);
   }
 
   public static <T> T initializing(final AdaptationFactory.Builder<?> builder, final Supplier<T> initializer) {
-    return ModelActions.context.setWithin(new InitializationContext(builder), initializer::get);
+    return ModelActions.context.setWithin(new InitializationContext<>(builder), initializer::get);
   }
 
   @Override
   public <CellType> CellType ask(final Query<?, ?, CellType> query) {
-    return query.getInitialValue();
+    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    @SuppressWarnings("unchecked")
+    final var brandedQuery = (Query<$Schema, ?, CellType>) query;
+
+    return this.builder.getInitialState(brandedQuery);
   }
 
   @Override

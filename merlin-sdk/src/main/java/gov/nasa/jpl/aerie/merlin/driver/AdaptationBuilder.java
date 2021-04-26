@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Builder<$Schema> {
   private AdaptationBuilderState<$Schema> state;
@@ -24,12 +25,19 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
   @Override
   public boolean isBuilt() {
-    return state.isBuilt();
+    return this.state.isBuilt();
+  }
+
+  @Override
+  public <CellType> CellType getInitialState(
+      final gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, CellType> query)
+  {
+    return this.state.getInitialState(query);
   }
 
   @Override
   public <Event, Effect, CellType>
-  Query<$Schema, Event, CellType>
+  gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
   allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
     return this.state.allocate(projection, applicator);
   }
@@ -39,6 +47,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     this.state.resourceFamily(resourceFamily);
   }
 
+  @Override
   public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
     return this.state.daemon(task);
   }
@@ -54,10 +63,19 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
 
   private interface AdaptationBuilderState<$Schema> extends AdaptationFactory.Builder<$Schema> {
+    // Provide a more specific return type.
+    @Override
+    <Event, Effect, CellType>
+    gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+    allocate(
+        Projection<Event, Effect> projection,
+        Applicator<Effect, CellType> applicator);
+
     Adaptation<$Schema> build();
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
+    private final Map<gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries = new HashMap<>();
     private final Schema.Builder<$Schema> schemaBuilder;
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
@@ -74,12 +92,25 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     }
 
     @Override
-    public <Event, Effect, CellType> Query<$Schema, Event, CellType> allocate(
-        final Projection<Event, Effect> projection,
-        final Applicator<Effect, CellType> applicator)
+    public <CellType> CellType getInitialState(
+        final gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, CellType> token)
     {
-      return this.schemaBuilder.register(
-          new gov.nasa.jpl.aerie.merlin.timeline.effects.Projection<>() {
+      // SAFETY: For every entry in the queries map, the type parameters line up.
+      @SuppressWarnings("unchecked")
+      final var query = (Query<$Schema, ?, CellType>) this.queries.get(token);
+
+      return Optional
+          .ofNullable(query)
+          .orElseThrow(() -> new IllegalArgumentException("Unrecognized query"))
+          .getInitialValue();
+    }
+
+    @Override
+    public <Event, Effect, CellType>
+    gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+    allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
+      final var query = this.schemaBuilder.register(
+          new gov.nasa.jpl.aerie.merlin.timeline.effects.Projection<Event, Effect>() {
             @Override
             public Effect atom(final Event atom) {
               return projection.atom(atom);
@@ -121,6 +152,12 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
               applicator.step(cellType, duration);
             }
           });
+
+      final var token = new gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>() {};
+
+      this.queries.put(token, query);
+
+      return token;
     }
 
     @Override
@@ -142,6 +179,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     @Override
     public Adaptation<$Schema> build() {
       final var adaptation = new Adaptation<>(
+          this.queries,
           this.schemaBuilder.build(),
           this.resourceFamilies,
           this.daemons,
@@ -166,10 +204,19 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     }
 
     @Override
-    public <Event, Effect, CellType> Query<$Schema, Event, CellType> allocate(
-        final Projection<Event, Effect> projection,
-        final Applicator<Effect, CellType> applicator)
+    public <CellType> CellType getInitialState(
+        final gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, CellType> query)
     {
+      return this.adaptation
+          .getQuery(query)
+          .orElseThrow(() -> new IllegalArgumentException("Unrecognized query"))
+          .getInitialValue();
+    }
+
+    @Override
+    public <Event, Effect, CellType>
+    gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+    allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");
     }
 

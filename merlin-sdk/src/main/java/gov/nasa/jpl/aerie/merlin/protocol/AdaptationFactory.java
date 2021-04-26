@@ -1,12 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
-
 public interface AdaptationFactory {
   <$Schema> void instantiate(SerializedValue configuration, Builder<$Schema> builder);
 
   interface Builder<$Schema> {
     boolean isBuilt();
+
+    <CellType> CellType getInitialState(Query<$Schema, ?, CellType> query);
 
     <Event, Effect, CellType>
     Query<$Schema, Event, CellType>

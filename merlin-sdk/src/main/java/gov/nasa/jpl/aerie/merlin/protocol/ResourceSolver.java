@@ -13,7 +13,7 @@ package gov.nasa.jpl.aerie.merlin.protocol;
  * @param <Dynamics> The type of continuous time-dependent resource behaviors.
  */
 public interface ResourceSolver<$Schema, Resource,  /*->*/ Dynamics> {
-  Dynamics getDynamics(Resource resource, Checkpoint<? extends $Schema> now);
+  Dynamics getDynamics(Resource resource, Querier<? extends $Schema> now);
 
   <Result> Result approximate(ApproximatorVisitor<Dynamics, Result> visitor);
 
