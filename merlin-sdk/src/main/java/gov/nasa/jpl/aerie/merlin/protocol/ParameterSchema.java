@@ -1,6 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.framework;
-
-import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+package gov.nasa.jpl.aerie.merlin.protocol;
 
 import java.util.Objects;
 
