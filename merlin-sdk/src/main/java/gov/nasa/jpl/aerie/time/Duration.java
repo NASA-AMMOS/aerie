@@ -266,6 +266,17 @@ public final class Duration implements Comparable<Duration> {
   }
 
   /**
+   * Obtain the largest duration that can fit into the given duration the given number of times.
+   *
+   * @param dividend The duration to measure against.
+   * @param divisor The number of times to fit the result into the {@code dividend}.
+   * @return The largest duration that can fit into the {@code dividend} a {@code divisor} number of times.
+   */
+  public static Duration divide(final Duration dividend, final long divisor) {
+    return new Duration(dividend.durationInMicroseconds / divisor);
+  }
+
+  /**
    * Obtain the span of time remaining after dividing one duration by another.
    *
    * @param dividend The duration to be broken into quantities of the divisor.
@@ -365,6 +376,11 @@ public final class Duration implements Comparable<Duration> {
   /** @see Duration#divide(Duration, Duration) */
   public long in(final Duration unit) {
     return dividedBy(unit);
+  }
+
+  /** @see Duration#divide(Duration, long) */
+  public Duration dividedBy(final long scale) {
+    return Duration.divide(this, scale);
   }
 
   /** @see Duration#remainder(Duration, Duration) */
