@@ -18,7 +18,7 @@ import java.util.Map;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
 
 public class ASTTests {
 

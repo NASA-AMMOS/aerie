@@ -1,14 +1,14 @@
-package gov.nasa.jpl.aerie.time;
+package gov.nasa.jpl.aerie.merlin.protocol;
 
 import org.junit.Test;
 
-import static gov.nasa.jpl.aerie.time.Duration.EPSILON;
-import static gov.nasa.jpl.aerie.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.duration;
-import static gov.nasa.jpl.aerie.time.Duration.roundDownward;
-import static gov.nasa.jpl.aerie.time.Duration.roundNearest;
-import static gov.nasa.jpl.aerie.time.Duration.roundUpward;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.EPSILON;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MILLISECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundDownward;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundNearest;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundUpward;
 import static org.junit.Assert.assertEquals;
 
 public final class DurationTest {

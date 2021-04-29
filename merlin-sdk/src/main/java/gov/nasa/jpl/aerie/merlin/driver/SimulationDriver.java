@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
@@ -20,7 +21,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
-import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;

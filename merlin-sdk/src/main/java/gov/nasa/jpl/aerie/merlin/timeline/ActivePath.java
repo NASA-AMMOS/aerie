@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.timeline;
 
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;

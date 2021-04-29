@@ -12,9 +12,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.nasa.jpl.aerie.time.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MILLISECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
 
 public final class Main {
   public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {

@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.time;
+package gov.nasa.jpl.aerie.merlin.protocol;
 
 import java.util.Collections;
 import java.util.List;

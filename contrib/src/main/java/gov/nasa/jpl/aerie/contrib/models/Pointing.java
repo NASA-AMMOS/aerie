@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
