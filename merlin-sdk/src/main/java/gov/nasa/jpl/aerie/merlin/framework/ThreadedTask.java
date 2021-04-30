@@ -16,7 +16,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   private final ArrayBlockingQueue<Scheduler<$Timeline>> hostToTask = new ArrayBlockingQueue<>(1);
   private final ArrayBlockingQueue<TaskStatus<$Timeline>> taskToHost = new ArrayBlockingQueue<>(1);
   private boolean done = false;
-  private Throwable failure = null;
+  private RuntimeException failure = null;
 
   public ThreadedTask(final Scoped<Context> rootContext, final Runnable task) {
     Objects.requireNonNull(rootContext);
@@ -32,7 +32,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
 
           final var context = new ReactionContext<>(rootContext, this.breadcrumbs, scheduler, handle);
           rootContext.setWithin(context, task::run);
-        } catch (final Throwable ex) {
+        } catch (final RuntimeException ex) {
           this.failure = ex;
         }
 
@@ -57,7 +57,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       if (this.done) this.thread.join();
 
       // TODO: Propagate task errors better.
-      if (this.failure != null) throw new Error(this.failure);
+      if (this.failure != null) throw new TaskFailureException(this.failure);
 
       return status;
     } catch (final InterruptedException ex) {
@@ -74,6 +74,15 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       } catch (final InterruptedException ex) {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }
+    }
+  }
+
+  public static final class TaskFailureException extends RuntimeException {
+    public final RuntimeException cause;
+
+    private TaskFailureException(final RuntimeException cause) {
+      super(cause);
+      this.cause = cause;
     }
   }
 }

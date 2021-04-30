@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.contrib.models;
 
-import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.time.Duration;
@@ -16,14 +15,14 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 public final class Pointing {
   public final Component x, y, z;
 
-  public Pointing(final Registrar registrar, final Vector3D initialVec) {
-    this(registrar, initialVec, new Vector3D(0, 0, 0));
+  public Pointing(final Vector3D initialVec) {
+    this(initialVec, new Vector3D(0, 0, 0));
   }
 
-  public Pointing(final Registrar registrar, final Vector3D initialVec, final Vector3D initialRate) {
-    this.x = new Component(registrar, initialVec.getX(), initialRate.getX());
-    this.y = new Component(registrar, initialVec.getY(), initialRate.getY());
-    this.z = new Component(registrar, initialVec.getZ(), initialRate.getZ());
+  public Pointing(final Vector3D initialVec, final Vector3D initialRate) {
+    this.x = new Component(initialVec.getX(), initialRate.getX());
+    this.y = new Component(initialVec.getY(), initialRate.getY());
+    this.z = new Component(initialVec.getZ(), initialRate.getZ());
   }
 
   public Vector3D getVector() {
@@ -59,8 +58,8 @@ public final class Pointing {
     private final Accumulator acc;
     public final Accumulator.Rate rate;
 
-    public Component(final Registrar registrar, final double value, final double rate) {
-      this.acc = new Accumulator(registrar, value, rate);
+    public Component(final double value, final double rate) {
+      this.acc = new Accumulator(value, rate);
       this.rate = this.acc.rate;
     }
 

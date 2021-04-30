@@ -7,8 +7,8 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public final class AdaptationBuilder<$Schema> {
   private final Schema.Builder<$Schema> schemaBuilder;
@@ -34,9 +33,9 @@ public final class AdaptationBuilder<$Schema> {
   }
 
   public <Event, Effect, CellType>
-  CellRef<Event, CellType>
-  register(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return new CellRef<>(this.schemaBuilder.register(projection, applicator));
+  Query<?, Event, CellType>
+  allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
+    return this.schemaBuilder.register(projection, applicator);
   }
 
   public <Resource>
@@ -52,43 +51,26 @@ public final class AdaptationBuilder<$Schema> {
     this.state.real(name, resource);
   }
 
-  public void daemon(final Runnable task) {
+  public void daemon(final Context.TaskFactory task) {
     this.state.daemon(task);
   }
 
-  public void taskType(final String id, final TaskSpecType<$Schema, ?> taskSpecType) {
-    this.state.taskType(id, taskSpecType);
-  }
-
-  public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
+  public <Activity> void taskType(final ActivityMapper<Activity> mapper, final TaskMaker<Activity> maker) {
     this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ThreadedTask<>(ModelActions.context, () -> task.accept(activity));
-      }
-    });
-  }
-
-  public <Activity> void replayingTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
-    this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ReplayingTask<>(ModelActions.context, () -> task.accept(activity));
-      }
-    });
-  }
-
-  public <Activity> void noopTask(final ActivityMapper<Activity> mapper) {
-    this.state.taskType(mapper.getName(), new ActivityType<>(mapper) {
-      @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return $ -> TaskStatus.completed();
+        return maker.make(activity);
       }
     });
   }
 
   public BuiltAdaptation<$Schema> build() {
     return this.state.build(this.schemaBuilder.build());
+  }
+
+
+  public interface TaskMaker<Activity> {
+    <$Timeline> Task<$Timeline> make(Activity activity);
   }
 
 
@@ -106,7 +88,7 @@ public final class AdaptationBuilder<$Schema> {
          RealResource resource);
 
     void
-    daemon(Runnable task);
+    daemon(Context.TaskFactory task);
 
     void
     taskType(String id,
@@ -118,7 +100,7 @@ public final class AdaptationBuilder<$Schema> {
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
-    private final List<Runnable> daemons = new ArrayList<>();
+    private final List<Context.TaskFactory> daemons = new ArrayList<>();
     private final Map<String, RealResource> realResources = new HashMap<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
@@ -146,7 +128,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void daemon(final Runnable task) {
+    public void daemon(final Context.TaskFactory task) {
       this.daemons.add(task);
     }
 
@@ -160,7 +142,6 @@ public final class AdaptationBuilder<$Schema> {
       this.resourceFamilies.add(new RealResourceFamily<>(ModelActions.context, this.realResources));
 
       final var adaptation = new BuiltAdaptation<>(
-          ModelActions.context,
           schema,
           this.resourceFamilies,
           this.daemons,
@@ -200,7 +181,7 @@ public final class AdaptationBuilder<$Schema> {
     }
 
     @Override
-    public void daemon(final Runnable task) {
+    public void daemon(final Context.TaskFactory task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

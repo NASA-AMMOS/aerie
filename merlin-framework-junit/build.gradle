@@ -8,19 +8,23 @@ java {
     languageVersion = JavaLanguageVersion.of(16)
     vendor = JvmVendorSpec.ADOPTOPENJDK
   }
+
+  withJavadocJar()
+  withSourcesJar()
 }
 
 tasks.withType(JavaCompile) {
   options.release.set(11)
 }
 
-dependencies {
-  implementation project(':merlin-sdk')
-  // TODO: Generate the NullableValueMapper class so we can remove the "contrib" dependency.
-  implementation project(':contrib')
+// Link references to standard Java classes to the official Java 11 documentation.
+javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
-  implementation 'org.apache.commons:commons-lang3:3.9'
-  implementation 'com.squareup:javapoet:1.11.1'
+dependencies {
+  api project(':merlin-sdk')
+  api 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 }
 
 publishing {

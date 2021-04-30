@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
+import javax.json.Json;
 import javax.json.JsonString;
 import javax.json.JsonValue.ValueType;
 import java.time.format.DateTimeParseException;
@@ -36,14 +37,21 @@ import static gov.nasa.jpl.aerie.json.Uncurry.uncurry5;
 public abstract class MerlinParsers {
   private MerlinParsers() {}
 
-  public static final JsonParser<Timestamp> timestampP = json -> {
-    if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
-    try {
-      return JsonParseResult.success(Timestamp.fromString(((JsonString)json).getString()));
-    } catch (DateTimeParseException e) {
-      return JsonParseResult.failure("invalid timestamp format");
-    }
-  };
+  public static final JsonParser<Timestamp> timestampP =
+      JsonParser.create(
+          (json) -> {
+            if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
+            try {
+              return JsonParseResult.success(Timestamp.fromString(((JsonString) json).getString()));
+            } catch (DateTimeParseException e) {
+              return JsonParseResult.failure("invalid timestamp format");
+            }
+          },
+          Json
+              .createObjectBuilder()
+              .add("type", "string")
+              .add("format", "date-time")
+              .build());
 
   public static final JsonParser<Duration> durationP
       = longP

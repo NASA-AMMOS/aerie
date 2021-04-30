@@ -77,7 +77,7 @@ public final class AdaptationProcessor implements Processor {
 
   @Override
   public SourceVersion getSupportedSourceVersion() {
-    return SourceVersion.RELEASE_11;
+    return SourceVersion.latest();
   }
 
   @Override
@@ -105,6 +105,7 @@ public final class AdaptationProcessor implements Processor {
         final var generatedFiles = new ArrayList<JavaFile>();
         generatedFiles.add(generateAdaptationFactory(adaptationRecord));
         generatedFiles.add(generateActivityActions(adaptationRecord));
+        generatedFiles.add(generateActivityTypes(adaptationRecord));
         for (final var activityRecord : adaptationRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration);
           if (!activityRecord.mapper.isCustom) {
@@ -861,15 +862,15 @@ public final class AdaptationProcessor implements Processor {
                         "configuration",
                         Modifier.FINAL)
                     .addStatement(
-                        "return this.makeBuilder($T.builder(), $L).build()",
+                        "return this.$L($T.builder(), $L).build()",
+                        "instantiate",
                         gov.nasa.jpl.aerie.merlin.timeline.Schema.class,
                         "configuration")
                     .build())
             .addMethod(
                 MethodSpec
-                    .methodBuilder("makeBuilder")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
+                    .methodBuilder("instantiate")
+                    .addModifiers(Modifier.PRIVATE)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .returns(
                         ParameterizedTypeName.get(
@@ -895,37 +896,82 @@ public final class AdaptationProcessor implements Processor {
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
                         "builder")
-                    .addCode(
-                        adaptation.modelConfiguration.map(configElem -> // if configuration is provided
-                        {
-                          final var mapperBlock = buildConfigurationMapperBlock(adaptation, configElem);
-                          return CodeBlock
-                              .builder()
-                              .addStatement(
-                                  "final var $L = $L",
-                                  "configMapper",
-                                  mapperBlock.toString())
-                              .addStatement(
-                                  "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
-                                  "deserializedConfig",
-                                  "configMapper",
-                                  "configuration")
-                              .addStatement(
-                                  "final var $L = new $T($L, $L)",
-                                  "model",
-                                  ClassName.get(adaptation.topLevelModel),
-                                  "registrar",
-                                  "deserializedConfig").build();
-                        }).orElseGet(() -> // if configuration is not provided
-                          CodeBlock
-                              .builder()
-                              .addStatement(
-                                "final var $L = new $T($L)",
-                                "model",
-                                ClassName.get(adaptation.topLevelModel),
-                                "registrar").build()
-                        ))
                     .addCode("\n")
+                    .addCode(
+                        adaptation.modelConfiguration
+                            .map(configElem -> CodeBlock  // if configuration is provided
+                                .builder()
+                                .addStatement(
+                                    "final var $L = $L",
+                                    "configMapper",
+                                    buildConfigurationMapperBlock(adaptation, configElem))
+                                .addStatement(
+                                    "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
+                                    "deserializedConfig",
+                                    "configMapper",
+                                    "configuration")
+                                .addStatement(
+                                    "final var $L = $T.initializing($L, () -> new $T($L, $L))",
+                                    "model",
+                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                    "builder",
+                                    ClassName.get(adaptation.topLevelModel),
+                                    "registrar",
+                                    "deserializedConfig")
+                                .build())
+                            .orElseGet(() -> CodeBlock  // if configuration is not provided
+                                .builder()
+                                .addStatement(
+                                    "final var $L = $T.initializing($L, () -> new $T($L))",
+                                    "model",
+                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                    "builder",
+                                    ClassName.get(adaptation.topLevelModel),
+                                    "registrar")
+                                .build()))
+                    .addCode("\n")
+                    .addStatement(
+                        "$T.register($L, $L)",
+                        adaptation.getTypesName(),
+                        "registrar",
+                        "model")
+                    .addCode("\n")
+                    .addStatement(
+                        "return $L",
+                        "builder")
+                    .build())
+            .build();
+
+    return JavaFile
+        .builder(typeName.packageName(), typeSpec)
+        .skipJavaLangImports(true)
+        .build();
+  }
+
+  private JavaFile generateActivityTypes(final AdaptationRecord adaptation) {
+    final var typeName = adaptation.getTypesName();
+
+    final var typeSpec =
+        TypeSpec
+            .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("register")
+                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                    .addParameter(
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
+                        "registrar",
+                        Modifier.FINAL)
+                    .addParameter(
+                        ClassName.get(adaptation.topLevelModel),
+                        "model",
+                        Modifier.FINAL)
                     .addCode(
                         adaptation.activityTypes
                             .stream()
@@ -935,7 +981,7 @@ public final class AdaptationProcessor implements Processor {
                                     .builder()
                                     .addStatement(
                                         "$L.noopTask(new $T())",
-                                        "builder",
+                                        "registrar",
                                         activityType.mapper.name);
                               }
                               final var effectModel = activityType.effectModel.get();
@@ -947,7 +993,7 @@ public final class AdaptationProcessor implements Processor {
                                         "$L.threadedTask("
                                         + "\n" + "new $T(),"
                                         + "\n" + "activity -> activity.$L($L))",
-                                        "builder",
+                                        "registrar",
                                         activityType.mapper.name,
                                         effectModel.getLeft(),
                                         "model");
@@ -958,7 +1004,7 @@ public final class AdaptationProcessor implements Processor {
                                         "$L.replayingTask("
                                         + "\n" + "new $T(),"
                                         + "\n" + "activity -> activity.$L($L))",
-                                        "builder",
+                                        "registrar",
                                         activityType.mapper.name,
                                         effectModel.getLeft(),
                                         "model");
@@ -971,10 +1017,6 @@ public final class AdaptationProcessor implements Processor {
                             })
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
-                    .addCode("\n")
-                    .addStatement(
-                        "return $L",
-                        "builder")
                     .build())
             .build();
 

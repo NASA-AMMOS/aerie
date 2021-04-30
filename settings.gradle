@@ -2,12 +2,14 @@ rootProject.name = 'aerie'
 
 // Adaptation support
 include 'merlin-sdk'
+include 'merlin-framework-junit'
 include 'activity-processor'
 include 'contrib'
 
 // Adaptations
 include 'banananation'
 include 'foo-adaptation'
+include 'insight'
 
 // Service support
 include 'parsing-utilities'

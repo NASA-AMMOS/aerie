@@ -1,47 +1,50 @@
 package gov.nasa.jpl.aerie.fooadaptation;
 
-import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.spawn;
-import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.delay;
-import static org.junit.Assert.*;
-
 import gov.nasa.jpl.aerie.fooadaptation.activities.FooActivity;
-import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
-import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
-import gov.nasa.jpl.aerie.merlin.framework.ModelTestFramework;
+import gov.nasa.jpl.aerie.fooadaptation.generated.ActivityTypes;
+import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.time.Duration;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public class MissionConfigurationTest {
+import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.spawn;
+import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
-  @Test
-  public void testConfiguration1() {
+@ExtendWith(MerlinExtension.class)
+public final class MissionConfigurationTest {
+  public @Nested final class Test1 {
+    private final Mission model;
 
-    final var config = new Configuration();
+    public Test1(final Registrar registrar) {
+      this.model = new Mission(registrar, new Configuration());
+      ActivityTypes.register(registrar, this.model);
+    }
 
-    ModelTestFramework.test(
-      new GeneratedAdaptationFactory(),
-      FooValueMappers.configuration().serializeValue(config),
-      registrar -> new Mission(registrar, config),
-      model -> {
-        spawn(new FooActivity());
-        delay(1, Duration.SECOND);
-        assertEquals(0.5, model.sink.get(), 1e-9);
-      });
+    @Test
+    public void test() {
+      spawn(new FooActivity());
+      delay(1, Duration.SECOND);
+      assertThat(model.sink.get()).isCloseTo(0.5, within(1e-9));
+    }
   }
 
-  @Test
-  public void testConfiguration2() {
+  public @Nested final class Test2 {
+    private final Mission model;
 
-    final var config = new Configuration(2.0);
+    public Test2(final Registrar registrar) {
+      this.model = new Mission(registrar, new Configuration(2.0));
+      ActivityTypes.register(registrar, this.model);
+    }
 
-    ModelTestFramework.test(
-      new GeneratedAdaptationFactory(),
-      FooValueMappers.configuration().serializeValue(config),
-      registrar -> new Mission(registrar, config),
-      model -> {
-        spawn(new FooActivity());
-        delay(1, Duration.SECOND);
-        assertEquals(2.0, model.sink.get(), 1e-9);
-      });
+    @Test
+    public void test() {
+      spawn(new FooActivity());
+      delay(1, Duration.SECOND);
+      assertThat(model.sink.get()).isCloseTo(2.0, within(1e-9));
+    }
   }
 }

@@ -4,6 +4,10 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
+import gov.nasa.jpl.aerie.merlin.framework.Context;
+import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
+import gov.nasa.jpl.aerie.merlin.framework.Scoped;
+import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
@@ -364,18 +368,10 @@ public final class SimulationDriver {
         startTime);
   }
 
-  public static <$Schema> void simulateTask(
-      final Adaptation<$Schema> adaptation,
-      final Duration simulationDuration)
-  throws TaskSpecInstantiationException
-  {
-    simulateTask(adaptation, SimulationTimeline.create(adaptation.getSchema()), simulationDuration);
-  }
-
-  private static <$Schema, $Timeline extends $Schema> void simulateTask(
+  public static <$Schema, $Timeline extends $Schema> void simulateTask(
       final Adaptation<$Schema> adaptation,
       final SimulationTimeline<$Timeline> database,
-      final Duration simulationDuration)
+      final Task<$Timeline> task)
   throws TaskSpecInstantiationException
   {
     final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
@@ -395,11 +391,19 @@ public final class SimulationDriver {
       queue.deferTo(Duration.ZERO, info.id);
     }
 
+    final var topTaskInfo = taskFactory.createAnonymousTask(task, Optional.empty());
+    queue.deferTo(Duration.ZERO, topTaskInfo.id);
+
     var now = database.origin();
 
-    // Step the stimulus program forward until we reach the end of the simulation.
+    // Step the stimulus program forward until the task ends.
     final var changedTables = new boolean[database.getTableCount()];
-    now = queue.consumeUpTo(simulationDuration, now, (delta, frame) -> {
+    while (!completedTasks.contains(topTaskInfo.id)) {
+      final var frame$ = queue.popNextFrame(now, Duration.MAX_VALUE);
+      if (frame$.isEmpty()) break;
+
+      final var frame = frame$.get();
+
       final var yieldTime = TaskFrame.runToCompletion(frame, (taskId, builder) -> {
         final var info = taskFactory.get(taskId);
 
@@ -519,7 +523,7 @@ public final class SimulationDriver {
       //   This will require some rejigging, since we'll need to store alongside each condition
       //   its dependencies *and* its last nextSatisfied() result.
       {
-        var maxBound = queue.getNextJobTime().orElse(simulationDuration);
+        var maxBound = queue.getNextJobTime().orElse(Duration.MAX_VALUE);
         final var activatedTasks = new ArrayList<String>();
 
         for (final var entry : conditionedTasks.entrySet()) {
@@ -544,8 +548,8 @@ public final class SimulationDriver {
         }
       }
 
-      return yieldTime;
-    });
+      now = yieldTime;
+    }
   }
 
   private static <$Schema, Resource>
