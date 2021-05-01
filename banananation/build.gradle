@@ -23,5 +23,5 @@ dependencies {
   testImplementation project(':merlin-sdk')
   testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.13.2'
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
 }
