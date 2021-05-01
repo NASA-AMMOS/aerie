@@ -9,6 +9,10 @@ java {
   }
 }
 
+test {
+  useJUnitPlatform()
+}
+
 tasks.withType(JavaCompile) {
   options.release.set(11)
 }
@@ -20,8 +24,9 @@ dependencies {
   compileOnly project(':contrib')
   implementation 'org.apache.commons:commons-lang3:3.9'
 
-  testImplementation project(':merlin-sdk')
+  testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.13.2'
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
+
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
 }
