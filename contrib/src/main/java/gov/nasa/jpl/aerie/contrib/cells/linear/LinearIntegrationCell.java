@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.contrib.cells.linear;
 
 import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.time.Duration;
 
 public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {
   // We split `initialVolume` from `accumulatedVolume` to avoid loss of floating-point precision.

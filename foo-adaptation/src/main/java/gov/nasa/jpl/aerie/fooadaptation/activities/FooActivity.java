@@ -12,7 +12,7 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import static gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
-import static gov.nasa.jpl.aerie.time.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECOND;
 
 @ActivityType("foo")
 public final class FooActivity {

@@ -10,16 +10,16 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.PlanTransaction;
-import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;

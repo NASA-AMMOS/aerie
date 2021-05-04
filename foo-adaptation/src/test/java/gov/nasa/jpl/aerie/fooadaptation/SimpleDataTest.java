@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.fooadaptation;
 
 import gov.nasa.jpl.aerie.fooadaptation.models.SimpleData;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 

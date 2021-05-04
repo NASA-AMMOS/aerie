@@ -2,8 +2,10 @@ rootProject.name = 'aerie'
 
 // Adaptation support
 include 'merlin-sdk'
+include 'merlin-driver'
+include 'merlin-framework'
 include 'merlin-framework-junit'
-include 'activity-processor'
+include 'merlin-framework-processor'
 include 'contrib'
 
 // Adaptations

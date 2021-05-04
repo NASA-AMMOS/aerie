@@ -4,13 +4,13 @@ import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;

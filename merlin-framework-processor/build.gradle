@@ -1,0 +1,47 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(16)
+    vendor = JvmVendorSpec.ADOPTOPENJDK
+  }
+}
+
+tasks.withType(JavaCompile) {
+  options.release.set(11)
+}
+
+dependencies {
+  implementation project(':merlin-framework')
+  // TODO: Generate the NullableValueMapper class so we can remove the "contrib" dependency.
+  implementation project(':contrib')
+
+  implementation 'org.apache.commons:commons-lang3:3.9'
+  implementation 'com.squareup:javapoet:1.11.1'
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      if (project.hasProperty('jplArtifactoryUsername')) {
+        maven {
+          name = 'jplSnapshots'
+          url = "https://artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local"
+          credentials {
+            username jplArtifactoryUsername
+            password jplArtifactoryPassword
+          }
+        }
+      }
+    }
+  }
+}
