@@ -286,12 +286,21 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">
 <div class="block">Determine whether this duration is greater than, less than, or equal to another duration.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static long</code></div>
-<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#divide(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">divide</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;dividend,
- <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;divisor)</code></div>
+<div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></code></div>
+<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#divide(gov.nasa.jpl.aerie.time.Duration,long)">divide</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;dividend,
+ long&nbsp;divisor)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">
+<div class="block">Obtain the largest duration that can fit into the given duration the given number of times.</div>
+</div>
+<div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static long</code></div>
+<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#divide(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">divide</a></span>&#8203;(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;dividend,
+ <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;divisor)</code></div>
+<div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">
 <div class="block">Obtain the number of integer quantities of one duration that fit completely within another duration.</div>
 </div>
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></code></div>
+<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#dividedBy(long)">dividedBy</a></span>&#8203;(long&nbsp;scale)</code></div>
+<div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>long</code></div>
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#dividedBy(long,gov.nasa.jpl.aerie.time.Duration)">dividedBy</a></span>&#8203;(long&nbsp;quantity,
  <a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;unit)</code></div>
@@ -732,6 +741,21 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 </section>
 </li>
 <li>
+<section class="detail" id="divide(gov.nasa.jpl.aerie.time.Duration,long)">
+<h3>divide</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></span>&nbsp;<span class="element-name">divide</span>&#8203;<span class="parameters">(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;dividend,
+ long&nbsp;divisor)</span></div>
+<div class="block">Obtain the largest duration that can fit into the given duration the given number of times.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>dividend</code> - The duration to measure against.</dd>
+<dd><code>divisor</code> - The number of times to fit the result into the <code>dividend</code>.</dd>
+<dt>Returns:</dt>
+<dd>The largest duration that can fit into the <code>dividend</code> a <code>divisor</code> number of times.</dd>
+</dl>
+</section>
+</li>
+<li>
 <section class="detail" id="remainder(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)">
 <h3>remainder</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></span>&nbsp;<span class="element-name">remainder</span>&#8203;<span class="parameters">(<a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;dividend,
@@ -900,6 +924,16 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <dl class="notes">
 <dt>See Also:</dt>
 <dd><a href="#divide(gov.nasa.jpl.aerie.time.Duration,gov.nasa.jpl.aerie.time.Duration)"><code>divide(Duration, Duration)</code></a></dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="dividedBy(long)">
+<h3>dividedBy</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a></span>&nbsp;<span class="element-name">dividedBy</span>&#8203;<span class="parameters">(long&nbsp;scale)</span></div>
+<dl class="notes">
+<dt>See Also:</dt>
+<dd><a href="#divide(gov.nasa.jpl.aerie.time.Duration,long)"><code>divide(Duration, long)</code></a></dd>
 </dl>
 </section>
 </li>
