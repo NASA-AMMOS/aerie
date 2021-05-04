@@ -93,7 +93,7 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Field</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>,&#8203;?,&#8203;?&gt;&gt;</code></div>
+<div class="col-first even-row-color"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;?,&#8203;?,&#8203;?&gt;&gt;</code></div>
 <div class="col-second even-row-color"><code><span class="member-name-link"><a href="#lastDependencies">lastDependencies</a></span></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/org/apache/commons/lang3/tuple/Pair.html" title="class or interface in org.apache.commons.lang3.tuple" class="external-link">Pair</a>&lt;<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>,&#8203;<a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">Dynamics</a>&gt;&gt;</code></div>
@@ -139,8 +139,9 @@ loadScripts(document, 'script');</script>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#extendBy(gov.nasa.jpl.aerie.time.Duration)">extendBy</a></span>&#8203;(<a href="../../time/Duration.html" title="class in gov.nasa.jpl.aerie.time">Duration</a>&nbsp;duration)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#updateAt(gov.nasa.jpl.aerie.merlin.timeline.History)">updateAt</a></span>&#8203;(<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>&gt;&nbsp;history)</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;$Timeline extends <a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>&gt;<br>void</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#updateAt(gov.nasa.jpl.aerie.merlin.driver.Adaptation,gov.nasa.jpl.aerie.merlin.timeline.History)">updateAt</a></span>&#8203;(<a href="Adaptation.html" title="class in gov.nasa.jpl.aerie.merlin.driver">Adaptation</a>&lt;<a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>&gt;&nbsp;adaptation,
+ <a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;$Timeline&gt;&nbsp;history)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
 </div>
@@ -180,7 +181,7 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="lastDependencies">
 <h3>lastDependencies</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;? super <a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>,&#8203;?,&#8203;?&gt;&gt;</span>&nbsp;<span class="element-name">lastDependencies</span></div>
+<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Set.html" title="class or interface in java.util" class="external-link">Set</a>&lt;<a href="../timeline/Query.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">Query</a>&lt;?,&#8203;?,&#8203;?&gt;&gt;</span>&nbsp;<span class="element-name">lastDependencies</span></div>
 </section>
 </li>
 </ul>
@@ -207,9 +208,10 @@ loadScripts(document, 'script');</script>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="updateAt(gov.nasa.jpl.aerie.merlin.timeline.History)">
+<section class="detail" id="updateAt(gov.nasa.jpl.aerie.merlin.driver.Adaptation,gov.nasa.jpl.aerie.merlin.timeline.History)">
 <h3>updateAt</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">updateAt</span>&#8203;<span class="parameters">(<a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;? extends <a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>&gt;&nbsp;history)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;$Timeline extends <a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">updateAt</span>&#8203;<span class="parameters">(<a href="Adaptation.html" title="class in gov.nasa.jpl.aerie.merlin.driver">Adaptation</a>&lt;<a href="ProfileBuilder.html" title="type parameter in ProfileBuilder">$Schema</a>&gt;&nbsp;adaptation,
+ <a href="../timeline/History.html" title="class in gov.nasa.jpl.aerie.merlin.timeline">History</a>&lt;$Timeline&gt;&nbsp;history)</span></div>
 </section>
 </li>
 <li>
