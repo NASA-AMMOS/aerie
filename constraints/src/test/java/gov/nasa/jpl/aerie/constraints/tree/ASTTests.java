@@ -147,31 +147,25 @@ public class ASTTests {
   }
 
   @Test
-  public void testAsReal() {
+  public void testRealParameter() {
+    final var act = new ActivityInstance(
+        "1",
+        "typeA",
+        Map.of("p1", SerializedValue.of(2)),
+        Window.between(0, 10, SECONDS));
+
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),
-        List.of(),
+        List.of(act),
         Map.of(),
         Map.of()
     );
+    final var environment = Map.of("act", act);
 
-    final var source = new DiscreteProfile(
-        List.of(
-            new DiscreteProfilePiece(Window.between(0, Inclusive, 5, Exclusive, SECONDS), SerializedValue.of(1)),
-            new DiscreteProfilePiece(Window.between(5, Inclusive, 10, Inclusive, SECONDS), SerializedValue.of(2)),
-            new DiscreteProfilePiece(Window.between(10, Exclusive, 15, Exclusive, SECONDS), SerializedValue.of(3)),
-            new DiscreteProfilePiece(Window.between(15, Inclusive, 15, Inclusive, SECONDS), SerializedValue.of(4)),
-            new DiscreteProfilePiece(Window.between(15, Exclusive, 20, Inclusive, SECONDS), SerializedValue.of(5))
-        ));
-
-    final var result = new AsReal(Supplier.of(source)).evaluate(simResults, Map.of());
+    final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Window.between(0, Inclusive, 5, Exclusive, SECONDS), 1, 0),
-        new LinearProfilePiece(Window.between(5, Inclusive, 10, Inclusive, SECONDS), 2, 0),
-        new LinearProfilePiece(Window.between(10, Exclusive, 15, Exclusive, SECONDS), 3, 0),
-        new LinearProfilePiece(Window.between(15, Inclusive, 15, Inclusive, SECONDS), 4, 0),
-        new LinearProfilePiece(Window.between(15, Exclusive, 20, Inclusive, SECONDS), 5, 0)
+        new LinearProfilePiece(Window.between(0, Inclusive, 20, Inclusive, SECONDS), 2, 0)
     );
 
     assertEquivalent(expected, result);

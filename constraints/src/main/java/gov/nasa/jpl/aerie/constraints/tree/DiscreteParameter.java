@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Parameter implements Expression<DiscreteProfile> {
+public final class DiscreteParameter implements Expression<DiscreteProfile> {
   private final String activityAlias;
   private final String parameterName;
 
-  public Parameter(final String activityAlias, final String parameterName) {
+  public DiscreteParameter(final String activityAlias, final String parameterName) {
     this.activityAlias = activityAlias;
     this.parameterName = parameterName;
   }
@@ -38,8 +38,8 @@ public final class Parameter implements Expression<DiscreteProfile> {
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Parameter)) return false;
-    final var o = (Parameter)obj;
+    if (!(obj instanceof DiscreteParameter)) return false;
+    final var o = (DiscreteParameter)obj;
 
     return Objects.equals(this.activityAlias, o.activityAlias) &&
            Objects.equals(this.parameterName, o.parameterName);

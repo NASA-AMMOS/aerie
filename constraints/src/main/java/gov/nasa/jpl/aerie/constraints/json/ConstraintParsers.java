@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.Profile;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.AsReal;
+import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Changed;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
@@ -22,7 +22,7 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.Parameter;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Rate;
@@ -100,18 +100,18 @@ public final class ConstraintParsers {
           .field("value", serializedValueP)
           .map(uncurry2(type -> value -> new DiscreteValue(value)));
 
-  private static final JsonParser<Expression<DiscreteProfile>> parameterP =
+  private static final JsonParser<Expression<DiscreteProfile>> discreteParameterP =
       productP
-          .field("type", literalP("Parameter"))
+          .field("type", literalP("DiscreteParameter"))
           .field("alias", stringP)
           .field("name", stringP)
-          .map(uncurry3(type -> alias -> name -> new Parameter(alias, name)));
+          .map(uncurry3(type -> alias -> name -> new DiscreteParameter(alias, name)));
 
   private static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP =
       recursiveP(selfP -> chooseP(
           discreteResourceP,
           discreteValueP,
-          parameterP));
+          discreteParameterP));
 
   private static final JsonParser<Expression<LinearProfile>> realValueP =
       productP
@@ -142,17 +142,18 @@ public final class ConstraintParsers {
         .map(uncurry2(type -> profile -> new Rate(profile)));
   }
 
-  private static JsonParser<Expression<LinearProfile>> asRealP =
+  private final static JsonParser<Expression<LinearProfile>> realParameterP =
       productP
-          .field("type", literalP("AsReal"))
-          .field("expression", discreteProfileExprP)
-          .map(uncurry2(type -> source -> new AsReal(source)));
+          .field("type", literalP("RealParameter"))
+          .field("alias", stringP)
+          .field("name", stringP)
+          .map(uncurry3(type -> alias -> name -> new RealParameter(alias, name)));
 
   private static final JsonParser<Expression<LinearProfile>> linearProfileExprP =
       recursiveP(selfP -> chooseP(
           realResourceP,
           realValueP,
-          asRealP,
+          realParameterP,
           plusF(selfP),
           timesF(selfP),
           rateF(selfP)));
