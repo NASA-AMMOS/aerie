@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
@@ -19,6 +20,7 @@ import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
+import static org.junit.Assert.fail;
 
 public class ASTTests {
 
@@ -207,7 +209,7 @@ public class ASTTests {
         ),
         Map.of(
             "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
             "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
             )
     );
@@ -220,13 +222,79 @@ public class ASTTests {
   }
 
   @Test
+  public void testRealResourceOnDiscrete() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(
+            "real1", new LinearProfile(new LinearProfilePiece(Window.at(1, SECONDS), 0, 1)),
+            "real2", new LinearProfile(new LinearProfilePiece(Window.at(2, SECONDS), 0, 1)),
+            "real3", new LinearProfile(new LinearProfilePiece(Window.at(3, SECONDS), 0, 1))
+        ),
+        Map.of(
+            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
+        )
+    );
+
+    final var result = new RealResource("discrete2").evaluate(simResults, Map.of());
+
+    final var expected = new LinearProfile(new LinearProfilePiece(Window.at(5, SECONDS), 2, 0));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testRealResourceFailureOnDiscrete() {
+      final var simResults = new SimulationResults(
+          Window.between(0, 20, SECONDS),
+          List.of(),
+          Map.of(
+              "real1", new LinearProfile(new LinearProfilePiece(Window.at(1, SECONDS), 0, 1)),
+              "real2", new LinearProfile(new LinearProfilePiece(Window.at(2, SECONDS), 0, 1)),
+              "real3", new LinearProfile(new LinearProfilePiece(Window.at(3, SECONDS), 0, 1))
+          ),
+          Map.of(
+              "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
+              "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
+              "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
+          )
+      );
+
+    try {
+      new RealResource("discrete1").evaluate(simResults, Map.of());
+    } catch (final InputMismatchException e) {
+      return;
+    }
+    fail("Expected RealResource node to fail conversion of discrete resource to real resource");
+  }
+
+  @Test
+  public void testRealResourceOnNonexistentResource() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    try {
+      new RealResource("does_not_exist").evaluate(simResults, Map.of());
+    } catch (final InputMismatchException e) {
+      return;
+    }
+    fail("Expected RealResource node to fail on non-existent resource");
+  }
+
+  @Test
   public void testForEachActivity() {
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),
         List.of(
             new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 6, SECONDS)),
             new ActivityInstance("2", "TypeB", Map.of(), Window.between(5, 7, SECONDS)),
-            new  ActivityInstance("3", "TypeA", Map.of(), Window.between(9, 10, SECONDS))
+            new ActivityInstance("3", "TypeA", Map.of(), Window.between(9, 10, SECONDS))
         ),
         Map.of(),
         Map.of()
