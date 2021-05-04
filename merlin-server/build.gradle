@@ -21,6 +21,8 @@ dependencies {
   implementation project(':contrib')
   implementation project(':constraints')
 
+  runtimeOnly project(':merlin-framework')
+
   implementation 'org.apache.commons:commons-lang3:3.9'
   implementation 'io.javalin:javalin:3.8.0'
   implementation 'org.mongodb:mongodb-driver-sync:3.11.0'

@@ -1,6 +1,7 @@
 plugins {
   id 'java-library'
   id 'maven-publish'
+  id 'jacoco'
 }
 
 java {
@@ -17,14 +18,15 @@ tasks.withType(JavaCompile) {
   options.release.set(11)
 }
 
+jacocoTestReport.dependsOn test
+
 // Link references to standard Java classes to the official Java 11 documentation.
 javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
-  compileOnly project(':merlin-framework')
-
-  api 'org.apache.commons:commons-math3:3.6.1'
+  api project(':merlin-sdk')
 }
 
 publishing {
@@ -49,3 +51,4 @@ publishing {
     }
   }
 }
+

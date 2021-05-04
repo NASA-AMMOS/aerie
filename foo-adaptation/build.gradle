@@ -16,7 +16,7 @@ test {
 dependencies {
   annotationProcessor project(':activity-processor')
 
-  compileOnly project(':merlin-sdk')
+  compileOnly project(':merlin-framework')
   compileOnly project(':contrib')
 
   testImplementation project(':merlin-framework-junit')

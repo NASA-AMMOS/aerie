@@ -20,7 +20,7 @@ tasks.withType(JavaCompile) {
 dependencies {
   annotationProcessor project(':activity-processor')
 
-  compileOnly project(':merlin-sdk')
+  compileOnly project(':merlin-framework')
   compileOnly project(':contrib')
   implementation 'org.apache.commons:commons-lang3:3.9'
 
