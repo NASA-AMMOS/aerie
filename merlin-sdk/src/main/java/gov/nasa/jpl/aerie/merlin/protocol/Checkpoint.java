@@ -1,7 +1,9 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
-
-public interface Checkpoint<$Timeline> {
-  <Event, Model> Model ask(final Query<? super $Timeline, Event, Model> query);
-}
+/**
+ * Designates the simulation state at a particular time in the simulation timeline.
+ *
+ * @param <$Timeline> The simulation timeline indexed by this checkpoint.
+ */
+@Capability
+public interface Checkpoint<$Timeline> {}

@@ -1,9 +1,11 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -16,7 +18,12 @@ import static gov.nasa.jpl.aerie.time.Duration.duration;
 
 public final class Main {
   public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {
-    final var adaptation = new GeneratedAdaptationFactory().instantiate(SerializedValue.NULL);
+    final var factory = new GeneratedAdaptationFactory();
+
+    final var builder = new AdaptationBuilder<>(Schema.builder());
+    factory.instantiate(SerializedValue.NULL, builder);
+    final var adaptation = builder.build();
+
     final var schedule = Map.of(
         UUID.randomUUID().toString(), Pair.of(
             duration(0, MILLISECONDS),

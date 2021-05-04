@@ -1,8 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.server.utilities;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.timeline.Schema;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,9 +17,10 @@ public final class AdaptationLoader {
     public static Adaptation<?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
-        return loadAdaptationProvider(path, name, version)
-            .get()
-            .instantiate(missionModelConfig);
+        final var factory = loadAdaptationProvider(path, name, version).get();
+        final var builder = new AdaptationBuilder<>(Schema.builder());
+        factory.instantiate(missionModelConfig, builder);
+        return builder.build();
     }
 
     public static Provider<AdaptationFactory> loadAdaptationProvider(final Path path, final String name, final String version)

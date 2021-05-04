@@ -1,28 +1,28 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
+import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 import gov.nasa.jpl.aerie.time.Duration;
 
 import java.util.Map;
 
 public final class QueryContext<$Schema> implements Context {
-  private final Checkpoint<? extends $Schema> history;
+  private final Querier<? extends $Schema> querier;
 
-  public QueryContext(final Checkpoint<? extends $Schema> history) {
-    this.history = history;
+  public QueryContext(final Querier<? extends $Schema> querier) {
+    this.querier = querier;
   }
 
   @Override
   public <CellType> CellType ask(final Query<?, ?, CellType> query) {
     // SAFETY: All objects accessible within a single adaptation instance have the same brand.
     @SuppressWarnings("unchecked")
-    final var brandedQuery = (Query<? super $Schema, ?, CellType>) query;
+    final var brandedQuery = (Query<$Schema, ?, CellType>) query;
 
-    return this.history.ask(brandedQuery);
+    return this.querier.getState(brandedQuery);
   }
 
   @Override

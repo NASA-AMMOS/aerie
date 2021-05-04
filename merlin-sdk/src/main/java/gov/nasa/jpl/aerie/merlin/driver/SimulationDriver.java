@@ -4,14 +4,11 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
-import gov.nasa.jpl.aerie.merlin.framework.Context;
-import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
-import gov.nasa.jpl.aerie.merlin.framework.Scoped;
-import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
-import gov.nasa.jpl.aerie.merlin.protocol.Adaptation;
 import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
+import gov.nasa.jpl.aerie.merlin.protocol.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
@@ -21,7 +18,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -38,7 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public final class SimulationDriver {
   public static <$Schema> SimulationResults simulate(
@@ -105,9 +101,10 @@ public final class SimulationDriver {
     for (final var family : adaptation.getResourceFamilies()) createProfilesForFamily(family, profiles::put);
 
     var now = database.origin();
-    for (final var profile : profiles.values()) profile.updateAt(now);
+    for (final var profile : profiles.values()) profile.updateAt(adaptation, now);
 
     // Step the stimulus program forward until we reach the end of the simulation.
+    final var checkpoints = new HashMap<Checkpoint<$Timeline>, History<$Timeline>>();
     final var changedTables = new boolean[database.getTableCount()];
     now = queue.consumeUpTo(simulationDuration, now, (delta, frame) -> {
       Arrays.fill(changedTables, false);
@@ -118,11 +115,37 @@ public final class SimulationDriver {
         final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
           @Override
           public Checkpoint<$Timeline> now() {
-            return builder.now();
+            final var checkpoint = new Checkpoint<$Timeline>() {};
+            checkpoints.put(checkpoint, builder.now());
+
+            return checkpoint;
           }
 
           @Override
-          public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+          public <State> State getStateAt(
+              final Checkpoint<$Timeline> checkpoint,
+              final Query<? super $Timeline, ?, State> token)
+          {
+            final var query = adaptation
+                .getQuery(token.specialize())
+                .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
+            final var time = Optional
+                .ofNullable(checkpoints.get(checkpoint))
+                .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
+            return time.ask(query);
+          }
+
+          @Override
+          public <Event, State> void emit(
+              final Event event,
+              final Query<? super $Timeline, ? super Event, State> token)
+          {
+            final var query = adaptation
+                .getQuery(token.specialize())
+                .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
             changedTables[query.getTableIndex()] = true;
             builder.emit(event, query);
           }
@@ -232,7 +255,7 @@ public final class SimulationDriver {
         // Only fetch a new dynamics if it could possibly have been changed by the tasks we just ran.
         for (final var dependency : profile.lastDependencies) {
           if (changedTables[dependency.getTableIndex()]) {
-            profile.updateAt(yieldTime);
+            profile.updateAt(adaptation, yieldTime);
             break;
           }
         }
@@ -250,8 +273,19 @@ public final class SimulationDriver {
           final var taskId = entry.getKey();
           final var condition = entry.getValue();
 
+          final var querier = new Querier<$Timeline>() {
+            @Override
+            public <State> State getState(final Query<? super $Timeline, ?, State> token) {
+              final var query = adaptation
+                  .getQuery(token.specialize())
+                  .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
+              return yieldTime.ask(query);
+            }
+          };
+
           final var triggerTime$ = condition
-              .nextSatisfied(yieldTime::ask, maxBound.minus(queue.getElapsedTime()))
+              .nextSatisfied(querier, maxBound.minus(queue.getElapsedTime()))
               .map(queue.getElapsedTime()::plus);
 
           if (triggerTime$.isEmpty()) continue;
@@ -397,6 +431,7 @@ public final class SimulationDriver {
     var now = database.origin();
 
     // Step the stimulus program forward until the task ends.
+    final var checkpoints = new HashMap<Checkpoint<$Timeline>, History<$Timeline>>();
     final var changedTables = new boolean[database.getTableCount()];
     while (!completedTasks.contains(topTaskInfo.id)) {
       final var frame$ = queue.popNextFrame(now, Duration.MAX_VALUE);
@@ -410,11 +445,37 @@ public final class SimulationDriver {
         final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
           @Override
           public Checkpoint<$Timeline> now() {
-            return builder.now();
+            final var checkpoint = new Checkpoint<$Timeline>() {};
+            checkpoints.put(checkpoint, builder.now());
+
+            return checkpoint;
           }
 
           @Override
-          public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+          public <State> State getStateAt(
+              final Checkpoint<$Timeline> checkpoint,
+              final Query<? super $Timeline, ?, State> token)
+          {
+            final var query = adaptation
+                .getQuery(token.specialize())
+                .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
+            final var time = Optional
+                .ofNullable(checkpoints.get(checkpoint))
+                .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
+            return time.ask(query);
+          }
+
+          @Override
+          public <Event, State> void emit(
+              final Event event,
+              final Query<? super $Timeline, ? super Event, State> token)
+          {
+            final var query = adaptation
+                .getQuery(token.specialize())
+                .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
             changedTables[query.getTableIndex()] = true;
             builder.emit(event, query);
           }
@@ -530,8 +591,19 @@ public final class SimulationDriver {
           final var taskId = entry.getKey();
           final var condition = entry.getValue();
 
+          final var querier = new Querier<$Timeline>() {
+            @Override
+            public <State> State getState(final Query<? super $Timeline, ?, State> token) {
+              final var query = adaptation
+                  .getQuery(token.specialize())
+                  .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
+              return yieldTime.ask(query);
+            }
+          };
+
           final var triggerTime$ = condition
-              .nextSatisfied(yieldTime::ask, maxBound.minus(queue.getElapsedTime()))
+              .nextSatisfied(querier, maxBound.minus(queue.getElapsedTime()))
               .map(queue.getElapsedTime()::plus);
 
           if (triggerTime$.isEmpty()) continue;

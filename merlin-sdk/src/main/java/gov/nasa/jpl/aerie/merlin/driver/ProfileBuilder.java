@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
+import gov.nasa.jpl.aerie.merlin.protocol.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
@@ -17,7 +17,7 @@ public final class ProfileBuilder<$Schema, Resource, Dynamics> {
   public final ResourceSolver<$Schema, Resource, Dynamics> solver;
   public final Resource resource;
   public final List<Pair<Duration, Dynamics>> pieces;
-  public final Set<Query<? super $Schema, ?, ?>> lastDependencies;
+  public final Set<Query<?, ?, ?>> lastDependencies;
 
   public ProfileBuilder(
       final ResourceSolver<$Schema, Resource, Dynamics> solver,
@@ -29,12 +29,17 @@ public final class ProfileBuilder<$Schema, Resource, Dynamics> {
     this.lastDependencies = new HashSet<>();
   }
 
-  public void updateAt(final History<? extends $Schema> history) {
+  public <$Timeline extends $Schema>
+  void updateAt(final Adaptation<$Schema> adaptation, final History<$Timeline> history) {
     this.lastDependencies.clear();
 
-    final var dynamics = this.solver.getDynamics(this.resource, new Checkpoint<>() {
+    final var dynamics = this.solver.getDynamics(this.resource, new Querier<$Timeline>() {
       @Override
-      public <Event, Model> Model ask(final Query<? super $Schema, Event, Model> query) {
+      public <State> State getState(final gov.nasa.jpl.aerie.merlin.protocol.Query<? super $Timeline, ?, State> token) {
+        final var query = adaptation
+            .getQuery(token.specialize())
+            .orElseThrow(() -> new IllegalArgumentException("forged token"));
+
         ProfileBuilder.this.lastDependencies.add(query);
         return history.ask(query);
       }
@@ -46,7 +51,9 @@ public final class ProfileBuilder<$Schema, Resource, Dynamics> {
   public void extendBy(final Duration duration) {
     if (duration.isNegative()) {
       throw new IllegalArgumentException("cannot extend by a negative duration");
-    } else if (duration.isZero()) return;
+    } else if (duration.isZero()) {
+      return;
+    }
 
     if (this.pieces.isEmpty()) throw new IllegalStateException("cannot extend an empty profile");
 

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 
 import java.util.HashSet;
 import java.util.Optional;

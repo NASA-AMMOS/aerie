@@ -3,9 +3,11 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,7 +26,12 @@ public final class AdaptationTest {
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
-        this.adaptation = new AdaptationFacade<>(new GeneratedAdaptationFactory().instantiate(serializedConfig));
+
+        final var factory = new GeneratedAdaptationFactory();
+        final var builder = new AdaptationBuilder<>(Schema.builder());
+        factory.instantiate(serializedConfig, builder);
+
+        this.adaptation = new AdaptationFacade<>(builder.build());
     }
 
     @Test

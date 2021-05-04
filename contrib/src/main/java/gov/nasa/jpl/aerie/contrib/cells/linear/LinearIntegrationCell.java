@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.contrib.cells.linear;
 
 import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
+import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
 import gov.nasa.jpl.aerie.time.Duration;
 
 public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {

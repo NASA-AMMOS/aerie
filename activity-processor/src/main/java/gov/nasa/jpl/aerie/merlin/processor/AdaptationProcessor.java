@@ -853,44 +853,17 @@ public final class AdaptationProcessor implements Processor {
                     .methodBuilder("instantiate")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.Adaptation.class),
-                            WildcardTypeName.get(this.typeUtils.getWildcardType(null, null))))
-                    .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
-                        "configuration",
-                        Modifier.FINAL)
-                    .addStatement(
-                        "return this.$L($T.builder(), $L).build()",
-                        "instantiate",
-                        gov.nasa.jpl.aerie.merlin.timeline.Schema.class,
-                        "configuration")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("instantiate")
-                    .addModifiers(Modifier.PRIVATE)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
-                    .returns(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class),
-                            TypeVariableName.get("$Schema")))
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.timeline.Schema.Builder.class),
-                            TypeVariableName.get("$Schema")),
-                        "schemaBuilder",
-                        Modifier.FINAL)
                     .addParameter(
                         TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
                         "configuration",
                         Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = new $T<>($L)",
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.Builder.class),
+                            TypeVariableName.get("$Schema")),
                         "builder",
-                        gov.nasa.jpl.aerie.merlin.framework.AdaptationBuilder.class,
-                        "schemaBuilder")
+                        Modifier.FINAL)
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -935,10 +908,6 @@ public final class AdaptationProcessor implements Processor {
                         adaptation.getTypesName(),
                         "registrar",
                         "model")
-                    .addCode("\n")
-                    .addStatement(
-                        "return $L",
-                        "builder")
                     .build())
             .build();
 
