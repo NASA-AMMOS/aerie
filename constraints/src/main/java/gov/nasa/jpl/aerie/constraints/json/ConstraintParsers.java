@@ -253,6 +253,14 @@ public final class ConstraintParsers {
         .map(uncurry2(type -> expr -> new Not(expr)));
   }
 
+  private static JsonParser<Expression<Windows>> ifThenF(final JsonParser<? extends Expression<Windows>> windowsExpressionP) {
+    return productP
+        .field("type", literalP("IfThen"))
+        .field("condition", windowsExpressionP)
+        .field("expression", windowsExpressionP)
+        .map(uncurry3(type -> cond -> expr -> new Or(new Not(cond), expr)));
+  }
+
   private static JsonParser<Expression<List<Violation>>> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
     return productP
         .field("type", literalP("ForEachActivity"))
@@ -288,7 +296,8 @@ public final class ConstraintParsers {
           notEqualF(discreteProfileExprP),
           andF(selfP),
           orF(selfP),
-          notF(selfP)));
+          notF(selfP),
+          ifThenF(selfP)));
 
   static final JsonParser<Expression<List<Violation>>> violationListExpressionP =
       recursiveP(selfP -> chooseP(
