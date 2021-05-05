@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.utilities;
+package gov.nasa.jpl.aerie.constraints.time;
 
 /**
  * An algebra for interval-like operations on some underlying type {@code I}.
