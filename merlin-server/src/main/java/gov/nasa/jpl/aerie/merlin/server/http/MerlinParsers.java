@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -133,4 +134,13 @@ public abstract class MerlinParsers {
       . field("activities", mapP(scheduledActivityP))
       . map(uncurry4(adaptationId -> startTime -> samplingDuration -> activities ->
           new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities)));
+
+  public static final JsonParser<Constraint> constraintP
+      = productP
+      . field("name", stringP)
+      . field("summary", stringP)
+      . field("description", stringP)
+      . field("definition", stringP)
+      .map(uncurry4(name -> summary -> description -> definition ->
+          new Constraint(name, summary, description, definition)));
 }

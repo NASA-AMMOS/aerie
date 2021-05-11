@@ -18,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -247,8 +248,19 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
   }
 
-  public static JsonValue serializeConstraints(Map<String, String> constraints) {
-    return serializeMap(Json::createValue, constraints);
+  public static JsonValue serializeConstraints(Map<String, Constraint> constraints) {
+    return serializeMap(ResponseSerializers::serializeConstraint, constraints);
+  }
+
+  public static JsonValue serializeConstraint(final Constraint constraint) {
+    if (constraint == null) return JsonValue.NULL;
+
+    return Json.createObjectBuilder()
+               .add("name", serializeString(constraint.name()))
+               .add("summary", serializeString(constraint.summary()))
+               .add("description", serializeString(constraint.description()))
+               .add("definition", serializeString(constraint.definition()))
+               .build();
   }
 
   private static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {
