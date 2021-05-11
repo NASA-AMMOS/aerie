@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
@@ -144,6 +145,23 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
+  public Map<String, Constraint> getConstraintsForPlan(final String planId) throws NoSuchPlanException {
+    return this.planRepository.getAllConstraintsInPlan(planId);
+  }
+
+  @Override
+  public void replaceConstraints(final String planId, final Map<String, Constraint> constraints) throws NoSuchPlanException {
+    this.planRepository.replacePlanConstraints(planId, constraints);
+  }
+
+  @Override
+  public void removeConstraintById(final String planId, final String constraintId)
+  throws NoSuchPlanException
+  {
+    this.planRepository.deleteConstraintInPlanById(planId, constraintId);
+  }
+
+  @Override
   public Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(final String planId)
   throws NoSuchPlanException
   {
@@ -224,11 +242,11 @@ public final class LocalPlanService implements PlanService {
       final var constraintJsons = this.adaptationService.getConstraints(plan.adaptationId);
       final var violations = new HashMap<String, List<Violation>>();
       for (final var entry : constraintJsons.entrySet()) {
-        final var subject = Json.createReader(new StringReader(entry.getValue())).readValue();
+        final var subject = Json.createReader(new StringReader(entry.getValue().definition())).readValue();
         final var constraint = ConstraintParsers.constraintP.parse(subject);
 
         if (constraint.isFailure()) {
-          throw new Error(entry.getValue());
+          throw new Error(entry.getValue().definition());
         }
 
         final var violationEvents = constraint.getSuccessOrThrow().evaluate(preparedResults);

@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
@@ -118,12 +119,12 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+  public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
     return Map.of();
   }
 
   @Override
-  public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+  public void replaceConstraints(final String adaptationId, final Map<String, Constraint> constraints)
   throws NoSuchAdaptationException
   {
   }
