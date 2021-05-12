@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.utilities;
+package gov.nasa.jpl.aerie.constraints.time;
 
 import java.util.ArrayList;
 import java.util.Iterator;
