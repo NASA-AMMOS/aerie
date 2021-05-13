@@ -7,25 +7,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 
 public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {
-  public final static double defaultZeroTolerance = 1E-7;
-
   // We split `initialVolume` from `accumulatedVolume` to avoid loss of floating-point precision.
   // The rate is usually smaller than the volume by some orders of magnitude,
   // so accumulated deltas will usually be closer to each other in magnitude than to the current volume.
   private double initialVolume;
   private double accumulatedVolume;
   private double rate;
-  private final double zeroTolerance;
 
-  public LinearIntegrationCell(final double initialVolume, final double rate, final double accumulatedVolume, final double zeroTolerance) {
+  public LinearIntegrationCell(final double initialVolume, final double rate, final double accumulatedVolume) {
     this.initialVolume = initialVolume;
     this.accumulatedVolume = accumulatedVolume;
     this.rate = rate;
-    this.zeroTolerance = zeroTolerance;
-  }
-
-  public LinearIntegrationCell(final double initialVolume, final double rate, final double accumulatedVolume) {
-    this(initialVolume, rate, accumulatedVolume, defaultZeroTolerance);
   }
 
   public LinearIntegrationCell(final double initialVolume, final double rate) {
@@ -47,7 +39,6 @@ public final class LinearIntegrationCell implements Cell<LinearAccumulationEffec
   @Override
   public void react(final LinearAccumulationEffect effect) {
     this.rate += effect.deltaRate;
-    if (Math.abs(this.rate) < this.zeroTolerance) this.rate = 0.0;
     if (effect.clearVolume) {
       this.initialVolume = 0;
       this.accumulatedVolume = 0;
