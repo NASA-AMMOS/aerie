@@ -30,6 +30,7 @@ import java.util.stream.StreamSupport;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.combine;
+import static com.mongodb.client.model.Updates.inc;
 import static com.mongodb.client.model.Updates.set;
 
 /**
@@ -90,6 +91,19 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
+  public long getPlanRevision(final String planId) throws NoSuchPlanException {
+    final Document planDocument = this.planCollection
+        .find(planById(makePlanObjectId(planId)))
+        .first();
+
+    if (planDocument == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    return planDocument.getLong("revision");
+  }
+
+  @Override
   public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
 
@@ -139,12 +153,18 @@ public final class RemotePlanRepository implements PlanRepository {
 
   @Override
   public void replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
-    {
-      final var result = this.planCollection.replaceOne(planById(makePlanObjectId(planId)), toDocument(plan));
-      if (result.getMatchedCount() <= 0) {
-        throw new NoSuchPlanException(planId);
-      }
-    }
+    final var revisionDoc = this.planCollection
+        .find(planById(makePlanObjectId(planId)))
+        .projection(new Document("revision", 1))
+        .first();
+    if (revisionDoc == null) throw new NoSuchPlanException(planId);
+
+    final var revision = revisionDoc.getLong("revision");
+
+    final var planDocument = toDocument(plan);
+    planDocument.put("revision", new org.bson.BsonInt64(revision + 1));
+
+    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
 
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
     if (plan.activityInstances != null) {
@@ -170,6 +190,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     final Document activityDocument = toDocument(planId, activity);
     this.activityCollection.insertOne(activityDocument);
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
     final String activityId = activityDocument.getObjectId("_id").toString();
 
     return activityId;
@@ -192,6 +213,8 @@ public final class RemotePlanRepository implements PlanRepository {
     if (result.getMatchedCount() <= 0) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
+
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
   }
 
   @Override
@@ -204,12 +227,15 @@ public final class RemotePlanRepository implements PlanRepository {
     if (result.getDeletedCount() <= 0) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
+
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
   }
 
   @Override
   public void deleteAllActivities(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
   }
 
   @Override
@@ -471,6 +497,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
   private Document toDocument(final NewPlan newPlan) {
     final Document planDocument = new Document();
+    planDocument.put("revision", new org.bson.BsonInt64(0));
     planDocument.put("name", newPlan.name);
     planDocument.put("startTimestamp", newPlan.startTimestamp.toString());
     planDocument.put("endTimestamp", newPlan.endTimestamp.toString());
@@ -493,11 +520,12 @@ public final class RemotePlanRepository implements PlanRepository {
 
   private class MongoPlanTransaction implements PlanTransaction {
     private final ObjectId planId;
-    private Bson patch = combine();
+    private Bson patch;
     private boolean notEmpty;
 
     public MongoPlanTransaction(final ObjectId planId) {
       this.planId = planId;
+      this.patch = inc("revision", 1);
       this.notEmpty = false;
     }
 
@@ -549,6 +577,8 @@ public final class RemotePlanRepository implements PlanRepository {
     public void commit() {
       RemotePlanRepository.this.activityCollection
           .updateOne(activityById(this.planId, this.activityId), this.patch);
+      RemotePlanRepository.this.planCollection
+          .updateOne(planById(this.planId), inc("revision", 1));
     }
 
     @Override

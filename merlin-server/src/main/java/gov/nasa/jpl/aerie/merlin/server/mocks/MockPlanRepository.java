@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 public final class MockPlanRepository implements PlanRepository {
-  private final Map<String, Plan> plans = new HashMap<>();
+  private final Map<String, Pair<Long, Plan>> plans = new HashMap<>();
   private int nextPlanId = 0;
   private int nextActivityId = 0;
 
@@ -28,21 +28,30 @@ public final class MockPlanRepository implements PlanRepository {
     return this.plans
         .entrySet()
         .stream()
-        .map(entry -> Pair.of(entry.getKey(), new Plan(entry.getValue())));
+        .map(entry -> Pair.of(entry.getKey(), new Plan(entry.getValue().getRight())));
   }
 
   @Override
   public Plan getPlan(final String planId) throws NoSuchPlanException {
     final Plan plan = Optional
         .ofNullable(this.plans.get(planId))
-        .orElseThrow(() -> new NoSuchPlanException(planId));
+        .orElseThrow(() -> new NoSuchPlanException(planId))
+        .getRight();
 
     return new Plan(plan);
   }
 
   @Override
+  public long getPlanRevision(final String planId) throws NoSuchPlanException {
+    return Optional
+        .ofNullable(this.plans.get(planId))
+        .orElseThrow(() -> new NoSuchPlanException(planId))
+        .getLeft();
+  }
+
+  @Override
   public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
-    final Plan plan = this.plans.get(planId);
+    final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
     }
@@ -57,7 +66,8 @@ public final class MockPlanRepository implements PlanRepository {
   public ActivityInstance getActivityInPlanById(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
     final Plan plan = Optional
         .ofNullable(this.plans.get(planId))
-        .orElseThrow(() -> new NoSuchPlanException(planId));
+        .orElseThrow(() -> new NoSuchPlanException(planId))
+        .getRight();
 
     final ActivityInstance activityInstance = Optional
         .ofNullable(plan.activityInstances.get(activityId))
@@ -84,7 +94,7 @@ public final class MockPlanRepository implements PlanRepository {
       }
     }
 
-    this.plans.put(planId, plan);
+    this.plans.put(planId, Pair.of(0L, plan));
     return planId;
   }
 
@@ -98,6 +108,8 @@ public final class MockPlanRepository implements PlanRepository {
     if (!this.plans.containsKey(id)) {
       throw new NoSuchPlanException(id);
     }
+
+    final var revision = this.plans.get(id).getLeft() + 1;
 
     final Plan plan = new Plan();
     plan.name = newPlan.name;
@@ -113,7 +125,7 @@ public final class MockPlanRepository implements PlanRepository {
       }
     }
 
-    this.plans.put(id, plan);
+    this.plans.put(id, Pair.of(revision, plan));
   }
 
   @Override
@@ -128,13 +140,16 @@ public final class MockPlanRepository implements PlanRepository {
 
   @Override
   public String createActivity(final String planId, final ActivityInstance activity) throws NoSuchPlanException {
-    final Plan plan = this.plans.get(planId);
-    if (plan == null) {
-      throw new NoSuchPlanException(planId);
-    }
+    final var entry = this.plans.get(planId);
+    if (entry == null) throw new NoSuchPlanException(planId);
+
+    final var plan = entry.getRight();
+    final var revision = entry.getLeft() + 1;
 
     final String activityId = Objects.toString(this.nextActivityId++);
     plan.activityInstances.put(activityId, new ActivityInstance(activity));
+    this.plans.put(planId, Pair.of(revision, plan));
+
     return activityId;
   }
 
@@ -145,40 +160,46 @@ public final class MockPlanRepository implements PlanRepository {
 
   @Override
   public void replaceActivity(final String planId, final String activityId, final ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    final Plan plan = this.plans.get(planId);
-    if (plan == null) {
-      throw new NoSuchPlanException(planId);
-    }
+    final var entry = this.plans.get(planId);
+    if (entry == null) throw new NoSuchPlanException(planId);
+
+    final var plan = entry.getRight();
+    final var revision = entry.getLeft() + 1;
 
     if (!plan.activityInstances.containsKey(activityId)) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
 
     plan.activityInstances.put(activityId, activity);
+    this.plans.put(planId, Pair.of(revision, plan));
   }
 
   @Override
   public void deleteActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    final Plan plan = this.plans.get(planId);
-    if (plan == null) {
-      throw new NoSuchPlanException(planId);
-    }
+    final var entry = this.plans.get(planId);
+    if (entry == null) throw new NoSuchPlanException(planId);
+
+    final var plan = entry.getRight();
+    final var revision = entry.getLeft() + 1;
 
     if (!plan.activityInstances.containsKey(activityId)) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
 
     plan.activityInstances.remove(activityId);
+    this.plans.put(planId, Pair.of(revision, plan));
   }
 
   @Override
   public void deleteAllActivities(final String planId) throws NoSuchPlanException {
-    final Plan plan = plans.get(planId);
-    if (plan == null) {
-      throw new NoSuchPlanException(planId);
-    }
+    final var entry = this.plans.get(planId);
+    if (entry == null) throw new NoSuchPlanException(planId);
+
+    final var plan = entry.getRight();
+    final var revision = entry.getLeft() + 1;
 
     plan.activityInstances.clear();
+    this.plans.put(planId, Pair.of(revision, plan));
   }
 
   @Override
@@ -211,15 +232,18 @@ public final class MockPlanRepository implements PlanRepository {
 
     @Override
     public void commit() throws NoSuchPlanException {
-      final Plan plan = MockPlanRepository.this.plans.get(this.planId);
-      if (plan == null) {
-        throw new NoSuchPlanException(this.planId);
-      }
+      final var entry = MockPlanRepository.this.plans.get(this.planId);
+      if (entry == null) throw new NoSuchPlanException(this.planId);
+
+      final var plan = entry.getRight();
+      final var revision = entry.getLeft() + 1;
 
       this.name.ifPresent(name -> plan.name = name);
       this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
       this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
       this.adaptationId.ifPresent(adaptationId -> plan.adaptationId = adaptationId);
+
+      MockPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
     }
 
     @Override
@@ -262,10 +286,11 @@ public final class MockPlanRepository implements PlanRepository {
 
     @Override
     public void commit() throws NoSuchPlanException, NoSuchActivityInstanceException {
-      final Plan plan = MockPlanRepository.this.plans.get(this.planId);
-      if (plan == null) {
-        throw new NoSuchPlanException(this.planId);
-      }
+      final var entry = MockPlanRepository.this.plans.get(this.planId);
+      if (entry == null) throw new NoSuchPlanException(this.planId);
+
+      final var plan = entry.getRight();
+      final var revision = entry.getLeft() + 1;
 
       final ActivityInstance activity = plan.activityInstances.get(this.activityId);
       if (activity == null) {
@@ -275,6 +300,8 @@ public final class MockPlanRepository implements PlanRepository {
       this.type.ifPresent(type -> activity.type = type);
       this.startTimestamp.ifPresent(startTimestamp -> activity.startTimestamp = startTimestamp);
       this.parameters.ifPresent(parameters -> activity.parameters = parameters);
+
+      MockPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
     }
 
     @Override

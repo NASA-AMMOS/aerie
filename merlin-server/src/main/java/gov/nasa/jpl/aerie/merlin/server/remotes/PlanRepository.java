@@ -25,6 +25,7 @@ public interface PlanRepository {
   // Queries
   Stream<Pair<String, Plan>> getAllPlans();
   Plan getPlan(String id) throws NoSuchPlanException;
+  long getPlanRevision(String id) throws NoSuchPlanException;
   Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
   ActivityInstance getActivityInPlanById(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
 
