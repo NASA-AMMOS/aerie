@@ -394,7 +394,7 @@ public final class SimulationDriver {
       taskInfo.put(taskId, info);
     });
 
-    return new SimulationResults(
+    return SimulationResults.create(
         realProfiles,
         discreteProfiles,
         taskIdToActivityId,
