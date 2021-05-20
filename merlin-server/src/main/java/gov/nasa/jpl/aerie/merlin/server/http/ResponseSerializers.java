@@ -35,7 +35,6 @@ import javax.json.stream.JsonParsingException;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -490,15 +489,17 @@ public final class ResponseSerializers {
     }
 
     @Override
-    public JsonValue onVariant(Class<? extends Enum<?>> enumeration) {
-      var enumValues = Arrays.asList(enumeration.getEnumConstants());
+    public JsonValue onVariant(final List<ValueSchema.Variant> variants) {
       return Json
           .createObjectBuilder()
           .add("type", "variant")
-          .add("variants", serializeIterable(v -> Json.createObjectBuilder()
-                                                      .add("key", v.name())
-                                                      .add("label", v.toString())
-                                                      .build(), enumValues))
+          .add("variants", serializeIterable(
+              v -> Json
+                  .createObjectBuilder()
+                  .add("key", v.key)
+                  .add("label", v.label)
+                  .build(),
+              variants))
           .build();
     }
   }
