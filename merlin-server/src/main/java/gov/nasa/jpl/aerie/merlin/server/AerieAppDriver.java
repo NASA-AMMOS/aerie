@@ -33,15 +33,15 @@ public final class AerieAppDriver {
 
     // Assemble the core non-web object graph.
     final var mongoDatabase = MongoClients
-        .create(configuration.MONGO_URI.toString())
-        .getDatabase(configuration.MONGO_DATABASE);
+        .create(configuration.MONGO_URI().toString())
+        .getDatabase(configuration.MONGO_DATABASE());
     final var planRepository = new RemotePlanRepository(
         mongoDatabase,
-        configuration.MONGO_PLAN_COLLECTION,
-        configuration.MONGO_ACTIVITY_COLLECTION);
+        configuration.MONGO_PLAN_COLLECTION(),
+        configuration.MONGO_ACTIVITY_COLLECTION());
     final var adaptationRepository = new RemoteAdaptationRepository(
         mongoDatabase,
-        configuration.MONGO_ADAPTATION_COLLECTION);
+        configuration.MONGO_ADAPTATION_COLLECTION());
 
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
@@ -50,7 +50,7 @@ public final class AerieAppDriver {
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      if (configuration.enableJavalinLogging) config.enableDevLogging();
+      if (configuration.enableJavalinLogging()) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
           .registerPlugin(new MerlinBindings(planController, adaptationController))
@@ -60,14 +60,14 @@ public final class AerieAppDriver {
     });
 
     // Start the HTTP server.
-    javalin.start(configuration.HTTP_PORT);
+    javalin.start(configuration.HTTP_PORT());
   }
 
   /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
   private static Supplier<SerializedValue> makeMissionModelConfigSupplier(final AppConfiguration configuration)
   {
     // Try to deserialize JSON configuration to a serialized configuration
-    return () -> configuration.MISSION_MODEL_CONFIG_PATH
+    return () -> configuration.MISSION_MODEL_CONFIG_PATH()
         .map(p -> {
           try {
             final var fs = new FileInputStream(p);
