@@ -18,9 +18,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -324,53 +322,13 @@ public final class RemotePlanRepository implements PlanRepository {
     return planDocument;
   }
 
-  private SerializedValue parameterFromDocument(final Document document) {
-    switch (document.getString("type")) {
-      case "null":
-        return SerializedValue.NULL;
-      case "string":
-        return SerializedValue.of(document.getString("value"));
-      case "int":
-        return SerializedValue.of(document.getLong("value"));
-      case "double":
-        return SerializedValue.of(document.getDouble("value"));
-      case "boolean":
-        return SerializedValue.of(document.getBoolean("value"));
-      case "list":
-        final List<Document> itemDocuments = document.getList("value", Document.class);
-
-        final List<SerializedValue> items = new ArrayList<>();
-        for (final var itemDocument : itemDocuments) {
-          items.add(parameterFromDocument(itemDocument));
-        }
-
-        return SerializedValue.of(items);
-      case "map":
-        final Document fieldsDocument = document.get("value", Document.class);
-
-        final Map<String, SerializedValue> fields = new HashMap<>();
-        for (final var entry : fieldsDocument.entrySet()) {
-          fields.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
-        }
-
-        return SerializedValue.of(fields);
-      default:
-        throw new Error("unexpected bad data in database");
-    }
-  }
-
   private ActivityInstance activityFromDocument(final Document document) {
     final Document parametersDocument = document.get("parameters", Document.class);
-
-    final Map<String, SerializedValue> parameters = new HashMap<>();
-    for (final var entry : parametersDocument.entrySet()) {
-      parameters.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
-    }
 
     final ActivityInstance activity = new ActivityInstance();
     activity.type = document.getString("type");
     activity.startTimestamp = Timestamp.fromString(document.getString("startTimestamp"));
-    activity.parameters = parameters;
+    activity.parameters = MongoDeserializers.map(parametersDocument, MongoDeserializers::serializedValue);
 
     return activity;
   }
@@ -398,89 +356,12 @@ public final class RemotePlanRepository implements PlanRepository {
     return plan;
   }
 
-  private Document toDocument(final SerializedValue parameter) {
-    return parameter.match(new SerializedValue.Visitor<>() {
-      @Override
-      public Document onNull() {
-        final Document document = new Document();
-        document.put("type", "null");
-        return document;
-      }
-
-      @Override
-      public Document onReal(double value) {
-        final Document document = new Document();
-        document.put("type", "double");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onInt(long value) {
-        final Document document = new Document();
-        document.put("type", "int");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onBoolean(boolean value) {
-        final Document document = new Document();
-        document.put("type", "boolean");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onString(String value) {
-        final Document document = new Document();
-        document.put("type", "string");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onList(List<SerializedValue> items) {
-        final List<Document> itemDocuments = new ArrayList<>();
-        for (final var item : items) {
-          itemDocuments.add(item.match(this));
-        }
-
-        final Document document = new Document();
-        document.put("type", "list");
-        document.put("value", itemDocuments);
-        return document;
-      }
-
-      @Override
-      public Document onMap(Map<String, SerializedValue> fields) {
-        final Document fieldsDocument = new Document();
-        for (final var field : fields.entrySet()) {
-          fieldsDocument.put(field.getKey(), field.getValue().match(this));
-        }
-
-        final Document document = new Document();
-        document.put("type", "map");
-        document.put("value", fieldsDocument);
-        return document;
-      }
-    });
-  }
-
-  private Document toDocument(final Map<String, SerializedValue> parameters) {
-    final Document parametersDocument = new Document();
-    for (final var entry : parameters.entrySet()) {
-      parametersDocument.put(entry.getKey(), toDocument(entry.getValue()));
-    }
-    return parametersDocument;
-  }
-
   private Document toDocument(final String planId, final ActivityInstance activity) {
     final Document activityDocument = new Document();
     activityDocument.put("planId", new ObjectId(planId));
     activityDocument.put("type", activity.type);
     activityDocument.put("startTimestamp", activity.startTimestamp.toString());
-    activityDocument.put("parameters", toDocument(activity.parameters));
+    activityDocument.put("parameters", MongoSerializers.map(activity.parameters, MongoSerializers::serializedValue));
 
     return activityDocument;
   }
@@ -595,7 +476,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     @Override
     public ActivityTransaction setParameters(final Map<String, SerializedValue> parameters) {
-      this.patch = combine(this.patch, set("parameters", toDocument(parameters)));
+      this.patch = combine(this.patch, set("parameters", MongoSerializers.map(parameters, MongoSerializers::serializedValue)));
       return this;
     }
   }
