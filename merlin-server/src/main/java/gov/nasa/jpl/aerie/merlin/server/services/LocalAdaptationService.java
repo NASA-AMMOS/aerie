@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
@@ -117,7 +118,7 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+  public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
     try {
       return this.adaptationRepository.getConstraints(adaptationId);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
@@ -126,7 +127,7 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+  public void replaceConstraints(final String adaptationId, final Map<String, Constraint> constraints)
   throws NoSuchAdaptationException
   {
     try {

@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -211,6 +212,45 @@ public final class RemotePlanRepository implements PlanRepository {
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
   }
 
+  @Override
+  public Map<String, Constraint> getAllConstraintsInPlan(final String planId) throws NoSuchPlanException {
+    final var planDocument = this.getPlanFromCollection(planId);
+    final var constraints = new HashMap<String, Constraint>();
+    final var constraintsDocument = planDocument.get("constraints", Document.class);
+
+    for (final var name : constraintsDocument.keySet()) {
+      constraints.put(name, this.constraintFromDocument((constraintsDocument.get(name, Document.class))));
+    }
+
+    return constraints;
+  }
+
+  @Override
+  public void replacePlanConstraints(final String planId, final Map<String, Constraint> constraints) throws NoSuchPlanException {
+    final var planDocument = this.getPlanFromCollection(planId);
+
+    final var constraintsDocument = planDocument.get("constraints", Document.class);
+    for (final var entry : constraints.entrySet()) {
+      constraintsDocument.put(entry.getKey(), this.toDocument(entry.getValue()));
+    }
+
+    planDocument.put("constraints", constraintsDocument);
+
+    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
+  }
+
+  @Override
+  public void deleteConstraintInPlanById(final String planId, final String constraintId)
+  throws NoSuchPlanException
+  {
+    final var planDocument = this.getPlanFromCollection(planId);
+    final var constraintsDocument = planDocument.get("constraints", Document.class);
+    constraintsDocument.remove(constraintId);
+    planDocument.put("constraints", constraintsDocument);
+
+    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
+  }
+
   private Bson activityByPlan(final ObjectId planId) {
     return eq("planId", planId);
   }
@@ -245,6 +285,17 @@ public final class RemotePlanRepository implements PlanRepository {
     if (this.planCollection.countDocuments(planById(makePlanObjectId(planId))) == 0) {
       throw new NoSuchPlanException(planId);
     }
+  }
+
+  private Document getPlanFromCollection(String planId) throws NoSuchPlanException {
+  final Document planDocument = this.planCollection
+        .find(planById(makePlanObjectId(planId)))
+        .first();
+
+    if (planDocument == null) {
+      throw new NoSuchPlanException(planId);
+    }
+    return planDocument;
   }
 
   private SerializedValue parameterFromDocument(final Document document) {
@@ -296,6 +347,16 @@ public final class RemotePlanRepository implements PlanRepository {
     activity.parameters = parameters;
 
     return activity;
+  }
+
+  private Constraint constraintFromDocument(final Document document) {
+    final Constraint constraint = new Constraint(
+        document.getString("name"),
+        document.getString("summary"),
+        document.getString("description"),
+        document.getString("definition"));
+
+    return constraint;
   }
 
   private Plan planFromDocuments(final Document planDocument, final FindIterable<Document> activityDocuments) {
@@ -398,12 +459,23 @@ public final class RemotePlanRepository implements PlanRepository {
     return activityDocument;
   }
 
+  private Document toDocument(final Constraint constraint) {
+    final Document constraintDocument = new Document();
+    constraintDocument.put("name", constraint.name());
+    constraintDocument.put("summary", constraint.summary());
+    constraintDocument.put("description", constraint.description());
+    constraintDocument.put("definition", constraint.definition());
+
+    return constraintDocument;
+  }
+
   private Document toDocument(final NewPlan newPlan) {
     final Document planDocument = new Document();
     planDocument.put("name", newPlan.name);
     planDocument.put("startTimestamp", newPlan.startTimestamp.toString());
     planDocument.put("endTimestamp", newPlan.endTimestamp.toString());
     planDocument.put("adaptationId", newPlan.adaptationId);
+    planDocument.put("constraints", new Document());
 
     return planDocument;
   }

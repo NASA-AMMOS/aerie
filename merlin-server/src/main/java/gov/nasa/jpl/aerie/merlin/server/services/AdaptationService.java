@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 
 import java.util.List;
@@ -22,12 +23,10 @@ public interface AdaptationService {
   void removeAdaptation(String adaptationId)
   throws NoSuchAdaptationException;
 
-  Map<String, String> getConstraints(String adaptationId)
+  Map<String, Constraint> getConstraints(String adaptationId)
   throws NoSuchAdaptationException;
-  void replaceConstraints(String adaptationId, Map<String, String> constraints)
-  throws NoSuchAdaptationException;
-  void deleteConstraint(String adaptationId, String constraintName)
-  throws NoSuchAdaptationException;
+  void replaceConstraints(String adaptationId, Map<String, Constraint> constraints) throws NoSuchAdaptationException;
+  void deleteConstraint(String adaptationId, String constraintId) throws NoSuchAdaptationException;
 
   Map<String, ValueSchema> getStatesSchemas(String adaptationId)
   throws NoSuchAdaptationException;

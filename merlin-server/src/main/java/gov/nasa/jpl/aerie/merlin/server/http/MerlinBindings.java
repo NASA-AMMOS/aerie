@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceExcepti
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
@@ -28,9 +29,9 @@ import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.serializedParameterP;
@@ -90,6 +91,11 @@ public final class MerlinBindings implements Plugin {
               patch(this::patchActivityInstance);
               delete(this::deleteActivityInstance);
             });
+          });
+          path("constraints", () -> {
+            get(this::getPlanConstraints);
+            post(this::postPlanConstraints);
+            delete(this::deletePlanConstraint);
           });
           path("results", () -> {
             get(this::getSimulationResults);
@@ -328,6 +334,45 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
+  private void getPlanConstraints(final Context ctx){
+    try {
+      final String planId = ctx.pathParam("planId");
+
+      final Map<String, Constraint> constraints = this.planService.getConstraintsForPlan(planId);
+
+      ctx.result(ResponseSerializers.serializeConstraints(constraints).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    }
+  }
+
+  private void postPlanConstraints(final Context ctx){
+    try {
+      final String planId = ctx.pathParam("planId");
+      final var constraints = parseJson(ctx.body(), mapP(constraintP));
+
+      this.planService.replaceConstraints(planId, constraints);
+
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    }
+  }
+
+  private void deletePlanConstraint(final Context ctx){
+    try {
+      final String planId = ctx.pathParam("planId");
+      final String constraintId = ctx.queryParam("name");
+      this.planService.removeConstraintById(planId, constraintId);
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    }
+  }
+
   private void getAdaptations(final Context ctx) {
     final var adaptations = this.adaptationService.getAdaptations();
 
@@ -399,7 +444,7 @@ public final class MerlinBindings implements Plugin {
   private void postModelConstraints(final Context ctx) {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
-      final var constraints = parseJson(ctx.body(), mapP(stringP));
+      final var constraints = parseJson(ctx.body(), mapP(constraintP));
 
       this.adaptationService.replaceConstraints(adaptationId, constraints);
 
