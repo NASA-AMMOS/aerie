@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class ForEachActivity implements Expression<List<Violation>> {
   public final String activityType;
@@ -45,6 +46,11 @@ public final class ForEachActivity implements Expression<List<Violation>> {
       }
     }
     return violations;
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expression.extractResources(names);
   }
 
   @Override

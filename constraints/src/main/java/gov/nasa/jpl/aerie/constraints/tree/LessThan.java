@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class LessThan implements Expression<Windows> {
   public final Expression<LinearProfile> left;
@@ -23,6 +24,12 @@ public final class LessThan implements Expression<Windows> {
     LinearProfile rightProfile = this.right.evaluate(results, environment);
 
     return leftProfile.lessThan(rightProfile, results.bounds);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.left.extractResources(names);
+    this.right.extractResources(names);
   }
 
   @Override

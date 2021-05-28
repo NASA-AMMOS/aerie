@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class RealValue implements Expression<LinearProfile> {
   private final double value;
@@ -24,6 +25,9 @@ public final class RealValue implements Expression<LinearProfile> {
         )
     );
   }
+
+  @Override
+  public void extractResources(final Set<String> names) { }
 
   @Override
   public String prettyPrint(final String prefix) {

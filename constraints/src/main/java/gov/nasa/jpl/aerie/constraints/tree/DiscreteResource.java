@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class DiscreteResource implements Expression<DiscreteProfile> {
   public final String name;
@@ -24,6 +25,11 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
     }
 
     throw new InputMismatchException(String.format("%s is not a valid resource", this.name));
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    names.add(this.name);
   }
 
   @Override

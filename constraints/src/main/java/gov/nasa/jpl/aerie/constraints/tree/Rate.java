@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Rate implements Expression<LinearProfile> {
   private final Expression<LinearProfile> profile;
@@ -18,6 +19,11 @@ public final class Rate implements Expression<LinearProfile> {
   @Override
   public LinearProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
     return this.profile.evaluate(results, environment).rate();
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.profile.extractResources(names);
   }
 
   @Override

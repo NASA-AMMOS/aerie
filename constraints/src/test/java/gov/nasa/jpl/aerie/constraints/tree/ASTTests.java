@@ -441,6 +441,9 @@ public class ASTTests {
     }
 
     @Override
+    public void extractResources(final Set<String> names) { }
+
+    @Override
     public String prettyPrint(final String prefix) {
       return value.toString();
     }

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Not implements Expression<Windows> {
   public final Expression<Windows> expression;
@@ -19,6 +20,11 @@ public final class Not implements Expression<Windows> {
     return Windows.minus(
         new Windows(results.bounds),
         this.expression.evaluate(results, environment));
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expression.extractResources(names);
   }
 
   @Override

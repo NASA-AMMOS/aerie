@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Transition implements Expression<Windows> {
   private final Expression<DiscreteProfile> profile;
@@ -23,6 +24,11 @@ public final class Transition implements Expression<Windows> {
   @Override
   public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
     return this.profile.evaluate(results, environment).transitions(oldState, newState, results.bounds);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.profile.extractResources(names);
   }
 
   @Override

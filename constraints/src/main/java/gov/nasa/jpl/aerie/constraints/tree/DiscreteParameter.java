@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class DiscreteParameter implements Expression<DiscreteProfile> {
   private final String activityAlias;
@@ -25,6 +26,9 @@ public final class DiscreteParameter implements Expression<DiscreteProfile> {
         List.of(
             new DiscreteProfilePiece(results.bounds, activity.parameters.get(this.parameterName))));
   }
+
+  @Override
+  public void extractResources(final Set<String> names) { }
 
   @Override
   public String prettyPrint(final String prefix) {
