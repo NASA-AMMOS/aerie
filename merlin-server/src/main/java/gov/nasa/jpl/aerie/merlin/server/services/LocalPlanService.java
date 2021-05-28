@@ -239,8 +239,15 @@ public final class LocalPlanService implements PlanService {
           realProfiles,
           discreteProfiles);
 
-      final var constraintJsons = this.adaptationService.getConstraints(plan.adaptationId);
       final var violations = new HashMap<String, List<Violation>>();
+      final var constraintJsons = new HashMap<String, Constraint>();
+
+      this.adaptationService.getConstraints(plan.adaptationId).forEach(
+          (name, constraint) -> constraintJsons.put("model/" + name, constraint)
+      );
+      this.getConstraintsForPlan(planId).forEach(
+          (name, constraint) -> constraintJsons.put("plan/" + name, constraint)
+      );
       for (final var entry : constraintJsons.entrySet()) {
         final var subject = Json.createReader(new StringReader(entry.getValue().definition())).readValue();
         final var constraint = ConstraintParsers.constraintP.parse(subject);
