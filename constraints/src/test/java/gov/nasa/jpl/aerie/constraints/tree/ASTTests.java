@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
@@ -300,7 +301,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var violation = new Violation(List.of(), new Windows(Window.between(4, 6, SECONDS)));
+    final var violation = new Violation(List.of(), List.of(), new Windows(Window.between(4, 6, SECONDS)));
     final var result = new ForEachActivity(
         "TypeA",
         "act",
@@ -308,8 +309,8 @@ public class ASTTests {
     ).evaluate(simResults, Map.of());
 
     final var expected = List.of(
-        new Violation(List.of("1"), new Windows(Window.between(4, 6, SECONDS))),
-        new Violation(List.of("3"), new Windows(Window.between(4, 6, SECONDS))));
+        new Violation(List.of("1"), List.of(), new Windows(Window.between(4, 6, SECONDS))),
+        new Violation(List.of("3"), List.of(), new Windows(Window.between(4, 6, SECONDS))));
 
     assertEquivalent(expected, result);
   }
@@ -327,7 +328,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var violation = new Violation(List.of(), new Windows(Window.between(4, 6, SECONDS)));
+    final var violation = new Violation(List.of(), List.of(), new Windows(Window.between(4, 6, SECONDS)));
     final var result = new ForEachActivity(
         "TypeA",
         "act",
@@ -341,8 +342,8 @@ public class ASTTests {
     // We expect two violations because there are two activities of TypeA
     // The details of the violation will be the same, since we are using a supplier
     final var expected = List.of(
-        new Violation(List.of("1", "2"), new Windows(Window.between(4, 6, SECONDS))),
-        new Violation(List.of("3", "2"), new Windows(Window.between(4, 6, SECONDS))));
+        new Violation(List.of("1", "2"), List.of(), new Windows(Window.between(4, 6, SECONDS))),
+        new Violation(List.of("3", "2"), List.of(), new Windows(Window.between(4, 6, SECONDS))));
 
     assertEquivalent(expected, result);
   }
