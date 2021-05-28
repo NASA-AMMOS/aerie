@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
@@ -29,9 +30,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public final class LocalPlanService implements PlanService {
@@ -256,7 +259,14 @@ public final class LocalPlanService implements PlanService {
           throw new Error(entry.getValue().definition());
         }
 
-        final var violationEvents = constraint.getSuccessOrThrow().evaluate(preparedResults);
+        final var violationEvents = new ArrayList<Violation>();
+        final var expression = constraint.getSuccessOrThrow();
+        try {
+          violationEvents.addAll(expression.evaluate(preparedResults));
+        } catch (final InputMismatchException ex) {
+          // @TODO Need a better way to catch and propagate the exception to the
+          // front end and to log the evaluation failure. This is captured in AERIE-1285.
+        }
 
         if (violationEvents.isEmpty()) continue;
 
@@ -265,7 +275,18 @@ public final class LocalPlanService implements PlanService {
             created to account for refactoring and removing the need for this condition. */
         if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
 
-        violations.put(entry.getKey(), violationEvents);
+
+        final var names = new HashSet<String>();
+        expression.extractResources(names);
+        final var resourceNames = new ArrayList<>(names);
+        final var violationEventsWithNames = new ArrayList<Violation>();
+        violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
+            violation.activityInstanceIds,
+            resourceNames,
+            violation.violationWindows)));
+
+        violations.put(entry.getKey(), violationEventsWithNames);
+
       }
 
       return Pair.of(results, violations);
