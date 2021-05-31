@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
@@ -202,5 +203,20 @@ public final class MongoDeserializers {
             MongoDeserializers::serializedActivity),
         MongoDeserializers.instant(
             resultsDocument.getString("startTime")));
+  }
+
+  public static ResultsProtocol.State simulationResultsState(final Document stateDocument) {
+    final var type = stateDocument.getString("type");
+
+    return switch (type) {
+      case "incomplete" ->
+          new ResultsProtocol.State.Incomplete();
+      case "failed" ->
+          new ResultsProtocol.State.Failed(stateDocument.getString("reason"));
+      case "success" ->
+          new ResultsProtocol.State.Success(simulationResults(stateDocument.get("results", Document.class)));
+      default ->
+          throw new Error("Key `%s` has unexpected value `%s`".formatted("type", type));
+    };
   }
 }

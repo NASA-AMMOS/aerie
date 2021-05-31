@@ -7,7 +7,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 
@@ -232,5 +234,22 @@ public final class MongoSerializers {
         "discreteProfiles", map(results.discreteProfiles, MongoSerializers::discreteProfile),
         "finishedActivities", map(results.simulatedActivities, MongoSerializers::simulatedActivity),
         "unfinishedActivities", map(results.unfinishedActivities, MongoSerializers::serializedActivity)));
+  }
+
+  public static Document simulationResultsState(final ResultsProtocol.State state) {
+    if (state instanceof ResultsProtocol.State.Incomplete) {
+      return new Document(Map.of(
+          "type", "incomplete"));
+    } else if (state instanceof ResultsProtocol.State.Failed s) {
+      return new Document(Map.of(
+          "type", "failed",
+          "reason", s.reason()));
+    } else if (state instanceof ResultsProtocol.State.Success s) {
+      return new Document(Map.of(
+          "type", "success",
+          "results", simulationResults(s.results())));
+    } else {
+      throw new UnexpectedSubtypeError(ResultsProtocol.State.class, state);
+    }
   }
 }
