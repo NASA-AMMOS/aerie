@@ -291,14 +291,22 @@ pipeline {
           steps {
             sh '''
               JAVADOC_PREP_DIR=$(mktemp -d)
-              mkdir -p ${JAVADOC_PREP_DIR}/javadoc/sdk
+              mkdir -p ${JAVADOC_PREP_DIR}/javadoc/framework
+              mkdir -p ${JAVADOC_PREP_DIR}/javadoc/framework-junit
+              mkdir -p ${JAVADOC_PREP_DIR}/javadoc/framework-processor
               mkdir -p ${JAVADOC_PREP_DIR}/javadoc/contrib
 
-              ./gradlew merlin-sdk:javadoc
-              cp -rv merlin-sdk/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/sdk/
+              ./gradlew merlin-framework:javadoc
+              cp -rv merlin-framework/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/framework/
+
+              ./gradlew merlin-framework-junit:javadoc
+              cp -rv merlin-framework-junit/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/framework-junit/
+
+              ./gradlew merlin-framework-processor:javadoc
+              cp -rv merlin-framework-processor/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/framework-processor/
 
               ./gradlew contrib:javadoc
-              cp -rv merlin-sdk/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/contrib/
+              cp -rv contrib/build/docs/javadoc/. ${JAVADOC_PREP_DIR}/javadoc/contrib/
 
               git checkout gh-pages
               rsync -av --delete ${JAVADOC_PREP_DIR}/javadoc/ javadoc
