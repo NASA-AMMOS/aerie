@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class And implements Expression<Windows> {
   public final List<Expression<Windows>> expressions;
@@ -29,6 +30,11 @@ public final class And implements Expression<Windows> {
       );
     }
     return windows;
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expressions.forEach(expression -> expression.extractResources(names));
   }
 
   @Override

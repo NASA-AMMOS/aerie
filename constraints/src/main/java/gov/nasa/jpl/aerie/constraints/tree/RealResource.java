@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class RealResource implements Expression<LinearProfile> {
   public final String name;
@@ -38,6 +39,11 @@ public final class RealResource implements Expression<LinearProfile> {
     }
 
     return new LinearProfile(linearPieces);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    names.add(this.name);
   }
 
   @Override

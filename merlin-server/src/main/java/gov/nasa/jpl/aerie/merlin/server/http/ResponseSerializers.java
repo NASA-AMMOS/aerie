@@ -161,7 +161,7 @@ public final class ResponseSerializers {
         .add("associations", Json
             .createObjectBuilder()
             .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))
-            .add("resourceIds", serializeIterable(Json::createValue, List.<String>of()))
+            .add("resourceIds", serializeIterable(Json::createValue, violation.resourceNames))
             .build())
         .add("windows", serializeIterable(ResponseSerializers::serializeWindow, violation.violationWindows))
         .build();

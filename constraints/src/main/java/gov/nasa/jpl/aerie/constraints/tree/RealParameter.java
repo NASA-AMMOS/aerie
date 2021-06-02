@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class RealParameter implements Expression<LinearProfile> {
   private final String activityAlias;
@@ -35,6 +36,9 @@ public final class RealParameter implements Expression<LinearProfile> {
         List.of(
             new LinearProfilePiece(results.bounds, value, 0)));
   }
+
+  @Override
+  public void extractResources(final Set<String> names) { }
 
   @Override
   public String prettyPrint(final String prefix) {

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class ProfileExpression<P extends Profile<P>> implements Expression<Profile<P>> {
   public final Expression<P> expression;
@@ -17,6 +18,11 @@ public final class ProfileExpression<P extends Profile<P>> implements Expression
   @Override
   public Profile<P> evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
     return this.expression.evaluate(results, environment);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expression.extractResources(names);
   }
 
   @Override

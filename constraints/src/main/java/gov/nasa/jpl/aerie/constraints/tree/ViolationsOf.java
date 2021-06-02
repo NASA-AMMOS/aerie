@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class ViolationsOf implements Expression<List<Violation>> {
   private final Expression<Windows> expression;
@@ -21,6 +22,11 @@ public final class ViolationsOf implements Expression<List<Violation>> {
     final var bounds = new Windows(results.bounds);
     final var satisfiedWindows = this.expression.evaluate(results, environment);
     return List.of(new Violation(Windows.minus(bounds, satisfiedWindows)));
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expression.extractResources(names);
   }
 
   @Override
