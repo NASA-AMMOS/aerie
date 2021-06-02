@@ -62,29 +62,15 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Interface</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><a href="AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">AdaptationFactory</a></div>
+<div class="col-first even-row-color"><a href="Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Adaptation</a>&lt;$Schema&gt;</div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="AdaptationFactory.Builder.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">AdaptationFactory.Builder</a>&lt;$Schema&gt;</div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="AdaptationFactory.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">AdaptationFactory.TaskFactory</a>&lt;$Schema&gt;</div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Applicator</a>&lt;Effect,&#8203;State&gt;</div>
+<div class="col-first odd-row-color"><a href="AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">AdaptationFactory</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><a href="Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Checkpoint</a>&lt;$Timeline&gt;</div>
-<div class="col-last even-row-color">
-<div class="block">Designates the simulation state at a particular time in the simulation timeline.</div>
-</div>
+<div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Condition</a>&lt;$Schema&gt;</div>
 <div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><a href="DiscreteApproximator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">DiscreteApproximator</a>&lt;Dynamics&gt;</div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="EffectTrait.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">EffectTrait</a>&lt;Effect&gt;</div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Projection</a>&lt;Event,&#8203;Effect&gt;</div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="Querier.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Querier</a>&lt;$Timeline&gt;</div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="Query.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Query</a>&lt;$Schema,&#8203;Event,&#8203;State&gt;</div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="RealApproximator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">RealApproximator</a>&lt;Dynamics&gt;</div>
 <div class="col-last odd-row-color">&nbsp;</div>
@@ -95,10 +81,6 @@ loadScripts(document, 'script');</script>
 <div class="block">A solver over a continuous dynamics for a resource type.</div>
 </div>
 <div class="col-first even-row-color"><a href="ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">ResourceSolver.ApproximatorVisitor</a>&lt;Dynamics,&#8203;Result&gt;</div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="Result.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Result.Visitor</a>&lt;Success,&#8203;Failure,&#8203;Output,&#8203;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</div>
-<div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="Result.VisitorCase.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Result.VisitorCase</a>&lt;Input,&#8203;Output,&#8203;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="Scheduler.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">Scheduler</a>&lt;$Timeline&gt;</div>
 <div class="col-last odd-row-color">&nbsp;</div>
@@ -130,45 +112,34 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color"><a href="DelimitedDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">DelimitedDynamics</a>&lt;Dynamics&gt;</div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="Duration.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Duration</a></div>
-<div class="col-last odd-row-color">
-<div class="block">A signed measure of the temporal distance between two instants.</div>
-</div>
-<div class="col-first even-row-color"><a href="ParameterSchema.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ParameterSchema</a></div>
-<div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">RealDynamics</a></div>
 <div class="col-last odd-row-color">
 <div class="block">A description of a time-dependent behavior for real-valued resources that may vary continuously.</div>
 </div>
-<div class="col-first even-row-color"><a href="Result.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">Result</a>&lt;Success,&#8203;Failure&gt;</div>
+<div class="col-first even-row-color"><a href="SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a></div>
 <div class="col-last even-row-color">
-<div class="block">This class is the equivalent of the type `Result L R = Success L | Failure R` in a language with algebraic data types,
- but adapted to the vagaries of the Java platform.</div>
-</div>
-<div class="col-first odd-row-color"><a href="SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue</a></div>
-<div class="col-last odd-row-color">
 <div class="block">A serializable representation of an adaptation-specific activity parameter domain object.</div>
 </div>
-<div class="col-first even-row-color"><a href="SerializedValue.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.DefaultVisitor</a>&lt;T&gt;</div>
-<div class="col-last even-row-color">
+<div class="col-first odd-row-color"><a href="SerializedValue.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.DefaultVisitor</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color">
 <div class="block">Provides a default case on top of the base Visitor.</div>
 </div>
-<div class="col-first odd-row-color"><a href="SerializedValue.OptionalVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.OptionalVisitor</a>&lt;T&gt;</div>
-<div class="col-last odd-row-color">
+<div class="col-first even-row-color"><a href="SerializedValue.OptionalVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.OptionalVisitor</a>&lt;T&gt;</div>
+<div class="col-last even-row-color">
 <div class="block">A helper base class implementing <code>Visitor&lt;Optional&lt;T&gt;&gt;</code> for any result type <code>T</code>.</div>
 </div>
-<div class="col-first even-row-color"><a href="TaskStatus.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">TaskStatus</a>&lt;$Timeline&gt;</div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="ValueSchema.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema</a></div>
-<div class="col-last odd-row-color">
+<div class="col-first odd-row-color"><a href="TaskStatus.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">TaskStatus</a>&lt;$Timeline&gt;</div>
+<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><a href="ValueSchema.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema</a></div>
+<div class="col-last even-row-color">
 <div class="block">A serializable description of the structure of a value such as an activity parameter.</div>
 </div>
-<div class="col-first even-row-color"><a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.DefaultVisitor</a>&lt;T&gt;</div>
-<div class="col-last even-row-color">
+<div class="col-first odd-row-color"><a href="ValueSchema.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.DefaultVisitor</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color">
 <div class="block">Provides a default case on top of the base Visitor.</div>
 </div>
-<div class="col-first odd-row-color"><a href="ValueSchema.OptionalVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.OptionalVisitor</a>&lt;T&gt;</div>
-<div class="col-last odd-row-color">
+<div class="col-first even-row-color"><a href="ValueSchema.OptionalVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.OptionalVisitor</a>&lt;T&gt;</div>
+<div class="col-last even-row-color">
 <div class="block">A helper base class implementing <code>Visitor&lt;Optional&lt;T&gt;&gt;</code> for any result type <code>T</code>.</div>
 </div>
 </div>
@@ -178,10 +149,8 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Enum Class</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><a href="Result.Kind.html" title="enum class in gov.nasa.jpl.aerie.merlin.protocol">Result.Kind</a></div>
+<div class="col-first even-row-color"><a href="ValueSchema.Unit.html" title="enum class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.Unit</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><a href="ValueSchema.Unit.html" title="enum class in gov.nasa.jpl.aerie.merlin.protocol">ValueSchema.Unit</a></div>
-<div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </li>
 <li>
@@ -191,17 +160,6 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color"><a href="TaskSpecType.UnconstructableTaskSpecException.html" title="class in gov.nasa.jpl.aerie.merlin.protocol">TaskSpecType.UnconstructableTaskSpecException</a></div>
 <div class="col-last even-row-color">&nbsp;</div>
-</div>
-</li>
-<li>
-<div class="caption"><span>Annotation Interfaces Summary</span></div>
-<div class="summary-table two-column-summary">
-<div class="table-header col-first">Annotation Interface</div>
-<div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><a href="Capability.html" title="annotation in gov.nasa.jpl.aerie.merlin.protocol">Capability</a></div>
-<div class="col-last even-row-color">
-<div class="block">A Capability has object identity.</div>
-</div>
 </div>
 </li>
 </ul>

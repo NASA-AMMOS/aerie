@@ -63,10 +63,7 @@ loadScripts(document, 'script');</script>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link"><span class="type-name-link">Object</span></a>
 <ul>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="DelimitedDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">DelimitedDynamics</span></a>&lt;Dynamics&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Duration.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Duration</span></a> (implements java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Comparable.html" title="class or interface in java.lang" class="external-link">Comparable</a>&lt;T&gt;)</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="ParameterSchema.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">ParameterSchema</span></a></li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="RealDynamics.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">RealDynamics</span></a></li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Result.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Result</span></a>&lt;Success,&#8203;Failure&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="SerializedValue.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">SerializedValue</span></a></li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="SerializedValue.DefaultVisitor.html" title="class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">SerializedValue.DefaultVisitor</span></a>&lt;T&gt; (implements gov.nasa.jpl.aerie.merlin.protocol.<a href="SerializedValue.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol">SerializedValue.Visitor</a>&lt;T&gt;)
 <ul>
@@ -96,26 +93,15 @@ loadScripts(document, 'script');</script>
 <section class="hierarchy">
 <h2 title="Interface Hierarchy">Interface Hierarchy</h2>
 <ul>
+<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Adaptation.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Adaptation</span></a>&lt;$Schema&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="AdaptationFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">AdaptationFactory</span></a></li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="AdaptationFactory.Builder.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">AdaptationFactory.Builder</span></a>&lt;$Schema&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="AdaptationFactory.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">AdaptationFactory.TaskFactory</span></a>&lt;$Schema&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Applicator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Applicator</span></a>&lt;Effect,&#8203;State&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Checkpoint.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Checkpoint</span></a>&lt;$Timeline&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Condition</span></a>&lt;$Schema&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="DiscreteApproximator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">DiscreteApproximator</span></a>&lt;Dynamics&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="EffectTrait.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">EffectTrait</span></a>&lt;Effect&gt;
-<ul>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Projection.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Projection</span></a>&lt;Event,&#8203;Effect&gt;</li>
-</ul>
-</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Querier.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Querier</span></a>&lt;$Timeline&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Query.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Query</span></a>&lt;$Schema,&#8203;Event,&#8203;State&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="RealApproximator.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">RealApproximator</span></a>&lt;Dynamics&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="ResourceFamily.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">ResourceFamily</span></a>&lt;$Schema,&#8203;Resource&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="ResourceSolver.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">ResourceSolver</span></a>&lt;$Schema,&#8203;Resource,&#8203;Dynamics&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="ResourceSolver.ApproximatorVisitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">ResourceSolver.ApproximatorVisitor</span></a>&lt;Dynamics,&#8203;Result&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Result.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Result.Visitor</span></a>&lt;Success,&#8203;Failure,&#8203;Output,&#8203;Throws&gt;</li>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Result.VisitorCase.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Result.VisitorCase</span></a>&lt;Input,&#8203;Output,&#8203;Throws&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Scheduler.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Scheduler</span></a>&lt;$Timeline&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="SerializedValue.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">SerializedValue.Visitor</span></a>&lt;T&gt;</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Task.html" title="interface in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Task</span></a>&lt;$Timeline&gt;</li>
@@ -126,19 +112,12 @@ loadScripts(document, 'script');</script>
 </ul>
 </section>
 <section class="hierarchy">
-<h2 title="Annotation Interface Hierarchy">Annotation Interface Hierarchy</h2>
-<ul>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Capability.html" title="annotation in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Capability</span></a> (implements java.lang.annotation.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/annotation/Annotation.html" title="class or interface in java.lang.annotation" class="external-link">Annotation</a>)</li>
-</ul>
-</section>
-<section class="hierarchy">
 <h2 title="Enum Class Hierarchy">Enum Class Hierarchy</h2>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link"><span class="type-name-link">Object</span></a>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Enum.html" title="class or interface in java.lang" class="external-link"><span class="type-name-link">Enum</span></a>&lt;E&gt; (implements java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Comparable.html" title="class or interface in java.lang" class="external-link">Comparable</a>&lt;T&gt;, java.lang.constant.Constable, java.io.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/Serializable.html" title="class or interface in java.io" class="external-link">Serializable</a>)
 <ul>
-<li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="Result.Kind.html" title="enum class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">Result.Kind</span></a></li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.protocol.<a href="ValueSchema.Unit.html" title="enum class in gov.nasa.jpl.aerie.merlin.protocol"><span class="type-name-link">ValueSchema.Unit</span></a></li>
 </ul>
 </li>

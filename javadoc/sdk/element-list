@@ -1,2 +1,13 @@
+gov.nasa.jpl.aerie.merlin.driver
+gov.nasa.jpl.aerie.merlin.driver.engine
+gov.nasa.jpl.aerie.merlin.driver.json
+gov.nasa.jpl.aerie.merlin.framework
+gov.nasa.jpl.aerie.merlin.framework.annotations
+gov.nasa.jpl.aerie.merlin.framework.resources.discrete
+gov.nasa.jpl.aerie.merlin.framework.resources.real
 gov.nasa.jpl.aerie.merlin.protocol
+gov.nasa.jpl.aerie.merlin.timeline
+gov.nasa.jpl.aerie.merlin.timeline.effects
 gov.nasa.jpl.aerie.spice
+gov.nasa.jpl.aerie.time
+gov.nasa.jpl.aerie.utilities
