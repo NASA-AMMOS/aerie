@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Plus implements Expression<LinearProfile> {
   private final Expression<LinearProfile> left;
@@ -20,6 +21,12 @@ public final class Plus implements Expression<LinearProfile> {
   public LinearProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
     return left.evaluate(results, environment)
                .plus(right.evaluate(results, environment));
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.left.extractResources(names);
+    this.right.extractResources(names);
   }
 
   @Override

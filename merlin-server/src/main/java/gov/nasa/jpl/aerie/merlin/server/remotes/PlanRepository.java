@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -38,6 +39,10 @@ public interface PlanRepository {
   void replaceActivity(String planId, String activityId, ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void deleteActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void deleteAllActivities(String planId) throws NoSuchPlanException;
+
+  Map<String, Constraint> getAllConstraintsInPlan(String planId) throws NoSuchPlanException;
+  void replacePlanConstraints(String planId, Map<String, Constraint> constraints) throws NoSuchPlanException;
+  void deleteConstraintInPlanById(String planId, String constraintId) throws NoSuchPlanException;
 
   interface PlanTransaction {
     void commit() throws NoSuchPlanException;

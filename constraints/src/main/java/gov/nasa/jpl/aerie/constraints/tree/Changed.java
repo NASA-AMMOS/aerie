@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Changed<P extends Profile<?>> implements Expression<Windows> {
   private final Expression<P> expression;
@@ -18,6 +19,11 @@ public final class Changed<P extends Profile<?>> implements Expression<Windows> 
   @Override
   public Windows evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
     return this.expression.evaluate(results, environment).changePoints(results.bounds);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expression.extractResources(names);
   }
 
   @Override

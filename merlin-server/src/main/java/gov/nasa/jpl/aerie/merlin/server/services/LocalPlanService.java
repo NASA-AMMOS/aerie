@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.json.ConstraintParsers;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
@@ -10,16 +11,17 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.PlanTransaction;
-import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -28,9 +30,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public final class LocalPlanService implements PlanService {
@@ -144,6 +148,23 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
+  public Map<String, Constraint> getConstraintsForPlan(final String planId) throws NoSuchPlanException {
+    return this.planRepository.getAllConstraintsInPlan(planId);
+  }
+
+  @Override
+  public void replaceConstraints(final String planId, final Map<String, Constraint> constraints) throws NoSuchPlanException {
+    this.planRepository.replacePlanConstraints(planId, constraints);
+  }
+
+  @Override
+  public void removeConstraintById(final String planId, final String constraintId)
+  throws NoSuchPlanException
+  {
+    this.planRepository.deleteConstraintInPlanById(planId, constraintId);
+  }
+
+  @Override
   public Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(final String planId)
   throws NoSuchPlanException
   {
@@ -221,17 +242,31 @@ public final class LocalPlanService implements PlanService {
           realProfiles,
           discreteProfiles);
 
-      final var constraintJsons = this.adaptationService.getConstraints(plan.adaptationId);
       final var violations = new HashMap<String, List<Violation>>();
+      final var constraintJsons = new HashMap<String, Constraint>();
+
+      this.adaptationService.getConstraints(plan.adaptationId).forEach(
+          (name, constraint) -> constraintJsons.put("model/" + name, constraint)
+      );
+      this.getConstraintsForPlan(planId).forEach(
+          (name, constraint) -> constraintJsons.put("plan/" + name, constraint)
+      );
       for (final var entry : constraintJsons.entrySet()) {
-        final var subject = Json.createReader(new StringReader(entry.getValue())).readValue();
+        final var subject = Json.createReader(new StringReader(entry.getValue().definition())).readValue();
         final var constraint = ConstraintParsers.constraintP.parse(subject);
 
         if (constraint.isFailure()) {
-          throw new Error(entry.getValue());
+          throw new Error(entry.getValue().definition());
         }
 
-        final var violationEvents = constraint.getSuccessOrThrow().evaluate(preparedResults);
+        final var violationEvents = new ArrayList<Violation>();
+        final var expression = constraint.getSuccessOrThrow();
+        try {
+          violationEvents.addAll(expression.evaluate(preparedResults));
+        } catch (final InputMismatchException ex) {
+          // @TODO Need a better way to catch and propagate the exception to the
+          // front end and to log the evaluation failure. This is captured in AERIE-1285.
+        }
 
         if (violationEvents.isEmpty()) continue;
 
@@ -240,7 +275,18 @@ public final class LocalPlanService implements PlanService {
             created to account for refactoring and removing the need for this condition. */
         if (violationEvents.size() == 1 && violationEvents.get(0).violationWindows.isEmpty()) continue;
 
-        violations.put(entry.getKey(), violationEvents);
+
+        final var names = new HashSet<String>();
+        expression.extractResources(names);
+        final var resourceNames = new ArrayList<>(names);
+        final var violationEventsWithNames = new ArrayList<Violation>();
+        violationEvents.forEach(violation -> violationEventsWithNames.add(new Violation(
+            violation.activityInstanceIds,
+            resourceNames,
+            violation.violationWindows)));
+
+        violations.put(entry.getKey(), violationEventsWithNames);
+
       }
 
       return Pair.of(results, violations);

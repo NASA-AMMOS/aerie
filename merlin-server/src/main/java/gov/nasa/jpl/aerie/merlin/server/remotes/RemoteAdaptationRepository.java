@@ -5,6 +5,7 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
@@ -16,9 +17,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
 public final class RemoteAdaptationRepository implements AdaptationRepository {
@@ -66,7 +69,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Map<String, String> getConstraints(final String id) throws NoSuchAdaptationException {
+    public Map<String, Constraint> getConstraints(final String id) throws NoSuchAdaptationException {
         final Document adaptationDocument;
         try {
             adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
@@ -78,11 +81,13 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
             throw new NoSuchAdaptationException();
         }
 
-        final var constraints = new HashMap<String, String>();
+        final var constraints = new HashMap<String, Constraint>();
 
         final var constraintsDocument = adaptationDocument.get("constraints", Document.class);
         for (final var key : constraintsDocument.keySet()) {
-            constraints.put(key, constraintsDocument.getString(key));
+          final var constraintId = key;
+          final var constraintDocument = constraintsDocument.get(constraintId, Document.class);
+          constraints.put(constraintId, constraintFromDocument(constraintDocument));
         }
 
         return constraints;
@@ -124,7 +129,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public void replaceConstraints(final String id, final Map<String, String> newConstraints)
+    public void replaceConstraints(final String id, final Map<String, Constraint> newConstraints)
     throws NoSuchAdaptationException
     {
         final Document adaptationDocument;
@@ -140,7 +145,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
 
         final var constraints = adaptationDocument.get("constraints", Document.class);
         for (final var entry : newConstraints.entrySet()) {
-          constraints.put(entry.getKey(), entry.getValue());
+          constraints.put(entry.getKey(), this.toDocument(entry.getValue()));
         }
 
         adaptationDocument.put("constraints", constraints);
@@ -179,6 +184,27 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
         adaptationJar.path = Path.of(adaptationDocument.getString("path"));
 
         return adaptationJar;
+    }
+
+    // @TODO should this be factored out with the duplicate code in RemotePlanRespository?
+    private Constraint constraintFromDocument(final Document document) {
+      final Constraint constraint = new Constraint(
+          document.getString("name"),
+          document.getString("summary"),
+          document.getString("description"),
+          document.getString("definition"));
+
+      return constraint;
+    }
+
+    private Document toDocument(final Constraint constraint) {
+      final Document constraintDocument = new Document();
+      constraintDocument.put("name", constraint.name());
+      constraintDocument.put("summary", constraint.summary());
+      constraintDocument.put("description", constraint.description());
+      constraintDocument.put("definition", constraint.definition());
+
+      return constraintDocument;
     }
 
     private Document toDocument(final AdaptationJar adaptationJar) {

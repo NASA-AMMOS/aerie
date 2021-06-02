@@ -7,10 +7,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
-import static gov.nasa.jpl.aerie.time.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.window;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MICROSECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

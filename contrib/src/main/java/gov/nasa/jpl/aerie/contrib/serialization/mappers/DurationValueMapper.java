@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.contrib.serialization.mappers;
 
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.Result;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.time.Duration;
-import gov.nasa.jpl.aerie.utilities.Result;
 
 import java.util.function.Function;
 

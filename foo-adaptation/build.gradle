@@ -14,14 +14,14 @@ test {
 }
 
 dependencies {
-  annotationProcessor project(':activity-processor')
-  compileOnly project(':merlin-sdk')
+  annotationProcessor project(':merlin-framework-processor')
+
+  compileOnly project(':merlin-framework')
   compileOnly project(':contrib')
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
   testImplementation 'org.assertj:assertj-core:3.13.2'
-  testImplementation 'org.glassfish:javax.json:1.1.4'
 
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
 }

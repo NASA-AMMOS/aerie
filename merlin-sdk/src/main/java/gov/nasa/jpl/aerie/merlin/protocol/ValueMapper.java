@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.utilities.Result;
-
 /**
  * A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a
  * mission-agnostic representation of that data type.

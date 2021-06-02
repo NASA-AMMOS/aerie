@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;

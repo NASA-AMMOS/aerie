@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class DiscreteResource implements Expression<DiscreteProfile> {
   public final String name;
@@ -16,7 +18,18 @@ public final class DiscreteResource implements Expression<DiscreteProfile> {
 
   @Override
   public DiscreteProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
-    return results.discreteProfiles.get(this.name);
+    if (results.discreteProfiles.containsKey(this.name)) {
+      return results.discreteProfiles.get(this.name);
+    } else if (results.realProfiles.containsKey(this.name)) {
+      throw new InputMismatchException(String.format("%s is a real resource, cannot interpret as discrete", this.name));
+    }
+
+    throw new InputMismatchException(String.format("%s is not a valid resource", this.name));
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    names.add(this.name);
   }
 
   @Override

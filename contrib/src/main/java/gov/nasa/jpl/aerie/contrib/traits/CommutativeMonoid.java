@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.traits;
 
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 
 import java.util.function.BinaryOperator;
 

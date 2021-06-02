@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.AsReal;
+import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Changed;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
@@ -16,7 +16,7 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.Parameter;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Rate;
@@ -112,20 +112,16 @@ public final class ConstraintParsersTest {
   }
 
   @Test
-  public void testParseAsReal() {
+  public void testParseRealParameter() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "AsReal")
-        .add("expression", Json
-            .createObjectBuilder()
-            .add("type", "DiscreteValue")
-            .add("value", 4.7))
+        .add("type", "RealParameter")
+        .add("alias", "act")
+        .add("name", "pJones")
         .build();
     final var result = linearProfileExpressionP.parse(json).getSuccessOrThrow();
 
-    final var expected =
-        new AsReal(
-            new DiscreteValue(SerializedValue.of(4.7)));
+    final var expected = new RealParameter("act", "pJones");
 
     assertEquivalent(expected, result);
   }
@@ -268,13 +264,13 @@ public final class ConstraintParsersTest {
   public void testParseParameter() {
     final var json = Json
         .createObjectBuilder()
-        .add("type", "Parameter")
+        .add("type", "DiscreteParameter")
         .add("alias", "TEST")
         .add("name", "paramesan")
         .build();
     final var result = discreteProfileExpressionP.parse(json).getSuccessOrThrow();
 
-    final var expected = new Parameter("TEST", "paramesan");
+    final var expected = new DiscreteParameter("TEST", "paramesan");
 
     assertEquivalent(expected, result);
   }
@@ -559,12 +555,9 @@ public final class ConstraintParsersTest {
                                         .add("multiplier", 2.0))
                                     .add("right", Json
                                         .createObjectBuilder()
-                                        .add("type", "AsReal")
-                                        .add("expression", Json
-                                            .createObjectBuilder()
-                                            .add("type", "Parameter")
-                                            .add("alias", "A")
-                                            .add("name", "a")))))
+                                        .add("type", "RealParameter")
+                                        .add("alias", "A")
+                                        .add("name", "a"))))
                             .add(Json
                                 .createObjectBuilder()
                                 .add("type", "Equal")
@@ -574,7 +567,7 @@ public final class ConstraintParsersTest {
                                     .add("value", false))
                                 .add("right", Json
                                     .createObjectBuilder()
-                                    .add("type", "Parameter")
+                                    .add("type", "DiscreteParameter")
                                     .add("alias", "B")
                                     .add("name", "b")))))
                     .add(Json
@@ -608,11 +601,10 @@ public final class ConstraintParsersTest {
                                 new Times(
                                     new RealResource("ResC"),
                                     2),
-                                new AsReal(
-                                    new Parameter("A", "a")))),
+                                new RealParameter("A", "a"))),
                         new Equal<>(
                             new DiscreteValue(SerializedValue.of(false)),
-                            new Parameter("B", "b"))),
+                            new DiscreteParameter("B", "b"))),
                     new Not(new During("A")),
                     new Not(new During("B"))))));
 

@@ -2,11 +2,13 @@ package gov.nasa.jpl.aerie.fooadaptation;
 
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -15,9 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.nasa.jpl.aerie.time.Duration.MICROSECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.time.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MICROSECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
 
 public class SimulateMapSchedule {
   public static void main(final String[] args) {
@@ -32,13 +34,19 @@ public class SimulateMapSchedule {
   void simulateWithMapSchedule()
   throws SimulationDriver.TaskSpecInstantiationException
   {
+    final var config = new Configuration();
+
+    final var factory = new GeneratedAdaptationFactory();
+    final var builder = new AdaptationBuilder<>(Schema.builder());
+    factory.instantiate(FooValueMappers.configuration().serializeValue(config), builder);
+    final var adaptation = builder.build();
+
     final var schedule = loadSchedule();
     final var startTime = Instant.now();
     final var simulationDuration = duration(25, SECONDS);
 
-    final var config = new Configuration();
     final var simulationResults = SimulationDriver.simulate(
-        new GeneratedAdaptationFactory().instantiate(FooValueMappers.configuration().serializeValue(config)),
+        adaptation,
         schedule,
         startTime,
         simulationDuration);

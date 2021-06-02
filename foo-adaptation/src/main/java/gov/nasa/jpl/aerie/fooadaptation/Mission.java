@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.fooadaptation.models.SimpleData;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 
 import java.time.Instant;
 

@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.contrib.cells.durative;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectTrait;
-import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;

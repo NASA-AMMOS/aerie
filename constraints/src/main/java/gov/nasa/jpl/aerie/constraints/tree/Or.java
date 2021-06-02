@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Or implements Expression<Windows> {
   public final List<Expression<Windows>> expressions;
@@ -28,6 +29,11 @@ public final class Or implements Expression<Windows> {
       );
     }
     return Windows.intersection(windows, new Windows(results.bounds));
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.expressions.forEach(expression -> expression.extractResources(names));
   }
 
   @Override

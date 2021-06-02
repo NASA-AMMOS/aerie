@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class StartOf implements Expression<Windows> {
   private final String activityAlias;
@@ -20,6 +21,9 @@ public final class StartOf implements Expression<Windows> {
     final var activity = environment.get(this.activityAlias);
     return new Windows(Window.at(activity.window.start));
   }
+
+  @Override
+  public void extractResources(final Set<String> names) { }
 
   @Override
   public String prettyPrint(final String prefix) {

@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class Equal<P extends Profile<P>> implements Expression<Windows> {
   private final Expression<P> left;
@@ -23,6 +24,12 @@ public final class Equal<P extends Profile<P>> implements Expression<Windows> {
     final var rightProfile = this.right.evaluate(results, environment);
 
     return leftProfile.equalTo(rightProfile, results.bounds);
+  }
+
+  @Override
+  public void extractResources(final Set<String> names) {
+    this.left.extractResources(names);
+    this.right.extractResources(names);
   }
 
   @Override

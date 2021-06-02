@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public final class DiscreteValue implements Expression<DiscreteProfile> {
   private final SerializedValue value;
@@ -21,6 +22,9 @@ public final class DiscreteValue implements Expression<DiscreteProfile> {
   public DiscreteProfile evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
     return new DiscreteProfile(List.of(new DiscreteProfilePiece(results.bounds, this.value)));
   }
+
+  @Override
+  public void extractResources(final Set<String> names) { }
 
   @Override
   public String prettyPrint(final String prefix) {

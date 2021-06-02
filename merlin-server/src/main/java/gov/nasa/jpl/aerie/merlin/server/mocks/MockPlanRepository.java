@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -11,6 +12,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -177,6 +179,22 @@ public final class MockPlanRepository implements PlanRepository {
     }
 
     plan.activityInstances.clear();
+  }
+
+  @Override
+  public Map<String, Constraint> getAllConstraintsInPlan(final String planId) throws NoSuchPlanException {
+    return Map.of();
+  }
+
+  @Override
+  public void replacePlanConstraints(final String planId, final Map<String, Constraint> constraints)
+  throws NoSuchPlanException {
+  }
+
+  @Override
+  public void deleteConstraintInPlanById(final String planId, final String constraintId)
+  throws NoSuchPlanException
+  {
   }
 
   private class MockPlanTransaction implements PlanTransaction {

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -63,7 +64,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public void replaceConstraints(final String adaptationId, final Map<String, String> constraints)
+    public void replaceConstraints(final String adaptationId, final Map<String, Constraint> constraints)
     throws NoSuchAdaptationException
     {
     }
@@ -84,7 +85,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Map<String, String> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+    public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
       return Map.of();
     }
 

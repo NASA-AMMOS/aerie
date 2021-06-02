@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
@@ -230,6 +231,24 @@ public final class StubPlanService implements PlanService {
     } else if (Objects.equals(activityInstance, INVALID_ACTIVITY)) {
       throw new ValidationException(VALIDATION_ERRORS);
     }
+  }
+
+  @Override
+  public Map<String, Constraint> getConstraintsForPlan(final String planId)
+  throws NoSuchPlanException {
+    return Map.of();
+  }
+
+  @Override
+  public void replaceConstraints(final String planId, final Map<String, Constraint> constraints)
+  throws NoSuchPlanException
+  {
+  }
+
+  @Override
+  public void removeConstraintById(final String planId, final String constraintId)
+  throws NoSuchPlanException
+  {
   }
 
   @Override

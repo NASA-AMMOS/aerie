@@ -7,7 +7,8 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.framework.ParameterSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
@@ -17,6 +18,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -25,7 +27,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
-import gov.nasa.jpl.aerie.time.Duration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -160,7 +161,7 @@ public final class ResponseSerializers {
         .add("associations", Json
             .createObjectBuilder()
             .add("activityInstanceIds", serializeIterable(Json::createValue, violation.activityInstanceIds))
-            .add("resourceIds", serializeIterable(Json::createValue, List.<String>of()))
+            .add("resourceIds", serializeIterable(Json::createValue, violation.resourceNames))
             .build())
         .add("windows", serializeIterable(ResponseSerializers::serializeWindow, violation.violationWindows))
         .build();
@@ -247,8 +248,19 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
   }
 
-  public static JsonValue serializeConstraints(Map<String, String> constraints) {
-    return serializeMap(Json::createValue, constraints);
+  public static JsonValue serializeConstraints(Map<String, Constraint> constraints) {
+    return serializeMap(ResponseSerializers::serializeConstraint, constraints);
+  }
+
+  public static JsonValue serializeConstraint(final Constraint constraint) {
+    if (constraint == null) return JsonValue.NULL;
+
+    return Json.createObjectBuilder()
+               .add("name", serializeString(constraint.name()))
+               .add("summary", serializeString(constraint.summary()))
+               .add("description", serializeString(constraint.description()))
+               .add("definition", serializeString(constraint.definition()))
+               .build();
   }
 
   private static JsonValue serializeBreadcrumb(final Breadcrumb breadcrumb) {

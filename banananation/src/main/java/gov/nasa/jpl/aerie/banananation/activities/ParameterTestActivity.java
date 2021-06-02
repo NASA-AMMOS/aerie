@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.banananation.activities;
 
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
-import gov.nasa.jpl.aerie.time.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 
 import java.util.List;
 import java.util.Map;

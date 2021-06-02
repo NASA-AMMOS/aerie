@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import gov.nasa.jpl.aerie.time.Duration;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;

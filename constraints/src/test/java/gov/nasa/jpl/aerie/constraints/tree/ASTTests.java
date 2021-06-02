@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
+import gov.nasa.jpl.aerie.constraints.InputMismatchException;
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
 import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
@@ -14,11 +15,13 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
-import static gov.nasa.jpl.aerie.time.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
+import static org.junit.Assert.fail;
 
 public class ASTTests {
 
@@ -147,31 +150,25 @@ public class ASTTests {
   }
 
   @Test
-  public void testAsReal() {
+  public void testRealParameter() {
+    final var act = new ActivityInstance(
+        "1",
+        "typeA",
+        Map.of("p1", SerializedValue.of(2)),
+        Window.between(0, 10, SECONDS));
+
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),
-        List.of(),
+        List.of(act),
         Map.of(),
         Map.of()
     );
+    final var environment = Map.of("act", act);
 
-    final var source = new DiscreteProfile(
-        List.of(
-            new DiscreteProfilePiece(Window.between(0, Inclusive, 5, Exclusive, SECONDS), SerializedValue.of(1)),
-            new DiscreteProfilePiece(Window.between(5, Inclusive, 10, Inclusive, SECONDS), SerializedValue.of(2)),
-            new DiscreteProfilePiece(Window.between(10, Exclusive, 15, Exclusive, SECONDS), SerializedValue.of(3)),
-            new DiscreteProfilePiece(Window.between(15, Inclusive, 15, Inclusive, SECONDS), SerializedValue.of(4)),
-            new DiscreteProfilePiece(Window.between(15, Exclusive, 20, Inclusive, SECONDS), SerializedValue.of(5))
-        ));
-
-    final var result = new AsReal(Supplier.of(source)).evaluate(simResults, Map.of());
+    final var result = new RealParameter("act", "p1").evaluate(simResults, environment);
 
     final var expected = new LinearProfile(
-        new LinearProfilePiece(Window.between(0, Inclusive, 5, Exclusive, SECONDS), 1, 0),
-        new LinearProfilePiece(Window.between(5, Inclusive, 10, Inclusive, SECONDS), 2, 0),
-        new LinearProfilePiece(Window.between(10, Exclusive, 15, Exclusive, SECONDS), 3, 0),
-        new LinearProfilePiece(Window.between(15, Inclusive, 15, Inclusive, SECONDS), 4, 0),
-        new LinearProfilePiece(Window.between(15, Exclusive, 20, Inclusive, SECONDS), 5, 0)
+        new LinearProfilePiece(Window.between(0, Inclusive, 20, Inclusive, SECONDS), 2, 0)
     );
 
     assertEquivalent(expected, result);
@@ -213,7 +210,7 @@ public class ASTTests {
         ),
         Map.of(
             "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
-            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of("two"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
             "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
             )
     );
@@ -226,19 +223,85 @@ public class ASTTests {
   }
 
   @Test
+  public void testRealResourceOnDiscrete() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(
+            "real1", new LinearProfile(new LinearProfilePiece(Window.at(1, SECONDS), 0, 1)),
+            "real2", new LinearProfile(new LinearProfilePiece(Window.at(2, SECONDS), 0, 1)),
+            "real3", new LinearProfile(new LinearProfilePiece(Window.at(3, SECONDS), 0, 1))
+        ),
+        Map.of(
+            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
+        )
+    );
+
+    final var result = new RealResource("discrete2").evaluate(simResults, Map.of());
+
+    final var expected = new LinearProfile(new LinearProfilePiece(Window.at(5, SECONDS), 2, 0));
+
+    assertEquivalent(expected, result);
+  }
+
+  @Test
+  public void testRealResourceFailureOnDiscrete() {
+      final var simResults = new SimulationResults(
+          Window.between(0, 20, SECONDS),
+          List.of(),
+          Map.of(
+              "real1", new LinearProfile(new LinearProfilePiece(Window.at(1, SECONDS), 0, 1)),
+              "real2", new LinearProfile(new LinearProfilePiece(Window.at(2, SECONDS), 0, 1)),
+              "real3", new LinearProfile(new LinearProfilePiece(Window.at(3, SECONDS), 0, 1))
+          ),
+          Map.of(
+              "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
+              "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
+              "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
+          )
+      );
+
+    try {
+      new RealResource("discrete1").evaluate(simResults, Map.of());
+    } catch (final InputMismatchException e) {
+      return;
+    }
+    fail("Expected RealResource node to fail conversion of discrete resource to real resource");
+  }
+
+  @Test
+  public void testRealResourceOnNonexistentResource() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(),
+        Map.of()
+    );
+
+    try {
+      new RealResource("does_not_exist").evaluate(simResults, Map.of());
+    } catch (final InputMismatchException e) {
+      return;
+    }
+    fail("Expected RealResource node to fail on non-existent resource");
+  }
+
+  @Test
   public void testForEachActivity() {
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),
         List.of(
             new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 6, SECONDS)),
             new ActivityInstance("2", "TypeB", Map.of(), Window.between(5, 7, SECONDS)),
-            new  ActivityInstance("3", "TypeA", Map.of(), Window.between(9, 10, SECONDS))
+            new ActivityInstance("3", "TypeA", Map.of(), Window.between(9, 10, SECONDS))
         ),
         Map.of(),
         Map.of()
     );
 
-    final var violation = new Violation(List.of(), new Windows(Window.between(4, 6, SECONDS)));
+    final var violation = new Violation(List.of(), List.of(), new Windows(Window.between(4, 6, SECONDS)));
     final var result = new ForEachActivity(
         "TypeA",
         "act",
@@ -246,8 +309,8 @@ public class ASTTests {
     ).evaluate(simResults, Map.of());
 
     final var expected = List.of(
-        new Violation(List.of("1"), new Windows(Window.between(4, 6, SECONDS))),
-        new Violation(List.of("3"), new Windows(Window.between(4, 6, SECONDS))));
+        new Violation(List.of("1"), List.of(), new Windows(Window.between(4, 6, SECONDS))),
+        new Violation(List.of("3"), List.of(), new Windows(Window.between(4, 6, SECONDS))));
 
     assertEquivalent(expected, result);
   }
@@ -265,7 +328,7 @@ public class ASTTests {
         Map.of()
     );
 
-    final var violation = new Violation(List.of(), new Windows(Window.between(4, 6, SECONDS)));
+    final var violation = new Violation(List.of(), List.of(), new Windows(Window.between(4, 6, SECONDS)));
     final var result = new ForEachActivity(
         "TypeA",
         "act",
@@ -279,8 +342,8 @@ public class ASTTests {
     // We expect two violations because there are two activities of TypeA
     // The details of the violation will be the same, since we are using a supplier
     final var expected = List.of(
-        new Violation(List.of("1", "2"), new Windows(Window.between(4, 6, SECONDS))),
-        new Violation(List.of("3", "2"), new Windows(Window.between(4, 6, SECONDS))));
+        new Violation(List.of("1", "2"), List.of(), new Windows(Window.between(4, 6, SECONDS))),
+        new Violation(List.of("3", "2"), List.of(), new Windows(Window.between(4, 6, SECONDS))));
 
     assertEquivalent(expected, result);
   }
@@ -376,6 +439,9 @@ public class ASTTests {
     public T evaluate(final SimulationResults results, final Map<String, ActivityInstance> environment) {
       return this.value;
     }
+
+    @Override
+    public void extractResources(final Set<String> names) { }
 
     @Override
     public String prettyPrint(final String prefix) {
