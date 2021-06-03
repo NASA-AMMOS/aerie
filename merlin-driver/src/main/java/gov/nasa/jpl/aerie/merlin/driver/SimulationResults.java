@@ -166,4 +166,16 @@ public final class SimulationResults {
     public final Map<String, SimulatedActivity> finished = new HashMap<>();
     public final Map<String, SerializedActivity> unfinished = new HashMap<>();
   }
+
+  @Override
+  public String toString() {
+    return
+        "SimulationResults "
+        + "{ startTime=" + this.startTime
+        + ", realProfiles=" + this.realProfiles
+        + ", discreteProfiles=" + this.discreteProfiles
+        + ", simulatedActivities=" + this.simulatedActivities
+        + ", unfinishedActivities=" + this.unfinishedActivities
+        + " }";
+  }
 }
