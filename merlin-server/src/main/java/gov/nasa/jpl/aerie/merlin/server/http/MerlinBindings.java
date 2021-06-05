@@ -147,13 +147,7 @@ public final class MerlinBindings implements Plugin {
       final var planId = ctx.pathParam("planId");
       final var response = this.simulationAction.run(planId);
 
-      if (response instanceof GetSimulationResultsAction.Response.Complete r) {
-        ctx.result(ResponseSerializers.serializeSimulationResults(r.results(), r.violations()).toString());
-      } else if (response instanceof GetSimulationResultsAction.Response.Failed r) {
-        throw new RuntimeException(r.reason());
-      } else if (response instanceof GetSimulationResultsAction.Response.Incomplete) {
-        throw new RuntimeException("incomplete simulation");
-      }
+      ctx.result(ResponseSerializers.serializeSimulationResultsResponse(response).toString());
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     }

@@ -24,7 +24,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
+import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -193,6 +195,29 @@ public final class ResponseSerializers {
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeMap(ResponseSerializers::serializeSimulatedActivity, results.simulatedActivities))
         .build();
+  }
+
+  public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {
+    if (response instanceof GetSimulationResultsAction.Response.Incomplete) {
+      return Json
+          .createObjectBuilder()
+          .add("status", "incomplete")
+          .build();
+    } else if (response instanceof GetSimulationResultsAction.Response.Failed r) {
+      return Json
+          .createObjectBuilder()
+          .add("status", "failed")
+          .add("reason", r.reason())
+          .build();
+    } else if (response instanceof GetSimulationResultsAction.Response.Complete r) {
+      return Json
+          .createObjectBuilder()
+          .add("status", "complete")
+          .add("results", serializeSimulationResults(r.results(), r.violations()))
+          .build();
+     } else {
+      throw new UnexpectedSubtypeError(GetSimulationResultsAction.Response.class, response);
+    }
   }
 
   public static JsonValue serializeAdaptation(final AdaptationJar adaptationJar) {

@@ -12,6 +12,7 @@ public record AppConfiguration (
     String MONGO_PLAN_COLLECTION,
     String MONGO_ACTIVITY_COLLECTION,
     String MONGO_ADAPTATION_COLLECTION,
+    String MONGO_SIMULATION_RESULTS_COLLECTION,
     boolean enableJavalinLogging,
     Optional<String> MISSION_MODEL_CONFIG_PATH
 ) {
@@ -21,6 +22,7 @@ public record AppConfiguration (
         Objects.requireNonNull(MONGO_PLAN_COLLECTION);
         Objects.requireNonNull(MONGO_ACTIVITY_COLLECTION);
         Objects.requireNonNull(MONGO_ADAPTATION_COLLECTION);
+        Objects.requireNonNull(MONGO_SIMULATION_RESULTS_COLLECTION);
         Objects.requireNonNull(MISSION_MODEL_CONFIG_PATH);
     }
 
@@ -36,6 +38,7 @@ public record AppConfiguration (
             .setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"))
             .setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"))
             .setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"))
+            .setMongoSimulationResultsCollection(config.getString("MONGO_SIMULATION_RESULTS_COLLECTION"))
             .setJavalinLogging(config.getBoolean("enable-javalin-logging", false));
 
         Optional.ofNullable(config.getString("MISSION_MODEL_CONFIG_PATH", null)).map(builder::setMissionModelConfigPath);
@@ -49,6 +52,7 @@ public record AppConfiguration (
         private Optional<String> mongoPlanCollection = Optional.empty();
         private Optional<String> mongoActivityCollection = Optional.empty();
         private Optional<String> mongoAdaptationCollection = Optional.empty();
+        private Optional<String> mongoSimulationResultsCollection = Optional.empty();
         private Optional<Boolean> enableJavalinLogging = Optional.empty();
         private Optional<String> missionModelConfigPath = Optional.empty();
 
@@ -78,6 +82,10 @@ public record AppConfiguration (
             this.mongoAdaptationCollection = Optional.of(mongoAdaptationCollection);
             return this;
         }
+        public Builder setMongoSimulationResultsCollection(String mongoSimulationResultsCollection) {
+          this.mongoSimulationResultsCollection = Optional.of(mongoSimulationResultsCollection);
+          return this;
+        }
         public Builder setJavalinLogging(boolean enableJavalinLogging) {
             this.enableJavalinLogging = Optional.of(enableJavalinLogging);
             return this;
@@ -95,6 +103,7 @@ public record AppConfiguration (
                 this.mongoPlanCollection.orElseThrow(),
                 this.mongoActivityCollection.orElseThrow(),
                 this.mongoAdaptationCollection.orElseThrow(),
+                this.mongoSimulationResultsCollection.orElseThrow(),
                 this.enableJavalinLogging.orElse(false),
                 this.missionModelConfigPath);
         }

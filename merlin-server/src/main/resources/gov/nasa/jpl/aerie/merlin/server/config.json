@@ -5,6 +5,7 @@
   "MONGO_PLAN_COLLECTION": "plans",
   "MONGO_ACTIVITY_COLLECTION": "activities",
   "MONGO_ADAPTATION_COLLECTION": "adaptations",
+  "MONGO_SIMULATION_RESULTS_COLLECTION": "simulationResults",
   "enable-javalin-logging": "false",
   "MISSION_MODEL_CONFIG_PATH": "/usr/src/app/mission_config.json"
 }
