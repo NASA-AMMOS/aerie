@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server;
 import com.mongodb.client.MongoClients;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
@@ -11,6 +12,8 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.remotes.RemotePlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
+import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationService;
 import io.javalin.Javalin;
 
 import javax.json.Json;
@@ -47,13 +50,18 @@ public final class AerieAppDriver {
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
     final var planController = new LocalPlanService(planRepository, adaptationController);
 
+    final var simulationAction = new GetSimulationResultsAction(
+        planController,
+        adaptationController,
+        new SynchronousSimulationService(new RunSimulationAction(planController, adaptationController)));
+
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
       if (configuration.enableJavalinLogging()) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new MerlinBindings(planController, adaptationController))
+          .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
           .registerPlugin(new LocalAppExceptionBindings())
           .registerPlugin(new AdaptationRepositoryExceptionBindings())
           .registerPlugin(new AdaptationExceptionBindings());

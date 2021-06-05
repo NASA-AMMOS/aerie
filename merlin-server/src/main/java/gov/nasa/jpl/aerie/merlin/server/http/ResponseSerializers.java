@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
-import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -25,7 +24,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
-import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -185,12 +183,7 @@ public final class ResponseSerializers {
         .build();
   }
 
-  public static JsonValue serializeSimulationResults(final Pair<SimulationResults, Map<String, List<Violation>>> p) {
-    if (p == null) return JsonValue.NULL;
-
-    final var results = p.getLeft();
-    final var violations = p.getRight();
-
+  public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
     return Json
         .createObjectBuilder()
         .add("start", serializeTimestamp(results.startTime))
@@ -274,27 +267,6 @@ public final class ResponseSerializers {
         return Json.createValue(index);
       }
     });
-  }
-
-  public static JsonValue serializeScheduledActivity(final Pair<Duration, SerializedActivity> scheduledActivity) {
-    return Json.createObjectBuilder()
-               .add("defer", scheduledActivity.getLeft().in(Duration.MICROSECONDS))
-               .add("type", scheduledActivity.getRight().getTypeName())
-               .add("parameters", serializeActivityParameterMap(scheduledActivity.getRight().getParameters()))
-               .build();
-  }
-
-  public static JsonValue serializeScheduledActivities(final Map<String, Pair<Duration, SerializedActivity>> activities) {
-    return serializeMap(ResponseSerializers::serializeScheduledActivity, activities);
-  }
-
-  public static JsonValue serializeCreateSimulationMessage(final CreateSimulationMessage message) {
-    return Json.createObjectBuilder()
-               .add("adaptationId", message.adaptationId)
-               .add("startTime", serializeTimestamp(message.startTime))
-               .add("samplingDuration", message.samplingDuration.in(Duration.MICROSECONDS))
-               .add("activities", serializeScheduledActivities(message.activityInstances))
-               .build();
   }
 
   public static JsonValue serializeFailureList(final List<String> failures) {

@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
@@ -17,9 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonValue;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -140,6 +136,15 @@ public final class StubPlanService implements PlanService {
     return EXISTENT_PLAN;
   }
 
+  @Override
+  public long getPlanRevisionById(final String id) throws NoSuchPlanException {
+    if (!Objects.equals(id, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(id);
+    }
+
+    return 0;
+  }
+
   public String addPlan(final NewPlan plan) throws ValidationException {
     if (plan.equals(INVALID_NEW_PLAN)) {
       throw new ValidationException(VALIDATION_ERRORS);
@@ -249,22 +254,5 @@ public final class StubPlanService implements PlanService {
   public void removeConstraintById(final String planId, final String constraintId)
   throws NoSuchPlanException
   {
-  }
-
-  @Override
-  public Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(final String planId) throws NoSuchPlanException {
-    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
-      throw new NoSuchPlanException(planId);
-    }
-
-    return Pair.of(
-        new SimulationResults(
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            Instant.EPOCH),
-        Map.of()
-    );
   }
 }

@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.constraints.model.Violation;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
@@ -18,6 +16,7 @@ import java.util.stream.Stream;
 public interface PlanService {
   Stream<Pair<String, Plan>> getPlans();
   Plan getPlanById(String id) throws NoSuchPlanException;
+  long getPlanRevisionById(String id) throws NoSuchPlanException;
   String addPlan(NewPlan plan) throws ValidationException;
   void removePlan(String id) throws NoSuchPlanException;
   void updatePlan(String id, Plan patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
@@ -33,7 +32,4 @@ public interface PlanService {
   throws NoSuchPlanException;
   void replaceConstraints(String planId, Map<String, Constraint> constraints) throws NoSuchPlanException;
   void removeConstraintById(String planId, String constraintId) throws NoSuchPlanException;
-
-  Pair<SimulationResults, Map<String, List<Violation>>> getSimulationResultsForPlan(String planId)
-  throws NoSuchPlanException;
 }
