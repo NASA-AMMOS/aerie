@@ -47,21 +47,28 @@ public final class GetSimulationResultsAction {
   }
 
   public Response run(final String planId) throws NoSuchPlanException {
-    final var plan = this.planService.getPlanById(planId);
     final var planRevision = this.planService.getPlanRevisionById(planId);
 
     final var response = this.simulationService.getSimulationResults(planId, planRevision);
 
-    final SimulationResults results;
     if (response instanceof ResultsProtocol.State.Incomplete) {
       return new Response.Incomplete();
     } else if (response instanceof ResultsProtocol.State.Failed r) {
       return new Response.Failed(r.reason());
     } else if (response instanceof ResultsProtocol.State.Success r) {
-      results = r.results();
+      final var results = r.results();
+      final var violations = getViolations(planId, results);
+
+      return new Response.Complete(results, violations);
     } else {
       throw new UnexpectedSubtypeError(ResultsProtocol.State.class, response);
     }
+  }
+
+  public Map<String, List<Violation>> getViolations(final String planId, final SimulationResults results)
+  throws NoSuchPlanException
+  {
+    final var plan = this.planService.getPlanById(planId);
 
     final var constraintJsons = new HashMap<String, Constraint>();
 
@@ -180,6 +187,6 @@ public final class GetSimulationResultsAction {
       violations.put(entry.getKey(), violationEventsWithNames);
     }
 
-    return new Response.Complete(results, violations);
+    return violations;
   }
 }
