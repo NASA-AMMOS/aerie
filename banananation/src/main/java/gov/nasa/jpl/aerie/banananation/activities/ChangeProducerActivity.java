@@ -11,6 +11,7 @@ import java.util.List;
 /**
  * Changes the active banana producer.
  */
+
 @ActivityType("ChangeProducer")
 public final class ChangeProducerActivity {
   @Parameter

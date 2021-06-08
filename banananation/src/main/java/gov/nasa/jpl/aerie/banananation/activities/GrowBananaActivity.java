@@ -3,33 +3,30 @@ package gov.nasa.jpl.aerie.banananation.activities;
 import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
 
 /**
- * Bite a banana.
+ * Monke has evolve. Monke now make banana. Monke is farmer.
  *
- * This activity causes a piece of banana to be bitten off and consumed.
+ * This activity causes a monkey to create new bananas in the banana plant.
  *
  * @subsystem fruit
  * @contact John Doe
  */
 
-@ActivityType("BiteBanana")
-public final class BiteBananaActivity {
-  @Parameter
-  public double biteSize = 1.0;
+@ActivityType("GrowBanana")
+public final record GrowBananaActivity(int quantity) {
 
-  @Validation("bite size must be positive")
+  @Validation("Quantity must be positive")
   public boolean validateBiteSize() {
-    return this.biteSize > 0;
+    return this.quantity() > 0;
   }
 
   @EffectModel
   public void run(final Mission mission) {
-    mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
-    mission.fruit.subtract(biteSize);
+    mission.plant.add(this.quantity());
   }
 }
+

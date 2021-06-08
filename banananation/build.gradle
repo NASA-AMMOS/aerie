@@ -13,6 +13,10 @@ test {
   useJUnitPlatform()
 }
 
+tasks.withType(JavaCompile) {
+  options.release.set(16)
+}
+
 dependencies {
   annotationProcessor project(':merlin-framework-processor')
 
