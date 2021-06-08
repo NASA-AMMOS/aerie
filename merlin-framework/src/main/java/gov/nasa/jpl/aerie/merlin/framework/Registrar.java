@@ -26,7 +26,7 @@ public final class Registrar {
 
   public <State>
   DiscreteResource<State>
-  resource(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {
+  discrete(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {
     this.builder.resourceFamily(new DiscreteResourceFamily<>(
         ModelActions.context,
         mapper,
@@ -37,7 +37,7 @@ public final class Registrar {
 
   public
   RealResource
-  resource(final String name, final RealResource resource) {
+  real(final String name, final RealResource resource) {
     this.builder.resourceFamily(new RealResourceFamily<>(
         ModelActions.context,
         Map.of(name, resource)));
