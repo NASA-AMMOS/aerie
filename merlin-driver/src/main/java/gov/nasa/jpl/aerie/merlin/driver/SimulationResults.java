@@ -19,20 +19,38 @@ public final class SimulationResults {
   public final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles;
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final Map<String, SimulatedActivity> simulatedActivities;
-  public final Map<String, SerializedActivity> unfinishedActivities = new HashMap<>();
+  public final Map<String, SerializedActivity> unfinishedActivities;
 
   public SimulationResults(
       final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
-      final Map<String, String> taskIdToActivityId,
-      final Map<String, TaskInfo<?>> activityRecords,
+      final Map<String, SimulatedActivity> simulatedActivities,
+      final Map<String, SerializedActivity> unfinishedActivities,
       final Instant startTime)
   {
     this.startTime = startTime;
     this.realProfiles = realProfiles;
     this.discreteProfiles = discreteProfiles;
     this.resourceSamples = takeSamples(realProfiles, discreteProfiles);
-    this.simulatedActivities = buildSimulatedActivities(startTime, taskIdToActivityId, activityRecords);
+    this.simulatedActivities = simulatedActivities;
+    this.unfinishedActivities = unfinishedActivities;
+  }
+
+  public static SimulationResults create(
+      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
+      final Map<String, String> taskIdToActivityId,
+      final Map<String, TaskInfo<?>> activityRecords,
+      final Instant startTime)
+  {
+    final var partition = buildSimulatedActivities(startTime, taskIdToActivityId, activityRecords);
+
+    return new SimulationResults(
+        realProfiles,
+        discreteProfiles,
+        partition.finished,
+        partition.unfinished,
+        startTime);
   }
 
   private static Map<String, List<Pair<Duration, SerializedValue>>>
@@ -79,15 +97,15 @@ public final class SimulationResults {
     return samples;
   }
 
-  private Map<String, SimulatedActivity> buildSimulatedActivities(
+  private static PartitionedActivities buildSimulatedActivities(
       final Instant startTime,
       final Map<String, String> taskIdToActivityId,
       final Map<String, TaskInfo<?>> activityRecords)
   {
-    final var simulatedActivities = new HashMap<String, SimulatedActivity>();
-    final var activityChildren = new HashMap<String, List<String>>();
+    final var partition = new PartitionedActivities();
 
     // Create the list of children for every activity
+    final var activityChildren = new HashMap<String, List<String>>();
     for (final var taskId : activityRecords.keySet()) {
       activityChildren.put(taskId, new ArrayList<>());
     }
@@ -128,9 +146,9 @@ public final class SimulationResults {
       final var specification = activityRecord.specification.get();
 
       if (activityRecord.endTime.isEmpty()) {
-        this.unfinishedActivities.put(activityId, specification);
+        partition.unfinished.put(activityId, specification);
       } else {
-        simulatedActivities.put(activityId, new SimulatedActivity(
+        partition.finished.put(activityId, new SimulatedActivity(
             specification.getTypeName(),
             specification.getParameters(),
             Duration.addToInstant(startTime, activityRecord.startTime.get()),
@@ -141,6 +159,23 @@ public final class SimulationResults {
       }
     }
 
-    return simulatedActivities;
+    return partition;
+  }
+
+  private static final class PartitionedActivities {
+    public final Map<String, SimulatedActivity> finished = new HashMap<>();
+    public final Map<String, SerializedActivity> unfinished = new HashMap<>();
+  }
+
+  @Override
+  public String toString() {
+    return
+        "SimulationResults "
+        + "{ startTime=" + this.startTime
+        + ", realProfiles=" + this.realProfiles
+        + ", discreteProfiles=" + this.discreteProfiles
+        + ", simulatedActivities=" + this.simulatedActivities
+        + ", unfinishedActivities=" + this.unfinishedActivities
+        + " }";
   }
 }

@@ -5,7 +5,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 
+import java.util.Arrays;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> {
     private final Class<E> enumType;
@@ -16,7 +18,12 @@ public final class EnumValueMapper<E extends Enum<E>> implements ValueMapper<E> 
 
     @Override
     public ValueSchema getValueSchema() {
-        return ValueSchema.ofVariant(enumType);
+        final var variants = Arrays
+            .stream(this.enumType.getEnumConstants())
+            .map(c -> new ValueSchema.Variant(c.name(), c.toString()))
+            .collect(Collectors.toUnmodifiableList());
+
+        return ValueSchema.ofVariant(variants);
     }
 
     @Override

@@ -12,7 +12,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -60,13 +62,16 @@ import static io.javalin.apibuilder.ApiBuilder.put;
 public final class MerlinBindings implements Plugin {
   private final PlanService planService;
   private final AdaptationService adaptationService;
+  private final GetSimulationResultsAction simulationAction;
 
   public MerlinBindings(
       final PlanService planService,
-      final AdaptationService adaptationService)
+      final AdaptationService adaptationService,
+      final GetSimulationResultsAction simulationAction)
   {
     this.planService = planService;
     this.adaptationService = adaptationService;
+    this.simulationAction = simulationAction;
   }
 
   @Override
@@ -141,12 +146,35 @@ public final class MerlinBindings implements Plugin {
   private void getSimulationResults(final Context ctx) {
     try {
       final var planId = ctx.pathParam("planId");
+      final var isNonblocking = ctx.queryParam("nonblocking", "false").equals("true");
 
-      final var results = this.planService.getSimulationResultsForPlan(planId);
+      if (isNonblocking) {
+        final var response = this.simulationAction.run(planId);
+        ctx.result(ResponseSerializers.serializeSimulationResultsResponse(response).toString());
+      } else {
+        var elapsedTimeMs = 0;
+        var response = this.simulationAction.run(planId);
+        while (response instanceof GetSimulationResultsAction.Response.Incomplete && elapsedTimeMs < 60 * 60 * 1_000) {
+          elapsedTimeMs += 1_000;
+          Thread.sleep(1_000);
 
-      ctx.result(ResponseSerializers.serializeSimulationResults(results).toString());
+          response = this.simulationAction.run(planId);
+        }
+
+        if (response instanceof GetSimulationResultsAction.Response.Complete r) {
+          ctx.result(ResponseSerializers.serializeSimulationResults(r.results(), r.violations()).toString());
+        } else if (response instanceof GetSimulationResultsAction.Response.Failed r) {
+          ctx.status(500).result(Json.createObjectBuilder().add("message", r.reason()).build().toString());
+        } else if (response instanceof GetSimulationResultsAction.Response.Incomplete r) {
+          ctx.status(500).result(Json.createObjectBuilder().add("message", "timed out").build().toString());
+        } else {
+          throw new UnexpectedSubtypeError(GetSimulationResultsAction.Response.class, response);
+        }
+      }
     } catch (final NoSuchPlanException ex) {
       ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    } catch (final InterruptedException ex) {
+      ctx.status(500).result(Json.createObjectBuilder().add("message", "interrupted").build().toString());
     }
   }
 

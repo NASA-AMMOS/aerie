@@ -30,4 +30,17 @@ public final class SimulatedActivity {
     this.parentId = parentId;
     this.childIds = childIds;
   }
+
+  @Override
+  public String toString() {
+    return
+        "SimulatedActivity "
+        + "{ type=" + this.type
+        + ", parameters=" + this.parameters
+        + ", start=" + this.start
+        + ", duration=" + this.duration
+        + ", parentId=" + this.parentId
+        + ", childIds=" + this.childIds
+        + " }";
+  }
 }

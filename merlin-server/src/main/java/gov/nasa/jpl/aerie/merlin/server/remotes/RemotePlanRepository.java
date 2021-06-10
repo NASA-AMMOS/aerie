@@ -18,9 +18,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,6 +28,7 @@ import java.util.stream.StreamSupport;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.combine;
+import static com.mongodb.client.model.Updates.inc;
 import static com.mongodb.client.model.Updates.set;
 
 /**
@@ -90,6 +89,19 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
+  public long getPlanRevision(final String planId) throws NoSuchPlanException {
+    final Document planDocument = this.planCollection
+        .find(planById(makePlanObjectId(planId)))
+        .first();
+
+    if (planDocument == null) {
+      throw new NoSuchPlanException(planId);
+    }
+
+    return planDocument.getLong("revision");
+  }
+
+  @Override
   public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
 
@@ -139,12 +151,18 @@ public final class RemotePlanRepository implements PlanRepository {
 
   @Override
   public void replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
-    {
-      final var result = this.planCollection.replaceOne(planById(makePlanObjectId(planId)), toDocument(plan));
-      if (result.getMatchedCount() <= 0) {
-        throw new NoSuchPlanException(planId);
-      }
-    }
+    final var revisionDoc = this.planCollection
+        .find(planById(makePlanObjectId(planId)))
+        .projection(new Document("revision", 1))
+        .first();
+    if (revisionDoc == null) throw new NoSuchPlanException(planId);
+
+    final var revision = revisionDoc.getLong("revision");
+
+    final var planDocument = toDocument(plan);
+    planDocument.put("revision", new org.bson.BsonInt64(revision + 1));
+
+    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
 
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
     if (plan.activityInstances != null) {
@@ -170,6 +188,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     final Document activityDocument = toDocument(planId, activity);
     this.activityCollection.insertOne(activityDocument);
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
     final String activityId = activityDocument.getObjectId("_id").toString();
 
     return activityId;
@@ -192,6 +211,8 @@ public final class RemotePlanRepository implements PlanRepository {
     if (result.getMatchedCount() <= 0) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
+
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
   }
 
   @Override
@@ -204,12 +225,15 @@ public final class RemotePlanRepository implements PlanRepository {
     if (result.getDeletedCount() <= 0) {
       throw new NoSuchActivityInstanceException(planId, activityId);
     }
+
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
   }
 
   @Override
   public void deleteAllActivities(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
+    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
   }
 
   @Override
@@ -298,53 +322,13 @@ public final class RemotePlanRepository implements PlanRepository {
     return planDocument;
   }
 
-  private SerializedValue parameterFromDocument(final Document document) {
-    switch (document.getString("type")) {
-      case "null":
-        return SerializedValue.NULL;
-      case "string":
-        return SerializedValue.of(document.getString("value"));
-      case "int":
-        return SerializedValue.of(document.getLong("value"));
-      case "double":
-        return SerializedValue.of(document.getDouble("value"));
-      case "boolean":
-        return SerializedValue.of(document.getBoolean("value"));
-      case "list":
-        final List<Document> itemDocuments = document.getList("value", Document.class);
-
-        final List<SerializedValue> items = new ArrayList<>();
-        for (final var itemDocument : itemDocuments) {
-          items.add(parameterFromDocument(itemDocument));
-        }
-
-        return SerializedValue.of(items);
-      case "map":
-        final Document fieldsDocument = document.get("value", Document.class);
-
-        final Map<String, SerializedValue> fields = new HashMap<>();
-        for (final var entry : fieldsDocument.entrySet()) {
-          fields.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
-        }
-
-        return SerializedValue.of(fields);
-      default:
-        throw new Error("unexpected bad data in database");
-    }
-  }
-
   private ActivityInstance activityFromDocument(final Document document) {
     final Document parametersDocument = document.get("parameters", Document.class);
-
-    final Map<String, SerializedValue> parameters = new HashMap<>();
-    for (final var entry : parametersDocument.entrySet()) {
-      parameters.put(entry.getKey(), parameterFromDocument((Document)entry.getValue()));
-    }
 
     final ActivityInstance activity = new ActivityInstance();
     activity.type = document.getString("type");
     activity.startTimestamp = Timestamp.fromString(document.getString("startTimestamp"));
-    activity.parameters = parameters;
+    activity.parameters = MongoDeserializers.map(parametersDocument, MongoDeserializers::serializedValue);
 
     return activity;
   }
@@ -372,89 +356,12 @@ public final class RemotePlanRepository implements PlanRepository {
     return plan;
   }
 
-  private Document toDocument(final SerializedValue parameter) {
-    return parameter.match(new SerializedValue.Visitor<>() {
-      @Override
-      public Document onNull() {
-        final Document document = new Document();
-        document.put("type", "null");
-        return document;
-      }
-
-      @Override
-      public Document onReal(double value) {
-        final Document document = new Document();
-        document.put("type", "double");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onInt(long value) {
-        final Document document = new Document();
-        document.put("type", "int");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onBoolean(boolean value) {
-        final Document document = new Document();
-        document.put("type", "boolean");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onString(String value) {
-        final Document document = new Document();
-        document.put("type", "string");
-        document.put("value", value);
-        return document;
-      }
-
-      @Override
-      public Document onList(List<SerializedValue> items) {
-        final List<Document> itemDocuments = new ArrayList<>();
-        for (final var item : items) {
-          itemDocuments.add(item.match(this));
-        }
-
-        final Document document = new Document();
-        document.put("type", "list");
-        document.put("value", itemDocuments);
-        return document;
-      }
-
-      @Override
-      public Document onMap(Map<String, SerializedValue> fields) {
-        final Document fieldsDocument = new Document();
-        for (final var field : fields.entrySet()) {
-          fieldsDocument.put(field.getKey(), field.getValue().match(this));
-        }
-
-        final Document document = new Document();
-        document.put("type", "map");
-        document.put("value", fieldsDocument);
-        return document;
-      }
-    });
-  }
-
-  private Document toDocument(final Map<String, SerializedValue> parameters) {
-    final Document parametersDocument = new Document();
-    for (final var entry : parameters.entrySet()) {
-      parametersDocument.put(entry.getKey(), toDocument(entry.getValue()));
-    }
-    return parametersDocument;
-  }
-
   private Document toDocument(final String planId, final ActivityInstance activity) {
     final Document activityDocument = new Document();
     activityDocument.put("planId", new ObjectId(planId));
     activityDocument.put("type", activity.type);
     activityDocument.put("startTimestamp", activity.startTimestamp.toString());
-    activityDocument.put("parameters", toDocument(activity.parameters));
+    activityDocument.put("parameters", MongoSerializers.map(activity.parameters, MongoSerializers::serializedValue));
 
     return activityDocument;
   }
@@ -471,6 +378,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
   private Document toDocument(final NewPlan newPlan) {
     final Document planDocument = new Document();
+    planDocument.put("revision", new org.bson.BsonInt64(0));
     planDocument.put("name", newPlan.name);
     planDocument.put("startTimestamp", newPlan.startTimestamp.toString());
     planDocument.put("endTimestamp", newPlan.endTimestamp.toString());
@@ -493,11 +401,12 @@ public final class RemotePlanRepository implements PlanRepository {
 
   private class MongoPlanTransaction implements PlanTransaction {
     private final ObjectId planId;
-    private Bson patch = combine();
+    private Bson patch;
     private boolean notEmpty;
 
     public MongoPlanTransaction(final ObjectId planId) {
       this.planId = planId;
+      this.patch = inc("revision", 1);
       this.notEmpty = false;
     }
 
@@ -549,6 +458,8 @@ public final class RemotePlanRepository implements PlanRepository {
     public void commit() {
       RemotePlanRepository.this.activityCollection
           .updateOne(activityById(this.planId, this.activityId), this.patch);
+      RemotePlanRepository.this.planCollection
+          .updateOne(planById(this.planId), inc("revision", 1));
     }
 
     @Override
@@ -565,7 +476,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     @Override
     public ActivityTransaction setParameters(final Map<String, SerializedValue> parameters) {
-      this.patch = combine(this.patch, set("parameters", toDocument(parameters)));
+      this.patch = combine(this.patch, set("parameters", MongoSerializers.map(parameters, MongoSerializers::serializedValue)));
       return this;
     }
   }
