@@ -32,6 +32,8 @@
 ## Release Report in Wiki
 - [ ] Copy final version of Percent Complete Report tables into Release Report page.
 - [ ] Check urls for all delivered products in artifactory
+- For non-milestone revisions (0.7.1, 0.7.2, ...):
+  - [ ] Move staged release notes from the next milestone's Release Report into the present Release Report page.
 
 ## Send Email To Stakeholders
 - [ ] Edit the following email text to point to the correct artifacts.
