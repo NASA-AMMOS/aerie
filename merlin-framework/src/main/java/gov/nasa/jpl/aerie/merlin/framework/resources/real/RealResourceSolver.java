@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.aerie.merlin.framework.Context;
 import gov.nasa.jpl.aerie.merlin.framework.QueryContext;
+import gov.nasa.jpl.aerie.merlin.framework.Resource;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
 import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.Querier;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class RealResourceSolver<$Schema>
-    implements ResourceSolver<$Schema, RealResource, RealDynamics>
+    implements ResourceSolver<$Schema, Resource<RealDynamics>, RealDynamics>
 {
   private final Scoped<Context> rootContext;
 
@@ -21,7 +22,7 @@ public final class RealResourceSolver<$Schema>
   }
 
   @Override
-  public RealDynamics getDynamics(final RealResource resource, final Querier<? extends $Schema> now) {
+  public RealDynamics getDynamics(final Resource<RealDynamics> resource, final Querier<? extends $Schema> now) {
     return this.rootContext.setWithin(new QueryContext<>(now), resource::getDynamics);
   }
 
