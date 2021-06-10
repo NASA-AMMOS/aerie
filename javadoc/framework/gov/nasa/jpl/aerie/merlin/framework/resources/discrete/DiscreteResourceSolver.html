@@ -71,20 +71,20 @@ loadScripts(document, 'script');</script>
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="sub-title"><span class="package-label-in-type">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework.resources.discrete</a></div>
-<h1 title="Class DiscreteResourceSolver" class="title">Class DiscreteResourceSolver&lt;$Schema,&#8203;Resource&gt;</h1>
+<h1 title="Class DiscreteResourceSolver" class="title">Class DiscreteResourceSolver&lt;$Schema,&#8203;Value&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
-<div class="inheritance">gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceSolver&lt;$Schema,&#8203;Resource&gt;</div>
+<div class="inheritance">gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceSolver&lt;$Schema,&#8203;Value&gt;</div>
 </div>
 <section class="description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Resource&gt;,&#8203;Resource&gt;</code></dd>
+<dd><code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;Value&gt;,&#8203;Value&gt;</code></dd>
 </dl>
 <hr>
-<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">DiscreteResourceSolver&lt;$Schema,&#8203;Resource&gt;</span>
+<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">DiscreteResourceSolver&lt;$Schema,&#8203;Value&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Resource&gt;,&#8203;Resource&gt;</span></div>
+implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;Value&gt;,&#8203;Value&gt;</span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -106,7 +106,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
 <div class="col-constructor-name even-row-color"><code><span class="member-name-link"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">DiscreteResourceSolver</a></span>&#8203;(<a href="../../Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="../../Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&gt;&nbsp;rootContext,
- gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;&nbsp;mapper)</code></div>
+ gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;&nbsp;mapper)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
@@ -123,10 +123,10 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Result&gt;&nbsp;Result</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">approximate</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>,&#8203;Result&gt;&nbsp;visitor)</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">approximate</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>,&#8203;Result&gt;&nbsp;visitor)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a></code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">getDynamics</a></span>&#8203;(<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;&nbsp;resource,
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a></code></div>
+<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">getDynamics</a></span>&#8203;(<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;&nbsp;resource,
  gov.nasa.jpl.aerie.merlin.protocol.Querier&lt;? extends <a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">$Schema</a>&gt;&nbsp;now)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
@@ -150,7 +150,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <section class="detail" id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.Scoped,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
 <h3>DiscreteResourceSolver</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">DiscreteResourceSolver</span>&#8203;<span class="parameters">(<a href="../../Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;<a href="../../Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a>&gt;&nbsp;rootContext,
- gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;&nbsp;mapper)</span></div>
+ gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;&nbsp;mapper)</span></div>
 </section>
 </li>
 </ul>
@@ -162,23 +162,23 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">
+<section class="detail" id="getDynamics(gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">
 <h3>getDynamics</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a></span>&nbsp;<span class="element-name">getDynamics</span>&#8203;<span class="parameters">(<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;&nbsp;resource,
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a></span>&nbsp;<span class="element-name">getDynamics</span>&#8203;<span class="parameters">(<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;&nbsp;resource,
  gov.nasa.jpl.aerie.merlin.protocol.Querier&lt;? extends <a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">$Schema</a>&gt;&nbsp;now)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getDynamics</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">$Schema</a>,&#8203;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;,&#8203;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;</code></dd>
+<dd><code>getDynamics</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">$Schema</a>,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;,&#8203;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
 <li>
 <section class="detail" id="approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">
 <h3>approximate</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Result&gt;</span>&nbsp;<span class="return-type">Result</span>&nbsp;<span class="element-name">approximate</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>,&#8203;Result&gt;&nbsp;visitor)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Result&gt;</span>&nbsp;<span class="return-type">Result</span>&nbsp;<span class="element-name">approximate</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>,&#8203;Result&gt;&nbsp;visitor)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>approximate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">$Schema</a>,&#8203;<a href="DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;,&#8203;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Resource</a>&gt;</code></dd>
+<dd><code>approximate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">$Schema</a>,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;,&#8203;<a href="DiscreteResourceSolver.html" title="type parameter in DiscreteResourceSolver">Value</a>&gt;</code></dd>
 </dl>
 </section>
 </li>

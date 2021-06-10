@@ -79,12 +79,12 @@ loadScripts(document, 'script');</script>
 <section class="description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</code></dd>
+<dd><code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</code></dd>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">RealResourceSolver&lt;$Schema&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</span></div>
+implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -125,7 +125,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#approximate(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor)">approximate</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics,&#8203;Result&gt;&nbsp;visitor)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.protocol.RealDynamics</code></div>
-<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">getDynamics</a></span>&#8203;(<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource,
+<div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getDynamics(gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">getDynamics</a></span>&#8203;(<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;&nbsp;resource,
  gov.nasa.jpl.aerie.merlin.protocol.Querier&lt;? extends <a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>&gt;&nbsp;now)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
@@ -160,13 +160,13 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="getDynamics(gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">
+<section class="detail" id="getDynamics(gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.Querier)">
 <h3>getDynamics</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.RealDynamics</span>&nbsp;<span class="element-name">getDynamics</span>&#8203;<span class="parameters">(<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>&nbsp;resource,
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.RealDynamics</span>&nbsp;<span class="element-name">getDynamics</span>&#8203;<span class="parameters">(<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;&nbsp;resource,
  gov.nasa.jpl.aerie.merlin.protocol.Querier&lt;? extends <a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>&gt;&nbsp;now)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getDynamics</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</code></dd>
+<dd><code>getDynamics</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -176,7 +176,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;$Schema,&#8203;<
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Result&gt;</span>&nbsp;<span class="return-type">Result</span>&nbsp;<span class="element-name">approximate</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver.ApproximatorVisitor&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics,&#8203;Result&gt;&nbsp;visitor)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>approximate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</code></dd>
+<dd><code>approximate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver&lt;<a href="RealResourceSolver.html" title="type parameter in RealResourceSolver">$Schema</a>,&#8203;<a href="../../Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;,&#8203;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;</code></dd>
 </dl>
 </section>
 </li>
