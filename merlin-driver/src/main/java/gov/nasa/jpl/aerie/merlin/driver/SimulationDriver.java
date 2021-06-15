@@ -305,6 +305,15 @@ public final class SimulationDriver {
       return yieldTime;
     });
 
+    // Flush the job queue, terminating any tasks that are incomplete.
+    waitingTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
+    conditionedTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
+    now = queue.consumeUpTo(Duration.MAX_VALUE, now, (delta, frame) -> {
+      return TaskFrame.runToCompletion(frame, (taskId, builder) -> {
+        taskFactory.get(taskId).abort();
+      });
+    });
+
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
     profiles.forEach(new BiConsumer<String, ProfileBuilder<?, ?, ?>>() {
@@ -622,6 +631,15 @@ public final class SimulationDriver {
 
       now = yieldTime;
     }
+
+    // Flush the job queue, terminating any tasks that are incomplete.
+    waitingTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
+    conditionedTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
+    now = queue.consumeUpTo(Duration.MAX_VALUE, now, (delta, frame) -> {
+      return TaskFrame.runToCompletion(frame, (taskId, builder) -> {
+        taskFactory.get(taskId).abort();
+      });
+    });
   }
 
   private static <$Schema, Resource>
