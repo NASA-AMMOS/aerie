@@ -610,4 +610,34 @@ public final class ConstraintParsersTest {
 
     assertEquivalent(expected, result);
   }
+
+  @Test
+  public void testForbiddenActivityOverlap() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("type", "ForbiddenActivityOverlap")
+        .add("activityType1", "A")
+        .add("activityType2", "B")
+        .build();
+    final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected = new ForEachActivity(
+        "A",
+        "act1",
+        new ForEachActivity(
+            "B",
+            "act2",
+            new ViolationsOf(
+                new Not(
+                    new And(
+                        new During("act1"),
+                        new During("act2")
+                    )
+                )
+            )
+        )
+    );
+
+    assertEquivalent(expected, result);
+  }
 }
