@@ -125,8 +125,6 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       }
     });
 
-    thread.setDaemon(true);
-
     return thread;
   }
 

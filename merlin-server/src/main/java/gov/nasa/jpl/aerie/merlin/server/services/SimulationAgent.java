@@ -24,7 +24,6 @@ public final class SimulationAgent {
     final var requestQueue = new LinkedBlockingQueue<SimulationRequest>();
 
     final var thread = new Thread(new Worker(requestQueue, simulationAction));
-    thread.setDaemon(true);
     thread.setName(threadName);
     thread.start();
 
