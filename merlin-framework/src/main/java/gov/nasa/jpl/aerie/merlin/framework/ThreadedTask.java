@@ -71,8 +71,20 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
         this.thread = null;
         this.isTerminated = true;
 
-        // TODO: Propagate task errors better.
-        throw new TaskFailureException(((TaskResponse.Failure<$Timeline>) response).failure);
+        // We re-throw the received exception to avoid interfering with `catch` blocks
+        //   that might be looking for this specific exception, but we add a new exception
+        //   to its suppression list to provide a stack trace in this thread, too.
+        final var ex = ((TaskResponse.Failure<$Timeline>) response).failure;
+        ex.addSuppressed(new TaskFailureException());
+
+        // This exception shouldn't be a checked exception, but we have to prove it to Java.
+        if (ex instanceof RuntimeException) {
+          throw (RuntimeException) ex;
+        } else if (ex instanceof Error) {
+          throw (Error) ex;
+        } else {
+          throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
+        }
       } else {
         throw new Error(String.format(
             "Unexpected variant of %s: %s",
@@ -236,11 +248,8 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   }
 
   public static final class TaskFailureException extends RuntimeException {
-    public final Throwable cause;
-
-    private TaskFailureException(final Throwable cause) {
-      super(cause);
-      this.cause = cause;
+    public TaskFailureException() {
+      super("Observed task thread failure from driver thread");
     }
   }
 
