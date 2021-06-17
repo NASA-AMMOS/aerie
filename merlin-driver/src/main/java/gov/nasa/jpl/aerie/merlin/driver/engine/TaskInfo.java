@@ -66,4 +66,8 @@ public final class TaskInfo<$Timeline> {
 
     return status;
   }
+
+  public void abort() {
+    this.task.reset();
+  }
 }

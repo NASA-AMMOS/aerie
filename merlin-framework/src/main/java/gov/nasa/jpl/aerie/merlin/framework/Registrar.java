@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Map;
@@ -91,7 +90,7 @@ public final class Registrar {
     builder.taskSpecType(mapper.getName(), new ActivityType<>(mapper) {
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return $ -> TaskStatus.completed();
+        return new OneShotTask<>($ -> {});
       }
     });
   }

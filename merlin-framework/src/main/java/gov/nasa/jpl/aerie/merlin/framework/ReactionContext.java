@@ -136,6 +136,7 @@ final class ReactionContext<$Timeline> implements Context {
   public void delay(final Duration duration) {
     if (this.history.isEmpty()) {
       // We're running normally.
+      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.delayed(duration));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
@@ -149,6 +150,7 @@ final class ReactionContext<$Timeline> implements Context {
   public void waitFor(final String id) {
     if (this.history.isEmpty()) {
       // We're running normally.
+      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
 
       this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(this.scheduler.now()));
@@ -162,7 +164,7 @@ final class ReactionContext<$Timeline> implements Context {
   public void waitUntil(final Condition condition) {
     if (this.history.isEmpty()) {
       // We're running normally.
-
+      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.awaiting((now, atLatest) -> {
         // This type annotation is necessary on JDK 11, but not JDK 14. Shrug.
         return this.rootContext.<Optional<Duration>, RuntimeException>setWithin(

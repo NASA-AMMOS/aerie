@@ -154,10 +154,10 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
     try {
       SimulationDriver.simulateTask(adaptation, timeline, task);
     } catch (final ThreadedTask.TaskFailureException ex) {
-      if (ex.cause instanceof WrappedException) {
-        throw ((WrappedException) ex.cause).wrapped;
+      if (ex.getCause() instanceof WrappedException) {
+        throw ((WrappedException) ex.getCause()).wrapped;
       } else {
-        throw ex.cause;
+        throw ex.getCause();
       }
     }
 
