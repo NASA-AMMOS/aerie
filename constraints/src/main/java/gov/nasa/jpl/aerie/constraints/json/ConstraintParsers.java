@@ -300,10 +300,33 @@ public final class ConstraintParsers {
           notF(selfP),
           ifThenF(selfP)));
 
+  private static final JsonParser<Expression<List<Violation>>> forbiddenActivityOverlapP =
+      productP
+          .field("type", literalP("ForbiddenActivityOverlap"))
+          .field("activityType1", stringP)
+          .field("activityType2", stringP)
+          .map(uncurry3(type -> act1 -> act2 -> new ForEachActivity(
+              act1,
+              "act1",
+              new ForEachActivity(
+                  act2,
+                  "act2",
+                  new ViolationsOf(
+                      new Not(
+                          new And(
+                              new During("act1"),
+                              new During("act2")
+                          )
+                      )
+                  )
+              )
+          )));
+
   static final JsonParser<Expression<List<Violation>>> violationListExpressionP =
       recursiveP(selfP -> chooseP(
           forEachActivityF(selfP),
-          windowsExpressionP.map(ViolationsOf::new)));
+          windowsExpressionP.map(ViolationsOf::new),
+          forbiddenActivityOverlapP));
 
   public static final JsonParser<Expression<List<Violation>>> constraintP = violationListExpressionP;
 }
