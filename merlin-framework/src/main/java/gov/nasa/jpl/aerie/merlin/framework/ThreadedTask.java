@@ -37,6 +37,12 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
         this.thread.start();
       }
 
+      // TODO: Add a (configurable) timeout to the `take()` call.
+      //   It should be sufficiently long as to allow the user-defined task to do its job.
+      //   The `put()` call is fine -- we know the thread will immediately wait
+      //   for a new request as soon as it puts a response to the last request.
+      // TODO: Track metrics for how long a task runs before responding.
+      //   This will help to tune the timeout.
       this.hostToTask.put(new TaskRequest.Resume<>(scheduler));
       final var response = this.taskToHost.take();
 
@@ -100,6 +106,10 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   public void reset() {
     if (this.thread != null) {
       try {
+        // TODO: Add a (configurable) timeout to the `take()` call.
+        //   This timeout can be (much) shorter than the one in `ThreadedTask.step()`.
+        //   The `put()` call is fine -- we know the thread will immediately wait
+        //   for a new request as soon as it puts a response to the last request.
         this.hostToTask.put(new TaskRequest.Abort<>());
         final var ignored = this.taskToHost.take();
       } catch (final InterruptedException ex) {
