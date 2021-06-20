@@ -14,10 +14,6 @@ java {
   withSourcesJar()
 }
 
-tasks.withType(JavaCompile) {
-  options.release.set(11)
-}
-
 jacocoTestReport.dependsOn test
 
 // Link references to standard Java classes to the official Java 11 documentation.
