@@ -19,8 +19,8 @@ public class ApfParserTests {
 
     @Test
     public void testParseSimplePlan() throws AdaptationParsingException, PlanParsingException {
-        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
-        Path planPath = resourcePath("/simple/simple_plan.apf");
+          Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_plan.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
         Plan plan = ApfParser.parseFile(planPath, adaptation);
 
@@ -50,8 +50,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanTooFewParameters() throws AdaptationParsingException {
-        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
-        Path planPath = resourcePath("/simple/too_few_parameters.apf");
+        Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/too_few_parameters.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
@@ -62,8 +62,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanTooManyParameters() throws AdaptationParsingException {
-        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
-        Path planPath = resourcePath("/simple/too_many_parameters.apf");
+        Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/too_many_parameters.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
@@ -74,8 +74,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanIncomplete() throws AdaptationParsingException {
-        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
-        Path planPath = resourcePath("/simple/incomplete.apf");
+        Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/incomplete.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
@@ -86,8 +86,8 @@ public class ApfParserTests {
 
     @Test
     public void testParsePlanUnexpectedActivityEnd() throws AdaptationParsingException {
-        Path adaptationPath = resourcePath("/simple/simple_adaptation.aaf");
-        Path planPath = resourcePath("/simple/unexpected_activity_end.apf");
+        Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
+        Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/unexpected_activity_end.apf");
         Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));

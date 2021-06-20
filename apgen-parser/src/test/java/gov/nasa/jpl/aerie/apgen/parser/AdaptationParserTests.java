@@ -17,7 +17,7 @@ public class AdaptationParserTests {
 
     @Test
     public void testLoadSimpleAdaptation() throws AdaptationParsingException {
-        Path path = resourcePath("/simple/simple_adaptation.aaf");
+        Path path = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
         Adaptation adaptation = AdaptationParser.parseFile(path);
 
         assertThat(adaptation.hasActivityType("Banana")).isTrue();
