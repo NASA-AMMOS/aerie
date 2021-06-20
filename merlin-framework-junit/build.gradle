@@ -13,10 +13,6 @@ java {
   withSourcesJar()
 }
 
-tasks.withType(JavaCompile) {
-  options.release.set(11)
-}
-
 // Link references to standard Java classes to the official Java 11 documentation.
 javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
 javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
