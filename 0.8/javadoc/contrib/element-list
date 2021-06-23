@@ -1,0 +1,9 @@
+gov.nasa.jpl.aerie.contrib.cells.counters
+gov.nasa.jpl.aerie.contrib.cells.durative
+gov.nasa.jpl.aerie.contrib.cells.linear
+gov.nasa.jpl.aerie.contrib.cells.register
+gov.nasa.jpl.aerie.contrib.models
+gov.nasa.jpl.aerie.contrib.models.counters
+gov.nasa.jpl.aerie.contrib.serialization.mappers
+gov.nasa.jpl.aerie.contrib.serialization.rulesets
+gov.nasa.jpl.aerie.contrib.traits
