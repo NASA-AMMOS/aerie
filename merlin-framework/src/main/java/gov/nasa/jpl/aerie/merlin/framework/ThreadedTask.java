@@ -37,6 +37,12 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
         this.thread.start();
       }
 
+      // TODO: Add a (configurable) timeout to the `take()` call.
+      //   It should be sufficiently long as to allow the user-defined task to do its job.
+      //   The `put()` call is fine -- we know the thread will immediately wait
+      //   for a new request as soon as it puts a response to the last request.
+      // TODO: Track metrics for how long a task runs before responding.
+      //   This will help to tune the timeout.
       this.hostToTask.put(new TaskRequest.Resume<>(scheduler));
       final var response = this.taskToHost.take();
 
@@ -71,8 +77,20 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
         this.thread = null;
         this.isTerminated = true;
 
-        // TODO: Propagate task errors better.
-        throw new TaskFailureException(((TaskResponse.Failure<$Timeline>) response).failure);
+        // We re-throw the received exception to avoid interfering with `catch` blocks
+        //   that might be looking for this specific exception, but we add a new exception
+        //   to its suppression list to provide a stack trace in this thread, too.
+        final var ex = ((TaskResponse.Failure<$Timeline>) response).failure;
+        ex.addSuppressed(new TaskFailureException());
+
+        // This exception shouldn't be a checked exception, but we have to prove it to Java.
+        if (ex instanceof RuntimeException) {
+          throw (RuntimeException) ex;
+        } else if (ex instanceof Error) {
+          throw (Error) ex;
+        } else {
+          throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
+        }
       } else {
         throw new Error(String.format(
             "Unexpected variant of %s: %s",
@@ -88,6 +106,10 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   public void reset() {
     if (this.thread != null) {
       try {
+        // TODO: Add a (configurable) timeout to the `take()` call.
+        //   This timeout can be (much) shorter than the one in `ThreadedTask.step()`.
+        //   The `put()` call is fine -- we know the thread will immediately wait
+        //   for a new request as soon as it puts a response to the last request.
         this.hostToTask.put(new TaskRequest.Abort<>());
         final var ignored = this.taskToHost.take();
       } catch (final InterruptedException ex) {
@@ -236,11 +258,8 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   }
 
   public static final class TaskFailureException extends RuntimeException {
-    public final Throwable cause;
-
-    private TaskFailureException(final Throwable cause) {
-      super(cause);
-      this.cause = cause;
+    public TaskFailureException() {
+      super("Observed task thread failure from driver thread");
     }
   }
 
