@@ -37,6 +37,11 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
     }
   }
 
+  @Override
+  public void reset() {
+    this.breadcrumbs.clear();
+  }
+
   private static final class ReplayingTaskHandle<$Timeline> implements TaskHandle<$Timeline> {
     public TaskStatus<$Timeline> status = TaskStatus.completed();
 

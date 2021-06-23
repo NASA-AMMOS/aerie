@@ -6,7 +6,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
-import gov.nasa.jpl.aerie.merlin.framework.ThreadedTask;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -153,12 +152,8 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
 
     try {
       SimulationDriver.simulateTask(adaptation, timeline, task);
-    } catch (final ThreadedTask.TaskFailureException ex) {
-      if (ex.cause instanceof WrappedException) {
-        throw ((WrappedException) ex.cause).wrapped;
-      } else {
-        throw ex.cause;
-      }
+    } catch (final WrappedException ex) {
+      throw ex.wrapped;
     }
 
     if (!completed.value) {
@@ -166,11 +161,12 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
     }
   }
 
-  private static final class WrappedException extends RuntimeException {
+  /** An exception for tunneling checked exceptions through an interface that expects no exceptions. */
+  private static final class WrappedException extends Error {
     public final Throwable wrapped;
 
     public WrappedException(final Throwable ex) {
-      super(ex);
+      super(null, ex, /* capture suppressed exceptions? */ false, /* capture stack trace? */ false);
       this.wrapped = ex;
     }
   }

@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFa
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
 import java.util.Map;
@@ -24,25 +24,25 @@ public final class Registrar {
     return this.builder.isBuilt();
   }
 
-  public <State>
-  DiscreteResource<State>
-  resource(final String name, final DiscreteResource<State> resource, final ValueMapper<State> mapper) {
+  public <Value>
+  DiscreteResource<Value>
+  discrete(final String name, final Resource<Value> resource, final ValueMapper<Value> mapper) {
     this.builder.resourceFamily(new DiscreteResourceFamily<>(
         ModelActions.context,
         mapper,
         Map.of(name, resource)));
 
-    return resource;
+    return resource::getDynamics;
   }
 
   public
   RealResource
-  resource(final String name, final RealResource resource) {
+  real(final String name, final Resource<RealDynamics> resource) {
     this.builder.resourceFamily(new RealResourceFamily<>(
         ModelActions.context,
         Map.of(name, resource)));
 
-    return resource;
+    return resource::getDynamics;
   }
 
   public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
@@ -90,7 +90,7 @@ public final class Registrar {
     builder.taskSpecType(mapper.getName(), new ActivityType<>(mapper) {
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return $ -> TaskStatus.completed();
+        return new OneShotTask<>($ -> {});
       }
     });
   }

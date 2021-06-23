@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -56,7 +57,7 @@ public abstract class ValueSchema {
     T onDuration();
     T onSeries(ValueSchema value);
     T onStruct(Map<String, ValueSchema> value);
-    T onVariant(Class<? extends Enum<?>> enumeration);
+    T onVariant(List<Variant> variants);
   }
 
   /**
@@ -169,11 +170,11 @@ public abstract class ValueSchema {
    *
    * @return A new {@link ValueSchema} representing an {@link Enum} type.
    */
-  public static ValueSchema ofVariant(final Class<? extends Enum<?>> enumeration) {
-    Objects.requireNonNull(enumeration);
+  public static ValueSchema ofVariant(final List<Variant> variants) {
+    Objects.requireNonNull(variants);
     return new ValueSchema() {
       public <T> T match(final Visitor<T> visitor) {
-        return visitor.onVariant(enumeration);
+        return visitor.onVariant(variants);
       }
     };
   }
@@ -231,7 +232,7 @@ public abstract class ValueSchema {
     }
 
     @Override
-    public T onVariant(final Class<? extends Enum<?>> enumeration) {
+    public T onVariant(final List<Variant> variants) {
       return this.onDefault();
     }
   }
@@ -248,7 +249,7 @@ public abstract class ValueSchema {
     }
 
     @Override
-    public Optional<T> onVariant(Class<? extends Enum<?>> enumeration) {
+    public Optional<T> onVariant(final List<Variant> variants) {
       return onDefault();
     }
   }
@@ -366,11 +367,11 @@ public abstract class ValueSchema {
    * @return An {@link Optional} containing an enum if this object represents an enumeration.
    *   Otherwise, returns an empty {@link Optional}
    */
-  public Optional<Class<? extends Enum<?>>> asVariant() {
+  public Optional<List<Variant>> asVariant() {
     return this.match(new OptionalVisitor<>() {
       @Override
-      public Optional<Class<? extends Enum<?>>> onVariant(final Class<? extends Enum<?>> enumeration) {
-        return Optional.of(enumeration);
+      public Optional<List<Variant>> onVariant(final List<Variant> variants) {
+        return Optional.of(variants);
       }
     });
   }
@@ -414,8 +415,8 @@ public abstract class ValueSchema {
       }
 
       @Override
-      public String onVariant(Class<? extends Enum<?>> enumeration) {
-        return "ValueSchema.VARIANT(enum=" + enumeration.getName() + ")";
+      public String onVariant(final List<Variant> variants) {
+        return "ValueSchema.VARIANT(" + variants.toString() + ")";
       }
     });
   }
@@ -462,9 +463,21 @@ public abstract class ValueSchema {
       }
 
       @Override
-      public Boolean onVariant(Class<? extends Enum<?>> enumeration) {
-        return other.asVariant().map(x -> x.equals(enumeration)).orElse(false);
+      public Boolean onVariant(final List<Variant> variants) {
+        return other.asVariant().map(x -> x.equals(variants)).orElse(false);
       }
     });
+  }
+
+  public static final class Variant {
+    /** The unique internal name of this variant. */
+    public final String key;
+    /** The user-facing presentation of this variant. */
+    public final String label;
+
+    public Variant(final String key, final String label) {
+      this.key = Objects.requireNonNull(key);
+      this.label = Objects.requireNonNull(label);
+    }
   }
 }

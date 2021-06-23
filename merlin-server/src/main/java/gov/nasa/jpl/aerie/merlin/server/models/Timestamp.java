@@ -12,7 +12,7 @@ import java.time.temporal.ChronoField;
 public class Timestamp {
   // This builder must be used to get optional subsecond values
   // See: https://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
-  private static final DateTimeFormatter format =
+  public static final DateTimeFormatter format =
       new DateTimeFormatterBuilder()
           .appendPattern("uuuu-DDD'T'HH:mm:ss")
           .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server;
 import com.mongodb.client.MongoClients;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
@@ -11,6 +12,9 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.remotes.RemotePlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
+import gov.nasa.jpl.aerie.merlin.server.services.SimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.ThreadedMongoSimulationService;
 import io.javalin.Javalin;
 
 import javax.json.Json;
@@ -33,41 +37,52 @@ public final class AerieAppDriver {
 
     // Assemble the core non-web object graph.
     final var mongoDatabase = MongoClients
-        .create(configuration.MONGO_URI.toString())
-        .getDatabase(configuration.MONGO_DATABASE);
+        .create(configuration.MONGO_URI().toString())
+        .getDatabase(configuration.MONGO_DATABASE());
     final var planRepository = new RemotePlanRepository(
         mongoDatabase,
-        configuration.MONGO_PLAN_COLLECTION,
-        configuration.MONGO_ACTIVITY_COLLECTION);
+        configuration.MONGO_PLAN_COLLECTION(),
+        configuration.MONGO_ACTIVITY_COLLECTION());
     final var adaptationRepository = new RemoteAdaptationRepository(
         mongoDatabase,
-        configuration.MONGO_ADAPTATION_COLLECTION);
+        configuration.MONGO_ADAPTATION_COLLECTION());
 
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
     final var planController = new LocalPlanService(planRepository, adaptationController);
 
+    final var simulationAgent = SimulationAgent.spawn(
+        "simulation-agent",
+        new RunSimulationAction(planController, adaptationController));
+
+    final var simulationAction = new GetSimulationResultsAction(
+        planController,
+        adaptationController,
+        new ThreadedMongoSimulationService(
+            mongoDatabase.getCollection(configuration.MONGO_SIMULATION_RESULTS_COLLECTION()),
+            simulationAgent));
+
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      if (configuration.enableJavalinLogging) config.enableDevLogging();
+      if (configuration.enableJavalinLogging()) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new MerlinBindings(planController, adaptationController))
+          .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
           .registerPlugin(new LocalAppExceptionBindings())
           .registerPlugin(new AdaptationRepositoryExceptionBindings())
           .registerPlugin(new AdaptationExceptionBindings());
     });
 
     // Start the HTTP server.
-    javalin.start(configuration.HTTP_PORT);
+    javalin.start(configuration.HTTP_PORT());
   }
 
   /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
   private static Supplier<SerializedValue> makeMissionModelConfigSupplier(final AppConfiguration configuration)
   {
     // Try to deserialize JSON configuration to a serialized configuration
-    return () -> configuration.MISSION_MODEL_CONFIG_PATH
+    return () -> configuration.MISSION_MODEL_CONFIG_PATH()
         .map(p -> {
           try {
             final var fs = new FileInputStream(p);

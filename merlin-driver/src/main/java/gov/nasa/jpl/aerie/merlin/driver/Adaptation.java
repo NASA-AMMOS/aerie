@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
@@ -51,9 +52,16 @@ public final class Adaptation<$Schema> {
   }
 
   public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {
-    return scheduler -> {
-      this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
-      return TaskStatus.completed();
+    return new Task<>() {
+      @Override
+      public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
+        Adaptation.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
+        return TaskStatus.completed();
+      }
+
+      @Override
+      public void reset() {
+      }
     };
   }
 

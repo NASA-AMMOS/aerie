@@ -53,7 +53,9 @@ public final class RealDynamics {
     final double valueAtEarliest = this.initial + this.rate * atEarliest.in(Duration.SECONDS);
     final double valueAtLatest = this.initial + this.rate * atLatest.in(Duration.SECONDS);
     final Duration entry;
-    if (this.rate > 0) {
+    if (min <= valueAtEarliest && valueAtEarliest <= max) {
+      entry = atEarliest;
+    } else if (this.rate > 0) {
       if (valueAtLatest < min || max < valueAtEarliest) return Optional.empty();
       entry = Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS);
     } else /* this.rate < 0 */ {
@@ -77,12 +79,12 @@ public final class RealDynamics {
     final double valueAtEarliest = this.initial + this.rate * atEarliest.in(Duration.SECONDS);
     final double valueAtLatest = this.initial + this.rate * atLatest.in(Duration.SECONDS);
     final Duration entry;
-    if (this.rate > 0) {
-      if (valueAtEarliest < min || max < valueAtEarliest) return Optional.of(atEarliest);
+    if (valueAtEarliest < min || max < valueAtEarliest) {
+      entry = atEarliest;
+    } else if (this.rate > 0) {
       if (valueAtLatest <= max) return Optional.empty();
       entry = Duration.roundUpward((max - this.initial) / this.rate, Duration.SECONDS);
     } else /* this.rate < 0 */ {
-      if (valueAtEarliest < min || max < valueAtEarliest) return Optional.of(atEarliest);
       if (valueAtLatest >= min) return Optional.empty();
       entry = Duration.roundUpward((min - this.initial) / this.rate, Duration.SECONDS);
     }

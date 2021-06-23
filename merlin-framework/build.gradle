@@ -14,8 +14,8 @@ java {
   withSourcesJar()
 }
 
-tasks.withType(JavaCompile) {
-  options.release.set(11)
+test {
+  useJUnitPlatform()
 }
 
 jacocoTestReport.dependsOn test
@@ -27,6 +27,9 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
   api project(':merlin-sdk')
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+  testImplementation 'junit:junit:4.12'
 }
 
 publishing {
@@ -51,4 +54,3 @@ publishing {
     }
   }
 }
-

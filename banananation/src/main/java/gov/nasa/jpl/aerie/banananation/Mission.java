@@ -17,11 +17,11 @@ public final class Mission {
   public final Register<String> producer = Register.create("Chiquita");
 
   public Mission(final Registrar registrar) {
-    registrar.resource("/flag", this.flag, new EnumValueMapper<>(Flag.class));
-    registrar.resource("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
-    registrar.resource("/peel", this.peel, new DoubleValueMapper());
-    registrar.resource("/fruit", this.fruit, new DoubleValueMapper());
-    registrar.resource("/plant", this.plant, new IntegerValueMapper());
-    registrar.resource("/producer", this.producer, new StringValueMapper());
+    registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
+    registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
+    registrar.discrete("/peel", this.peel, new DoubleValueMapper());
+    registrar.discrete("/fruit", this.fruit, new DoubleValueMapper());
+    registrar.discrete("/plant", this.plant, new IntegerValueMapper());
+    registrar.discrete("/producer", this.producer, new StringValueMapper());
   }
 }

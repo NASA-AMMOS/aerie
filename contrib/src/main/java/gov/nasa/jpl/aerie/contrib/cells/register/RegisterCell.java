@@ -28,7 +28,10 @@ public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCe
   @Override
   public void react(final RegisterEffect<T> concurrentValues) {
     concurrentValues.newValue.ifPresent(newValue -> this.value = newValue);
-    this.conflicted = (concurrentValues.conflictingValues.size() > 1);
+
+    if (concurrentValues.conflictingValues.size() > 0) {
+      this.conflicted = (concurrentValues.conflictingValues.size() > 1);
+    }
   }
 
   public T getValue() {
