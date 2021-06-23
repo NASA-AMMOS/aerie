@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes","u":"allclasses-index.html"},{"p":"gov.nasa.jpl.aerie.merlin.framework.junit","l":"MerlinExtension"}];updateSearchResults();
