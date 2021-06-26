@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 
 import gov.nasa.jpl.aerie.merlin.framework.Condition;
 import gov.nasa.jpl.aerie.merlin.framework.Resource;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
 import java.util.Objects;
 

@@ -1,4 +1,6 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.model;
+
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 
 /**
  * A solver over a continuous dynamics for a resource type.

@@ -3,8 +3,8 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.discrete;
 import gov.nasa.jpl.aerie.merlin.framework.Context;
 import gov.nasa.jpl.aerie.merlin.framework.Resource;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 
 import java.util.Collections;
 import java.util.Map;

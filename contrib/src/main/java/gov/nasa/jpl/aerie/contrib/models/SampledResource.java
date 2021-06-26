@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
 public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;

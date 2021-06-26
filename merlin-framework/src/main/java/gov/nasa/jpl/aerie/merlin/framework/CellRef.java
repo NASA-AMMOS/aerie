@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
 public final class CellRef<Event, CellType extends Cell<Event, CellType>> {
   private final Query<?, Event, CellType> query;

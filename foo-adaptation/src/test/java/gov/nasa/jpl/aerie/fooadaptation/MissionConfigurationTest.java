@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.fooadaptation.activities.FooActivity;
 import gov.nasa.jpl.aerie.fooadaptation.generated.ActivityTypes;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

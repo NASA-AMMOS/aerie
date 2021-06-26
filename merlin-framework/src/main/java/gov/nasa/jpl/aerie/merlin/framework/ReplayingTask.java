@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.ArrayList;
 import java.util.List;

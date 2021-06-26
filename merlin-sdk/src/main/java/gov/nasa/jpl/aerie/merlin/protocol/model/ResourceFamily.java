@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import java.util.Map;
 

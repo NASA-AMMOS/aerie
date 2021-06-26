@@ -1,4 +1,8 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.driver;
+
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 

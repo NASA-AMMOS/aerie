@@ -1,17 +1,18 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Checkpoint;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public final class ThreadedTaskTest {
   @Test

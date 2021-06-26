@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
@@ -30,14 +30,14 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
   @Override
   public <CellType> CellType getInitialState(
-      final gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, CellType> query)
+      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> query)
   {
     return this.state.getInitialState(query);
   }
 
   @Override
   public <Event, Effect, CellType>
-  gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
   allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
     return this.state.allocate(projection, applicator);
   }
@@ -66,7 +66,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     // Provide a more specific return type.
     @Override
     <Event, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
     allocate(
         Projection<Event, Effect> projection,
         Applicator<Effect, CellType> applicator);
@@ -75,7 +75,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
-    private final Map<gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries = new HashMap<>();
+    private final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries = new HashMap<>();
     private final Schema.Builder<$Schema> schemaBuilder;
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
@@ -93,7 +93,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, CellType> token)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> token)
     {
       // SAFETY: For every entry in the queries map, the type parameters line up.
       @SuppressWarnings("unchecked")
@@ -107,7 +107,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
     @Override
     public <Event, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
     allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
       final var query = this.schemaBuilder.register(
           new gov.nasa.jpl.aerie.merlin.timeline.effects.Projection<Event, Effect>() {
@@ -153,7 +153,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
             }
           });
 
-      final var token = new gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>() {};
+      final var token = new gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>() {};
 
       this.queries.put(token, query);
 
@@ -205,7 +205,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, ?, CellType> query)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> query)
     {
       return this.adaptation
           .getQuery(query)
@@ -215,7 +215,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
 
     @Override
     public <Event, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.Query<$Schema, Event, CellType>
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
     allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");
     }

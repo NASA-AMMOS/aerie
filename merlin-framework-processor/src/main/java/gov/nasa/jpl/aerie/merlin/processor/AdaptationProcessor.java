@@ -20,8 +20,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -486,12 +485,12 @@ public final class AdaptationProcessor implements Processor {
                                   .addModifiers(Modifier.PUBLIC)
                                   .addAnnotation(Override.class)
                                   .returns(TypeName.get(activityType.declaration.asType()))
-                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
+                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
                                   .addParameter(
                                       ParameterizedTypeName.get(
                                           java.util.Map.class,
                                           String.class,
-                                          gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
+                                          gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
                                       "arguments",
                                       Modifier.FINAL);
 
@@ -602,7 +601,7 @@ public final class AdaptationProcessor implements Processor {
                                         parameter.name,
                                         parameter.name,
                                         "entry",
-                                        gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
+                                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
                                     .addStatement("break")
                                     .unindent())
                                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -614,7 +613,7 @@ public final class AdaptationProcessor implements Processor {
                                 .indent()
                                 .addStatement(
                                     "throw new $T()",
-                                    gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
+                                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
                                 .unindent()
                                 .build())
                         .endControlFlow()
@@ -856,13 +855,13 @@ public final class AdaptationProcessor implements Processor {
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(
                         java.util.ArrayList.class,
-                        gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema.class))
+                        gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema.class))
                     .addStatement(
                         "final var $L = new $T()",
                         "parameters",
                         ParameterizedTypeName.get(
                             java.util.ArrayList.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema.class))
+                            gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema.class))
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -871,7 +870,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addStatement(
                                     "$L.add(new $T( $S, this.mapper_$L.getValueSchema()))",
                                     "parameters",
-                                    gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema.class,
+                                    gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema.class,
                                     parameter.name,
                                     parameter.name))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -888,7 +887,7 @@ public final class AdaptationProcessor implements Processor {
                     .returns(ParameterizedTypeName.get(
                         java.util.Map.class,
                         String.class,
-                        gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class))
+                        gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
                     .addParameter(
                         TypeName.get(activityType.declaration.asType()),
                         "activity",
@@ -899,7 +898,7 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             java.util.HashMap.class,
                             String.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class))
+                            gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -1012,7 +1011,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
-                                            gov.nasa.jpl.aerie.merlin.protocol.Duration.class,
+                                            gov.nasa.jpl.aerie.merlin.protocol.types.Duration.class,
                                             "duration")
                                         .addModifiers(Modifier.FINAL)
                                         .build())
@@ -1046,7 +1045,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
-                                            gov.nasa.jpl.aerie.merlin.protocol.Duration.class,
+                                            gov.nasa.jpl.aerie.merlin.protocol.types.Duration.class,
                                             "unit")
                                         .addModifiers(Modifier.FINAL)
                                         .build())
@@ -1095,7 +1094,7 @@ public final class AdaptationProcessor implements Processor {
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addSuperinterface(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.class)
+            .addSuperinterface(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.class)
             .addMethod(
                 MethodSpec
                     .methodBuilder("instantiate")
@@ -1103,12 +1102,12 @@ public final class AdaptationProcessor implements Processor {
                     .addAnnotation(Override.class)
                     .addTypeVariable(TypeVariableName.get("$Schema"))
                     .addParameter(
-                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
+                        TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
                         "configuration",
                         Modifier.FINAL)
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.Builder.class),
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.Builder.class),
                             TypeVariableName.get("$Schema")),
                         "builder",
                         Modifier.FINAL)

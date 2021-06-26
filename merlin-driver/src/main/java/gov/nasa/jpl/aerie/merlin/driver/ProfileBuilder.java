@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,7 +35,7 @@ public final class ProfileBuilder<$Schema, Resource, Dynamics> {
 
     final var dynamics = this.solver.getDynamics(this.resource, new Querier<$Timeline>() {
       @Override
-      public <State> State getState(final gov.nasa.jpl.aerie.merlin.protocol.Query<? super $Timeline, ?, State> token) {
+      public <State> State getState(final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Timeline, ?, State> token) {
         final var query = adaptation
             .getQuery(token.specialize())
             .orElseThrow(() -> new IllegalArgumentException("forged token"));

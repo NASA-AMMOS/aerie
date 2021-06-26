@@ -1,4 +1,6 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.types;
+
+import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 
 import java.util.Objects;
 

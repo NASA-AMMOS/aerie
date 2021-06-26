@@ -1,8 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
-import java.nio.file.Path;
-
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
@@ -15,6 +13,8 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import io.javalin.Javalin;
+
+import java.nio.file.Path;
 
 public final class DevAppDriver {
   private static final int HTTP_PORT = 27183;

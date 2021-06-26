@@ -7,8 +7,8 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 
 import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.call;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECOND;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
 
 public final class DecompositionTestActivities {
   @ActivityType("parent")

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.timeline.effects;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 public interface Applicator<Effect, Model> {
   Model initial();

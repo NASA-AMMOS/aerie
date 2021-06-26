@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.timeline.History;
 import org.apache.commons.lang3.tuple.Pair;
 

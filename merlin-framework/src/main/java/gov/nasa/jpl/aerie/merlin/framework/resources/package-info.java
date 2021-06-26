@@ -8,7 +8,7 @@
  *
  * <p>
  *   At any given time, a resource is in a given <b>state</b>, and its time-varying behavior -- its <b>dynamics</b> --
- *   depends only upon that state. The {@link gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver} interface
+ *   depends only upon that state. The {@link gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver} interface
  *   defines this relationship between state and dynamics.
  * </p>
  *
@@ -22,7 +22,7 @@
  * <p>
  *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time. A resource, then,
  *   also gives the current extent of validity for its current dynamics.
- *   The {@link gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics} class describes this mechanism.
+ *   The {@link gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics} class describes this mechanism.
  * </p>
  *
  * <p>
@@ -35,7 +35,7 @@
  *     Determining the next time at which some condition is held true.
  * </ul>
  * <p>
- *   The {@link gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver} interface captures these capabilities
+ *   The {@link gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver} interface captures these capabilities
  *   for a given choice of types for resource values, dynamics, and conditions.
  * </p>
  */

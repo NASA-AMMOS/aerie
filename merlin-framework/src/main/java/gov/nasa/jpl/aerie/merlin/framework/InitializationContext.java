@@ -1,11 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 import java.util.Objects;

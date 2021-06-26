@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server;
 
 import com.mongodb.client.MongoClients;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;

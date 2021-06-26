@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.contrib.models.Register;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

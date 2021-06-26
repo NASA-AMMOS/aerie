@@ -1,4 +1,8 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.model;
+
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
 

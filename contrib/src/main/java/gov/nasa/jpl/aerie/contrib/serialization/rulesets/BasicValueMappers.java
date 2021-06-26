@@ -23,8 +23,8 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveLongArrayValueM
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveShortArrayValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.ShortValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.nio.file.Path;
 import java.util.List;

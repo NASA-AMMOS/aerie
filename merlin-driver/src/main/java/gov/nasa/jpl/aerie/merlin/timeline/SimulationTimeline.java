@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.timeline;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EffectExpression;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EventGraph;
