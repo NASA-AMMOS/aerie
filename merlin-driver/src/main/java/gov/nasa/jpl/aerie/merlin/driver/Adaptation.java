@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
@@ -21,13 +21,13 @@ public final class Adaptation<$Schema> {
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
   private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
-  private final List<AdaptationFactory.TaskFactory<$Schema>> daemons;
+  private final List<Initializer.TaskFactory<$Schema>> daemons;
 
   public Adaptation(
       final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries,
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
-      final List<AdaptationFactory.TaskFactory<$Schema>> daemons,
+      final List<Initializer.TaskFactory<$Schema>> daemons,
       final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes)
   {
     this.queries = Objects.requireNonNull(queries);

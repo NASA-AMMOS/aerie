@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
@@ -13,9 +13,9 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class Registrar {
-  private final AdaptationFactory.Builder<?> builder;
+  private final Initializer<?> builder;
 
-  public Registrar(final AdaptationFactory.Builder<?> builder) {
+  public Registrar(final Initializer<?> builder) {
     this.builder = Objects.requireNonNull(builder);
   }
 
@@ -58,7 +58,7 @@ public final class Registrar {
 
   private <$Schema, Activity>
   void threadedTaskHelper(
-      final AdaptationFactory.Builder<$Schema> builder,
+      final Initializer<$Schema> builder,
       final ActivityMapper<Activity> mapper,
       final Consumer<Activity> task
   ) {
@@ -72,7 +72,7 @@ public final class Registrar {
 
   private <$Schema, Activity>
   void replayingTaskHelper(
-      final AdaptationFactory.Builder<$Schema> builder,
+      final Initializer<$Schema> builder,
       final ActivityMapper<Activity> mapper,
       final Consumer<Activity> task
   ) {
@@ -85,7 +85,7 @@ public final class Registrar {
   }
 
   private <$Schema, Activity>
-  void noopTaskHelper(final AdaptationFactory.Builder<$Schema> builder, final ActivityMapper<Activity> mapper) {
+  void noopTaskHelper(final Initializer<$Schema> builder, final ActivityMapper<Activity> mapper) {
     builder.taskSpecType(mapper.getName(), new ActivityType<>(mapper) {
       @Override
       public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {

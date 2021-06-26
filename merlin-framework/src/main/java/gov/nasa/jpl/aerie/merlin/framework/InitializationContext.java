@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -12,13 +12,13 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class InitializationContext<$Schema> implements Context {
-  private final AdaptationFactory.Builder<$Schema> builder;
+  private final Initializer<$Schema> builder;
 
-  public InitializationContext(final AdaptationFactory.Builder<$Schema> builder) {
+  public InitializationContext(final Initializer<$Schema> builder) {
     this.builder = Objects.requireNonNull(builder);
   }
 
-  public static <T> T initializing(final AdaptationFactory.Builder<?> builder, final Supplier<T> initializer) {
+  public static <T> T initializing(final Initializer<?> builder, final Supplier<T> initializer) {
     return ModelActions.context.setWithin(new InitializationContext<>(builder), initializer::get);
   }
 

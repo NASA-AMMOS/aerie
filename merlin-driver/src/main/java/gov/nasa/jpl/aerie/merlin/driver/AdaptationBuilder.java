@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Builder<$Schema> {
+public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   private AdaptationBuilderState<$Schema> state;
 
   public AdaptationBuilder(final Schema.Builder<$Schema> schemaBuilder) {
@@ -47,7 +47,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
   }
 
   @Override
-  public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
+  public String daemon(final TaskFactory<$Schema> task) {
     return this.state.daemon(task);
   }
 
@@ -61,7 +61,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
   }
 
 
-  private interface AdaptationBuilderState<$Schema> extends AdaptationFactory.Builder<$Schema> {
+  private interface AdaptationBuilderState<$Schema> extends Initializer<$Schema> {
     // Provide a more specific return type.
     @Override
     <Event, Effect, CellType>
@@ -78,7 +78,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     private final Schema.Builder<$Schema> schemaBuilder;
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
-    private final List<AdaptationFactory.TaskFactory<$Schema>> daemons = new ArrayList<>();
+    private final List<TaskFactory<$Schema>> daemons = new ArrayList<>();
     private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
     public UnbuiltState(final Schema.Builder<$Schema> schemaBuilder) {
@@ -123,7 +123,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     }
 
     @Override
-    public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
+    public String daemon(final TaskFactory<$Schema> task) {
       this.daemons.add(task);
       return null;  // TODO: get some way to refer to the daemon task
     }
@@ -183,7 +183,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     }
 
     @Override
-    public String daemon(final AdaptationFactory.TaskFactory<$Schema> task) {
+    public String daemon(final TaskFactory<$Schema> task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

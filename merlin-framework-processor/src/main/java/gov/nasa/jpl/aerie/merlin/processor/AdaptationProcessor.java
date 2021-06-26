@@ -1106,7 +1106,7 @@ public final class AdaptationProcessor implements Processor {
                         Modifier.FINAL)
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.Builder.class),
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer.class),
                             TypeVariableName.get("$Schema")),
                         "builder",
                         Modifier.FINAL)
