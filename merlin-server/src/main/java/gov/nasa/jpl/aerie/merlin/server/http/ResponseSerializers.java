@@ -6,8 +6,9 @@ import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
@@ -54,13 +55,23 @@ public final class ResponseSerializers {
     return builder.build();
   }
 
-  public static JsonValue serializeParameterSchema(final ParameterSchema element) {
+  public static JsonValue serializeActivityParameter(final TaskSpecType.Parameter element) {
     if (element == null) return JsonValue.NULL;
 
     return Json
         .createObjectBuilder()
-        .add("name", element.name)
-        .add("schema", serializeValueSchema(element.schema))
+        .add("name", element.name())
+        .add("schema", serializeValueSchema(element.schema()))
+        .build();
+  }
+
+  public static JsonValue serializeModelParameter(final AdaptationFactory.Parameter element) {
+    if (element == null) return JsonValue.NULL;
+
+    return Json
+        .createObjectBuilder()
+        .add("name", element.name())
+        .add("schema", serializeValueSchema(element.schema()))
         .build();
   }
 
@@ -84,8 +95,12 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeValueSchema, schemas);
   }
 
-  public static JsonValue serializeParameterSchemas(final List<ParameterSchema> schemas) {
-    return serializeIterable(ResponseSerializers::serializeParameterSchema, schemas);
+  public static JsonValue serializeActivityParameters(final List<TaskSpecType.Parameter> schemas) {
+    return serializeIterable(ResponseSerializers::serializeActivityParameter, schemas);
+  }
+
+  public static JsonValue serializeModelParameters(final List<AdaptationFactory.Parameter> schemas) {
+    return serializeIterable(ResponseSerializers::serializeModelParameter, schemas);
   }
 
   public static JsonValue serializeSample(final Pair<Duration, SerializedValue> element) {
@@ -191,7 +206,7 @@ public final class ResponseSerializers {
         .createObjectBuilder()
         .add("start", serializeTimestamp(results.startTime))
         .add("resources", serializeMap(
-            elements -> serializeIterable(gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers::serializeSample, elements),
+            elements -> serializeIterable(ResponseSerializers::serializeSample, elements),
             results.resourceSamples))
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeMap(ResponseSerializers::serializeSimulatedActivity, results.simulatedActivities))
@@ -257,7 +272,7 @@ public final class ResponseSerializers {
   public static JsonValue serializeActivityType(final ActivityType activityType) {
     return Json
         .createObjectBuilder()
-        .add("parameters", ResponseSerializers.serializeParameterSchemas(activityType.parameters))
+        .add("parameters", serializeActivityParameters(activityType.parameters))
         .add("defaults", serializeArgumentMap(activityType.defaults))
         .build();
   }
@@ -266,10 +281,10 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
   }
 
-  public static JsonValue serializeConfigurationSchema(final List<ParameterSchema> parameterSchemas) {
+  public static JsonValue serializeConfigurationSchema(final List<AdaptationFactory.Parameter> parameterSchemas) {
     return Json
         .createObjectBuilder()
-        .add("parameters", ResponseSerializers.serializeParameterSchemas(parameterSchemas))
+        .add("parameters", serializeModelParameters(parameterSchemas))
         .build();
   }
 

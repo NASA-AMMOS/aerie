@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
@@ -30,7 +29,7 @@ public final class AdaptationLoader {
         return builder.build();
     }
 
-    public static List<ParameterSchema> getConfigurationSchema(final Path path, final String name, final String version)
+    public static List<AdaptationFactory.Parameter> getConfigurationSchema(final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         return loadAdaptationProvider(path, name, version).getParameters();

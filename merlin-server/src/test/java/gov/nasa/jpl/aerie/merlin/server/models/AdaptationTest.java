@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
@@ -41,9 +41,9 @@ public final class AdaptationTest {
             "foo", new ActivityType(
                 "foo",
                 List.of(
-                    new ParameterSchema("x", ValueSchema.INT),
-                    new ParameterSchema("y", ValueSchema.STRING),
-                    new ParameterSchema("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                    new TaskSpecType.Parameter("x", ValueSchema.INT),
+                    new TaskSpecType.Parameter("y", ValueSchema.STRING),
+                    new TaskSpecType.Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 Map.of(
                     "x", SerializedValue.of(0),
                     "y", SerializedValue.of("test"),
@@ -67,9 +67,9 @@ public final class AdaptationTest {
         final ActivityType expectedType = new ActivityType(
             "foo",
             List.of(
-                new ParameterSchema("x", ValueSchema.INT),
-                new ParameterSchema("y", ValueSchema.STRING),
-                new ParameterSchema("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                new TaskSpecType.Parameter("x", ValueSchema.INT),
+                new TaskSpecType.Parameter("y", ValueSchema.STRING),
+                new TaskSpecType.Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             Map.of(
                 "x", SerializedValue.of(0),
                 "y", SerializedValue.of("test"),

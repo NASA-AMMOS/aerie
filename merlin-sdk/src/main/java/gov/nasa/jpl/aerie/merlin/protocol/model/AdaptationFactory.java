@@ -1,14 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.List;
 
 public interface AdaptationFactory {
   <$Schema> void instantiate(SerializedValue configuration, Builder<$Schema> builder);
-  List<ParameterSchema> getParameters();
+
+  List<Parameter> getParameters();
+
+  record Parameter(String name, ValueSchema schema) {}
 
   interface Builder<$Schema> {
     boolean isBuilt();

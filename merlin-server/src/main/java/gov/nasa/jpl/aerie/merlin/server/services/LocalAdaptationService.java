@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
@@ -228,7 +227,7 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ParameterSchema> getModelParameters(final String adaptationId)
+  public List<AdaptationFactory.Parameter> getModelParameters(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {

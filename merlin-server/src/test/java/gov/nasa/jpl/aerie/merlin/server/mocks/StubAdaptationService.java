@@ -2,7 +2,8 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
@@ -13,7 +14,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class StubAdaptationService implements AdaptationService {
   public static final String EXISTENT_ADAPTATION_ID = "abc";
@@ -35,7 +34,7 @@ public final class StubAdaptationService implements AdaptationService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new ParameterSchema("Param", ValueSchema.STRING)),
+      List.of(new TaskSpecType.Parameter("Param", ValueSchema.STRING)),
       Map.of("Param", SerializedValue.of("Default")));
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
@@ -192,7 +191,7 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ParameterSchema> getModelParameters(final String adaptationId) {
+  public List<AdaptationFactory.Parameter> getModelParameters(final String adaptationId) {
     return List.of();
   }
 

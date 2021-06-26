@@ -20,7 +20,6 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -855,13 +854,13 @@ public final class AdaptationProcessor implements Processor {
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(
                         java.util.ArrayList.class,
-                        gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema.class))
+                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter.class))
                     .addStatement(
                         "final var $L = new $T()",
                         "parameters",
                         ParameterizedTypeName.get(
                             java.util.ArrayList.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema.class))
+                            gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter.class))
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -870,7 +869,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addStatement(
                                     "$L.add(new $T( $S, this.mapper_$L.getValueSchema()))",
                                     "parameters",
-                                    gov.nasa.jpl.aerie.merlin.protocol.types.ParameterSchema.class,
+                                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter.class,
                                     parameter.name,
                                     parameter.name))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -1161,7 +1160,7 @@ public final class AdaptationProcessor implements Processor {
                     .methodBuilder("getParameters")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(List.class, ParameterSchema.class))
+                    .returns(ParameterizedTypeName.get(List.class, gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.Parameter.class))
                     .addCode(
                         adaptation.modelConfiguration
                             .map(configElem -> CodeBlock  // if configuration is provided
@@ -1170,7 +1169,7 @@ public final class AdaptationProcessor implements Processor {
                                               "parameterMap.keySet().stream().map(name -> new $T(name, parameterMap.get(name))).toList())\n"+
                                               ".orElse($T.of())",
                                     buildConfigurationMapperBlock(adaptation, configElem),
-                                    ParameterSchema.class,
+                                    gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.Parameter.class,
                                     List.class)
                                 .build())
                             .orElse(CodeBlock
