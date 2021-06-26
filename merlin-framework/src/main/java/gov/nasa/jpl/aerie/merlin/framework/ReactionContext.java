@@ -39,6 +39,11 @@ final class ReactionContext<$Timeline> implements Context {
   }
 
   @Override
+  public ContextType getContextType() {
+    return ContextType.Reacting;
+  }
+
+  @Override
   public <CellType> CellType ask(final Query<?, ?, CellType> query) {
     // SAFETY: All objects accessible within a single adaptation instance have the same brand.
     @SuppressWarnings("unchecked")

@@ -10,6 +10,11 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.Map;
 
 public interface Context {
+  enum ContextType { Initializing, Reacting, Querying }
+
+  // Usable in all contexts
+  ContextType getContextType();
+
   // Usable during both initialization & simulation
   <CellType> CellType ask(Query<?, ?, CellType> query);
 

@@ -7,8 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 
 public interface Initializer<$Schema> {
-  boolean isBuilt();
-
   <CellType> CellType getInitialState(Query<$Schema, ?, CellType> query);
 
   <Event, Effect, CellType>

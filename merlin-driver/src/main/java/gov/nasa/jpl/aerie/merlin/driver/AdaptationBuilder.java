@@ -23,11 +23,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   }
 
   @Override
-  public boolean isBuilt() {
-    return this.state.isBuilt();
-  }
-
-  @Override
   public <CellType> CellType getInitialState(
       final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> query)
   {
@@ -83,11 +78,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     public UnbuiltState(final Schema.Builder<$Schema> schemaBuilder) {
       this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
-    }
-
-    @Override
-    public boolean isBuilt() {
-      return false;
     }
 
     @Override
@@ -153,11 +143,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     public BuiltState(final Adaptation<$Schema> adaptation) {
       this.adaptation = adaptation;
-    }
-
-    @Override
-    public boolean isBuilt() {
-      return true;
     }
 
     @Override

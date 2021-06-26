@@ -20,7 +20,7 @@ public final class Registrar {
   }
 
   public boolean isInitializationComplete() {
-    return this.builder.isBuilt();
+    return (ModelActions.context.get().getContextType() != Context.ContextType.Initializing);
   }
 
   public <Value>
