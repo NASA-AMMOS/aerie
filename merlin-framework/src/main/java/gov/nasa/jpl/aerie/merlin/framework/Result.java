@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.framework;
 
 import java.util.Objects;
 import java.util.function.Function;

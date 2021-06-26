@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.fooadaptation.mappers;
 
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.Vector3DValueMapper;
 import gov.nasa.jpl.aerie.fooadaptation.Configuration;
-import gov.nasa.jpl.aerie.merlin.protocol.Result;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
