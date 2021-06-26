@@ -30,4 +30,10 @@ public final class Register<Value> implements DiscreteResource<Value> {
   public void set(final Value value) {
     this.ref.emit(RegisterEffect.set(value));
   }
+
+  @Deprecated
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
+  }
 }

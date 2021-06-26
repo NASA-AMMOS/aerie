@@ -24,6 +24,12 @@ public final class Accumulator implements RealResource {
     return this.ref.get().getVolume();
   }
 
+  @Deprecated
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
+  }
+
 
   public final class Rate implements RealResource {
     @Override
@@ -33,6 +39,12 @@ public final class Accumulator implements RealResource {
 
     public void add(final double delta) {
       Accumulator.this.ref.emit(LinearAccumulationEffect.addRate(delta));
+    }
+
+    @Deprecated
+    @Override
+    public boolean equals(final Object obj) {
+      return super.equals(obj);
     }
   }
 }

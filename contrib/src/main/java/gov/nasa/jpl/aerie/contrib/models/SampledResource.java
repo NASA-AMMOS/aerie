@@ -33,4 +33,10 @@ public class SampledResource<T> implements DiscreteResource<T> {
   public T getDynamics() {
     return this.result.getDynamics();
   }
+
+  @Deprecated
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
+  }
 }
