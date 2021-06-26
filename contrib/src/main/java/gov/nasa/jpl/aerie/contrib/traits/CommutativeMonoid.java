@@ -25,27 +25,16 @@ import java.util.function.BinaryOperator;
  *
  * @see EffectTrait
  */
-public final class CommutativeMonoid<T> implements EffectTrait<T> {
-  private final T empty;
-  private final BinaryOperator<T> combinator;
-
-  public CommutativeMonoid(final T empty, final BinaryOperator<T> combinator) {
-    this.empty = empty;
-    this.combinator = combinator;
-  }
-
-  @Override
-  public T empty() {
-    return this.empty;
-  }
-
+public record CommutativeMonoid<T> (T empty, BinaryOperator<T> combinator)
+    implements EffectTrait<T>
+{
   @Override
   public T sequentially(final T prefix, final T suffix) {
-    return combinator.apply(prefix, suffix);
+    return this.combinator.apply(prefix, suffix);
   }
 
   @Override
   public T concurrently(final T left, final T right) {
-    return combinator.apply(left, right);
+    return this.combinator.apply(left, right);
   }
 }
