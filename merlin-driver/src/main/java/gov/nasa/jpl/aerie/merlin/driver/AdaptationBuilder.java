@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
@@ -109,49 +108,7 @@ public final class AdaptationBuilder<$Schema> implements AdaptationFactory.Build
     public <Event, Effect, CellType>
     gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
     allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-      final var query = this.schemaBuilder.register(
-          new gov.nasa.jpl.aerie.merlin.timeline.effects.Projection<Event, Effect>() {
-            @Override
-            public Effect atom(final Event atom) {
-              return projection.atom(atom);
-            }
-
-            @Override
-            public Effect empty() {
-              return projection.empty();
-            }
-
-            @Override
-            public Effect sequentially(final Effect prefix, final Effect suffix) {
-              return projection.sequentially(prefix, suffix);
-            }
-
-            @Override
-            public Effect concurrently(final Effect left, final Effect right) {
-              return projection.concurrently(left, right);
-            }
-          },
-          new gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator<Effect, CellType>() {
-            @Override
-            public CellType initial() {
-              return applicator.initial();
-            }
-
-            @Override
-            public CellType duplicate(final CellType cellType) {
-              return applicator.duplicate(cellType);
-            }
-
-            @Override
-            public void apply(final CellType cellType, final Effect effect) {
-              applicator.apply(cellType, effect);
-            }
-
-            @Override
-            public void step(final CellType cellType, final Duration duration) {
-              applicator.step(cellType, duration);
-            }
-          });
+      final var query = this.schemaBuilder.register(projection, applicator);
 
       final var token = new gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>() {};
 

@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.timeline;
 
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Applicator;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
 /**
  * A cached query onto a {@link SimulationTimeline}.
