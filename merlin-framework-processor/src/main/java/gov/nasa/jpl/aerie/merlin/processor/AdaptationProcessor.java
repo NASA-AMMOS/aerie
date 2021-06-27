@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -103,6 +104,7 @@ public final class AdaptationProcessor implements Processor {
         final var adaptationRecord = parseAdaptation(packageElement);
 
         final var generatedFiles = new ArrayList<JavaFile>();
+        generatedFiles.add(generateMerlinPlugin(adaptationRecord));
         generatedFiles.add(generateAdaptationFactory(adaptationRecord));
         generatedFiles.add(generateActivityActions(adaptationRecord));
         generatedFiles.add(generateActivityTypes(adaptationRecord));
@@ -1254,6 +1256,37 @@ public final class AdaptationProcessor implements Processor {
                             })
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
+                    .build())
+            .build();
+
+    return JavaFile
+        .builder(typeName.packageName(), typeSpec)
+        .skipJavaLangImports(true)
+        .build();
+  }
+
+  private JavaFile generateMerlinPlugin(final AdaptationRecord adaptation) {
+    final var typeName = adaptation.getPluginName();
+
+    final var typeSpec =
+        TypeSpec
+            .classBuilder(typeName)
+            .addAnnotation(
+                AnnotationSpec
+                    .builder(javax.annotation.processing.Generated.class)
+                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .build())
+            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addSuperinterface(MerlinPlugin.class)
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getFactory")
+                    .addAnnotation(Override.class)
+                    .addModifiers(Modifier.PUBLIC)
+                    .returns(adaptation.getFactoryName())
+                    .addStatement(
+                        "return new $T()",
+                        adaptation.getFactoryName())
                     .build())
             .build();
 

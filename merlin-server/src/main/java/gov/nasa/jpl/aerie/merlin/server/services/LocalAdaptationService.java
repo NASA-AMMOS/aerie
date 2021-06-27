@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
@@ -81,7 +82,7 @@ public final class LocalAdaptationService implements AdaptationService {
 
     final String adClassStr;
     try {
-      adClassStr = getImplementingClassName(path, AdaptationFactory.class);
+      adClassStr = getImplementingClassName(path, MerlinPlugin.class);
     } catch (final IOException ex) {
       throw new AdaptationRejectedException(ex);
     }
@@ -300,7 +301,7 @@ public final class LocalAdaptationService implements AdaptationService {
 
     if (classPathList.size() != 1) {
       throw new AdaptationRejectedException(
-          "Adaptation contains zero/multiple registered implementations of AdaptationFactory.");
+          "Adaptation contains zero/multiple registered implementations of %s.".formatted(javaClass));
     }
 
     return classPathList.get(0);

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
@@ -23,7 +24,8 @@ public final class AdaptationLoader {
     public static Adaptation<?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
-        final var factory = loadAdaptationProvider(path, name, version);
+        final var service = loadAdaptationProvider(path, name, version);
+        final var factory = service.getFactory();
         final var builder = new AdaptationBuilder<>(Schema.builder());
         factory.instantiate(missionModelConfig, builder);
         return builder.build();
@@ -32,10 +34,10 @@ public final class AdaptationLoader {
     public static List<AdaptationFactory.Parameter> getConfigurationSchema(final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
-        return loadAdaptationProvider(path, name, version).getParameters();
+        return loadAdaptationProvider(path, name, version).getFactory().getParameters();
     }
 
-    public static AdaptationFactory loadAdaptationProvider(final Path path, final String name, final String version)
+    public static MerlinPlugin loadAdaptationProvider(final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         // Look for a MerlinAdaptation implementor in the adaptation. For correctness, we're assuming there's
@@ -48,13 +50,13 @@ public final class AdaptationLoader {
 
         try {
             final var factoryClass$ = classLoader.loadClass(className);
-            if (!AdaptationFactory.class.isAssignableFrom(factoryClass$)) {
+            if (!MerlinPlugin.class.isAssignableFrom(factoryClass$)) {
                 throw new AdaptationLoadException(path, name, version);
             }
 
             // SAFETY: We checked above that AdaptationFactory is assignable from this type.
             @SuppressWarnings("unchecked")
-            final var factoryClass = (Class<? extends AdaptationFactory>) factoryClass$;
+            final var factoryClass = (Class<? extends MerlinPlugin>) factoryClass$;
 
             return factoryClass.getConstructor().newInstance();
         } catch (final ClassNotFoundException | NoSuchMethodException | InstantiationException
@@ -68,7 +70,7 @@ public final class AdaptationLoader {
     throws AdaptationLoadException {
         try {
             final var jarFile = new JarFile(jarPath.toFile());
-            final var jarEntry = jarFile.getEntry("META-INF/services/" + AdaptationFactory.class.getCanonicalName());
+            final var jarEntry = jarFile.getEntry("META-INF/services/" + MerlinPlugin.class.getCanonicalName());
             final var inputStream = jarFile.getInputStream(jarEntry);
 
             final var classPathList = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
@@ -104,7 +106,7 @@ public final class AdaptationLoader {
             super(
                 String.format(
                     "No implementation found for `%s` at path `%s` wih name \"%s\" and version \"%s\"",
-                    AdaptationFactory.class.getSimpleName(),
+                    MerlinPlugin.class.getSimpleName(),
                     path,
                     name,
                     version),
