@@ -11,9 +11,9 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
-import gov.nasa.jpl.aerie.merlin.framework.ActivityDefinitionStyle;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
+import gov.nasa.jpl.aerie.merlin.framework.ActivityDefinitionStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -124,13 +124,13 @@ public final class AdaptationProcessor implements Processor {
         final var trace = ex.getStackTrace();
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
-            ( ex.getMessage()
-              + "\n"
-              + Arrays
-                  .stream(trace)
-                  .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
-                  .map(Object::toString)
-                  .collect(Collectors.joining("\n")) ),
+            (ex.getMessage()
+             + "\n"
+             + Arrays
+                 .stream(trace)
+                 .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
+                 .map(Object::toString)
+                 .collect(Collectors.joining("\n"))),
             ex.element,
             ex.annotation,
             ex.attribute);
@@ -138,13 +138,13 @@ public final class AdaptationProcessor implements Processor {
         final var trace = ex.getStackTrace();
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
-            ( ex.getMessage()
-              + "\n"
-              + Arrays
-                  .stream(trace)
-                  .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
-                  .map(Object::toString)
-                  .collect(Collectors.joining("\n")) ));
+            (ex.getMessage()
+             + "\n"
+             + Arrays
+                 .stream(trace)
+                 .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
+                 .map(Object::toString)
+                 .collect(Collectors.joining("\n"))));
       }
     }
 
@@ -175,7 +175,8 @@ public final class AdaptationProcessor implements Processor {
 
   private AdaptationRecord
   parseAdaptation(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var modelConfiguration = this.getAdaptationConfiguration(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
@@ -194,12 +195,13 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeRule>
   parseValueMappers(final TypeElement factory)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var valueMappers = new ArrayList<TypeRule>();
 
     for (final var element : factory.getEnclosedElements()) {
       if (element.getKind().equals(ElementKind.METHOD)) {
-        valueMappers.add(this.parseValueMapperMethod((ExecutableElement)element, ClassName.get(factory)));
+        valueMappers.add(this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
       }
     }
 
@@ -208,7 +210,8 @@ public final class AdaptationProcessor implements Processor {
 
   private TypeRule
   parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
       throw new InvalidAdaptationException(
           "Value Mapper method must be public and static",
@@ -229,7 +232,8 @@ public final class AdaptationProcessor implements Processor {
 
   private Set<String>
   getEnumBoundedTypeParameters(final ExecutableElement element)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var enumBoundedTypeParameters = new HashSet<String>();
     // Check type parameters are bounded only by enum type or not at all
     for (final var typeParameter : element.getTypeParameters()) {
@@ -237,9 +241,7 @@ public final class AdaptationProcessor implements Processor {
       for (final var bound : bounds) {
         final var erasure = typeUtils.erasure(bound);
         final var objectType = elementUtils.getTypeElement("java.lang.Object").asType();
-        final var enumType = typeUtils.erasure(
-            elementUtils.getTypeElement("java.lang.Enum").asType()
-        );
+        final var enumType = typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
         if (typeUtils.isSameType(erasure, objectType)) {
           // Nothing to do
         } else if (typeUtils.isSameType(erasure, enumType)) {
@@ -257,7 +259,8 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityTypeRecord
   parseActivityType(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getActivityMapper(adaptationElement, activityTypeElement);
     final var validations = this.getActivityValidations(activityTypeElement);
@@ -282,7 +285,8 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityDefinitionStyle
   getActivityDefinitionStyle(final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
 
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.Parameter.class) != null) return ActivityDefinitionStyle.Classic;
@@ -298,7 +302,8 @@ public final class AdaptationProcessor implements Processor {
 
   private String
   getActivityTypeName(final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var annotationMirror = this
         .getAnnotationMirrorByType(activityTypeElement, ActivityType.class)
         .orElseThrow(() -> new InvalidAdaptationException(
@@ -317,9 +322,9 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityMapperRecord
   getActivityMapper(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
-    final var annotationMirror =
-        this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
+  throws InvalidAdaptationException
+  {
+    final var annotationMirror = this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
     if (annotationMirror.isEmpty()) {
       return ActivityMapperRecord.generatedFor(
           ClassName.get(activityTypeElement),
@@ -339,7 +344,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private List<ActivityValidationRecord>
-  getActivityValidations(final TypeElement activityTypeElement) {
+  getActivityValidations(final TypeElement activityTypeElement)
+  {
     final var validations = new ArrayList<ActivityValidationRecord>();
 
     for (final var element : activityTypeElement.getEnclosedElements()) {
@@ -357,14 +363,10 @@ public final class AdaptationProcessor implements Processor {
   private List<ActivityParameterRecord>
   getActivityParameters(final TypeElement activityTypeElement) throws InvalidAdaptationException
   {
-
-    //UPDATED 2021/06/10
-
-
     final var parameters = new ArrayList<ActivityParameterRecord>();
 
     /*
-    New style parameter extraction does not require reading for the
+    Record-style parameter extraction does not require reading for the
     @Parameter tag, due to record styles having parameters built
     into the record definition itself. As a result, since any additional
     fields not defined in the header definition of a record must be static,
@@ -423,7 +425,7 @@ public final class AdaptationProcessor implements Processor {
 
   private MethodSpec
   generateDefaultInstantiationMethod(final ActivityTypeRecord activityType)
-  throws InvalidAdaptationException {
+  {
 
     final var activityDefinitionStyle = activityType.activityDefinitionStyle;
 
@@ -434,14 +436,14 @@ public final class AdaptationProcessor implements Processor {
 
     var activityTypeName = activityType.declaration.getSimpleName().toString();
 
-    switch(activityDefinitionStyle) {
+    switch (activityDefinitionStyle) {
       case Classic:
         methodBuilder = methodBuilder.addStatement("return new $N()", activityTypeName);
         break;
 
       case AllOptional:
         //Exists @Template method
-        for(final var element: activityType.declaration.getEnclosedElements()) {
+        for (final var element : activityType.declaration.getEnclosedElements()) {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
@@ -457,8 +459,10 @@ public final class AdaptationProcessor implements Processor {
         break;
 
       default:
-        throw new InvalidAdaptationException("No matching activity definition style: " + activityDefinitionStyle
-                                             + " for " + activityTypeName);
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "No matching activity definition style: " + activityDefinitionStyle + " for " + activityTypeName
+        );
 
     }
 
@@ -468,7 +472,7 @@ public final class AdaptationProcessor implements Processor {
 
   private MethodSpec
   generateInstantiationMethod(final ActivityTypeRecord activityType)
-  throws InvalidAdaptationException {
+  {
 
     var activityDefinitionStyle = activityType.activityDefinitionStyle;
 
@@ -495,7 +499,7 @@ public final class AdaptationProcessor implements Processor {
         break;
 
       case AllOptional:
-        for(final var element: activityType.declaration.getEnclosedElements()) {
+        for (final var element : activityType.declaration.getEnclosedElements()) {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
@@ -512,8 +516,10 @@ public final class AdaptationProcessor implements Processor {
         break;
 
       default:
-        throw new InvalidAdaptationException("No matching activity definition style: " + activityDefinitionStyle
-                                             + " for " + activityTypeName);
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "No matching activity definition style: " + activityDefinitionStyle + " for " + activityTypeName
+        );
     }
 
     methodBuilder = methodBuilder.addStatement(
@@ -521,11 +527,10 @@ public final class AdaptationProcessor implements Processor {
 
         switch (activityType.activityDefinitionStyle) {
           case Classic -> "template";
-          case AllOptional, AllRequired ->
-              getRecordInstantiatorWithParams(
-                  activityType.declaration.getSimpleName().toString(),
-                  activityType.parameters
-              );
+          case AllOptional, AllRequired -> getRecordInstantiatorWithParams(
+              activityType.declaration.getSimpleName().toString(),
+              activityType.parameters
+          );
           case SomeOptional -> "null";
         }
     );
@@ -536,7 +541,7 @@ public final class AdaptationProcessor implements Processor {
 
   private MethodSpec.Builder
   produceParametersFromTemplate(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
-  throws InvalidAdaptationException {
+  {
 
     return methodBuilder.addComment("generated from func: produceParametersFromTemplate")
                         .addCode(
@@ -558,7 +563,7 @@ public final class AdaptationProcessor implements Processor {
                                               case Classic -> "template." + parameter.name;
                                               case AllOptional, SomeOptional -> "template." + parameter.name + "()";
                                               case AllRequired -> (
-                                                  List.of("int", "boolean").contains( parameter.type.toString())
+                                                  List.of("int", "boolean").contains(parameter.type.toString())
                                                       ? "0"
                                                       : "null"
                                               );
@@ -572,7 +577,7 @@ public final class AdaptationProcessor implements Processor {
 
   private MethodSpec.Builder
   produceArgumentExtractor(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
-  throws InvalidAdaptationException {
+  {
 
     return methodBuilder.addComment("generated from func: produceArgumentExtractor")
                         .beginControlFlow(
@@ -618,7 +623,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<Pair<String, ActivityType.Executor>>
-  getActivityEffectModel(final TypeElement activityTypeElement) {
+  getActivityEffectModel(final TypeElement activityTypeElement)
+  {
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD) continue;
 
@@ -633,7 +639,8 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeElement>
   getAdaptationMapperClasses(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var mapperClassElements = new ArrayList<TypeElement>();
 
     for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithMappers.class)) {
@@ -656,10 +663,13 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeElement>
   getAdaptationActivityTypes(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var activityTypeElements = new ArrayList<TypeElement>();
 
-    for (final var activityTypeAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithActivityType.class)) {
+    for (final var activityTypeAnnotation : getRepeatableAnnotation(
+        adaptationElement,
+        Adaptation.WithActivityType.class)) {
       final var attribute =
           getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
 
@@ -681,7 +691,8 @@ public final class AdaptationProcessor implements Processor {
 
   private TypeElement
   getAdaptationModel(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var annotationMirror = this
         .getAnnotationMirrorByType(adaptationElement, Adaptation.class)
         .orElseThrow(() -> new InvalidAdaptationException(
@@ -730,7 +741,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private String
-  getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params) {
+  getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params)
+  {
     return "new "
            + declarationName
            + "("
@@ -751,7 +763,10 @@ public final class AdaptationProcessor implements Processor {
         mapperBlocks.put(parameter.name, mapperBlock.get());
       } else {
         failed = true;
-        messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for parameter", parameter.element);
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "Failed to generate value mapper for parameter",
+            parameter.element);
       }
     }
 
@@ -768,16 +783,8 @@ public final class AdaptationProcessor implements Processor {
     return mapperBlock.get();
   }
 
-  /*
-
-  Generate Activity Mapper
-  Updating this from previous version (AdaptionProcessor.java)
-
-   */
-
   private Optional<JavaFile>
   generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType)
-  throws InvalidAdaptationException
   {
     final var maybeMapperBlocks = buildParameterMapperBlocks(adaptation, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
@@ -1240,7 +1247,8 @@ public final class AdaptationProcessor implements Processor {
 
 
   private List<AnnotationMirror>
-  getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass) {
+  getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass)
+  {
     final var containerClass = annotationClass.getAnnotation(Repeatable.class).value();
 
     final var annotationType = this.elementUtils.getTypeElement(annotationClass.getCanonicalName()).asType();
@@ -1267,7 +1275,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<AnnotationValue>
-  getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName) {
+  getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName)
+  {
     for (final var entry : annotationMirror.getElementValues().entrySet()) {
       if (Objects.equals(attributeName, entry.getKey().getSimpleName().toString())) {
         return Optional.of(entry.getValue());
@@ -1278,7 +1287,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<AnnotationMirror>
-  getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass) {
+  getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass)
+  {
     final var annotationType = this.elementUtils
         .getTypeElement(annotationClass.getCanonicalName())
         .asType();
