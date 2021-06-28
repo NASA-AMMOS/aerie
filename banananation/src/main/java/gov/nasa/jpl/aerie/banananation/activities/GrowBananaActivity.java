@@ -16,7 +16,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
  * @contact John Doe
  */
 @ActivityType("GrowBanana")
-public final record GrowBananaActivity(int quantity) {
+public record GrowBananaActivity(int quantity) {
 
   @Validation("Quantity must be positive")
   public boolean validateBiteSize() {

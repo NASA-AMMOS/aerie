@@ -16,7 +16,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
  * @contact John Doe
  */
 @ActivityType("ThrowBanana")
-public final record ThrowBananaActivity(double speed) {
+public record ThrowBananaActivity(double speed) {
 
   public static @Template ThrowBananaActivity defaults() {
     return new ThrowBananaActivity(1.0);
