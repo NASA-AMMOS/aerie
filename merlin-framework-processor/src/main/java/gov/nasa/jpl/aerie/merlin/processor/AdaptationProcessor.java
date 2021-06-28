@@ -978,7 +978,8 @@ public final class AdaptationProcessor implements Processor {
                     .builder(javax.annotation.processing.Generated.class)
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+            .addModifiers(Modifier.PUBLIC)
+            .superclass(gov.nasa.jpl.aerie.merlin.framework.ModelActions.class)
             .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build())
             .addMethods(
                 adaptation.activityTypes

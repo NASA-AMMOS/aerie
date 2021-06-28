@@ -6,8 +6,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.Task;
 
 import java.util.Map;
 
-public final class ModelActions {
-  private ModelActions() {}
+public /*non-final*/ class ModelActions {
+  protected ModelActions() {}
 
   /* package-local */
   static final Scoped<Context> context = Scoped.create();
