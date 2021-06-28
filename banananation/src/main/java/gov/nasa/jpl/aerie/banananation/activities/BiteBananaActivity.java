@@ -16,7 +16,6 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
  * @subsystem fruit
  * @contact John Doe
  */
-
 @ActivityType("BiteBanana")
 public final class BiteBananaActivity {
   @Parameter

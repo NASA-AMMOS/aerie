@@ -27,7 +27,7 @@ public @interface ActivityType {
     String value() default "";
 
     //Computes defaults for a given factory
-    //Usage will most likely involve dependency injection from a modeler provided default class
+    //Usage will involve dependency injection from a modeler provided default class
     @Retention(RetentionPolicy.CLASS)
     @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
     @interface WithDefaults {

@@ -15,7 +15,6 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
  * @subsystem fruit
  * @contact John Doe
  */
-
 @ActivityType("GrowBanana")
 public final record GrowBananaActivity(int quantity) {
 
