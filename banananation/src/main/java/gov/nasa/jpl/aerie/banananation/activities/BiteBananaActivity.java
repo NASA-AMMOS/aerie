@@ -3,10 +3,9 @@ package gov.nasa.jpl.aerie.banananation.activities;
 import gov.nasa.jpl.aerie.banananation.Flag;
 import gov.nasa.jpl.aerie.banananation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
 
 /**
  * Bite a banana.
