@@ -57,7 +57,7 @@ public final class ThreadedTaskTest {
 
     class TestException extends RuntimeException {}
 
-    final var task = new ThreadedTask<$Timeline>(ModelActions.context, () -> {
+    final var task = new ThreadedTask<$Timeline>(Scoped.create(), () -> {
       throw new TestException();
     });
 
