@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
 import gov.nasa.jpl.aerie.merlin.framework.ActivityDefinitionStyle;
@@ -423,7 +424,7 @@ public final class AdaptationProcessor implements Processor {
    */
 
   private MethodSpec
-  generateInstantiateDefaultMethod(final ActivityTypeRecord activityType) throws InstantiationException
+  generateInstantiateDefaultMethod(final ActivityTypeRecord activityType)
   {
 
     final var activityDefinitionStyle = activityType.activityDefinitionStyle;
@@ -437,7 +438,7 @@ public final class AdaptationProcessor implements Processor {
 
     switch (activityDefinitionStyle) {
       case Classic:
-        methodBuilder = methodBuilder.addStatement("return new $N()", activityTypeName);
+        methodBuilder = methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
         break;
 
       case AllOptional:
@@ -446,7 +447,7 @@ public final class AdaptationProcessor implements Processor {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("return $N.$N()", activityTypeName, templateName);
+          methodBuilder = methodBuilder.addStatement("return $T.$N()", TypeName.get(activityType.declaration.asType()), templateName);
           break;
         }
         break;
@@ -456,9 +457,9 @@ public final class AdaptationProcessor implements Processor {
         //As a result, no method shall be created.
         //Unless there are 0 parameters, in which case a default no-arg constructor may be called.
         if (activityType.parameters.size() != 0) {
-          throw new InstantiationException("An activity with required parameters cannot be instantiated with defaults");
+          methodBuilder.addStatement("throw new $T()", NoDefaultInstanceException.class);
         } else {
-          methodBuilder.addStatement("return new $N()", activityTypeName);
+          methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
         }
         break;
 
@@ -497,7 +498,7 @@ public final class AdaptationProcessor implements Processor {
 
     switch (activityDefinitionStyle) {
       case Classic:
-        methodBuilder = methodBuilder.addStatement("final var template = new $N()", activityTypeName);
+        methodBuilder = methodBuilder.addStatement("final var template = new $T()", TypeName.get(activityType.declaration.asType()));
         methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
         methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
         break;
