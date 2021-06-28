@@ -547,8 +547,7 @@ public final class AdaptationProcessor implements Processor {
   produceParametersFromTemplate(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
   {
 
-    return methodBuilder.addComment("generated from func: produceParametersFromTemplate")
-                        .addCode(
+    return methodBuilder.addCode(
                             activityType.parameters
                                 .stream()
                                 .map(parameter -> CodeBlock
@@ -583,8 +582,7 @@ public final class AdaptationProcessor implements Processor {
   produceArgumentExtractor(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
   {
 
-    return methodBuilder.addComment("generated from func: produceArgumentExtractor")
-                        .beginControlFlow(
+    return methodBuilder.beginControlFlow(
                             "for (final var $L : $L.entrySet())",
                             "entry",
                             "arguments")
