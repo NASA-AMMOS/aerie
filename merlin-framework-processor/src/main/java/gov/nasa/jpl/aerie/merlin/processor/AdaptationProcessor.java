@@ -365,20 +365,19 @@ public final class AdaptationProcessor implements Processor {
   {
     final var parameters = new ArrayList<ActivityParameterRecord>();
 
-    /*
-    Record-style parameter extraction does not require reading for the
-    @Parameter tag, due to record styles having parameters built
-    into the record definition itself. As a result, since any additional
-    fields not defined in the header definition of a record must be static,
-    any non-static fields in the record decomposition as a class must
-    be parameters defined in the record header definition.
-     */
-
     var activityDefinitionStyle = this.getActivityDefinitionStyle(activityTypeElement);
 
     switch (activityDefinitionStyle) {
 
-      case AllOptional, AllRequired:
+      /*
+        Record-style parameter extraction does not require reading for the
+        @Parameter tag, due to record styles having parameters built
+        into the record definition itself. As a result, since any additional
+        fields not defined in the header definition of a record must be static,
+        any non-static fields in the record decomposition as a class must
+        be parameters defined in the record header definition.
+      */
+      case AllOptional, AllRequired -> {
         for (final var element : activityTypeElement.getEnclosedElements()) {
 
           if (element.getKind() != ElementKind.FIELD) continue;
@@ -390,9 +389,9 @@ public final class AdaptationProcessor implements Processor {
           parameters.add(new ActivityParameterRecord(name, type, element));
 
         }
-        break;
+      }
 
-      case Classic:
+      case Classic -> {
         for (final var element : activityTypeElement.getEnclosedElements()) {
           if (element.getKind() != ElementKind.FIELD) continue;
           if (element.getAnnotation(ActivityType.Parameter.class) == null) continue;
@@ -402,7 +401,7 @@ public final class AdaptationProcessor implements Processor {
 
           parameters.add(new ActivityParameterRecord(name, type, element));
         }
-        break;
+      }
 
     }
 
@@ -412,19 +411,19 @@ public final class AdaptationProcessor implements Processor {
 
   /*
   Returns the default template factory method or constructor for a given activity
-  type depending on whether it was written as a Java 16 new-style record or
-  an old-style class.
+  type depending on whether it was written as a Java 16 record-style activity or
+  an traditional non-record class activity.
 
-  Ex. Old-Style
+  Ex. Non-record class
   returns "new BiteBananaActivity()"
 
-  Ex. New-Style
+  Ex. Record-Style
   returns "new BiteBananaActivity.defaults()"
   where "defaults" is the factory method annotated with the @Template annotation
    */
 
   private MethodSpec
-  generateDefaultInstantiationMethod(final ActivityTypeRecord activityType)
+  generateInstantiateDefaultMethod(final ActivityTypeRecord activityType) throws InstantiationException
   {
 
     final var activityDefinitionStyle = activityType.activityDefinitionStyle;
@@ -455,7 +454,12 @@ public final class AdaptationProcessor implements Processor {
       case AllRequired:
         //There are no defaults if the activity has AllRequired parameters
         //As a result, no method shall be created.
-        methodBuilder = methodBuilder.addStatement("return null");
+        //Unless there are 0 parameters, in which case a default no-arg constructor may be called.
+        if (activityType.parameters.size() != 0) {
+          throw new InstantiationException("An activity with required parameters cannot be instantiated with defaults");
+        } else {
+          methodBuilder.addStatement("return new $N()", activityTypeName);
+        }
         break;
 
       default:
@@ -471,7 +475,7 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private MethodSpec
-  generateInstantiationMethod(final ActivityTypeRecord activityType)
+  generateInstantiateMethod(final ActivityTypeRecord activityType)
   {
 
     var activityDefinitionStyle = activityType.activityDefinitionStyle;
@@ -923,8 +927,8 @@ public final class AdaptationProcessor implements Processor {
                         "return $L",
                         "arguments")
                     .build())
-            .addMethod(generateDefaultInstantiationMethod(activityType))
-            .addMethod(generateInstantiationMethod(activityType))
+            .addMethod(generateInstantiateDefaultMethod(activityType))
+            .addMethod(generateInstantiateMethod(activityType))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getValidationFailures")
