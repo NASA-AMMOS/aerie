@@ -465,7 +465,7 @@ public final class AdaptationProcessor implements Processor {
       default:
         messager.printMessage(
             Diagnostic.Kind.ERROR,
-            "No matching activity definition style: " + activityDefinitionStyle + " for " + activityTypeName
+            "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
         );
 
     }
@@ -507,7 +507,7 @@ public final class AdaptationProcessor implements Processor {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("final var template = $N.$N()", activityTypeName, templateName);
+          methodBuilder = methodBuilder.addStatement("final var template = $T.$L()", activityType.declaration, templateName);
           methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
           methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
           break;
@@ -553,13 +553,8 @@ public final class AdaptationProcessor implements Processor {
                                 .map(parameter -> CodeBlock
                                     .builder()
                                     .addStatement(
-                                        "$L $L = $L",
-                                        (
-                                            switch (activityType.activityDefinitionStyle) {
-                                              case Classic, AllOptional, SomeOptional -> "var";
-                                              case AllRequired -> parameter.type.toString();
-                                            }
-                                        ),
+                                        "$T $L = $L",
+                                        parameter.type,
                                         parameter.name,
                                         (
                                             switch (activityType.activityDefinitionStyle) {
@@ -745,11 +740,9 @@ public final class AdaptationProcessor implements Processor {
   private String
   getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params)
   {
-    return "new "
-           + declarationName
-           + "("
-           + params.stream().map(parameter -> parameter.name).collect(Collectors.joining(", "))
-           + ")";
+    return "new %s(%s)".formatted(
+      declarationName,
+      params.stream().map(parameter -> parameter.name).collect(Collectors.joining(", ")));
   }
 
   private Optional<Map<String, CodeBlock>>
