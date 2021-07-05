@@ -466,7 +466,7 @@ public final class AdaptationProcessor implements Processor {
       default:
         messager.printMessage(
             Diagnostic.Kind.ERROR,
-            "No matching activity definition style: " + activityDefinitionStyle + " for " + activityTypeName
+            "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
         );
 
     }
