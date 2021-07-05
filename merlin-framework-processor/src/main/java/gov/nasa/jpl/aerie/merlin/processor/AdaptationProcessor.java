@@ -508,7 +508,7 @@ public final class AdaptationProcessor implements Processor {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("final var template = $N.$N()", activityTypeName, templateName);
+          methodBuilder = methodBuilder.addStatement("final var template = $T.$L()", activityType.declaration, templateName);
           methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
           methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
           break;
