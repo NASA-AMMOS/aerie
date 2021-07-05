@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import gov.nasa.jpl.aerie.merlin.framework.ActivityDefinitionStyle;
+import gov.nasa.jpl.aerie.merlin.processor.ActivityDefinitionStyle;
 
 public final class ActivityTypeRecord {
   public final TypeElement declaration;

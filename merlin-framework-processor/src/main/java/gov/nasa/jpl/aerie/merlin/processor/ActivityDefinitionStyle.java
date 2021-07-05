@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.framework;
+package gov.nasa.jpl.aerie.merlin.processor;
 
 public enum ActivityDefinitionStyle {
   Classic,
