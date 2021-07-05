@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
@@ -94,6 +95,7 @@ public final class AdaptationProcessor implements Processor {
     ///Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
 
+    //Iterate over all elements annotated with @Adaptation
     for (final var element : roundEnv.getElementsAnnotatedWith(Adaptation.class)) {
       final var packageElement = (PackageElement) element;
 
@@ -122,13 +124,13 @@ public final class AdaptationProcessor implements Processor {
         final var trace = ex.getStackTrace();
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
-            ( ex.getMessage()
-              + "\n"
-              + Arrays
-                  .stream(trace)
-                  .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
-                  .map(Object::toString)
-                  .collect(Collectors.joining("\n")) ),
+            (ex.getMessage()
+             + "\n"
+             + Arrays
+                 .stream(trace)
+                 .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
+                 .map(Object::toString)
+                 .collect(Collectors.joining("\n"))),
             ex.element,
             ex.annotation,
             ex.attribute);
@@ -136,13 +138,13 @@ public final class AdaptationProcessor implements Processor {
         final var trace = ex.getStackTrace();
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
-            ( ex.getMessage()
-              + "\n"
-              + Arrays
-                  .stream(trace)
-                  .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
-                  .map(Object::toString)
-                  .collect(Collectors.joining("\n")) ));
+            (ex.getMessage()
+             + "\n"
+             + Arrays
+                 .stream(trace)
+                 .filter(x -> x.getClassName().startsWith("gov.nasa.jpl.aerie.merlin."))
+                 .map(Object::toString)
+                 .collect(Collectors.joining("\n"))));
       }
     }
 
@@ -173,7 +175,8 @@ public final class AdaptationProcessor implements Processor {
 
   private AdaptationRecord
   parseAdaptation(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var modelConfiguration = this.getAdaptationConfiguration(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
@@ -192,12 +195,13 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeRule>
   parseValueMappers(final TypeElement factory)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var valueMappers = new ArrayList<TypeRule>();
 
     for (final var element : factory.getEnclosedElements()) {
       if (element.getKind().equals(ElementKind.METHOD)) {
-        valueMappers.add(this.parseValueMapperMethod((ExecutableElement)element, ClassName.get(factory)));
+        valueMappers.add(this.parseValueMapperMethod((ExecutableElement) element, ClassName.get(factory)));
       }
     }
 
@@ -206,7 +210,8 @@ public final class AdaptationProcessor implements Processor {
 
   private TypeRule
   parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
       throw new InvalidAdaptationException(
           "Value Mapper method must be public and static",
@@ -227,7 +232,8 @@ public final class AdaptationProcessor implements Processor {
 
   private Set<String>
   getEnumBoundedTypeParameters(final ExecutableElement element)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var enumBoundedTypeParameters = new HashSet<String>();
     // Check type parameters are bounded only by enum type or not at all
     for (final var typeParameter : element.getTypeParameters()) {
@@ -253,19 +259,51 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityTypeRecord
   parseActivityType(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getActivityMapper(adaptationElement, activityTypeElement);
     final var validations = this.getActivityValidations(activityTypeElement);
     final var parameters = this.getActivityParameters(activityTypeElement);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
-    return new ActivityTypeRecord(activityTypeElement, name, mapper, validations, parameters, effectModel);
+    /*
+    The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
+    In order to allow for optional/required parameters, the processor
+    must extract the factory method call that creates the default
+    template values for some activity. Additionally, a helper method
+    is used to determine whether some activity is written as a
+    class (old-style) or as a record (new-style) by determining
+    whether there are @Parameter tags (old-style) or not
+     */
+    final var activityDefinitionStyle = this.getActivityDefinitionStyle(activityTypeElement);
+
+
+    return new ActivityTypeRecord(activityTypeElement, name, mapper,
+                                  validations, parameters, effectModel, activityDefinitionStyle);
+  }
+
+  private ActivityDefinitionStyle
+  getActivityDefinitionStyle(final TypeElement activityTypeElement)
+  throws InvalidAdaptationException
+  {
+
+    for (final var element : activityTypeElement.getEnclosedElements()) {
+      if (element.getAnnotation(ActivityType.Parameter.class) != null) return ActivityDefinitionStyle.Classic;
+      if (element.getAnnotation(ActivityType.Template.class) != null) return ActivityDefinitionStyle.AllOptional;
+    }
+
+    //No @Parameter annotations (not classic)
+    //No @Template annotations (not All Optional)
+    //Must be All required
+    return ActivityDefinitionStyle.AllRequired;
+
   }
 
   private String
   getActivityTypeName(final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var annotationMirror = this
         .getAnnotationMirrorByType(activityTypeElement, ActivityType.class)
         .orElseThrow(() -> new InvalidAdaptationException(
@@ -284,7 +322,8 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityMapperRecord
   getActivityMapper(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var annotationMirror = this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
     if (annotationMirror.isEmpty()) {
       return ActivityMapperRecord.generatedFor(
@@ -295,9 +334,9 @@ public final class AdaptationProcessor implements Processor {
     final var mapperType = (DeclaredType) this
         .getAnnotationAttribute(annotationMirror.get(), "value")
         .orElseThrow(() -> new InvalidAdaptationException(
-          "Unable to get value attribute of annotation",
-          activityTypeElement,
-          annotationMirror.get()))
+            "Unable to get value attribute of annotation",
+            activityTypeElement,
+            annotationMirror.get()))
         .getValue();
 
     return ActivityMapperRecord.custom(
@@ -305,7 +344,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private List<ActivityValidationRecord>
-  getActivityValidations(final TypeElement activityTypeElement) {
+  getActivityValidations(final TypeElement activityTypeElement)
+  {
     final var validations = new ArrayList<ActivityValidationRecord>();
 
     for (final var element : activityTypeElement.getEnclosedElements()) {
@@ -321,24 +361,267 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private List<ActivityParameterRecord>
-  getActivityParameters(final TypeElement activityTypeElement) {
+  getActivityParameters(final TypeElement activityTypeElement) throws InvalidAdaptationException
+  {
     final var parameters = new ArrayList<ActivityParameterRecord>();
 
-    for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getKind() != ElementKind.FIELD) continue;
-      if (element.getAnnotation(ActivityType.Parameter.class) == null) continue;
+    var activityDefinitionStyle = this.getActivityDefinitionStyle(activityTypeElement);
 
-      final var name = element.getSimpleName().toString();
-      final var type = element.asType();
+    switch (activityDefinitionStyle) {
 
-      parameters.add(new ActivityParameterRecord(name, type, element));
+      /*
+        Record-style parameter extraction does not require reading for the
+        @Parameter tag, due to record styles having parameters built
+        into the record definition itself. As a result, since any additional
+        fields not defined in the header definition of a record must be static,
+        any non-static fields in the record decomposition as a class must
+        be parameters defined in the record header definition.
+      */
+      case AllOptional, AllRequired -> {
+        for (final var element : activityTypeElement.getEnclosedElements()) {
+
+          if (element.getKind() != ElementKind.FIELD) continue;
+          if (element.getModifiers().contains(Modifier.STATIC)) continue;
+
+          final var name = element.getSimpleName().toString();
+          final var type = element.asType();
+
+          parameters.add(new ActivityParameterRecord(name, type, element));
+
+        }
+      }
+
+      case Classic -> {
+        for (final var element : activityTypeElement.getEnclosedElements()) {
+          if (element.getKind() != ElementKind.FIELD) continue;
+          if (element.getAnnotation(ActivityType.Parameter.class) == null) continue;
+
+          final var name = element.getSimpleName().toString();
+          final var type = element.asType();
+
+          parameters.add(new ActivityParameterRecord(name, type, element));
+        }
+      }
+
     }
 
     return parameters;
+
+  }
+
+  /*
+  Returns the default template factory method or constructor for a given activity
+  type depending on whether it was written as a Java 16 record-style activity or
+  an traditional non-record class activity.
+
+  Ex. Non-record class
+  returns "new BiteBananaActivity()"
+
+  Ex. Record-Style
+  returns "new BiteBananaActivity.defaults()"
+  where "defaults" is the factory method annotated with the @Template annotation
+   */
+
+  private MethodSpec
+  generateInstantiateDefaultMethod(final ActivityTypeRecord activityType)
+  {
+
+    final var activityDefinitionStyle = activityType.activityDefinitionStyle;
+
+    var methodBuilder = MethodSpec.methodBuilder("instantiateDefault")
+                                  .addModifiers(Modifier.PUBLIC)
+                                  .addAnnotation(Override.class)
+                                  .returns(TypeName.get(activityType.declaration.asType()));
+
+    var activityTypeName = activityType.declaration.getSimpleName().toString();
+
+    switch (activityDefinitionStyle) {
+      case Classic:
+        methodBuilder = methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
+        break;
+
+      case AllOptional:
+        //Exists @Template method
+        for (final var element : activityType.declaration.getEnclosedElements()) {
+          if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
+          if (element.getAnnotation(ActivityType.Template.class) == null) continue;
+          var templateName = element.getSimpleName().toString();
+          methodBuilder = methodBuilder.addStatement("return $T.$N()", TypeName.get(activityType.declaration.asType()), templateName);
+          break;
+        }
+        break;
+
+      case AllRequired:
+        //There are no defaults if the activity has AllRequired parameters
+        //As a result, no method shall be created.
+        //Unless there are 0 parameters, in which case a default no-arg constructor may be called.
+        if (activityType.parameters.size() != 0) {
+          methodBuilder.addStatement("throw new $T()", NoDefaultInstanceException.class);
+        } else {
+          methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
+        }
+        break;
+
+      default:
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
+        );
+
+    }
+
+    return methodBuilder.build();
+
+  }
+
+  private MethodSpec
+  generateInstantiateMethod(final ActivityTypeRecord activityType)
+  {
+
+    var activityDefinitionStyle = activityType.activityDefinitionStyle;
+
+    var methodBuilder = MethodSpec.methodBuilder("instantiate")
+                                  .addModifiers(Modifier.PUBLIC)
+                                  .addAnnotation(Override.class)
+                                  .returns(TypeName.get(activityType.declaration.asType()))
+                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
+                                  .addParameter(
+                                      ParameterizedTypeName.get(
+                                          java.util.Map.class,
+                                          String.class,
+                                          gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
+                                      "arguments",
+                                      Modifier.FINAL);
+
+    var activityTypeName = activityType.declaration.getSimpleName().toString();
+
+    switch (activityDefinitionStyle) {
+      case Classic:
+        methodBuilder = methodBuilder.addStatement("final var template = new $T()", TypeName.get(activityType.declaration.asType()));
+        methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
+        methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
+        break;
+
+      case AllOptional:
+        for (final var element : activityType.declaration.getEnclosedElements()) {
+          if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
+          if (element.getAnnotation(ActivityType.Template.class) == null) continue;
+          var templateName = element.getSimpleName().toString();
+          methodBuilder = methodBuilder.addStatement("final var template = $T.$L()", activityType.declaration, templateName);
+          methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
+          methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
+          break;
+        }
+        break;
+
+      case AllRequired:
+        methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
+        methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
+        break;
+
+      default:
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "No matching activity definition style: " + activityDefinitionStyle + " for " + activityTypeName
+        );
+    }
+
+    methodBuilder = methodBuilder.addStatement(
+        "return $L",
+
+        switch (activityType.activityDefinitionStyle) {
+          case Classic -> "template";
+          case AllOptional, AllRequired -> getRecordInstantiatorWithParams(
+              activityType.declaration.getSimpleName().toString(),
+              activityType.parameters
+          );
+          case SomeOptional -> "null";
+        }
+    );
+
+    return methodBuilder.build();
+
+  }
+
+  private MethodSpec.Builder
+  produceParametersFromTemplate(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
+  {
+
+    return methodBuilder.addCode(
+                            activityType.parameters
+                                .stream()
+                                .map(parameter -> CodeBlock
+                                    .builder()
+                                    .addStatement(
+                                        "$T $L = $L",
+                                        parameter.type,
+                                        parameter.name,
+                                        (
+                                            switch (activityType.activityDefinitionStyle) {
+                                              case Classic -> "template." + parameter.name;
+                                              case AllOptional, SomeOptional -> "template." + parameter.name + "()";
+                                              case AllRequired -> (
+                                                  List.of("int", "boolean").contains(parameter.type.toString())
+                                                      ? "0"
+                                                      : "null"
+                                              );
+                                            }
+                                        )
+                                    )
+                                )
+                                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                                .build()).addCode("\n");
+  }
+
+  private MethodSpec.Builder
+  produceArgumentExtractor(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
+  {
+
+    return methodBuilder.beginControlFlow(
+                            "for (final var $L : $L.entrySet())",
+                            "entry",
+                            "arguments")
+                        .beginControlFlow(
+                            "switch ($L.getKey())",
+                            "entry")
+                        .addCode(
+                            activityType.parameters
+                                .stream()
+                                .map(parameter -> CodeBlock
+                                    .builder()
+                                    .add("case $S:\n", parameter.name)
+                                    .indent()
+                                    .addStatement(
+                                        "$L$L = this.mapper_$L"
+                                        + "\n" + ".deserializeValue($L.getValue())"
+                                        + "\n" + ".getSuccessOrThrow($$ -> new $T())",
+                                        (activityType.activityDefinitionStyle
+                                         != ActivityDefinitionStyle.Classic ? "" : "template."),
+                                        parameter.name,
+                                        parameter.name,
+                                        "entry",
+                                        gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
+                                    .addStatement("break")
+                                    .unindent())
+                                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                                .build())
+                        .addCode(
+                            CodeBlock
+                                .builder()
+                                .add("default:\n")
+                                .indent()
+                                .addStatement(
+                                    "throw new $T()",
+                                    gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
+                                .unindent()
+                                .build())
+                        .endControlFlow()
+                        .endControlFlow().addCode("\n");
   }
 
   private Optional<Pair<String, ActivityType.Executor>>
-  getActivityEffectModel(final TypeElement activityTypeElement) {
+  getActivityEffectModel(final TypeElement activityTypeElement)
+  {
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD) continue;
 
@@ -353,11 +636,13 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeElement>
   getAdaptationMapperClasses(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var mapperClassElements = new ArrayList<TypeElement>();
 
     for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithMappers.class)) {
-      final var attribute = getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
+      final var attribute =
+          getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
         throw new InvalidAdaptationException(
@@ -375,11 +660,15 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeElement>
   getAdaptationActivityTypes(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var activityTypeElements = new ArrayList<TypeElement>();
 
-    for (final var activityTypeAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithActivityType.class)) {
-      final var attribute = getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
+    for (final var activityTypeAnnotation : getRepeatableAnnotation(
+        adaptationElement,
+        Adaptation.WithActivityType.class)) {
+      final var attribute =
+          getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
         throw new InvalidAdaptationException(
@@ -399,14 +688,16 @@ public final class AdaptationProcessor implements Processor {
 
   private TypeElement
   getAdaptationModel(final PackageElement adaptationElement)
-  throws InvalidAdaptationException {
+  throws InvalidAdaptationException
+  {
     final var annotationMirror = this
         .getAnnotationMirrorByType(adaptationElement, Adaptation.class)
         .orElseThrow(() -> new InvalidAdaptationException(
             "The adaptation package is somehow missing an @Adaptation annotation",
             adaptationElement));
 
-    final var modelAttribute = getAnnotationAttribute(annotationMirror, "model").orElseThrow();
+    final var modelAttribute =
+        getAnnotationAttribute(annotationMirror, "model").orElseThrow();
     if (!(modelAttribute.getValue() instanceof DeclaredType)) {
       throw new InvalidAdaptationException(
           "The top-level model is not yet defined",
@@ -426,8 +717,12 @@ public final class AdaptationProcessor implements Processor {
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
-  private Optional<TypeElement> getAdaptationConfiguration(final PackageElement adaptationElement) throws InvalidAdaptationException {
-    final var annotationMirror = this.getAnnotationMirrorByType(adaptationElement, Adaptation.WithConfiguration.class);
+  private Optional<TypeElement>
+  getAdaptationConfiguration(final PackageElement adaptationElement)
+  throws InvalidAdaptationException
+  {
+    final var annotationMirror =
+        this.getAnnotationMirrorByType(adaptationElement, Adaptation.WithConfiguration.class);
     if (annotationMirror.isEmpty()) return Optional.empty();
 
     final var attribute = getAnnotationAttribute(annotationMirror.get(), "value").orElseThrow();
@@ -442,7 +737,17 @@ public final class AdaptationProcessor implements Processor {
     return Optional.of((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
   }
 
-  private Optional<Map<String, CodeBlock>> buildParameterMapperBlocks(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
+  private String
+  getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params)
+  {
+    return "new %s(%s)".formatted(
+      declarationName,
+      params.stream().map(parameter -> parameter.name).collect(Collectors.joining(", ")));
+  }
+
+  private Optional<Map<String, CodeBlock>>
+  buildParameterMapperBlocks(final AdaptationRecord adaptation, final ActivityTypeRecord activityType)
+  {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
     var failed = false;
     final var mapperBlocks = new HashMap<String, CodeBlock>();
@@ -453,7 +758,10 @@ public final class AdaptationProcessor implements Processor {
         mapperBlocks.put(parameter.name, mapperBlock.get());
       } else {
         failed = true;
-        messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for parameter", parameter.element);
+        messager.printMessage(
+            Diagnostic.Kind.ERROR,
+            "Failed to generate value mapper for parameter",
+            parameter.element);
       }
     }
 
@@ -470,7 +778,9 @@ public final class AdaptationProcessor implements Processor {
     return mapperBlock.get();
   }
 
-  private Optional<JavaFile> generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType) {
+  private Optional<JavaFile>
+  generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType)
+  {
     final var maybeMapperBlocks = buildParameterMapperBlocks(adaptation, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
     final var mapperBlocks = maybeMapperBlocks.get();
@@ -509,7 +819,9 @@ public final class AdaptationProcessor implements Processor {
                 MethodSpec
                     .constructorBuilder()
                     .addModifiers(Modifier.PUBLIC)
-                    // Suppress unchecked warnings because the resolver has to put some big casting in for Class parameters
+                    /* Suppress unchecked warnings because the resolver has to
+                        put some big casting in for Class parameters
+                     */
                     .addAnnotation(
                         AnnotationSpec
                             .builder(SuppressWarnings.class)
@@ -597,82 +909,17 @@ public final class AdaptationProcessor implements Processor {
                                     parameter.name,
                                     parameter.name,
                                     "activity",
-                                    parameter.name))
+                                    parameter.name + (activityType.activityDefinitionStyle
+                                                      != ActivityDefinitionStyle.Classic ? "()" : "")
+                                ))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
                     .addStatement(
                         "return $L",
                         "arguments")
                     .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("instantiateDefault")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(TypeName.get(activityType.declaration.asType()))
-                    .addStatement("return new $T()", TypeName.get(activityType.declaration.asType()))
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("instantiate")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(TypeName.get(activityType.declaration.asType()))
-                    .addException(gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            java.util.Map.class,
-                            String.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.SerializedValue.class),
-                        "arguments",
-                        Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = new $T()",
-                        "activity",
-                        TypeName.get(activityType.declaration.asType()))
-                    .beginControlFlow(
-                        "for (final var $L : $L.entrySet())",
-                        "entry",
-                        "arguments")
-                    .beginControlFlow(
-                        "switch ($L.getKey())",
-                        "entry")
-                    .addCode(
-                        activityType.parameters
-                            .stream()
-                            .map(parameter -> CodeBlock
-                                .builder()
-                                .add("case $S:\n", parameter.name)
-                                .indent()
-                                .addStatement(
-                                    "$L.$L = this.mapper_$L"
-                                    + "\n" + ".deserializeValue($L.getValue())"
-                                    + "\n" + ".getSuccessOrThrow($$ -> new $T())",
-                                    "activity",
-                                    parameter.name,
-                                    parameter.name,
-                                    "entry",
-                                    gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
-                                .addStatement("break")
-                                .unindent())
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                            .build())
-                    .addCode(
-                        CodeBlock
-                            .builder()
-                            .add("default:\n")
-                            .indent()
-                            .addStatement(
-                                "throw new $T()",
-                                gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException.class)
-                            .unindent()
-                            .build())
-                    .endControlFlow()
-                    .endControlFlow()
-                    .addStatement(
-                        "return $L",
-                        "activity")
-                    .build())
+            .addMethod(generateInstantiateDefaultMethod(activityType))
+            .addMethod(generateInstantiateMethod(activityType))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getValidationFailures")
@@ -710,9 +957,9 @@ public final class AdaptationProcessor implements Processor {
             .build();
 
     return Optional.of(JavaFile
-        .builder(activityType.mapper.name.packageName(), typeSpec)
-        .skipJavaLangImports(true)
-        .build());
+                           .builder(activityType.mapper.name.packageName(), typeSpec)
+                           .skipJavaLangImports(true)
+                           .build());
   }
 
   private JavaFile generateActivityActions(final AdaptationRecord adaptation) {
@@ -871,35 +1118,35 @@ public final class AdaptationProcessor implements Processor {
                     .addCode(
                         adaptation.modelConfiguration
                             .map(configElem -> CodeBlock  // if configuration is provided
-                                .builder()
-                                .addStatement(
-                                    "final var $L = $L",
-                                    "configMapper",
-                                    buildConfigurationMapperBlock(adaptation, configElem))
-                                .addStatement(
-                                    "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
-                                    "deserializedConfig",
-                                    "configMapper",
-                                    "configuration")
-                                .addStatement(
-                                    "final var $L = $T.initializing($L, () -> new $T($L, $L))",
-                                    "model",
-                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                                    "builder",
-                                    ClassName.get(adaptation.topLevelModel),
-                                    "registrar",
-                                    "deserializedConfig")
-                                .build())
+                                                          .builder()
+                                                          .addStatement(
+                                                              "final var $L = $L",
+                                                              "configMapper",
+                                                              buildConfigurationMapperBlock(adaptation, configElem))
+                                                          .addStatement(
+                                                              "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
+                                                              "deserializedConfig",
+                                                              "configMapper",
+                                                              "configuration")
+                                                          .addStatement(
+                                                              "final var $L = $T.initializing($L, () -> new $T($L, $L))",
+                                                              "model",
+                                                              gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                                              "builder",
+                                                              ClassName.get(adaptation.topLevelModel),
+                                                              "registrar",
+                                                              "deserializedConfig")
+                                                          .build())
                             .orElseGet(() -> CodeBlock  // if configuration is not provided
-                                .builder()
-                                .addStatement(
-                                    "final var $L = $T.initializing($L, () -> new $T($L))",
-                                    "model",
-                                    gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
-                                    "builder",
-                                    ClassName.get(adaptation.topLevelModel),
-                                    "registrar")
-                                .build()))
+                                                        .builder()
+                                                        .addStatement(
+                                                            "final var $L = $T.initializing($L, () -> new $T($L))",
+                                                            "model",
+                                                            gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                                            "builder",
+                                                            ClassName.get(adaptation.topLevelModel),
+                                                            "registrar")
+                                                        .build()))
                     .addCode("\n")
                     .addStatement(
                         "$T.register($L, $L)",
@@ -994,7 +1241,9 @@ public final class AdaptationProcessor implements Processor {
   }
 
 
-  private List<AnnotationMirror> getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass) {
+  private List<AnnotationMirror>
+  getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass)
+  {
     final var containerClass = annotationClass.getAnnotation(Repeatable.class).value();
 
     final var annotationType = this.elementUtils.getTypeElement(annotationClass.getCanonicalName()).asType();
@@ -1021,7 +1270,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<AnnotationValue>
-  getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName) {
+  getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName)
+  {
     for (final var entry : annotationMirror.getElementValues().entrySet()) {
       if (Objects.equals(attributeName, entry.getKey().getSimpleName().toString())) {
         return Optional.of(entry.getValue());
@@ -1032,7 +1282,8 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<AnnotationMirror>
-  getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass) {
+  getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass)
+  {
     final var annotationType = this.elementUtils
         .getTypeElement(annotationClass.getCanonicalName())
         .asType();
