@@ -741,11 +741,9 @@ public final class AdaptationProcessor implements Processor {
   private String
   getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params)
   {
-    return "new "
-           + declarationName
-           + "("
-           + params.stream().map(parameter -> parameter.name).collect(Collectors.joining(", "))
-           + ")";
+    return "new %s(%s)".formatted(
+      declarationName,
+      params.stream().map(parameter -> parameter.name).collect(Collectors.joining(", ")));
   }
 
   private Optional<Map<String, CodeBlock>>
