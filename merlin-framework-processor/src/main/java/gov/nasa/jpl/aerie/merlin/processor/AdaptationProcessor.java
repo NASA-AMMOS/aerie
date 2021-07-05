@@ -554,13 +554,8 @@ public final class AdaptationProcessor implements Processor {
                                 .map(parameter -> CodeBlock
                                     .builder()
                                     .addStatement(
-                                        "$L $L = $L",
-                                        (
-                                            switch (activityType.activityDefinitionStyle) {
-                                              case Classic, AllOptional, SomeOptional -> "var";
-                                              case AllRequired -> parameter.type.toString();
-                                            }
-                                        ),
+                                        "$T $L = $L",
+                                        parameter.type,
                                         parameter.name,
                                         (
                                             switch (activityType.activityDefinitionStyle) {
