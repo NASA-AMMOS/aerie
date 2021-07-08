@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server;
+package gov.nasa.jpl.aerie.merlin.server.config;
 
 import org.junit.Test;
 
@@ -8,7 +8,7 @@ import java.net.URI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class AdaptationServiceConfigurationTest {
+public class AppConfigurationTest {
 
     @Test
     public void testParseProperties() {

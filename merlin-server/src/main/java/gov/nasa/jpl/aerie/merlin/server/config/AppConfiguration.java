@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.server;
+package gov.nasa.jpl.aerie.merlin.server.config;
 
 import javax.json.JsonObject;
 import java.net.URI;
