@@ -2,14 +2,14 @@ package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 public class RegisterEffectTrait<T> implements EffectTrait<RegisterEffect<T>> {
   @Override
   public RegisterEffect<T> empty() {
-    return new RegisterEffect<>(Optional.empty(), Set.of());
+    return new RegisterEffect<>(Optional.empty(), List.of());
   }
 
   @Override
@@ -26,9 +26,10 @@ public class RegisterEffectTrait<T> implements EffectTrait<RegisterEffect<T>> {
             ? left.newValue.or(() -> right.newValue)
             : Optional.<T>empty();
 
-    final var set = new HashSet<>(left.conflictingValues);
-    set.addAll(right.conflictingValues);
+    final var conflictingValues = new ArrayList<T>(left.conflictingValues.size() + right.conflictingValues.size());
+    conflictingValues.addAll(left.conflictingValues);
+    conflictingValues.addAll(right.conflictingValues);
 
-    return new RegisterEffect<>(nextValue, set);
+    return new RegisterEffect<>(nextValue, conflictingValues);
   }
 }
