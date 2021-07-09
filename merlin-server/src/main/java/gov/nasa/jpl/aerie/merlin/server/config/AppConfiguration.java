@@ -6,24 +6,15 @@ import java.util.Objects;
 import java.util.Optional;
 
 public record AppConfiguration (
-    int HTTP_PORT,
-    URI MONGO_URI,
-    String MONGO_DATABASE,
-    String MONGO_PLAN_COLLECTION,
-    String MONGO_ACTIVITY_COLLECTION,
-    String MONGO_ADAPTATION_COLLECTION,
-    String MONGO_SIMULATION_RESULTS_COLLECTION,
-    boolean enableJavalinLogging,
-    Optional<String> MISSION_MODEL_CONFIG_PATH
+    int httpPort,
+    JavalinLoggingState javalinLogging,
+    Optional<String> missionModelConfigPath,
+    MongoStore store
 ) {
     public AppConfiguration {
-        Objects.requireNonNull(MONGO_URI);
-        Objects.requireNonNull(MONGO_DATABASE);
-        Objects.requireNonNull(MONGO_PLAN_COLLECTION);
-        Objects.requireNonNull(MONGO_ACTIVITY_COLLECTION);
-        Objects.requireNonNull(MONGO_ADAPTATION_COLLECTION);
-        Objects.requireNonNull(MONGO_SIMULATION_RESULTS_COLLECTION);
-        Objects.requireNonNull(MISSION_MODEL_CONFIG_PATH);
+        Objects.requireNonNull(javalinLogging);
+        Objects.requireNonNull(missionModelConfigPath);
+        Objects.requireNonNull(store);
     }
 
     public static Builder builder() {
@@ -31,17 +22,24 @@ public record AppConfiguration (
     }
 
     public static AppConfiguration parseProperties(final JsonObject config) {
-        final var builder = builder()
-            .setHttpPort(config.getInt("HTTP_PORT"))
-            .setMongoUri(URI.create(config.getString("MONGO_URI")))
-            .setMongoDatabase(config.getString("MONGO_DATABASE"))
-            .setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"))
-            .setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"))
-            .setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"))
-            .setMongoSimulationResultsCollection(config.getString("MONGO_SIMULATION_RESULTS_COLLECTION"))
-            .setJavalinLogging(config.getBoolean("enable-javalin-logging", false));
+        var builder = builder();
 
-        Optional.ofNullable(config.getString("MISSION_MODEL_CONFIG_PATH", null)).map(builder::setMissionModelConfigPath);
+        builder.setHttpPort(config.getInt("HTTP_PORT"));
+        builder.setMongoUri(URI.create(config.getString("MONGO_URI")));
+        builder.setMongoDatabase(config.getString("MONGO_DATABASE"));
+        builder.setMongoPlanCollection(config.getString("MONGO_PLAN_COLLECTION"));
+        builder.setMongoActivityCollection(config.getString("MONGO_ACTIVITY_COLLECTION"));
+        builder.setMongoAdaptationCollection(config.getString("MONGO_ADAPTATION_COLLECTION"));
+        builder.setMongoSimulationResultsCollection(config.getString("MONGO_SIMULATION_RESULTS_COLLECTION"));
+
+        if (config.getBoolean("enable-javalin-logging", false)) {
+            builder.setJavalinLogging(JavalinLoggingState.Enabled);
+        }
+
+        if (config.containsKey("MISSION_MODEL_CONFIG_PATH")) {
+            builder.setMissionModelConfigPath(config.getString("MISSION_MODEL_CONFIG_PATH"));
+        }
+
         return builder.build();
     }
 
@@ -53,7 +51,7 @@ public record AppConfiguration (
         private Optional<String> mongoActivityCollection = Optional.empty();
         private Optional<String> mongoAdaptationCollection = Optional.empty();
         private Optional<String> mongoSimulationResultsCollection = Optional.empty();
-        private Optional<Boolean> enableJavalinLogging = Optional.empty();
+        private Optional<JavalinLoggingState> enableJavalinLogging = Optional.empty();
         private Optional<String> missionModelConfigPath = Optional.empty();
 
         private Builder() {}
@@ -86,7 +84,7 @@ public record AppConfiguration (
           this.mongoSimulationResultsCollection = Optional.of(mongoSimulationResultsCollection);
           return this;
         }
-        public Builder setJavalinLogging(boolean enableJavalinLogging) {
+        public Builder setJavalinLogging(JavalinLoggingState enableJavalinLogging) {
             this.enableJavalinLogging = Optional.of(enableJavalinLogging);
             return this;
         }
@@ -98,14 +96,15 @@ public record AppConfiguration (
         public AppConfiguration build() {
             return new AppConfiguration(
                 this.httpPort.orElseThrow(),
-                this.mongoUri.orElseThrow(),
-                this.mongoDatabase.orElseThrow(),
-                this.mongoPlanCollection.orElseThrow(),
-                this.mongoActivityCollection.orElseThrow(),
-                this.mongoAdaptationCollection.orElseThrow(),
-                this.mongoSimulationResultsCollection.orElseThrow(),
-                this.enableJavalinLogging.orElse(false),
-                this.missionModelConfigPath);
+                this.enableJavalinLogging.orElse(JavalinLoggingState.Disabled),
+                this.missionModelConfigPath,
+                new MongoStore(
+                    this.mongoUri.orElseThrow(),
+                    this.mongoDatabase.orElseThrow(),
+                    this.mongoPlanCollection.orElseThrow(),
+                    this.mongoActivityCollection.orElseThrow(),
+                    this.mongoAdaptationCollection.orElseThrow(),
+                    this.mongoSimulationResultsCollection.orElseThrow()));
         }
     }
 }

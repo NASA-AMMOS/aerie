@@ -38,15 +38,15 @@ public final class AerieAppDriver {
 
     // Assemble the core non-web object graph.
     final var mongoDatabase = MongoClients
-        .create(configuration.MONGO_URI().toString())
-        .getDatabase(configuration.MONGO_DATABASE());
+        .create(configuration.store().uri().toString())
+        .getDatabase(configuration.store().database());
     final var planRepository = new RemotePlanRepository(
         mongoDatabase,
-        configuration.MONGO_PLAN_COLLECTION(),
-        configuration.MONGO_ACTIVITY_COLLECTION());
+        configuration.store().planCollection(),
+        configuration.store().activityCollection());
     final var adaptationRepository = new RemoteAdaptationRepository(
         mongoDatabase,
-        configuration.MONGO_ADAPTATION_COLLECTION());
+        configuration.store().adaptationCollection());
 
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
@@ -60,13 +60,13 @@ public final class AerieAppDriver {
         planController,
         adaptationController,
         new ThreadedMongoSimulationService(
-            mongoDatabase.getCollection(configuration.MONGO_SIMULATION_RESULTS_COLLECTION()),
+            mongoDatabase.getCollection(configuration.store().simulationResultsCollection()),
             simulationAgent));
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      if (configuration.enableJavalinLogging()) config.enableDevLogging();
+      if (configuration.javalinLogging().isEnabled()) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
           .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
@@ -76,14 +76,14 @@ public final class AerieAppDriver {
     });
 
     // Start the HTTP server.
-    javalin.start(configuration.HTTP_PORT());
+    javalin.start(configuration.httpPort());
   }
 
   /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
   private static Supplier<SerializedValue> makeMissionModelConfigSupplier(final AppConfiguration configuration)
   {
     // Try to deserialize JSON configuration to a serialized configuration
-    return () -> configuration.MISSION_MODEL_CONFIG_PATH()
+    return () -> configuration.missionModelConfigPath()
         .map(p -> {
           try {
             final var fs = new FileInputStream(p);
