@@ -9,9 +9,9 @@ public record AppConfiguration (
     Optional<String> missionModelConfigPath,
     MongoStore store
 ) {
-    public AppConfiguration {
-        Objects.requireNonNull(javalinLogging);
-        Objects.requireNonNull(missionModelConfigPath);
-        Objects.requireNonNull(store);
-    }
+  public AppConfiguration {
+    Objects.requireNonNull(javalinLogging);
+    Objects.requireNonNull(missionModelConfigPath);
+    Objects.requireNonNull(store);
+  }
 }
