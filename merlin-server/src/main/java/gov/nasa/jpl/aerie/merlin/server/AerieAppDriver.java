@@ -17,7 +17,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.RemotePlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
 import gov.nasa.jpl.aerie.merlin.server.services.SimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.ThreadedMongoSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationService;
 import io.javalin.Javalin;
 
 import javax.json.Json;
@@ -67,8 +67,8 @@ public final class AerieAppDriver {
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         adaptationController,
-        new ThreadedMongoSimulationService(
-            mongoDatabase.getCollection(store.simulationResultsCollection()),
+        new ThreadedSimulationService(
+            new MongoResultsCellRepository(mongoDatabase.getCollection(store.simulationResultsCollection())),
             simulationAgent));
 
     // Configure an HTTP server.

@@ -1,31 +1,27 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import com.mongodb.client.MongoCollection;
+import gov.nasa.jpl.aerie.merlin.server.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
-import org.bson.Document;
 
 import java.util.Objects;
 
-public final class ThreadedMongoSimulationService implements SimulationService {
-  private final MongoCollection<Document> resultsCollection;
+public final class ThreadedSimulationService implements SimulationService {
+  private final ResultsCellRepository store;
   private final SimulationAgent agent;
 
-  public ThreadedMongoSimulationService(
-      final MongoCollection<Document> resultsCollection,
-      final SimulationAgent agent)
-  {
-    this.resultsCollection = Objects.requireNonNull(resultsCollection);
+  public ThreadedSimulationService(final ResultsCellRepository store, final SimulationAgent agent) {
+    this.store = Objects.requireNonNull(store);
     this.agent = Objects.requireNonNull(agent);
   }
 
   @Override
   public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
-    final var cell$ = ResultsProtocol.MongoCell.lookup(this.resultsCollection, planId, planRevision);
+    final var cell$ = this.store.lookup(planId, planRevision);
     if (cell$.isPresent()) {
       return cell$.get().get();
     } else {
       // Allocate a fresh cell.
-      final var cell = ResultsProtocol.MongoCell.allocate(this.resultsCollection, planId, planRevision);
+      final var cell = this.store.allocate(planId, planRevision);
 
       // Split the cell into its two concurrent roles, and delegate the writer role to another process.
       final ResultsProtocol.ReaderRole reader;
@@ -36,7 +32,7 @@ public final class ThreadedMongoSimulationService implements SimulationService {
         this.agent.simulate(planId, planRevision, writer);
       } catch (final InterruptedException ex) {
         // If we couldn't delegate, clean up the cell and return an Incomplete.
-        ResultsProtocol.MongoCell.deallocate(this.resultsCollection, planId, planRevision);
+        this.store.deallocate(planId, planRevision);
         return new ResultsProtocol.State.Incomplete();
       }
 

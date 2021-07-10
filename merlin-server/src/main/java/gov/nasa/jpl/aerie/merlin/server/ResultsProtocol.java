@@ -58,22 +58,6 @@ public final class ResultsProtocol {
       this.documentId = Objects.requireNonNull(documentId);
     }
 
-    public static MongoCell
-    allocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      return new MongoResultsCellRepository(collection).allocate(planId, planRevision);
-    }
-
-    public static Optional<ReaderRole>
-    lookup(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      return new MongoResultsCellRepository(collection).lookup(planId, planRevision);
-    }
-
-    public static void
-    deallocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      new MongoResultsCellRepository(collection).deallocate(planId, planRevision);
-    }
-
-
     @Override
     public State get() {
       final var resultsDocument = Optional
