@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
+import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
@@ -37,17 +38,23 @@ public final class AerieAppDriver {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration(args);
 
+    if (!(configuration.store() instanceof MongoStore store)) {
+      throw new RuntimeException(
+          "Aerie can currently only run on MongoDB, but it was configured with a %s"
+              .formatted(configuration.store().getClass()));
+    }
+
     // Assemble the core non-web object graph.
     final var mongoDatabase = MongoClients
-        .create(configuration.store().uri().toString())
-        .getDatabase(configuration.store().database());
+        .create(store.uri().toString())
+        .getDatabase(store.database());
     final var planRepository = new RemotePlanRepository(
         mongoDatabase,
-        configuration.store().planCollection(),
-        configuration.store().activityCollection());
+        store.planCollection(),
+        store.activityCollection());
     final var adaptationRepository = new RemoteAdaptationRepository(
         mongoDatabase,
-        configuration.store().adaptationCollection());
+        store.adaptationCollection());
 
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
@@ -61,7 +68,7 @@ public final class AerieAppDriver {
         planController,
         adaptationController,
         new ThreadedMongoSimulationService(
-            mongoDatabase.getCollection(configuration.store().simulationResultsCollection()),
+            mongoDatabase.getCollection(store.simulationResultsCollection()),
             simulationAgent));
 
     // Configure an HTTP server.

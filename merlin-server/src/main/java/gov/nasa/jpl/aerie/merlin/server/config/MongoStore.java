@@ -10,7 +10,7 @@ public record MongoStore (
     String activityCollection,
     String adaptationCollection,
     String simulationResultsCollection
-) {
+) implements Store {
   public MongoStore {
     Objects.requireNonNull(uri);
     Objects.requireNonNull(database);

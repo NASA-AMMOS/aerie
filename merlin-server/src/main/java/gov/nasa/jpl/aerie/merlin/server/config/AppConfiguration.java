@@ -7,7 +7,7 @@ public record AppConfiguration (
     int httpPort,
     JavalinLoggingState javalinLogging,
     Optional<String> missionModelConfigPath,
-    MongoStore store
+    Store store
 ) {
   public AppConfiguration {
     Objects.requireNonNull(javalinLogging);

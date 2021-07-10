@@ -50,15 +50,21 @@ public final class AppConfigurationJsonMapper {
   public static JsonObject toJson(final AppConfiguration config) {
     final var builder = Json.createObjectBuilder();
 
+    if (!(config.store() instanceof MongoStore store)) {
+      throw new RuntimeException(
+          "Aerie can currently only run on MongoDB, but it was configured with a %s"
+              .formatted(config.store().getClass()));
+    }
+
     builder.add("HTTP_PORT", config.httpPort());
     builder.add("enable-javalin-logging", config.javalinLogging().isEnabled());
     config.missionModelConfigPath().ifPresent($ -> builder.add("MISSION_MODEL_CONFIG_PATH", $));
-    builder.add("MONGO_URI", config.store().uri().toString());
-    builder.add("MONGO_DATABASE", config.store().database());
-    builder.add("MONGO_PLAN_COLLECTION", config.store().planCollection());
-    builder.add("MONGO_ACTIVITY_COLLECTION", config.store().activityCollection());
-    builder.add("MONGO_ADAPTATION_COLLECTION", config.store().adaptationCollection());
-    builder.add("MONGO_SIMULATION_RESULTS_COLLECTION", config.store().simulationResultsCollection());
+    builder.add("MONGO_URI", store.uri().toString());
+    builder.add("MONGO_DATABASE", store.database());
+    builder.add("MONGO_PLAN_COLLECTION", store.planCollection());
+    builder.add("MONGO_ACTIVITY_COLLECTION", store.activityCollection());
+    builder.add("MONGO_ADAPTATION_COLLECTION", store.adaptationCollection());
+    builder.add("MONGO_SIMULATION_RESULTS_COLLECTION", store.simulationResultsCollection());
 
     return builder.build();
   }
