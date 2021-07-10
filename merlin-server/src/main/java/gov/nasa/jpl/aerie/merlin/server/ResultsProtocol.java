@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MongoSerializers;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -61,29 +60,17 @@ public final class ResultsProtocol {
 
     public static MongoCell
     allocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      final var document = new Document(Map.of(
-          "planId", planId,
-          "planRevision", planRevision,
-          "state", MongoSerializers.simulationResultsState(new State.Incomplete()),
-          "canceled", false));
-
-      collection.insertOne(document);
-
-      return new MongoCell(collection, document.getObjectId("_id"));
+      return new MongoResultsCellRepository(collection).allocate(planId, planRevision);
     }
 
     public static Optional<ReaderRole>
     lookup(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      return Optional
-          .ofNullable(collection
-              .find(and(eq("planId", planId), eq("planRevision", planRevision)))
-              .first())
-          .map($ -> new MongoCell(collection, $.getObjectId("_id")));
+      return new MongoResultsCellRepository(collection).lookup(planId, planRevision);
     }
 
     public static void
     deallocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      collection.deleteOne(and(eq("planId", planId), eq("planRevision", planRevision)));
+      new MongoResultsCellRepository(collection).deallocate(planId, planRevision);
     }
 
 
