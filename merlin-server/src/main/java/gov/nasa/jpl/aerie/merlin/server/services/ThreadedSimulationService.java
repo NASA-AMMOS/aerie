@@ -3,17 +3,10 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.server.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 
-import java.util.Objects;
-
-public final class ThreadedSimulationService implements SimulationService {
-  private final ResultsCellRepository store;
-  private final SimulationAgent agent;
-
-  public ThreadedSimulationService(final ResultsCellRepository store, final SimulationAgent agent) {
-    this.store = Objects.requireNonNull(store);
-    this.agent = Objects.requireNonNull(agent);
-  }
-
+public record ThreadedSimulationService (
+    ResultsCellRepository store,
+    SimulationAgent agent
+) implements SimulationService {
   @Override
   public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
     final var cell$ = this.store.lookup(planId, planRevision);
