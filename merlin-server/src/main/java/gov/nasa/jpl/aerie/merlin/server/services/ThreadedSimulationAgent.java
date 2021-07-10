@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public final class SimulationAgent {
+public final class ThreadedSimulationAgent {
   public /*sealed*/ interface SimulationRequest {
     record Simulate(String planId, long planRevision, ResultsProtocol.WriterRole writer) implements SimulationRequest {}
 
@@ -16,22 +16,21 @@ public final class SimulationAgent {
 
   private final BlockingQueue<SimulationRequest> requestQueue;
 
-  private SimulationAgent(final BlockingQueue<SimulationRequest> requestQueue) {
+  private ThreadedSimulationAgent(final BlockingQueue<SimulationRequest> requestQueue) {
     this.requestQueue = Objects.requireNonNull(requestQueue);
   }
 
-  public static SimulationAgent spawn(final String threadName, final RunSimulationAction simulationAction) {
+  public static ThreadedSimulationAgent spawn(final String threadName, final RunSimulationAction simulationAction) {
     final var requestQueue = new LinkedBlockingQueue<SimulationRequest>();
 
     final var thread = new Thread(new Worker(requestQueue, simulationAction));
     thread.setName(threadName);
     thread.start();
 
-    return new SimulationAgent(requestQueue);
+    return new ThreadedSimulationAgent(requestQueue);
   }
 
-
-  public void simulate(final String planId, final long planRevision, ResultsProtocol.WriterRole writer)
+  public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer)
   throws InterruptedException
   {
     this.requestQueue.put(new SimulationRequest.Simulate(planId, planRevision, writer));

@@ -16,7 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.remotes.RemotePlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
-import gov.nasa.jpl.aerie.merlin.server.services.SimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationService;
 import io.javalin.Javalin;
 
@@ -60,7 +60,7 @@ public final class AerieAppDriver {
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
     final var planController = new LocalPlanService(planRepository, adaptationController);
 
-    final var simulationAgent = SimulationAgent.spawn(
+    final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
         new RunSimulationAction(planController, adaptationController));
 
