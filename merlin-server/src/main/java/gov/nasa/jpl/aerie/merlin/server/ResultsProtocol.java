@@ -39,7 +39,7 @@ public final class ResultsProtocol {
     boolean isCanceled();
 
     // If the writer aborts because it observes `isCanceled()`,
-    //   it must still complete with `fail()`.
+    //   it must still complete with `failWith()`.
     //   Otherwise, the reader would not be able to reclaim unique ownership
     //   of the underlying resource in order to deallocate it.
     void succeedWith(SimulationResults results);
