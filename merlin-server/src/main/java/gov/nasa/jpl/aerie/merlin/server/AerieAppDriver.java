@@ -4,6 +4,7 @@ import com.mongodb.client.MongoClients;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
+import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
@@ -118,6 +119,6 @@ public final class AerieAppDriver {
 
     // Read and process the configuration source.
     final var config = (JsonObject)(Json.createReader(configStream).readValue());
-    return AppConfiguration.parseProperties(config);
+    return AppConfigurationJsonMapper.fromJson(config).orElseThrow();
   }
 }
