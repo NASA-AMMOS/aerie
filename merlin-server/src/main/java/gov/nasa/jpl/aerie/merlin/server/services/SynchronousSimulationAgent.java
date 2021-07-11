@@ -14,23 +14,14 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-public final class RunSimulationAction implements SimulationAgent {
+public record SynchronousSimulationAgent (
+    PlanService planService,
+    AdaptationService adaptationService
+) implements SimulationAgent {
   public /*sealed*/ interface Response {
     record Failed(String reason) implements Response {}
     record Success(SimulationResults results) implements Response {}
-  }
-
-  private final PlanService planService;
-  private final AdaptationService adaptationService;
-
-  public RunSimulationAction(
-      final PlanService planService,
-      final AdaptationService adaptationService)
-  {
-    this.planService = Objects.requireNonNull(planService);
-    this.adaptationService = Objects.requireNonNull(adaptationService);
   }
 
   public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer) {

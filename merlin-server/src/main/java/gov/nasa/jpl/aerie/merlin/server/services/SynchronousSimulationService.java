@@ -5,9 +5,9 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import java.util.Objects;
 
 public final class SynchronousSimulationService implements SimulationService {
-  private final RunSimulationAction action;
+  private final SynchronousSimulationAgent action;
 
-  public SynchronousSimulationService(final RunSimulationAction action) {
+  public SynchronousSimulationService(final SynchronousSimulationAgent action) {
     this.action = Objects.requireNonNull(action);
   }
 
