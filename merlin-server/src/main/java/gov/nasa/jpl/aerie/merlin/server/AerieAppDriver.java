@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
+import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
@@ -17,7 +18,6 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.RemotePlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationService;
 import io.javalin.Javalin;
 
 import javax.json.Json;
@@ -67,7 +67,7 @@ public final class AerieAppDriver {
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         adaptationController,
-        new ThreadedSimulationService(
+        new CachedSimulationService(
             new MongoResultsCellRepository(mongoDatabase.getCollection(store.simulationResultsCollection())),
             simulationAgent));
 

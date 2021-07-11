@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.server.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 
-public record ThreadedSimulationService (
+public record CachedSimulationService (
     ResultsCellRepository store,
     ThreadedSimulationAgent agent
 ) implements SimulationService {

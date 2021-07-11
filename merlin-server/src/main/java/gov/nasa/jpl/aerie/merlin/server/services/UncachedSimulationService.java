@@ -4,10 +4,10 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 
 import java.util.Objects;
 
-public final class SynchronousSimulationService implements SimulationService {
+public final class UncachedSimulationService implements SimulationService {
   private final SynchronousSimulationAgent action;
 
-  public SynchronousSimulationService(final SynchronousSimulationAgent action) {
+  public UncachedSimulationService(final SynchronousSimulationAgent action) {
     this.action = Objects.requireNonNull(action);
   }
 
