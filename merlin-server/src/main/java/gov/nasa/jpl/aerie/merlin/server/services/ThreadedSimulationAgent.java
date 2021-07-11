@@ -6,8 +6,8 @@ import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public final class ThreadedSimulationAgent {
-  public /*sealed*/ interface SimulationRequest {
+public final class ThreadedSimulationAgent implements SimulationAgent {
+  private /*sealed*/ interface SimulationRequest {
     record Simulate(String planId, long planRevision, ResultsProtocol.WriterRole writer) implements SimulationRequest {}
 
     record Terminate() implements SimulationRequest {}
@@ -20,7 +20,7 @@ public final class ThreadedSimulationAgent {
     this.requestQueue = Objects.requireNonNull(requestQueue);
   }
 
-  public static ThreadedSimulationAgent spawn(final String threadName, final RunSimulationAction simulationAction) {
+  public static ThreadedSimulationAgent spawn(final String threadName, final SimulationAgent simulationAction) {
     final var requestQueue = new LinkedBlockingQueue<SimulationRequest>();
 
     final var thread = new Thread(new Worker(requestQueue, simulationAction));
@@ -30,6 +30,7 @@ public final class ThreadedSimulationAgent {
     return new ThreadedSimulationAgent(requestQueue);
   }
 
+  @Override
   public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer)
   throws InterruptedException
   {
@@ -43,11 +44,11 @@ public final class ThreadedSimulationAgent {
 
   private static final class Worker implements Runnable {
     private final BlockingQueue<SimulationRequest> requestQueue;
-    private final RunSimulationAction simulationAction;
+    private final SimulationAgent simulationAction;
 
     public Worker(
         final BlockingQueue<SimulationRequest> requestQueue,
-        final RunSimulationAction simulationAction)
+        final SimulationAgent simulationAction)
     {
       this.requestQueue = Objects.requireNonNull(requestQueue);
       this.simulationAction = Objects.requireNonNull(simulationAction);
@@ -60,24 +61,13 @@ public final class ThreadedSimulationAgent {
           final var request = this.requestQueue.take();
 
           if (request instanceof SimulationRequest.Simulate req) {
-            final RunSimulationAction.Response response;
             try {
-              response = this.simulationAction.run(req.planId(), req.planRevision());
+              this.simulationAction.simulate(req.planId(), req.planRevision(), req.writer());
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
               req.writer().failWith(ex.getMessage());
-              continue;
             }
-
-            if (response instanceof RunSimulationAction.Response.Failed res) {
-              req.writer().failWith(res.reason());
-            } else if (response instanceof RunSimulationAction.Response.Success res) {
-              req.writer().succeedWith(res.results());
-            } else {
-              final var ex = new UnexpectedSubtypeError(RunSimulationAction.Response.class, response);
-              req.writer().failWith(ex.getMessage());
-              throw ex;
-            }
+            // continue
           } else if (request instanceof SimulationRequest.Terminate) {
             break;
           } else {

@@ -13,14 +13,8 @@ public final class SynchronousSimulationService implements SimulationService {
 
   @Override
   public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
-    final var response = this.action.run(planId, planRevision);
-
-    if (response instanceof RunSimulationAction.Response.Failed res) {
-      return new ResultsProtocol.State.Failed(res.reason());
-    } else if (response instanceof RunSimulationAction.Response.Success res) {
-      return new ResultsProtocol.State.Success(res.results());
-    } else {
-      throw new UnexpectedSubtypeError(RunSimulationAction.Response.class, response);
-    }
+    final var cell = new ResultsProtocol.InMemoryCell();
+    this.action.simulate(planId, planRevision, cell);
+    return cell.get();
   }
 }
