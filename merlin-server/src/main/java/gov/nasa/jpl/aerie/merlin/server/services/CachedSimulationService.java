@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 
 public record CachedSimulationService (
     ResultsCellRepository store,
-    ThreadedSimulationAgent agent
+    SimulationAgent agent
 ) implements SimulationService {
   @Override
   public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {

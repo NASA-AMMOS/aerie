@@ -1,21 +1,21 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoSerializers;
 import org.bson.Document;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
-public class MongoResultsCellRepository implements ResultsCellRepository {
+public final class MongoResultsCellRepository implements ResultsCellRepository {
   private final MongoCollection<Document> collection;
 
-  public MongoResultsCellRepository(final MongoCollection<Document> collection) {
-    this.collection = Objects.requireNonNull(collection);
+  public MongoResultsCellRepository(final MongoDatabase database, final String resultsCellCollectionName) {
+    this.collection = database.getCollection(resultsCellCollectionName);
   }
 
   @Override
@@ -28,9 +28,9 @@ public class MongoResultsCellRepository implements ResultsCellRepository {
         "state", MongoSerializers.simulationResultsState(new ResultsProtocol.State.Incomplete()),
         "canceled", false));
 
-    collection.insertOne(document);
+    this.collection.insertOne(document);
 
-    return new ResultsProtocol.MongoCell(collection, document.getObjectId("_id"));
+    return new ResultsProtocol.MongoCell(this.collection, document.getObjectId("_id"));
   }
 
   @Override
@@ -38,16 +38,16 @@ public class MongoResultsCellRepository implements ResultsCellRepository {
   lookup(final String planId, final long planRevision)
   {
     return Optional
-        .ofNullable(collection
+        .ofNullable(this.collection
                         .find(and(eq("planId", planId), eq("planRevision", planRevision)))
                         .first())
-        .map($ -> new ResultsProtocol.MongoCell(collection, $.getObjectId("_id")));
+        .map($ -> new ResultsProtocol.MongoCell(this.collection, $.getObjectId("_id")));
   }
 
   @Override
   public void
   deallocate(final String planId, final long planRevision)
   {
-    collection.deleteOne(and(eq("planId", planId), eq("planRevision", planRevision)));
+    this.collection.deleteOne(and(eq("planId", planId), eq("planRevision", planRevision)));
   }
 }

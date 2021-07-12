@@ -55,21 +55,19 @@ public final class AerieAppDriver {
     final var adaptationRepository = new MongoAdaptationRepository(
         mongoDatabase,
         store.adaptationCollection());
+    final var resultsCellRepository = new MongoResultsCellRepository(
+        mongoDatabase,
+        store.simulationResultsCollection());
 
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
     final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
     final var planController = new LocalPlanService(planRepository, adaptationController);
-
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
         new SynchronousSimulationAgent(planController, adaptationController));
-
-    final var simulationAction = new GetSimulationResultsAction(
-        planController,
-        adaptationController,
-        new CachedSimulationService(
-            new MongoResultsCellRepository(mongoDatabase.getCollection(store.simulationResultsCollection())),
-            simulationAgent));
+    final var simulationController = new CachedSimulationService(resultsCellRepository, simulationAgent);
+    final var simulationAction = new GetSimulationResultsAction(planController, adaptationController, simulationController);
+    final var merlinBindings = new MerlinBindings(planController, adaptationController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
@@ -77,7 +75,7 @@ public final class AerieAppDriver {
       if (configuration.javalinLogging().isEnabled()) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
+          .registerPlugin(merlinBindings)
           .registerPlugin(new LocalAppExceptionBindings())
           .registerPlugin(new AdaptationRepositoryExceptionBindings())
           .registerPlugin(new AdaptationExceptionBindings());
