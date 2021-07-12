@@ -24,11 +24,11 @@ import java.util.stream.StreamSupport;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
-public final class RemoteAdaptationRepository implements AdaptationRepository {
+public final class MongoAdaptationRepository implements AdaptationRepository {
     private final Path ADAPTATION_FILE_PATH = Path.of("adaptation_files").toAbsolutePath();
     private final MongoCollection<Document> adaptationCollection;
 
-    public RemoteAdaptationRepository(
+    public MongoAdaptationRepository(
             final MongoDatabase database,
             final String adaptationCollectionName
     ) {
