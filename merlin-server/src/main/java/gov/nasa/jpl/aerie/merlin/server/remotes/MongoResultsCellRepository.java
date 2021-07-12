@@ -1,8 +1,8 @@
-package gov.nasa.jpl.aerie.merlin.server;
+package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoSerializers;
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import org.bson.Document;
 
 import java.util.Map;

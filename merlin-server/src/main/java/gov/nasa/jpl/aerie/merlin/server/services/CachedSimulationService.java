@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.server.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 
 public record CachedSimulationService (
     ResultsCellRepository store,
