@@ -6,18 +6,22 @@ import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
+import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoPlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
 import javax.json.Json;
@@ -37,35 +41,16 @@ public final class AerieAppDriver {
   public static void main(final String[] args) {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration(args);
-
-    if (!(configuration.store() instanceof MongoStore store)) {
-      throw new RuntimeException(
-          "Aerie can currently only run on MongoDB, but it was configured with a %s"
-              .formatted(configuration.store().getClass()));
-    }
+    final var stores = loadStores(configuration.store());
 
     // Assemble the core non-web object graph.
-    final var mongoDatabase = MongoClients
-        .create(store.uri().toString())
-        .getDatabase(store.database());
-    final var planRepository = new MongoPlanRepository(
-        mongoDatabase,
-        store.planCollection(),
-        store.activityCollection());
-    final var adaptationRepository = new MongoAdaptationRepository(
-        mongoDatabase,
-        store.adaptationCollection());
-    final var resultsCellRepository = new MongoResultsCellRepository(
-        mongoDatabase,
-        store.simulationResultsCollection());
-
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
-    final var planController = new LocalPlanService(planRepository, adaptationController);
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, stores.adaptations());
+    final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
         new SynchronousSimulationAgent(planController, adaptationController));
-    final var simulationController = new CachedSimulationService(resultsCellRepository, simulationAgent);
+    final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
     final var simulationAction = new GetSimulationResultsAction(planController, adaptationController, simulationController);
     final var merlinBindings = new MerlinBindings(planController, adaptationController, simulationAction);
 
@@ -83,6 +68,30 @@ public final class AerieAppDriver {
 
     // Start the HTTP server.
     javalin.start(configuration.httpPort());
+  }
+
+  private record Stores (PlanRepository plans, AdaptationRepository adaptations, ResultsCellRepository results) {}
+
+  private static Stores loadStores(final Store config) {
+    if (config instanceof MongoStore c) {
+      final var mongoDatabase = MongoClients
+          .create(c.uri().toString())
+          .getDatabase(c.database());
+
+      return new Stores(
+          new MongoPlanRepository(
+              mongoDatabase,
+              c.planCollection(),
+              c.activityCollection()),
+          new MongoAdaptationRepository(
+              mongoDatabase,
+              c.adaptationCollection()),
+          new MongoResultsCellRepository(
+              mongoDatabase,
+              c.simulationResultsCollection()));
+    } else {
+      throw new UnexpectedSubtypeError(Store.class, config);
+    }
   }
 
   /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
