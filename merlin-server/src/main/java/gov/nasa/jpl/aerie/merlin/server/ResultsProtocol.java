@@ -101,44 +101,4 @@ public final class ResultsProtocol {
 
     public static class MissingDocumentException extends RuntimeException {}
   }
-
-  public static final class InMemoryCell implements OwnerRole {
-    private volatile boolean canceled = false;
-    private volatile State state = new State.Incomplete();
-
-    @Override
-    public State get() {
-      return this.state;
-    }
-
-    @Override
-    public void cancel() {
-      this.canceled = true;
-    }
-
-    @Override
-    public boolean isCanceled() {
-      return this.canceled;
-    }
-
-    @Override
-    public void succeedWith(final SimulationResults results) {
-      if (!(this.state instanceof State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to success state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
-      }
-
-      this.state = new State.Success(results);
-    }
-
-    @Override
-    public void failWith(final String reason) {
-      if (!(this.state instanceof State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to failed state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
-      }
-
-      this.state = new State.Failed(reason);
-    }
-  }
 }
