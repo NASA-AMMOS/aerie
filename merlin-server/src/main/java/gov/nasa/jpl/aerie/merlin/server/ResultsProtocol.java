@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MongoSerializers;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -40,7 +39,7 @@ public final class ResultsProtocol {
     boolean isCanceled();
 
     // If the writer aborts because it observes `isCanceled()`,
-    //   it must still complete with `fail()`.
+    //   it must still complete with `failWith()`.
     //   Otherwise, the reader would not be able to reclaim unique ownership
     //   of the underlying resource in order to deallocate it.
     void succeedWith(SimulationResults results);
@@ -58,34 +57,6 @@ public final class ResultsProtocol {
       this.collection = Objects.requireNonNull(collection);
       this.documentId = Objects.requireNonNull(documentId);
     }
-
-    public static MongoCell
-    allocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      final var document = new Document(Map.of(
-          "planId", planId,
-          "planRevision", planRevision,
-          "state", MongoSerializers.simulationResultsState(new State.Incomplete()),
-          "canceled", false));
-
-      collection.insertOne(document);
-
-      return new MongoCell(collection, document.getObjectId("_id"));
-    }
-
-    public static Optional<ReaderRole>
-    lookup(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      return Optional
-          .ofNullable(collection
-              .find(and(eq("planId", planId), eq("planRevision", planRevision)))
-              .first())
-          .map($ -> new MongoCell(collection, $.getObjectId("_id")));
-    }
-
-    public static void
-    deallocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      collection.deleteOne(and(eq("planId", planId), eq("planRevision", planRevision)));
-    }
-
 
     @Override
     public State get() {

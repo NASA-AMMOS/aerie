@@ -21,7 +21,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -376,7 +376,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeAdaptationAccessException(final RemoteAdaptationRepository.AdaptationAccessException ex) {
+  public static JsonValue serializeAdaptationAccessException(final MongoAdaptationRepository.AdaptationAccessException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())

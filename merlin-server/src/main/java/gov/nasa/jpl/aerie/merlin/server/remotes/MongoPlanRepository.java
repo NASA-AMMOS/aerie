@@ -43,11 +43,11 @@ import static com.mongodb.client.model.Updates.set;
 //   be views in potentially independent processes that must be accounted for. Therefore, concurrency control must
 //   necessarily involve the shared MongoDB instance. (We may implement additional control locally, if we wish to
 //   optimize the case of multiple local views, but such a scheme alone is not sufficient.)
-public final class RemotePlanRepository implements PlanRepository {
+public final class MongoPlanRepository implements PlanRepository {
   private final MongoCollection<Document> planCollection;
   private final MongoCollection<Document> activityCollection;
 
-  public RemotePlanRepository(final MongoDatabase database, final String planCollectionName, final String activityCollectionName) {
+  public MongoPlanRepository(final MongoDatabase database, final String planCollectionName, final String activityCollectionName) {
     this.planCollection = database.getCollection(planCollectionName);
     this.activityCollection = database.getCollection(activityCollectionName);
   }
@@ -412,7 +412,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     @Override
     public void commit() {
-      if (this.notEmpty) RemotePlanRepository.this.planCollection.updateOne(planById(this.planId), this.patch);
+      if (this.notEmpty) MongoPlanRepository.this.planCollection.updateOne(planById(this.planId), this.patch);
     }
 
     @Override
@@ -456,9 +456,9 @@ public final class RemotePlanRepository implements PlanRepository {
 
     @Override
     public void commit() {
-      RemotePlanRepository.this.activityCollection
+      MongoPlanRepository.this.activityCollection
           .updateOne(activityById(this.planId, this.activityId), this.patch);
-      RemotePlanRepository.this.planCollection
+      MongoPlanRepository.this.planCollection
           .updateOne(planById(this.planId), inc("revision", 1));
     }
 

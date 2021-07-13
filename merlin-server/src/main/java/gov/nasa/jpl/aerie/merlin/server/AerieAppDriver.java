@@ -3,18 +3,25 @@ package gov.nasa.jpl.aerie.merlin.server;
 import com.mongodb.client.MongoClients;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
-import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
+import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
+import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
+import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
-import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
-import gov.nasa.jpl.aerie.merlin.server.remotes.RemotePlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MongoPlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
-import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
-import gov.nasa.jpl.aerie.merlin.server.services.SimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.ThreadedMongoSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
 import javax.json.Json;
@@ -34,55 +41,64 @@ public final class AerieAppDriver {
   public static void main(final String[] args) {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration(args);
+    final var stores = loadStores(configuration.store());
 
     // Assemble the core non-web object graph.
-    final var mongoDatabase = MongoClients
-        .create(configuration.MONGO_URI().toString())
-        .getDatabase(configuration.MONGO_DATABASE());
-    final var planRepository = new RemotePlanRepository(
-        mongoDatabase,
-        configuration.MONGO_PLAN_COLLECTION(),
-        configuration.MONGO_ACTIVITY_COLLECTION());
-    final var adaptationRepository = new RemoteAdaptationRepository(
-        mongoDatabase,
-        configuration.MONGO_ADAPTATION_COLLECTION());
-
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, adaptationRepository);
-    final var planController = new LocalPlanService(planRepository, adaptationController);
-
-    final var simulationAgent = SimulationAgent.spawn(
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, stores.adaptations());
+    final var planController = new LocalPlanService(stores.plans(), adaptationController);
+    final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
-        new RunSimulationAction(planController, adaptationController));
-
-    final var simulationAction = new GetSimulationResultsAction(
-        planController,
-        adaptationController,
-        new ThreadedMongoSimulationService(
-            mongoDatabase.getCollection(configuration.MONGO_SIMULATION_RESULTS_COLLECTION()),
-            simulationAgent));
+        new SynchronousSimulationAgent(planController, adaptationController));
+    final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
+    final var simulationAction = new GetSimulationResultsAction(planController, adaptationController, simulationController);
+    final var merlinBindings = new MerlinBindings(planController, adaptationController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
-      if (configuration.enableJavalinLogging()) config.enableDevLogging();
+      if (configuration.javalinLogging().isEnabled()) config.enableDevLogging();
       config
           .enableCorsForAllOrigins()
-          .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
+          .registerPlugin(merlinBindings)
           .registerPlugin(new LocalAppExceptionBindings())
           .registerPlugin(new AdaptationRepositoryExceptionBindings())
           .registerPlugin(new AdaptationExceptionBindings());
     });
 
     // Start the HTTP server.
-    javalin.start(configuration.HTTP_PORT());
+    javalin.start(configuration.httpPort());
+  }
+
+  private record Stores (PlanRepository plans, AdaptationRepository adaptations, ResultsCellRepository results) {}
+
+  private static Stores loadStores(final Store config) {
+    if (config instanceof MongoStore c) {
+      final var mongoDatabase = MongoClients
+          .create(c.uri().toString())
+          .getDatabase(c.database());
+
+      return new Stores(
+          new MongoPlanRepository(
+              mongoDatabase,
+              c.planCollection(),
+              c.activityCollection()),
+          new MongoAdaptationRepository(
+              mongoDatabase,
+              c.adaptationCollection()),
+          new MongoResultsCellRepository(
+              mongoDatabase,
+              c.simulationResultsCollection()));
+    } else {
+      throw new UnexpectedSubtypeError(Store.class, config);
+    }
   }
 
   /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
   private static Supplier<SerializedValue> makeMissionModelConfigSupplier(final AppConfiguration configuration)
   {
     // Try to deserialize JSON configuration to a serialized configuration
-    return () -> configuration.MISSION_MODEL_CONFIG_PATH()
+    return () -> configuration.missionModelConfigPath()
         .map(p -> {
           try {
             final var fs = new FileInputStream(p);
@@ -117,6 +133,6 @@ public final class AerieAppDriver {
 
     // Read and process the configuration source.
     final var config = (JsonObject)(Json.createReader(configStream).readValue());
-    return AppConfiguration.parseProperties(config);
+    return AppConfigurationJsonMapper.fromJson(config).orElseThrow();
   }
 }

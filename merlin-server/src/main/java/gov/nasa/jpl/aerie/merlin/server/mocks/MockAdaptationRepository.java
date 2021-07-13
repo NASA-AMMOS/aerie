@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
         try {
             Files.copy(adaptationJar.path, location);
         } catch (final IOException e) {
-            throw new RemoteAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
+            throw new MongoAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
         }
 
         final AdaptationJar newJar = new AdaptationJar(adaptationJar);
@@ -57,7 +57,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
         try {
             Files.deleteIfExists(adaptationJar.path);
         } catch (final IOException e) {
-            throw new RemoteAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
+            throw new MongoAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
         }
 
         this.adaptations.remove(adaptationId);
