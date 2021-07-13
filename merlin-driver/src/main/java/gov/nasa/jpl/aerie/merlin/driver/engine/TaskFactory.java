@@ -30,8 +30,9 @@ public final class TaskFactory<$Schema, $Timeline extends $Schema>
   throws SimulationDriver.InstantiationException
   {
     final var taskId = Integer.toString(this.nextTaskId++);
-    final var task = instantiate(this.taskTypes.get(typeName), arguments);
-    final var info = new TaskInfo<>(taskId, parent, task, Optional.of(new SerializedActivity(typeName, arguments)));
+    final var specType = this.taskTypes.get(typeName);
+    final var reifiedTask = instantiate(specType, arguments);
+    final var info = new TaskInfo<>(taskId, parent, reifiedTask.task(), Optional.of(new SerializedActivity(typeName, reifiedTask.arguments())));
 
     this.taskInfo.put(taskId, info);
 
@@ -48,15 +49,20 @@ public final class TaskFactory<$Schema, $Timeline extends $Schema>
     return info;
   }
 
-  private <Spec> Task<$Timeline>
+  private record ReifiedTask<$Timeline> (Task<$Timeline> task, Map<String, SerializedValue> arguments) {}
+
+  private <Spec> ReifiedTask<$Timeline>
   instantiate(final TaskSpecType<$Schema, Spec> specType, final Map<String, SerializedValue> arguments)
   throws SimulationDriver.InstantiationException
   {
+    final Spec spec;
     try {
-      return specType.createTask(specType.instantiate(arguments));
+      spec = specType.instantiate(arguments);
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
       throw new SimulationDriver.InstantiationException(specType.getName(), arguments, ex);
     }
+
+    return new ReifiedTask<>(specType.createTask(spec), specType.getArguments(spec));
   }
 
   public TaskInfo<$Timeline> get(final String id) {
