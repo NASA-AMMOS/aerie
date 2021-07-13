@@ -1,12 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import com.mongodb.client.MongoClients;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 
 import java.net.URI;
 
-@Ignore
+@Disabled
 @Tag("integration")
 public final class MongoAdaptationRepositoryTest extends AdaptationRepositoryContractTest {
     private static final URI MONGO_URI = URI.create("mongodb://localhost:27019");

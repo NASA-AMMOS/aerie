@@ -5,8 +5,8 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public abstract class PlanRepositoryContractTest {
 
   protected abstract void resetRepository();
 
-  @Before
+  @BeforeEach
   public void resetRepositoryBeforeEachTest() {
     this.resetRepository();
   }
