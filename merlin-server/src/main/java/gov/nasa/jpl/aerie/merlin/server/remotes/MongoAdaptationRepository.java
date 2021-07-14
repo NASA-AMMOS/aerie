@@ -7,7 +7,6 @@ import com.mongodb.client.MongoIterable;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -17,11 +16,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
 public final class MongoAdaptationRepository implements AdaptationRepository {
@@ -40,16 +38,13 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<Pair<String, AdaptationJar>> getAllAdaptations() {
+    public Map<String, AdaptationJar> getAllAdaptations() {
         final var query = this.adaptationCollection.find();
 
         return documentStream(query)
-                .map(adaptationDocument -> {
-                    final String adaptationId = adaptationDocument.getObjectId("_id").toString();
-                    final AdaptationJar adaptationJar = adaptationFromDocuments(adaptationDocument);
-
-                    return Pair.of(adaptationId, adaptationJar);
-                });
+                .collect(Collectors.toMap(
+                    (document) -> document.getObjectId("_id").toString(),
+                    (document) -> adaptationFromDocuments(document)));
     }
 
     @Override

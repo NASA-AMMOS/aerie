@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import static gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils.getUniqueFilePath;
 
@@ -90,10 +88,7 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<Pair<String, AdaptationJar>> getAllAdaptations() {
-        return this.adaptations
-                .entrySet()
-                .stream()
-                .map(entry -> Pair.of(entry.getKey(), new AdaptationJar(entry.getValue())));
+    public Map<String, AdaptationJar> getAllAdaptations() {
+        return new HashMap<>(this.adaptations);
     }
 }
