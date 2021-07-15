@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  */
 public interface PlanRepository {
   // Queries
-  Stream<Pair<String, Plan>> getAllPlans();
+  Map<String, Plan> getAllPlans();
   Plan getPlan(String id) throws NoSuchPlanException;
   long getPlanRevision(String id) throws NoSuchPlanException;
   Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;

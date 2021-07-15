@@ -12,10 +12,10 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class MockPlanRepository implements PlanRepository {
@@ -24,11 +24,13 @@ public final class MockPlanRepository implements PlanRepository {
   private int nextActivityId = 0;
 
   @Override
-  public Stream<Pair<String, Plan>> getAllPlans() {
+  public Map<String, Plan> getAllPlans() {
     return this.plans
         .entrySet()
         .stream()
-        .map(entry -> Pair.of(entry.getKey(), new Plan(entry.getValue().getRight())));
+        .collect(Collectors.toMap(
+            entry -> entry.getKey(),
+            entry -> new Plan(entry.getValue().getRight())));
   }
 
   @Override

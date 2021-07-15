@@ -7,14 +7,12 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 public interface PlanService {
-  Stream<Pair<String, Plan>> getPlans();
+  Map<String, Plan> getPlans();
   Plan getPlanById(String id) throws NoSuchPlanException;
   long getPlanRevisionById(String id) throws NoSuchPlanException;
   String addPlan(NewPlan plan) throws ValidationException;

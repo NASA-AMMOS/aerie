@@ -27,12 +27,10 @@ public final class LocalAdaptationServiceTest {
     final Fixtures fixtures = new Fixtures();
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
 
-    final List<Pair<String, Plan>> expectedPlans = fixtures.planRepository
-        .getAllPlans()
-        .collect(Collectors.toUnmodifiableList());
+    final Map<String, Plan> expectedPlans = fixtures.planRepository.getAllPlans();
 
     // WHEN
-    final List<Pair<String, Plan>> plans = controller.getPlans().collect(Collectors.toUnmodifiableList());
+    final Map<String, Plan> plans = controller.getPlans();
 
     // THEN
     assertThat(plans).isEqualTo(expectedPlans);

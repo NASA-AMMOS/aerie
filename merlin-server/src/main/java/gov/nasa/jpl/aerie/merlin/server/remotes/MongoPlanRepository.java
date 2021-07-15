@@ -58,18 +58,15 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, Plan>> getAllPlans() {
+  public Map<String, Plan> getAllPlans() {
     final var query = this.planCollection.find();
 
     return documentStream(query)
-        .map(planDocument -> {
-          final ObjectId planId = planDocument.getObjectId("_id");
-          final FindIterable<Document> activityDocuments = this.activityCollection.find(
-              activityByPlan(planId));
-          final Plan plan = planFromDocuments(planDocument, activityDocuments);
-
-          return Pair.of(planId.toString(), plan);
-        });
+        .collect(Collectors.toMap(
+            (document) -> document.getObjectId("_id").toString(),
+            (document) -> planFromDocuments(
+                document,
+                this.activityCollection.find(activityByPlan(document.getObjectId("_id"))))));
   }
 
   @Override
