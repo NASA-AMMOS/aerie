@@ -99,13 +99,13 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
 
     return documentStream(this.activityCollection.find(activityByPlan(makePlanObjectId(planId))))
-        .map(document -> Pair.of(
-            document.getObjectId("_id").toString(),
-            activityFromDocument(document)));
+        .collect(Collectors.toMap(
+            (document) -> document.getObjectId("_id").toString(),
+            (document) -> activityFromDocument(document)));
   }
 
   @Override

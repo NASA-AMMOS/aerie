@@ -8,10 +8,8 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * An owned interface to a concurrency-safe store of plans.
@@ -26,7 +24,7 @@ public interface PlanRepository {
   Map<String, Plan> getAllPlans();
   Plan getPlan(String id) throws NoSuchPlanException;
   long getPlanRevision(String id) throws NoSuchPlanException;
-  Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
+  Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
   ActivityInstance getActivityInPlanById(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
 
   // Mutations

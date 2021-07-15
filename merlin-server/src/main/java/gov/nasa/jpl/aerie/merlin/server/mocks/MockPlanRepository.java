@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class MockPlanRepository implements PlanRepository {
   private final Map<String, Pair<Long, Plan>> plans = new HashMap<>();
@@ -52,7 +51,7 @@ public final class MockPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
@@ -61,7 +60,9 @@ public final class MockPlanRepository implements PlanRepository {
     return plan.activityInstances
         .entrySet()
         .stream()
-        .map(entry -> Pair.of(entry.getKey(), new ActivityInstance(entry.getValue())));
+        .collect(Collectors.toMap(
+            (entry) -> entry.getKey(),
+            (entry) -> new ActivityInstance(entry.getValue())));
   }
 
   @Override

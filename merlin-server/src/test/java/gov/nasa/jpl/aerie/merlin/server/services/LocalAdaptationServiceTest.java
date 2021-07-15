@@ -8,14 +8,11 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -445,7 +442,7 @@ public final class LocalAdaptationServiceTest {
     // THEN
     assertThat(activityInstanceIds).size().isEqualTo(activityInstances.size());
     assertThat(zipToMap(activityInstanceIds, activityInstances))
-        .isEqualTo(pairStreamToMap(fixtures.planRepository.getAllActivitiesInPlan(planId)));
+        .isEqualTo(fixtures.planRepository.getAllActivitiesInPlan(planId));
   }
 
   @Test
@@ -713,9 +710,5 @@ public final class LocalAdaptationServiceTest {
     assert !keysIterator.hasNext() && !valuesIterator.hasNext();
 
     return map;
-  }
-
-  private <K, V> Map<K, V> pairStreamToMap(final Stream<Pair<K, V>> pairs) {
-    return pairs.collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 }
