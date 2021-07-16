@@ -224,7 +224,7 @@ public final class LocalAdaptationServiceTest {
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
-    final String planId = fixtures.planRepository.createPlan(newPlan);
+    final String planId = fixtures.planRepository.createPlan(newPlan).planId();
 
     // Add 3 activity instances to the plan
     final String activity1Id = fixtures.planRepository.createActivity(planId, fixtures.createValidActivityInstance());
@@ -430,7 +430,7 @@ public final class LocalAdaptationServiceTest {
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
-    final String planId = fixtures.planRepository.createPlan(newPlan);
+    final String planId = fixtures.planRepository.createPlan(newPlan).planId();
 
     final List<ActivityInstance> activityInstances = List.of(
         fixtures.createValidActivityInstance(),

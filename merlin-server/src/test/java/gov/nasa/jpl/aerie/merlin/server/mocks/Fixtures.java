@@ -32,7 +32,7 @@ public final class Fixtures {
       this.NONEXISTENT_ADAPTATION_ID = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
       this.EXISTENT_ADAPTATION_ID = StubAdaptationService.EXISTENT_ADAPTATION_ID;
 
-      this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1"));
+      this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1")).planId();
       this.NONEXISTENT_PLAN_ID = "nonexistent plan";
 
       this.planRepository.createPlan(createValidNewPlan("plan 2"));

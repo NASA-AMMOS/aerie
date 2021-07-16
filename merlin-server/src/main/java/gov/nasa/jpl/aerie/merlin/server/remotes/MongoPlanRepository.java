@@ -18,7 +18,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -124,7 +126,7 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createPlan(final NewPlan plan) {
+  public CreatedPlan createPlan(final NewPlan plan) {
     final String planId;
     {
       final Document planDocument = toDocument(plan);
@@ -132,13 +134,19 @@ public final class MongoPlanRepository implements PlanRepository {
       planId = planDocument.getObjectId("_id").toString();
     }
 
-    if (plan.activityInstances != null) {
+    final List<String> activityIds;
+    if (plan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(plan.activityInstances.size());
       for (final var activity : plan.activityInstances) {
-        this.activityCollection.insertOne(toDocument(planId, activity));
+        final Document activityDocument = toDocument(planId, activity);
+        this.activityCollection.insertOne(activityDocument);
+        activityIds.add(activityDocument.getObjectId("_id").toString());
       }
     }
 
-    return planId;
+    return new CreatedPlan(planId, activityIds);
   }
 
   @Override

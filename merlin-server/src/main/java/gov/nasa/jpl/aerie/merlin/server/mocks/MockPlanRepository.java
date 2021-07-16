@@ -11,7 +11,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -80,7 +82,7 @@ public final class MockPlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createPlan(final NewPlan newPlan) {
+  public CreatedPlan createPlan(final NewPlan newPlan) {
     final String planId = Objects.toString(this.nextPlanId++);
 
     final Plan plan = new Plan();
@@ -90,15 +92,22 @@ public final class MockPlanRepository implements PlanRepository {
     plan.adaptationId = newPlan.adaptationId;
     plan.activityInstances = new HashMap<>();
 
-    if (newPlan.activityInstances != null) {
+    final List<String> activityIds;
+    if (newPlan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(newPlan.activityInstances.size());
       for (final var activity : newPlan.activityInstances) {
         final String activityId = Objects.toString(this.nextActivityId++);
+
+        activityIds.add(activityId);
         plan.activityInstances.put(activityId, new ActivityInstance(activity));
       }
     }
 
     this.plans.put(planId, Pair.of(0L, plan));
-    return planId;
+
+    return new CreatedPlan(planId, activityIds);
   }
 
   @Override

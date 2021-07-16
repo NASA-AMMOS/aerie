@@ -45,7 +45,7 @@ public final class LocalPlanService implements PlanService {
   @Override
   public String addPlan(final NewPlan plan) throws ValidationException {
     withValidator(validator -> validator.validateNewPlan(plan));
-    return this.planRepository.createPlan(plan);
+    return this.planRepository.createPlan(plan).planId();
   }
 
   @Override
