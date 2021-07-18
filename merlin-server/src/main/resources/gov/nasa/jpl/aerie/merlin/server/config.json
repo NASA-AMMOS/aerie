@@ -1,11 +1,13 @@
-{
-  "HTTP_PORT": 27183,
-  "MONGO_URI": "mongodb://merlin_mongo:27020",
-  "MONGO_DATABASE": "merlin",
-  "MONGO_PLAN_COLLECTION": "plans",
-  "MONGO_ACTIVITY_COLLECTION": "activities",
-  "MONGO_ADAPTATION_COLLECTION": "adaptations",
-  "MONGO_SIMULATION_RESULTS_COLLECTION": "simulationResults",
-  "enable-javalin-logging": "false",
-  "MISSION_MODEL_CONFIG_PATH": "/usr/src/app/mission_config.json"
-}
+{ "server":
+    { "port": 27183,
+      "logging": true,
+      "model-config": "/usr/src/app/mission_config.json" },
+  "store":
+    { "type": "mongo",
+      "uri": "mongodb://merlin_mongo:27020",
+      "database": "merlin",
+      "collections":
+        { "mission-models": "adaptations",
+          "plans": "plans",
+          "activities": "activities",
+          "results": "simulationResults" } } }

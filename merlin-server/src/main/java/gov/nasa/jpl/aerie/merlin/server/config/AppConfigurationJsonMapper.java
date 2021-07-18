@@ -1,71 +1,138 @@
 package gov.nasa.jpl.aerie.merlin.server.config;
 
-import javax.json.Json;
+import gov.nasa.jpl.aerie.json.Iso;
+import gov.nasa.jpl.aerie.json.JsonParseResult;
+import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
+
+import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple2;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple3;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple4;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry2;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
+import static gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper.UriJsonParser.uriP;
 
 public final class AppConfigurationJsonMapper {
-  // TODO: Return something more helpful for failures than an `Optional`.
-  public static Optional<AppConfiguration> fromJson(final JsonObject config) {
-    final var httpPort = config.getInt("HTTP_PORT");
-    final var javalinLogging =
-        (config.getBoolean("enable-javalin-logging", false))
-            ? JavalinLoggingState.Enabled
-            : JavalinLoggingState.Disabled;
-
-    final var missionModelConfigPath = getOptional(config, "MISSION_MODEL_CONFIG_PATH", JsonObject::getString);
-
-    final var mongoUri = URI.create(config.getString("MONGO_URI"));
-    final var mongoDatabase = config.getString("MONGO_DATABASE");
-    final var mongoPlanCollection = config.getString("MONGO_PLAN_COLLECTION");
-    final var mongoActivityCollection = config.getString("MONGO_ACTIVITY_COLLECTION");
-    final var mongoAdaptationCollection = config.getString("MONGO_ADAPTATION_COLLECTION");
-    final var mongoSimulationResultsCollection = config.getString("MONGO_SIMULATION_RESULTS_COLLECTION");
-
-    return Optional.of(new AppConfiguration(
-        httpPort,
-        javalinLogging,
-        missionModelConfigPath,
-        new MongoStore(
-            mongoUri,
-            mongoDatabase,
-            mongoPlanCollection,
-            mongoActivityCollection,
-            mongoAdaptationCollection,
-            mongoSimulationResultsCollection)));
+  public static AppConfiguration fromJson(final JsonValue config) {
+    return configP.parse(config).getSuccessOrThrow();
   }
 
-  private static <T>
-  Optional<T> getOptional(final JsonObject object, final String key, final BiFunction<JsonObject, String, T> getter) {
-    if (object.containsKey(key)) {
-      return Optional.of(getter.apply(object, key));
-    } else {
-      return Optional.empty();
-    }
+  public static JsonValue toJson(final AppConfiguration config) {
+    return configP.unparse(config);
   }
 
+  private record Server(int port, JavalinLoggingState loggingState, Optional<String> modelConfigPath) {}
+  private static final JsonParser<Server> serverP =
+      productP
+          .field("port", intP)
+          .optionalField("logging", boolP)
+          .optionalField("model-config", stringP)
+          .map(Iso.of(
+              uncurry3(port -> logging -> modelConfig -> new Server(
+                  port,
+                  logging.orElse(false)
+                      ? JavalinLoggingState.Enabled
+                      : JavalinLoggingState.Disabled,
+                  modelConfig)),
+              $ -> tuple3(
+                  $.port(),
+                  Optional.of($.loggingState() == JavalinLoggingState.Enabled),
+                  $.modelConfigPath())));
 
-  public static JsonObject toJson(final AppConfiguration config) {
-    final var builder = Json.createObjectBuilder();
 
-    if (!(config.store() instanceof MongoStore store)) {
-      throw new RuntimeException(
-          "Aerie can currently only run on MongoDB, but it was configured with a %s"
-              .formatted(config.store().getClass()));
+  private record Collections(String plans, String activities, String missionModels, String results) {}
+  private static final JsonParser<Collections> mongoCollectionsP =
+      productP
+          .field("plans", stringP)
+          .field("activities", stringP)
+          .field("mission-models", stringP)
+          .field("results", stringP)
+          .map(Iso.of(
+              uncurry4(plans -> activities -> missionModels -> results ->
+                  new Collections(plans, activities, missionModels, results)),
+              $ -> tuple4($.plans(), $.activities(), $.missionModels(), $.results())));
+
+  private static final JsonParser<MongoStore> mongoStoreP =
+      productP
+          .field("type", literalP("mongo"))
+          .field("uri", uriP)
+          .field("database", stringP)
+          .field("collections", mongoCollectionsP)
+          .map(Iso.of(
+              uncurry4(type -> uri -> database -> collections -> new MongoStore(
+                  uri,
+                  database,
+                  collections.plans(),
+                  collections.activities(),
+                  collections.missionModels(),
+                  collections.results())),
+              $ -> tuple4(
+                  Unit.UNIT,
+                  $.uri(),
+                  $.database(),
+                  new Collections(
+                      $.planCollection(),
+                      $.activityCollection(),
+                      $.adaptationCollection(),
+                      $.simulationResultsCollection()))));
+
+  private static final JsonParser<Store> storeP = chooseP(mongoStoreP);
+
+  private static final JsonParser<AppConfiguration> configP =
+      productP
+          .field("server", serverP)
+          .field("store", storeP)
+          .map(Iso.of(
+              uncurry2(server -> store -> new AppConfiguration(
+                  server.port(),
+                  server.loggingState(),
+                  server.modelConfigPath(),
+                  store)),
+              $ -> tuple2(
+                  new Server($.httpPort(), $.javalinLogging(), $.missionModelConfigPath()),
+                  $.store())));
+
+  public static final class UriJsonParser implements JsonParser<URI> {
+    public static final JsonParser<URI> uriP = new UriJsonParser();
+
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return stringP.getSchema(anchors);
     }
 
-    builder.add("HTTP_PORT", config.httpPort());
-    builder.add("enable-javalin-logging", config.javalinLogging().isEnabled());
-    config.missionModelConfigPath().ifPresent($ -> builder.add("MISSION_MODEL_CONFIG_PATH", $));
-    builder.add("MONGO_URI", store.uri().toString());
-    builder.add("MONGO_DATABASE", store.database());
-    builder.add("MONGO_PLAN_COLLECTION", store.planCollection());
-    builder.add("MONGO_ACTIVITY_COLLECTION", store.activityCollection());
-    builder.add("MONGO_ADAPTATION_COLLECTION", store.adaptationCollection());
-    builder.add("MONGO_SIMULATION_RESULTS_COLLECTION", store.simulationResultsCollection());
+    @Override
+    public JsonParseResult<URI> parse(final JsonValue json) {
+      final var result = stringP.parse(json);
+      if (result instanceof JsonParseResult.Success<String> s) {
+        try {
+          return JsonParseResult.success(URI.create(s.result()));
+        } catch (final IllegalArgumentException ex) {
+          return JsonParseResult.failure("Invalid URI");
+        }
+      } else if (result instanceof JsonParseResult.Failure<?> f) {
+        return f.cast();
+      } else {
+        throw new UnexpectedSubtypeError(JsonParseResult.class, result);
+      }
+    }
 
-    return builder.build();
+    @Override
+    public JsonValue unparse(final URI value) {
+      return stringP.unparse(value.toString());
+    }
   }
 }

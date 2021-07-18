@@ -24,6 +24,6 @@ public class AppConfigurationTest {
 
     final var observed = AppConfigurationJsonMapper.fromJson(AppConfigurationJsonMapper.toJson(expected));
 
-    assertEquals(Optional.of(expected), observed);
+    assertEquals(expected, observed);
   }
 }
