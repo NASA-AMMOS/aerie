@@ -5,6 +5,8 @@ import org.junit.Test;
 import java.net.URI;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 public class AppConfigurationTest {
   @Test
   public void testParseProperties() {
@@ -22,15 +24,6 @@ public class AppConfigurationTest {
 
     final var observed = AppConfigurationJsonMapper.fromJson(AppConfigurationJsonMapper.toJson(expected));
 
-    assertTypedEquals(Optional.of(expected), observed);
-  }
-
-  /**
-   * A wrapper around {@link org.junit.jupiter.api.Assertions#assertEquals}
-   * that ensures that the arguments given are of the same type.
-   */
-  private static <T> void assertTypedEquals(final T expected, final T observed) {
-    // Don't use an import; it makes it too easy for test code to use `assertEquals` directly.
-    org.junit.jupiter.api.Assertions.assertEquals(expected, observed);
+    assertEquals(Optional.of(expected), observed);
   }
 }
