@@ -116,7 +116,7 @@ public final class MockPlanRepository implements PlanRepository {
   }
 
   @Override
-  public void replacePlan(final String id, final NewPlan newPlan) throws NoSuchPlanException {
+  public List<String> replacePlan(final String id, final NewPlan newPlan) throws NoSuchPlanException {
     if (!this.plans.containsKey(id)) {
       throw new NoSuchPlanException(id);
     }
@@ -130,14 +130,22 @@ public final class MockPlanRepository implements PlanRepository {
     plan.adaptationId = newPlan.adaptationId;
     plan.activityInstances = new HashMap<>();
 
-    if (newPlan.activityInstances != null) {
+    final List<String> activityIds;
+    if (newPlan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(newPlan.activityInstances.size());
       for (final var activity : newPlan.activityInstances) {
         final String activityId = Objects.toString(this.nextActivityId++);
+
+        activityIds.add(activityId);
         plan.activityInstances.put(activityId, new ActivityInstance(activity));
       }
     }
 
     this.plans.put(id, Pair.of(revision, plan));
+
+    return activityIds;
   }
 
   @Override

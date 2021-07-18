@@ -31,7 +31,7 @@ public interface PlanRepository {
   // Mutations
   CreatedPlan createPlan(NewPlan plan);
   PlanTransaction updatePlan(String id) throws NoSuchPlanException;
-  void replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
+  List<String> replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
 
   String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;

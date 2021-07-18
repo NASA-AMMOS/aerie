@@ -155,7 +155,7 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public void replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
+  public List<String> replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
     final var revisionDoc = this.planCollection
         .find(planById(makePlanObjectId(planId)))
         .projection(new Document("revision", 1))
@@ -170,11 +170,20 @@ public final class MongoPlanRepository implements PlanRepository {
     this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
 
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
-    if (plan.activityInstances != null) {
+
+    final List<String> activityIds;
+    if (plan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(plan.activityInstances.size());
       for (final var activity : plan.activityInstances) {
-        this.activityCollection.insertOne(toDocument(planId, activity));
+        final var activityDocument = toDocument(planId, activity);
+        this.activityCollection.insertOne(activityDocument);
+        activityIds.add(activityDocument.getObjectId("_id").toString());
       }
     }
+
+    return activityIds;
   }
 
   @Override
