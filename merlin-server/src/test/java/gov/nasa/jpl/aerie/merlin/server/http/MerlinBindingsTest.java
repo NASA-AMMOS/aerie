@@ -73,7 +73,7 @@ public final class MerlinBindingsTest {
     try {
       final var requestJson = Json.createReader(new StringReader(subject)).readValue();
       final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow(() -> new InvalidEntityException(List.of(result.failureReason())));
+      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
     } catch (JsonParsingException e) {
       throw new InvalidJsonException(e);
     }

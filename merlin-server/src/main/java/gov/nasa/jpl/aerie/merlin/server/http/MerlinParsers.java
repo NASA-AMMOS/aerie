@@ -12,14 +12,17 @@ import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
-import javax.json.JsonString;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
@@ -38,21 +41,32 @@ import static gov.nasa.jpl.aerie.json.Uncurry.uncurry5;
 public abstract class MerlinParsers {
   private MerlinParsers() {}
 
-  public static final JsonParser<Timestamp> timestampP =
-      JsonParser.create(
-          (json) -> {
-            if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
-            try {
-              return JsonParseResult.success(Timestamp.fromString(((JsonString) json).getString()));
-            } catch (DateTimeParseException e) {
-              return JsonParseResult.failure("invalid timestamp format");
-            }
-          },
-          Json
-              .createObjectBuilder()
-              .add("type", "string")
-              .add("format", "date-time")
-              .build());
+  public static final JsonParser<Timestamp> timestampP = new JsonParser<>() {
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return Json
+          .createObjectBuilder()
+          .add("type", "string")
+          .add("format", "date-time")
+          .build();
+    }
+
+    @Override
+    public JsonParseResult<Timestamp> parse(final JsonValue json) {
+      final var result = stringP.parse(json);
+      if (result instanceof JsonParseResult.Success<String> s) {
+        try {
+          return JsonParseResult.success(Timestamp.fromString(s.result()));
+        } catch (DateTimeParseException e) {
+          return JsonParseResult.failure("invalid timestamp format");
+        }
+      } else if (result instanceof JsonParseResult.Failure<?> f) {
+        return f.cast();
+      } else {
+        throw new UnexpectedSubtypeError(JsonParseResult.class, result);
+      }
+    }
+  };
 
   public static final JsonParser<Duration> durationP
       = longP

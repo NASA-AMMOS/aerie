@@ -237,16 +237,12 @@ public abstract class BasicParsers {
         final var list = new ArrayList<T>(jsonArray.size());
         for (int index = 0; index < jsonArray.size(); index++) {
           final var element = jsonArray.get(index);
-          final var result = elementParser.parse(element);
+          final var result = elementParser.parse(element).prependBreadcrumb(Breadcrumb.ofInteger(index));
 
-          if (result.isFailure()) {
-            return JsonParseResult.failure(
-                result
-                    .failureReason()
-                    .prependBreadcrumb(
-                        Breadcrumb.ofInteger(index)
-                    ));
+          if (result instanceof JsonParseResult.Failure<?> f) {
+            return f.cast();
           }
+
           list.add(result.getSuccessOrThrow());
         }
 
@@ -272,16 +268,12 @@ public abstract class BasicParsers {
 
         final var map = new HashMap<String, S>(json.asJsonObject().size());
         for (final var field : json.asJsonObject().entrySet()) {
-          final var result = fieldParser.parse(field.getValue());
+          final var result = fieldParser.parse(field.getValue()).prependBreadcrumb(Breadcrumb.ofString(field.getKey()));
 
-          if (result.isFailure()) {
-            return JsonParseResult.failure(
-                result
-                    .failureReason()
-                    .prependBreadcrumb(
-                        Breadcrumb.ofString(field.getKey())
-                    ));
+          if (result instanceof JsonParseResult.Failure<?> f) {
+            return f.cast();
           }
+
           map.put(field.getKey(), result.getSuccessOrThrow());
         }
 

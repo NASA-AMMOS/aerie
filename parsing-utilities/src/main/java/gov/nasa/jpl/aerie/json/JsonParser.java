@@ -20,26 +20,6 @@ public interface JsonParser<T> {
         .build();
   }
 
-  static <T> JsonParser<T> create(
-      final Function<JsonValue, JsonParseResult<T>> parser,
-      final JsonObject schema
-  ) {
-    Objects.requireNonNull(parser);
-    Objects.requireNonNull(schema);
-
-    return new JsonParser<>() {
-      @Override
-      public JsonParseResult<T> parse(final JsonValue json) {
-        return parser.apply(json);
-      }
-
-      @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
-        return schema;
-      }
-    };
-  }
-
   default <S> JsonParser<S> map(final Function<T, S> transform) {
     Objects.requireNonNull(transform);
 
