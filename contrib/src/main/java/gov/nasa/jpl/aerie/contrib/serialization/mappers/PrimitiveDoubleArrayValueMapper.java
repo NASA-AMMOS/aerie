@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class PrimitiveDoubleArrayValueMapper implements ValueMapper<double[]> {
+public final class PrimitiveDoubleArrayValueMapper implements ValueMapper<double[]> {
     @Override
     public ValueSchema getValueSchema() {
         return ValueSchema.ofSeries(ValueSchema.REAL);
