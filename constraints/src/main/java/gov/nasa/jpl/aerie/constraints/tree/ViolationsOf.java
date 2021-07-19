@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class ViolationsOf implements Expression<List<Violation>> {
-  private final Expression<Windows> expression;
+  public final Expression<Windows> expression;
 
   public ViolationsOf(Expression<Windows> expression) {
     this.expression = expression;

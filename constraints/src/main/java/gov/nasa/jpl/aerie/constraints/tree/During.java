@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class During implements Expression<Windows> {
-  private final String activityAlias;
+  public final String activityAlias;
 
   public During(final String activityAlias) {
     this.activityAlias = activityAlias;

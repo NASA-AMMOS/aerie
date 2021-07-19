@@ -11,9 +11,9 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class Transition implements Expression<Windows> {
-  private final Expression<DiscreteProfile> profile;
-  private final SerializedValue oldState;
-  private final SerializedValue newState;
+  public final Expression<DiscreteProfile> profile;
+  public final SerializedValue oldState;
+  public final SerializedValue newState;
 
   public Transition(final Expression<DiscreteProfile> profile, final SerializedValue oldState, final SerializedValue newState) {
     this.profile = profile;

@@ -11,8 +11,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class DiscreteParameter implements Expression<DiscreteProfile> {
-  private final String activityAlias;
-  private final String parameterName;
+  public final String activityAlias;
+  public final String parameterName;
 
   public DiscreteParameter(final String activityAlias, final String parameterName) {
     this.activityAlias = activityAlias;

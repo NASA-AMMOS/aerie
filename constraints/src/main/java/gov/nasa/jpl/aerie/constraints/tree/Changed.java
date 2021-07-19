@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class Changed<P extends Profile<?>> implements Expression<Windows> {
-  private final Expression<P> expression;
+  public final Expression<P> expression;
 
   public Changed(final Expression<P> expression) {
     this.expression = expression;
