@@ -15,8 +15,10 @@ import gov.nasa.jpl.aerie.constraints.tree.EndOf;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
+import gov.nasa.jpl.aerie.constraints.tree.ForbiddenActivityOverlap;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.IfThen;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
@@ -259,7 +261,7 @@ public final class ConstraintParsers {
         .field("type", literalP("IfThen"))
         .field("condition", windowsExpressionP)
         .field("expression", windowsExpressionP)
-        .map(uncurry3(type -> cond -> expr -> new Or(new Not(cond), expr)));
+        .map(uncurry3(type -> cond -> expr -> new IfThen(cond, expr)));
   }
 
   private static JsonParser<Expression<List<Violation>>> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
@@ -305,22 +307,7 @@ public final class ConstraintParsers {
           .field("type", literalP("ForbiddenActivityOverlap"))
           .field("activityType1", stringP)
           .field("activityType2", stringP)
-          .map(uncurry3(type -> act1 -> act2 -> new ForEachActivity(
-              act1,
-              "act1",
-              new ForEachActivity(
-                  act2,
-                  "act2",
-                  new ViolationsOf(
-                      new Not(
-                          new And(
-                              new During("act1"),
-                              new During("act2")
-                          )
-                      )
-                  )
-              )
-          )));
+          .map(uncurry3(type -> act1 -> act2 -> new ForbiddenActivityOverlap(act1, act2)));
 
   static final JsonParser<Expression<List<Violation>>> violationListExpressionP =
       recursiveP(selfP -> chooseP(
