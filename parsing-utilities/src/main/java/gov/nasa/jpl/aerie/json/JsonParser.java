@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public interface JsonParser<T> {
-  JsonParseResult<T> parse(JsonValue json);
   JsonObject getSchema(Map<Object, String> anchors);
+  JsonParseResult<T> parse(JsonValue json);
 
   default JsonObject getSchema() {
     return Json
@@ -27,13 +27,13 @@ public interface JsonParser<T> {
 
     return new JsonParser<>() {
       @Override
-      public JsonParseResult<S> parse(final JsonValue json) {
-        return that.parse(json).mapSuccess(transform);
+      public JsonObject getSchema(final Map<Object, String> anchors) {
+        return that.getSchema(anchors);
       }
 
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
-        return that.getSchema(anchors);
+      public JsonParseResult<S> parse(final JsonValue json) {
+        return that.parse(json).mapSuccess(transform);
       }
     };
   }
