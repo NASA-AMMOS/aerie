@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.ListValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.LongValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.MapValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.PathValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveBooleanArrayValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveByteArrayValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.PrimitiveCharArrayValueMapper;
@@ -25,6 +26,7 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -118,5 +120,9 @@ public final class BasicValueMappers {
 
   public static ValueMapper<Duration> duration() {
     return new DurationValueMapper();
+  }
+
+  public static ValueMapper<Path> path() {
+    return new PathValueMapper();
   }
 }

@@ -468,6 +468,14 @@ public final class ResponseSerializers {
     }
 
     @Override
+    public JsonValue onPath() {
+      return Json
+          .createObjectBuilder()
+          .add("type", "path")
+          .build();
+    }
+
+    @Override
     public JsonValue onSeries(final ValueSchema itemSchema) {
       return Json
           .createObjectBuilder()

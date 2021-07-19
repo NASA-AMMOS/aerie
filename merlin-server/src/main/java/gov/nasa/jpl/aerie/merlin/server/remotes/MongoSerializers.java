@@ -77,6 +77,11 @@ public final class MongoSerializers {
       }
 
       @Override
+      public Document onPath() {
+        return new Document(Map.of("type", "path"));
+      }
+
+      @Override
       public Document onSeries(final ValueSchema itemSchema) {
         return new Document(Map.of(
             "type", "series",
