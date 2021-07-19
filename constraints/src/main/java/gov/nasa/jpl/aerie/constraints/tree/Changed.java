@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public final class Changed<P extends Profile<?>> implements Expression<Windows> {
-  public final Expression<P> expression;
+public final class Changed<P extends Profile<P>> implements Expression<Windows> {
+  public final ProfileExpression<P> expression;
 
-  public Changed(final Expression<P> expression) {
+  public Changed(final ProfileExpression<P> expression) {
     this.expression = expression;
   }
 

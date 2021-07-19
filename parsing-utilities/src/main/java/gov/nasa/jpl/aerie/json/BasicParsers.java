@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -45,6 +46,11 @@ public abstract class BasicParsers {
     public JsonParseResult<JsonValue> parse(final JsonValue json) {
       return JsonParseResult.success(json);
     }
+
+    @Override
+    public JsonValue unparse(final JsonValue value) {
+      return value;
+    }
   };
 
   public static final JsonParser<Boolean> boolP = new JsonParser<>() {
@@ -62,6 +68,11 @@ public abstract class BasicParsers {
       if (Objects.equals(json, JsonValue.FALSE)) return JsonParseResult.success(false);
       return JsonParseResult.failure("expected boolean");
     }
+
+    @Override
+    public JsonValue unparse(final Boolean value) {
+      return (value) ? JsonValue.TRUE : JsonValue.FALSE;
+    }
   };
 
   public static final JsonParser<String> stringP = new JsonParser<>() {
@@ -78,6 +89,11 @@ public abstract class BasicParsers {
       if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
 
       return JsonParseResult.success(((JsonString) json).getString());
+    }
+
+    @Override
+    public JsonValue unparse(final String value) {
+      return Json.createValue(value);
     }
   };
 
@@ -101,6 +117,11 @@ public abstract class BasicParsers {
 
       return JsonParseResult.success(((JsonNumber) json).longValue());
     }
+
+    @Override
+    public JsonValue unparse(final Long value) {
+      return Json.createValue(value);
+    }
   };
 
   public static final JsonParser<Double> doubleP = new JsonParser<>() {
@@ -123,6 +144,11 @@ public abstract class BasicParsers {
 
       return JsonParseResult.success(((JsonNumber) json).doubleValue());
     }
+
+    @Override
+    public JsonValue unparse(final Double value) {
+      return Json.createValue(value);
+    }
   };
 
   public static final JsonParser<Unit> nullP = new JsonParser<>() {
@@ -139,6 +165,11 @@ public abstract class BasicParsers {
       if (!Objects.equals(json, JsonValue.NULL)) return JsonParseResult.failure("expected null");
 
       return JsonParseResult.success(null);
+    }
+
+    @Override
+    public JsonValue unparse(final Unit value) {
+      return JsonValue.NULL;
     }
   };
 
@@ -161,6 +192,11 @@ public abstract class BasicParsers {
 
         return JsonParseResult.success(Unit.UNIT);
       }
+
+      @Override
+      public JsonValue unparse(final Unit value) {
+        return Json.createValue(x);
+      }
     };
   }
 
@@ -181,6 +217,11 @@ public abstract class BasicParsers {
         }
 
         return JsonParseResult.success(Unit.UNIT);
+      }
+
+      @Override
+      public JsonValue unparse(final Unit value) {
+        return Json.createValue(x);
       }
     };
   }
@@ -203,6 +244,11 @@ public abstract class BasicParsers {
 
         return JsonParseResult.success(Unit.UNIT);
       }
+
+      @Override
+      public JsonValue unparse(final Unit value) {
+        return Json.createValue(x);
+      }
     };
   }
 
@@ -223,6 +269,11 @@ public abstract class BasicParsers {
         }
 
         return JsonParseResult.success(Unit.UNIT);
+      }
+
+      @Override
+      public JsonValue unparse(final Unit value) {
+        return (x) ? JsonValue.TRUE : JsonValue.FALSE;
       }
     };
   }
@@ -257,6 +308,13 @@ public abstract class BasicParsers {
 
         return JsonParseResult.success(list);
       }
+
+      @Override
+      public JsonValue unparse(final List<T> values) {
+        final var builder = Json.createArrayBuilder();
+        for (final var value : values) builder.add(elementParser.unparse(value));
+        return builder.build();
+      }
     };
   }
 
@@ -288,6 +346,13 @@ public abstract class BasicParsers {
 
         return JsonParseResult.success(map);
       }
+
+      @Override
+      public JsonValue unparse(final Map<String, S> values) {
+        final var builder = Json.createObjectBuilder();
+        for (final var entry : values.entrySet()) builder.add(entry.getKey(), fieldParser.unparse(entry.getValue()));
+        return builder.build();
+      }
     };
   }
 
@@ -303,6 +368,11 @@ public abstract class BasicParsers {
       @Override
       public JsonParseResult<S> parse(final JsonValue json) {
         return this.target.parse(json);
+      }
+
+      @Override
+      public JsonValue unparse(final S value) {
+        return this.target.unparse(value);
       }
     };
   }
@@ -332,6 +402,28 @@ public abstract class BasicParsers {
         }
 
         return JsonParseResult.failure("not parsable into acceptable type");
+      }
+
+      // TODO: Figure out a better way to define choice parsers that doesn't fundamentally rely on unsafe casts.
+      @Override
+      public JsonValue unparse(final T value) {
+        for (final JsonParser<? extends T> option : options) {
+          final var result = unsafeUnparse(option, value);
+          if (result.isEmpty()) continue;
+          return result.get();
+        }
+
+        throw new RuntimeException("No choice of parser can unparse this value.");
+      }
+
+      // SAFETY: Class cast exceptions are isolated to this method and are handled appropriately.
+      @SuppressWarnings("unchecked")
+      private static <S extends T, T> Optional<JsonValue> unsafeUnparse(JsonParser<S> parser, T value) {
+        try {
+          return Optional.of(parser.unparse((S) value));
+        } catch (final ClassCastException ignored) {
+          return Optional.empty();
+        }
       }
     };
   }

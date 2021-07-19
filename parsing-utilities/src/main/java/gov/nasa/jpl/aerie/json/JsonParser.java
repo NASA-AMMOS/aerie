@@ -6,11 +6,11 @@ import javax.json.JsonValue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 public interface JsonParser<T> {
   JsonObject getSchema(Map<Object, String> anchors);
   JsonParseResult<T> parse(JsonValue json);
+  JsonValue unparse(T value);
 
   default JsonObject getSchema() {
     return Json
@@ -20,20 +20,25 @@ public interface JsonParser<T> {
         .build();
   }
 
-  default <S> JsonParser<S> map(final Function<T, S> transform) {
+  default <S> JsonParser<S> map(final Iso<T, S> transform) {
     Objects.requireNonNull(transform);
 
-    final var that = this;
+    final var self = this;
 
     return new JsonParser<>() {
       @Override
       public JsonObject getSchema(final Map<Object, String> anchors) {
-        return that.getSchema(anchors);
+        return self.getSchema(anchors);
       }
 
       @Override
       public JsonParseResult<S> parse(final JsonValue json) {
-        return that.parse(json).mapSuccess(transform);
+        return self.parse(json).mapSuccess(transform::from);
+      }
+
+      @Override
+      public JsonValue unparse(final S value) {
+        return self.unparse(transform.to(value));
       }
     };
   }
