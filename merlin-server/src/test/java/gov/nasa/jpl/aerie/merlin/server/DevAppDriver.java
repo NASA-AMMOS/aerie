@@ -10,8 +10,8 @@ import gov.nasa.jpl.aerie.merlin.server.mocks.MockAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
-import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
-import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import io.javalin.Javalin;
 
 public final class DevAppDriver {
@@ -25,7 +25,7 @@ public final class DevAppDriver {
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         adaptationController,
-        new SynchronousSimulationService(new RunSimulationAction(planController, adaptationController)));
+        new UncachedSimulationService(new SynchronousSimulationAgent(planController, adaptationController)));
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> config

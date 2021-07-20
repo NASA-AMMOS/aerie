@@ -7,8 +7,8 @@ import gov.nasa.jpl.aerie.merlin.server.mocks.StubAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
-import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
-import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.utils.HttpRequester;
 import io.javalin.Javalin;
 import org.junit.AfterClass;
@@ -47,7 +47,7 @@ public final class MerlinBindingsTest {
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         adaptationApp,
-        new SynchronousSimulationService(new RunSimulationAction(planApp, adaptationApp)));
+        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, adaptationApp)));
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
