@@ -49,7 +49,29 @@ extend type AerieMutation {
   setActivityArgument(activityId: ID!, argument: [ActivityArgumentInput!]!): [SetActivityArgumentResult]!
 
   resetActivityArgument(activityId: ID!, argumentName: [String!]!): [ResetActivityArgumentResult]!
+
+  deleteScheduleTypeConstraints(adaptationId: ID!, names: [String!]!): [DeleteScheduleTypeConstraintResult]!
+
+  deleteScheduleConstraints(planId: ID!, names: [String!]!): [DeleteScheduleConstraintResult]!
+
+  updateScheduleTypeConstraints(adaptationId: ID!, constraints: [ConstraintInput!]!): [UpdateScheduleTypeConstraintResult]!
+
+  updateScheduleConstraints(planId: ID!, constraints: [ConstraintInput!]!): [UpdateScheduleConstraintResult]!
 }
+union DeleteScheduleTypeConstraintResult =
+  | ScheduleType
+  | NoSuchScheduleType
+
+union DeleteScheduleConstraintResult =
+  | Schedule
+  | NoSuchSchedule
+
+union UpdateScheduleTypeConstraintResult =
+  | ScheduleType
+  | NoSuchScheduleType
+union UpdateScheduleConstraintResult =
+  | Schedule
+  | NoSuchSchedule
 
 union CreateScheduleResult =
   | Schedule
@@ -93,6 +115,12 @@ union ResetActivityArgumentResult =
 input ActivityArgumentInput {
   name: String!
   value: MissionValue
+}
+input ConstraintInput {
+  name: String!
+  specification: ConstraintSpecification!
+  verboseSummary: String!
+  briefSummary: String!
 }
 
 
