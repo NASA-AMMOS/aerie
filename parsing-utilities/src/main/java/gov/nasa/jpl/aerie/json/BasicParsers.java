@@ -97,6 +97,37 @@ public abstract class BasicParsers {
     }
   };
 
+  public static final JsonParser<Integer> intP = new JsonParser<>() {
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return Json
+          .createObjectBuilder()
+          // must be an integer
+          .add("type", "integer")
+          // within the range of Java integers
+          .add("minimum", Integer.MIN_VALUE)
+          .add("maximum", Integer.MAX_VALUE)
+          .build();
+    }
+
+    @Override
+    public JsonParseResult<Integer> parse(final JsonValue json) {
+      if (!(json instanceof JsonNumber n)) return JsonParseResult.failure("expected int");
+      if (!n.isIntegral()) return JsonParseResult.failure("expected integral number");
+
+      try {
+        return JsonParseResult.success(n.intValueExact());
+      } catch (final ArithmeticException ex) {
+        return JsonParseResult.failure("integer is outside of the expected range");
+      }
+    }
+
+    @Override
+    public JsonValue unparse(final Integer value) {
+      return Json.createValue(value);
+    }
+  };
+
   public static final JsonParser<Long> longP = new JsonParser<>() {
     @Override
     public JsonObject getSchema(final Map<Object, String> anchors) {
