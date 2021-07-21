@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -169,6 +170,13 @@ public final class StubAdaptationService implements AdaptationService {
     }
 
     return EXISTENT_ACTIVITY;
+  }
+
+  @Override
+  public List<ParameterSchema> getActivityParameterSchemas(final String adaptationId, final String activityTypeId)
+  throws NoSuchAdaptationException, NoSuchActivityTypeException, LocalAdaptationService.AdaptationLoadException
+  {
+    return EXISTENT_ACTIVITY.parameters;
   }
 
   @Override

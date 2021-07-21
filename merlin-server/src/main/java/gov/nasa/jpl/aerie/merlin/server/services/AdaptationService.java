@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
@@ -38,6 +39,8 @@ public interface AdaptationService {
   throws NoSuchAdaptationException;
   ActivityType getActivityType(String adaptationId, String activityTypeId)
   throws NoSuchAdaptationException, NoSuchActivityTypeException;
+  List<ParameterSchema> getActivityParameterSchemas(String adaptationId, String activityTypeId)
+  throws NoSuchAdaptationException, NoSuchActivityTypeException, LocalAdaptationService.AdaptationLoadException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
   List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
   throws NoSuchAdaptationException;
