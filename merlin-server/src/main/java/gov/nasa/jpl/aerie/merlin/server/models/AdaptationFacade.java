@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
@@ -77,6 +78,16 @@ public final class AdaptationFacade<$Schema> {
         .orElseThrow(NoSuchActivityTypeException::new);
 
     return new ActivityType(typeName, specType.getParameters(), getDefaultArguments(specType));
+  }
+
+  public List<ParameterSchema> getActivityParameterSchemas(final String typeName)
+  throws NoSuchActivityTypeException, AdaptationContractException
+  {
+    final var specType = Optional
+        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
+        .orElseThrow(NoSuchActivityTypeException::new);
+
+    return specType.getParameters();
   }
 
   public List<String> validateActivity(final String typeName, final Map<String, SerializedValue> arguments)
