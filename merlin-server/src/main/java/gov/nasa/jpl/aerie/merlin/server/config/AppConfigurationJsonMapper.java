@@ -35,24 +35,26 @@ public final class AppConfigurationJsonMapper {
     return configP.unparse(config);
   }
 
-  private record Server(int port, JavalinLoggingState loggingState, Optional<String> modelConfigPath) {}
+  private record Server(int port, JavalinLoggingState loggingState, Optional<String> modelConfigPath, String modelDataPath) {}
   private static final JsonParser<Server> serverP =
       productP
           .field("port", intP)
           .optionalField("logging", boolP)
           .optionalField("model-config", stringP)
+          .field("model-data", stringP)
           .map(Iso.of(
-              uncurry3(port -> logging -> modelConfig -> new Server(
+              uncurry4(port -> logging -> modelConfig -> modelData -> new Server(
                   port,
                   logging.orElse(false)
                       ? JavalinLoggingState.Enabled
                       : JavalinLoggingState.Disabled,
-                  modelConfig)),
-              $ -> tuple3(
+                  modelConfig,
+                  modelData)),
+              $ -> tuple4(
                   $.port(),
                   Optional.of($.loggingState() == JavalinLoggingState.Enabled),
-                  $.modelConfigPath())));
-
+                  $.modelConfigPath(),
+                  $.modelDataPath())));
 
   private record Collections(String plans, String activities, String missionModels, String results) {}
   private static final JsonParser<Collections> mongoCollectionsP =
@@ -101,9 +103,10 @@ public final class AppConfigurationJsonMapper {
                   server.port(),
                   server.loggingState(),
                   server.modelConfigPath(),
+                  server.modelDataPath(),
                   store)),
               $ -> tuple2(
-                  new Server($.httpPort(), $.javalinLogging(), $.missionModelConfigPath()),
+                  new Server($.httpPort(), $.javalinLogging(), $.missionModelConfigPath(), $.missionModelDataPath()),
                   $.store())));
 
   public static final class UriJsonParser implements JsonParser<URI> {
