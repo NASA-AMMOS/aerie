@@ -41,10 +41,16 @@ import java.util.stream.Collectors;
  */
 public final class LocalAdaptationService implements AdaptationService {
   private final Supplier<SerializedValue> missionModelConfigGet;
+  private final Path missionModelDataPath;
   private final AdaptationRepository adaptationRepository;
 
-  public LocalAdaptationService(final Supplier<SerializedValue> missionModelConfigGet, final AdaptationRepository adaptationRepository) {
+  public LocalAdaptationService(
+      final Supplier<SerializedValue> missionModelConfigGet,
+      final Path missionModelDataPath,
+      final AdaptationRepository adaptationRepository
+  ) {
     this.missionModelConfigGet = missionModelConfigGet;
+    this.missionModelDataPath = missionModelDataPath;
     this.adaptationRepository = adaptationRepository;
   }
 
@@ -233,6 +239,14 @@ public final class LocalAdaptationService implements AdaptationService {
   {
     return loadAdaptation(message.adaptationId)
         .simulate(message.activityInstances, message.samplingDuration, message.startTime);
+  }
+
+  @Override
+  public List<Path> getAvailableFilePaths() throws IOException {
+    return Files
+        .list(missionModelDataPath)
+        .map(missionModelDataPath::relativize)
+        .collect(Collectors.toList());
   }
 
   private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)

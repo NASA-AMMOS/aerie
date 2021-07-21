@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
+import java.nio.file.Path;
+
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
@@ -20,7 +22,7 @@ public final class DevAppDriver {
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
-    final var adaptationController = new LocalAdaptationService(() -> SerializedValue.NULL, new MockAdaptationRepository());
+    final var adaptationController = new LocalAdaptationService(() -> SerializedValue.NULL, Path.of("/dev/null"), new MockAdaptationRepository());
     final var planController = new LocalPlanService(fixtures.planRepository, adaptationController);
     final var simulationAction = new GetSimulationResultsAction(
         planController,
