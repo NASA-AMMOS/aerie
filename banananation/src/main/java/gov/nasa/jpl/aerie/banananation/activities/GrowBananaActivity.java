@@ -18,6 +18,11 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Template;
 @ActivityType("GrowBanana")
 public record GrowBananaActivity(int quantity) {
 
+  //Placeholder default constructor for dealing with issues related to NoDefaultInstanceException
+  public static @Template GrowBananaActivity defaults() {
+    return new GrowBananaActivity(0);
+  }
+
   @Validation("Quantity must be positive")
   public boolean validateBiteSize() {
     return this.quantity() > 0;
