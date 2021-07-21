@@ -648,6 +648,27 @@ public final class LocalAdaptationServiceTest {
   }
 
   @Test
+  public void shouldTriggerParameterValueUpdateListener() throws NoSuchPlanException, NoSuchActivityInstanceException, ValidationException {
+    // GIVEN
+    final Fixtures fixtures = new Fixtures();
+    final var nReplaceOperations = 42;
+    final var counter = new Object() { int count = 0; };
+    final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService, parameterMap -> counter.count++);
+
+    final String planId = fixtures.EXISTENT_PLAN_ID;
+    final String activityInstanceId = fixtures.EXISTENT_ACTIVITY_INSTANCE_ID;
+    final ActivityInstance activityInstance = new ActivityInstance(fixtures.EXISTENT_ACTIVITY_INSTANCE);
+
+    // WHEN
+    for (int i = 0; i < nReplaceOperations; i++) {
+      controller.replaceActivityInstance(planId, activityInstanceId, activityInstance);
+    }
+
+    // THEN
+    assertThat(counter.count).isEqualTo(nReplaceOperations);
+  }
+
+  @Test
   public void shouldNotReplaceActivityInstanceOfNonexistentPlan() {
     // GIVEN
     final Fixtures fixtures = new Fixtures();

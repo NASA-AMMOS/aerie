@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
@@ -15,18 +18,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toMap;
 
 public final class LocalPlanService implements PlanService {
   private final PlanRepository planRepository;
   private final AdaptationService adaptationService;
+  private final Consumer<Map<String, Pair<ValueSchema, SerializedValue>>> parameterUpdateListener;
+
+  public LocalPlanService(
+      final PlanRepository planRepository,
+      final AdaptationService adaptationService,
+      final Consumer<Map<String, Pair<ValueSchema, SerializedValue>>> parameterUpdateListener
+  ) {
+    this.planRepository = planRepository;
+    this.adaptationService = adaptationService;
+    this.parameterUpdateListener = parameterUpdateListener;
+  }
 
   public LocalPlanService(
       final PlanRepository planRepository,
       final AdaptationService adaptationService
   ) {
-    this.planRepository = planRepository;
-    this.adaptationService = adaptationService;
+    this(planRepository, adaptationService, $ -> { });
   }
 
   @Override
@@ -121,6 +137,7 @@ public final class LocalPlanService implements PlanService {
 
     withValidator(validator -> validator.validateActivity(plan.adaptationId, activityInstance));
 
+    interceptActivityInstance(plan.adaptationId, activityInstanceId, activityInstance);
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }
 
@@ -129,6 +146,7 @@ public final class LocalPlanService implements PlanService {
     final String adaptationId = this.planRepository.getPlan(planId).adaptationId;
     withValidator(validator -> validator.validateActivity(adaptationId, activityInstance));
 
+    interceptActivityInstance(adaptationId, activityInstanceId, activityInstance);
     this.planRepository.replaceActivity(planId, activityInstanceId, activityInstance);
   }
 
@@ -156,6 +174,21 @@ public final class LocalPlanService implements PlanService {
     final var messages = validator.getMessages();
 
     if (messages.size() > 0) throw new ValidationException(messages);
+  }
+
+  private void interceptActivityInstance(final String adaptationId, final String activityInstanceId, final ActivityInstance activityInstance)
+  {
+    try {
+      final var schemas = this.adaptationService.getActivityParameterSchemas(adaptationId, activityInstanceId);
+      final var parameterSchemaValues = schemas.stream().collect(
+          toMap(schema -> schema.name,
+                schema -> Pair.of(schema.schema, activityInstance.parameters.get(schema.name))));
+      parameterUpdateListener.accept(parameterSchemaValues);
+    } catch (final AdaptationService.NoSuchAdaptationException e) {
+      throw new Error("Unexpectedly nonexistent adaptation, when this should have been loaded earlier.", e);
+    } catch (final AdaptationService.NoSuchActivityTypeException e) {
+      throw new Error("Unexpectedly nonexistent activity type.", e);
+    }
   }
 
   @FunctionalInterface
