@@ -23,7 +23,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
+import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -133,6 +135,10 @@ public final class MerlinBindings implements Plugin {
             get(this::getStateSchemas);
           });
         });
+      });
+
+      path("files", () -> {
+        get(this::getAvailableFilePaths);
       });
     });
 
@@ -508,6 +514,15 @@ public final class MerlinBindings implements Plugin {
       ctx.result(ResponseSerializers.serializeValueSchemas(schemaMap).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
+    }
+  }
+
+  private void getAvailableFilePaths(final Context ctx) {
+    try {
+      final var files = this.adaptationService.getAvailableFilePaths().stream().map(Path::toString).toList();
+      ctx.result(ResponseSerializers.serializeStringList(files).toString());
+    } catch (final IOException ex) {
+      ctx.status(500);
     }
   }
 
