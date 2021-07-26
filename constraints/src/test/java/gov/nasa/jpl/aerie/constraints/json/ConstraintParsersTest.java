@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.InstanceCardinality;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Changed;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -427,13 +428,13 @@ public final class ConstraintParsersTest {
         .add("expressions", Json
             .createArrayBuilder()
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "A"))
+                     .createObjectBuilder()
+                     .add("type", "During")
+                     .add("alias", "A"))
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "B")))
+                     .createObjectBuilder()
+                     .add("type", "During")
+                     .add("alias", "B")))
         .build();
 
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -454,13 +455,13 @@ public final class ConstraintParsersTest {
         .add("expressions", Json
             .createArrayBuilder()
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "A"))
+                     .createObjectBuilder()
+                     .add("type", "During")
+                     .add("alias", "A"))
             .add(Json
-                .createObjectBuilder()
-                .add("type", "During")
-                .add("alias", "B")))
+                     .createObjectBuilder()
+                     .add("type", "During")
+                     .add("alias", "B")))
         .build();
 
     final var result = windowsExpressionP.parse(json).getSuccessOrThrow();
@@ -518,6 +519,24 @@ public final class ConstraintParsersTest {
   }
 
   @Test
+  public void testInstanceCardinality() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("type", "InstanceCardinality")
+        .add("activityType", "TypeA")
+        .add("minimum", 0)
+        .add("maximum", 1)
+        .build();
+
+    final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
+
+    final var expected = new InstanceCardinality("TypeA", 0, 1);
+
+    assertEquivalent(expected, result);
+
+  }
+
+  @Test
   public void testParseMassiveExpression() {
     var json = Json
         .createObjectBuilder()
@@ -535,55 +554,55 @@ public final class ConstraintParsersTest {
                 .add("expressions", Json
                     .createArrayBuilder()
                     .add(Json
-                        .createObjectBuilder()
-                        .add("type", "Or")
-                        .add("expressions", Json
-                            .createArrayBuilder()
-                            .add(Json
-                                .createObjectBuilder()
-                                .add("type", "Not")
-                                .add("expression", Json
-                                    .createObjectBuilder()
-                                    .add("type", "LessThan")
-                                    .add("left", Json
-                                        .createObjectBuilder()
-                                        .add("type", "Times")
-                                        .add("profile", Json
-                                            .createObjectBuilder()
-                                            .add("type", "RealResource")
-                                            .add("name", "ResC"))
-                                        .add("multiplier", 2.0))
-                                    .add("right", Json
-                                        .createObjectBuilder()
-                                        .add("type", "RealParameter")
-                                        .add("alias", "A")
-                                        .add("name", "a"))))
-                            .add(Json
-                                .createObjectBuilder()
-                                .add("type", "Equal")
-                                .add("left", Json
-                                    .createObjectBuilder()
-                                    .add("type", "DiscreteValue")
-                                    .add("value", false))
-                                .add("right", Json
-                                    .createObjectBuilder()
-                                    .add("type", "DiscreteParameter")
-                                    .add("alias", "B")
-                                    .add("name", "b")))))
+                             .createObjectBuilder()
+                             .add("type", "Or")
+                             .add("expressions", Json
+                                 .createArrayBuilder()
+                                 .add(Json
+                                          .createObjectBuilder()
+                                          .add("type", "Not")
+                                          .add("expression", Json
+                                              .createObjectBuilder()
+                                              .add("type", "LessThan")
+                                              .add("left", Json
+                                                  .createObjectBuilder()
+                                                  .add("type", "Times")
+                                                  .add("profile", Json
+                                                      .createObjectBuilder()
+                                                      .add("type", "RealResource")
+                                                      .add("name", "ResC"))
+                                                  .add("multiplier", 2.0))
+                                              .add("right", Json
+                                                  .createObjectBuilder()
+                                                  .add("type", "RealParameter")
+                                                  .add("alias", "A")
+                                                  .add("name", "a"))))
+                                 .add(Json
+                                          .createObjectBuilder()
+                                          .add("type", "Equal")
+                                          .add("left", Json
+                                              .createObjectBuilder()
+                                              .add("type", "DiscreteValue")
+                                              .add("value", false))
+                                          .add("right", Json
+                                              .createObjectBuilder()
+                                              .add("type", "DiscreteParameter")
+                                              .add("alias", "B")
+                                              .add("name", "b")))))
                     .add(Json
-                        .createObjectBuilder()
-                        .add("type", "Not")
-                        .add("expression", Json
-                            .createObjectBuilder()
-                            .add("type", "During")
-                            .add("alias", "A")))
+                             .createObjectBuilder()
+                             .add("type", "Not")
+                             .add("expression", Json
+                                 .createObjectBuilder()
+                                 .add("type", "During")
+                                 .add("alias", "A")))
                     .add(Json
-                        .createObjectBuilder()
-                        .add("type", "Not")
-                        .add("expression", Json
-                            .createObjectBuilder()
-                            .add("type", "During")
-                            .add("alias", "B"))))))
+                             .createObjectBuilder()
+                             .add("type", "Not")
+                             .add("expression", Json
+                                 .createObjectBuilder()
+                                 .add("type", "During")
+                                 .add("alias", "B"))))))
         .build();
     final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
 
