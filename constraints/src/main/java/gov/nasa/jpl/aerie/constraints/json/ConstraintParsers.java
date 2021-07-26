@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Expression;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
+import gov.nasa.jpl.aerie.constraints.tree.InstanceCardinality;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
 import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
@@ -120,11 +121,11 @@ public final class ConstraintParsers {
           .map(uncurry2(type -> value -> new RealValue(value)));
 
   private static JsonParser<Expression<LinearProfile>> plusF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
-      return productP
-          .field("type", literalP("Plus"))
-          .field("left", linearProfileExpressionP)
-          .field("right", linearProfileExpressionP)
-          .map(uncurry3(type -> left -> right -> new Plus(left, right)));
+    return productP
+        .field("type", literalP("Plus"))
+        .field("left", linearProfileExpressionP)
+        .field("right", linearProfileExpressionP)
+        .map(uncurry3(type -> left -> right -> new Plus(left, right)));
   }
 
   private static JsonParser<Expression<LinearProfile>> timesF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
@@ -206,11 +207,11 @@ public final class ConstraintParsers {
   }
 
   private static final JsonParser<Expression<Windows>> lessThanP =
-    productP
-        .field("type", literalP("LessThan"))
-        .field("left", linearProfileExprP)
-        .field("right", linearProfileExprP)
-        .map(uncurry3(type -> left -> right -> new LessThan(left, right)));
+      productP
+          .field("type", literalP("LessThan"))
+          .field("left", linearProfileExprP)
+          .field("right", linearProfileExprP)
+          .map(uncurry3(type -> left -> right -> new LessThan(left, right)));
 
   private static final JsonParser<Expression<Windows>> lessThanOrEqualP =
       productP
@@ -322,11 +323,20 @@ public final class ConstraintParsers {
               )
           )));
 
+  private static final JsonParser<Expression<List<Violation>>> instanceCardinalityP =
+      productP
+          .field("type", literalP("InstanceCardinality"))
+          .field("activityType", stringP)
+          .field("minimum", longP)
+          .field("maximum", longP)
+          .map(uncurry4(type -> activityType -> minimum -> maximum -> new InstanceCardinality(activityType, minimum, maximum)));
+
   static final JsonParser<Expression<List<Violation>>> violationListExpressionP =
       recursiveP(selfP -> chooseP(
           forEachActivityF(selfP),
           windowsExpressionP.map(ViolationsOf::new),
-          forbiddenActivityOverlapP));
+          forbiddenActivityOverlapP,
+          instanceCardinalityP));
 
   public static final JsonParser<Expression<List<Violation>>> constraintP = violationListExpressionP;
 }
