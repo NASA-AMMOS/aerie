@@ -36,7 +36,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstan
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.serializedParameterP;
+import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
@@ -542,7 +542,7 @@ public final class MerlinBindings implements Plugin {
       final var adaptationId = ctx.pathParam("adaptationId");
       final var activityTypeId = ctx.pathParam("activityTypeId");
 
-      final var activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
+      final var activityParameters = parseJson(ctx.body(), mapP(serializedValueP));
       final var serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
       final var failures = this.adaptationService.validateActivityParameters(adaptationId, serializedActivity);
@@ -659,7 +659,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var requestJson = Json.createReader(new StringReader(subject)).readValue();
       final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow(() -> new InvalidEntityException(List.of(result.failureReason())));
+      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
     } catch (JsonParsingException e) {
       throw new InvalidJsonException(e);
     }

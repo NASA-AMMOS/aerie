@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class StartOf implements Expression<Windows> {
-  private final String activityAlias;
+  public final String activityAlias;
 
   public StartOf(final String activityAlias) {
     this.activityAlias = activityAlias;

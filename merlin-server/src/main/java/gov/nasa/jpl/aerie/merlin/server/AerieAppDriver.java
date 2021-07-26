@@ -133,6 +133,6 @@ public final class AerieAppDriver {
 
     // Read and process the configuration source.
     final var config = (JsonObject)(Json.createReader(configStream).readValue());
-    return AppConfigurationJsonMapper.fromJson(config).orElseThrow();
+    return AppConfigurationJsonMapper.fromJson(config);
   }
 }

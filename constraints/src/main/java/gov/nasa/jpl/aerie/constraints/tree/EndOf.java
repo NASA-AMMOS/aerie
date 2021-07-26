@@ -10,7 +10,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class EndOf implements Expression<Windows> {
-  private final String activityAlias;
+  public final String activityAlias;
 
   public EndOf(final String activityAlias) {
     this.activityAlias = activityAlias;

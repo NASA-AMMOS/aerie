@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class DiscreteValue implements Expression<DiscreteProfile> {
-  private final SerializedValue value;
+  public final SerializedValue value;
 
   public DiscreteValue(final SerializedValue value) {
     this.value = value;

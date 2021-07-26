@@ -24,6 +24,10 @@ public class Timestamp {
     time = LocalDateTime.parse(timestamp, format).atZone(ZoneOffset.UTC);
   }
 
+  public Timestamp(Instant instant) {
+    time = instant.atZone(ZoneOffset.UTC);
+  }
+
   public static Timestamp fromString(String timestamp) throws DateTimeParseException {
     return new Timestamp(timestamp);
   }

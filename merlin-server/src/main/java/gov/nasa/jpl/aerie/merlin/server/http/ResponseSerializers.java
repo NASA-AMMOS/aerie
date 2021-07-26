@@ -393,8 +393,8 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeFailureReason(final FailureReason failure) {
     return Json.createObjectBuilder()
-               .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeParseFailureBreadcrumb, failure.breadcrumbs))
-               .add("message", failure.reason)
+               .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeParseFailureBreadcrumb, failure.breadcrumbs()))
+               .add("message", failure.reason())
                .build();
   }
 
