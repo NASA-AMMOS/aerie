@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +21,7 @@ import java.util.Set;
 import static gov.nasa.jpl.aerie.constraints.Assertions.assertEquivalent;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
+import static gov.nasa.jpl.aerie.merlin.protocol.Duration.HOURS;
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
 import static org.junit.Assert.fail;
 
@@ -212,7 +214,7 @@ public class ASTTests {
             "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
             "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
             "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
-            )
+        )
     );
 
     final var result = new RealResource("real2").evaluate(simResults, Map.of());
@@ -248,20 +250,20 @@ public class ASTTests {
 
   @Test
   public void testRealResourceFailureOnDiscrete() {
-      final var simResults = new SimulationResults(
-          Window.between(0, 20, SECONDS),
-          List.of(),
-          Map.of(
-              "real1", new LinearProfile(new LinearProfilePiece(Window.at(1, SECONDS), 0, 1)),
-              "real2", new LinearProfile(new LinearProfilePiece(Window.at(2, SECONDS), 0, 1)),
-              "real3", new LinearProfile(new LinearProfilePiece(Window.at(3, SECONDS), 0, 1))
-          ),
-          Map.of(
-              "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
-              "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
-              "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
-          )
-      );
+    final var simResults = new SimulationResults(
+        Window.between(0, 20, SECONDS),
+        List.of(),
+        Map.of(
+            "real1", new LinearProfile(new LinearProfilePiece(Window.at(1, SECONDS), 0, 1)),
+            "real2", new LinearProfile(new LinearProfilePiece(Window.at(2, SECONDS), 0, 1)),
+            "real3", new LinearProfile(new LinearProfilePiece(Window.at(3, SECONDS), 0, 1))
+        ),
+        Map.of(
+            "discrete1", new DiscreteProfile(new DiscreteProfilePiece(Window.at(4, SECONDS), SerializedValue.of("one"))),
+            "discrete2", new DiscreteProfile(new DiscreteProfilePiece(Window.at(5, SECONDS), SerializedValue.of(2))),
+            "discrete3", new DiscreteProfile(new DiscreteProfilePiece(Window.at(6, SECONDS), SerializedValue.of("three")))
+        )
+    );
 
     try {
       new RealResource("discrete1").evaluate(simResults, Map.of());
@@ -452,4 +454,45 @@ public class ASTTests {
       return new Supplier<>(value);
     }
   }
+
+  @Test
+  public void testInstanceCardinality() {
+    final var simResults = new SimulationResults(
+        Window.between(0, 100, HOURS),
+        List.of(
+            new ActivityInstance("1",
+                                 "TypeA",
+                                 Map.of(),
+                                 Window.between(3, 10, HOURS)
+            ),
+            new ActivityInstance("2",
+                                 "TypeA",
+                                 Map.of(),
+                                 Window.between(50, 60, HOURS)
+            )
+        ),
+        Map.of(),
+        Map.of()
+    );
+
+    //Test for cardinality < minimum
+    final var result1 = new InstanceCardinality("TypeA", 3, 5).evaluate(simResults);
+    final var expected1 = List.of(new Violation(new Windows(Window.between(0, 100, HOURS))));
+    assertEquivalent(expected1, result1);
+
+    //Test for cardinality satisfied
+    final var result2 = new InstanceCardinality("TypeA", 2, 3).evaluate(simResults);
+    final var expected2 = Collections.<Violation>emptyList();
+    assertEquivalent(expected2, result2);
+
+    //Test for cardinality > maximum
+    final var result3 = new InstanceCardinality("TypeA", 0, 1).evaluate(simResults);
+    final var expected3 = List.of(new Violation(new Windows(Window.between(3, 60, HOURS))));
+    assertEquivalent(expected3, result3);
+
+
+  }
+
+
+
 }
