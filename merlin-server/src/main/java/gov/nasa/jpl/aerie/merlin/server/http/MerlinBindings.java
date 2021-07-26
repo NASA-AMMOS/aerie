@@ -23,12 +23,14 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
@@ -139,6 +141,8 @@ public final class MerlinBindings implements Plugin {
 
       path("files", () -> {
         get(this::getAvailableFilePaths);
+        post(this::postFile);
+        delete(this::deleteFile);
       });
     });
 
@@ -523,6 +527,31 @@ public final class MerlinBindings implements Plugin {
       ctx.result(ResponseSerializers.serializeStringList(files).toString());
     } catch (final IOException ex) {
       ctx.status(500);
+    }
+  }
+
+  private void postFile(final Context ctx) {
+    final var file = ctx.uploadedFile("file");
+    if (file == null) {
+      ctx.status(400);
+      return;
+    }
+
+    try {
+      this.adaptationService.createFile(file.getFilename(), file.getContent());
+      ctx.status(200);
+    } catch (final IOException ex) {
+      ctx.status(500);
+    }
+  }
+
+  private void deleteFile(final Context ctx) {
+    try {
+      final var path = ctx.queryParam("path");
+      this.adaptationService.deleteFile(path);
+      ctx.status(200);
+    } catch (final IOException ex) {
+      ctx.status(404);
     }
   }
 

@@ -20,11 +20,14 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -247,6 +250,24 @@ public final class LocalAdaptationService implements AdaptationService {
         .list(missionModelDataPath)
         .map(missionModelDataPath::relativize)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public void createFile(final String filename, final InputStream content) throws IOException {
+    final var path = missionModelDataPath.resolve(filename).toAbsolutePath().normalize();
+    if (!path.startsWith(missionModelDataPath.toAbsolutePath())) { // Only allow sub-paths
+      throw new FileNotFoundException(path.toString());
+    }
+    Files.copy(content, path, StandardCopyOption.REPLACE_EXISTING);
+  }
+
+  @Override
+  public void deleteFile(final String filename) throws IOException {
+    final var path = missionModelDataPath.resolve(filename).toAbsolutePath().normalize();
+    if (!path.startsWith(missionModelDataPath.toAbsolutePath())) { // Only allow sub-paths
+      throw new FileNotFoundException(path.toString());
+    }
+    Files.delete(path);
   }
 
   private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)
