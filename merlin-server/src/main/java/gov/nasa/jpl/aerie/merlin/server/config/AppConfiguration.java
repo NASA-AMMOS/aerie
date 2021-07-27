@@ -8,13 +8,16 @@ public record AppConfiguration (
     int httpPort,
     JavalinLoggingState javalinLogging,
     Optional<Path> missionModelConfigPath,
-    String missionModelDataPath,
+    Path merlinFileStore,
     Store store
 ) {
   public AppConfiguration {
     Objects.requireNonNull(javalinLogging);
     Objects.requireNonNull(missionModelConfigPath);
-    Objects.requireNonNull(missionModelDataPath);
+    Objects.requireNonNull(merlinFileStore);
     Objects.requireNonNull(store);
   }
+
+  public Path merlinJarsPath() { return merlinFileStore.resolve("jars"); }
+  public Path merlinFilesPath() { return merlinFileStore.resolve("files"); }
 }

@@ -43,11 +43,11 @@ public final class AerieAppDriver {
   public static void main(final String[] args) {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration(args);
-    final var stores = loadStores(configuration.store());
+    final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, Path.of(configuration.missionModelDataPath()), stores.adaptations());
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, configuration.merlinFilesPath(), stores.adaptations());
     final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
@@ -74,8 +74,9 @@ public final class AerieAppDriver {
 
   private record Stores (PlanRepository plans, AdaptationRepository adaptations, ResultsCellRepository results) {}
 
-  private static Stores loadStores(final Store config) {
-    if (config instanceof MongoStore c) {
+  private static Stores loadStores(final AppConfiguration config) {
+    final var store = config.store();
+    if (store instanceof MongoStore c) {
       final var mongoDatabase = MongoClients
           .create(c.uri().toString())
           .getDatabase(c.database());
@@ -86,13 +87,14 @@ public final class AerieAppDriver {
               c.planCollection(),
               c.activityCollection()),
           new MongoAdaptationRepository(
+              config.merlinJarsPath(),
               mongoDatabase,
               c.adaptationCollection()),
           new MongoResultsCellRepository(
               mongoDatabase,
               c.simulationResultsCollection()));
     } else {
-      throw new UnexpectedSubtypeError(Store.class, config);
+      throw new UnexpectedSubtypeError(Store.class, store);
     }
   }
 

@@ -35,26 +35,26 @@ public final class AppConfigurationJsonMapper {
     return configP.unparse(config);
   }
 
-  private record Server(int port, JavalinLoggingState loggingState, Optional<Path> modelConfigPath, String modelDataPath) {}
+  private record Server(int port, JavalinLoggingState loggingState, Optional<Path> modelConfigPath, Path merlinFileStore) {}
   private static final JsonParser<Server> serverP =
       productP
           .field("port", intP)
           .optionalField("logging", boolP)
           .optionalField("model-config", pathP)
-          .field("model-data", stringP)
+          .field("file-store", pathP)
           .map(Iso.of(
-              uncurry4(port -> logging -> modelConfig -> modelData -> new Server(
+              uncurry4(port -> logging -> modelConfig -> merlinFileStorePath -> new Server(
                   port,
                   logging.orElse(false)
                       ? JavalinLoggingState.Enabled
                       : JavalinLoggingState.Disabled,
                   modelConfig,
-                  modelData)),
+                  merlinFileStorePath)),
               $ -> tuple4(
                   $.port(),
                   Optional.of($.loggingState() == JavalinLoggingState.Enabled),
                   $.modelConfigPath(),
-                  $.modelDataPath())));
+                  $.merlinFileStore)));
 
   private record Collections(String plans, String activities, String missionModels, String results) {}
   private static final JsonParser<Collections> mongoCollectionsP =
@@ -103,10 +103,10 @@ public final class AppConfigurationJsonMapper {
                   server.port(),
                   server.loggingState(),
                   server.modelConfigPath(),
-                  server.modelDataPath(),
+                  server.merlinFileStore(),
                   store)),
               $ -> tuple2(
-                  new Server($.httpPort(), $.javalinLogging(), $.missionModelConfigPath(), $.missionModelDataPath()),
+                  new Server($.httpPort(), $.javalinLogging(), $.missionModelConfigPath(), $.merlinFileStore()),
                   $.store())));
 
   public static final class UriJsonParser implements JsonParser<URI> {

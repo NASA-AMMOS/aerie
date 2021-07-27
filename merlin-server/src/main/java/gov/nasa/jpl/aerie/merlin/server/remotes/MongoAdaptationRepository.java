@@ -23,13 +23,15 @@ import java.util.stream.StreamSupport;
 import static com.mongodb.client.model.Filters.eq;
 
 public final class MongoAdaptationRepository implements AdaptationRepository {
-    private final Path ADAPTATION_FILE_PATH = Path.of("adaptation_files").toAbsolutePath();
+    private final Path adaptationJarsPath;
     private final MongoCollection<Document> adaptationCollection;
 
     public MongoAdaptationRepository(
+            final Path adaptationJarsPath,
             final MongoDatabase database,
             final String adaptationCollectionName
     ) {
+        this.adaptationJarsPath = adaptationJarsPath;
         this.adaptationCollection = database.getCollection(adaptationCollectionName);
     }
 
@@ -91,7 +93,7 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
     @Override
     public String createAdaptation(final AdaptationJar adaptationJar) {
         // Store Adaptation JAR
-        final Path location = FileUtils.getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
+        final Path location = FileUtils.getUniqueFilePath(adaptationJar, adaptationJarsPath);
         try {
             Files.createDirectories(location.getParent());
             Files.copy(adaptationJar.path, location);
