@@ -12,6 +12,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
@@ -199,5 +202,15 @@ public final class StubAdaptationService implements AdaptationService {
   @Override
   public List<Path> getAvailableFilePaths() {
     return List.of();
+  }
+
+  @Override
+  public void createFile(final String filename, final InputStream content) throws FileNotFoundException
+  {
+  }
+
+  @Override
+  public void deleteFile(final String path) throws FileNotFoundException
+  {
   }
 }
