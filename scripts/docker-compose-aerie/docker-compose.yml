@@ -6,7 +6,7 @@ services:
     ports: ["27183:27183"]
     restart: always
     volumes:
-      - adaptation_files:/usr/src/app/adaptation_files
+      - merlin_file_store:/usr/src/app/merlin_file_store
   merlin_mongo:
     command: ["mongod", "--port", "27020", "--smallfiles"]
     image: mongo:3.2
@@ -30,6 +30,6 @@ services:
     volumes: ["postgres_data:/var/lib/postgresql/data"]
 
 volumes:
-  adaptation_files:
+  merlin_file_store:
   merlin_mongo_data:
   postgres_data:
