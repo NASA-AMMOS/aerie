@@ -10,6 +10,8 @@ import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,7 @@ public interface AdaptationService {
   SimulationResults runSimulation(CreateSimulationMessage message)
           throws NoSuchAdaptationException, AdaptationFacade.NoSuchActivityTypeException,
                  SimulationDriver.TaskSpecInstantiationException;
+  List<Path> getAvailableFilePaths() throws IOException;
 
   class AdaptationRejectedException extends Exception {
     public AdaptationRejectedException(final String message) { super(message); }

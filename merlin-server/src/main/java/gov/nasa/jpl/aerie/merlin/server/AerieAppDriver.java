@@ -45,7 +45,7 @@ public final class AerieAppDriver {
 
     // Assemble the core non-web object graph.
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, stores.adaptations());
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, Path.of(configuration.missionModelDataPath()), stores.adaptations());
     final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,6 +56,7 @@ public abstract class ValueSchema {
     T onBoolean();
     T onString();
     T onDuration();
+    T onPath();
     T onSeries(ValueSchema value);
     T onStruct(Map<String, ValueSchema> value);
     T onVariant(List<Variant> variants);
@@ -131,6 +133,20 @@ public abstract class ValueSchema {
   }
 
   /**
+   * Creates a {@link ValueSchema} representing a {@link Path} type.
+   *
+   * @return A new {@link ValueSchema} representing a {@link Path} type.
+   */
+  private static ValueSchema ofPath() {
+    return new ValueSchema() {
+      @Override
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onPath();
+      }
+    };
+  }
+
+  /**
    * Creates a {@link ValueSchema} representing a homogeneous list of elements matching
    *   the provided {@link ValueSchema}s.
    *
@@ -184,6 +200,7 @@ public abstract class ValueSchema {
   public static final ValueSchema BOOLEAN = ofBoolean();
   public static final ValueSchema STRING = ofString();
   public static final ValueSchema DURATION = ofDuration();
+  public static final ValueSchema PATH = ofPath();
 
   /**
    * Provides a default case on top of the base Visitor.
@@ -218,6 +235,11 @@ public abstract class ValueSchema {
 
     @Override
     public T onString() {
+      return this.onDefault();
+    }
+
+    @Override
+    public T onPath() {
       return this.onDefault();
     }
 
@@ -332,6 +354,21 @@ public abstract class ValueSchema {
   }
 
   /**
+   * Asserts that this object represents a Path.
+   *
+   * @return A non-empty {@link Optional} if this object represents a Path.
+   *   Otherwise, returns an empty {@link Optional}.
+   */
+  public Optional<Unit> asPath() {
+    return this.match(new OptionalVisitor<>() {
+      @Override
+      public Optional<Unit> onPath() {
+        return Optional.of(Unit.UNIT);
+      }
+    });
+  }
+
+  /**
    * Attempts to access this schema as a list of {@code ValueSchema}s.
    *
    * @return An {@link Optional} containing a schema for elements of a homogeneous list if this
@@ -405,6 +442,11 @@ public abstract class ValueSchema {
       }
 
       @Override
+      public String onPath() {
+        return "ValueSchema.PATH";
+      }
+
+      @Override
       public String onSeries(final ValueSchema value) {
         return "[" + value + "]";
       }
@@ -450,6 +492,11 @@ public abstract class ValueSchema {
       @Override
       public Boolean onDuration() {
         return other.asDuration().isPresent();
+      }
+
+      @Override
+      public Boolean onPath() {
+        return other.asPath().isPresent();
       }
 
       @Override

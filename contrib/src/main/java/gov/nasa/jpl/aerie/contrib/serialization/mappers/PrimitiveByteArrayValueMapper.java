@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class PrimitiveByteArrayValueMapper implements ValueMapper<byte[]> {
+public final class PrimitiveByteArrayValueMapper implements ValueMapper<byte[]> {
     @Override
     public ValueSchema getValueSchema() {
         return ValueSchema.ofSeries(ValueSchema.INT);

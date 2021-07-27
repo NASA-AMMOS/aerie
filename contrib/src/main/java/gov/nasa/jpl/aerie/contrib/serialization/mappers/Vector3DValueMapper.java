@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class Vector3DValueMapper implements ValueMapper<Vector3D> {
+public final class Vector3DValueMapper implements ValueMapper<Vector3D> {
   private final ValueMapper<Double> componentMapper;
 
   public Vector3DValueMapper(final ValueMapper<Double> componentMapper) {

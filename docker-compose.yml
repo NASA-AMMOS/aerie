@@ -14,6 +14,7 @@ services:
     restart: always
     volumes:
       - adaptation_files:/usr/src/app/adaptation_files
+      - model_data:/usr/src/app/model_data
   postgres:
     image: postgres
     ports: ["5432:5432"]
@@ -32,6 +33,7 @@ services:
     ports: ["27184:27184"]
 
 volumes:
-  adaptation_files:
   merlin_mongo_data:
+  adaptation_files:
+  model_data:
   postgres_data:

@@ -195,4 +195,9 @@ public final class StubAdaptationService implements AdaptationService {
 
     return SUCCESSFUL_SIMULATION_RESULTS;
   }
+
+  @Override
+  public List<Path> getAvailableFilePaths() {
+    return List.of();
+  }
 }

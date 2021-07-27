@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class PrimitiveFloatArrayValueMapper implements ValueMapper<float[]> {
+public final class PrimitiveFloatArrayValueMapper implements ValueMapper<float[]> {
     @Override
     public ValueSchema getValueSchema() {
         return ValueSchema.ofSeries(ValueSchema.REAL);

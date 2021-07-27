@@ -14,6 +14,7 @@ public class AppConfigurationTest {
         7654,
         JavalinLoggingState.Disabled,
         Optional.empty(),
+        "model_data_test",
         new MongoStore(
             URI.create("http://localhost.mongo.test"),
             "mongo_database_test",
