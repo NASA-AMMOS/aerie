@@ -1,12 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.config;
 
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
 public record AppConfiguration (
     int httpPort,
     JavalinLoggingState javalinLogging,
-    Optional<String> missionModelConfigPath,
+    Optional<Path> missionModelConfigPath,
     String missionModelDataPath,
     Store store
 ) {

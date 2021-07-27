@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,11 +19,10 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.json.PathJsonParser.pathP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple2;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple3;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple4;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry2;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
 import static gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper.UriJsonParser.uriP;
 
@@ -35,12 +35,12 @@ public final class AppConfigurationJsonMapper {
     return configP.unparse(config);
   }
 
-  private record Server(int port, JavalinLoggingState loggingState, Optional<String> modelConfigPath, String modelDataPath) {}
+  private record Server(int port, JavalinLoggingState loggingState, Optional<Path> modelConfigPath, String modelDataPath) {}
   private static final JsonParser<Server> serverP =
       productP
           .field("port", intP)
           .optionalField("logging", boolP)
-          .optionalField("model-config", stringP)
+          .optionalField("model-config", pathP)
           .field("model-data", stringP)
           .map(Iso.of(
               uncurry4(port -> logging -> modelConfig -> modelData -> new Server(

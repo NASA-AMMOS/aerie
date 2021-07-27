@@ -103,12 +103,15 @@ public final class AerieAppDriver {
     return () -> configuration.missionModelConfigPath()
         .map(p -> {
           try {
-            final var fs = new FileInputStream(p);
+            final var fs = Files.newInputStream(p);
             final var sv = JsonEncoding.decode(Json.createReader(fs).read());
-            log.info(String.format("Successfully loaded mission model configuration from: %s", p));
+            log.info("Successfully loaded mission model configuration from: %s".formatted(p));
             return sv;
           } catch (final FileNotFoundException ex) {
-            log.warning(String.format("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.", p));
+            log.warning("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.".formatted(p));
+            return SerializedValue.NULL;
+          } catch (final IOException e) {
+            log.warning("Error reading from mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.".formatted(p));
             return SerializedValue.NULL;
           }
         })
@@ -125,7 +128,7 @@ public final class AerieAppDriver {
       try {
         configStream = Files.newInputStream(Path.of(args[0]));
       } catch (final IOException ex) {
-        log.warning(String.format("Configuration file \"%s\" could not be loaded: %s", args[0], ex.getMessage()));
+        log.warning("Configuration file \"%s\" could not be loaded: %s".formatted(args[0], ex.getMessage()));
         System.exit(1);
         throw new Error(ex);
       }
