@@ -15,6 +15,7 @@ public final class Mission {
   public final Register<Flag> flag = Register.create(Flag.A);
   public final Counter<Integer> plant = Counter.ofInteger(200);
   public final Register<String> producer = Register.create("Chiquita");
+  public final Register<Integer> lineCount = Register.create(0);
 
   public Mission(final Registrar registrar) {
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
