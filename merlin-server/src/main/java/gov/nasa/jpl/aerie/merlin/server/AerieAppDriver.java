@@ -28,7 +28,6 @@ import io.javalin.Javalin;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +46,8 @@ public final class AerieAppDriver {
 
     // Assemble the core non-web object graph.
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, configuration.merlinFilesPath(), stores.adaptations());
+    final var missionModelDataPath = makeMissionModelDataPath(configuration);
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, missionModelDataPath, stores.adaptations());
     final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
@@ -87,7 +87,7 @@ public final class AerieAppDriver {
               c.planCollection(),
               c.activityCollection()),
           new MongoAdaptationRepository(
-              config.merlinJarsPath(),
+              makeJarsPath(config),
               mongoDatabase,
               c.adaptationCollection()),
           new MongoResultsCellRepository(
@@ -121,6 +121,22 @@ public final class AerieAppDriver {
           log.warning("No mission model configuration specified in server configuration. Simulations will receive an empty set of configuration arguments.");
           return SerializedValue.NULL;
         });
+  }
+
+  private static Path makeMissionModelDataPath(final AppConfiguration configuration) {
+    try {
+      return Files.createDirectories(configuration.merlinFilesPath());
+    } catch (final IOException ex) {
+      throw new Error("Error creating merlin file store files directory", ex);
+    }
+  }
+
+  private static Path makeJarsPath(final AppConfiguration configuration) {
+    try {
+      return Files.createDirectories(configuration.merlinJarsPath());
+    } catch (final IOException ex) {
+      throw new Error("Error creating merlin file store jars directory", ex);
+    }
   }
 
   private static AppConfiguration loadConfiguration(final String[] args) {
