@@ -85,9 +85,8 @@ Clients may mount the shared directory by making use of a Docker volume:
 ```yaml
 volumes:
   merlin_mongo_data:
-  adaptation_files:
   postgres_data:
-  model_data:
+  merlin_file_store:
     driver: local
     driver_opts:
       type: nfs4
@@ -111,7 +110,7 @@ $ docker inspect 2724af1ec4d2 | grep IPAddress
 The volume may now be attached to an existing service's `volumes` list with:
 ```yaml
 volumes:
-  - model_data:/usr/src/app/data
+  - merlin_file_store:/usr/src/app/data
 ```
 `/usr/src/app/data` will now be the mount location of the shared directory.
 

@@ -17,6 +17,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+/**
+ * A namespace for primitive parsers and essential combinators.
+ *
+ * Non-primitive mappers and niche combinators should be given their own top-level classes.
+ */
 public abstract class BasicParsers {
   private BasicParsers() {}
 

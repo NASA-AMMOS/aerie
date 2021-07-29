@@ -2,7 +2,7 @@
     { "port": 27183,
       "logging": true,
       "model-config": "/usr/src/app/mission_config.json",
-      "model-data": "/usr/src/app/model_data" },
+      "file-store": "/usr/src/app/merlin_file_store" },
   "store":
     { "type": "mongo",
       "uri": "mongodb://merlin_mongo:27020",

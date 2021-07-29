@@ -28,7 +28,6 @@ import io.javalin.Javalin;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,11 +42,12 @@ public final class AerieAppDriver {
   public static void main(final String[] args) {
     // Fetch application configuration properties.
     final var configuration = loadConfiguration(args);
-    final var stores = loadStores(configuration.store());
+    final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
     final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, Path.of(configuration.missionModelDataPath()), stores.adaptations());
+    final var missionModelDataPath = makeMissionModelDataPath(configuration);
+    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, missionModelDataPath, stores.adaptations());
     final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
@@ -74,8 +74,9 @@ public final class AerieAppDriver {
 
   private record Stores (PlanRepository plans, AdaptationRepository adaptations, ResultsCellRepository results) {}
 
-  private static Stores loadStores(final Store config) {
-    if (config instanceof MongoStore c) {
+  private static Stores loadStores(final AppConfiguration config) {
+    final var store = config.store();
+    if (store instanceof MongoStore c) {
       final var mongoDatabase = MongoClients
           .create(c.uri().toString())
           .getDatabase(c.database());
@@ -86,13 +87,14 @@ public final class AerieAppDriver {
               c.planCollection(),
               c.activityCollection()),
           new MongoAdaptationRepository(
+              makeJarsPath(config),
               mongoDatabase,
               c.adaptationCollection()),
           new MongoResultsCellRepository(
               mongoDatabase,
               c.simulationResultsCollection()));
     } else {
-      throw new UnexpectedSubtypeError(Store.class, config);
+      throw new UnexpectedSubtypeError(Store.class, store);
     }
   }
 
@@ -103,12 +105,15 @@ public final class AerieAppDriver {
     return () -> configuration.missionModelConfigPath()
         .map(p -> {
           try {
-            final var fs = new FileInputStream(p);
+            final var fs = Files.newInputStream(p);
             final var sv = JsonEncoding.decode(Json.createReader(fs).read());
-            log.info(String.format("Successfully loaded mission model configuration from: %s", p));
+            log.info("Successfully loaded mission model configuration from: %s".formatted(p));
             return sv;
           } catch (final FileNotFoundException ex) {
-            log.warning(String.format("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.", p));
+            log.warning("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.".formatted(p));
+            return SerializedValue.NULL;
+          } catch (final IOException e) {
+            log.warning("Error reading from mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.".formatted(p));
             return SerializedValue.NULL;
           }
         })
@@ -118,6 +123,22 @@ public final class AerieAppDriver {
         });
   }
 
+  private static Path makeMissionModelDataPath(final AppConfiguration configuration) {
+    try {
+      return Files.createDirectories(configuration.merlinFilesPath());
+    } catch (final IOException ex) {
+      throw new Error("Error creating merlin file store files directory", ex);
+    }
+  }
+
+  private static Path makeJarsPath(final AppConfiguration configuration) {
+    try {
+      return Files.createDirectories(configuration.merlinJarsPath());
+    } catch (final IOException ex) {
+      throw new Error("Error creating merlin file store jars directory", ex);
+    }
+  }
+
   private static AppConfiguration loadConfiguration(final String[] args) {
     // Determine where we're getting our configuration from.
     final InputStream configStream;
@@ -125,7 +146,7 @@ public final class AerieAppDriver {
       try {
         configStream = Files.newInputStream(Path.of(args[0]));
       } catch (final IOException ex) {
-        log.warning(String.format("Configuration file \"%s\" could not be loaded: %s", args[0], ex.getMessage()));
+        log.warning("Configuration file \"%s\" could not be loaded: %s".formatted(args[0], ex.getMessage()));
         System.exit(1);
         throw new Error(ex);
       }

@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.config;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,7 +15,7 @@ public class AppConfigurationTest {
         7654,
         JavalinLoggingState.Disabled,
         Optional.empty(),
-        "model_data_test",
+        Path.of("merlin_file_store"),
         new MongoStore(
             URI.create("http://localhost.mongo.test"),
             "mongo_database_test",
