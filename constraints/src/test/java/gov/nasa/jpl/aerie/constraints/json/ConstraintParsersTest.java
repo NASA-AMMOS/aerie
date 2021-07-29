@@ -529,11 +529,8 @@ public final class ConstraintParsersTest {
         .build();
 
     final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
-
     final var expected = new InstanceCardinality("TypeA", 0, 1);
-
     assertEquivalent(expected, result);
-
   }
 
   @Test

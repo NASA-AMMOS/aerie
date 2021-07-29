@@ -1,16 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.tree;
 
 import gov.nasa.jpl.aerie.constraints.model.ActivityInstance;
-import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
 import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 
-import javax.swing.text.html.Option;
-import javax.xml.datatype.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -71,8 +66,8 @@ public class InstanceCardinality implements Expression<List<Violation>> {
         "\n%s(instance-cardinality %s %s %s)",
         prefix,
         this.activityType,
-        String.valueOf(this.minimum),
-        String.valueOf(this.maximum)
+        this.minimum,
+        this.maximum
     );
   }
 
@@ -93,5 +88,4 @@ public class InstanceCardinality implements Expression<List<Violation>> {
            Objects.equals(this.minimum, o.minimum) &&
            Objects.equals(this.maximum, o.maximum);
   }
-
 }

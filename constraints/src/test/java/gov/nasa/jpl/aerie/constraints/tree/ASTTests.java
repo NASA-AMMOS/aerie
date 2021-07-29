@@ -489,10 +489,5 @@ public class ASTTests {
     final var result3 = new InstanceCardinality("TypeA", 0, 1).evaluate(simResults);
     final var expected3 = List.of(new Violation(new Windows(Window.between(3, 60, HOURS))));
     assertEquivalent(expected3, result3);
-
-
   }
-
-
-
 }
