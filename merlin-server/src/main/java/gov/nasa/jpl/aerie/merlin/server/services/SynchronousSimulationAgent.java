@@ -24,6 +24,7 @@ public record SynchronousSimulationAgent (
     record Success(SimulationResults results) implements Response {}
   }
 
+  @Override
   public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
