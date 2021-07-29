@@ -10,6 +10,10 @@ java {
   }
 }
 
+test {
+  useJUnitPlatform()
+}
+
 application {
   mainClass = 'gov.nasa.jpl.aerie.merlin.server.AerieAppDriver'
   applicationDefaultJvmArgs = ['-Xmx2g']

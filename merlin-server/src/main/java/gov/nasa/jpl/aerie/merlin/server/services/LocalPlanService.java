@@ -9,13 +9,11 @@ import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.PlanTransaction;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 public final class LocalPlanService implements PlanService {
   private final PlanRepository planRepository;
@@ -30,7 +28,7 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public Stream<Pair<String, Plan>> getPlans() {
+  public Map<String, Plan> getPlans() {
     return this.planRepository.getAllPlans();
   }
 
@@ -47,7 +45,7 @@ public final class LocalPlanService implements PlanService {
   @Override
   public String addPlan(final NewPlan plan) throws ValidationException {
     withValidator(validator -> validator.validateNewPlan(plan));
-    return this.planRepository.createPlan(plan);
+    return this.planRepository.createPlan(plan).planId();
   }
 
   @Override

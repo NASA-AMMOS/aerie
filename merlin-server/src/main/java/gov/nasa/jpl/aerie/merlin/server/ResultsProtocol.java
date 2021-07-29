@@ -1,18 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
-import com.mongodb.client.MongoCollection;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoDeserializers;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoSerializers;
-import org.bson.Document;
-import org.bson.types.ObjectId;
-
-import java.util.Objects;
-import java.util.Optional;
-
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.set;
 
 public final class ResultsProtocol {
   private ResultsProtocol() {}
@@ -46,99 +34,5 @@ public final class ResultsProtocol {
     void failWith(String reason);
   }
 
-  public interface OwnerRole extends ReaderRole, WriterRole {
-  }
-
-  public static final class MongoCell implements OwnerRole {
-    private final MongoCollection<Document> collection;
-    public final ObjectId documentId;
-
-    public MongoCell(final MongoCollection<Document> collection, final ObjectId documentId) {
-      this.collection = Objects.requireNonNull(collection);
-      this.documentId = Objects.requireNonNull(documentId);
-    }
-
-    @Override
-    public State get() {
-      final var resultsDocument = Optional
-          .ofNullable(this.collection
-              .find(eq("_id", this.documentId))
-              .first())
-          .orElseThrow(MissingDocumentException::new)
-          .get("state", Document.class);
-
-      return MongoDeserializers.simulationResultsState(resultsDocument);
-    }
-
-    @Override
-    public void cancel() {
-      this.collection.updateOne(eq("_id", this.documentId), set("canceled", true));
-    }
-
-    @Override
-    public boolean isCanceled() {
-      return Optional
-          .ofNullable(this.collection
-              .find(eq("_id", this.documentId))
-              .first())
-          .orElseThrow(MissingDocumentException::new)
-          .getBoolean("canceled");
-    }
-
-    @Override
-    public void succeedWith(final SimulationResults results) {
-      this.collection.updateOne(
-          and(eq("_id", this.documentId)),
-          set("state", MongoSerializers.simulationResultsState(new State.Success(results))));
-    }
-
-    @Override
-    public void failWith(final String reason) {
-      this.collection.updateOne(
-          and(eq("_id", this.documentId)),
-          set("state", MongoSerializers.simulationResultsState(new State.Failed(reason))));
-    }
-
-    public static class MissingDocumentException extends RuntimeException {}
-  }
-
-  public static final class InMemoryCell implements OwnerRole {
-    private volatile boolean canceled = false;
-    private volatile State state = new State.Incomplete();
-
-    @Override
-    public State get() {
-      return this.state;
-    }
-
-    @Override
-    public void cancel() {
-      this.canceled = true;
-    }
-
-    @Override
-    public boolean isCanceled() {
-      return this.canceled;
-    }
-
-    @Override
-    public void succeedWith(final SimulationResults results) {
-      if (!(this.state instanceof State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to success state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
-      }
-
-      this.state = new State.Success(results);
-    }
-
-    @Override
-    public void failWith(final String reason) {
-      if (!(this.state instanceof State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to failed state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
-      }
-
-      this.state = new State.Failed(reason);
-    }
-  }
+  public interface OwnerRole extends ReaderRole, WriterRole {}
 }

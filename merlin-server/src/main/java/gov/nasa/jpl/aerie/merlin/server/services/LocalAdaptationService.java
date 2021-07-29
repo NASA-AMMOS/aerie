@@ -17,7 +17,6 @@ import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
 import io.javalin.core.util.FileUtil;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -59,7 +58,7 @@ public final class LocalAdaptationService implements AdaptationService {
 
   @Override
   public Map<String, AdaptationJar> getAdaptations() {
-    return this.adaptationRepository.getAllAdaptations().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    return this.adaptationRepository.getAllAdaptations();
   }
 
   @Override

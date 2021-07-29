@@ -1,4 +1,6 @@
-package gov.nasa.jpl.aerie.merlin.server;
+package gov.nasa.jpl.aerie.merlin.server.remotes;
+
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 
 import java.util.Optional;
 

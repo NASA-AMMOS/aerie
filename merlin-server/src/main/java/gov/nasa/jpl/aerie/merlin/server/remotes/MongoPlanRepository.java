@@ -18,7 +18,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -58,18 +60,15 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, Plan>> getAllPlans() {
+  public Map<String, Plan> getAllPlans() {
     final var query = this.planCollection.find();
 
     return documentStream(query)
-        .map(planDocument -> {
-          final ObjectId planId = planDocument.getObjectId("_id");
-          final FindIterable<Document> activityDocuments = this.activityCollection.find(
-              activityByPlan(planId));
-          final Plan plan = planFromDocuments(planDocument, activityDocuments);
-
-          return Pair.of(planId.toString(), plan);
-        });
+        .collect(Collectors.toMap(
+            (document) -> document.getObjectId("_id").toString(),
+            (document) -> planFromDocuments(
+                document,
+                this.activityCollection.find(activityByPlan(document.getObjectId("_id"))))));
   }
 
   @Override
@@ -102,13 +101,13 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
 
     return documentStream(this.activityCollection.find(activityByPlan(makePlanObjectId(planId))))
-        .map(document -> Pair.of(
-            document.getObjectId("_id").toString(),
-            activityFromDocument(document)));
+        .collect(Collectors.toMap(
+            (document) -> document.getObjectId("_id").toString(),
+            (document) -> activityFromDocument(document)));
   }
 
   @Override
@@ -127,7 +126,7 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createPlan(final NewPlan plan) {
+  public CreatedPlan createPlan(final NewPlan plan) {
     final String planId;
     {
       final Document planDocument = toDocument(plan);
@@ -135,13 +134,19 @@ public final class MongoPlanRepository implements PlanRepository {
       planId = planDocument.getObjectId("_id").toString();
     }
 
-    if (plan.activityInstances != null) {
+    final List<String> activityIds;
+    if (plan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(plan.activityInstances.size());
       for (final var activity : plan.activityInstances) {
-        this.activityCollection.insertOne(toDocument(planId, activity));
+        final Document activityDocument = toDocument(planId, activity);
+        this.activityCollection.insertOne(activityDocument);
+        activityIds.add(activityDocument.getObjectId("_id").toString());
       }
     }
 
-    return planId;
+    return new CreatedPlan(planId, activityIds);
   }
 
   @Override
@@ -150,7 +155,7 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public void replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
+  public List<String> replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
     final var revisionDoc = this.planCollection
         .find(planById(makePlanObjectId(planId)))
         .projection(new Document("revision", 1))
@@ -165,11 +170,20 @@ public final class MongoPlanRepository implements PlanRepository {
     this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
 
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
-    if (plan.activityInstances != null) {
+
+    final List<String> activityIds;
+    if (plan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(plan.activityInstances.size());
       for (final var activity : plan.activityInstances) {
-        this.activityCollection.insertOne(toDocument(planId, activity));
+        final var activityDocument = toDocument(planId, activity);
+        this.activityCollection.insertOne(activityDocument);
+        activityIds.add(activityDocument.getObjectId("_id").toString());
       }
     }
+
+    return activityIds;
   }
 
   @Override

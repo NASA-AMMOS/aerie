@@ -8,10 +8,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * An owned interface to a concurrency-safe store of plans.
@@ -23,16 +22,16 @@ import java.util.stream.Stream;
  */
 public interface PlanRepository {
   // Queries
-  Stream<Pair<String, Plan>> getAllPlans();
+  Map<String, Plan> getAllPlans();
   Plan getPlan(String id) throws NoSuchPlanException;
   long getPlanRevision(String id) throws NoSuchPlanException;
-  Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
+  Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
   ActivityInstance getActivityInPlanById(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
 
   // Mutations
-  String createPlan(NewPlan plan);
+  CreatedPlan createPlan(NewPlan plan);
   PlanTransaction updatePlan(String id) throws NoSuchPlanException;
-  void replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
+  List<String> replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
 
   String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
@@ -44,6 +43,8 @@ public interface PlanRepository {
   Map<String, Constraint> getAllConstraintsInPlan(String planId) throws NoSuchPlanException;
   void replacePlanConstraints(String planId, Map<String, Constraint> constraints) throws NoSuchPlanException;
   void deleteConstraintInPlanById(String planId, String constraintId) throws NoSuchPlanException;
+
+  record CreatedPlan(String planId, List<String> activityIds) {}
 
   interface PlanTransaction {
     void commit() throws NoSuchPlanException;

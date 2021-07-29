@@ -1,16 +1,16 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
-import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
+import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 public final class StubPlanService implements PlanService {
   public static final String EXISTENT_PLAN_ID = "abc";
@@ -124,8 +123,8 @@ public final class StubPlanService implements PlanService {
   }
 
 
-  public Stream<Pair<String, Plan>> getPlans() {
-    return Stream.of(Pair.of(EXISTENT_PLAN_ID, EXISTENT_PLAN));
+  public Map<String, Plan> getPlans() {
+    return Map.of(EXISTENT_PLAN_ID, EXISTENT_PLAN);
   }
 
   public Plan getPlanById(final String id) throws NoSuchPlanException {

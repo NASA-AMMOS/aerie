@@ -19,19 +19,15 @@ import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -189,9 +185,7 @@ public final class MerlinBindings implements Plugin {
   }
 
   private void getPlans(final Context ctx) {
-    final Map<String, Plan> plans = this.planService
-        .getPlans()
-        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    final Map<String, Plan> plans = this.planService.getPlans();
 
     ctx.result(ResponseSerializers.serializePlanMap(plans).toString());
   }
