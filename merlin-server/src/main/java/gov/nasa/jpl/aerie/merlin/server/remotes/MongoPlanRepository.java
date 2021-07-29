@@ -363,6 +363,7 @@ public final class MongoPlanRepository implements PlanRepository {
     plan.startTimestamp = Timestamp.fromString(planDocument.getString("startTimestamp"));
     plan.endTimestamp = Timestamp.fromString(planDocument.getString("endTimestamp"));
     plan.adaptationId = planDocument.getString("adaptationId");
+    plan.configuration = MongoDeserializers.map(planDocument.get("configuration", Document.class), MongoDeserializers::serializedValue);
     plan.activityInstances = documentStream(activityDocuments)
         .map(doc -> Pair.of(doc.getObjectId("_id").toString(), activityFromDocument(doc)))
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
@@ -398,6 +399,7 @@ public final class MongoPlanRepository implements PlanRepository {
     planDocument.put("endTimestamp", newPlan.endTimestamp.toString());
     planDocument.put("adaptationId", newPlan.adaptationId);
     planDocument.put("constraints", new Document());
+    planDocument.put("configuration", MongoSerializers.map(newPlan.configuration, MongoSerializers::serializedValue));
 
     return planDocument;
   }
@@ -446,6 +448,13 @@ public final class MongoPlanRepository implements PlanRepository {
     @Override
     public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
       this.patch = combine(this.patch, set("endTimestamp", timestamp.toString()));
+      this.notEmpty = true;
+      return this;
+    }
+
+    @Override
+    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration) {
+      this.patch = combine(this.patch, set("configuration", MongoSerializers.map(configuration, MongoSerializers::serializedValue)));
       this.notEmpty = true;
       return this;
     }

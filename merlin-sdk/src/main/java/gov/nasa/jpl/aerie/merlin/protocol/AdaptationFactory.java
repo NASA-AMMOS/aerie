@@ -1,7 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
+import java.util.List;
+
 public interface AdaptationFactory {
   <$Schema> void instantiate(SerializedValue configuration, Builder<$Schema> builder);
+  List<ParameterSchema> getConfigurationSchema();
 
   interface Builder<$Schema> {
     boolean isBuilt();

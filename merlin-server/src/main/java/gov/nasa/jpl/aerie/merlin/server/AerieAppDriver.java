@@ -28,12 +28,10 @@ import io.javalin.Javalin;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public final class AerieAppDriver {
@@ -45,9 +43,8 @@ public final class AerieAppDriver {
     final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
-    final var missionModelConfigGet = makeMissionModelConfigSupplier(configuration);
     final var missionModelDataPath = makeMissionModelDataPath(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelConfigGet, missionModelDataPath, stores.adaptations());
+    final var adaptationController = new LocalAdaptationService(missionModelDataPath, stores.adaptations());
     final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
@@ -96,31 +93,6 @@ public final class AerieAppDriver {
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
     }
-  }
-
-  /** Allows for mission model configuration to be loaded when an adaptation is loaded. */
-  private static Supplier<SerializedValue> makeMissionModelConfigSupplier(final AppConfiguration configuration)
-  {
-    // Try to deserialize JSON configuration to a serialized configuration
-    return () -> configuration.missionModelConfigPath()
-        .map(p -> {
-          try {
-            final var fs = Files.newInputStream(p);
-            final var sv = JsonEncoding.decode(Json.createReader(fs).read());
-            log.info("Successfully loaded mission model configuration from: %s".formatted(p));
-            return sv;
-          } catch (final FileNotFoundException ex) {
-            log.warning("Unable to find mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.".formatted(p));
-            return SerializedValue.NULL;
-          } catch (final IOException e) {
-            log.warning("Error reading from mission model configuration path: \"%s\". Simulations will receive an empty set of configuration arguments.".formatted(p));
-            return SerializedValue.NULL;
-          }
-        })
-        .orElseGet(() -> {
-          log.warning("No mission model configuration specified in server configuration. Simulations will receive an empty set of configuration arguments.");
-          return SerializedValue.NULL;
-        });
   }
 
   private static Path makeMissionModelDataPath(final AppConfiguration configuration) {

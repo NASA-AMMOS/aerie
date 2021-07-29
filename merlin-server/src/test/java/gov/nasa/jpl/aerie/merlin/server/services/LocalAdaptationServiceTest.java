@@ -68,7 +68,9 @@ public final class LocalAdaptationServiceTest {
   }
 
   @Test
-  public void shouldAddPlan() throws ValidationException, NoSuchPlanException {
+  public void shouldAddPlan()
+  throws ValidationException, NoSuchPlanException
+  {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);

@@ -307,6 +307,17 @@ public final class ReplicatedPlanRepository implements PlanRepository {
     }
 
     @Override
+    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration) {
+      this.primaryTransaction.setConfiguration(configuration);
+
+      for (final var secondaryTransaction : this.secondaryTransactions) {
+        secondaryTransaction.setConfiguration(configuration);
+      }
+
+      return this;
+    }
+
+    @Override
     public PlanTransaction setAdaptationId(final String adaptationId) {
       this.primaryTransaction.setAdaptationId(adaptationId);
 

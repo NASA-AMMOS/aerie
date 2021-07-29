@@ -14,7 +14,6 @@ public class AppConfigurationTest {
     final var expected = new AppConfiguration(
         7654,
         JavalinLoggingState.Disabled,
-        Optional.empty(),
         Path.of("merlin_file_store"),
         new MongoStore(
             URI.create("http://localhost.mongo.test"),

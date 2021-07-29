@@ -752,7 +752,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -774,7 +774,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -796,7 +796,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -818,7 +818,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
