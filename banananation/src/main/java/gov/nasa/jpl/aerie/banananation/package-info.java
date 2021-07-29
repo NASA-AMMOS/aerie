@@ -9,6 +9,7 @@
 @WithActivityType(ChangeProducerActivity.class)
 @WithActivityType(ThrowBananaActivity.class)
 @WithActivityType(GrowBananaActivity.class)
+@WithActivityType(LineCountBananaActivity.class)
 @WithActivityType(DecomposingActivity.ParentActivity.class)
 @WithActivityType(DecomposingActivity.ChildActivity.class)
 
@@ -17,6 +18,7 @@ package gov.nasa.jpl.aerie.banananation;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
+import gov.nasa.jpl.aerie.banananation.activities.LineCountBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ParameterTestActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PeelBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.PickBananaActivity;
