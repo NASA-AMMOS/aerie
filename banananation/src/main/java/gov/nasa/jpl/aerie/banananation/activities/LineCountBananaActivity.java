@@ -14,8 +14,8 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Validation;
 public final class LineCountBananaActivity {
 
   @Parameter
-  public Path path = Path.of("/etc/paths"); // TODO Make this a required parameter when required parameters are fully
-                                            //  supported. As a placeholder this defaults to a file that should exist.
+  public Path path = Path.of("/etc/os-release"); // TODO Make this a required parameter when required parameters are fully
+                                                 //  supported. As a placeholder this defaults to a file that should exist.
 
   @Validation("path must exist")
   public boolean validatePath() {
