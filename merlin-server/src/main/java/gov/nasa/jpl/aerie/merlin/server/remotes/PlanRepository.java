@@ -52,6 +52,7 @@ public interface PlanRepository {
     PlanTransaction setName(String name);
     PlanTransaction setStartTimestamp(Timestamp timestamp);
     PlanTransaction setEndTimestamp(Timestamp timestamp);
+    PlanTransaction setConfiguration(Map<String, SerializedValue> configuration);
     PlanTransaction setAdaptationId(String adaptationId);
   }
 

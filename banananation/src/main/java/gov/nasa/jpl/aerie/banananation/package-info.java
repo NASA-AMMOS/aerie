@@ -1,6 +1,9 @@
 @Adaptation(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
+@WithMappers(BananaValueMappers.class)
+
+@WithConfiguration(Configuration.class)
 
 @WithActivityType(BiteBananaActivity.class)
 @WithActivityType(PeelBananaActivity.class)
@@ -28,3 +31,4 @@ import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithMappers;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithConfiguration;

@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -123,6 +124,9 @@ public final class MerlinBindings implements Plugin {
                 post(this::validateActivityParameters);
               });
             });
+          });
+          path("configuration_schema", () -> {
+            get(this::getConfigurationSchema);
           });
           path("constraints", () -> {
             get(this::getConstraints);
@@ -592,6 +596,20 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void getConfigurationSchema(final Context ctx) {
+    try {
+      final var adaptationId = ctx.pathParam("adaptationId");
+
+      final var schema = this.adaptationService.getConfigurationSchema(adaptationId);
+
+      ctx.result(ResponseSerializers.serializeConfigurationSchema(schema).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    } catch (final AdaptationLoader.AdaptationLoadException ex) {
+      ctx.status(500);
     }
   }
 

@@ -89,6 +89,7 @@ public final class MockPlanRepository implements PlanRepository {
     plan.name = newPlan.name;
     plan.startTimestamp = newPlan.startTimestamp;
     plan.endTimestamp = newPlan.endTimestamp;
+    plan.configuration = newPlan.configuration;
     plan.adaptationId = newPlan.adaptationId;
     plan.activityInstances = new HashMap<>();
 
@@ -127,6 +128,7 @@ public final class MockPlanRepository implements PlanRepository {
     plan.name = newPlan.name;
     plan.startTimestamp = newPlan.startTimestamp;
     plan.endTimestamp = newPlan.endTimestamp;
+    plan.configuration = newPlan.configuration;
     plan.adaptationId = newPlan.adaptationId;
     plan.activityInstances = new HashMap<>();
 
@@ -244,6 +246,7 @@ public final class MockPlanRepository implements PlanRepository {
     private Optional<String> name = Optional.empty();
     private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Timestamp> endTimestamp = Optional.empty();
+    private Optional<Map<String, SerializedValue>> configuration = Optional.empty();
     private Optional<String> adaptationId = Optional.empty();
 
     public MockPlanTransaction(final String planId) {
@@ -261,6 +264,7 @@ public final class MockPlanRepository implements PlanRepository {
       this.name.ifPresent(name -> plan.name = name);
       this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
       this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
+      this.configuration.ifPresent(configuration -> plan.configuration = configuration);
       this.adaptationId.ifPresent(adaptationId -> plan.adaptationId = adaptationId);
 
       MockPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
@@ -281,6 +285,13 @@ public final class MockPlanRepository implements PlanRepository {
     @Override
     public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
       this.endTimestamp = Optional.of(timestamp);
+      return this;
+    }
+
+    @Override
+    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration)
+    {
+      this.configuration = Optional.of(configuration);
       return this;
     }
 

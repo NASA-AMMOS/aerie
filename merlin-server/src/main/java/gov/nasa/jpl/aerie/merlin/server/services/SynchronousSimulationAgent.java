@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
@@ -24,6 +25,7 @@ public record SynchronousSimulationAgent (
     record Success(SimulationResults results) implements Response {}
   }
 
+  @Override
   public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
@@ -50,7 +52,8 @@ public record SynchronousSimulationAgent (
           plan.adaptationId,
           plan.startTimestamp.toInstant(),
           planDuration,
-          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances)));
+          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
+          plan.configuration));
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       writer.failWith("adaptation for existing plan does not exist");
       return;

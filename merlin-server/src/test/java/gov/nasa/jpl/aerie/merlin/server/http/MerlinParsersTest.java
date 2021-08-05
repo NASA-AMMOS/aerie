@@ -11,6 +11,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import javax.json.Json;
+import javax.json.JsonValue;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,7 @@ public final class MerlinParsersTest {
                     . build())
                 . build())
             . build())
+        . add("configuration", JsonValue.NULL)
         . build();
 
     final var expected = new CreateSimulationMessage(
@@ -117,7 +119,8 @@ public final class MerlinParsersTest {
                         "str", SerializedValue.of("hi")))
                 ))
             )
-        )
+        ),
+        Map.of()
     );
 
     assertThat(

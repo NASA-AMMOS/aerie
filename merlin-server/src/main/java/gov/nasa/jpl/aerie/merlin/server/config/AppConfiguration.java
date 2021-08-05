@@ -7,13 +7,11 @@ import java.util.Optional;
 public record AppConfiguration (
     int httpPort,
     JavalinLoggingState javalinLogging,
-    Optional<Path> missionModelConfigPath,
     Path merlinFileStore,
     Store store
 ) {
   public AppConfiguration {
     Objects.requireNonNull(javalinLogging);
-    Objects.requireNonNull(missionModelConfigPath);
     Objects.requireNonNull(merlinFileStore);
     Objects.requireNonNull(store);
   }

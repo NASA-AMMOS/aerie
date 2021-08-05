@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
@@ -43,7 +44,9 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public String addPlan(final NewPlan plan) throws ValidationException {
+  public String addPlan(final NewPlan plan)
+  throws ValidationException
+  {
     withValidator(validator -> validator.validateNewPlan(plan));
     return this.planRepository.createPlan(plan).planId();
   }
@@ -62,6 +65,7 @@ public final class LocalPlanService implements PlanService {
     if (patch.name != null) transaction.setName(patch.name);
     if (patch.startTimestamp != null) transaction.setStartTimestamp(patch.startTimestamp);
     if (patch.endTimestamp != null) transaction.setEndTimestamp(patch.endTimestamp);
+    if (patch.configuration != null) transaction.setConfiguration(patch.configuration);
     transaction.commit();
 
     if (patch.activityInstances != null) {

@@ -3,14 +3,15 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
+import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.io.InputStream;
@@ -41,6 +42,8 @@ public interface AdaptationService {
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
   List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
   throws NoSuchAdaptationException;
+  List<ParameterSchema> getConfigurationSchema(String adaptationId)
+  throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
           throws NoSuchAdaptationException, AdaptationFacade.NoSuchActivityTypeException,

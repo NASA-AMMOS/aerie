@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Uncurry;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
@@ -32,6 +33,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry5;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry6;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 public abstract class MerlinParsers {
@@ -101,10 +103,11 @@ public abstract class MerlinParsers {
       . field("startTimestamp", timestampP)
       . field("endTimestamp", timestampP)
       . optionalField("activityInstances", listP(activityInstanceP))
+      . optionalField("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry5(name -> adaptationId -> startTimestamp -> endTimestamp -> activityInstances ->
-              new NewPlan(name, adaptationId, startTimestamp, endTimestamp, activityInstances.orElse(List.of()))),
-          $ -> Uncurry.tuple5($.name, $.adaptationId, $.startTimestamp, $.endTimestamp, Optional.of($.activityInstances))));
+          uncurry6(name -> adaptationId -> startTimestamp -> endTimestamp -> activityInstances -> configuration ->
+              new NewPlan(name, adaptationId, startTimestamp, endTimestamp, activityInstances.orElse(List.of()), configuration.orElse(Map.of()))),
+          $ -> Uncurry.tuple6($.name, $.adaptationId, $.startTimestamp, $.endTimestamp, Optional.of($.activityInstances), Optional.of($.configuration))));
 
   public static final JsonParser<Plan> planPatchP
       = productP
@@ -113,20 +116,23 @@ public abstract class MerlinParsers {
       . optionalField("startTimestamp", timestampP)
       . optionalField("endTimestamp", timestampP)
       . optionalField("activityInstances", mapP(activityInstanceP))
+      . optionalField("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry5(name -> adaptationId -> startTimestamp -> endTimestamp -> activityInstances ->
+          uncurry6(name -> adaptationId -> startTimestamp -> endTimestamp -> activityInstances -> configuration ->
               new Plan(
                   name.orElse(null),
                   adaptationId.orElse(null),
                   startTimestamp.orElse(null),
                   endTimestamp.orElse(null),
-                  activityInstances.orElse(null))),
-          $ -> Uncurry.tuple5(
+                  activityInstances.orElse(null),
+                  configuration.orElse(Map.of()))),
+          $ -> Uncurry.tuple6(
               Optional.ofNullable($.name),
               Optional.ofNullable($.adaptationId),
               Optional.ofNullable($.startTimestamp),
               Optional.ofNullable($.endTimestamp),
-              Optional.ofNullable($.activityInstances))));
+              Optional.ofNullable($.activityInstances),
+              Optional.ofNullable($.configuration))));
 
   public static final JsonParser<Pair<Duration, SerializedActivity>> scheduledActivityP
       = productP
@@ -144,10 +150,11 @@ public abstract class MerlinParsers {
       . field("startTime", timestampP.map(Iso.of(Timestamp::toInstant, Timestamp::new)))
       . field("samplingDuration", durationP)
       . field("activities", mapP(scheduledActivityP))
+      . field("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry4(adaptationId -> startTime -> samplingDuration -> activities ->
-              new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities)),
-          $ -> Uncurry.tuple4($.adaptationId, $.startTime, $.samplingDuration, $.activityInstances)));
+          uncurry5(adaptationId -> startTime -> samplingDuration -> activities -> configuration ->
+              new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities, configuration)),
+          $ -> Uncurry.tuple5($.adaptationId(), $.startTime(), $.samplingDuration(), $.activityInstances(), $.configuration())));
 
   public static final JsonParser<Constraint> constraintP
       = productP

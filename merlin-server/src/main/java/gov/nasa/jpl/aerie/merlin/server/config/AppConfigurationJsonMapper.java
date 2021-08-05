@@ -21,8 +21,10 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.PathJsonParser.pathP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple2;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple3;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple4;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry2;
+import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
 import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
 import static gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper.UriJsonParser.uriP;
 
@@ -35,25 +37,22 @@ public final class AppConfigurationJsonMapper {
     return configP.unparse(config);
   }
 
-  private record Server(int port, JavalinLoggingState loggingState, Optional<Path> modelConfigPath, Path merlinFileStore) {}
+  private record Server(int port, JavalinLoggingState loggingState, Path merlinFileStore) {}
   private static final JsonParser<Server> serverP =
       productP
           .field("port", intP)
           .optionalField("logging", boolP)
-          .optionalField("model-config", pathP)
           .field("file-store", pathP)
           .map(Iso.of(
-              uncurry4(port -> logging -> modelConfig -> merlinFileStorePath -> new Server(
+              uncurry3(port -> logging -> merlinFileStorePath -> new Server(
                   port,
                   logging.orElse(false)
                       ? JavalinLoggingState.Enabled
                       : JavalinLoggingState.Disabled,
-                  modelConfig,
                   merlinFileStorePath)),
-              $ -> tuple4(
+              $ -> tuple3(
                   $.port(),
                   Optional.of($.loggingState() == JavalinLoggingState.Enabled),
-                  $.modelConfigPath(),
                   $.merlinFileStore)));
 
   private record Collections(String plans, String activities, String missionModels, String results) {}
@@ -102,11 +101,10 @@ public final class AppConfigurationJsonMapper {
               uncurry2(server -> store -> new AppConfiguration(
                   server.port(),
                   server.loggingState(),
-                  server.modelConfigPath(),
                   server.merlinFileStore(),
                   store)),
               $ -> tuple2(
-                  new Server($.httpPort(), $.javalinLogging(), $.missionModelConfigPath(), $.merlinFileStore()),
+                  new Server($.httpPort(), $.javalinLogging(), $.merlinFileStore()),
                   $.store())));
 
   public static final class UriJsonParser implements JsonParser<URI> {

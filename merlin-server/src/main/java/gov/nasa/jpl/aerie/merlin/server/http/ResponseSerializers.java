@@ -116,7 +116,7 @@ public final class ResponseSerializers {
     return parameter.match(new ParameterSerializationVisitor());
   }
 
-  public static JsonValue serializeActivityParameterMap(final Map<String, SerializedValue> fields) {
+  public static JsonValue serializeArgumentMap(final Map<String, SerializedValue> fields) {
     return serializeMap(ResponseSerializers::serializeActivityParameter, fields);
   }
 
@@ -126,7 +126,7 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
         .add("type", serializeString(activityInstance.type))
         .add("startTimestamp", serializeTimestamp(activityInstance.startTimestamp))
-        .add("parameters", serializeActivityParameterMap(activityInstance.parameters))
+        .add("parameters", serializeArgumentMap(activityInstance.parameters))
         .build();
   }
 
@@ -146,6 +146,7 @@ public final class ResponseSerializers {
         .add("adaptationId", serializeString(plan.adaptationId))
         .add("startTimestamp", serializeTimestamp(plan.startTimestamp))
         .add("endTimestamp", serializeTimestamp(plan.endTimestamp))
+        .add("configuration", serializeArgumentMap(plan.configuration))
         .add("activityInstances", serializeActivityInstanceMap(plan.activityInstances))
         .build();
   }
@@ -177,7 +178,7 @@ public final class ResponseSerializers {
     return Json
         .createObjectBuilder()
         .add("type", simulatedActivity.type)
-        .add("parameters", serializeActivityParameterMap(simulatedActivity.parameters))
+        .add("parameters", serializeArgumentMap(simulatedActivity.parameters))
         .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
@@ -256,13 +257,20 @@ public final class ResponseSerializers {
   public static JsonValue serializeActivityType(final ActivityType activityType) {
     return Json
         .createObjectBuilder()
-        .add("parameters", gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeParameterSchemas(activityType.parameters))
-        .add("defaults", serializeActivityParameterMap(activityType.defaults))
+        .add("parameters", ResponseSerializers.serializeParameterSchemas(activityType.parameters))
+        .add("defaults", serializeArgumentMap(activityType.defaults))
         .build();
   }
 
   public static JsonValue serializeActivityTypes(final Map<String, ActivityType> activityTypes) {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
+  }
+
+  public static JsonValue serializeConfigurationSchema(final List<ParameterSchema> parameterSchemas) {
+    return Json
+        .createObjectBuilder()
+        .add("parameters", ResponseSerializers.serializeParameterSchemas(parameterSchemas))
+        .build();
   }
 
   public static JsonValue serializeConstraints(Map<String, Constraint> constraints) {

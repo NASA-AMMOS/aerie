@@ -20,6 +20,8 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
+import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -1153,6 +1155,28 @@ public final class AdaptationProcessor implements Processor {
                         adaptation.getTypesName(),
                         "registrar",
                         "model")
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getConfigurationSchema")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(List.class, ParameterSchema.class))
+                    .addCode(
+                        adaptation.modelConfiguration
+                            .map(configElem -> CodeBlock  // if configuration is provided
+                                .builder()
+                                .addStatement("return $L.getValueSchema().asStruct().map(parameterMap ->\n"+
+                                              "parameterMap.keySet().stream().map(name -> new $T(name, parameterMap.get(name))).toList())\n"+
+                                              ".orElse($T.of())",
+                                    buildConfigurationMapperBlock(adaptation, configElem),
+                                    ParameterSchema.class,
+                                    List.class)
+                                .build())
+                            .orElse(CodeBlock
+                                .builder()
+                                .addStatement("return $T.of()", List.class)
+                                .build()))
                     .build())
             .build();
 
