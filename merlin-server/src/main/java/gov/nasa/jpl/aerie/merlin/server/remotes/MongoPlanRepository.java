@@ -363,7 +363,11 @@ public final class MongoPlanRepository implements PlanRepository {
     plan.startTimestamp = Timestamp.fromString(planDocument.getString("startTimestamp"));
     plan.endTimestamp = Timestamp.fromString(planDocument.getString("endTimestamp"));
     plan.adaptationId = planDocument.getString("adaptationId");
-    plan.configuration = MongoDeserializers.map(planDocument.get("configuration", Document.class), MongoDeserializers::serializedValue);
+
+    // Allow for nonexistent "configuration" document to support older schemas
+    final var configDocument = planDocument.get("configuration", Document.class);
+    if (configDocument != null) plan.configuration = MongoDeserializers.map(configDocument, MongoDeserializers::serializedValue);
+
     plan.activityInstances = documentStream(activityDocuments)
         .map(doc -> Pair.of(doc.getObjectId("_id").toString(), activityFromDocument(doc)))
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
