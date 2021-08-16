@@ -125,8 +125,8 @@ public final class MerlinBindings implements Plugin {
               });
             });
           });
-          path("configuration_schema", () -> {
-            get(this::getConfigurationSchema);
+          path("parameters", () -> {
+            get(this::getModelParameters);
           });
           path("constraints", () -> {
             get(this::getConstraints);
@@ -599,7 +599,7 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
-  private void getConfigurationSchema(final Context ctx) {
+  private void getModelParameters(final Context ctx) {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
