@@ -603,7 +603,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
 
-      final var schema = this.adaptationService.getConfigurationSchema(adaptationId);
+      final var schema = this.adaptationService.getModelParameters(adaptationId);
 
       ctx.result(ResponseSerializers.serializeConfigurationSchema(schema).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {

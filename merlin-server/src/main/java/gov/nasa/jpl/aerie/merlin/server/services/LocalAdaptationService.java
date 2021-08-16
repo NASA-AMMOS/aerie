@@ -228,7 +228,7 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ParameterSchema> getConfigurationSchema(final String adaptationId)
+  public List<ParameterSchema> getModelParameters(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {
