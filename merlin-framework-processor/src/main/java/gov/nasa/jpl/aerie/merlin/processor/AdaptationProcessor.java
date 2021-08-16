@@ -1158,7 +1158,7 @@ public final class AdaptationProcessor implements Processor {
                     .build())
             .addMethod(
                 MethodSpec
-                    .methodBuilder("getConfigurationSchema")
+                    .methodBuilder("getParameters")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(List.class, ParameterSchema.class))

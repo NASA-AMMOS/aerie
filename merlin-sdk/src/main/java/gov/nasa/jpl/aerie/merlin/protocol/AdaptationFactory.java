@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface AdaptationFactory {
   <$Schema> void instantiate(SerializedValue configuration, Builder<$Schema> builder);
-  List<ParameterSchema> getConfigurationSchema();
+  List<ParameterSchema> getParameters();
 
   interface Builder<$Schema> {
     boolean isBuilt();
