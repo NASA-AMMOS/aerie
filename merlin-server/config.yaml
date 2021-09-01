@@ -1,0 +1,8 @@
+# This file configures the Hasura CLI, a local development (and deployment) tool.
+# Other files adjacent to it configure the Hasura Server specified herein.
+version: 3
+endpoint: https://aerie-develop.jpl.nasa.gov:8080/
+metadata_directory: metadata
+actions:
+  kind: synchronous
+  handler_webhook_baseurl: https://aerie-develop.jpl.nasa.gov:3000

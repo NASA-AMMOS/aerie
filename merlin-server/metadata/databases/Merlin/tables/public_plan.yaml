@@ -1,0 +1,36 @@
+table:
+  name: plan
+  schema: public
+object_relationships:
+- name: mission_model
+  using:
+    foreign_key_constraint_on: model_id
+array_relationships:
+- name: activities
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: activity
+        schema: public
+- name: conditions
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: condition
+        schema: public
+- name: datasets
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: dataset
+        schema: public
+- name: simulations
+  using:
+    foreign_key_constraint_on:
+      column: plan_id
+      table:
+        name: simulation
+        schema: public
