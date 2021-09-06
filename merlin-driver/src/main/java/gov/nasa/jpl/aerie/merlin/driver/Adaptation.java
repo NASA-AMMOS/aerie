@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.newengine.Directive;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
@@ -57,6 +58,12 @@ public final class Adaptation<$Schema, Model> {
 
   public Map<String, TaskSpecType<Model, ?>> getTaskSpecificationTypes() {
     return this.taskSpecTypes;
+  }
+
+  public Directive<Model, ?> instantiateDirective(final SerializedActivity specification)
+  throws TaskSpecType.UnconstructableTaskSpecException
+  {
+    return Directive.instantiate(this.taskSpecTypes.get(specification.getTypeName()), specification.getParameters());
   }
 
   public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {

@@ -9,7 +9,7 @@ import java.util.Map;
 public interface Scheduler<$Timeline> {
   <State> State get(Query<? super $Timeline, ?, State> query);
 
-  <Event, State> void emit(Event event, Query<? super $Timeline, ? super Event, State> query);
+  <Event> void emit(Event event, Query<? super $Timeline, ? super Event, ?> query);
 
   String spawn(Task<$Timeline> task);
   String spawn(String type, Map<String, SerializedValue> arguments);

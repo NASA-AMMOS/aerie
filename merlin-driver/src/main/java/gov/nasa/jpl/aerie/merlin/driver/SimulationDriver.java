@@ -18,7 +18,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -121,10 +120,7 @@ public final class SimulationDriver {
           }
 
           @Override
-          public <Event, State> void emit(
-              final Event event,
-              final Query<? super $Timeline, ? super Event, State> token)
-          {
+          public <Event> void emit(final Event event, final Query<? super $Timeline, ? super Event, ?> token) {
             final var query = adaptation
                 .getQuery(token.specialize())
                 .orElseThrow(() -> new IllegalArgumentException("forged token"));
@@ -428,10 +424,7 @@ public final class SimulationDriver {
           }
 
           @Override
-          public <Event, State> void emit(
-              final Event event,
-              final Query<? super $Timeline, ? super Event, State> token)
-          {
+          public <Event> void emit(final Event event, final Query<? super $Timeline, ? super Event, ?> token) {
             final var query = adaptation
                 .getQuery(token.specialize())
                 .orElseThrow(() -> new IllegalArgumentException("forged token"));

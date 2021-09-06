@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.newengine.EngineQuery;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
@@ -100,7 +101,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
       final var query = this.schemaBuilder.register(projection, applicator);
 
-      final var token = new gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>() {};
+      final var token = new EngineQuery<>(query);
 
       this.queries.put(token, query);
 

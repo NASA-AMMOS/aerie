@@ -24,7 +24,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public <Event, State> void emit(final Event event, final Query<? super $Timeline, ? super Event, State> query) {
+      public <Event> void emit(final Event event, final Query<? super $Timeline, ? super Event, ?> query) {
         throw new UnsupportedOperationException();
       }
 
