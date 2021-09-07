@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
 import javax.json.JsonValue;
@@ -102,7 +102,7 @@ public final class MerlinParsersTest {
                     . build())
                 . build())
             . build())
-        . add("configuration", JsonValue.NULL)
+        . add("configuration", JsonValue.EMPTY_JSON_OBJECT)
         . build();
 
     final var expected = new CreateSimulationMessage(
