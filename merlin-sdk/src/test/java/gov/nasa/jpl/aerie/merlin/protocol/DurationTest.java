@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.EPSILON;
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MILLISECONDS;
@@ -9,7 +9,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundDownward;
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundNearest;
 import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundUpward;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class DurationTest {
   @Test

@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.apgen.model.ActivityType;
 import gov.nasa.jpl.aerie.apgen.model.ActivityTypeParameter;
 import gov.nasa.jpl.aerie.apgen.model.Adaptation;
 import gov.nasa.jpl.aerie.apgen.model.Attribute;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;

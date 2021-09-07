@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.constraints.model;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;

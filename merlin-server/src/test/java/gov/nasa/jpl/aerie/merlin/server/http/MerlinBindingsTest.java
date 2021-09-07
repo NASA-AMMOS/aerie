@@ -11,9 +11,9 @@ import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.utils.HttpRequester;
 import io.javalin.Javalin;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public final class MerlinBindingsTest {
   private static Javalin SERVER = null;
 
-  @BeforeClass
+  @BeforeAll
   public static void setupServer() {
     final var planApp = new StubPlanService();
     final var adaptationApp = new StubAdaptationService();
@@ -58,7 +58,7 @@ public final class MerlinBindingsTest {
     SERVER.start();
   }
 
-  @AfterClass
+  @AfterAll
   public static void shutdownServer() {
     SERVER.stop();
   }
