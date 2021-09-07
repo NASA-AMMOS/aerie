@@ -14,6 +14,10 @@ java {
   withSourcesJar()
 }
 
+test {
+  useJUnitPlatform()
+}
+
 jacocoTestReport.dependsOn test
 
 // Link references to standard Java classes to the official Java 11 documentation.
@@ -25,7 +29,7 @@ dependencies {
   api project(':merlin-sdk')
   api 'org.glassfish:javax.json:1.1.4'
 
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
 publishing {
@@ -50,4 +54,3 @@ publishing {
     }
   }
 }
-

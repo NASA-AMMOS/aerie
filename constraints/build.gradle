@@ -9,6 +9,10 @@ java {
   }
 }
 
+test {
+  useJUnitPlatform()
+}
+
 repositories {
   mavenCentral()
 }
@@ -17,5 +21,5 @@ dependencies {
   implementation project(':merlin-sdk')
   implementation project(':parsing-utilities')
 
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }

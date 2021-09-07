@@ -28,7 +28,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
 

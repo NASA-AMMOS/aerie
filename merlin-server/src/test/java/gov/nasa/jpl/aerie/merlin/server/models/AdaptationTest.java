@@ -8,8 +8,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +22,7 @@ public final class AdaptationTest {
 
     private AdaptationFacade<?> adaptation;
 
-    @Before
+    @BeforeEach
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);

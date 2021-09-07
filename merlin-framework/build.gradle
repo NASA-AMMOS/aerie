@@ -28,8 +28,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 dependencies {
   api project(':merlin-sdk')
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
 
 publishing {

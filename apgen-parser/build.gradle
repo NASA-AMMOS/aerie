@@ -11,5 +11,5 @@ java {
 
 dependencies {
   testImplementation 'org.assertj:assertj-core:3.13.2'
-  testImplementation 'junit:junit:4.12'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
 }
