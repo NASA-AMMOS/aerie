@@ -11,12 +11,13 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public final class MockPlanRepository implements PlanRepository {
   private final Map<String, Pair<Long, Plan>> plans = new HashMap<>();
@@ -24,11 +25,13 @@ public final class MockPlanRepository implements PlanRepository {
   private int nextActivityId = 0;
 
   @Override
-  public Stream<Pair<String, Plan>> getAllPlans() {
+  public Map<String, Plan> getAllPlans() {
     return this.plans
         .entrySet()
         .stream()
-        .map(entry -> Pair.of(entry.getKey(), new Plan(entry.getValue().getRight())));
+        .collect(Collectors.toMap(
+            entry -> entry.getKey(),
+            entry -> new Plan(entry.getValue().getRight())));
   }
 
   @Override
@@ -50,7 +53,7 @@ public final class MockPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
@@ -59,7 +62,9 @@ public final class MockPlanRepository implements PlanRepository {
     return plan.activityInstances
         .entrySet()
         .stream()
-        .map(entry -> Pair.of(entry.getKey(), new ActivityInstance(entry.getValue())));
+        .collect(Collectors.toMap(
+            (entry) -> entry.getKey(),
+            (entry) -> new ActivityInstance(entry.getValue())));
   }
 
   @Override
@@ -77,25 +82,33 @@ public final class MockPlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createPlan(final NewPlan newPlan) {
+  public CreatedPlan createPlan(final NewPlan newPlan) {
     final String planId = Objects.toString(this.nextPlanId++);
 
     final Plan plan = new Plan();
     plan.name = newPlan.name;
     plan.startTimestamp = newPlan.startTimestamp;
     plan.endTimestamp = newPlan.endTimestamp;
+    plan.configuration = newPlan.configuration;
     plan.adaptationId = newPlan.adaptationId;
     plan.activityInstances = new HashMap<>();
 
-    if (newPlan.activityInstances != null) {
+    final List<String> activityIds;
+    if (newPlan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(newPlan.activityInstances.size());
       for (final var activity : newPlan.activityInstances) {
         final String activityId = Objects.toString(this.nextActivityId++);
+
+        activityIds.add(activityId);
         plan.activityInstances.put(activityId, new ActivityInstance(activity));
       }
     }
 
     this.plans.put(planId, Pair.of(0L, plan));
-    return planId;
+
+    return new CreatedPlan(planId, activityIds);
   }
 
   @Override
@@ -104,7 +117,7 @@ public final class MockPlanRepository implements PlanRepository {
   }
 
   @Override
-  public void replacePlan(final String id, final NewPlan newPlan) throws NoSuchPlanException {
+  public List<String> replacePlan(final String id, final NewPlan newPlan) throws NoSuchPlanException {
     if (!this.plans.containsKey(id)) {
       throw new NoSuchPlanException(id);
     }
@@ -115,17 +128,26 @@ public final class MockPlanRepository implements PlanRepository {
     plan.name = newPlan.name;
     plan.startTimestamp = newPlan.startTimestamp;
     plan.endTimestamp = newPlan.endTimestamp;
+    plan.configuration = newPlan.configuration;
     plan.adaptationId = newPlan.adaptationId;
     plan.activityInstances = new HashMap<>();
 
-    if (newPlan.activityInstances != null) {
+    final List<String> activityIds;
+    if (newPlan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(newPlan.activityInstances.size());
       for (final var activity : newPlan.activityInstances) {
         final String activityId = Objects.toString(this.nextActivityId++);
+
+        activityIds.add(activityId);
         plan.activityInstances.put(activityId, new ActivityInstance(activity));
       }
     }
 
     this.plans.put(id, Pair.of(revision, plan));
+
+    return activityIds;
   }
 
   @Override
@@ -224,6 +246,7 @@ public final class MockPlanRepository implements PlanRepository {
     private Optional<String> name = Optional.empty();
     private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Timestamp> endTimestamp = Optional.empty();
+    private Optional<Map<String, SerializedValue>> configuration = Optional.empty();
     private Optional<String> adaptationId = Optional.empty();
 
     public MockPlanTransaction(final String planId) {
@@ -241,6 +264,7 @@ public final class MockPlanRepository implements PlanRepository {
       this.name.ifPresent(name -> plan.name = name);
       this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
       this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
+      this.configuration.ifPresent(configuration -> plan.configuration = configuration);
       this.adaptationId.ifPresent(adaptationId -> plan.adaptationId = adaptationId);
 
       MockPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
@@ -261,6 +285,13 @@ public final class MockPlanRepository implements PlanRepository {
     @Override
     public PlanTransaction setEndTimestamp(final Timestamp timestamp) {
       this.endTimestamp = Optional.of(timestamp);
+      return this;
+    }
+
+    @Override
+    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration)
+    {
+      this.configuration = Optional.of(configuration);
       return this;
     }
 

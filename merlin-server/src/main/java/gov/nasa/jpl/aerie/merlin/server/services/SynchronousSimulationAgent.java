@@ -4,6 +4,8 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
@@ -13,37 +15,31 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
-public final class RunSimulationAction {
+public record SynchronousSimulationAgent (
+    PlanService planService,
+    AdaptationService adaptationService
+) implements SimulationAgent {
   public /*sealed*/ interface Response {
     record Failed(String reason) implements Response {}
     record Success(SimulationResults results) implements Response {}
   }
 
-  private final PlanService planService;
-  private final AdaptationService adaptationService;
-
-  public RunSimulationAction(
-      final PlanService planService,
-      final AdaptationService adaptationService)
-  {
-    this.planService = Objects.requireNonNull(planService);
-    this.adaptationService = Objects.requireNonNull(adaptationService);
-  }
-
-  public Response run(final String planId, final long planRevision) {
+  @Override
+  public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
       plan = this.planService.getPlanById(planId);
 
       if (this.planService.getPlanRevisionById(planId) != planRevision) {
-        return new Response.Failed("plan with id %s is no longer at revision %s".formatted(
+        writer.failWith("plan with id %s is no longer at revision %s".formatted(
             planId,
             planRevision));
+        return;
       }
     } catch (final NoSuchPlanException ex) {
-      return new Response.Failed("no plan with id %s".formatted(planId));
+      writer.failWith("no plan with id %s".formatted(planId));
+      return;
     }
 
     final var planDuration = Duration.of(
@@ -56,14 +52,17 @@ public final class RunSimulationAction {
           plan.adaptationId,
           plan.startTimestamp.toInstant(),
           planDuration,
-          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances)));
+          serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
+          plan.configuration));
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
-      return new Response.Failed("adaptation for existing plan does not exist");
+      writer.failWith("adaptation for existing plan does not exist");
+      return;
     } catch (final SimulationDriver.TaskSpecInstantiationException | AdaptationFacade.NoSuchActivityTypeException ex) {
-      return new Response.Failed("activity could not be instantiated");
+      writer.failWith("activity could not be instantiated");
+      return;
     }
 
-    return new Response.Success(results);
+    writer.succeedWith(results);
   }
 
   private static Map<String, Pair<Duration, SerializedActivity>>

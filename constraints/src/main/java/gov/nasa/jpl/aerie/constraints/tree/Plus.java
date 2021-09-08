@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class Plus implements Expression<LinearProfile> {
-  private final Expression<LinearProfile> left;
-  private final Expression<LinearProfile> right;
+  public final Expression<LinearProfile> left;
+  public final Expression<LinearProfile> right;
 
   public Plus(final Expression<LinearProfile> left, final Expression<LinearProfile> right) {
     this.left = left;

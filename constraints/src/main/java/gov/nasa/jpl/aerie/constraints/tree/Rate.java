@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class Rate implements Expression<LinearProfile> {
-  private final Expression<LinearProfile> profile;
+  public final Expression<LinearProfile> profile;
 
   public Rate(final Expression<LinearProfile> profile) {
     this.profile = profile;

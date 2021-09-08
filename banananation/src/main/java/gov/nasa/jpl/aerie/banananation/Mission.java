@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.banananation;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.models.Register;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
@@ -13,15 +17,30 @@ public final class Mission {
   public final AdditiveRegister fruit = AdditiveRegister.create(4.0);
   public final AdditiveRegister peel = AdditiveRegister.create(4.0);
   public final Register<Flag> flag = Register.create(Flag.A);
-  public final Counter<Integer> plant = Counter.ofInteger(200);
-  public final Register<String> producer = Register.create("Chiquita");
+  public final Register<Integer> lineCount = Register.create(0);
+  public final Counter<Integer> plant;
+  public final Register<String> producer;
+  public final Register<Integer> dataLineCount;
 
-  public Mission(final Registrar registrar) {
+  public Mission(final Registrar registrar, final Configuration config) {
+    this.plant = Counter.ofInteger(config.initialPlantCount());
+    this.producer = Register.create(config.initialProducer());
+    this.dataLineCount = Register.create(countLines(config.initialDataPath()));
+
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());
     registrar.discrete("/peel", this.peel, new DoubleValueMapper());
     registrar.discrete("/fruit", this.fruit, new DoubleValueMapper());
     registrar.discrete("/plant", this.plant, new IntegerValueMapper());
     registrar.discrete("/producer", this.producer, new StringValueMapper());
+    registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
+  }
+
+  private static int countLines(final Path path) {
+    try {
+      return (int)Files.lines(path).count();
+    } catch (IOException e) {
+      throw new Error(e);
+    }
   }
 }

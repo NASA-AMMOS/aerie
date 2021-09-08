@@ -1,14 +1,14 @@
 package gov.nasa.jpl.aerie.spice;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import spice.basic.CSPICE;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SpiceTests {
 
-    @BeforeClass
+    @BeforeAll
     public static void loadSpice() {
         SpiceLoader.loadSpice();
     }

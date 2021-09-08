@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.http;
 
+import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
@@ -7,9 +8,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
+import javax.json.JsonValue;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +21,8 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.serializedParameterP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
+import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public final class MerlinParsersTest {
@@ -51,7 +53,7 @@ public final class MerlinParsersTest {
   @Test
   public void testRecursiveList() {
     final var listsP =
-        recursiveP((JsonParser<NestedLists> self) -> listP(self).map(NestedLists::new));
+        recursiveP((JsonParser<NestedLists> self) -> listP(self).map(Iso.of(NestedLists::new, $ -> $.lists)));
 
     final var foo = Json
         . createArrayBuilder()
@@ -100,6 +102,7 @@ public final class MerlinParsersTest {
                     . build())
                 . build())
             . build())
+        . add("configuration", JsonValue.EMPTY_JSON_OBJECT)
         . build();
 
     final var expected = new CreateSimulationMessage(
@@ -116,7 +119,8 @@ public final class MerlinParsersTest {
                         "str", SerializedValue.of("hi")))
                 ))
             )
-        )
+        ),
+        Map.of()
     );
 
     assertThat(
@@ -129,7 +133,7 @@ public final class MerlinParsersTest {
   @Test
   public void testSerializedReal() {
     final var expected = SerializedValue.of(3.14);
-    final var actual = serializedParameterP.parse(Json.createValue(3.14)).getSuccessOrThrow();
+    final var actual = serializedValueP.parse(Json.createValue(3.14)).getSuccessOrThrow();
 
     assertThat(expected).isEqualTo(actual);
   }

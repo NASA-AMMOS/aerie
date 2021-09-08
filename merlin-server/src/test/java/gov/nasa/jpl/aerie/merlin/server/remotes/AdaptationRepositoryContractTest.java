@@ -1,14 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -59,8 +57,7 @@ public abstract class AdaptationRepositoryContractTest {
 
         // WHEN
         final Map<String, AdaptationJar> adaptations = this.adaptationRepository
-                .getAllAdaptations()
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+                .getAllAdaptations();
 
         // THEN
         assertThat(adaptations.size()).isEqualTo(3);

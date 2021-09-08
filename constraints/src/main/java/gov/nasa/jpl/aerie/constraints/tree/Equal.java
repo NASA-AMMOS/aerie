@@ -10,8 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class Equal<P extends Profile<P>> implements Expression<Windows> {
-  private final Expression<P> left;
-  private final Expression<P> right;
+  public final Expression<P> left;
+  public final Expression<P> right;
 
   public Equal(final Expression<P> left, final Expression<P> right) {
     this.left = left;

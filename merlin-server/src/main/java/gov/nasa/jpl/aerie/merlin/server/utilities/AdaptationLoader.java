@@ -3,7 +3,9 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.io.BufferedReader;
@@ -15,6 +17,9 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,12 @@ public final class AdaptationLoader {
         final var builder = new AdaptationBuilder<>(Schema.builder());
         factory.instantiate(missionModelConfig, builder);
         return builder.build();
+    }
+
+    public static List<ParameterSchema> getConfigurationSchema(final Path path, final String name, final String version)
+        throws AdaptationLoadException
+    {
+        return loadAdaptationProvider(path, name, version).getConfigurationSchema();
     }
 
     public static AdaptationFactory loadAdaptationProvider(final Path path, final String name, final String version)

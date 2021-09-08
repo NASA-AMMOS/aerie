@@ -4,6 +4,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import java.util.ArrayList;
 import java.util.Map;
@@ -22,6 +23,15 @@ public abstract class ProductParsers {
     private EmptyProductParser() {}
 
     @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return Json
+          .createObjectBuilder()
+          .add("type", "object")
+          .add("additionalProperties", JsonValue.FALSE)
+          .build();
+    }
+
+    @Override
     public JsonParseResult<Unit> parse(final JsonValue json) {
       if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
       if (!json.asJsonObject().isEmpty()) return JsonParseResult.failure("expected empty object");
@@ -30,12 +40,8 @@ public abstract class ProductParsers {
     }
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "object")
-          .add("additionalProperties", JsonValue.FALSE)
-          .build();
+    public JsonValue unparse(final Unit value) {
+      return Json.createObjectBuilder().build();
     }
 
     public <S> VariadicProductParser<S> field(final String key, final JsonParser<S> valueParser) {
@@ -47,7 +53,7 @@ public abstract class ProductParsers {
     }
   }
 
-  // CONTRACT: T must be of the form Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
+  // INVARIANT: T must be of the form Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
   public static final class VariadicProductParser<T> implements JsonParser<T> {
     private final ArrayList<FieldSpec<?>> fields;
 
@@ -114,6 +120,33 @@ public abstract class ProductParsers {
     }
 
     @Override
+    public JsonValue unparse(final T value) {
+      final var builder = Json.createObjectBuilder();
+
+      unparse(builder, value, fields.size());
+
+      return builder.build();
+    }
+
+    private JsonObjectBuilder unparse(final JsonObjectBuilder builder, Object value, int i) {
+      if (i <= 0) return builder; // This shouldn't happen, but doing nothing is a safe behavior.
+
+      final Object element;
+      final JsonObjectBuilder resultBuilder;
+      if (i == 1) { // type(value) = Ti
+        element = value;
+        resultBuilder = builder;
+      } else { // type(value) = Pair<..., Ti>
+        final var pair = (Pair<?, ?>) value;
+
+        element = pair.getRight();
+        resultBuilder = unparse(builder, pair.getLeft(), i - 1);
+      }
+
+      return unparseField(resultBuilder, this.fields.get(i - 1), element);
+    }
+
+    @Override
     public JsonObject getSchema(final Map<Object, String> anchors) {
       final var fieldSchemas = Json.createObjectBuilder();
       for (final var field : this.fields) {
@@ -148,7 +181,7 @@ public abstract class ProductParsers {
         if (!obj.containsKey(field.name)) {
           result = JsonParseResult.success(Optional.empty());
         } else {
-          result = field.valueParser.map(Optional::of).parse(obj.get(field.name));
+          result = field.valueParser.parse(obj.get(field.name)).mapSuccess(Optional::of);
         }
       } else {
         if (!obj.containsKey(field.name)) {
@@ -159,6 +192,25 @@ public abstract class ProductParsers {
       }
 
       return result.prependBreadcrumb(Breadcrumb.ofString(field.name));
+    }
+
+    // PRECONDITION: `value` is of type `Ti` or `Optional<Ti>` (depending on `field.isOptional`).
+    private static <Ti>
+    JsonObjectBuilder unparseField(final JsonObjectBuilder builder, final FieldSpec<Ti> field, final Object value) {
+      if (field.isOptional) { // type(value) = Optional<Ti>
+        // SAFETY: By precondition.
+        @SuppressWarnings("unchecked")
+        final var result = (Optional<Ti>) value;
+
+        result.ifPresent($ -> builder.add(field.name, field.valueParser.unparse($)));
+        return builder;
+      } else { // type(value) = Ti
+        // SAFETY: By precondition.
+        @SuppressWarnings("unchecked")
+        final var result = (Ti) value;
+
+        return builder.add(field.name, field.valueParser.unparse(result));
+      }
     }
 
     public <S> VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {

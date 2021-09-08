@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 
 import java.util.function.Function;
 
-public class DurationValueMapper implements ValueMapper<Duration> {
+public final class DurationValueMapper implements ValueMapper<Duration> {
   @Override
   public ValueSchema getValueSchema() {
     return ValueSchema.DURATION;

@@ -13,9 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 
+/**
+ * A namespace for primitive parsers and essential combinators.
+ *
+ * Non-primitive mappers and niche combinators should be given their own top-level classes.
+ */
 public abstract class BasicParsers {
   private BasicParsers() {}
 
@@ -36,18 +42,31 @@ public abstract class BasicParsers {
 
   public static final JsonParser<JsonValue> anyP = new JsonParser<>() {
     @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      // The empty object represents no constraints on JSON to be parsed.
+      return Json.createObjectBuilder().build();
+    }
+
+    @Override
     public JsonParseResult<JsonValue> parse(final JsonValue json) {
       return JsonParseResult.success(json);
     }
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
-      // The empty object represents no constraints on JSON to be parsed.
-      return Json.createObjectBuilder().build();
+    public JsonValue unparse(final JsonValue value) {
+      return value;
     }
   };
 
   public static final JsonParser<Boolean> boolP = new JsonParser<>() {
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return Json
+          .createObjectBuilder()
+          .add("type", "boolean")
+          .build();
+    }
+
     @Override
     public JsonParseResult<Boolean> parse(final JsonValue json) {
       if (Objects.equals(json, JsonValue.TRUE)) return JsonParseResult.success(true);
@@ -56,15 +75,20 @@ public abstract class BasicParsers {
     }
 
     @Override
-    public JsonObject getSchema(final Map<Object, String> anchors) {
-      return Json
-          .createObjectBuilder()
-          .add("type", "boolean")
-          .build();
+    public JsonValue unparse(final Boolean value) {
+      return (value) ? JsonValue.TRUE : JsonValue.FALSE;
     }
   };
 
   public static final JsonParser<String> stringP = new JsonParser<>() {
+    @Override
+    public JsonObject getSchema(final Map<Object, String> anchors) {
+      return Json
+          .createObjectBuilder()
+          .add("type", "string")
+          .build();
+    }
+
     @Override
     public JsonParseResult<String> parse(final JsonValue json) {
       if (!(json instanceof JsonString)) return JsonParseResult.failure("expected string");
@@ -73,23 +97,43 @@ public abstract class BasicParsers {
     }
 
     @Override
+    public JsonValue unparse(final String value) {
+      return Json.createValue(value);
+    }
+  };
+
+  public static final JsonParser<Integer> intP = new JsonParser<>() {
+    @Override
     public JsonObject getSchema(final Map<Object, String> anchors) {
       return Json
           .createObjectBuilder()
-          .add("type", "string")
+          // must be an integer
+          .add("type", "integer")
+          // within the range of Java integers
+          .add("minimum", Integer.MIN_VALUE)
+          .add("maximum", Integer.MAX_VALUE)
           .build();
+    }
+
+    @Override
+    public JsonParseResult<Integer> parse(final JsonValue json) {
+      if (!(json instanceof JsonNumber n)) return JsonParseResult.failure("expected int");
+      if (!n.isIntegral()) return JsonParseResult.failure("expected integral number");
+
+      try {
+        return JsonParseResult.success(n.intValueExact());
+      } catch (final ArithmeticException ex) {
+        return JsonParseResult.failure("integer is outside of the expected range");
+      }
+    }
+
+    @Override
+    public JsonValue unparse(final Integer value) {
+      return Json.createValue(value);
     }
   };
 
   public static final JsonParser<Long> longP = new JsonParser<>() {
-    @Override
-    public JsonParseResult<Long> parse(final JsonValue json) {
-      if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected long");
-      if (!((JsonNumber) json).isIntegral()) return JsonParseResult.failure("expected integral number");
-
-      return JsonParseResult.success(((JsonNumber) json).longValue());
-    }
-
     @Override
     public JsonObject getSchema(final Map<Object, String> anchors) {
       return Json
@@ -101,16 +145,22 @@ public abstract class BasicParsers {
           .add("maximum", Long.MAX_VALUE)
           .build();
     }
+
+    @Override
+    public JsonParseResult<Long> parse(final JsonValue json) {
+      if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected long");
+      if (!((JsonNumber) json).isIntegral()) return JsonParseResult.failure("expected integral number");
+
+      return JsonParseResult.success(((JsonNumber) json).longValue());
+    }
+
+    @Override
+    public JsonValue unparse(final Long value) {
+      return Json.createValue(value);
+    }
   };
 
   public static final JsonParser<Double> doubleP = new JsonParser<>() {
-    @Override
-    public JsonParseResult<Double> parse(final JsonValue json) {
-      if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected double");
-
-      return JsonParseResult.success(((JsonNumber) json).doubleValue());
-    }
-
     @Override
     public JsonObject getSchema(final Map<Object, String> anchors) {
       return Json
@@ -123,16 +173,21 @@ public abstract class BasicParsers {
           .add("maximum", +Double.MAX_VALUE)
           .build();
     }
-  };
 
-  public static final JsonParser<Long> nullP = new JsonParser<>() {
     @Override
-    public JsonParseResult<Long> parse(final JsonValue json) {
-      if (!Objects.equals(json, JsonValue.NULL)) return JsonParseResult.failure("expected null");
+    public JsonParseResult<Double> parse(final JsonValue json) {
+      if (!(json instanceof JsonNumber)) return JsonParseResult.failure("expected double");
 
-      return JsonParseResult.success(null);
+      return JsonParseResult.success(((JsonNumber) json).doubleValue());
     }
 
+    @Override
+    public JsonValue unparse(final Double value) {
+      return Json.createValue(value);
+    }
+  };
+
+  public static final JsonParser<Unit> nullP = new JsonParser<>() {
     @Override
     public JsonObject getSchema(final Map<Object, String> anchors) {
       return Json
@@ -140,119 +195,127 @@ public abstract class BasicParsers {
           .add("type", "null")
           .build();
     }
+
+    @Override
+    public JsonParseResult<Unit> parse(final JsonValue json) {
+      if (!Objects.equals(json, JsonValue.NULL)) return JsonParseResult.failure("expected null");
+
+      return JsonParseResult.success(null);
+    }
+
+    @Override
+    public JsonValue unparse(final Unit value) {
+      return JsonValue.NULL;
+    }
   };
 
 
-  public static JsonParser<String> literalP(final String x) {
+  public static JsonParser<Unit> literalP(final String x) {
     return new JsonParser<>() {
       @Override
-      public JsonParseResult<String> parse(final JsonValue json) {
-        if (!Objects.equals(json, Json.createValue(x))) {
+      public JsonObject getSchema(final Map<Object, String> anchors) {
+        return Json
+            .createObjectBuilder()
+            .add("const", unparse(Unit.UNIT))
+            .build();
+      }
+
+      @Override
+      public JsonParseResult<Unit> parse(final JsonValue json) {
+        if (!Objects.equals(json, unparse(Unit.UNIT))) {
           return JsonParseResult.failure("string literal does not match expected value: \"" + x + "\"");
         }
 
-        return JsonParseResult.success(x);
+        return JsonParseResult.success(Unit.UNIT);
       }
 
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
-        return Json
-            .createObjectBuilder()
-            .add("const", Json.createValue(x))
-            .build();
+      public JsonValue unparse(final Unit value) {
+        return Json.createValue(x);
       }
     };
   }
 
-  public static JsonParser<Long> literalP(final long x) {
+  public static JsonParser<Unit> literalP(final long x) {
     return new JsonParser<>() {
       @Override
-      public JsonParseResult<Long> parse(final JsonValue json) {
-        if (!Objects.equals(json, Json.createValue(x))) {
+      public JsonObject getSchema(final Map<Object, String> anchors) {
+        return Json
+            .createObjectBuilder()
+            .add("const", unparse(Unit.UNIT))
+            .build();
+      }
+
+      @Override
+      public JsonParseResult<Unit> parse(final JsonValue json) {
+        if (!Objects.equals(json, unparse(Unit.UNIT))) {
           return JsonParseResult.failure("long literal does not match expected value: \"" + x + "\"");
         }
 
-        return JsonParseResult.success(x);
+        return JsonParseResult.success(Unit.UNIT);
       }
 
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
-        return Json
-            .createObjectBuilder()
-            .add("const", Json.createValue(x))
-            .build();
+      public JsonValue unparse(final Unit value) {
+        return Json.createValue(x);
       }
     };
   }
 
-  public static JsonParser<Double> literalP(final double x) {
+  public static JsonParser<Unit> literalP(final double x) {
     return new JsonParser<>() {
       @Override
-      public JsonParseResult<Double> parse(final JsonValue json) {
-        if (!Objects.equals(json, Json.createValue(x))) {
+      public JsonObject getSchema(final Map<Object, String> anchors) {
+        return Json
+            .createObjectBuilder()
+            .add("const", unparse(Unit.UNIT))
+            .build();
+      }
+
+      @Override
+      public JsonParseResult<Unit> parse(final JsonValue json) {
+        if (!Objects.equals(json, unparse(Unit.UNIT))) {
           return JsonParseResult.failure("double literal does not match expected value: \"" + x + "\"");
         }
 
-        return JsonParseResult.success(x);
+        return JsonParseResult.success(Unit.UNIT);
       }
 
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
-        return Json
-            .createObjectBuilder()
-            .add("const", Json.createValue(x))
-            .build();
+      public JsonValue unparse(final Unit value) {
+        return Json.createValue(x);
       }
     };
   }
 
-  public static JsonParser<Boolean> literalP(final boolean x) {
+  public static JsonParser<Unit> literalP(final boolean x) {
     return new JsonParser<>() {
-      @Override
-      public JsonParseResult<Boolean> parse(final JsonValue json) {
-        if (!Objects.equals(json, (x) ? JsonValue.TRUE : JsonValue.FALSE)) {
-          return JsonParseResult.failure("boolean literal does not match expected value: \"" + x + "\"");
-        }
-
-        return JsonParseResult.success(x);
-      }
-
       @Override
       public JsonObject getSchema(final Map<Object, String> anchors) {
         return Json
             .createObjectBuilder()
-            .add("const", (x) ? JsonValue.TRUE : JsonValue.FALSE)
+            .add("const", unparse(Unit.UNIT))
             .build();
+      }
+
+      @Override
+      public JsonParseResult<Unit> parse(final JsonValue json) {
+        if (!Objects.equals(json, unparse(Unit.UNIT))) {
+          return JsonParseResult.failure("boolean literal does not match expected value: \"" + x + "\"");
+        }
+
+        return JsonParseResult.success(Unit.UNIT);
+      }
+
+      @Override
+      public JsonValue unparse(final Unit value) {
+        return (x) ? JsonValue.TRUE : JsonValue.FALSE;
       }
     };
   }
 
   public static <T> JsonParser<List<T>> listP(final JsonParser<T> elementParser) {
     return new JsonParser<>() {
-      @Override
-      public JsonParseResult<List<T>> parse(final JsonValue json) {
-        if (!(json instanceof JsonArray)) return JsonParseResult.failure("expected list");
-
-        final var jsonArray = json.asJsonArray();
-        final var list = new ArrayList<T>(jsonArray.size());
-        for (int index = 0; index < jsonArray.size(); index++) {
-          final var element = jsonArray.get(index);
-          final var result = elementParser.parse(element);
-
-          if (result.isFailure()) {
-            return JsonParseResult.failure(
-                result
-                    .failureReason()
-                    .prependBreadcrumb(
-                        Breadcrumb.ofInteger(index)
-                    ));
-          }
-          list.add(result.getSuccessOrThrow());
-        }
-
-        return JsonParseResult.success(list);
-      }
-
       @Override
       public JsonObject getSchema(final Map<Object, String> anchors) {
         return Json
@@ -261,33 +324,38 @@ public abstract class BasicParsers {
             .add("items", getCachedSchema(anchors, elementParser))
             .build();
       }
+
+      @Override
+      public JsonParseResult<List<T>> parse(final JsonValue json) {
+        if (!(json instanceof JsonArray)) return JsonParseResult.failure("expected list");
+
+        final var jsonArray = json.asJsonArray();
+        final var list = new ArrayList<T>(jsonArray.size());
+        for (int index = 0; index < jsonArray.size(); index++) {
+          final var element = jsonArray.get(index);
+          final var result = elementParser.parse(element).prependBreadcrumb(Breadcrumb.ofInteger(index));
+
+          if (result instanceof JsonParseResult.Failure<?> f) {
+            return f.cast();
+          }
+
+          list.add(result.getSuccessOrThrow());
+        }
+
+        return JsonParseResult.success(list);
+      }
+
+      @Override
+      public JsonValue unparse(final List<T> values) {
+        final var builder = Json.createArrayBuilder();
+        for (final var value : values) builder.add(elementParser.unparse(value));
+        return builder.build();
+      }
     };
   }
 
   public static <S> JsonParser<Map<String, S>> mapP(final JsonParser<S> fieldParser) {
     return new JsonParser<>() {
-      @Override
-      public JsonParseResult<Map<String, S>> parse(final JsonValue json) {
-        if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
-
-        final var map = new HashMap<String, S>(json.asJsonObject().size());
-        for (final var field : json.asJsonObject().entrySet()) {
-          final var result = fieldParser.parse(field.getValue());
-
-          if (result.isFailure()) {
-            return JsonParseResult.failure(
-                result
-                    .failureReason()
-                    .prependBreadcrumb(
-                        Breadcrumb.ofString(field.getKey())
-                    ));
-          }
-          map.put(field.getKey(), result.getSuccessOrThrow());
-        }
-
-        return JsonParseResult.success(map);
-      }
-
       @Override
       public JsonObject getSchema(final Map<Object, String> anchors) {
         return Json
@@ -295,6 +363,31 @@ public abstract class BasicParsers {
             .add("type", "object")
             .add("additionalProperties", getCachedSchema(anchors, fieldParser))
             .build();
+      }
+
+      @Override
+      public JsonParseResult<Map<String, S>> parse(final JsonValue json) {
+        if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
+
+        final var map = new HashMap<String, S>(json.asJsonObject().size());
+        for (final var field : json.asJsonObject().entrySet()) {
+          final var result = fieldParser.parse(field.getValue()).prependBreadcrumb(Breadcrumb.ofString(field.getKey()));
+
+          if (result instanceof JsonParseResult.Failure<?> f) {
+            return f.cast();
+          }
+
+          map.put(field.getKey(), result.getSuccessOrThrow());
+        }
+
+        return JsonParseResult.success(map);
+      }
+
+      @Override
+      public JsonValue unparse(final Map<String, S> values) {
+        final var builder = Json.createObjectBuilder();
+        for (final var entry : values.entrySet()) builder.add(entry.getKey(), fieldParser.unparse(entry.getValue()));
+        return builder.build();
       }
     };
   }
@@ -304,13 +397,18 @@ public abstract class BasicParsers {
       private final JsonParser<S> target = scope.apply(this);
 
       @Override
+      public JsonObject getSchema(final Map<Object, String> anchors) {
+        return this.target.getSchema(anchors);
+      }
+
+      @Override
       public JsonParseResult<S> parse(final JsonValue json) {
         return this.target.parse(json);
       }
 
       @Override
-      public JsonObject getSchema(final Map<Object, String> anchors) {
-        return this.target.getSchema(anchors);
+      public JsonValue unparse(final S value) {
+        return this.target.unparse(value);
       }
     };
   }
@@ -318,17 +416,6 @@ public abstract class BasicParsers {
   @SafeVarargs
   public static <T> JsonParser<T> chooseP(final JsonParser<? extends T>... options) {
     return new JsonParser<>() {
-      @Override
-      public JsonParseResult<T> parse(final JsonValue json) {
-        for (final var option : options) {
-          final var result = option.parse(json);
-          if (result.isFailure()) continue;
-          return result.mapSuccess(x -> (T) x);
-        }
-
-        return JsonParseResult.failure("not parsable into acceptable type");
-      }
-
       @Override
       public JsonObject getSchema(final Map<Object, String> anchors) {
         final var optionSchemas = Json.createArrayBuilder();
@@ -341,11 +428,40 @@ public abstract class BasicParsers {
             .add("oneOf", optionSchemas)
             .build();
       }
-    };
-  }
 
-  public static <T> SumParsers.VariantJsonParser<T> sumP() {
-    return SumParsers.sumP();
+      @Override
+      public JsonParseResult<T> parse(final JsonValue json) {
+        for (final var option : options) {
+          final var result = option.parse(json);
+          if (result.isFailure()) continue;
+          return result.mapSuccess(x -> (T) x);
+        }
+
+        return JsonParseResult.failure("not parsable into acceptable type");
+      }
+
+      // TODO: Figure out a better way to define choice parsers that doesn't fundamentally rely on unsafe casts.
+      @Override
+      public JsonValue unparse(final T value) {
+        for (final JsonParser<? extends T> option : options) {
+          final var result = unsafeUnparse(option, value);
+          if (result.isEmpty()) continue;
+          return result.get();
+        }
+
+        throw new RuntimeException("No choice of parser can unparse this value.");
+      }
+
+      // SAFETY: Class cast exceptions are isolated to this method and are handled appropriately.
+      @SuppressWarnings("unchecked")
+      private static <S extends T, T> Optional<JsonValue> unsafeUnparse(JsonParser<S> parser, T value) {
+        try {
+          return Optional.of(parser.unparse((S) value));
+        } catch (final ClassCastException ignored) {
+          return Optional.empty();
+        }
+      }
+    };
   }
 
   public static EmptyProductParser productP = ProductParsers.productP;

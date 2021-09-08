@@ -10,6 +10,10 @@ java {
   }
 }
 
+test {
+  useJUnitPlatform()
+}
+
 application {
   mainClass = 'gov.nasa.jpl.aerie.merlin.server.AerieAppDriver'
   applicationDefaultJvmArgs = ['-Xmx2g']
@@ -31,9 +35,8 @@ dependencies {
   implementation 'org.apache.bcel:bcel:6.5.0'
 
   testImplementation project(':foo-adaptation')
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.4.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
   testImplementation 'org.assertj:assertj-core:3.13.2'
-  testImplementation 'junit:junit:4.12'
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'org.glassfish:javax.json:1.1.4'
 }

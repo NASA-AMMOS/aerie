@@ -12,6 +12,9 @@ import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class StubAdaptationService implements AdaptationService {
   public static final String EXISTENT_ADAPTATION_ID = "abc";
@@ -188,11 +192,31 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
+  public List<ParameterSchema> getConfigurationSchema(final String adaptationId) {
+    return List.of();
+  }
+
+  @Override
   public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
-    if (!Objects.equals(message.adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(message.adaptationId);
+    if (!Objects.equals(message.adaptationId(), EXISTENT_ADAPTATION_ID)) {
+      throw new NoSuchAdaptationException(message.adaptationId());
     }
 
     return SUCCESSFUL_SIMULATION_RESULTS;
+  }
+
+  @Override
+  public List<Path> getAvailableFilePaths() {
+    return List.of();
+  }
+
+  @Override
+  public void createFile(final String filename, final InputStream content) throws FileNotFoundException
+  {
+  }
+
+  @Override
+  public void deleteFile(final String path) throws FileNotFoundException
+  {
   }
 }

@@ -13,7 +13,7 @@ services:
     ports: ["27183:27183"]
     restart: always
     volumes:
-      - adaptation_files:/usr/src/app/adaptation_files
+      - merlin_file_store:/usr/src/app/merlin_file_store
   postgres:
     image: postgres
     ports: ["5432:5432"]
@@ -32,6 +32,6 @@ services:
     ports: ["27184:27184"]
 
 volumes:
-  adaptation_files:
   merlin_mongo_data:
+  merlin_file_store:
   postgres_data:

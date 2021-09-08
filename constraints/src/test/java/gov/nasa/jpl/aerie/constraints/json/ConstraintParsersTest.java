@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.tree.And;
+import gov.nasa.jpl.aerie.constraints.tree.ForbiddenActivityOverlap;
 import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Changed;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -27,7 +28,7 @@ import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
 
@@ -621,22 +622,7 @@ public final class ConstraintParsersTest {
         .build();
     final var result = violationListExpressionP.parse(json).getSuccessOrThrow();
 
-    final var expected = new ForEachActivity(
-        "A",
-        "act1",
-        new ForEachActivity(
-            "B",
-            "act2",
-            new ViolationsOf(
-                new Not(
-                    new And(
-                        new During("act1"),
-                        new During("act2")
-                    )
-                )
-            )
-        )
-    );
+    final var expected = new ForbiddenActivityOverlap("A", "B");
 
     assertEquivalent(expected, result);
   }

@@ -15,19 +15,20 @@ import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
+import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
+import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -36,7 +37,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstan
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.serializedParameterP;
+import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
@@ -124,6 +125,9 @@ public final class MerlinBindings implements Plugin {
               });
             });
           });
+          path("configuration_schema", () -> {
+            get(this::getConfigurationSchema);
+          });
           path("constraints", () -> {
             get(this::getConstraints);
             post(this::postModelConstraints);
@@ -133,6 +137,12 @@ public final class MerlinBindings implements Plugin {
             get(this::getStateSchemas);
           });
         });
+      });
+
+      path("files", () -> {
+        get(this::getAvailableFilePaths);
+        post(this::postFile);
+        delete(this::deleteFile);
       });
     });
 
@@ -179,9 +189,7 @@ public final class MerlinBindings implements Plugin {
   }
 
   private void getPlans(final Context ctx) {
-    final Map<String, Plan> plans = this.planService
-        .getPlans()
-        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    final Map<String, Plan> plans = this.planService.getPlans();
 
     ctx.result(ResponseSerializers.serializePlanMap(plans).toString());
   }
@@ -511,6 +519,40 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
+  private void getAvailableFilePaths(final Context ctx) {
+    try {
+      final var files = this.adaptationService.getAvailableFilePaths().stream().map(Path::toString).toList();
+      ctx.result(ResponseSerializers.serializeStringList(files).toString());
+    } catch (final IOException ex) {
+      ctx.status(500);
+    }
+  }
+
+  private void postFile(final Context ctx) {
+    final var file = ctx.uploadedFile("file");
+    if (file == null) {
+      ctx.status(400);
+      return;
+    }
+
+    try {
+      this.adaptationService.createFile(file.getFilename(), file.getContent());
+      ctx.status(200);
+    } catch (final IOException ex) {
+      ctx.status(500);
+    }
+  }
+
+  private void deleteFile(final Context ctx) {
+    try {
+      final var path = ctx.queryParam("path");
+      this.adaptationService.deleteFile(path);
+      ctx.status(200);
+    } catch (final IOException ex) {
+      ctx.status(404);
+    }
+  }
+
   private void getActivityTypes(final Context ctx) {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
@@ -542,7 +584,7 @@ public final class MerlinBindings implements Plugin {
       final var adaptationId = ctx.pathParam("adaptationId");
       final var activityTypeId = ctx.pathParam("activityTypeId");
 
-      final var activityParameters = parseJson(ctx.body(), mapP(serializedParameterP));
+      final var activityParameters = parseJson(ctx.body(), mapP(serializedValueP));
       final var serializedActivity = new SerializedActivity(activityTypeId, activityParameters);
 
       final var failures = this.adaptationService.validateActivityParameters(adaptationId, serializedActivity);
@@ -554,6 +596,20 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void getConfigurationSchema(final Context ctx) {
+    try {
+      final var adaptationId = ctx.pathParam("adaptationId");
+
+      final var schema = this.adaptationService.getConfigurationSchema(adaptationId);
+
+      ctx.result(ResponseSerializers.serializeConfigurationSchema(schema).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    } catch (final AdaptationLoader.AdaptationLoadException ex) {
+      ctx.status(500);
     }
   }
 
@@ -659,7 +715,7 @@ public final class MerlinBindings implements Plugin {
     try {
       final var requestJson = Json.createReader(new StringReader(subject)).readValue();
       final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow(() -> new InvalidEntityException(List.of(result.failureReason())));
+      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
     } catch (JsonParsingException e) {
       throw new InvalidJsonException(e);
     }

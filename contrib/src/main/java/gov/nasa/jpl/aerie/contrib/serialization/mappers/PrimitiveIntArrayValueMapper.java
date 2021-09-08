@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class PrimitiveIntArrayValueMapper implements ValueMapper<int[]> {
+public final class PrimitiveIntArrayValueMapper implements ValueMapper<int[]> {
     @Override
     public ValueSchema getValueSchema() {
         return ValueSchema.ofSeries(ValueSchema.INT);

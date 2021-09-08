@@ -12,6 +12,29 @@ import java.lang.annotation.Target;
 public @interface ActivityType {
   String value();
 
+  //Marks the default activity instance whose arguments are all defaulted
+  //Primarily used for All Optional Parameter types
+  //Add handling for @target on no-arg constructors and static instances
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.METHOD)
+  @interface Template {}
+
+  //Declares Factory method for instantiation
+  //Primarily used for Some Optional Parameter types
+  @Retention(RetentionPolicy.CLASS)
+  @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+  @interface Factory {
+    String value() default "";
+
+    //Computes defaults for a given factory
+    //Usage will involve dependency injection from a modeler provided default class
+    @Retention(RetentionPolicy.CLASS)
+    @Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
+    @interface WithDefaults {
+      Class<?> value();
+    }
+  }
+
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.TYPE)
   @interface WithMapper {

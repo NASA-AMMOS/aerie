@@ -21,7 +21,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.CreatedEntity;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.RemoteAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.Breadcrumb;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -116,7 +116,7 @@ public final class ResponseSerializers {
     return parameter.match(new ParameterSerializationVisitor());
   }
 
-  public static JsonValue serializeActivityParameterMap(final Map<String, SerializedValue> fields) {
+  public static JsonValue serializeArgumentMap(final Map<String, SerializedValue> fields) {
     return serializeMap(ResponseSerializers::serializeActivityParameter, fields);
   }
 
@@ -126,7 +126,7 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
         .add("type", serializeString(activityInstance.type))
         .add("startTimestamp", serializeTimestamp(activityInstance.startTimestamp))
-        .add("parameters", serializeActivityParameterMap(activityInstance.parameters))
+        .add("parameters", serializeArgumentMap(activityInstance.parameters))
         .build();
   }
 
@@ -146,6 +146,7 @@ public final class ResponseSerializers {
         .add("adaptationId", serializeString(plan.adaptationId))
         .add("startTimestamp", serializeTimestamp(plan.startTimestamp))
         .add("endTimestamp", serializeTimestamp(plan.endTimestamp))
+        .add("configuration", serializeArgumentMap(plan.configuration))
         .add("activityInstances", serializeActivityInstanceMap(plan.activityInstances))
         .build();
   }
@@ -177,7 +178,7 @@ public final class ResponseSerializers {
     return Json
         .createObjectBuilder()
         .add("type", simulatedActivity.type)
-        .add("parameters", serializeActivityParameterMap(simulatedActivity.parameters))
+        .add("parameters", serializeArgumentMap(simulatedActivity.parameters))
         .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
@@ -256,13 +257,20 @@ public final class ResponseSerializers {
   public static JsonValue serializeActivityType(final ActivityType activityType) {
     return Json
         .createObjectBuilder()
-        .add("parameters", gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeParameterSchemas(activityType.parameters))
-        .add("defaults", serializeActivityParameterMap(activityType.defaults))
+        .add("parameters", ResponseSerializers.serializeParameterSchemas(activityType.parameters))
+        .add("defaults", serializeArgumentMap(activityType.defaults))
         .build();
   }
 
   public static JsonValue serializeActivityTypes(final Map<String, ActivityType> activityTypes) {
     return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
+  }
+
+  public static JsonValue serializeConfigurationSchema(final List<ParameterSchema> parameterSchemas) {
+    return Json
+        .createObjectBuilder()
+        .add("parameters", ResponseSerializers.serializeParameterSchemas(parameterSchemas))
+        .build();
   }
 
   public static JsonValue serializeConstraints(Map<String, Constraint> constraints) {
@@ -376,7 +384,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeAdaptationAccessException(final RemoteAdaptationRepository.AdaptationAccessException ex) {
+  public static JsonValue serializeAdaptationAccessException(final MongoAdaptationRepository.AdaptationAccessException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())
@@ -393,8 +401,8 @@ public final class ResponseSerializers {
 
   public static JsonValue serializeFailureReason(final FailureReason failure) {
     return Json.createObjectBuilder()
-               .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeParseFailureBreadcrumb, failure.breadcrumbs))
-               .add("message", failure.reason)
+               .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeParseFailureBreadcrumb, failure.breadcrumbs()))
+               .add("message", failure.reason())
                .build();
   }
 
@@ -464,6 +472,14 @@ public final class ResponseSerializers {
       return Json
           .createObjectBuilder()
           .add("type", "duration")
+          .build();
+    }
+
+    @Override
+    public JsonValue onPath() {
+      return Json
+          .createObjectBuilder()
+          .add("type", "path")
           .build();
     }
 

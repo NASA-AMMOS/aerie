@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -79,8 +78,7 @@ public final class PlanValidator {
     if (patch.activityInstances != null) {
       final Set<String> validActivityIds = this.planRepository
           .getAllActivitiesInPlan(planId)
-          .map(Pair::getKey)
-          .collect(Collectors.toSet());
+          .keySet();
 
       with("activityInstances", () -> {
         for (final var entry : patch.activityInstances.entrySet()) {

@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class Times implements Expression<LinearProfile> {
-  private final Expression<LinearProfile> profile;
-  private final double multiplier;
+  public final Expression<LinearProfile> profile;
+  public final double multiplier;
 
   public Times(final Expression<LinearProfile> profile, final double multiplier) {
     this.profile = profile;

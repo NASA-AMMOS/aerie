@@ -55,4 +55,41 @@ public abstract class Uncurry {
   uncurry8(Function<T1, Function<T2, Function<T3, Function<T4, Function<T5, Function<T6, Function<T7, Function<T8, Result>>>>>>>> f) {
     return uncurry(uncurry(uncurry(uncurry(uncurry(uncurry(uncurry(f)))))));
   }
+
+
+  public static <T1, T2>
+  Pair<T1, T2>
+  tuple(T1 t1, T2 t2) {
+    return Pair.of(t1, t2);
+  }
+
+  public static <T1, T2>
+  Pair<T1, T2>
+  tuple2(T1 t1, T2 t2) {
+    return tuple(t1, t2);
+  }
+
+  public static <T1, T2, T3>
+  Pair<Pair<T1, T2>, T3>
+  tuple3(T1 t1, T2 t2, T3 t3) {
+    return tuple(tuple(t1, t2), t3);
+  }
+
+  public static <T1, T2, T3, T4>
+  Pair<Pair<Pair<T1, T2>, T3>, T4>
+  tuple4(T1 t1, T2 t2, T3 t3, T4 t4) {
+    return tuple(tuple(tuple(t1, t2), t3), t4);
+  }
+
+  public static <T1, T2, T3, T4, T5>
+  Pair<Pair<Pair<Pair<T1, T2>, T3>, T4>, T5>
+  tuple5(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5) {
+    return tuple(tuple(tuple(tuple(t1, t2), t3), t4), t5);
+  }
+
+  public static <T1, T2, T3, T4, T5, T6>
+  Pair<Pair<Pair<Pair<Pair<T1, T2>, T3>, T4>, T5>, T6>
+  tuple6(T1 t1, T2 t2, T3 t3, T4 t4, T5 t5, T6 t6) {
+    return tuple(tuple(tuple(tuple(tuple(t1, t2), t3), t4), t5), t6);
+  }
 }

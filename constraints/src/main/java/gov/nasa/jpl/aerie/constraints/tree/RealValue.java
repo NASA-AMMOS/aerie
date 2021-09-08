@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class RealValue implements Expression<LinearProfile> {
-  private final double value;
+  public final double value;
 
   public RealValue(final double value) {
     this.value = value;

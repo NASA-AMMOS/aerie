@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public final class RealParameter implements Expression<LinearProfile> {
-  private final String activityAlias;
-  private final String parameterName;
+  public final String activityAlias;
+  public final String parameterName;
 
   public RealParameter(final String activityAlias, final String parameterName) {
     this.activityAlias = activityAlias;

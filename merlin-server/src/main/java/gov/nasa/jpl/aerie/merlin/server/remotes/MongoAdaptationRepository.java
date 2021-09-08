@@ -7,7 +7,6 @@ import com.mongodb.client.MongoIterable;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -17,21 +16,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
-public final class RemoteAdaptationRepository implements AdaptationRepository {
-    private final Path ADAPTATION_FILE_PATH = Path.of("adaptation_files").toAbsolutePath();
+public final class MongoAdaptationRepository implements AdaptationRepository {
+    private final Path adaptationJarsPath;
     private final MongoCollection<Document> adaptationCollection;
 
-    public RemoteAdaptationRepository(
+    public MongoAdaptationRepository(
+            final Path adaptationJarsPath,
             final MongoDatabase database,
             final String adaptationCollectionName
     ) {
+        this.adaptationJarsPath = adaptationJarsPath;
         this.adaptationCollection = database.getCollection(adaptationCollectionName);
     }
 
@@ -40,16 +40,13 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public Stream<Pair<String, AdaptationJar>> getAllAdaptations() {
+    public Map<String, AdaptationJar> getAllAdaptations() {
         final var query = this.adaptationCollection.find();
 
         return documentStream(query)
-                .map(adaptationDocument -> {
-                    final String adaptationId = adaptationDocument.getObjectId("_id").toString();
-                    final AdaptationJar adaptationJar = adaptationFromDocuments(adaptationDocument);
-
-                    return Pair.of(adaptationId, adaptationJar);
-                });
+                .collect(Collectors.toMap(
+                    (document) -> document.getObjectId("_id").toString(),
+                    (document) -> adaptationFromDocuments(document)));
     }
 
     @Override
@@ -96,7 +93,7 @@ public final class RemoteAdaptationRepository implements AdaptationRepository {
     @Override
     public String createAdaptation(final AdaptationJar adaptationJar) {
         // Store Adaptation JAR
-        final Path location = FileUtils.getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
+        final Path location = FileUtils.getUniqueFilePath(adaptationJar, adaptationJarsPath);
         try {
             Files.createDirectories(location.getParent());
             Files.copy(adaptationJar.path, location);

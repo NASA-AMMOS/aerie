@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.constraints.model;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

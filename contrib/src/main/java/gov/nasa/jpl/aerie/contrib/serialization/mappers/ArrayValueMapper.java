@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class ArrayValueMapper<T> implements ValueMapper<T[]> {
+public final class ArrayValueMapper<T> implements ValueMapper<T[]> {
     private final ValueMapper<T> elementMapper;
     private final Class<? super T> elementClass;
 

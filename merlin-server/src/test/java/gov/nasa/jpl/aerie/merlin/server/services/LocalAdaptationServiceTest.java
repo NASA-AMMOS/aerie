@@ -8,14 +8,11 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -27,12 +24,10 @@ public final class LocalAdaptationServiceTest {
     final Fixtures fixtures = new Fixtures();
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
 
-    final List<Pair<String, Plan>> expectedPlans = fixtures.planRepository
-        .getAllPlans()
-        .collect(Collectors.toUnmodifiableList());
+    final Map<String, Plan> expectedPlans = fixtures.planRepository.getAllPlans();
 
     // WHEN
-    final List<Pair<String, Plan>> plans = controller.getPlans().collect(Collectors.toUnmodifiableList());
+    final Map<String, Plan> plans = controller.getPlans();
 
     // THEN
     assertThat(plans).isEqualTo(expectedPlans);
@@ -73,7 +68,9 @@ public final class LocalAdaptationServiceTest {
   }
 
   @Test
-  public void shouldAddPlan() throws ValidationException, NoSuchPlanException {
+  public void shouldAddPlan()
+  throws ValidationException, NoSuchPlanException
+  {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
@@ -229,7 +226,7 @@ public final class LocalAdaptationServiceTest {
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
-    final String planId = fixtures.planRepository.createPlan(newPlan);
+    final String planId = fixtures.planRepository.createPlan(newPlan).planId();
 
     // Add 3 activity instances to the plan
     final String activity1Id = fixtures.planRepository.createActivity(planId, fixtures.createValidActivityInstance());
@@ -435,7 +432,7 @@ public final class LocalAdaptationServiceTest {
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
 
     final NewPlan newPlan = fixtures.createValidNewPlan("new-plan");
-    final String planId = fixtures.planRepository.createPlan(newPlan);
+    final String planId = fixtures.planRepository.createPlan(newPlan).planId();
 
     final List<ActivityInstance> activityInstances = List.of(
         fixtures.createValidActivityInstance(),
@@ -447,7 +444,7 @@ public final class LocalAdaptationServiceTest {
     // THEN
     assertThat(activityInstanceIds).size().isEqualTo(activityInstances.size());
     assertThat(zipToMap(activityInstanceIds, activityInstances))
-        .isEqualTo(pairStreamToMap(fixtures.planRepository.getAllActivitiesInPlan(planId)));
+        .isEqualTo(fixtures.planRepository.getAllActivitiesInPlan(planId));
   }
 
   @Test
@@ -715,9 +712,5 @@ public final class LocalAdaptationServiceTest {
     assert !keysIterator.hasNext() && !valuesIterator.hasNext();
 
     return map;
-  }
-
-  private <K, V> Map<K, V> pairStreamToMap(final Stream<Pair<K, V>> pairs) {
-    return pairs.collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 }

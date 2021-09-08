@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema;
 import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
@@ -17,22 +18,24 @@ import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
 import io.javalin.core.util.FileUtil;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 import java.util.jar.JarFile;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * Implements the plan service {@link AdaptationService} interface on a set of local domain objects.
+ * Implements the adaptation service {@link AdaptationService} interface on a set of local domain objects.
  *
  * May throw unchecked exceptions:
  * * {@link LocalAdaptationService.AdaptationLoadException}: When an adaptation cannot be loaded from the JAR provided by the
@@ -40,17 +43,22 @@ import java.util.stream.Collectors;
  * adaptation repository.
  */
 public final class LocalAdaptationService implements AdaptationService {
-  private final Supplier<SerializedValue> missionModelConfigGet;
+  private static final Logger log = Logger.getLogger(LocalAdaptationService.class.getName());
+
+  private final Path missionModelDataPath;
   private final AdaptationRepository adaptationRepository;
 
-  public LocalAdaptationService(final Supplier<SerializedValue> missionModelConfigGet, final AdaptationRepository adaptationRepository) {
-    this.missionModelConfigGet = missionModelConfigGet;
+  public LocalAdaptationService(
+      final Path missionModelDataPath,
+      final AdaptationRepository adaptationRepository
+  ) {
+    this.missionModelDataPath = missionModelDataPath;
     this.adaptationRepository = adaptationRepository;
   }
 
   @Override
   public Map<String, AdaptationJar> getAdaptations() {
-    return this.adaptationRepository.getAllAdaptations().collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    return this.adaptationRepository.getAllAdaptations();
   }
 
   @Override
@@ -219,6 +227,20 @@ public final class LocalAdaptationService implements AdaptationService {
     }
   }
 
+  @Override
+  public List<ParameterSchema> getConfigurationSchema(final String adaptationId)
+  throws NoSuchAdaptationException, AdaptationLoadException
+  {
+    try {
+      final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+      return AdaptationLoader.getConfigurationSchema(adaptationJar.path, adaptationJar.name, adaptationJar.version);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    } catch (final AdaptationLoader.AdaptationLoadException ex) {
+      throw new AdaptationLoadException(ex);
+    }
+  }
+
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named adaptation.
    *
@@ -231,8 +253,40 @@ public final class LocalAdaptationService implements AdaptationService {
   throws NoSuchAdaptationException,
          SimulationDriver.TaskSpecInstantiationException
   {
-    return loadAdaptation(message.adaptationId)
-        .simulate(message.activityInstances, message.samplingDuration, message.startTime);
+    final var config = message.configuration();
+    if (config.isEmpty()) {
+      log.warning(
+          "No mission model configuration defined for adaptation. Simulations will receive an empty set of configuration arguments.");
+    }
+
+    return loadAdaptation(message.adaptationId(), SerializedValue.of(config))
+        .simulate(message.activityInstances(), message.samplingDuration(), message.startTime());
+  }
+
+  @Override
+  public List<Path> getAvailableFilePaths() throws IOException {
+    return Files
+        .list(missionModelDataPath)
+        .map(missionModelDataPath::relativize)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public void createFile(final String filename, final InputStream content) throws IOException {
+    final var path = missionModelDataPath.resolve(filename).toAbsolutePath().normalize();
+    if (!path.startsWith(missionModelDataPath.toAbsolutePath())) { // Only allow sub-paths
+      throw new FileNotFoundException(path.toString());
+    }
+    Files.copy(content, path, StandardCopyOption.REPLACE_EXISTING);
+  }
+
+  @Override
+  public void deleteFile(final String filename) throws IOException {
+    final var path = missionModelDataPath.resolve(filename).toAbsolutePath().normalize();
+    if (!path.startsWith(missionModelDataPath.toAbsolutePath())) { // Only allow sub-paths
+      throw new FileNotFoundException(path.toString());
+    }
+    Files.delete(path);
   }
 
   private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)
@@ -263,7 +317,8 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   /**
-   * Load an {@link Adaptation} from the adaptation repository, and wrap it in an {@link AdaptationFacade} domain object.
+   * Load an {@link Adaptation} from the adaptation repository using the adaptation's default mission model configuration,
+   * and wrap it in an {@link AdaptationFacade} domain object.
    *
    * @param adaptationId The ID of the adaptation in the adaptation repository to load.
    * @return An {@link AdaptationFacade} domain object allowing use of the loaded adaptation.
@@ -274,10 +329,26 @@ public final class LocalAdaptationService implements AdaptationService {
   private AdaptationFacade<?> loadAdaptation(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
+    return loadAdaptation(adaptationId, SerializedValue.of(Map.of()));
+  }
+
+  /**
+   * Load an {@link Adaptation} from the adaptation repository, and wrap it in an {@link AdaptationFacade} domain object.
+   *
+   * @param adaptationId The ID of the adaptation in the adaptation repository to load.
+   * @param configuration The mission model configuration to to load the adaptation with.
+   * @return An {@link AdaptationFacade} domain object allowing use of the loaded adaptation.
+   * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
+   * it contains may not abide by the expected contract at load time.
+   * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
+   */
+  private AdaptationFacade<?> loadAdaptation(final String adaptationId, final SerializedValue configuration)
+  throws NoSuchAdaptationException, AdaptationLoadException
+  {
     try {
       final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
       final var adaptation =
-          AdaptationLoader.loadAdaptation(missionModelConfigGet.get(), adaptationJar.path, adaptationJar.name, adaptationJar.version);
+          AdaptationLoader.loadAdaptation(configuration, adaptationJar.path, adaptationJar.name, adaptationJar.version);
       return new AdaptationFacade<>(adaptation);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);

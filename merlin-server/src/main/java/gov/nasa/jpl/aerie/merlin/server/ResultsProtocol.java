@@ -1,19 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
-import com.mongodb.client.MongoCollection;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoDeserializers;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoSerializers;
-import org.bson.Document;
-import org.bson.types.ObjectId;
-
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.set;
 
 public final class ResultsProtocol {
   private ResultsProtocol() {}
@@ -40,134 +27,12 @@ public final class ResultsProtocol {
     boolean isCanceled();
 
     // If the writer aborts because it observes `isCanceled()`,
-    //   it must still complete with `fail()`.
+    //   it must still complete with `failWith()`.
     //   Otherwise, the reader would not be able to reclaim unique ownership
     //   of the underlying resource in order to deallocate it.
     void succeedWith(SimulationResults results);
     void failWith(String reason);
   }
 
-  public interface OwnerRole extends ReaderRole, WriterRole {
-  }
-
-  public static final class MongoCell implements OwnerRole {
-    private final MongoCollection<Document> collection;
-    public final ObjectId documentId;
-
-    public MongoCell(final MongoCollection<Document> collection, final ObjectId documentId) {
-      this.collection = Objects.requireNonNull(collection);
-      this.documentId = Objects.requireNonNull(documentId);
-    }
-
-    public static MongoCell
-    allocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      final var document = new Document(Map.of(
-          "planId", planId,
-          "planRevision", planRevision,
-          "state", MongoSerializers.simulationResultsState(new State.Incomplete()),
-          "canceled", false));
-
-      collection.insertOne(document);
-
-      return new MongoCell(collection, document.getObjectId("_id"));
-    }
-
-    public static Optional<ReaderRole>
-    lookup(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      return Optional
-          .ofNullable(collection
-              .find(and(eq("planId", planId), eq("planRevision", planRevision)))
-              .first())
-          .map($ -> new MongoCell(collection, $.getObjectId("_id")));
-    }
-
-    public static void
-    deallocate(final MongoCollection<Document> collection, final String planId, final long planRevision) {
-      collection.deleteOne(and(eq("planId", planId), eq("planRevision", planRevision)));
-    }
-
-
-    @Override
-    public State get() {
-      final var resultsDocument = Optional
-          .ofNullable(this.collection
-              .find(eq("_id", this.documentId))
-              .first())
-          .orElseThrow(MissingDocumentException::new)
-          .get("state", Document.class);
-
-      return MongoDeserializers.simulationResultsState(resultsDocument);
-    }
-
-    @Override
-    public void cancel() {
-      this.collection.updateOne(eq("_id", this.documentId), set("canceled", true));
-    }
-
-    @Override
-    public boolean isCanceled() {
-      return Optional
-          .ofNullable(this.collection
-              .find(eq("_id", this.documentId))
-              .first())
-          .orElseThrow(MissingDocumentException::new)
-          .getBoolean("canceled");
-    }
-
-    @Override
-    public void succeedWith(final SimulationResults results) {
-      this.collection.updateOne(
-          and(eq("_id", this.documentId)),
-          set("state", MongoSerializers.simulationResultsState(new State.Success(results))));
-    }
-
-    @Override
-    public void failWith(final String reason) {
-      this.collection.updateOne(
-          and(eq("_id", this.documentId)),
-          set("state", MongoSerializers.simulationResultsState(new State.Failed(reason))));
-    }
-
-    public static class MissingDocumentException extends RuntimeException {}
-  }
-
-  public static final class InMemoryCell implements OwnerRole {
-    private volatile boolean canceled = false;
-    private volatile State state = new State.Incomplete();
-
-    @Override
-    public State get() {
-      return this.state;
-    }
-
-    @Override
-    public void cancel() {
-      this.canceled = true;
-    }
-
-    @Override
-    public boolean isCanceled() {
-      return this.canceled;
-    }
-
-    @Override
-    public void succeedWith(final SimulationResults results) {
-      if (!(this.state instanceof State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to success state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
-      }
-
-      this.state = new State.Success(results);
-    }
-
-    @Override
-    public void failWith(final String reason) {
-      if (!(this.state instanceof State.Incomplete)) {
-        throw new IllegalStateException("Cannot transition to failed state from state %s".formatted(
-            this.state.getClass().getCanonicalName()));
-      }
-
-      this.state = new State.Failed(reason);
-    }
-  }
+  public interface OwnerRole extends ReaderRole, WriterRole {}
 }

@@ -7,13 +7,13 @@ import gov.nasa.jpl.aerie.merlin.server.mocks.StubAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
-import gov.nasa.jpl.aerie.merlin.server.services.RunSimulationAction;
-import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationService;
+import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.utils.HttpRequester;
 import io.javalin.Javalin;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -40,14 +40,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 public final class MerlinBindingsTest {
   private static Javalin SERVER = null;
 
-  @BeforeClass
+  @BeforeAll
   public static void setupServer() {
     final var planApp = new StubPlanService();
     final var adaptationApp = new StubAdaptationService();
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         adaptationApp,
-        new SynchronousSimulationService(new RunSimulationAction(planApp, adaptationApp)));
+        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, adaptationApp)));
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
@@ -58,7 +58,7 @@ public final class MerlinBindingsTest {
     SERVER.start();
   }
 
-  @AfterClass
+  @AfterAll
   public static void shutdownServer() {
     SERVER.stop();
   }
@@ -73,7 +73,7 @@ public final class MerlinBindingsTest {
     try {
       final var requestJson = Json.createReader(new StringReader(subject)).readValue();
       final var result = parser.parse(requestJson);
-      return result.getSuccessOrThrow(() -> new InvalidEntityException(List.of(result.failureReason())));
+      return result.getSuccessOrThrow($ -> new InvalidEntityException(List.of($)));
     } catch (JsonParsingException e) {
       throw new InvalidJsonException(e);
     }
@@ -752,7 +752,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -774,7 +774,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -796,7 +796,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);
@@ -818,7 +818,7 @@ public final class MerlinBindingsTest {
     final HttpResponse<String> response = client.sendRequest(
         "POST",
         "/adaptations/" + adaptationId + "/activities/" + activityId + "/validate",
-        ResponseSerializers.serializeActivityParameterMap(activityParameters.getParameters()));
+        ResponseSerializers.serializeArgumentMap(activityParameters.getParameters()));
 
     // THEN
     assertThat(response.statusCode()).isEqualTo(200);

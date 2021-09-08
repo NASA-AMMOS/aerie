@@ -4,7 +4,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import org.bson.types.ObjectId;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -13,9 +13,9 @@ import java.net.URI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-@Ignore
+@Disabled
 @Tag("integration")
-public final class RemotePlanRepositoryTest extends PlanRepositoryContractTest {
+public final class MongoPlanRepositoryTest extends PlanRepositoryContractTest {
   private static final URI MONGO_URI = URI.create("mongodb://localhost:27017");
   private static final String MONGO_DATABASE = "plan-service";
   private static final String MONGO_PLAN_COLLECTION = "plans";
@@ -23,13 +23,13 @@ public final class RemotePlanRepositoryTest extends PlanRepositoryContractTest {
 
   private static final MongoDatabase mongoDatabase =
       MongoClients.create(MONGO_URI.toString()).getDatabase(MONGO_DATABASE);
-  private static final RemotePlanRepository remoteRepository =
-      new RemotePlanRepository(mongoDatabase, MONGO_PLAN_COLLECTION, MONGO_ACTIVITY_COLLECTION);
+  private static final MongoPlanRepository remoteRepository =
+      new MongoPlanRepository(mongoDatabase, MONGO_PLAN_COLLECTION, MONGO_ACTIVITY_COLLECTION);
 
   @Override
   protected void resetRepository() {
-    RemotePlanRepositoryTest.remoteRepository.clear();
-    this.planRepository = RemotePlanRepositoryTest.remoteRepository;
+    MongoPlanRepositoryTest.remoteRepository.clear();
+    this.planRepository = MongoPlanRepositoryTest.remoteRepository;
   }
 
   @Test

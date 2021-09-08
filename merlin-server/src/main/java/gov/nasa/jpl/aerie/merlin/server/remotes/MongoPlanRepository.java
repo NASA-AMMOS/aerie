@@ -18,7 +18,9 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -43,11 +45,11 @@ import static com.mongodb.client.model.Updates.set;
 //   be views in potentially independent processes that must be accounted for. Therefore, concurrency control must
 //   necessarily involve the shared MongoDB instance. (We may implement additional control locally, if we wish to
 //   optimize the case of multiple local views, but such a scheme alone is not sufficient.)
-public final class RemotePlanRepository implements PlanRepository {
+public final class MongoPlanRepository implements PlanRepository {
   private final MongoCollection<Document> planCollection;
   private final MongoCollection<Document> activityCollection;
 
-  public RemotePlanRepository(final MongoDatabase database, final String planCollectionName, final String activityCollectionName) {
+  public MongoPlanRepository(final MongoDatabase database, final String planCollectionName, final String activityCollectionName) {
     this.planCollection = database.getCollection(planCollectionName);
     this.activityCollection = database.getCollection(activityCollectionName);
   }
@@ -58,18 +60,15 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, Plan>> getAllPlans() {
+  public Map<String, Plan> getAllPlans() {
     final var query = this.planCollection.find();
 
     return documentStream(query)
-        .map(planDocument -> {
-          final ObjectId planId = planDocument.getObjectId("_id");
-          final FindIterable<Document> activityDocuments = this.activityCollection.find(
-              activityByPlan(planId));
-          final Plan plan = planFromDocuments(planDocument, activityDocuments);
-
-          return Pair.of(planId.toString(), plan);
-        });
+        .collect(Collectors.toMap(
+            (document) -> document.getObjectId("_id").toString(),
+            (document) -> planFromDocuments(
+                document,
+                this.activityCollection.find(activityByPlan(document.getObjectId("_id"))))));
   }
 
   @Override
@@ -102,13 +101,13 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
-  public Stream<Pair<String, ActivityInstance>> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
 
     return documentStream(this.activityCollection.find(activityByPlan(makePlanObjectId(planId))))
-        .map(document -> Pair.of(
-            document.getObjectId("_id").toString(),
-            activityFromDocument(document)));
+        .collect(Collectors.toMap(
+            (document) -> document.getObjectId("_id").toString(),
+            (document) -> activityFromDocument(document)));
   }
 
   @Override
@@ -127,7 +126,7 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createPlan(final NewPlan plan) {
+  public CreatedPlan createPlan(final NewPlan plan) {
     final String planId;
     {
       final Document planDocument = toDocument(plan);
@@ -135,13 +134,19 @@ public final class RemotePlanRepository implements PlanRepository {
       planId = planDocument.getObjectId("_id").toString();
     }
 
-    if (plan.activityInstances != null) {
+    final List<String> activityIds;
+    if (plan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(plan.activityInstances.size());
       for (final var activity : plan.activityInstances) {
-        this.activityCollection.insertOne(toDocument(planId, activity));
+        final Document activityDocument = toDocument(planId, activity);
+        this.activityCollection.insertOne(activityDocument);
+        activityIds.add(activityDocument.getObjectId("_id").toString());
       }
     }
 
-    return planId;
+    return new CreatedPlan(planId, activityIds);
   }
 
   @Override
@@ -150,7 +155,7 @@ public final class RemotePlanRepository implements PlanRepository {
   }
 
   @Override
-  public void replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
+  public List<String> replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
     final var revisionDoc = this.planCollection
         .find(planById(makePlanObjectId(planId)))
         .projection(new Document("revision", 1))
@@ -165,11 +170,20 @@ public final class RemotePlanRepository implements PlanRepository {
     this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
 
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
-    if (plan.activityInstances != null) {
+
+    final List<String> activityIds;
+    if (plan.activityInstances == null) {
+      activityIds = new ArrayList<>();
+    } else {
+      activityIds = new ArrayList<>(plan.activityInstances.size());
       for (final var activity : plan.activityInstances) {
-        this.activityCollection.insertOne(toDocument(planId, activity));
+        final var activityDocument = toDocument(planId, activity);
+        this.activityCollection.insertOne(activityDocument);
+        activityIds.add(activityDocument.getObjectId("_id").toString());
       }
     }
+
+    return activityIds;
   }
 
   @Override
@@ -349,6 +363,11 @@ public final class RemotePlanRepository implements PlanRepository {
     plan.startTimestamp = Timestamp.fromString(planDocument.getString("startTimestamp"));
     plan.endTimestamp = Timestamp.fromString(planDocument.getString("endTimestamp"));
     plan.adaptationId = planDocument.getString("adaptationId");
+
+    // Allow for nonexistent "configuration" document to support older schemas
+    final var configDocument = planDocument.get("configuration", Document.class);
+    if (configDocument != null) plan.configuration = MongoDeserializers.map(configDocument, MongoDeserializers::serializedValue);
+
     plan.activityInstances = documentStream(activityDocuments)
         .map(doc -> Pair.of(doc.getObjectId("_id").toString(), activityFromDocument(doc)))
         .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
@@ -384,6 +403,7 @@ public final class RemotePlanRepository implements PlanRepository {
     planDocument.put("endTimestamp", newPlan.endTimestamp.toString());
     planDocument.put("adaptationId", newPlan.adaptationId);
     planDocument.put("constraints", new Document());
+    planDocument.put("configuration", MongoSerializers.map(newPlan.configuration, MongoSerializers::serializedValue));
 
     return planDocument;
   }
@@ -412,7 +432,7 @@ public final class RemotePlanRepository implements PlanRepository {
 
     @Override
     public void commit() {
-      if (this.notEmpty) RemotePlanRepository.this.planCollection.updateOne(planById(this.planId), this.patch);
+      if (this.notEmpty) MongoPlanRepository.this.planCollection.updateOne(planById(this.planId), this.patch);
     }
 
     @Override
@@ -437,6 +457,13 @@ public final class RemotePlanRepository implements PlanRepository {
     }
 
     @Override
+    public PlanTransaction setConfiguration(final Map<String, SerializedValue> configuration) {
+      this.patch = combine(this.patch, set("configuration", MongoSerializers.map(configuration, MongoSerializers::serializedValue)));
+      this.notEmpty = true;
+      return this;
+    }
+
+    @Override
     public PlanTransaction setAdaptationId(final String adaptationId) {
       this.patch = combine(this.patch, set("adaptationId", adaptationId));
       this.notEmpty = true;
@@ -456,9 +483,9 @@ public final class RemotePlanRepository implements PlanRepository {
 
     @Override
     public void commit() {
-      RemotePlanRepository.this.activityCollection
+      MongoPlanRepository.this.activityCollection
           .updateOne(activityById(this.planId, this.activityId), this.patch);
-      RemotePlanRepository.this.planCollection
+      MongoPlanRepository.this.planCollection
           .updateOne(planById(this.planId), inc("revision", 1));
     }
 

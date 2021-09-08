@@ -11,6 +11,5 @@ java {
 
 dependencies {
   api 'org.eclipse:yasson:1.0.5'
-
   api 'org.apache.commons:commons-lang3:3.9'
 }
