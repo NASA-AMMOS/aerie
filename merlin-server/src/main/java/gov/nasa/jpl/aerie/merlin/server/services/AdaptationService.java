@@ -42,7 +42,7 @@ public interface AdaptationService {
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
   List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
   throws NoSuchAdaptationException;
-  List<ParameterSchema> getConfigurationSchema(String adaptationId)
+  List<ParameterSchema> getModelParameters(String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)

@@ -192,7 +192,7 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<ParameterSchema> getConfigurationSchema(final String adaptationId) {
+  public List<ParameterSchema> getModelParameters(final String adaptationId) {
     return List.of();
   }
 
