@@ -118,9 +118,9 @@ final class ReactionContext<$Timeline> implements Context {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.awaiting((now, atLatest) -> {
-        return this.rootContext.setWithin(
-            new QueryContext<>(now),
-            () -> condition.nextSatisfied(true, Duration.ZERO, atLatest));
+        try (final var restore = this.rootContext.set(new QueryContext<>(now))) {
+          return condition.nextSatisfied(true, Duration.ZERO, atLatest);
+        }
       }));
     });
   }

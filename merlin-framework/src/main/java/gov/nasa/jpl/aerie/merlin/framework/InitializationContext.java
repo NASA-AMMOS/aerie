@@ -19,7 +19,9 @@ public final class InitializationContext<$Schema> implements Context {
   }
 
   public static <T> T initializing(final Initializer<?> builder, final Supplier<T> initializer) {
-    return ModelActions.context.setWithin(new InitializationContext<>(builder), initializer::get);
+    try (final var restore = ModelActions.context.set(new InitializationContext<>(builder))) {
+      return initializer.get();
+    }
   }
 
   @Override

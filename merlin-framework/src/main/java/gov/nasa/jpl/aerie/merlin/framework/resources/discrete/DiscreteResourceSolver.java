@@ -28,7 +28,9 @@ public final class DiscreteResourceSolver<$Schema, Value>
 
   @Override
   public Value getDynamics(final Resource<Value> resource, final Querier<? extends $Schema> now) {
-    return this.rootContext.setWithin(new QueryContext<>(now), resource::getDynamics);
+    try (final var restore = this.rootContext.set(new QueryContext<>(now))) {
+      return resource.getDynamics();
+    }
   }
 
   @Override

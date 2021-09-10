@@ -30,22 +30,6 @@ public final class Scoped<T> implements Supplier<T> {
     }
 
     /**
-     * Provide a value for a dynamic cell for queries within the provided scope.
-     */
-    public static <T, Throws extends Throwable>
-    void setDynamic(final Scoped<T> cell, final T value, final BlockScope<Throws> scope) throws Throws {
-        cell.setWithin(value, scope);
-    }
-
-    /**
-     * Provide a value for a dynamic cell for queries within the provided scope.
-     */
-    public static <T, Result, Throws extends Throwable>
-    Result setDynamic(final Scoped<T> cell, final T value, final ExpressionScope<Result, Throws> scope) throws Throws {
-        return cell.setWithin(value, scope);
-    }
-
-    /**
      * Gets the current value of the dynamic cell.
      *
      * Throws an exception if nobody up-stack is currently serving this cell.
@@ -58,34 +42,29 @@ public final class Scoped<T> implements Supplier<T> {
     }
 
     /**
-     * Provide a value for this dynamic cell for queries within the provided scope.
+     * Set a value in this cell, returning an {@link AutoCloseable} resource restoring the previous value on close.
+     *
+     * <p>
+     *   This method should always be used in a try-with-resources statement:
+     * </p>
+     *
+     * <pre>
+     * try (final var scope = cell.set(value)) {
+     *   // ...
+     * }
+     * </pre>
      */
-    public <Result, Throws extends Throwable>
-    Result setWithin(final T value, final ExpressionScope<Result, Throws> scope) throws Throws {
-        final var oldValue = dynamicSlot.get();
+    public UndoToken<T> set(final T newValue) {
+        final var oldValue = this.dynamicSlot.get();
+        this.dynamicSlot.set(newValue);
+        return new UndoToken<>(this, oldValue);
+    }
 
-        dynamicSlot.set(value);
-        try {
-            return scope.run();
-        } finally {
-            dynamicSlot.set(oldValue);
+    public record UndoToken<T>(Scoped<T> cell, T oldValue) implements AutoCloseable {
+        @Override
+        public void close() {
+            this.cell.dynamicSlot.set(this.oldValue);
         }
-    }
-
-    /**
-     * Provide a value for a dynamic cell for queries within the provided scope.
-     */
-    public <Throws extends Throwable>
-    void setWithin(final T value, final BlockScope<Throws> scope) throws Throws {
-        this.setWithin(value, () -> { scope.run(); return null; });
-    }
-
-    public interface ExpressionScope<Result, Throws extends Throwable> {
-        Result run() throws Throws;
-    }
-
-    public interface BlockScope<Throws extends Throwable> {
-        void run() throws Throws;
     }
 
     public static class EmptyDynamicCellException extends RuntimeException {}

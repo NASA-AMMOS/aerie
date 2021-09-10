@@ -143,8 +143,8 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
             scheduler,
             this);
 
-        try {
-          ThreadedTask.this.rootContext.setWithin(context, ThreadedTask.this.task::run);
+        try (final var restore = ThreadedTask.this.rootContext.set(context)) {
+          ThreadedTask.this.task.run();
           return new TaskResponse.Success<>(TaskStatus.completed());
         } catch (final TaskAbort ex) {
           return new TaskResponse.Success<>(TaskStatus.completed());

@@ -24,8 +24,8 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
     final var handle = new ReplayingTaskHandle<$Timeline>();
     final var context = new ReactionContext<>(this.rootContext, this.memory, scheduler, handle);
 
-    try {
-      this.rootContext.setWithin(context, this.task::run);
+    try (final var restore = this.rootContext.set(context)){
+      this.task.run();
 
       // If we get here, the activity has completed normally.
       return TaskStatus.completed();
