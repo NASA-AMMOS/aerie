@@ -1,9 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.ArrayList;
@@ -49,28 +47,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       if (response instanceof TaskResponse.Success) {
         final var status = ((TaskResponse.Success<$Timeline>) response).status;
 
-        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-          @Override
-          public Void completed() {
-            ThreadedTask.this.isTerminated = true;
-            return null;
-          }
-
-          @Override
-          public Void delayed(final Duration delay) {
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final String activityId) {
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final Condition<? super $Timeline> condition) {
-            return null;
-          }
-        });
+        this.isTerminated = (status instanceof TaskStatus.Completed);
 
         return status;
       } else if (response instanceof TaskResponse.Failure) {

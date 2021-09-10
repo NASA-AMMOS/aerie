@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -51,18 +50,10 @@ public final class TaskInfo<$Timeline> {
 
     final var status = this.task.step(scheduler);
 
-    status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-      @Override
-      public Void completed() {
-        TaskInfo.this.endTime = Optional.of(atTime);
-        TaskInfo.this.task = null;
-        return null;
-      }
-
-      @Override public Void delayed(final Duration delay) { return null; }
-      @Override public Void awaiting(final String target) { return null; }
-      @Override public Void awaiting(final Condition<? super $Timeline> condition) { return null; }
-    });
+    if (status instanceof TaskStatus.Completed) {
+      this.endTime = Optional.of(atTime);
+      this.task = null;
+    }
 
     return status;
   }

@@ -2,62 +2,29 @@ package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 
-import java.util.Objects;
+public sealed interface TaskStatus<$Timeline> {
+  record Completed<$Timeline>() implements TaskStatus<$Timeline> {}
 
-public abstract class TaskStatus<$Timeline> {
-  private TaskStatus() {}
+  record Delayed<$Timeline>(Duration delay) implements TaskStatus<$Timeline> {}
 
-  public abstract <Result> Result match(final Visitor<$Timeline, Result> visitor);
+  record AwaitingTask<$Timeline>(String target) implements TaskStatus<$Timeline> {}
 
-  public interface Visitor<$Timeline, Result> {
-    Result completed();
+  record AwaitingCondition<$Timeline>(Condition<? super $Timeline> condition) implements TaskStatus<$Timeline> {}
 
-    Result delayed(Duration delay);
 
-    Result awaiting(String activityId);
-
-    Result awaiting(Condition<? super $Timeline> condition);
+  static <$Timeline> Completed<$Timeline> completed() {
+    return new Completed<>();
   }
 
-  public static <$Timeline> TaskStatus<$Timeline> completed() {
-    return new TaskStatus<>() {
-      @Override
-      public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.completed();
-      }
-    };
+  static <$Timeline> Delayed<$Timeline> delayed(final Duration delay) {
+    return new Delayed<>(delay);
   }
 
-  public static <$Timeline> TaskStatus<$Timeline> delayed(final Duration delay) {
-    Objects.requireNonNull(delay);
-
-    return new TaskStatus<>() {
-      @Override
-      public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.delayed(delay);
-      }
-    };
+  static <$Timeline> AwaitingTask<$Timeline> awaiting(final String id) {
+    return new AwaitingTask<>(id);
   }
 
-  public static <$Timeline> TaskStatus<$Timeline> awaiting(final String id) {
-    Objects.requireNonNull(id);
-
-    return new TaskStatus<>() {
-      @Override
-      public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.awaiting(id);
-      }
-    };
-  }
-
-  public static <$Timeline> TaskStatus<$Timeline> awaiting(final Condition<? super $Timeline> condition) {
-    Objects.requireNonNull(condition);
-
-    return new TaskStatus<>() {
-      @Override
-      public <Result> Result match(final Visitor<$Timeline, Result> visitor) {
-        return visitor.awaiting(condition);
-      }
-    };
+  static <$Timeline> AwaitingCondition<$Timeline> awaiting(final Condition<? super $Timeline> condition) {
+    return new AwaitingCondition<>(condition);
   }
 }

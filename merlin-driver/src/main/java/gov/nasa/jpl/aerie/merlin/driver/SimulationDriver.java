@@ -189,64 +189,48 @@ public final class SimulationDriver {
           }
         });
 
-        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-          @Override
-          public Void completed() {
-            var ancestorId$ = Optional.of(info.id);
+        if (status instanceof TaskStatus.Completed) {
+          var ancestorId$ = Optional.of(info.id);
 
-            completeAncestors: while (ancestorId$.isPresent()) {
-              final var ancestorInfo = taskFactory.get(ancestorId$.get());
+          completeAncestors: while (ancestorId$.isPresent()) {
+            final var ancestorInfo = taskFactory.get(ancestorId$.get());
 
-              // If this task is still ongoing, it's definitely not complete.
-              if (!ancestorInfo.isDone()) break;
+            // If this task is still ongoing, it's definitely not complete.
+            if (!ancestorInfo.isDone()) break;
 
-              // Check if this task's children are all complete.
-              for (final var childId : ancestorInfo.children) {
-                if (!completedTasks.contains(taskFactory.get(childId).id)) {
-                  // It's not yet "truly" complete.
-                  break completeAncestors;
-                }
+            // Check if this task's children are all complete.
+            for (final var childId : ancestorInfo.children) {
+              if (!completedTasks.contains(taskFactory.get(childId).id)) {
+                // It's not yet "truly" complete.
+                break completeAncestors;
               }
-
-              // Mark this task as complete, and signal anybody waiting on it.
-              completedTasks.add(ancestorInfo.id);
-
-              final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
-              if (conditionedActivities != null) {
-                for (final var conditionedTask : conditionedActivities) {
-                  queue.deferTo(queue.getElapsedTime(), conditionedTask);
-                }
-              }
-
-              ancestorId$ = ancestorInfo.parent;
             }
 
-            return null;
-          }
+            // Mark this task as complete, and signal anybody waiting on it.
+            completedTasks.add(ancestorInfo.id);
 
-          @Override
-          public Void delayed(final Duration delay) {
-            queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final String target) {
-            if (completedTasks.contains(target)) {
-              queue.deferTo(queue.getElapsedTime(), taskId);
-            } else {
-              waitingTasks.computeIfAbsent(target, k -> new HashSet<>()).add(taskId);
+            final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
+            if (conditionedActivities != null) {
+              for (final var conditionedTask : conditionedActivities) {
+                queue.deferTo(queue.getElapsedTime(), conditionedTask);
+              }
             }
 
-            return null;
+            ancestorId$ = ancestorInfo.parent;
           }
-
-          @Override
-          public Void awaiting(final Condition<? super $Timeline> condition) {
-            conditionedTasks.put(info.id, condition);
-            return null;
+        } else if (status instanceof TaskStatus.Delayed<?> s) {
+          queue.deferTo(queue.getElapsedTime().plus(s.delay()), info.id);
+        } else if (status instanceof TaskStatus.AwaitingTask<?> s) {
+          if (completedTasks.contains(s.target())) {
+            queue.deferTo(queue.getElapsedTime(), taskId);
+          } else {
+            waitingTasks.computeIfAbsent(s.target(), k -> new HashSet<>()).add(taskId);
           }
-        });
+        } else if (status instanceof TaskStatus.AwaitingCondition<$Timeline> s) {
+          conditionedTasks.put(info.id, s.condition());
+        } else {
+          throw new IllegalStateException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
+        }
       });
 
       for (final var profile : profiles.values()) {
@@ -528,64 +512,48 @@ public final class SimulationDriver {
           }
         });
 
-        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-          @Override
-          public Void completed() {
-            var ancestorId$ = Optional.of(info.id);
+        if (status instanceof TaskStatus.Completed) {
+          var ancestorId$ = Optional.of(info.id);
 
-            completeAncestors: while (ancestorId$.isPresent()) {
-              final var ancestorInfo = taskFactory.get(ancestorId$.get());
+          completeAncestors: while (ancestorId$.isPresent()) {
+            final var ancestorInfo = taskFactory.get(ancestorId$.get());
 
-              // If this task is still ongoing, it's definitely not complete.
-              if (!ancestorInfo.isDone()) break;
+            // If this task is still ongoing, it's definitely not complete.
+            if (!ancestorInfo.isDone()) break;
 
-              // Check if this task's children are all complete.
-              for (final var childId : ancestorInfo.children) {
-                if (!completedTasks.contains(taskFactory.get(childId).id)) {
-                  // It's not yet "truly" complete.
-                  break completeAncestors;
-                }
+            // Check if this task's children are all complete.
+            for (final var childId : ancestorInfo.children) {
+              if (!completedTasks.contains(taskFactory.get(childId).id)) {
+                // It's not yet "truly" complete.
+                break completeAncestors;
               }
-
-              // Mark this task as complete, and signal anybody waiting on it.
-              completedTasks.add(ancestorInfo.id);
-
-              final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
-              if (conditionedActivities != null) {
-                for (final var conditionedTask : conditionedActivities) {
-                  queue.deferTo(queue.getElapsedTime(), conditionedTask);
-                }
-              }
-
-              ancestorId$ = ancestorInfo.parent;
             }
 
-            return null;
-          }
+            // Mark this task as complete, and signal anybody waiting on it.
+            completedTasks.add(ancestorInfo.id);
 
-          @Override
-          public Void delayed(final Duration delay) {
-            queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final String target) {
-            if (completedTasks.contains(target)) {
-              queue.deferTo(queue.getElapsedTime(), taskId);
-            } else {
-              waitingTasks.computeIfAbsent(target, k -> new HashSet<>()).add(taskId);
+            final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
+            if (conditionedActivities != null) {
+              for (final var conditionedTask : conditionedActivities) {
+                queue.deferTo(queue.getElapsedTime(), conditionedTask);
+              }
             }
 
-            return null;
+            ancestorId$ = ancestorInfo.parent;
           }
-
-          @Override
-          public Void awaiting(final Condition<? super $Timeline> condition) {
-            conditionedTasks.put(info.id, condition);
-            return null;
+        } else if (status instanceof TaskStatus.Delayed<?> s) {
+          queue.deferTo(queue.getElapsedTime().plus(s.delay()), info.id);
+        } else if (status instanceof TaskStatus.AwaitingTask<?> s) {
+          if (completedTasks.contains(s.target())) {
+            queue.deferTo(queue.getElapsedTime(), taskId);
+          } else {
+            waitingTasks.computeIfAbsent(s.target(), k -> new HashSet<>()).add(taskId);
           }
-        });
+        } else if (status instanceof TaskStatus.AwaitingCondition<$Timeline> s) {
+          conditionedTasks.put(info.id, s.condition());
+        } else {
+          throw new IllegalStateException("Unknown subclass of %s: %s".formatted(TaskStatus.class, status));
+        }
       });
 
       // Signal any tasks whose condition occurs soon.
