@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -20,13 +19,7 @@ public final class ThreadedTaskTest {
   public <$Timeline> void testTransparentExceptions() {
     final var mockScheduler = new Scheduler<$Timeline>() {
       @Override
-      public Checkpoint<$Timeline> now() {
-        return new Checkpoint<>() {};
-      }
-
-      @Override
-      public <State>
-      State getStateAt(final Checkpoint<$Timeline> time, final Query<? super $Timeline, ?, State> query) {
+      public <State> State get(final Query<? super $Timeline, ?, State> query) {
         throw new UnsupportedOperationException();
       }
 

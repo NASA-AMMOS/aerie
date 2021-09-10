@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
 import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Checkpoint;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -104,7 +103,6 @@ public final class SimulationDriver {
     for (final var profile : profiles.values()) profile.updateAt(adaptation, now);
 
     // Step the stimulus program forward until we reach the end of the simulation.
-    final var checkpoints = new HashMap<Checkpoint<$Timeline>, History<$Timeline>>();
     final var changedTables = new boolean[database.getTableCount()];
     now = queue.consumeUpTo(simulationDuration, now, (delta, frame) -> {
       Arrays.fill(changedTables, false);
@@ -114,27 +112,12 @@ public final class SimulationDriver {
 
         final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
           @Override
-          public Checkpoint<$Timeline> now() {
-            final var checkpoint = new Checkpoint<$Timeline>() {};
-            checkpoints.put(checkpoint, builder.now());
-
-            return checkpoint;
-          }
-
-          @Override
-          public <State> State getStateAt(
-              final Checkpoint<$Timeline> checkpoint,
-              final Query<? super $Timeline, ?, State> token)
-          {
+          public <State> State get(final Query<? super $Timeline, ?, State> token) {
             final var query = adaptation
                 .getQuery(token.specialize())
                 .orElseThrow(() -> new IllegalArgumentException("forged token"));
 
-            final var time = Optional
-                .ofNullable(checkpoints.get(checkpoint))
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            return time.ask(query);
+            return builder.now().ask(query);
           }
 
           @Override
@@ -424,7 +407,6 @@ public final class SimulationDriver {
     var now = database.origin();
 
     // Step the stimulus program forward until the task ends.
-    final var checkpoints = new HashMap<Checkpoint<$Timeline>, History<$Timeline>>();
     final var changedTables = new boolean[database.getTableCount()];
     while (!completedTasks.contains(topTaskInfo.id)) {
       final var frame$ = queue.popNextFrame(now, Duration.MAX_VALUE);
@@ -437,27 +419,12 @@ public final class SimulationDriver {
 
         final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
           @Override
-          public Checkpoint<$Timeline> now() {
-            final var checkpoint = new Checkpoint<$Timeline>() {};
-            checkpoints.put(checkpoint, builder.now());
-
-            return checkpoint;
-          }
-
-          @Override
-          public <State> State getStateAt(
-              final Checkpoint<$Timeline> checkpoint,
-              final Query<? super $Timeline, ?, State> token)
-          {
+          public <State> State get(final Query<? super $Timeline, ?, State> token) {
             final var query = adaptation
                 .getQuery(token.specialize())
                 .orElseThrow(() -> new IllegalArgumentException("forged token"));
 
-            final var time = Optional
-                .ofNullable(checkpoints.get(checkpoint))
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            return time.ask(query);
+            return builder.now().ask(query);
           }
 
           @Override

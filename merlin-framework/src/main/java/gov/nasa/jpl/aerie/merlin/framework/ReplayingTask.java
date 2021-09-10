@@ -3,16 +3,16 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
   private final Scoped<Context> rootContext;
   private final Runnable task;
 
-  private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
+  private final ReactionContext.Memory memory = new ReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
   public ReplayingTask(final Scoped<Context> rootContext, final Runnable task) {
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -21,10 +21,8 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
 
   @Override
   public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
-    this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
-
     final var handle = new ReplayingTaskHandle<$Timeline>();
-    final var context = new ReactionContext<>(this.rootContext, this.breadcrumbs, scheduler, handle);
+    final var context = new ReactionContext<>(this.rootContext, this.memory, scheduler, handle);
 
     try {
       this.rootContext.setWithin(context, this.task::run);
@@ -39,7 +37,7 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
 
   @Override
   public void reset() {
-    this.breadcrumbs.clear();
+    this.memory.clear();
   }
 
   private static final class ReplayingTaskHandle<$Timeline> implements TaskHandle<$Timeline> {
