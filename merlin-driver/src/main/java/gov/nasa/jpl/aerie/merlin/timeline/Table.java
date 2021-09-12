@@ -50,48 +50,51 @@ final class Table<$Timeline, Event, Effect, Model> {
   }
 
   public Model getAt(final History<$Timeline> history) {
+    if (history.getIndex() == START_INDEX) return this.applicator.initial();
+
     // If we already have a model cached for this time point, we can just bail now.
-    if (history.getIndex() == START_INDEX) {
-      return this.applicator.initial();
-    } else if (this.cache.containsKey(history.getIndex())) {
-      return this.cache.get(history.getIndex());
-    }
-
-    // Look for a cached model anytime back to our most recent branch point, if any.
-    final var baseIndex = (history.getLastBranchBase() != null) ? history.getLastBranchBase().getIndex() : START_INDEX;
-    var previousIndex = history.getIndex();
-    while (previousIndex != baseIndex && !this.cache.containsKey(previousIndex)) {
-      previousIndex = this.database.get(previousIndex).getPrevious();
-    }
-
     final Model model;
-    if (previousIndex == baseIndex) {
-      // We didn't find anything. We'll have to query our previous segment for its model.
-      if (history.getLastBranchBase() != null) {
-        model = this.applicator.duplicate(this.getAt(history.getLastBranchBase()));
-      } else {
-        // Well, we don't have a previous segment. Start with the initial model.
-        model = this.applicator.initial();
-      }
+    if (this.cache.containsKey(history.getIndex())) {
+      model = this.cache.get(history.getIndex());
     } else {
-      // We found something! Since we have exclusive ownership over our branch segment, we'll remove it from the cache,
-      // update it directly, and put it back in the cache at our current time point.
-      model = this.cache.remove(previousIndex);
+      // Look for a cached model anytime back to our most recent branch point, if any.
+      final var baseIndex = (history.getLastBranchBase() != null) ? history.getLastBranchBase().getIndex() : START_INDEX;
+      var previousIndex = history.getIndex();
+      while (previousIndex != baseIndex && !this.cache.containsKey(previousIndex)) {
+        previousIndex = this.database.get(previousIndex).getPrevious();
+      }
+
+      if (previousIndex == baseIndex) {
+        // We didn't find anything. We'll have to query our previous segment for its model.
+        if (history.getLastBranchBase() != null) {
+          // Copy the base value so that other branches (and the joined timeline) can still use the cached value.
+          model = this.applicator.duplicate(this.getAt(history.getLastBranchBase()));
+        } else {
+          // Well, we don't have a previous segment. Start with the initial model.
+          model = this.applicator.initial();
+        }
+      } else {
+        // We found something! Since we have exclusive ownership over our branch segment, we'll remove it from the cache,
+        // update it directly, and put it back in the cache at our current time point.
+        model = this.cache.remove(previousIndex);
+      }
+
+      // Compute the effects that have occurred since our last update on this branch.
+      final var effects = this.evaluate(previousIndex, history.getIndex());
+
+      // Step this model up to the current point in time.
+      for (final var effect : effects) {
+        this.applicator.step(model, effect.getKey());
+        this.applicator.apply(model, effect.getValue());
+      }
+
+      // Cache this model for future queries.
+      this.cache.put(history.getIndex(), model);
     }
 
-    // Compute the effects that have occurred since our last update on this branch.
-    final var effects = this.evaluate(previousIndex, history.getIndex());
-
-    // Step this model up to the current point in time.
-    for (final var effect : effects) {
-      this.applicator.step(model, effect.getKey());
-      this.applicator.apply(model, effect.getValue());
-    }
-
-    // Cache this model for future queries.
-    this.cache.put(history.getIndex(), model);
-
-    return model;
+    // Duplicate the cell's value so that our copy can't be affected by downstream mutation,
+    //   and so that our later mutations don't affect downstream consumers caching this value.
+    return this.applicator.duplicate(model);
   }
 
   // PRECONDITION: `startTime` occurs-before `endTime`.
