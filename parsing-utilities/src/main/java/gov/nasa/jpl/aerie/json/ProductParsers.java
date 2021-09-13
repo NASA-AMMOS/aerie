@@ -18,8 +18,35 @@ public abstract class ProductParsers {
 
   public static final EmptyProductParser productP = new EmptyProductParser();
 
+  public interface JsonObjectParser<T> extends JsonParser<T> {
+    @Override JsonObject unparse(final T value);
 
-  public static final class EmptyProductParser implements JsonParser<Unit> {
+    default <S> JsonObjectParser<S> map(final Iso<T, S> transform) {
+      Objects.requireNonNull(transform);
+
+      final var self = this;
+
+      return new JsonObjectParser<>() {
+        @Override
+        public JsonObject getSchema(final Map<Object, String> anchors) {
+          return self.getSchema(anchors);
+        }
+
+        @Override
+        public JsonParseResult<S> parse(final JsonValue json) {
+          return self.parse(json).mapSuccess(transform::from);
+        }
+
+        @Override
+        public JsonObject unparse(final S value) {
+          return self.unparse(transform.to(value));
+        }
+      };
+    }
+  }
+
+
+  public static final class EmptyProductParser implements JsonObjectParser<Unit> {
     private EmptyProductParser() {}
 
     @Override
@@ -40,7 +67,7 @@ public abstract class ProductParsers {
     }
 
     @Override
-    public JsonValue unparse(final Unit value) {
+    public JsonObject unparse(final Unit value) {
       return Json.createObjectBuilder().build();
     }
 
@@ -54,7 +81,7 @@ public abstract class ProductParsers {
   }
 
   // INVARIANT: T must be of the form Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
-  public static final class VariadicProductParser<T> implements JsonParser<T> {
+  public static final class VariadicProductParser<T> implements JsonObjectParser<T> {
     private final ArrayList<FieldSpec<?>> fields;
 
     private VariadicProductParser(final FieldSpec<?> fieldSpec) {
@@ -120,7 +147,7 @@ public abstract class ProductParsers {
     }
 
     @Override
-    public JsonValue unparse(final T value) {
+    public JsonObject unparse(final T value) {
       final var builder = Json.createObjectBuilder();
 
       unparse(builder, value, fields.size());
