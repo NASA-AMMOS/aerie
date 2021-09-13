@@ -3,23 +3,24 @@ package gov.nasa.jpl.aerie.merlin.server.config;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.json.ProductParsers.JsonObjectParser;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 
 import javax.json.JsonObject;
 import javax.json.JsonValue;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.intP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.PathJsonParser.pathP;
+import static gov.nasa.jpl.aerie.json.SumParsers.sumP;
+import static gov.nasa.jpl.aerie.json.SumParsers.variant;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper.UriJsonParser.uriP;
@@ -33,23 +34,27 @@ public final class AppConfigurationJsonMapper {
     return configP.unparse(config);
   }
 
+  private static final JsonParser<JavalinLoggingState> loggingStateP =
+      boolP.map(Iso.of(
+          untuple($ -> $ ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled),
+          $ -> tuple($ == JavalinLoggingState.Enabled)));
+
   private record Server(int port, JavalinLoggingState loggingState, Path merlinFileStore) {}
   private static final JsonParser<Server> serverP =
       productP
           .field("port", intP)
-          .optionalField("logging", boolP)
+          .optionalField("logging", loggingStateP)
           .field("file-store", pathP)
           .map(Iso.of(
               untuple((port, logging, merlinFileStorePath) -> new Server(
                   port,
-                  logging.orElse(false)
-                      ? JavalinLoggingState.Enabled
-                      : JavalinLoggingState.Disabled,
+                  logging.orElse(JavalinLoggingState.Disabled),
                   merlinFileStorePath)),
               $ -> tuple(
                   $.port(),
-                  Optional.of($.loggingState() == JavalinLoggingState.Enabled),
+                  Optional.of($.loggingState()),
                   $.merlinFileStore)));
+
 
   private record Collections(String plans, String activities, String missionModels, String results) {}
   private static final JsonParser<Collections> mongoCollectionsP =
@@ -63,14 +68,13 @@ public final class AppConfigurationJsonMapper {
                   new Collections(plans, activities, missionModels, results)),
               $ -> tuple($.plans(), $.activities(), $.missionModels(), $.results())));
 
-  private static final JsonParser<MongoStore> mongoStoreP =
+  private static final JsonObjectParser<MongoStore> mongoStoreP =
       productP
-          .field("type", literalP("mongo"))
           .field("uri", uriP)
           .field("database", stringP)
           .field("collections", mongoCollectionsP)
           .map(Iso.of(
-              untuple((type, uri, database, collections) -> new MongoStore(
+              untuple((uri, database, collections) -> new MongoStore(
                   uri,
                   database,
                   collections.plans(),
@@ -78,7 +82,6 @@ public final class AppConfigurationJsonMapper {
                   collections.missionModels(),
                   collections.results())),
               $ -> tuple(
-                  Unit.UNIT,
                   $.uri(),
                   $.database(),
                   new Collections(
@@ -87,7 +90,9 @@ public final class AppConfigurationJsonMapper {
                       $.adaptationCollection(),
                       $.simulationResultsCollection()))));
 
-  private static final JsonParser<Store> storeP = chooseP(mongoStoreP);
+  private static final JsonParser<Store> storeP =
+      sumP("type", Store.class, List.of(
+          variant("mongo", MongoStore.class, mongoStoreP)));
 
   private static final JsonParser<AppConfiguration> configP =
       productP
