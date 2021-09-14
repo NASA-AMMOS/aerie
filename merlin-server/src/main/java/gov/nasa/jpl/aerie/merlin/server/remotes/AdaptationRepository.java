@@ -14,8 +14,8 @@ public interface AdaptationRepository {
     // Mutations
     String createAdaptation(AdaptationJar adaptationJar);
     void deleteAdaptation(String adaptationId) throws NoSuchAdaptationException;
-    void replaceConstraints(String adaptationId, Map<String, Constraint> constraints) throws NoSuchAdaptationException;
-    void deleteConstraint(String adaptationId, String constraintId) throws NoSuchAdaptationException;
+    void replaceAdaptationConstraints(String adaptationId, Map<String, Constraint> constraints) throws NoSuchAdaptationException;
+    void deleteAdaptationConstraint(String adaptationId, String constraintId) throws NoSuchAdaptationException;
 
     class NoSuchAdaptationException extends Exception {}
 }

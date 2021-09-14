@@ -139,7 +139,7 @@ public final class LocalAdaptationService implements AdaptationService {
   throws NoSuchAdaptationException
   {
     try {
-      this.adaptationRepository.replaceConstraints(adaptationId, constraints);
+      this.adaptationRepository.replaceAdaptationConstraints(adaptationId, constraints);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
@@ -150,7 +150,7 @@ public final class LocalAdaptationService implements AdaptationService {
   throws NoSuchAdaptationException
   {
     try {
-      this.adaptationRepository.deleteConstraint(adaptationId, constraintName);
+      this.adaptationRepository.deleteAdaptationConstraint(adaptationId, constraintName);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
