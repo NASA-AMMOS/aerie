@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import java.util.Collections;
 import java.util.List;

@@ -7,9 +7,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECOND;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

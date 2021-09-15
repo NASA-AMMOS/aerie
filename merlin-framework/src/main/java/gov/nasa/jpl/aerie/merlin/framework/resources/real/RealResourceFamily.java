@@ -3,9 +3,9 @@ package gov.nasa.jpl.aerie.merlin.framework.resources.real;
 import gov.nasa.jpl.aerie.merlin.framework.Context;
 import gov.nasa.jpl.aerie.merlin.framework.Resource;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
 import java.util.Collections;
 import java.util.Map;

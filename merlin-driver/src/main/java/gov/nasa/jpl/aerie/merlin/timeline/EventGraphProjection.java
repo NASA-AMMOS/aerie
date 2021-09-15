@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.timeline;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.timeline.effects.EventGraph;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.Projection;
 
 /**
  * The identity projection from event graphs to event graphs.

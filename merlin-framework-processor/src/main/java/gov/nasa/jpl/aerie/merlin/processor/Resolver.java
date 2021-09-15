@@ -4,7 +4,7 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern.ClassPattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;

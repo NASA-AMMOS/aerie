@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.fooadaptation.activities;
 import gov.nasa.jpl.aerie.fooadaptation.Mission;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.EffectModel;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 

@@ -1,14 +1,14 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import org.junit.jupiter.api.Test;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.EPSILON;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundDownward;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundNearest;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.roundUpward;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.EPSILON;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.roundDownward;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.roundNearest;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.roundUpward;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public final class DurationTest {

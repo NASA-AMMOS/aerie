@@ -39,4 +39,11 @@ public final class Counter<T> implements DiscreteResource<T> {
   public void add(final T change) {
     this.ref.emit(change);
   }
+
+
+  @Deprecated
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
+  }
 }

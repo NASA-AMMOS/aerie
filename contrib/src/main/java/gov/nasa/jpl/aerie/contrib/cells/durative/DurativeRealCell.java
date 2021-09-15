@@ -1,17 +1,17 @@
 package gov.nasa.jpl.aerie.contrib.cells.durative;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics.delimited;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics.delimited;
 
 public final class DurativeRealCell implements Cell<Collection<Pair<Duration, RealDynamics>>, DurativeRealCell> {
   private final PriorityQueue<Pair<Duration, RealDynamics>> activeEffects;

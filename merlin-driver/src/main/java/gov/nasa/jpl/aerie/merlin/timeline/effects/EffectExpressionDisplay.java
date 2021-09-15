@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.timeline.effects;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;

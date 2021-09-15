@@ -4,10 +4,10 @@ import gov.nasa.jpl.aerie.merlin.framework.Context;
 import gov.nasa.jpl.aerie.merlin.framework.QueryContext;
 import gov.nasa.jpl.aerie.merlin.framework.Resource;
 import gov.nasa.jpl.aerie.merlin.framework.Scoped;
-import gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
 import java.util.List;
 import java.util.Objects;

@@ -2,14 +2,14 @@ package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 
 public final class Main {
   public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {

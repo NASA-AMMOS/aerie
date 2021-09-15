@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.timeline.effects;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -18,7 +21,6 @@ import java.util.function.Function;
  * @see EventGraph
  * @see Projection
  */
-
 public interface EffectExpression<Event> {
   /**
    * Produce an effect in the domain of effects described by the provided trait and event substitution.

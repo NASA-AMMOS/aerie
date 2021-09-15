@@ -1,19 +1,18 @@
-package gov.nasa.jpl.aerie.merlin.timeline.effects;
+package gov.nasa.jpl.aerie.merlin.protocol.model;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * A projection from an {@link EventGraph} to some accumulated effect type.
+ * A projection from a sequence-parallel expression of {@code Event}s to some accumulated {@code Effect} type.
  *
  * <p>
- * <code>Projection</code> extends {@link EffectTrait} by requiring a mapping from events to effects. Just as
- * <code>EffectTrait</code> can be thought of as allowing the construction of algebraic expressions over effects,
- * <code>Projection</code> further allows atomic events to be used as variables in these expressions.
+ * {@code Projection} extends {@link EffectTrait} by requiring an interpretation of events as concretee effects.
+ * Just as {@code EffectTrait} allows the construction of algebraic expressions over effects,
+ * {@code Projection} further allows atomic events to be used as variables in these expressions.
  * </p>
  *
  * @param <Event> The type of event to be mapped into effects.
- * @param <Effect> The type of effect that will be combined according to the event graph structure.
+ * @param <Effect> The type of effect that will be combined according to the expression structure.
  * @see EffectTrait
  */
 public interface Projection<Event, Effect> extends EffectTrait<Effect> {
@@ -29,7 +28,7 @@ public interface Projection<Event, Effect> extends EffectTrait<Effect> {
    * A factory method for constructing projections from an {@link EffectTrait} and an interpretation of events in that
    * trait.
    *
-   * A <code>Projection</code> is an <code>EffectTrait</code> with an additionam function from events to effects. This
+   * A <code>Projection</code> is an <code>EffectTrait</code> with an additional function from events to effects. This
    * factory method allows a <code>Projection</code> to be constructed from these components without requiring a new
    * class declaration.
    *
@@ -45,15 +44,26 @@ public interface Projection<Event, Effect> extends EffectTrait<Effect> {
       final EffectTrait<Effect> trait,
       final Function<Event, Effect> interpretation
   ) {
-    return new AbstractProjection<>(trait) {
+    return new Projection<>() {
       @Override
       public Effect atom(final Event atom) {
         return interpretation.apply(atom);
       }
-    };
-  }
 
-  default <X> Projection<X, Effect> filterContramap(final Function<X, Optional<Event>> f) {
-    return from(this, (x) -> f.apply(x).map(this::atom).orElseGet(this::empty));
+      @Override
+      public final Effect empty() {
+        return trait.empty();
+      }
+
+      @Override
+      public final Effect sequentially(final Effect prefix, final Effect suffix) {
+        return trait.sequentially(prefix, suffix);
+      }
+
+      @Override
+      public final Effect concurrently(final Effect left, final Effect right) {
+        return trait.concurrently(left, right);
+      }
+    };
   }
 }

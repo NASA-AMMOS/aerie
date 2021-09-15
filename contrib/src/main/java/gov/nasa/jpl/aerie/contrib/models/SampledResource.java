@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
 
 public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
@@ -32,5 +32,11 @@ public class SampledResource<T> implements DiscreteResource<T> {
   @Override
   public T getDynamics() {
     return this.result.getDynamics();
+  }
+
+  @Deprecated
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
   }
 }

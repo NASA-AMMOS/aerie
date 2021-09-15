@@ -29,6 +29,10 @@ public final class AdaptationRecord {
     this.activityTypes = Objects.requireNonNull(activityTypes);
   }
 
+  public ClassName getPluginName() {
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedMerlinPlugin");
+  }
+
   public ClassName getFactoryName() {
     return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedAdaptationFactory");
   }

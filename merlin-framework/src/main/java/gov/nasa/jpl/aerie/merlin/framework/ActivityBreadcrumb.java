@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Checkpoint;
 
 public abstract class ActivityBreadcrumb<$Timeline> {
   private ActivityBreadcrumb() {}

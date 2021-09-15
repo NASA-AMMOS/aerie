@@ -1,4 +1,6 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.protocol.driver;
+
+import gov.nasa.jpl.aerie.merlin.protocol.Capability;
 
 /**
  * @param <$Schema>

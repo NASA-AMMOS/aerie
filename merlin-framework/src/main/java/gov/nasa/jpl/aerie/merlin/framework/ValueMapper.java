@@ -1,4 +1,7 @@
-package gov.nasa.jpl.aerie.merlin.protocol;
+package gov.nasa.jpl.aerie.merlin.framework;
+
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 /**
  * A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a

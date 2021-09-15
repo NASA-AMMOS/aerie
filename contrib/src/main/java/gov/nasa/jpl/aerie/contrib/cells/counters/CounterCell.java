@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.contrib.cells.counters;
 
 import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.function.BinaryOperator;
 
