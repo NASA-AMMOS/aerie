@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
@@ -24,7 +25,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
   @Override
   public <CellType> CellType getInitialState(
-      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> query)
+      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> query)
   {
     return this.state.getInitialState(query);
   }
@@ -46,13 +47,9 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     return this.state.daemon(task);
   }
 
-  @Override
-  public <Activity> void taskSpecType(final String name, final TaskSpecType<$Schema, Activity> type) {
-    this.state.taskSpecType(name, type);
-  }
-
-  public Adaptation<$Schema> build() {
-    return this.state.build();
+  public <Model> Adaptation<$Schema, Model>
+  build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+    return this.state.build(model, taskSpecTypes);
   }
 
 
@@ -65,7 +62,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
         Projection<Event, Effect> projection,
         Applicator<Effect, CellType> applicator);
 
-    Adaptation<$Schema> build();
+    <Model>
+    Adaptation<$Schema, Model>
+    build(
+        Phantom<$Schema, Model> model,
+        Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
@@ -74,7 +75,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
     private final List<TaskFactory<$Schema>> daemons = new ArrayList<>();
-    private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes = new HashMap<>();
 
     public UnbuiltState(final Schema.Builder<$Schema> schemaBuilder) {
       this.schemaBuilder = Objects.requireNonNull(schemaBuilder);
@@ -82,7 +82,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> token)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> token)
     {
       // SAFETY: For every entry in the queries map, the type parameters line up.
       @SuppressWarnings("unchecked")
@@ -119,40 +119,28 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
-    public <Activity> void taskSpecType(final String id, final TaskSpecType<$Schema, Activity> taskSpecType) {
-      this.taskSpecTypes.put(id, taskSpecType);
-    }
-
-    @Override
-    public Adaptation<$Schema> build() {
+    public <Model> Adaptation<$Schema, Model>
+    build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
       final var adaptation = new Adaptation<>(
+          model,
           this.queries,
           this.schemaBuilder.build(),
           this.resourceFamilies,
           this.daemons,
-          this.taskSpecTypes);
+          taskSpecTypes);
 
-      AdaptationBuilder.this.state = new BuiltState(adaptation);
+      AdaptationBuilder.this.state = new BuiltState();
 
       return adaptation;
     }
   }
 
   private final class BuiltState implements AdaptationBuilderState<$Schema> {
-    private final Adaptation<$Schema> adaptation;
-
-    public BuiltState(final Adaptation<$Schema> adaptation) {
-      this.adaptation = adaptation;
-    }
-
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, CellType> query)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> query)
     {
-      return this.adaptation
-          .getQuery(query)
-          .orElseThrow(() -> new IllegalArgumentException("Unrecognized query"))
-          .getInitialValue();
+      throw new IllegalStateException("Cannot interact with the builder after it is built");
     }
 
     @Override
@@ -173,13 +161,9 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
-    public <Activity> void taskSpecType(final String id, final TaskSpecType<$Schema, Activity> taskSpecType) {
-      throw new IllegalStateException("Activity types cannot be added after the schema is built");
-    }
-
-    @Override
-    public Adaptation<$Schema> build() {
-      return this.adaptation;
+    public <Model> Adaptation<$Schema, Model>
+    build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+      throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }
 }

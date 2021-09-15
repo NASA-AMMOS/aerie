@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
@@ -15,26 +16,33 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class Adaptation<$Schema> {
+public final class Adaptation<$Schema, Model> {
   private final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries;
 
+  private final Phantom<$Schema, Model> model;
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
-  private final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes;
+  private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
   private final List<Initializer.TaskFactory<$Schema>> daemons;
 
   public Adaptation(
+      final Phantom<$Schema, Model> model,
       final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries,
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
       final List<Initializer.TaskFactory<$Schema>> daemons,
-      final Map<String, TaskSpecType<$Schema, ?>> taskSpecTypes)
+      final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
+    this.model = Objects.requireNonNull(model);
     this.queries = Objects.requireNonNull(queries);
     this.schema = Objects.requireNonNull(schema);
     this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
+  }
+
+  public Phantom<$Schema, Model> getModel() {
+    return this.model;
   }
 
   public <Event, State>
@@ -47,7 +55,7 @@ public final class Adaptation<$Schema> {
     return Optional.ofNullable(query);
   }
 
-  public Map<String, TaskSpecType<$Schema, ?>> getTaskSpecificationTypes() {
+  public Map<String, TaskSpecType<Model, ?>> getTaskSpecificationTypes() {
     return this.taskSpecTypes;
   }
 

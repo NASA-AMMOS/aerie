@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -8,7 +9,7 @@ import java.util.Map;
 
 public interface ActivityMapper<Instance> {
   String getName();
-  List<TaskSpecType.Parameter> getParameters();
+  List<Parameter> getParameters();
   Map<String, SerializedValue> getArguments(Instance activity);
 
   Instance instantiateDefault();

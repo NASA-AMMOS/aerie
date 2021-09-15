@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -21,17 +22,26 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public final class AdaptationLoader {
-    public static Adaptation<?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
+    public static Adaptation<?, ?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         final var service = loadAdaptationProvider(path, name, version);
         final var factory = service.getFactory();
         final var builder = new AdaptationBuilder<>(Schema.builder());
-        factory.instantiate(missionModelConfig, builder);
-        return builder.build();
+        return loadAdaptation(missionModelConfig, factory, builder);
     }
 
-    public static List<AdaptationFactory.Parameter> getConfigurationSchema(final Path path, final String name, final String version)
+    private static <$Schema, Model>
+    Adaptation<$Schema, Model> loadAdaptation(
+        final SerializedValue missionModelConfig,
+        final AdaptationFactory<Model> factory,
+        final AdaptationBuilder<$Schema> builder
+    ) {
+        final var model = factory.instantiate(missionModelConfig, builder);
+        return builder.build(model, factory.getTaskSpecTypes());
+    }
+
+    public static List<Parameter> getConfigurationSchema(final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         return loadAdaptationProvider(path, name, version).getFactory().getParameters();

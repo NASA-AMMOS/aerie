@@ -11,6 +11,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
@@ -21,6 +22,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -802,8 +804,9 @@ public final class AdaptationProcessor implements Processor {
                     .build())
             .addSuperinterface(
                 ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper.class),
-                    TypeName.get(activityType.declaration.asType())))
+                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+                    ClassName.get(adaptation.topLevelModel),
+                    ClassName.get(activityType.declaration)))
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addFields(
                 activityType.parameters
@@ -856,13 +859,13 @@ public final class AdaptationProcessor implements Processor {
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(
                         java.util.ArrayList.class,
-                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter.class))
+                        Parameter.class))
                     .addStatement(
                         "final var $L = new $T()",
                         "parameters",
                         ParameterizedTypeName.get(
                             java.util.ArrayList.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter.class))
+                            Parameter.class))
                     .addCode(
                         activityType.parameters
                             .stream()
@@ -871,7 +874,7 @@ public final class AdaptationProcessor implements Processor {
                                 .addStatement(
                                     "$L.add(new $T( $S, this.mapper_$L.getValueSchema()))",
                                     "parameters",
-                                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter.class,
+                                    Parameter.class,
                                     parameter.name,
                                     parameter.name))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -955,6 +958,58 @@ public final class AdaptationProcessor implements Processor {
                     .addStatement(
                         "return $L",
                         "failures")
+                    .build())
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("createTask")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .addTypeVariables(List.of(
+                        TypeVariableName.get("$Schema"),
+                        TypeVariableName.get("$Timeline", TypeVariableName.get("$Schema"))))
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
+                        TypeVariableName.get("$Timeline")))
+                    .addParameter(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class),
+                            TypeVariableName.get("$Schema"),
+                            ClassName.get(adaptation.topLevelModel)),
+                        "model",
+                        Modifier.FINAL)
+                    .addParameter(
+                        TypeName.get(activityType.declaration.asType()),
+                        "activity",
+                        Modifier.FINAL)
+                    .addCode(
+                        activityType.effectModel
+                            .map(effectModel -> switch (effectModel.getRight()) {
+                              case Threaded -> CodeBlock
+                                  .builder()
+                                  .addStatement(
+                                      "return $T.threaded(() -> $L.$L($L.value())).create()",
+                                      gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                      "activity",
+                                      effectModel.getLeft(),
+                                      "model")
+                                  .build();
+
+                              case Replaying -> CodeBlock
+                                  .builder()
+                                  .addStatement(
+                                      "return $T.replaying(() -> $L.$L($L.value())).create()",
+                                      gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                      "activity",
+                                      effectModel.getLeft(),
+                                      "model")
+                                  .build();
+                            })
+                            .orElseGet(() -> CodeBlock
+                                .builder()
+                                .addStatement(
+                                    "return new $T<>($$ -> {})",
+                                    gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
+                                .build()))
                     .build())
             .build();
 
@@ -1095,7 +1150,24 @@ public final class AdaptationProcessor implements Processor {
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addSuperinterface(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.class)
+            .addSuperinterface(
+                ParameterizedTypeName.get(
+                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.class),
+                    ClassName.get(adaptation.topLevelModel)))
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getTaskSpecTypes")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(Map.class),
+                        ClassName.get(String.class),
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+                            ClassName.get(adaptation.topLevelModel),
+                            WildcardTypeName.subtypeOf(Object.class))))
+                    .addStatement("return $T.activityTypes", adaptation.getTypesName())
+                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("instantiate")
@@ -1112,6 +1184,11 @@ public final class AdaptationProcessor implements Processor {
                             TypeVariableName.get("$Schema")),
                         "builder",
                         Modifier.FINAL)
+                    .returns(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class),
+                            TypeVariableName.get("$Schema"),
+                            ClassName.get(adaptation.topLevelModel)))
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -1152,9 +1229,8 @@ public final class AdaptationProcessor implements Processor {
                                                         .build()))
                     .addCode("\n")
                     .addStatement(
-                        "$T.register($L, $L)",
-                        adaptation.getTypesName(),
-                        "registrar",
+                        "return new $T<>($L)",
+                        gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class,
                         "model")
                     .build())
             .addMethod(
@@ -1162,7 +1238,7 @@ public final class AdaptationProcessor implements Processor {
                     .methodBuilder("getParameters")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(List.class, gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.Parameter.class))
+                    .returns(ParameterizedTypeName.get(List.class, Parameter.class))
                     .addCode(
                         adaptation.modelConfiguration
                             .map(configElem -> CodeBlock  // if configuration is provided
@@ -1171,7 +1247,7 @@ public final class AdaptationProcessor implements Processor {
                                               "parameterMap.keySet().stream().map(name -> new $T(name, parameterMap.get(name))).toList())\n"+
                                               ".orElse($T.of())",
                                     buildConfigurationMapperBlock(adaptation, configElem),
-                                    gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.Parameter.class,
+                                    Parameter.class,
                                     List.class)
                                 .build())
                             .orElse(CodeBlock
@@ -1199,63 +1275,43 @@ public final class AdaptationProcessor implements Processor {
                     .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("register")
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                    .addParameter(
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.Registrar.class),
-                        "registrar",
-                        Modifier.FINAL)
-                    .addParameter(
-                        ClassName.get(adaptation.topLevelModel),
-                        "model",
-                        Modifier.FINAL)
-                    .addCode(
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(List.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+                                ClassName.get(adaptation.topLevelModel),
+                                WildcardTypeName.subtypeOf(Object.class))),
+                        "activityTypeList",
+                        Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                    .initializer(
+                        "$T.of($>$>\n$L$<$<)",
+                        List.class,
                         adaptation.activityTypes
                             .stream()
-                            .map(activityType -> {
-                              if (activityType.effectModel.isEmpty()) {
-                                return CodeBlock
-                                    .builder()
-                                    .addStatement(
-                                        "$L.noopTask(new $T())",
-                                        "registrar",
-                                        activityType.mapper.name);
-                              }
-                              final var effectModel = activityType.effectModel.get();
-
-                              if (effectModel.getRight() == ActivityType.Executor.Threaded) {
-                                return CodeBlock
-                                    .builder()
-                                    .addStatement(
-                                        "$L.threadedTask("
-                                        + "\n" + "new $T(),"
-                                        + "\n" + "activity -> activity.$L($L))",
-                                        "registrar",
-                                        activityType.mapper.name,
-                                        effectModel.getLeft(),
-                                        "model");
-                              } else if (effectModel.getRight() == ActivityType.Executor.Replaying) {
-                                return CodeBlock
-                                    .builder()
-                                    .addStatement(
-                                        "$L.replayingTask("
-                                        + "\n" + "new $T(),"
-                                        + "\n" + "activity -> activity.$L($L))",
-                                        "registrar",
-                                        activityType.mapper.name,
-                                        effectModel.getLeft(),
-                                        "model");
-                              } else {
-                                messager.printMessage(
-                                    Diagnostic.Kind.ERROR,
-                                    "Internal error: unknown executor type " + effectModel.getRight());
-                                return CodeBlock.builder();
-                              }
-                            })
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                            .map(activityType -> CodeBlock.builder().add("new $T()", activityType.mapper.name))
+                            .reduce((x, y) -> x.add(",\n$L", y.build()))
+                            .orElse(CodeBlock.builder())
                             .build())
+                    .build())
+            .addField(
+                FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(Map.class),
+                            ClassName.get(String.class),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+                                ClassName.get(adaptation.topLevelModel),
+                                WildcardTypeName.subtypeOf(Object.class))),
+                        "activityTypes",
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                    .initializer(
+                        "$L.stream().collect($T.toMap($$ -> $$.getName(), $$ -> $$));",
+                        "activityTypeList",
+                        java.util.stream.Collectors.class)
                     .build())
             .build();
 

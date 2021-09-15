@@ -41,9 +41,9 @@ public final class AdaptationTest {
             "foo", new ActivityType(
                 "foo",
                 List.of(
-                    new TaskSpecType.Parameter("x", ValueSchema.INT),
-                    new TaskSpecType.Parameter("y", ValueSchema.STRING),
-                    new TaskSpecType.Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                    new Parameter("x", ValueSchema.INT),
+                    new Parameter("y", ValueSchema.STRING),
+                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 Map.of(
                     "x", SerializedValue.of(0),
                     "y", SerializedValue.of("test"),
@@ -67,9 +67,9 @@ public final class AdaptationTest {
         final ActivityType expectedType = new ActivityType(
             "foo",
             List.of(
-                new TaskSpecType.Parameter("x", ValueSchema.INT),
-                new TaskSpecType.Parameter("y", ValueSchema.STRING),
-                new TaskSpecType.Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                new Parameter("x", ValueSchema.INT),
+                new Parameter("y", ValueSchema.STRING),
+                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             Map.of(
                 "x", SerializedValue.of(0),
                 "y", SerializedValue.of("test"),

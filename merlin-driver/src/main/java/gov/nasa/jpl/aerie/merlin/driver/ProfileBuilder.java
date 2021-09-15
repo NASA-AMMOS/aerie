@@ -30,7 +30,7 @@ public final class ProfileBuilder<$Schema, Resource, Dynamics> {
   }
 
   public <$Timeline extends $Schema>
-  void updateAt(final Adaptation<$Schema> adaptation, final History<$Timeline> history) {
+  void updateAt(final Adaptation<$Schema, ?> adaptation, final History<$Timeline> history) {
     this.lastDependencies.clear();
 
     final var dynamics = this.solver.getDynamics(this.resource, new Querier<$Timeline>() {

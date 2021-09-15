@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class AdaptationFacade<$Schema> {
-  private final Adaptation<$Schema> adaptation;
+  private final Adaptation<$Schema, ?> adaptation;
 
-  public AdaptationFacade(final Adaptation<$Schema> adaptation) throws AdaptationContractException {
+  public AdaptationFacade(final Adaptation<$Schema, ?> adaptation) throws AdaptationContractException {
     this.adaptation = adaptation;
   }
 
@@ -89,12 +89,12 @@ public final class AdaptationFacade<$Schema> {
     return getValidationFailures(specType, arguments);
   }
 
-  private <Specification> Map<String, SerializedValue> getDefaultArguments(final TaskSpecType<$Schema, Specification> specType) {
+  private <Specification> Map<String, SerializedValue> getDefaultArguments(final TaskSpecType<?, Specification> specType) {
     return specType.getArguments(specType.instantiateDefault());
   }
 
   private <Specification> List<String> getValidationFailures(
-      final TaskSpecType<$Schema, Specification> specType,
+      final TaskSpecType<?, Specification> specType,
       final Map<String, SerializedValue> arguments)
   throws UnconstructableActivityInstanceException
   {
