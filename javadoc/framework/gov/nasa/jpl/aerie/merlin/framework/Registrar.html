@@ -91,7 +91,7 @@ loadScripts(document, 'script');</script>
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><span class="member-name-link"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.Builder)">Registrar</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.Builder&lt;?&gt;&nbsp;builder)</code></div>
+<div class="col-constructor-name even-row-color"><code><span class="member-name-link"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer)">Registrar</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer&lt;?&gt;&nbsp;builder)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
@@ -108,9 +108,9 @@ loadScripts(document, 'script');</script>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Value&gt;&nbsp;<a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Value&gt;</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.framework.ValueMapper)">discrete</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
  <a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;Value&gt;&nbsp;resource,
- gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;Value&gt;&nbsp;mapper)</code></div>
+ <a href="ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ValueMapper</a>&lt;Value&gt;&nbsp;mapper)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>boolean</code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#isInitializationComplete()">isInitializationComplete</a></span>()</code></div>
@@ -120,7 +120,7 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a></code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource)">real</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
- <a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;&nbsp;resource)</code></div>
+ <a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics&gt;&nbsp;resource)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>&lt;Activity&gt;&nbsp;void</code></div>
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#replayingTask(gov.nasa.jpl.aerie.merlin.framework.ActivityMapper,java.util.function.Consumer)">replayingTask</a></span>&#8203;(<a href="ActivityMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ActivityMapper</a>&lt;Activity&gt;&nbsp;mapper,
@@ -148,9 +148,9 @@ loadScripts(document, 'script');</script>
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.Builder)">
+<section class="detail" id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer)">
 <h3>Registrar</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Registrar</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory.Builder&lt;?&gt;&nbsp;builder)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">Registrar</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer&lt;?&gt;&nbsp;builder)</span></div>
 </section>
 </li>
 </ul>
@@ -168,18 +168,18 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
+<section class="detail" id="discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.framework.ValueMapper)">
 <h3>discrete</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Value&gt;</span>&nbsp;<span class="return-type"><a href="resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a>&lt;Value&gt;</span>&nbsp;<span class="element-name">discrete</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
  <a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;Value&gt;&nbsp;resource,
- gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;Value&gt;&nbsp;mapper)</span></div>
+ <a href="ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ValueMapper</a>&lt;Value&gt;&nbsp;mapper)</span></div>
 </section>
 </li>
 <li>
 <section class="detail" id="real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource)">
 <h3>real</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="resources/real/RealResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.real">RealResource</a></span>&nbsp;<span class="element-name">real</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;name,
- <a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.RealDynamics&gt;&nbsp;resource)</span></div>
+ <a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics&gt;&nbsp;resource)</span></div>
 </section>
 </li>
 <li>

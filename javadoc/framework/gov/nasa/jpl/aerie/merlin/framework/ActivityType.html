@@ -79,12 +79,12 @@ loadScripts(document, 'script');</script>
 <section class="description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Activity&gt;</code></dd>
+<dd><code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;$Schema,&#8203;Activity&gt;</code></dd>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public abstract class </span><span class="element-name type-name-label">ActivityType&lt;$Schema,&#8203;Activity&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Activity&gt;</span></div>
+implements gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;$Schema,&#8203;Activity&gt;</span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -93,8 +93,8 @@ implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Act
 <section class="nested-class-summary" id="nested.class.summary">
 <h2>Nested Class Summary</h2>
 <div class="inherited-list">
-<h2 id="nested.classes.inherited.from.class.gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType">Nested classes/interfaces inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType</h2>
-<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException</code></div>
+<h2 id="nested.classes.inherited.from.class.gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType">Nested classes/interfaces inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType</h2>
+<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter, gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException</code></div>
 </section>
 </li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
@@ -123,20 +123,20 @@ implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Act
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;</code></div>
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getArguments(Activity)">getArguments</a></span>&#8203;(<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&nbsp;activity)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getName()">getName</a></span>()</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema&gt;</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter&gt;</code></div>
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getParameters()">getParameters</a></span>()</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getValidationFailures(Activity)">getValidationFailures</a></span>&#8203;(<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&nbsp;activity)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="ActivityType.html" title="type parameter in ActivityType">Activity</a></code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#instantiate(java.util.Map)">instantiate</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#instantiate(java.util.Map)">instantiate</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="ActivityType.html" title="type parameter in ActivityType">Activity</a></code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#instantiateDefault()">instantiateDefault</a></span>()</code></div>
@@ -148,7 +148,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Act
 <h3 id="methods.inherited.from.class.java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
 <div class="inherited-list">
-<h3 id="methods.inherited.from.class.gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType">Methods inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType</h3>
+<h3 id="methods.inherited.from.class.gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType">Methods inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType</h3>
 <code>createTask</code></div>
 </section>
 </li>
@@ -181,17 +181,17 @@ implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Act
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">getName</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getName</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
+<dd><code>getName</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
 <li>
 <section class="detail" id="getParameters()">
 <h3>getParameters</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.ParameterSchema&gt;</span>&nbsp;<span class="element-name">getParameters</span>()</div>
+<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.Parameter&gt;</span>&nbsp;<span class="element-name">getParameters</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getParameters</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
+<dd><code>getParameters</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -201,30 +201,30 @@ implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Act
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="ActivityType.html" title="type parameter in ActivityType">Activity</a></span>&nbsp;<span class="element-name">instantiateDefault</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>instantiateDefault</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
+<dd><code>instantiateDefault</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
 <li>
 <section class="detail" id="instantiate(java.util.Map)">
 <h3>instantiate</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="ActivityType.html" title="type parameter in ActivityType">Activity</a></span>&nbsp;<span class="element-name">instantiate</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</span>
-                           throws <span class="exceptions">gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException</span></div>
+<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="ActivityType.html" title="type parameter in ActivityType">Activity</a></span>&nbsp;<span class="element-name">instantiate</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</span>
+                           throws <span class="exceptions">gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>instantiate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
+<dd><code>instantiate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
 <dt>Throws:</dt>
-<dd><code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType.UnconstructableTaskSpecException</code></dd>
+<dd><code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException</code></dd>
 </dl>
 </section>
 </li>
 <li>
 <section class="detail" id="getArguments(Activity)">
 <h3 id="getArguments(java.lang.Object)">getArguments</h3>
-<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;</span>&nbsp;<span class="element-name">getArguments</span>&#8203;<span class="parameters">(<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&nbsp;activity)</span></div>
+<div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;</span>&nbsp;<span class="element-name">getArguments</span>&#8203;<span class="parameters">(<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&nbsp;activity)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getArguments</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
+<dd><code>getArguments</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
@@ -234,7 +234,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;$Schema,&#8203;Act
 <div class="member-signature"><span class="modifiers">public final</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">getValidationFailures</span>&#8203;<span class="parameters">(<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&nbsp;activity)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getValidationFailures</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
+<dd><code>getValidationFailures</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType&lt;<a href="ActivityType.html" title="type parameter in ActivityType">$Schema</a>,&#8203;<a href="ActivityType.html" title="type parameter in ActivityType">Activity</a>&gt;</code></dd>
 </dl>
 </section>
 </li>

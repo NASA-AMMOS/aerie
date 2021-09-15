@@ -46,13 +46,13 @@ loadScripts(document, 'script');</script>
 <li>Summary:&nbsp;</li>
 <li>Nested&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li>Constr&nbsp;|&nbsp;</li>
+<li><a href="#constructor.summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.summary">Method</a></li>
 </ul>
 <ul class="sub-nav-list">
 <li>Detail:&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
-<li>Constr&nbsp;|&nbsp;</li>
+<li><a href="#constructor.detail">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method.detail">Method</a></li>
 </ul>
 </div>
@@ -78,11 +78,26 @@ loadScripts(document, 'script');</script>
 </div>
 <section class="description">
 <hr>
-<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">ModelActions</span>
+<div class="type-signature"><span class="modifiers">public class </span><span class="element-name type-name-label">ModelActions</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== CONSTRUCTOR SUMMARY ======== -->
+<li>
+<section class="constructor-summary" id="constructor.summary">
+<h2>Constructor Summary</h2>
+<div class="caption"><span>Constructors</span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier</div>
+<div class="table-header col-second">Constructor</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>protected </code></div>
+<div class="col-constructor-name even-row-color"><code><span class="member-name-link"><a href="#%3Cinit%3E()">ModelActions</a></span>()</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+</section>
+</li>
 <!-- ========== METHOD SUMMARY =========== -->
 <li>
 <section class="method-summary" id="method.summary">
@@ -102,43 +117,43 @@ loadScripts(document, 'script');</script>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static void</code></div>
 <div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#call(java.lang.String,java.util.Map)">call</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</code></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(long,gov.nasa.jpl.aerie.merlin.protocol.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer</a></span>&#8203;(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit,
+<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer</a></span>&#8203;(long&nbsp;quantity,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit,
  <a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a>&nbsp;task)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(long,gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.Runnable)">defer</a></span>&#8203;(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit,
+<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.Runnable)">defer</a></span>&#8203;(long&nbsp;quantity,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(long,gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit,
+<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(long&nbsp;quantity,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</code></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(gov.nasa.jpl.aerie.merlin.protocol.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration,
+<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(gov.nasa.jpl.aerie.merlin.protocol.types.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">defer</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration,
  <a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a>&nbsp;task)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.Runnable)">defer</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration,
+<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.Runnable)">defer</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
-<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration,
+<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#defer(gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.String,java.util.Map)">defer</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</code></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static void</code></div>
-<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#delay(long,gov.nasa.jpl.aerie.merlin.protocol.Duration)">delay</a></span>&#8203;(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit)</code></div>
+<div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#delay(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration)">delay</a></span>&#8203;(long&nbsp;quantity,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static void</code></div>
-<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#delay(gov.nasa.jpl.aerie.merlin.protocol.Duration)">delay</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration)</code></div>
+<div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#delay(gov.nasa.jpl.aerie.merlin.protocol.types.Duration)">delay</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a></code></div>
 <div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#replaying(java.lang.Runnable)">replaying</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</code></div>
@@ -151,7 +166,7 @@ loadScripts(document, 'script');</script>
 <div class="col-last odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#spawn(java.lang.String,java.util.Map)">spawn</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</code></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</code></div>
 <div class="col-last even-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code>static <a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a></code></div>
 <div class="col-second odd-row-color method-summary-table-tab1 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#threaded(java.lang.Runnable)">threaded</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</code></div>
@@ -174,6 +189,20 @@ loadScripts(document, 'script');</script>
 </section>
 <section class="details">
 <ul class="details-list">
+<!-- ========= CONSTRUCTOR DETAIL ======== -->
+<li>
+<section class="constructor-details" id="constructor.detail">
+<h2>Constructor Details</h2>
+<ul class="member-list">
+<li>
+<section class="detail" id="&lt;init&gt;()">
+<h3>ModelActions</h3>
+<div class="member-signature"><span class="modifiers">protected</span>&nbsp;<span class="element-name">ModelActions</span>()</div>
+</section>
+</li>
+</ul>
+</section>
+</li>
 <!-- ============ METHOD DETAIL ========== -->
 <li>
 <section class="method-details" id="method.detail">
@@ -207,7 +236,7 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="spawn(java.lang.String,java.util.Map)">
 <h3>spawn</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">spawn</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</span></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</span></div>
 </section>
 </li>
 <li>
@@ -226,67 +255,67 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="call(java.lang.String,java.util.Map)">
 <h3>call</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">call</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</span></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="defer(gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.Runnable)">
+<section class="detail" id="defer(gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.Runnable)">
 <h3>defer</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration,
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="defer(gov.nasa.jpl.aerie.merlin.protocol.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">
+<section class="detail" id="defer(gov.nasa.jpl.aerie.merlin.protocol.types.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">
 <h3>defer</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration,
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration,
  <a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a>&nbsp;task)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="defer(gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.String,java.util.Map)">
+<section class="detail" id="defer(gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.String,java.util.Map)">
 <h3>defer</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration,
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</span></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="defer(long,gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.Runnable)">
+<section class="detail" id="defer(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.Runnable)">
 <h3>defer</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Runnable.html" title="class or interface in java.lang" class="external-link">Runnable</a>&nbsp;task)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="defer(long,gov.nasa.jpl.aerie.merlin.protocol.Duration,java.lang.String,java.util.Map)">
+<section class="detail" id="defer(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration,java.lang.String,java.util.Map)">
 <h3>defer</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;type,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&gt;&nbsp;arguments)</span></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Map.html" title="class or interface in java.util" class="external-link">Map</a>&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>,&#8203;gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&gt;&nbsp;arguments)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="defer(long,gov.nasa.jpl.aerie.merlin.protocol.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">
+<section class="detail" id="defer(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration,gov.nasa.jpl.aerie.merlin.framework.Context.TaskFactory)">
 <h3>defer</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">defer</span>&#8203;<span class="parameters">(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit,
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit,
  <a href="Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a>&nbsp;task)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="delay(gov.nasa.jpl.aerie.merlin.protocol.Duration)">
+<section class="detail" id="delay(gov.nasa.jpl.aerie.merlin.protocol.types.Duration)">
 <h3>delay</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">delay</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;duration)</span></div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">delay</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration)</span></div>
 </section>
 </li>
 <li>
-<section class="detail" id="delay(long,gov.nasa.jpl.aerie.merlin.protocol.Duration)">
+<section class="detail" id="delay(long,gov.nasa.jpl.aerie.merlin.protocol.types.Duration)">
 <h3>delay</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">delay</span>&#8203;<span class="parameters">(long&nbsp;quantity,
- gov.nasa.jpl.aerie.merlin.protocol.Duration&nbsp;unit)</span></div>
+ gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;unit)</span></div>
 </section>
 </li>
 <li>

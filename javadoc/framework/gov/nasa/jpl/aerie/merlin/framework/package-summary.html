@@ -73,12 +73,21 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="Resource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Resource</a>&lt;Dynamics&gt;</div>
 <div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-first even-row-color"><a href="Result.Visitor.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Result.Visitor</a>&lt;Success,&#8203;Failure,&#8203;Output,&#8203;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><a href="Result.VisitorCase.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Result.VisitorCase</a>&lt;Input,&#8203;Output,&#8203;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</div>
+<div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><a href="Scoped.BlockScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.BlockScope</a>&lt;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</div>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="Scoped.ExpressionScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.ExpressionScope</a>&lt;Result,&#8203;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</div>
 <div class="col-last odd-row-color">&nbsp;</div>
 <div class="col-first even-row-color"><a href="TaskHandle.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">TaskHandle</a>&lt;$Timeline&gt;</div>
 <div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><a href="ValueMapper.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">ValueMapper</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color">
+<div class="block">A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a
+ mission-agnostic representation of that data type.</div>
+</div>
 </div>
 </li>
 <li>
@@ -110,11 +119,27 @@ loadScripts(document, 'script');</script>
 <div class="col-last even-row-color">&nbsp;</div>
 <div class="col-first odd-row-color"><a href="ReplayingTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ReplayingTask</a>&lt;$Timeline&gt;</div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;T&gt;</div>
+<div class="col-first even-row-color"><a href="Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a>&lt;Success,&#8203;Failure&gt;</div>
 <div class="col-last even-row-color">
+<div class="block">This class is the equivalent of the type `Result L R = Success L | Failure R` in a language with algebraic data types,
+ but adapted to the vagaries of the Java platform.</div>
+</div>
+<div class="col-first odd-row-color"><a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;T&gt;</div>
+<div class="col-last odd-row-color">
 <div class="block">A dynamically-scoped cell.</div>
 </div>
-<div class="col-first odd-row-color"><a href="ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a>&lt;$Timeline&gt;</div>
+<div class="col-first even-row-color"><a href="ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a>&lt;$Timeline&gt;</div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+</li>
+<li>
+<div class="caption"><span>Enum Class Summary</span></div>
+<div class="summary-table two-column-summary">
+<div class="table-header col-first">Enum Class</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><a href="Context.ContextType.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework">Context.ContextType</a></div>
+<div class="col-last even-row-color">&nbsp;</div>
+<div class="col-first odd-row-color"><a href="Result.Kind.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework">Result.Kind</a></div>
 <div class="col-last odd-row-color">&nbsp;</div>
 </div>
 </li>

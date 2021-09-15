@@ -36,6 +36,7 @@ loadScripts(document, 'script');</script>
 <li><a href="package-summary.html">Package</a></li>
 <li class="nav-bar-cell1-rev">Class</li>
 <li><a href="package-tree.html">Tree</a></li>
+<li><a href="../../../../../../../deprecated-list.html">Deprecated</a></li>
 <li><a href="../../../../../../../index-all.html">Index</a></li>
 <li><a href="../../../../../../../help-doc.html">Help</a></li>
 </ul>
@@ -79,12 +80,12 @@ loadScripts(document, 'script');</script>
 <section class="description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code>gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;T&gt;&gt;</code></dd>
+<dd><code>gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;T&gt;&gt;</code></dd>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">ListValueMapper&lt;T&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;T&gt;&gt;</span></div>
+implements gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;T&gt;&gt;</span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -96,7 +97,7 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="https://do
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><span class="member-name-link"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">ListValueMapper</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elementMapper)</code></div>
+<div class="col-constructor-name even-row-color"><code><span class="member-name-link"><a href="#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.ValueMapper)">ListValueMapper</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elementMapper)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
@@ -112,13 +113,13 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="https://do
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.protocol.Result&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#deserializeValue(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue)">deserializeValue</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&nbsp;serializedValue)</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.framework.Result&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#deserializeValue(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue)">deserializeValue</a></span>&#8203;(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&nbsp;serializedValue)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.protocol.ValueSchema</code></div>
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema</code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#getValueSchema()">getValueSchema</a></span>()</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.protocol.SerializedValue</code></div>
+<div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue</code></div>
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#serializeValue(java.util.List)">serializeValue</a></span>&#8203;(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elements)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
 </div>
@@ -139,9 +140,9 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="https://do
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.protocol.ValueMapper)">
+<section class="detail" id="&lt;init&gt;(gov.nasa.jpl.aerie.merlin.framework.ValueMapper)">
 <h3>ListValueMapper</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">ListValueMapper</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elementMapper)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">ListValueMapper</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elementMapper)</span></div>
 </section>
 </li>
 </ul>
@@ -155,30 +156,30 @@ implements gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="https://do
 <li>
 <section class="detail" id="getValueSchema()">
 <h3>getValueSchema</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.ValueSchema</span>&nbsp;<span class="element-name">getValueSchema</span>()</div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema</span>&nbsp;<span class="element-name">getValueSchema</span>()</div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>getValueSchema</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;</code></dd>
+<dd><code>getValueSchema</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
 <li>
-<section class="detail" id="deserializeValue(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue)">
+<section class="detail" id="deserializeValue(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue)">
 <h3>deserializeValue</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.Result&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">deserializeValue</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.SerializedValue&nbsp;serializedValue)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.framework.Result&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;,&#8203;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">deserializeValue</span>&#8203;<span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&nbsp;serializedValue)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>deserializeValue</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;</code></dd>
+<dd><code>deserializeValue</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
 <li>
 <section class="detail" id="serializeValue(java.util.List)">
 <h3>serializeValue</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.SerializedValue</span>&nbsp;<span class="element-name">serializeValue</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elements)</span></div>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue</span>&nbsp;<span class="element-name">serializeValue</span>&#8203;<span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;&nbsp;elements)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code>serializeValue</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.protocol.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;</code></dd>
+<dd><code>serializeValue</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.ValueMapper&lt;<a href="ListValueMapper.html" title="type parameter in ListValueMapper">T</a>&gt;</code></dd>
 </dl>
 </section>
 </li>
