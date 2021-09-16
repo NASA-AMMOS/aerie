@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.utilities;
 
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -17,11 +16,17 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public final class AdaptationLoader {
+    public static AdaptationFactory<?> loadAdaptationFactory(final Path path, final String name, final String version)
+        throws AdaptationLoadException
+    {
+        final var service = loadAdaptationProvider(path, name, version);
+        return service.getFactory();
+    }
+
     public static Adaptation<?, ?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
@@ -39,12 +44,6 @@ public final class AdaptationLoader {
     ) {
         final var model = factory.instantiate(missionModelConfig, builder);
         return builder.build(model, factory.getTaskSpecTypes());
-    }
-
-    public static List<Parameter> getConfigurationSchema(final Path path, final String name, final String version)
-        throws AdaptationLoadException
-    {
-        return loadAdaptationProvider(path, name, version).getFactory().getParameters();
     }
 
     public static MerlinPlugin loadAdaptationProvider(final Path path, final String name, final String version)

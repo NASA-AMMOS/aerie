@@ -160,7 +160,7 @@ public final class LocalAdaptationService implements AdaptationService {
   public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
-    return loadAdaptation(adaptationId).getStateSchemas();
+    return loadConfiguredAdaptation(adaptationId).getStateSchemas();
   }
 
   /**
@@ -176,7 +176,7 @@ public final class LocalAdaptationService implements AdaptationService {
   public Map<String, ActivityType> getActivityTypes(String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
-    return loadAdaptation(adaptationId)
+    return loadUnconfiguredAdaptation(adaptationId)
         .getActivityTypes();
   }
 
@@ -196,7 +196,7 @@ public final class LocalAdaptationService implements AdaptationService {
   throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationLoadException
   {
     try {
-      return loadAdaptation(adaptationId).getActivityType(activityTypeId);
+      return loadUnconfiguredAdaptation(adaptationId).getActivityType(activityTypeId);
     } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activityTypeId, ex);
     }
@@ -218,7 +218,7 @@ public final class LocalAdaptationService implements AdaptationService {
   throws NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoadException
   {
     try {
-      return this.loadAdaptation(adaptationId)
+      return this.loadConfiguredAdaptation(adaptationId)
                  .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
     } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
@@ -231,14 +231,7 @@ public final class LocalAdaptationService implements AdaptationService {
   public List<Parameter> getModelParameters(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
-    try {
-      final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
-      return AdaptationLoader.getConfigurationSchema(adaptationJar.path, adaptationJar.name, adaptationJar.version);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
-      throw new NoSuchAdaptationException(adaptationId, ex);
-    } catch (final AdaptationLoader.AdaptationLoadException ex) {
-      throw new AdaptationLoadException(ex);
-    }
+    return loadUnconfiguredAdaptation(adaptationId).getParameters();
   }
 
   /**
@@ -259,7 +252,7 @@ public final class LocalAdaptationService implements AdaptationService {
           "No mission model configuration defined for adaptation. Simulations will receive an empty set of configuration arguments.");
     }
 
-    return loadAdaptation(message.adaptationId(), SerializedValue.of(config))
+    return loadConfiguredAdaptation(message.adaptationId(), SerializedValue.of(config))
         .simulate(message.activityInstances(), message.samplingDuration(), message.startTime());
   }
 
@@ -316,6 +309,21 @@ public final class LocalAdaptationService implements AdaptationService {
     return Runtime.version().feature() + 44 >= javaClass.getMajor();
   }
 
+  private AdaptationFacade.Unconfigured<?> loadUnconfiguredAdaptation(final String adaptationId)
+  throws NoSuchAdaptationException, AdaptationLoadException
+  {
+    try {
+      final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
+      final var adaptation =
+          AdaptationLoader.loadAdaptationFactory(adaptationJar.path, adaptationJar.name, adaptationJar.version);
+      return new AdaptationFacade.Unconfigured<>(adaptation);
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    } catch (final AdaptationLoader.AdaptationLoadException ex) {
+      throw new AdaptationLoadException(ex);
+    }
+  }
+
   /**
    * Load an {@link Adaptation} from the adaptation repository using the adaptation's default mission model configuration,
    * and wrap it in an {@link AdaptationFacade} domain object.
@@ -326,10 +334,10 @@ public final class LocalAdaptationService implements AdaptationService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
    */
-  private AdaptationFacade<?> loadAdaptation(final String adaptationId)
+  private AdaptationFacade<?> loadConfiguredAdaptation(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
-    return loadAdaptation(adaptationId, SerializedValue.of(Map.of()));
+    return loadConfiguredAdaptation(adaptationId, SerializedValue.of(Map.of()));
   }
 
   /**
@@ -342,7 +350,7 @@ public final class LocalAdaptationService implements AdaptationService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
    */
-  private AdaptationFacade<?> loadAdaptation(final String adaptationId, final SerializedValue configuration)
+  private AdaptationFacade<?> loadConfiguredAdaptation(final String adaptationId, final SerializedValue configuration)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {

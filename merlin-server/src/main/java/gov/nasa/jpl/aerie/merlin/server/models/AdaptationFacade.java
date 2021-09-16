@@ -4,11 +4,13 @@ import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
@@ -61,24 +63,6 @@ public final class AdaptationFacade<$Schema> {
     return schemas;
   }
 
-  public Map<String, ActivityType> getActivityTypes() throws AdaptationContractException {
-    final var activityTypes = new HashMap<String, ActivityType>();
-    this.adaptation.getTaskSpecificationTypes().forEach((name, specType) -> {
-      activityTypes.put(name, new ActivityType(name, specType.getParameters(), getDefaultArguments(specType)));
-    });
-    return activityTypes;
-  }
-
-  public ActivityType getActivityType(final String typeName)
-  throws NoSuchActivityTypeException, AdaptationContractException
-  {
-    final var specType = Optional
-        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
-        .orElseThrow(NoSuchActivityTypeException::new);
-
-    return new ActivityType(typeName, specType.getParameters(), getDefaultArguments(specType));
-  }
-
   public List<String> validateActivity(final String typeName, final Map<String, SerializedValue> arguments)
   throws NoSuchActivityTypeException, UnconstructableActivityInstanceException
   {
@@ -87,10 +71,6 @@ public final class AdaptationFacade<$Schema> {
         .orElseThrow(NoSuchActivityTypeException::new);
 
     return getValidationFailures(specType, arguments);
-  }
-
-  private <Specification> Map<String, SerializedValue> getDefaultArguments(final TaskSpecType<?, Specification> specType) {
-    return specType.getArguments(specType.instantiateDefault());
   }
 
   private <Specification> List<String> getValidationFailures(
@@ -104,6 +84,42 @@ public final class AdaptationFacade<$Schema> {
       throw new UnconstructableActivityInstanceException(
           "Unknown failure when deserializing activity -- do the parameters match the schema?",
           e);
+    }
+  }
+
+  private static <Specification> Map<String, SerializedValue> getDefaultArguments(final TaskSpecType<?, Specification> specType) {
+    return specType.getArguments(specType.instantiateDefault());
+  }
+
+  public static final class Unconfigured<Model> {
+    private final AdaptationFactory<Model> factory;
+
+    public Unconfigured(final AdaptationFactory<Model> factory) {
+      this.factory = factory;
+    }
+
+    public Map<String, ActivityType> getActivityTypes()
+    throws AdaptationFacade.AdaptationContractException
+    {
+      final var activityTypes = new HashMap<String, ActivityType>();
+      factory.getTaskSpecTypes().forEach((name, specType) -> {
+        activityTypes.put(name, new ActivityType(name, specType.getParameters(), getDefaultArguments(specType)));
+      });
+      return activityTypes;
+    }
+
+    public ActivityType getActivityType(final String typeName)
+    throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException
+    {
+      final var specType = Optional
+          .ofNullable(factory.getTaskSpecTypes().get(typeName))
+          .orElseThrow(AdaptationFacade.NoSuchActivityTypeException::new);
+
+      return new ActivityType(typeName, specType.getParameters(), getDefaultArguments(specType));
+    }
+
+    public List<Parameter> getParameters() {
+      return factory.getParameters();
     }
   }
 

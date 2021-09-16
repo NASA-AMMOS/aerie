@@ -21,12 +21,14 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 public final class AdaptationTest {
 
     private AdaptationFacade<?> adaptation;
+    private AdaptationFacade.Unconfigured<?> unconfiguredAdaptation;
 
     @BeforeEach
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
         this.adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
+        this.unconfiguredAdaptation = new AdaptationFacade.Unconfigured<>(new GeneratedAdaptationFactory());
     }
 
     private static <$Schema> AdaptationFacade<$Schema> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
@@ -56,7 +58,7 @@ public final class AdaptationTest {
                                     SerializedValue.of(0.0),
                                     SerializedValue.of(0.0))))))));
         // WHEN
-        final Map<String, ActivityType> typeList = adaptation.getActivityTypes();
+        final Map<String, ActivityType> typeList = unconfiguredAdaptation.getActivityTypes();
 
         // THEN
         assertThat(typeList).containsAllEntriesOf(expectedTypes);
@@ -83,7 +85,7 @@ public final class AdaptationTest {
                                 SerializedValue.of(0.0)))))));
 
         // WHEN
-        final ActivityType type = adaptation.getActivityType(expectedType.name);
+        final ActivityType type = unconfiguredAdaptation.getActivityType(expectedType.name);
 
         // THEN
         assertThat(type).isEqualTo(expectedType);
@@ -95,7 +97,7 @@ public final class AdaptationTest {
         final String activityId = "nonexistent activity type";
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> adaptation.getActivityType(activityId));
+        final Throwable thrown = catchThrowable(() -> unconfiguredAdaptation.getActivityType(activityId));
 
         // THEN
         assertThat(thrown).isInstanceOf(AdaptationFacade.NoSuchActivityTypeException.class);
