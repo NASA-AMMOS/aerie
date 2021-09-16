@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
@@ -26,12 +26,13 @@ public final class AdaptationTest {
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
+        this.adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
+    }
 
+    private static <$Schema> AdaptationFacade<$Schema> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
         final var factory = new GeneratedAdaptationFactory();
-        final var builder = new AdaptationBuilder<>(Schema.builder());
-        factory.instantiate(serializedConfig, builder);
-
-        this.adaptation = new AdaptationFacade<>(builder.build());
+        final var model = factory.instantiate(config, builder);
+        return new AdaptationFacade<>(builder.build(model, factory.getTaskSpecTypes()));
     }
 
     @Test
