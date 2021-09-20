@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 
 public class Timestamp {
   // This builder must be used to get optional subsecond values
@@ -18,7 +19,11 @@ public class Timestamp {
           .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
           .toFormatter();
 
-  private ZonedDateTime time;
+  public final ZonedDateTime time;
+
+  private Timestamp(final ZonedDateTime timestamp) {
+    this.time = timestamp;
+  }
 
   private Timestamp(String timestamp) throws DateTimeParseException {
     time = LocalDateTime.parse(timestamp, format).atZone(ZoneOffset.UTC);
@@ -30,6 +35,14 @@ public class Timestamp {
 
   public static Timestamp fromString(String timestamp) throws DateTimeParseException {
     return new Timestamp(timestamp);
+  }
+
+  public Timestamp plusMicros(final long micros) {
+    return new Timestamp(this.time.plus(micros, ChronoUnit.MICROS));
+  }
+
+  public long microsUntil(final Timestamp other) {
+    return this.time.until(other.time, ChronoUnit.MICROS);
   }
 
   public Instant toInstant() {

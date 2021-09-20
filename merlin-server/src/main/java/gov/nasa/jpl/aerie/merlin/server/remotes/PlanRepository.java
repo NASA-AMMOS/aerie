@@ -29,7 +29,7 @@ public interface PlanRepository {
   ActivityInstance getActivityInPlanById(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
 
   // Mutations
-  CreatedPlan createPlan(NewPlan plan);
+  CreatedPlan createPlan(NewPlan plan) throws AdaptationRepository.NoSuchAdaptationException;
   PlanTransaction updatePlan(String id) throws NoSuchPlanException;
   List<String> replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
@@ -53,7 +53,6 @@ public interface PlanRepository {
     PlanTransaction setStartTimestamp(Timestamp timestamp);
     PlanTransaction setEndTimestamp(Timestamp timestamp);
     PlanTransaction setConfiguration(Map<String, SerializedValue> configuration);
-    PlanTransaction setAdaptationId(String adaptationId);
   }
 
   interface ActivityTransaction {

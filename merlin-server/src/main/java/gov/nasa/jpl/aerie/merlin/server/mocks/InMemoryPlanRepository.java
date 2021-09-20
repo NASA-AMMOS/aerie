@@ -294,12 +294,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
       this.configuration = Optional.of(configuration);
       return this;
     }
-
-    @Override
-    public PlanTransaction setAdaptationId(final String adaptationId) {
-      this.adaptationId = Optional.of(adaptationId);
-      return this;
-    }
   }
 
   private class MockActivityTransaction implements ActivityTransaction {

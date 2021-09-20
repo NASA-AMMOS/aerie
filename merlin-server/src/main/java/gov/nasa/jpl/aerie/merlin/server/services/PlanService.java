@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,7 @@ public interface PlanService {
   Map<String, Plan> getPlans();
   Plan getPlanById(String id) throws NoSuchPlanException;
   long getPlanRevisionById(String id) throws NoSuchPlanException;
-  String addPlan(NewPlan plan) throws ValidationException;
+  String addPlan(NewPlan plan) throws ValidationException, AdaptationService.NoSuchAdaptationException;
   void removePlan(String id) throws NoSuchPlanException;
   void updatePlan(String id, Plan patch) throws ValidationException, NoSuchPlanException, NoSuchActivityInstanceException;
   void replacePlan(String id, NewPlan plan) throws ValidationException, NoSuchPlanException;
