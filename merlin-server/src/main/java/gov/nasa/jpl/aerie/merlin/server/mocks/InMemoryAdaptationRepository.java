@@ -15,12 +15,12 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils.getUniqueFilePath;
 
-public final class MockAdaptationRepository implements AdaptationRepository {
+public final class InMemoryAdaptationRepository implements AdaptationRepository {
     private final Path ADAPTATION_FILE_PATH;
     private final Map<String, AdaptationJar> adaptations = new HashMap<>();
     private int nextAdaptationId;
 
-    public MockAdaptationRepository() {
+    public InMemoryAdaptationRepository() {
         try {
             ADAPTATION_FILE_PATH = Files.createTempDirectory("mock_adaptation_files").toAbsolutePath();
         } catch (final IOException ex) {

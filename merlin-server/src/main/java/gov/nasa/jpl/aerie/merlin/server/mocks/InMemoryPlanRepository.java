@@ -19,7 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public final class MockPlanRepository implements PlanRepository {
+public final class InMemoryPlanRepository implements PlanRepository {
   private final Map<String, Pair<Long, Plan>> plans = new HashMap<>();
   private int nextPlanId = 0;
   private int nextActivityId = 0;
@@ -255,7 +255,7 @@ public final class MockPlanRepository implements PlanRepository {
 
     @Override
     public void commit() throws NoSuchPlanException {
-      final var entry = MockPlanRepository.this.plans.get(this.planId);
+      final var entry = InMemoryPlanRepository.this.plans.get(this.planId);
       if (entry == null) throw new NoSuchPlanException(this.planId);
 
       final var plan = entry.getRight();
@@ -267,7 +267,7 @@ public final class MockPlanRepository implements PlanRepository {
       this.configuration.ifPresent(configuration -> plan.configuration = configuration);
       this.adaptationId.ifPresent(adaptationId -> plan.adaptationId = adaptationId);
 
-      MockPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
+      InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
     }
 
     @Override
@@ -317,7 +317,7 @@ public final class MockPlanRepository implements PlanRepository {
 
     @Override
     public void commit() throws NoSuchPlanException, NoSuchActivityInstanceException {
-      final var entry = MockPlanRepository.this.plans.get(this.planId);
+      final var entry = InMemoryPlanRepository.this.plans.get(this.planId);
       if (entry == null) throw new NoSuchPlanException(this.planId);
 
       final var plan = entry.getRight();
@@ -332,7 +332,7 @@ public final class MockPlanRepository implements PlanRepository {
       this.startTimestamp.ifPresent(startTimestamp -> activity.startTimestamp = startTimestamp);
       this.parameters.ifPresent(parameters -> activity.parameters = parameters);
 
-      MockPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
+      InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
     }
 
     @Override
