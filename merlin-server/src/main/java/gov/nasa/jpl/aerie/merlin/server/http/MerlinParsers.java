@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.json.Uncurry;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
@@ -29,10 +28,8 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry5;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry6;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
+import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 public abstract class MerlinParsers {
@@ -81,9 +78,9 @@ public abstract class MerlinParsers {
       . field("startTimestamp", timestampP)
       . field("parameters", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry3(type -> startTimestamp -> parameters ->
+          untuple((type, startTimestamp, parameters) ->
               new ActivityInstance(type, startTimestamp, parameters)),
-          activity -> Uncurry.tuple3(activity.type, activity.startTimestamp, activity.parameters)));
+          activity -> tuple(activity.type, activity.startTimestamp, activity.parameters)));
 
   public static final JsonParser<ActivityInstance> activityInstancePatchP
       = productP
@@ -91,9 +88,9 @@ public abstract class MerlinParsers {
       . optionalField("startTimestamp", timestampP)
       . optionalField("parameters", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry3(type -> startTimestamp -> parameters ->
+          untuple((type, startTimestamp, parameters) ->
               new ActivityInstance(type.orElse(null), startTimestamp.orElse(null), parameters.orElse(null))),
-          $ -> Uncurry.tuple3(Optional.ofNullable($.type), Optional.ofNullable($.startTimestamp), Optional.ofNullable($.parameters))));
+          $ -> tuple(Optional.ofNullable($.type), Optional.ofNullable($.startTimestamp), Optional.ofNullable($.parameters))));
 
   public static final JsonParser<NewPlan> newPlanP
       = productP
@@ -104,9 +101,9 @@ public abstract class MerlinParsers {
       . optionalField("activityInstances", listP(activityInstanceP))
       . optionalField("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry6(name -> adaptationId -> startTimestamp -> endTimestamp -> activityInstances -> configuration ->
+          untuple((name, adaptationId, startTimestamp, endTimestamp, activityInstances, configuration) ->
               new NewPlan(name, adaptationId, startTimestamp, endTimestamp, activityInstances.orElse(List.of()), configuration.orElse(Map.of()))),
-          $ -> Uncurry.tuple6($.name, $.adaptationId, $.startTimestamp, $.endTimestamp, Optional.of($.activityInstances), Optional.of($.configuration))));
+          $ -> tuple($.name, $.adaptationId, $.startTimestamp, $.endTimestamp, Optional.of($.activityInstances), Optional.of($.configuration))));
 
   public static final JsonParser<Plan> planPatchP
       = productP
@@ -117,7 +114,7 @@ public abstract class MerlinParsers {
       . optionalField("activityInstances", mapP(activityInstanceP))
       . optionalField("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry6(name -> adaptationId -> startTimestamp -> endTimestamp -> activityInstances -> configuration ->
+          untuple((name, adaptationId, startTimestamp, endTimestamp, activityInstances, configuration) ->
               new Plan(
                   name.orElse(null),
                   adaptationId.orElse(null),
@@ -125,7 +122,7 @@ public abstract class MerlinParsers {
                   endTimestamp.orElse(null),
                   activityInstances.orElse(null),
                   configuration.orElse(Map.of()))),
-          $ -> Uncurry.tuple6(
+          $ -> tuple(
               Optional.ofNullable($.name),
               Optional.ofNullable($.adaptationId),
               Optional.ofNullable($.startTimestamp),
@@ -139,9 +136,9 @@ public abstract class MerlinParsers {
       . field("type", stringP)
       . optionalField("parameters", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry3(defer -> type -> parameters ->
+          untuple((defer, type, parameters) ->
               Pair.of(defer, new SerializedActivity(type, parameters.orElse(Collections.emptyMap())))),
-          $ -> Uncurry.tuple3($.getLeft(), $.getRight().getTypeName(), Optional.of($.getRight().getParameters()))));
+          $ -> tuple($.getLeft(), $.getRight().getTypeName(), Optional.of($.getRight().getParameters()))));
 
   public static final JsonParser<CreateSimulationMessage> createSimulationMessageP
       = productP
@@ -151,9 +148,9 @@ public abstract class MerlinParsers {
       . field("activities", mapP(scheduledActivityP))
       . field("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          uncurry5(adaptationId -> startTime -> samplingDuration -> activities -> configuration ->
+          untuple((adaptationId, startTime, samplingDuration, activities, configuration) ->
               new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities, configuration)),
-          $ -> Uncurry.tuple5($.adaptationId(), $.startTime(), $.samplingDuration(), $.activityInstances(), $.configuration())));
+          $ -> tuple($.adaptationId(), $.startTime(), $.samplingDuration(), $.activityInstances(), $.configuration())));
 
   public static final JsonParser<Constraint> constraintP
       = productP
@@ -162,7 +159,7 @@ public abstract class MerlinParsers {
       . field("description", stringP)
       . field("definition", stringP)
       . map(Iso.of(
-          uncurry4(name -> summary -> description -> definition ->
+          untuple((name, summary, description, definition) ->
               new Constraint(name, summary, description, definition)),
-          $ -> Uncurry.tuple4($.name(), $.summary(), $.description(), $.definition())));
+          $ -> tuple($.name(), $.summary(), $.description(), $.definition())));
 }

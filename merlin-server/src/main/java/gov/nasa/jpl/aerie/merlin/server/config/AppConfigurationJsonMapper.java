@@ -20,12 +20,8 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.PathJsonParser.pathP;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple2;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple3;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple4;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry2;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
+import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper.UriJsonParser.uriP;
 
 public final class AppConfigurationJsonMapper {
@@ -44,13 +40,13 @@ public final class AppConfigurationJsonMapper {
           .optionalField("logging", boolP)
           .field("file-store", pathP)
           .map(Iso.of(
-              uncurry3(port -> logging -> merlinFileStorePath -> new Server(
+              untuple((port, logging, merlinFileStorePath) -> new Server(
                   port,
                   logging.orElse(false)
                       ? JavalinLoggingState.Enabled
                       : JavalinLoggingState.Disabled,
                   merlinFileStorePath)),
-              $ -> tuple3(
+              $ -> tuple(
                   $.port(),
                   Optional.of($.loggingState() == JavalinLoggingState.Enabled),
                   $.merlinFileStore)));
@@ -63,9 +59,9 @@ public final class AppConfigurationJsonMapper {
           .field("mission-models", stringP)
           .field("results", stringP)
           .map(Iso.of(
-              uncurry4(plans -> activities -> missionModels -> results ->
+              untuple((plans, activities, missionModels, results) ->
                   new Collections(plans, activities, missionModels, results)),
-              $ -> tuple4($.plans(), $.activities(), $.missionModels(), $.results())));
+              $ -> tuple($.plans(), $.activities(), $.missionModels(), $.results())));
 
   private static final JsonParser<MongoStore> mongoStoreP =
       productP
@@ -74,14 +70,14 @@ public final class AppConfigurationJsonMapper {
           .field("database", stringP)
           .field("collections", mongoCollectionsP)
           .map(Iso.of(
-              uncurry4(type -> uri -> database -> collections -> new MongoStore(
+              untuple((type, uri, database, collections) -> new MongoStore(
                   uri,
                   database,
                   collections.plans(),
                   collections.activities(),
                   collections.missionModels(),
                   collections.results())),
-              $ -> tuple4(
+              $ -> tuple(
                   Unit.UNIT,
                   $.uri(),
                   $.database(),
@@ -98,12 +94,12 @@ public final class AppConfigurationJsonMapper {
           .field("server", serverP)
           .field("store", storeP)
           .map(Iso.of(
-              uncurry2(server -> store -> new AppConfiguration(
+              untuple((server, store) -> new AppConfiguration(
                   server.port(),
                   server.loggingState(),
                   server.merlinFileStore(),
                   store)),
-              $ -> tuple2(
+              $ -> tuple(
                   new Server($.httpPort(), $.javalinLogging(), $.merlinFileStore()),
                   $.store())));
 
