@@ -2,11 +2,13 @@ package gov.nasa.jpl.aerie.fooadaptation;
 
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,16 +32,19 @@ public class SimulateMapSchedule {
     }
   }
 
+  private static <$Schema> Adaptation<$Schema, ?> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
+    final var factory = new GeneratedAdaptationFactory();
+    final var model = factory.instantiate(config, builder);
+    return builder.build(model, factory.getTaskSpecTypes());
+  }
+
   private static
   void simulateWithMapSchedule()
   throws SimulationDriver.TaskSpecInstantiationException
   {
     final var config = new Configuration();
-
-    final var factory = new GeneratedAdaptationFactory();
-    final var builder = new AdaptationBuilder<>(Schema.builder());
-    factory.instantiate(FooValueMappers.configuration().serializeValue(config), builder);
-    final var adaptation = builder.build();
+    final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
+    final var adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
 
     final var schedule = loadSchedule();
     final var startTime = Instant.now();

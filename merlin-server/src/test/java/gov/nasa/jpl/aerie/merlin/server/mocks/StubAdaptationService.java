@@ -2,8 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
@@ -34,7 +33,7 @@ public final class StubAdaptationService implements AdaptationService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new TaskSpecType.Parameter("Param", ValueSchema.STRING)),
+      List.of(new Parameter("Param", ValueSchema.STRING)),
       Map.of("Param", SerializedValue.of("Default")));
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
@@ -191,7 +190,7 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<AdaptationFactory.Parameter> getModelParameters(final String adaptationId) {
+  public List<Parameter> getModelParameters(final String adaptationId) {
     return List.of();
   }
 

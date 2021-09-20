@@ -38,7 +38,7 @@ import java.util.function.BiConsumer;
 
 public final class SimulationDriver {
   public static <$Schema> SimulationResults simulate(
-      final Adaptation<$Schema> adaptation,
+      final Adaptation<$Schema, ?> adaptation,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration)
@@ -49,8 +49,8 @@ public final class SimulationDriver {
 
   // The need for this helper is documented in the standard Java tutorials.
   // https://docs.oracle.com/javase/tutorial/java/generics/capture.html
-  private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
-      final Adaptation<$Schema> adaptation,
+  private static <$Schema, $Timeline extends $Schema, Model> SimulationResults simulate(
+      final Adaptation<$Schema, Model> adaptation,
       final SimulationTimeline<$Timeline> database,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
@@ -58,7 +58,7 @@ public final class SimulationDriver {
   throws TaskSpecInstantiationException
   {
     final var taskIdToActivityId = new HashMap<String, String>();
-    final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
+    final var taskFactory = new TaskFactory<$Timeline, Model>(adaptation.getTaskSpecificationTypes());
 
     // A time-ordered queue of all scheduled future tasks.
     final var queue = new TaskQueue<String>();
@@ -87,7 +87,7 @@ public final class SimulationDriver {
 
       final TaskInfo<$Timeline> info;
       try {
-        info = taskFactory.createTask(activity.getTypeName(), activity.getParameters(), Optional.empty());
+        info = taskFactory.createTask(adaptation.getModel(), activity.getTypeName(), activity.getParameters(), Optional.empty());
       } catch (final InstantiationException ex) {
         throw new TaskSpecInstantiationException(activityId, ex);
       }
@@ -162,7 +162,7 @@ public final class SimulationDriver {
 
           @Override
           public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            final var childInfo = taskFactory.createTask(adaptation.getModel(), type, arguments, Optional.of(info.id));
             info.children.add(childInfo.id);
 
             builder.signal(childInfo.id);
@@ -181,7 +181,7 @@ public final class SimulationDriver {
 
           @Override
           public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            final var childInfo = taskFactory.createTask(adaptation.getModel(), type, arguments, Optional.of(info.id));
             info.children.add(childInfo.id);
 
             queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
@@ -411,13 +411,13 @@ public final class SimulationDriver {
         startTime);
   }
 
-  public static <$Schema, $Timeline extends $Schema> void simulateTask(
-      final Adaptation<$Schema> adaptation,
+  public static <$Schema, $Timeline extends $Schema, Model> void simulateTask(
+      final Adaptation<$Schema, Model> adaptation,
       final SimulationTimeline<$Timeline> database,
       final Task<$Timeline> task)
   throws TaskSpecInstantiationException
   {
-    final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
+    final var taskFactory = new TaskFactory<$Timeline, Model>(adaptation.getTaskSpecificationTypes());
 
     // A time-ordered queue of all scheduled future tasks.
     final var queue = new TaskQueue<String>();
@@ -501,7 +501,7 @@ public final class SimulationDriver {
 
           @Override
           public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            final var childInfo = taskFactory.createTask(adaptation.getModel(), type, arguments, Optional.of(info.id));
             info.children.add(childInfo.id);
 
             builder.signal(childInfo.id);
@@ -520,7 +520,7 @@ public final class SimulationDriver {
 
           @Override
           public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
+            final var childInfo = taskFactory.createTask(adaptation.getModel(), type, arguments, Optional.of(info.id));
             info.children.add(childInfo.id);
 
             queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);

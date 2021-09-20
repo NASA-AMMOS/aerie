@@ -16,25 +16,34 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public final class AdaptationLoader {
-    public static Adaptation<?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
+    public static AdaptationFactory<?> loadAdaptationFactory(final Path path, final String name, final String version)
+        throws AdaptationLoadException
+    {
+        final var service = loadAdaptationProvider(path, name, version);
+        return service.getFactory();
+    }
+
+    public static Adaptation<?, ?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         final var service = loadAdaptationProvider(path, name, version);
         final var factory = service.getFactory();
         final var builder = new AdaptationBuilder<>(Schema.builder());
-        factory.instantiate(missionModelConfig, builder);
-        return builder.build();
+        return loadAdaptation(missionModelConfig, factory, builder);
     }
 
-    public static List<AdaptationFactory.Parameter> getConfigurationSchema(final Path path, final String name, final String version)
-        throws AdaptationLoadException
-    {
-        return loadAdaptationProvider(path, name, version).getFactory().getParameters();
+    private static <$Schema, Model>
+    Adaptation<$Schema, Model> loadAdaptation(
+        final SerializedValue missionModelConfig,
+        final AdaptationFactory<Model> factory,
+        final AdaptationBuilder<$Schema> builder
+    ) {
+        final var model = factory.instantiate(missionModelConfig, builder);
+        return builder.build(model, factory.getTaskSpecTypes());
     }
 
     public static MerlinPlugin loadAdaptationProvider(final Path path, final String name, final String version)

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
@@ -21,17 +21,20 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 public final class AdaptationTest {
 
     private AdaptationFacade<?> adaptation;
+    private AdaptationFacade.Unconfigured<?> unconfiguredAdaptation;
 
     @BeforeEach
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
+        this.adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
+        this.unconfiguredAdaptation = new AdaptationFacade.Unconfigured<>(new GeneratedAdaptationFactory());
+    }
 
+    private static <$Schema> AdaptationFacade<$Schema> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
         final var factory = new GeneratedAdaptationFactory();
-        final var builder = new AdaptationBuilder<>(Schema.builder());
-        factory.instantiate(serializedConfig, builder);
-
-        this.adaptation = new AdaptationFacade<>(builder.build());
+        final var model = factory.instantiate(config, builder);
+        return new AdaptationFacade<>(builder.build(model, factory.getTaskSpecTypes()));
     }
 
     @Test
@@ -41,9 +44,9 @@ public final class AdaptationTest {
             "foo", new ActivityType(
                 "foo",
                 List.of(
-                    new TaskSpecType.Parameter("x", ValueSchema.INT),
-                    new TaskSpecType.Parameter("y", ValueSchema.STRING),
-                    new TaskSpecType.Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                    new Parameter("x", ValueSchema.INT),
+                    new Parameter("y", ValueSchema.STRING),
+                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 Map.of(
                     "x", SerializedValue.of(0),
                     "y", SerializedValue.of("test"),
@@ -55,7 +58,7 @@ public final class AdaptationTest {
                                     SerializedValue.of(0.0),
                                     SerializedValue.of(0.0))))))));
         // WHEN
-        final Map<String, ActivityType> typeList = adaptation.getActivityTypes();
+        final Map<String, ActivityType> typeList = unconfiguredAdaptation.getActivityTypes();
 
         // THEN
         assertThat(typeList).containsAllEntriesOf(expectedTypes);
@@ -67,9 +70,9 @@ public final class AdaptationTest {
         final ActivityType expectedType = new ActivityType(
             "foo",
             List.of(
-                new TaskSpecType.Parameter("x", ValueSchema.INT),
-                new TaskSpecType.Parameter("y", ValueSchema.STRING),
-                new TaskSpecType.Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                new Parameter("x", ValueSchema.INT),
+                new Parameter("y", ValueSchema.STRING),
+                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             Map.of(
                 "x", SerializedValue.of(0),
                 "y", SerializedValue.of("test"),
@@ -82,7 +85,7 @@ public final class AdaptationTest {
                                 SerializedValue.of(0.0)))))));
 
         // WHEN
-        final ActivityType type = adaptation.getActivityType(expectedType.name);
+        final ActivityType type = unconfiguredAdaptation.getActivityType(expectedType.name);
 
         // THEN
         assertThat(type).isEqualTo(expectedType);
@@ -94,7 +97,7 @@ public final class AdaptationTest {
         final String activityId = "nonexistent activity type";
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> adaptation.getActivityType(activityId));
+        final Throwable thrown = catchThrowable(() -> unconfiguredAdaptation.getActivityType(activityId));
 
         // THEN
         assertThat(thrown).isInstanceOf(AdaptationFacade.NoSuchActivityTypeException.class);

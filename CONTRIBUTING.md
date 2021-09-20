@@ -1,7 +1,9 @@
 # Contributing
+
 Contributions to the Aerie repository should abide by the following guidelines:
 
 ## Building Aerie
+
 Aerie uses [Gradle](https://docs.gradle.org/) as its build system.
 You do not need to install Gradle explicitly -- use the Gradle wrapper
 included in the repository root, e.g. `./gradlew build`.
@@ -19,12 +21,14 @@ If you use IntelliJ IDEA, you can simply import the Aerie repository
 into IntelliJ as a Gradle project. No additional configuration is required.
 
 ## Branches
+
 * Branches should be named `feature/AERIE-XXX--short-desc` or `hotfix/short-desc`, where "AERIE-XXX" is the associated Jira ticket.
   - If a branch is not associated with a ticket, either it's a hotfix or it needs a ticket.
   - Hotfixes should be used sparingly. For instance, a bug introduced in the same release cycle (or discovered very shortly
     after merging a PR) can be hotfixed. Bugs that a user may have been exposed to should be logged as tickets.
 
-##Pull Requests
+## Pull Requests
+
 * Pull requests should be made against `develop`, using the pull request template in `.github/pull_request_template.md`.
   - GitHub will automatically populate a new PR with this template.
   - Please fill out all information in the PR header, as well as any information in the subsections.
@@ -57,14 +61,20 @@ into IntelliJ as a Gradle project. No additional configuration is required.
     on either side, making a clear hierarchical separation between features added to `develop` and the work
     that went into each feature.
 
+## Coding Conventions
+
+A [coding conventions](./docs/conventions.md) document exists to explain peculiarities and assist in onboarding.
+
 **tl;dr**
 All development should correspond to a JIRA ticket, and branch names and PRs should include the ticket name.
 
 ## Write-Ups About Good Commit/PR/Code Review Practice
+
 The project relies on the ability to effectively query the Git history
 * [How to write a good commit message](https://chris.beams.io/posts/git-commit/)
 * [Telling Stories Through Your Commits](https://blog.mocoso.co.uk/talks/2015/01/12/telling-stories-through-your-commits/)
 * [How to Make Your Code Reviewer Fall in Love with You](https://mtlynch.io/code-review-love/)
 
 ## Asking for Help
+
 If you have a question, a great place to reach out is the mpsa-aerie Slack channel.

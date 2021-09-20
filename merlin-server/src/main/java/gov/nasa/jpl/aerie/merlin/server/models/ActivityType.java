@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
@@ -9,12 +9,12 @@ import java.util.Objects;
 
 public final class ActivityType {
     public final String name;
-    public final List<TaskSpecType.Parameter> parameters;
+    public final List<Parameter> parameters;
     public final Map<String, SerializedValue> defaults;
 
     public ActivityType(
         final String name,
-        final List<TaskSpecType.Parameter> parameters,
+        final List<Parameter> parameters,
         final Map<String, SerializedValue> defaults
     ) {
         this.name = name;

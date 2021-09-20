@@ -2,37 +2,41 @@ package gov.nasa.jpl.aerie.fooadaptation;
 
 import gov.nasa.jpl.aerie.fooadaptation.activities.FooActivity;
 import gov.nasa.jpl.aerie.fooadaptation.generated.ActivityTypes;
-import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.spawn;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-// The `@ExtendWith` annotation injects the given extension into JUnit's testing apparatus.
-// Our `MerlinExtension` hooks test class construction and test method execution,
-//   executing each with the appropriate simulation context.
-@ExtendWith(MerlinExtension.class)
 public final class FooActivityTest {
+
+  // The `@RegisterExtension` annotation programmatically injects the given extension into JUnit's testing apparatus.
+  // Our `MerlinExtension` hooks test class construction and test method execution,
+  //   executing each with the appropriate simulation context.
+  @RegisterExtension
+  public static final MerlinExtension<Mission> ext = new MerlinExtension<>();
+
   private final Mission model;
 
   // Initializers and the test class constructor are executed in an "initialization" Merlin context.
   // This means that models can be created (and cell storage allocated, and daemons spawned),
   //   but simulation control actions like `waitFor`, `delay`, and `emit` cannot be performed.
   // The `Registrar` does not need to be declared as a parameter, but will be injected if declared.
-  public FooActivityTest(final Registrar registrar) {
+  public FooActivityTest(final MerlinTestContext<Mission> ctx) {
     // Model configuration can be provided directly, just as for a normal Java class constructor.
-    this.model = new Mission(registrar, new Configuration());
+    this.model = new Mission(ctx.registrar(), new Configuration());
 
     // Activities must be registered explicitly in order to be used in testing.
     // The generated `ActivityTypes` helper class loads all declared activities,
     //   but focused subsystem tests might register only the activities under test.
-    ActivityTypes.register(registrar, this.model);
+    ctx.use(model, ActivityTypes.activityTypes);
   }
+
 
   @Test
   public void testActivity() {
