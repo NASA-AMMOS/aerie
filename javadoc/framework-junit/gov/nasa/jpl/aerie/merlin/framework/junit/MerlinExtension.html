@@ -70,10 +70,10 @@ loadScripts(document, 'script');</script>
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="sub-title"><span class="package-label-in-type">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework.junit</a></div>
-<h1 title="Class MerlinExtension" class="title">Class MerlinExtension</h1>
+<h1 title="Class MerlinExtension" class="title">Class MerlinExtension&lt;Model&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
-<div class="inheritance">gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension</div>
+<div class="inheritance">gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension&lt;Model&gt;</div>
 </div>
 <section class="description">
 <dl class="notes">
@@ -81,7 +81,7 @@ loadScripts(document, 'script');</script>
 <dd><code>org.junit.jupiter.api.extension.Extension</code>, <code>org.junit.jupiter.api.extension.InvocationInterceptor</code>, <code>org.junit.jupiter.api.extension.ParameterResolver</code>, <code>org.junit.jupiter.api.extension.TestInstancePreDestroyCallback</code></dd>
 </dl>
 <hr>
-<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">MerlinExtension</span>
+<div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">MerlinExtension&lt;Model&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
 implements org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.api.extension.InvocationInterceptor, org.junit.jupiter.api.extension.TestInstancePreDestroyCallback</span></div>
 </section>
@@ -142,7 +142,7 @@ implements org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.
 <div class="col-first even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>void</code></div>
 <div class="col-second even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#preDestroyTestInstance(org.junit.jupiter.api.extension.ExtensionContext)">preDestroyTestInstance</a></span>&#8203;(org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last even-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code>gov.nasa.jpl.aerie.merlin.framework.Registrar</code></div>
+<div class="col-first odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><a href="MerlinTestContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework.junit">MerlinTestContext</a>&lt;<a href="MerlinExtension.html" title="type parameter in MerlinExtension">Model</a>&gt;</code></div>
 <div class="col-second odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table"><code><span class="member-name-link"><a href="#resolveParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)">resolveParameter</a></span>&#8203;(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
  org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last odd-row-color method-summary-table-tab2 method-summary-table-tab4 method-summary-table">&nbsp;</div>
@@ -201,9 +201,9 @@ implements org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.
 <li>
 <section class="detail" id="resolveParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)">
 <h3>resolveParameter</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.framework.Registrar</span>&nbsp;<span class="element-name">resolveParameter</span>&#8203;<span class="parameters">(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="MerlinTestContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework.junit">MerlinTestContext</a>&lt;<a href="MerlinExtension.html" title="type parameter in MerlinExtension">Model</a>&gt;</span>&nbsp;<span class="element-name">resolveParameter</span>&#8203;<span class="parameters">(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
  org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</span>
-                                                               throws <span class="exceptions">org.junit.jupiter.api.extension.ParameterResolutionException</span></div>
+                                          throws <span class="exceptions">org.junit.jupiter.api.extension.ParameterResolutionException</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
 <dd><code>resolveParameter</code>&nbsp;in interface&nbsp;<code>org.junit.jupiter.api.extension.ParameterResolver</code></dd>
