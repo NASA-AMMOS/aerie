@@ -91,6 +91,17 @@ public final class AppConfigurationJsonMapper {
                       $.adaptationCollection(),
                       $.simulationResultsCollection()))));
 
+  private static final JsonObjectParser<PostgresStore> postgresStoreP =
+      productP
+          .field("server", stringP)
+          .field("user", stringP)
+          .field("port", intP)
+          .field("password", stringP)
+          .field("database", stringP)
+          .map(Iso.of(
+              untuple((server, user, port, password, database) -> new PostgresStore(server, user, port, password, database)),
+              $ -> tuple($.server(), $.user(), $.port(), $.password(), $.database())));
+
   private static final JsonObjectParser<InMemoryStore> inMemoryStoreP =
       productP
           .map(Iso.of(
@@ -100,6 +111,7 @@ public final class AppConfigurationJsonMapper {
   private static final JsonParser<Store> storeP =
       sumP("type", Store.class, List.of(
           variant("mongo", MongoStore.class, mongoStoreP),
+          variant("postgres", PostgresStore.class, postgresStoreP),
           variant("in-memory", InMemoryStore.class, inMemoryStoreP)));
 
   private static final JsonParser<AppConfiguration> configP =

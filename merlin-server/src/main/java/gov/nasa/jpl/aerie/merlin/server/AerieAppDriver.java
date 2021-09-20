@@ -1,12 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
+import com.impossibl.postgres.jdbc.PGDataSource;
 import com.mongodb.client.MongoClients;
-import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
+import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
@@ -21,6 +23,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MongoPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
@@ -94,6 +97,22 @@ public final class AerieAppDriver {
           new MongoResultsCellRepository(
               mongoDatabase,
               c.simulationResultsCollection()));
+    } else if (store instanceof PostgresStore c) {
+      final var pgDataSource = new PGDataSource();
+      pgDataSource.setServerName(c.server());
+      pgDataSource.setPortNumber(c.port());
+      pgDataSource.setDatabaseName(c.database());
+      pgDataSource.setApplicationName("Merlin Server");
+
+      final var hikariConfig = new HikariConfig();
+      hikariConfig.setUsername(c.user());
+      hikariConfig.setPassword(c.password());
+      hikariConfig.setDataSource(pgDataSource);
+
+      final var hikariDataSource = new HikariDataSource(hikariConfig);
+      final var repository = new PostgresRepository(hikariDataSource);
+
+      return new Stores(repository, repository, repository);
     } else if (store instanceof InMemoryStore c) {
       return new Stores(
           new InMemoryPlanRepository(),
@@ -133,7 +152,7 @@ public final class AerieAppDriver {
         throw new Error(ex);
       }
     } else {
-      configStream = AerieAppDriver.class.getResourceAsStream("config.json");
+      configStream = AerieAppDriver.class.getResourceAsStream("configPostgres.json");
     }
 
     // Read and process the configuration source.
