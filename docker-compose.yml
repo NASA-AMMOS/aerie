@@ -13,7 +13,7 @@ services:
     ports: ["27183:27183"]
     restart: always
     volumes:
-      - merlin_file_store:/usr/src/app/merlin_file_store
+      - file_store:/usr/src/app/merlin_file_store
   postgres:
     image: postgres
     ports: ["5432:5432"]
@@ -30,8 +30,26 @@ services:
   aerie_apollo:
     image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-apollo:develop"
     ports: ["27184:27184"]
+  aerie_gateway:
+    depends_on: ["postgres"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-gateway:develop"
+    ports: ["9000:9000"]
+    restart: always
+    volumes:
+      - file_store:/app/files
+  hasura:
+    depends_on: ["postgres"]
+    image: "hasura/graphql-engine:v2.0.9"
+    ports: ["8080:8080"]
+    restart: always
+    environment:
+      AERIE_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
 
 volumes:
+  file_store:
   merlin_mongo_data:
-  merlin_file_store:
   postgres_data:
