@@ -5,13 +5,17 @@ import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
+import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoResultsCellRepository;
@@ -90,6 +94,12 @@ public final class AerieAppDriver {
           new MongoResultsCellRepository(
               mongoDatabase,
               c.simulationResultsCollection()));
+    } else if (store instanceof InMemoryStore c) {
+      return new Stores(
+          new InMemoryPlanRepository(),
+          new InMemoryAdaptationRepository(),
+          new InMemoryResultsCellRepository());
+
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
     }

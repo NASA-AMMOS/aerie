@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.ProductParsers.JsonObjectParser;
+import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 
 import javax.json.JsonObject;
@@ -90,9 +91,16 @@ public final class AppConfigurationJsonMapper {
                       $.adaptationCollection(),
                       $.simulationResultsCollection()))));
 
+  private static final JsonObjectParser<InMemoryStore> inMemoryStoreP =
+      productP
+          .map(Iso.of(
+              untuple($ -> new InMemoryStore()),
+              $ -> tuple(Unit.UNIT)));
+
   private static final JsonParser<Store> storeP =
       sumP("type", Store.class, List.of(
-          variant("mongo", MongoStore.class, mongoStoreP)));
+          variant("mongo", MongoStore.class, mongoStoreP),
+          variant("in-memory", InMemoryStore.class, inMemoryStoreP)));
 
   private static final JsonParser<AppConfiguration> configP =
       productP
