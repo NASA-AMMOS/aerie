@@ -1,0 +1,36 @@
+table:
+  name: mission_model
+  schema: public
+object_relationships:
+- name: parameters
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: mission_model_parameters
+        schema: public
+- name: uploaded_file
+  using:
+    foreign_key_constraint_on: jar_id
+array_relationships:
+- name: activity_types
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: activity_type
+        schema: public
+- name: conditions
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: condition
+        schema: public
+- name: plans
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: plan
+        schema: public
