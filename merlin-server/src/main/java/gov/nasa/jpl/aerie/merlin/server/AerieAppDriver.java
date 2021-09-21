@@ -152,7 +152,7 @@ public final class AerieAppDriver {
         throw new Error(ex);
       }
     } else {
-      configStream = AerieAppDriver.class.getResourceAsStream("configPostgres.json");
+      configStream = AerieAppDriver.class.getResourceAsStream("config.json");
     }
 
     // Read and process the configuration source.
