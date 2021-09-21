@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository.PlanTransaction;
 
@@ -43,11 +44,13 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public String addPlan(final NewPlan plan)
-  throws ValidationException
-  {
-    withValidator(validator -> validator.validateNewPlan(plan));
-    return this.planRepository.createPlan(plan).planId();
+  public String addPlan(final NewPlan plan) throws ValidationException, AdaptationService.NoSuchAdaptationException {
+    try {
+      withValidator(validator -> validator.validateNewPlan(plan));
+      return this.planRepository.createPlan(plan).planId();
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new AdaptationService.NoSuchAdaptationException(plan.adaptationId);
+    }
   }
 
   @Override

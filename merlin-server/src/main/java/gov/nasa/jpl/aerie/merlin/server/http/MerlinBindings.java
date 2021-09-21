@@ -222,6 +222,8 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     } catch (final ValidationException ex) {
       ctx.status(422).result(ResponseSerializers.serializeValidationException(ex).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
     }
   }
 

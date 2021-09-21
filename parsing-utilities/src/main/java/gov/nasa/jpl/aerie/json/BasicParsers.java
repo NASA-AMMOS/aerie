@@ -209,6 +209,42 @@ public abstract class BasicParsers {
     }
   };
 
+  public static <E extends Enum<E>> JsonParser<E> enumP(final Class<E> klass, final Function<E, String> valueOf) {
+    return new JsonParser<>() {
+      @Override
+      public JsonObject getSchema(final Map<Object, String> anchors) {
+        final var builder = Json.createArrayBuilder();
+        for (final var enumConstant : klass.getEnumConstants()) {
+          builder.add(Json.createValue(valueOf.apply(enumConstant)));
+        }
+        builder.build();
+
+        return Json
+            .createObjectBuilder()
+            .add("type", "string")
+            .add("enum", builder.build())
+            .build();
+      }
+
+      @Override
+      public JsonParseResult<E> parse(final JsonValue json) {
+        if (!(json instanceof JsonString str)) return JsonParseResult.failure("expected string");
+
+        for (final var enumConstant : klass.getEnumConstants()) {
+          if (!Objects.equals(valueOf.apply(enumConstant), str.getString())) continue;
+
+          return JsonParseResult.success(enumConstant);
+        }
+
+        return JsonParseResult.failure("unknown enum variant");
+      }
+
+      @Override
+      public JsonValue unparse(final E enumConstant) {
+        return Json.createValue(valueOf.apply(enumConstant));
+      }
+    };
+  }
 
   public static JsonParser<Unit> literalP(final String x) {
     return new JsonParser<>() {

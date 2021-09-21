@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindin
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
 import gov.nasa.jpl.aerie.merlin.server.mocks.Fixtures;
-import gov.nasa.jpl.aerie.merlin.server.mocks.MockAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
@@ -22,7 +22,7 @@ public final class DevAppDriver {
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
-    final var adaptationController = new LocalAdaptationService(Path.of("/dev/null"), new MockAdaptationRepository());
+    final var adaptationController = new LocalAdaptationService(Path.of("/dev/null"), new InMemoryAdaptationRepository());
     final var planController = new LocalPlanService(fixtures.planRepository, adaptationController);
     final var simulationAction = new GetSimulationResultsAction(
         planController,

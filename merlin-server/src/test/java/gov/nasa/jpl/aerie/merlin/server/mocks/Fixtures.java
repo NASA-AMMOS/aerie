@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import java.util.ArrayList;
 
 public final class Fixtures {
-  public final MockPlanRepository planRepository;
+  public final InMemoryPlanRepository planRepository;
   public final StubAdaptationService adaptationService;
 
   public final String EXISTENT_ADAPTATION_ID;
@@ -23,7 +23,7 @@ public final class Fixtures {
 
   public Fixtures() {
     try {
-      this.planRepository = new MockPlanRepository();
+      this.planRepository = new InMemoryPlanRepository();
       this.adaptationService = new StubAdaptationService();
 
       this.NONEXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.NONEXISTENT_ACTIVITY_TYPE;

@@ -126,7 +126,7 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public void replaceConstraints(final String id, final Map<String, Constraint> newConstraints)
+    public void replaceAdaptationConstraints(final String id, final Map<String, Constraint> newConstraints)
     throws NoSuchAdaptationException
     {
         final Document adaptationDocument;
@@ -151,7 +151,7 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public void deleteConstraint(final String adaptationId, final String constraintName)
+    public void deleteAdaptationConstraint(final String adaptationId, final String constraintName)
     throws NoSuchAdaptationException
     {
         final Document adaptationDocument;

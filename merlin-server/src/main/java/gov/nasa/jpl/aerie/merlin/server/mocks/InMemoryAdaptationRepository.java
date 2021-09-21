@@ -15,12 +15,12 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils.getUniqueFilePath;
 
-public final class MockAdaptationRepository implements AdaptationRepository {
+public final class InMemoryAdaptationRepository implements AdaptationRepository {
     private final Path ADAPTATION_FILE_PATH;
     private final Map<String, AdaptationJar> adaptations = new HashMap<>();
     private int nextAdaptationId;
 
-    public MockAdaptationRepository() {
+    public InMemoryAdaptationRepository() {
         try {
             ADAPTATION_FILE_PATH = Files.createTempDirectory("mock_adaptation_files").toAbsolutePath();
         } catch (final IOException ex) {
@@ -62,13 +62,13 @@ public final class MockAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public void replaceConstraints(final String adaptationId, final Map<String, Constraint> constraints)
+    public void replaceAdaptationConstraints(final String adaptationId, final Map<String, Constraint> constraints)
     throws NoSuchAdaptationException
     {
     }
 
     @Override
-    public void deleteConstraint(final String adaptationId, final String constraintName)
+    public void deleteAdaptationConstraint(final String adaptationId, final String constraintName)
     throws NoSuchAdaptationException
     {
     }

@@ -462,13 +462,6 @@ public final class MongoPlanRepository implements PlanRepository {
       this.notEmpty = true;
       return this;
     }
-
-    @Override
-    public PlanTransaction setAdaptationId(final String adaptationId) {
-      this.patch = combine(this.patch, set("adaptationId", adaptationId));
-      this.notEmpty = true;
-      return this;
-    }
   }
 
   private class MongoActivityTransaction implements ActivityTransaction {

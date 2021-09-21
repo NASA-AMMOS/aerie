@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public final class LocalAdaptationServiceTest {
 
   @Test
   public void shouldAddPlan()
-  throws ValidationException, NoSuchPlanException
+  throws ValidationException, NoSuchPlanException, AdaptationService.NoSuchAdaptationException
   {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
@@ -142,7 +143,10 @@ public final class LocalAdaptationServiceTest {
   }
 
   @Test
-  public void shouldReplacePlan() throws ValidationException, NoSuchPlanException {
+  public void shouldReplacePlan()
+  throws ValidationException, NoSuchPlanException, AdaptationService.NoSuchAdaptationException,
+         AdaptationRepository.NoSuchAdaptationException
+  {
     // GIVEN
     final Fixtures fixtures = new Fixtures();
     final PlanService controller = new LocalPlanService(fixtures.planRepository, fixtures.adaptationService);
