@@ -5,8 +5,7 @@ plugins {
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(16)
-    vendor = JvmVendorSpec.ADOPTOPENJDK
+    languageVersion = JavaLanguageVersion.of(17)
   }
 
   withJavadocJar()
