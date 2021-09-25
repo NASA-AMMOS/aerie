@@ -107,6 +107,7 @@ public final class AerieAppDriver {
       final var hikariConfig = new HikariConfig();
       hikariConfig.setUsername(c.user());
       hikariConfig.setPassword(c.password());
+      hikariConfig.setSchema("merlin");
       hikariConfig.setDataSource(pgDataSource);
 
       final var hikariDataSource = new HikariDataSource(hikariConfig);
