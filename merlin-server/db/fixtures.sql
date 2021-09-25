@@ -1,6 +1,8 @@
 -- for mission_model.jar_path
 set bytea_output = escape;
 
+set schema 'merlin';
+
 begin;
   insert into uploaded_file (path, name)
   values

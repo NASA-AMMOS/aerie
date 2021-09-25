@@ -43,7 +43,7 @@ create function increment_revision_on_update_mission_model()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update mission_model
+  update merlin.mission_model
   set revision = revision + 1
   where id = new.id;
 
@@ -60,7 +60,7 @@ create function increment_revision_on_update_mission_model_jar()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update mission_model
+  update merlin.mission_model
   set revision = revision + 1
   where jar_id = new.id
     or jar_id = old.id;

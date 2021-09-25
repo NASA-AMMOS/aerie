@@ -39,7 +39,7 @@ create function increment_revision_on_insert_activity()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update plan
+  update merlin.plan
   set revision = revision + 1
   where id = new.plan_id;
 
@@ -56,7 +56,7 @@ create function increment_revision_on_update_activity()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update plan
+  update merlin.plan
   set revision = revision + 1
   where id = new.plan_id
     or id = old.plan_id;
@@ -74,7 +74,7 @@ create function increment_revision_on_delete_activity()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update plan
+  update merlin.plan
   set revision = revision + 1
   where id = old.plan_id;
 
