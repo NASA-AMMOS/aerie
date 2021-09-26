@@ -124,6 +124,9 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       }
     });
 
+    // TODO: Set a thread name so that activity threads can easily be distinguished
+    //   from within tools like Java Flight Recorder.
+
     return thread;
   }
 
