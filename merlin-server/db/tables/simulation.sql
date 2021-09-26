@@ -43,4 +43,5 @@ end$$;
 create trigger increment_revision_for_update_simulation_trigger
 after update on simulation
 for each row
+when (pg_trigger_depth() < 1)
 execute function increment_revision_for_update_simulation();
