@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -46,8 +45,7 @@ public interface AdaptationService {
   throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
-          throws NoSuchAdaptationException, AdaptationFacade.NoSuchActivityTypeException,
-                 SimulationDriver.TaskSpecInstantiationException;
+          throws NoSuchAdaptationException, AdaptationFacade.NoSuchActivityTypeException;
   List<Path> getAvailableFilePaths() throws IOException;
   void createFile(String filename, InputStream content) throws IOException;
   void deleteFile(String filename) throws IOException;

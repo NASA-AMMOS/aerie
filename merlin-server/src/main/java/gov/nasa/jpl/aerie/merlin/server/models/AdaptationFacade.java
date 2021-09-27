@@ -32,8 +32,7 @@ public final class AdaptationFacade<$Schema> {
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Duration simulationDuration,
       final Instant startTime
-  ) throws SimulationDriver.TaskSpecInstantiationException
-  {
+  ) {
     return SimulationDriver.simulate(this.adaptation, schedule, startTime, simulationDuration);
   }
 

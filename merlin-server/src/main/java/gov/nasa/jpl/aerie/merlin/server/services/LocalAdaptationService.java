@@ -243,8 +243,7 @@ public final class LocalAdaptationService implements AdaptationService {
    */
   @Override
   public SimulationResults runSimulation(final CreateSimulationMessage message)
-  throws NoSuchAdaptationException,
-         SimulationDriver.TaskSpecInstantiationException
+  throws NoSuchAdaptationException
   {
     final var config = message.configuration();
     if (config.isEmpty()) {

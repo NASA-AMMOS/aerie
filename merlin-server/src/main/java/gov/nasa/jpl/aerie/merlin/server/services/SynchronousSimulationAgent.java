@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -56,7 +55,7 @@ public record SynchronousSimulationAgent (
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       writer.failWith("adaptation for existing plan does not exist");
       return;
-    } catch (final SimulationDriver.TaskSpecInstantiationException | AdaptationFacade.NoSuchActivityTypeException ex) {
+    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
       writer.failWith("activity could not be instantiated");
       return;
     }
