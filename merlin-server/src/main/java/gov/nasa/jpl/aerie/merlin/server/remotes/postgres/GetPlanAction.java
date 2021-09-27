@@ -13,22 +13,14 @@ import java.util.Map;
 /*package-local*/ final class GetPlanAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     with
-      json_activity_arguments as
-        ( select
-            arg.activity_id,
-            json_object_agg(arg.name, arg.value) as arguments
-          from activity_argument as arg
-          group by activity_id ),
       full_activity as
         ( select
             a.plan_id,
             a.id,
             ceil(extract(epoch from a.start_offset) * 1000*1000) as start_offset_in_micros,
             a.type,
-            coalesce(arguments.arguments, '[]'::json) as arguments
-          from activity as a
-          left join json_activity_arguments as arguments
-            on a.id = arguments.activity_id ),
+            a.arguments
+          from activity as a ),
       json_activities as
         ( select
             a.plan_id,
