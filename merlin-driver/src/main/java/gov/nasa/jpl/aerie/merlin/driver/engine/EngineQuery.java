@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.newengine;
+package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 

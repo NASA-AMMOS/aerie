@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.newengine;
+package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 /** A typed wrapper for signal IDs. */
 /*package-local*/ sealed interface SignalId {

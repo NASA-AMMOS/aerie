@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.driver.newengine;
+package gov.nasa.jpl.aerie.merlin.driver.engine;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
