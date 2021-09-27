@@ -33,8 +33,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -300,17 +302,16 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
         .nextSatisfied(querier, horizonTime.minus(currentTime))
         .map(currentTime::plus);
 
-    // TODO: Compute an expiry time as the minimum of the expiries of the cells referenced.
-    // TODO: If the prediction occurs later than the expiry time, discard the prediction.
-    if (prediction.isPresent()) {
+    this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);
+
+    final var expiry = querier.expiry.map(currentTime::plus);
+    if (prediction.isPresent() && (expiry.isEmpty() || prediction.get().shorterThan(expiry.get()))) {
       this.scheduledJobs.schedule(JobId.forSignal(SignalId.forCondition(condition)), SubInstant.Tasks.at(prediction.get()));
     } else {
       // Try checking again later -- where "later" is in some non-zero amount of time!
-      final var nextCheckTime = Duration.max(horizonTime, currentTime.plus(Duration.EPSILON));
+      final var nextCheckTime = Duration.max(expiry.orElse(horizonTime), currentTime.plus(Duration.EPSILON));
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(nextCheckTime));
     }
-
-    this.waitingConditions.subscribeQuery(condition, querier.referencedTopics);
   }
 
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
@@ -318,8 +319,12 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     final var querier = new EngineQuerier(now);
     this.resources.get(resource).append(currentTime, querier);
 
-    // TODO: Compute an expiry time as the minimum of the expiries of the cells referenced.
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
+
+    final var expiry = querier.expiry.map(currentTime::plus);
+    if (expiry.isPresent()) {
+      this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(expiry.get()));
+    }
   }
 
   /** Resets all tasks (freeing any held resources). The engine should not be used after being closed. */
@@ -485,6 +490,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   private final class EngineQuerier implements Querier<$Timeline> {
     private final History<$Timeline> history;
     private final Set<TopicId> referencedTopics = new HashSet<>();
+    private Optional<Duration> expiry = Optional.empty();
 
     public EngineQuerier(final History<$Timeline> history) {
       this.history = Objects.requireNonNull(history);
@@ -496,11 +502,20 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token).query();
 
+      // TODO: Cache the state (until the query returns) to avoid unnecessary copies
+      //  if the same state is requested multiple times in a row.
+      final var state = this.history.ask(query);
+
+      this.expiry = map2(this.expiry, query.getCurrentExpiry(state), Duration::min);
       this.referencedTopics.add(new TopicId(query.getTableIndex()));
 
-      // TODO: Cache the return value (until the query returns) to avoid unnecessary copies
-      //  if the same state is requested multiple times in a row.
-      return this.history.ask(query);
+      return state;
+    }
+
+    private static <T> Optional<T> map2(final Optional<T> a, final Optional<T> b, final BinaryOperator<T> f) {
+      if (a.isEmpty()) return b;
+      if (b.isEmpty()) return a;
+      return Optional.of(f.apply(a.get(), b.get()));
     }
   }
 
