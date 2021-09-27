@@ -32,7 +32,7 @@ create function increment_revision_for_update_simulation()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update simulation
+  update merlin.simulation
   set revision = revision + 1
   where id = new.id
     or id = old.id;
@@ -43,4 +43,5 @@ end$$;
 create trigger increment_revision_for_update_simulation_trigger
 after update on simulation
 for each row
+when (pg_trigger_depth() < 1)
 execute function increment_revision_for_update_simulation();

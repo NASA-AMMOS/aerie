@@ -48,7 +48,7 @@ create function increment_revision_on_update_plan()
 returns trigger
 security definer
 language plpgsql as $$begin
-  update plan
+  update merlin.plan
   set revision = revision + 1
   where id = new.id
     or id = old.id;
@@ -59,4 +59,5 @@ end$$;
 create trigger increment_revision_on_update_plan_trigger
 after update on plan
 for each row
+when (pg_trigger_depth() < 1)
 execute function increment_revision_on_update_plan();
