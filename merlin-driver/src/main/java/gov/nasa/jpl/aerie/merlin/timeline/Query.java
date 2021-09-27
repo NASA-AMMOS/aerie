@@ -2,6 +2,9 @@ package gov.nasa.jpl.aerie.merlin.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
+import java.util.Optional;
 
 /**
  * A cached query onto a {@link SimulationTimeline}.
@@ -35,6 +38,10 @@ public final class Query<$Schema, Event, CellType> {
 
   public int getTableIndex() {
     return this.inner.getTableIndex();
+  }
+
+  public Optional<Duration> getCurrentExpiry(final CellType state) {
+    return this.inner.getCurrentExpiry(state);
   }
 
   /**
@@ -78,6 +85,10 @@ public final class Query<$Schema, Event, CellType> {
 
     public CellType getInitialValue() {
       return this.applicator.initial();
+    }
+
+    public Optional<Duration> getCurrentExpiry(final CellType state) {
+      return this.applicator.getExpiry(state);
     }
   }
 }
