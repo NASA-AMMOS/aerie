@@ -3,10 +3,12 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.json.ProductParsers;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -162,4 +164,45 @@ public abstract class MerlinParsers {
           untuple((name, summary, description, definition) ->
               new Constraint(name, summary, description, definition)),
           $ -> tuple($.name(), $.summary(), $.description(), $.definition())));
+
+  private static final JsonParser<HasuraAction.Session> hasuraActionSessionP
+      = productP
+      .field("x-hasura-role", stringP)
+      .optionalField("x-hasura-user-id", stringP)
+      .map(Iso.of(
+          untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(""))),
+          $ -> tuple($.hasuraRole(), Optional.ofNullable($.hasuraUserId()))));
+
+  private static <S> ProductParsers.VariadicProductParser<Pair<Pair<String, S>, HasuraAction.Session>> hasuraActionP(final JsonParser<S> inputP) {
+    return productP
+        .field("action", productP.field("name", stringP))
+        .field("input", inputP)
+        .field("session_variables", hasuraActionSessionP);
+  }
+
+  public static final JsonParser<HasuraAction<HasuraAction.AdaptationInput>> hasuraAdaptationActionP
+      = hasuraActionP(productP.field("adaptationId", stringP))
+      .map(Iso.of(
+          untuple((name, adaptationId, session) -> new HasuraAction<>(name, new HasuraAction.AdaptationInput(adaptationId), session)),
+          $ -> tuple($.name(), $.input().adaptationId(), $.session())));
+
+  public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
+      = hasuraActionP(productP.field("planId", stringP))
+      .map(Iso.of(
+          untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
+          $ -> tuple($.name(), $.input().planId(), $.session())));
+
+  private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
+      = productP
+      .field("adaptationId", stringP)
+      .field("activityTypeId", stringP)
+      .map(Iso.of(
+          untuple((adaptationId, activityTypeId) -> new HasuraAction.ActivityInput(adaptationId, activityTypeId)),
+          $ -> tuple($.adaptationId(), $.activityTypeId())));
+
+  public static final JsonParser<HasuraAction<HasuraAction.ActivityInput>> hasuraActivityActionP
+      = hasuraActionP(hasuraActivityInputP)
+      .map(Iso.of(
+          untuple((name, activityInput, session) -> new HasuraAction<>(name, activityInput, session)),
+          $ -> tuple($.name(), $.input(), $.session())));
 }
