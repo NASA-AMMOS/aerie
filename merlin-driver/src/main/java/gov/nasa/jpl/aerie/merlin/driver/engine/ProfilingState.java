@@ -4,8 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.ArrayList;
-
 /*package-local*/ record ProfilingState<$Schema, Dynamics>(
     Resource<$Schema, ?, Dynamics> getter,
     Profile<Dynamics> profile
@@ -15,7 +13,7 @@ import java.util.ArrayList;
       final ResourceType getter,
       final ResourceSolver<$Schema, ResourceType, DynamicsType> solver
   ) {
-    return new ProfilingState<>(new Resource<>(solver, getter), new Profile<>(new ArrayList<>()));
+    return new ProfilingState<>(new Resource<>(solver, getter), new Profile<>());
   }
 
   public void append(final Duration currentTime, final Querier<? extends $Schema> querier) {

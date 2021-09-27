@@ -381,7 +381,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
           approximateProfile(final Approximator<Dynamics, Derived> approximator) {
             final var profile = new ArrayList<Pair<Duration, Derived>>();
 
-            final var segmentsIter = state.profile().segments().iterator();
+            final var segmentsIter = state.profile().iterator();
             if (segmentsIter.hasNext()) {
               var segment = segmentsIter.next();
               while (segmentsIter.hasNext()) {
