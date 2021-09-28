@@ -32,9 +32,12 @@ import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
@@ -144,6 +147,10 @@ public final class MerlinBindings implements Plugin {
         post(this::postFile);
         delete(this::deleteFile);
       });
+
+      path("resourceTypes", () -> {
+        post(this::getResourceTypes);
+      });
     });
 
     // This exception is expected when the request body entity is not a legal JsonValue.
@@ -151,6 +158,22 @@ public final class MerlinBindings implements Plugin {
         .status(400)
         .result(ResponseSerializers.serializeJsonParsingException(ex).toString())
         .contentType("application/json"));
+  }
+
+  private void getResourceTypes(final Context ctx) {
+    try {
+      final var adaptationId = parseJson(ctx.body(), hasuraAdaptationActionP).input().adaptationId();
+
+      final var schemaMap = this.adaptationService.getStatesSchemas(adaptationId);
+
+      ctx.result(ResponseSerializers.serializeValueSchemas(schemaMap).toString());
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
   }
 
   private void getSimulationResults(final Context ctx) {

@@ -81,7 +81,11 @@ public final class ResponseSerializers {
   public static JsonValue serializeValueSchemas(final Map<String, ValueSchema> schemas) {
     if (schemas == null) return JsonValue.NULL;
 
-    return serializeMap(ResponseSerializers::serializeValueSchema, schemas);
+    final var builder = Json.createArrayBuilder();
+    schemas.forEach((k, v) -> builder.add(Json.createObjectBuilder()
+      .add("name", k)
+      .add("schema", serializeValueSchema(v))));
+    return builder.build();
   }
 
   public static JsonValue serializeParameters(final List<Parameter> schemas) {
