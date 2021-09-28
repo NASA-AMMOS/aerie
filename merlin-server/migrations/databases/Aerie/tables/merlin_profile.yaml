@@ -1,6 +1,6 @@
 table:
   name: profile
-  schema: public
+  schema: merlin
 array_relationships:
 - name: profile_segments
   using:
@@ -8,4 +8,4 @@ array_relationships:
       column: profile_id
       table:
         name: profile_segment
-        schema: public
+        schema: merlin

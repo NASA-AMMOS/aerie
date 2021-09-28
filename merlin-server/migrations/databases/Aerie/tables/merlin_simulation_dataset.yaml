@@ -1,6 +1,6 @@
 table:
   name: simulation_dataset
-  schema: public
+  schema: merlin
 object_relationships:
 - name: dataset
   using:

@@ -1,9 +1,9 @@
-- name: Merlin
+- name: Aerie
   kind: postgres
   configuration:
     connection_info:
       database_url:
-        from_env: MERLIN_DATABASE_URL
+        from_env: AERIE_DATABASE_URL
       isolation_level: read-committed
       use_prepared_statements: false
-  tables: "!include Merlin/tables/tables.yaml"
+  tables: "!include Aerie/tables/tables.yaml"

@@ -1,6 +1,6 @@
 table:
   name: dataset
-  schema: public
+  schema: merlin
 object_relationships:
 - name: plan
   using:
@@ -12,18 +12,18 @@ array_relationships:
       column: dataset_id
       table:
         name: profile_request
-        schema: public
+        schema: merlin
 - name: profiles
   using:
     foreign_key_constraint_on:
       column: dataset_id
       table:
         name: profile
-        schema: public
+        schema: merlin
 - name: spans
   using:
     foreign_key_constraint_on:
       column: dataset_id
       table:
         name: span
-        schema: public
+        schema: merlin

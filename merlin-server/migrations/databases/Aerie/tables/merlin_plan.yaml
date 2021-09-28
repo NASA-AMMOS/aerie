@@ -1,6 +1,6 @@
 table:
   name: plan
-  schema: public
+  schema: merlin
 object_relationships:
 - name: mission_model
   using:
@@ -12,25 +12,25 @@ array_relationships:
       column: plan_id
       table:
         name: activity
-        schema: public
+        schema: merlin
 - name: conditions
   using:
     foreign_key_constraint_on:
       column: plan_id
       table:
         name: condition
-        schema: public
+        schema: merlin
 - name: datasets
   using:
     foreign_key_constraint_on:
       column: plan_id
       table:
         name: dataset
-        schema: public
+        schema: merlin
 - name: simulations
   using:
     foreign_key_constraint_on:
       column: plan_id
       table:
         name: simulation
-        schema: public
+        schema: merlin
