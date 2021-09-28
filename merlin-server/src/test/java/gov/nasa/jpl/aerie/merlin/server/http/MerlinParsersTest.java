@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,8 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -141,5 +144,85 @@ public final class MerlinParsersTest {
   @Test
   public void testRealIsNotALong() {
     assertThat(longP.parse(Json.createValue(3.14))).matches(JsonParseResult::isFailure);
+  }
+
+  @Test
+  public void testHasuraActionParsers() {
+    {
+      final var json = Json
+          .createObjectBuilder()
+          .add("action", Json
+              .createObjectBuilder()
+              .add("name", "testAction")
+              .build())
+          .add("input", Json
+              .createObjectBuilder()
+              .add("adaptationId", "1")
+              .build())
+          .add("session_variables", Json
+              .createObjectBuilder()
+              .add("x-hasura-role", "admin")
+              .build())
+          .build();
+
+      final var expected = new HasuraAction<>(
+          "testAction",
+          new HasuraAction.AdaptationInput("1"),
+          new HasuraAction.Session("admin", ""));
+
+      assertThat(hasuraAdaptationActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+    }
+
+    {
+      final var json = Json
+          .createObjectBuilder()
+          .add("action", Json
+              .createObjectBuilder()
+              .add("name", "testAction")
+              .build())
+          .add("input", Json
+              .createObjectBuilder()
+              .add("adaptationId", "1")
+              .build())
+          .add("session_variables", Json
+              .createObjectBuilder()
+              .add("x-hasura-role", "admin")
+              .add("x-hasura-user-id", "userId")
+              .build())
+          .build();
+
+      final var expected = new HasuraAction<>(
+          "testAction",
+          new HasuraAction.AdaptationInput("1"),
+          new HasuraAction.Session("admin", "userId"));
+
+      assertThat(hasuraAdaptationActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+    }
+
+    {
+      final var json = Json
+          .createObjectBuilder()
+          .add("action", Json
+              .createObjectBuilder()
+              .add("name", "testAction")
+              .build())
+          .add("input", Json
+              .createObjectBuilder()
+              .add("adaptationId", "1")
+              .add("activityTypeId", "42")
+              .build())
+          .add("session_variables", Json
+              .createObjectBuilder()
+              .add("x-hasura-role", "admin")
+              .build())
+          .build();
+
+      final var expected = new HasuraAction<>(
+          "testAction",
+          new HasuraAction.ActivityInput("1", "42"),
+          new HasuraAction.Session("admin", ""));
+
+      assertThat(hasuraActivityActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+    }
   }
 }
