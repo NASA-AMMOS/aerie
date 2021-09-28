@@ -173,7 +173,7 @@ public abstract class MerlinParsers {
           untuple((role, userId) -> new HasuraAction.Session(role, userId.orElse(""))),
           $ -> tuple($.hasuraRole(), Optional.ofNullable($.hasuraUserId()))));
 
-  private static <S> ProductParsers.VariadicProductParser<Pair<Pair<String, S>, HasuraAction.Session>> hasuraActionP(final JsonParser<S> inputP) {
+  private static <S> JsonParser<Pair<Pair<String, S>, HasuraAction.Session>> hasuraActionP(final JsonParser<S> inputP) {
     return productP
         .field("action", productP.field("name", stringP))
         .field("input", inputP)
