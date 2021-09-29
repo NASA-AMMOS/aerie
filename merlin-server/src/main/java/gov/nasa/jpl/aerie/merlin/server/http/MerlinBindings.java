@@ -32,8 +32,8 @@ import java.util.Map;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
@@ -148,7 +148,9 @@ public final class MerlinBindings implements Plugin {
         post(this::postFile);
         delete(this::deleteFile);
       });
-
+      path("activityTypesAction", () -> {
+        post(this::getActivityTypesAction);
+      });
       path("resourceTypes", () -> {
         post(this::getResourceTypes);
       });
@@ -597,6 +599,21 @@ public final class MerlinBindings implements Plugin {
       ctx.status(200);
     } catch (final IOException ex) {
       ctx.status(404);
+    }
+  }
+
+  private void getActivityTypesAction(final Context ctx) {
+    try {
+      final var action = parseJson(ctx.body(), mapP(mapP(stringP)));
+      final var adaptationId = action.get("input").get("adaptationId");
+      final var activityTypes = this.adaptationService.getActivityTypes(adaptationId);
+      ctx.result(ResponseSerializers.serializeActivityTypes(activityTypes).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     }
   }
 

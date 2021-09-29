@@ -266,7 +266,11 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeActivityTypes(final Map<String, ActivityType> activityTypes) {
-    return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
+    final var builder = Json.createArrayBuilder();
+    activityTypes.forEach((k, v) -> builder.add(Json.createObjectBuilder()
+                                              .add("name", k)
+                                              .add("parameters", serializeActivityType(v))));
+    return builder.build();
   }
 
   public static JsonValue serializeConfigurationSchema(final List<Parameter> parameterSchemas) {
