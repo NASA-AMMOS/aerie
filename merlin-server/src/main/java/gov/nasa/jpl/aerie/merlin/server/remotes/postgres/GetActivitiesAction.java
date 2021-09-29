@@ -64,7 +64,7 @@ import java.util.Map;
       final var startTimestamp = Timestamp.fromString(results.getString(1));
       final var activitiesJson = results.getString(2);
 
-      return PostgresRepository.parseActivitiesJson(activitiesJson, startTimestamp);
+      return PostgresPlanRepository.parseActivitiesJson(activitiesJson, startTimestamp);
     }
   }
 

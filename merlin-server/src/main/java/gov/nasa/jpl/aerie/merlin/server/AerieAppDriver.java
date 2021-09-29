@@ -23,7 +23,9 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MongoPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MongoResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
@@ -111,9 +113,11 @@ public final class AerieAppDriver {
       hikariConfig.setDataSource(pgDataSource);
 
       final var hikariDataSource = new HikariDataSource(hikariConfig);
-      final var repository = new PostgresRepository(hikariDataSource);
 
-      return new Stores(repository, repository, repository);
+      return new Stores(
+          new PostgresPlanRepository(hikariDataSource),
+          new PostgresAdaptationRepository(hikariDataSource),
+          new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore c) {
       return new Stores(
           new InMemoryPlanRepository(),

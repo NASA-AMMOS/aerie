@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresRepository.parseActivitiesJson;
+import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository.parseActivitiesJson;
 
 /*package-local*/ final class GetAllPlansAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
