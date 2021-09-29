@@ -37,6 +37,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraSimulationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
@@ -147,6 +148,9 @@ public final class MerlinBindings implements Plugin {
         get(this::getAvailableFilePaths);
         post(this::postFile);
         delete(this::deleteFile);
+      });
+      path("activityTypeAction", () -> {
+        post(this::getActivityTypeAction);
       });
       path("activityTypesAction", () -> {
         post(this::getActivityTypesAction);
@@ -604,8 +608,7 @@ public final class MerlinBindings implements Plugin {
 
   private void getActivityTypesAction(final Context ctx) {
     try {
-      final var action = parseJson(ctx.body(), mapP(mapP(stringP)));
-      final var adaptationId = action.get("input").get("adaptationId");
+      final var adaptationId = parseJson(ctx.body(), hasuraAdaptationActionP).input().adaptationId();
       final var activityTypes = this.adaptationService.getActivityTypes(adaptationId);
       ctx.result(ResponseSerializers.serializeActivityTypes(activityTypes).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
@@ -626,6 +629,23 @@ public final class MerlinBindings implements Plugin {
       ctx.result(ResponseSerializers.serializeActivityTypes(activityTypes).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
+    }
+  }
+
+  private void getActivityTypeAction(final Context ctx) {
+    try {
+      final var activityInput = parseJson(ctx.body(), hasuraActivityActionP);
+      final var adaptationId = activityInput.input().adaptationId();
+      final var activityTypeId = activityInput.input().activityTypeId();
+      final var activityType = this.adaptationService.getActivityType(adaptationId, activityTypeId);
+      ctx.result(ResponseSerializers.serializeActivityTypeAction(activityType).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException
+        | AdaptationService.NoSuchActivityTypeException ex) {
+      ctx.status(404);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
     }
   }
 
