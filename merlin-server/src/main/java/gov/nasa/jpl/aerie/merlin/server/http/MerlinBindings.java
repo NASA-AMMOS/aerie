@@ -38,6 +38,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstan
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraSimulationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
@@ -107,7 +108,7 @@ public final class MerlinBindings implements Plugin {
             delete(this::deletePlanConstraint);
           });
           path("results", () -> {
-            get(this::getSimulationResults);
+            get(this::getSimulationResultsLegacy);
           });
         });
       });
@@ -151,6 +152,10 @@ public final class MerlinBindings implements Plugin {
       path("resourceTypes", () -> {
         post(this::getResourceTypes);
       });
+
+      path("getSimulationResults", () -> {
+        post(this::getSimulationResults);
+      });
     });
 
     // This exception is expected when the request body entity is not a legal JsonValue.
@@ -177,6 +182,23 @@ public final class MerlinBindings implements Plugin {
   }
 
   private void getSimulationResults(final Context ctx) {
+    try {
+      final var body = parseJson(ctx.body(), hasuraSimulationActionP);
+      final var planId = body.input().planId();
+
+      final var response = this.simulationAction.run(planId);
+      ctx.result(ResponseSerializers.serializeSimulationResultsResponse(response).toString());
+
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch(final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
+    }
+  }
+
+  private void getSimulationResultsLegacy(final Context ctx) {
     try {
       final var planId = ctx.pathParam("planId");
       final var isNonblocking = ctx.queryParam("nonblocking", "false").equals("true");
