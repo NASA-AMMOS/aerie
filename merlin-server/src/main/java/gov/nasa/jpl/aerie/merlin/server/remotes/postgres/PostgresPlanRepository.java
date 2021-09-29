@@ -199,8 +199,15 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, Constraint> getAllConstraintsInPlan(final String planId) {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
+  public Map<String, Constraint> getAllConstraintsInPlan(final String planId) throws NoSuchPlanException {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var getPlanConstraintsAction = new GetPlanConstraintsAction(connection)) {
+        return getPlanConstraintsAction.get(toPlanId(planId));
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to retrieve constraints for plan with id `%s`".formatted(planId), ex);
+    }
   }
 
   @Override
