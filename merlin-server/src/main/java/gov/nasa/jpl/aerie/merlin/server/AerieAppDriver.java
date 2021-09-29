@@ -32,6 +32,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
+import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
@@ -117,7 +118,9 @@ public final class AerieAppDriver {
       return new Stores(
           new PostgresPlanRepository(hikariDataSource),
           new PostgresAdaptationRepository(hikariDataSource),
-          new PostgresResultsCellRepository(hikariDataSource));
+          //new PostgresResultsCellRepository(hikariDataSource));
+          // TODO: TEMPORARY WORKAROUND UNTIL POSTGRES CACHING IS COMPLETE
+          new InMemoryResultsCellRepository());
     } else if (store instanceof InMemoryStore c) {
       return new Stores(
           new InMemoryPlanRepository(),
