@@ -43,7 +43,7 @@ import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 public final class PostgresRepository implements AdaptationRepository, PlanRepository, ResultsCellRepository {
-  private final Path adaptationsPath = Path.of("adaptation_files").toAbsolutePath();
+  private final Path adaptationsPath = Path.of("merlin_file_store").toAbsolutePath();
   private final DataSource dataSource;
 
   public PostgresRepository(final DataSource dataSource) {
