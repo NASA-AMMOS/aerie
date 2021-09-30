@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.constraints.model.Violation;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -393,14 +392,6 @@ public final class ResponseSerializers {
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())
                .build();
-  }
-
-  public static JsonValue serializeTaskSpecInstantiationException(final SimulationDriver.TaskSpecInstantiationException ex) {
-    // TODO: Improve diagnostic information?
-    return Json.createObjectBuilder()
-        .add("message", ex.getMessage())
-        .add("activityId", ex.id)
-        .build();
   }
 
   public static JsonValue serializeFailureReason(final FailureReason failure) {

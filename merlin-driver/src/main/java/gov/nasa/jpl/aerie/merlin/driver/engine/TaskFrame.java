@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -27,6 +28,19 @@ public final class TaskFrame<$Timeline, Signal> {
     final var builder = new FrameBuilder<$Timeline, Signal>(tip, Optional.empty());
     body.accept(builder);
     return builder.yield();
+  }
+
+  public static <$Timeline, Signal>
+  History<$Timeline> runToCompletion(
+      final Collection<Signal> jobs,
+      final History<$Timeline> now,
+      final BiConsumer<Signal, FrameBuilder<$Timeline, Signal>> executor
+  ) {
+    var frame = TaskFrame.<$Timeline, Signal>of(now, builder -> jobs.forEach(builder::signal));
+
+    while (!frame.isDone()) frame = frame.step(executor);
+
+    return frame.getTip();
   }
 
   public static <$Timeline, Signal>

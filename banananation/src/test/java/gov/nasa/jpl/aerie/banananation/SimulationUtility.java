@@ -26,9 +26,7 @@ public final class SimulationUtility {
   }
 
   public static SimulationResults
-  simulate(final Map<String, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration)
-  throws SimulationDriver.TaskSpecInstantiationException
-  {
+  simulate(final Map<String, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);

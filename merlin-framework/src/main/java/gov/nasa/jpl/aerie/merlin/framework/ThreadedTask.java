@@ -1,13 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -20,7 +18,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
 
   private Thread thread = null;
   private boolean isTerminated = false;
-  private final List<ActivityBreadcrumb<$Timeline>> breadcrumbs = new ArrayList<>();
+  private final ReactionContext.Memory memory = new ReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
   public ThreadedTask(final Scoped<Context> rootContext, final Runnable task) {
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -49,28 +47,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       if (response instanceof TaskResponse.Success) {
         final var status = ((TaskResponse.Success<$Timeline>) response).status;
 
-        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-          @Override
-          public Void completed() {
-            ThreadedTask.this.isTerminated = true;
-            return null;
-          }
-
-          @Override
-          public Void delayed(final Duration delay) {
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final String activityId) {
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final Condition<? super $Timeline> condition) {
-            return null;
-          }
-        });
+        this.isTerminated = (status instanceof TaskStatus.Completed);
 
         return status;
       } else if (response instanceof TaskResponse.Failure) {
@@ -119,7 +96,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
 
     this.thread = null;
     this.isTerminated = false;
-    this.breadcrumbs.clear();
+    this.memory.clear();
   }
 
   private Thread makeThread() {
@@ -147,6 +124,9 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       }
     });
 
+    // TODO: Set a thread name so that activity threads can easily be distinguished
+    //   from within tools like Java Flight Recorder.
+
     return thread;
   }
 
@@ -157,15 +137,14 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       if (request instanceof TaskRequest.Resume) {
         final var scheduler = ((TaskRequest.Resume<$Timeline>) request).scheduler;
 
-        ThreadedTask.this.breadcrumbs.add(new ActivityBreadcrumb.Advance<>(scheduler.now()));
         final var context = new ReactionContext<>(
             ThreadedTask.this.rootContext,
-            ThreadedTask.this.breadcrumbs,
+            ThreadedTask.this.memory,
             scheduler,
             this);
 
-        try {
-          ThreadedTask.this.rootContext.setWithin(context, ThreadedTask.this.task::run);
+        try (final var restore = ThreadedTask.this.rootContext.set(context)) {
+          ThreadedTask.this.task.run();
           return new TaskResponse.Success<>(TaskStatus.completed());
         } catch (final TaskAbort ex) {
           return new TaskResponse.Success<>(TaskStatus.completed());

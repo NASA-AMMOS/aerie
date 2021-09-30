@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,11 +24,7 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 
 public class SimulateMapSchedule {
   public static void main(final String[] args) {
-    try {
-      simulateWithMapSchedule();
-    } catch (final SimulationDriver.TaskSpecInstantiationException ex) {
-      ex.printStackTrace();
-    }
+    simulateWithMapSchedule();
   }
 
   private static <$Schema> Adaptation<$Schema, ?> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
@@ -39,9 +34,7 @@ public class SimulateMapSchedule {
   }
 
   private static
-  void simulateWithMapSchedule()
-  throws SimulationDriver.TaskSpecInstantiationException
-  {
+  void simulateWithMapSchedule() {
     final var config = new Configuration();
     final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
     final var adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);

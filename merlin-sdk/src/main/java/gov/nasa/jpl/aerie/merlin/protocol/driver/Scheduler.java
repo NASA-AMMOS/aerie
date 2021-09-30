@@ -7,10 +7,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.Map;
 
 public interface Scheduler<$Timeline> {
-  Checkpoint<$Timeline> now();
-  <State> State getStateAt(Checkpoint<$Timeline> time, Query<? super $Timeline, ?, State> query);
+  <State> State get(Query<? super $Timeline, ?, State> query);
 
-  <Event, State> void emit(Event event, Query<? super $Timeline, ? super Event, State> query);
+  <Event> void emit(Event event, Query<? super $Timeline, ? super Event, ?> query);
 
   String spawn(Task<$Timeline> task);
   String spawn(String type, Map<String, SerializedValue> arguments);
