@@ -102,15 +102,12 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Class</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color"><code>static interface&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="Scoped.BlockScope.html" class="type-name-link" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.BlockScope</a>&lt;<a href="Scoped.BlockScope.html" title="type parameter in Scoped.BlockScope">Throws</a> extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</code></div>
+<div class="col-first even-row-color"><code>static class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="Scoped.EmptyDynamicCellException.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.EmptyDynamicCellException</a></code></div>
 <div class="col-last even-row-color">&nbsp;</div>
-<div class="col-first odd-row-color"><code>static class&nbsp;</code></div>
-<div class="col-second odd-row-color"><code><a href="Scoped.EmptyDynamicCellException.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.EmptyDynamicCellException</a></code></div>
+<div class="col-first odd-row-color"><code>static final record&nbsp;</code></div>
+<div class="col-second odd-row-color"><code><a href="Scoped.UndoToken.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a>&lt;<a href="Scoped.UndoToken.html" title="type parameter in Scoped.UndoToken">T</a>&gt;</code></div>
 <div class="col-last odd-row-color">&nbsp;</div>
-<div class="col-first even-row-color"><code>static interface&nbsp;</code></div>
-<div class="col-second even-row-color"><code><a href="Scoped.ExpressionScope.html" class="type-name-link" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.ExpressionScope</a>&lt;<a href="Scoped.ExpressionScope.html" title="type parameter in Scoped.ExpressionScope">Result</a>,<wbr><a href="Scoped.ExpressionScope.html" title="type parameter in Scoped.ExpressionScope">Throws</a> extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</code></div>
-<div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -135,35 +132,10 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Gets the current value of the dynamic cell.</div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;T,<wbr>
-Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;<br>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#setDynamic(gov.nasa.jpl.aerie.merlin.framework.Scoped,T,gov.nasa.jpl.aerie.merlin.framework.Scoped.BlockScope)" class="member-name-link">setDynamic</a><wbr>(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;T&gt;&nbsp;cell,
- T&nbsp;value,
- <a href="Scoped.BlockScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.BlockScope</a>&lt;Throws&gt;&nbsp;scope)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Provide a value for a dynamic cell for queries within the provided scope.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;T,<wbr>
-Result,<wbr>
-Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;<br>Result</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#setDynamic(gov.nasa.jpl.aerie.merlin.framework.Scoped,T,gov.nasa.jpl.aerie.merlin.framework.Scoped.ExpressionScope)" class="member-name-link">setDynamic</a><wbr>(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;T&gt;&nbsp;cell,
- T&nbsp;value,
- <a href="Scoped.ExpressionScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.ExpressionScope</a>&lt;Result,<wbr>Throws&gt;&nbsp;scope)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
-<div class="block">Provide a value for a dynamic cell for queries within the provided scope.</div>
-</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;<br>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setWithin(T,gov.nasa.jpl.aerie.merlin.framework.Scoped.BlockScope)" class="member-name-link">setWithin</a><wbr>(<a href="Scoped.html" title="type parameter in Scoped">T</a>&nbsp;value,
- <a href="Scoped.BlockScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.BlockScope</a>&lt;Throws&gt;&nbsp;scope)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="Scoped.UndoToken.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a>&lt;<a href="Scoped.html" title="type parameter in Scoped">T</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#set(T)" class="member-name-link">set</a><wbr>(<a href="Scoped.html" title="type parameter in Scoped">T</a>&nbsp;newValue)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Provide a value for a dynamic cell for queries within the provided scope.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;Result,<wbr>
-Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;<br>Result</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#setWithin(T,gov.nasa.jpl.aerie.merlin.framework.Scoped.ExpressionScope)" class="member-name-link">setWithin</a><wbr>(<a href="Scoped.html" title="type parameter in Scoped">T</a>&nbsp;value,
- <a href="Scoped.ExpressionScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.ExpressionScope</a>&lt;Result,<wbr>Throws&gt;&nbsp;scope)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
-<div class="block">Provide a value for this dynamic cell for queries within the provided scope.</div>
+<div class="block">Set a value in this cell, returning an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link"><code>AutoCloseable</code></a> resource restoring the previous value on close.</div>
 </div>
 </div>
 </div>
@@ -196,38 +168,6 @@ Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.
 </section>
 </li>
 <li>
-<section class="detail" id="setDynamic(gov.nasa.jpl.aerie.merlin.framework.Scoped,T,gov.nasa.jpl.aerie.merlin.framework.Scoped.BlockScope)">
-<h3 id="setDynamic(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Object,gov.nasa.jpl.aerie.merlin.framework.Scoped.BlockScope)">setDynamic</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;T,<wbr>
-Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">setDynamic</span><wbr><span class="parameters">(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;T&gt;&nbsp;cell,
- T&nbsp;value,
- <a href="Scoped.BlockScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.BlockScope</a>&lt;Throws&gt;&nbsp;scope)</span>
-                                                    throws <span class="exceptions">Throws</span></div>
-<div class="block">Provide a value for a dynamic cell for queries within the provided scope.</div>
-<dl class="notes">
-<dt>Throws:</dt>
-<dd><code>Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="setDynamic(gov.nasa.jpl.aerie.merlin.framework.Scoped,T,gov.nasa.jpl.aerie.merlin.framework.Scoped.ExpressionScope)">
-<h3 id="setDynamic(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Object,gov.nasa.jpl.aerie.merlin.framework.Scoped.ExpressionScope)">setDynamic</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;T,<wbr>
-Result,<wbr>
-Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</span>
-<span class="return-type">Result</span>&nbsp;<span class="element-name">setDynamic</span><wbr><span class="parameters">(<a href="Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a>&lt;T&gt;&nbsp;cell,
- T&nbsp;value,
- <a href="Scoped.ExpressionScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.ExpressionScope</a>&lt;Result,<wbr>Throws&gt;&nbsp;scope)</span>
-           throws <span class="exceptions">Throws</span></div>
-<div class="block">Provide a value for a dynamic cell for queries within the provided scope.</div>
-<dl class="notes">
-<dt>Throws:</dt>
-<dd><code>Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
 <section class="detail" id="get()">
 <h3>get</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="Scoped.html" title="type parameter in Scoped">T</a></span>&nbsp;<span class="element-name">get</span>()
@@ -244,30 +184,20 @@ Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.
 </section>
 </li>
 <li>
-<section class="detail" id="setWithin(T,gov.nasa.jpl.aerie.merlin.framework.Scoped.ExpressionScope)">
-<h3 id="setWithin(java.lang.Object,gov.nasa.jpl.aerie.merlin.framework.Scoped.ExpressionScope)">setWithin</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Result,<wbr>
-Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</span>&nbsp;<span class="return-type">Result</span>&nbsp;<span class="element-name">setWithin</span><wbr><span class="parameters">(<a href="Scoped.html" title="type parameter in Scoped">T</a>&nbsp;value,
- <a href="Scoped.ExpressionScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.ExpressionScope</a>&lt;Result,<wbr>Throws&gt;&nbsp;scope)</span>
-                                                   throws <span class="exceptions">Throws</span></div>
-<div class="block">Provide a value for this dynamic cell for queries within the provided scope.</div>
-<dl class="notes">
-<dt>Throws:</dt>
-<dd><code>Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a></code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="setWithin(T,gov.nasa.jpl.aerie.merlin.framework.Scoped.BlockScope)">
-<h3 id="setWithin(java.lang.Object,gov.nasa.jpl.aerie.merlin.framework.Scoped.BlockScope)">setWithin</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt;</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">setWithin</span><wbr><span class="parameters">(<a href="Scoped.html" title="type parameter in Scoped">T</a>&nbsp;value,
- <a href="Scoped.BlockScope.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Scoped.BlockScope</a>&lt;Throws&gt;&nbsp;scope)</span>
-                                          throws <span class="exceptions">Throws</span></div>
-<div class="block">Provide a value for a dynamic cell for queries within the provided scope.</div>
-<dl class="notes">
-<dt>Throws:</dt>
-<dd><code>Throws extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a></code></dd>
-</dl>
+<section class="detail" id="set(T)">
+<h3 id="set(java.lang.Object)">set</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="Scoped.UndoToken.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a>&lt;<a href="Scoped.html" title="type parameter in Scoped">T</a>&gt;</span>&nbsp;<span class="element-name">set</span><wbr><span class="parameters">(<a href="Scoped.html" title="type parameter in Scoped">T</a>&nbsp;newValue)</span></div>
+<div class="block">Set a value in this cell, returning an <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link"><code>AutoCloseable</code></a> resource restoring the previous value on close.
+
+ <p>
+   This method should always be used in a try-with-resources statement:
+ </p>
+
+ <pre>
+ try (final var scope = cell.set(value)) {
+   // ...
+ }
+ </pre></div>
 </section>
 </li>
 </ul>
