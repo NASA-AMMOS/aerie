@@ -463,13 +463,11 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final var activityId = taskToPlannedDirective.get(task.id());
 
       if (state instanceof ExecutionState.Terminated e) {
-        final var duration = e.startOffset().minus(e.endOffset());
-
         simulatedActivities.put(activityId, new SimulatedActivity(
             directive.getType(),
             directive.getArguments(),
-            startTime.plus(duration.in(Duration.MICROSECOND), ChronoUnit.MICROS),
-            duration,
+            startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
+            e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList())
         ));
