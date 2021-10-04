@@ -4,9 +4,12 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
@@ -15,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -109,6 +113,15 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
         this.adaptationCollection.insertOne(adaptationDocument);
 
         return adaptationDocument.getObjectId("_id").toString();
+    }
+
+    @Override
+    public void updateAdaptationDerivedData(
+        final String adaptationId,
+        final List<Parameter> modelParameters,
+        final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException
+    {
+        throw new NotImplementedException("If this is needed on the Mongo repository then implement it");
     }
 
     @Override

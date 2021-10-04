@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -108,6 +111,26 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
       return Long.toString(modelId);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to register a mission model", ex);
+    }
+  }
+
+  @Override
+  public void updateAdaptationDerivedData(
+      final String adaptationId,
+      final List<Parameter> modelParameters,
+      final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (
+          final var createModelParametersAction = new CreateModelParametersAction(connection);
+          final var createActivityTypeAction = new CreateActivityTypeAction(connection)
+      ) {
+        final var id = toMissionModelId(adaptationId);
+        createModelParametersAction.apply(id, modelParameters);
+        // TODO: apply `createActivityTypeAction` here to update activity types on mission model update
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to update derived data for mission model with id `%s`".formatted(adaptationId), ex);
     }
   }
 

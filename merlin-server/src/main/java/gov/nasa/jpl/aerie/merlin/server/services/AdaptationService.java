@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
 
 import java.io.IOException;
@@ -49,6 +50,8 @@ public interface AdaptationService {
   List<Path> getAvailableFilePaths() throws IOException;
   void createFile(String filename, InputStream content) throws IOException;
   void deleteFile(String filename) throws IOException;
+
+  void updateDerivedData(String adaptationId) throws NoSuchAdaptationException;
 
   class AdaptationRejectedException extends Exception {
     public AdaptationRejectedException(final String message) { super(message); }

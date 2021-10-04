@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
@@ -9,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,6 +48,14 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
         this.adaptations.put(adaptationId, newJar);
 
         return adaptationId;
+    }
+
+    @Override
+    public void updateAdaptationDerivedData(
+        final String adaptationId,
+        final List<Parameter> modelParameters,
+        final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException
+    {
     }
 
     @Override
