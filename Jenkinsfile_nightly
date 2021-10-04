@@ -29,7 +29,7 @@ pipeline {
           reuseNode true
           registryUrl 'https://artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
-          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/aerie-nightly:latest'
+          image 'gov/nasa/jpl/aerie/jenkins/aerie-nightly:latest'
           alwaysPull true
           args "-u root --mount type=bind,source=${WORKSPACE},target=/home"
         }
