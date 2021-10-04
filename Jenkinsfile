@@ -130,7 +130,7 @@ pipeline {
           reuseNode true
           registryUrl 'https://artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
-          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/aerie:latest'
+          image 'gov/nasa/jpl/aerie/jenkins/aerie:latest'
           alwaysPull true
           args '-u root --mount type=bind,source=${WORKSPACE},target=/home --workdir=/home -v /var/run/docker.sock:/var/run/docker.sock'
         }
