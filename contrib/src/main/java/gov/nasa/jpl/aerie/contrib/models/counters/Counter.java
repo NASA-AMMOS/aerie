@@ -14,7 +14,7 @@ public final class Counter<T> implements DiscreteResource<T> {
   public Counter(final T initialValue, final T zero, final BinaryOperator<T> adder) {
     final var trait = new CommutativeMonoid<>(zero, adder);
 
-    this.ref = new CellRef<>(new CounterCell<>(initialValue, trait::sequentially), trait);
+    this.ref = CellRef.allocate(new CounterCell<>(initialValue, trait::sequentially), trait);
   }
 
   public static Counter<Integer> ofInteger(final Integer initialValue) {
