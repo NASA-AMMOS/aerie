@@ -4,14 +4,27 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
-public final class CellRef<Event, CellType extends Cell<Event, CellType>> {
+import java.util.function.Function;
+
+public final class CellRef<Event, CellType> {
   private final Query<?, Event, CellType> query;
 
-  public CellRef(final CellType initialState, final EffectTrait<Event> trait) {
-    this.query = ModelActions.context.get().allocate(
+  private CellRef(Query<?, Event, CellType> query) {
+    this.query = query;
+  }
+
+  public static <Effect, CellType extends Cell<Effect, CellType>>
+  CellRef<Effect, CellType> allocate(final CellType initialState, final EffectTrait<Effect> trait) {
+    return allocate(initialState, trait, $ -> $);
+  }
+
+  public static <Event, Effect, CellType extends Cell<Effect, CellType>>
+  CellRef<Event, CellType> allocate(final CellType initialState, final EffectTrait<Effect> trait, Function<Event, Effect> eventToEffect) {
+    final var query = ModelActions.context.get().allocate(
         initialState,
         new CellApplicator<>(),
-        Projection.from(trait, $ -> $));
+        Projection.from(trait, eventToEffect));
+    return new CellRef<>(query);
   }
 
   public CellType get() {

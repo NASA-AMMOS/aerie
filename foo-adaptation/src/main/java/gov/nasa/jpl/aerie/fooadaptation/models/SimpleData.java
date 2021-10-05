@@ -30,7 +30,7 @@ public final class SimpleData {
     public final RealResource volume, rate;
 
     private InstrumentData(final double activeRate) {
-      this.ref = new CellRef<>(new LinearIntegrationCell(0, 0), LinearAccumulationEffect.TRAIT);
+      this.ref = CellRef.allocate(new LinearIntegrationCell(0, 0), LinearAccumulationEffect.TRAIT);
       this.activeRate = activeRate;
       this.volume = () -> this.ref.get().getVolume();
       this.rate = () -> this.ref.get().getRate();
