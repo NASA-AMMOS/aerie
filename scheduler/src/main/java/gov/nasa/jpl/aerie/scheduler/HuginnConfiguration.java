@@ -28,7 +28,7 @@ public class HuginnConfiguration {
    */
   private Range<Time> horizon = new Range<>(
     Time.fromString( "2025-001T00:00:00.000" ),
-    Time.fromString( "2027-001T00:00:00.000" ) );
+    Time.fromString( "2034-001T00:00:00.000" ) );
   public Range<Time> getHorizon() { return horizon; }
   public void setHorizon( Range<Time> h ) { horizon = h; }
 
@@ -37,7 +37,7 @@ public class HuginnConfiguration {
    *
    * matches the demo scenario name provided at runtime
    */
-  private String outputStem = "gov/nasa/jpl/aerie/scheduler";
+  private String outputStem = "huginn";
   public String getOutputStem() { return outputStem; }
   public void setOutputStem( String stem ) { outputStem = stem; }
 

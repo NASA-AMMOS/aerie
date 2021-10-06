@@ -14,16 +14,25 @@ test {
 }
 
 dependencies {
+  api 'com.apollographql.apollo:apollo-api:2.5.5'
   compileOnly project(':merlin-framework')
   compileOnly project(':contrib')
 
   implementation 'com.google.guava:guava:29.0-jre'
   implementation 'org.json:json:20171018'
   implementation 'org.jfree:jfreechart:1.5.0'
+  implementation 'com.google.code.gson:gson:2.8.6'
   implementation 'it.univr.di:CSTNU:3.6'
+  implementation 'org.jgrapht:jgrapht-core:1.5.1'
+  implementation 'org.jheaps:jheaps:0.13'
+  implementation 'com.squareup.okio:okio:2.9.0'
+  implementation 'com.squareup.okhttp3:okhttp:4.9.0'
 
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':contrib')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
   testImplementation 'com.google.guava:guava-testlib:29.0-jre'
+  testImplementation 'com.google.truth:truth:1.0.1'
+  testImplementation 'com.google.truth.extensions:truth-java8-extension:1.0.1'
+
 }

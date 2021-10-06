@@ -4,7 +4,7 @@ package gov.nasa.jpl.aerie.scheduler;
  * Equal state constraint
  * @param <T> the type of the state on which the constraint applies
  */
-public class StateConstraintEqual<T extends Comparable<T>> extends StateConstraint<T>{
+public class StateConstraintEqual<T extends Comparable<T>> extends StateConstraint<T> {
 
     protected StateConstraintEqual(){
         cache = new ValidityCache(){
@@ -19,7 +19,7 @@ public class StateConstraintEqual<T extends Comparable<T>> extends StateConstrai
      * @param windows IN set of time ranges in which search is performed
      * @return a set of time ranges in which the constraint is satisfied
      */
-    public TimeWindows findWindowsPart( Plan plan, TimeWindows windows ) {
+    public TimeWindows findWindowsPart(Plan plan, TimeWindows windows ) {
         TimeWindows wins = this.state.whenValueEqual(this.valueDefinition.get(0), windows);
         return wins;
     }

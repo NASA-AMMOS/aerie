@@ -1,14 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import it.univr.di.cstnu.algorithms.STN;
-import it.univr.di.cstnu.algorithms.WellDefinitionException;
-import it.univr.di.cstnu.graph.LabeledNode;
-import it.univr.di.cstnu.graph.STNEdge;
-import it.univr.di.cstnu.graph.STNEdgeInt;
-import it.univr.di.cstnu.graph.TNGraph;
-
-import java.util.ArrayList;
-import java.util.List;
+import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityInstance;
+import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityType;
+import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
+import org.jgrapht.alg.shortestpath.NegativeCycleDetectedException;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.builder.GraphTypeBuilder;
 
 /**
  * criteria used to identify create activity instances in scheduling goals
@@ -37,6 +34,11 @@ public class ActivityCreationTemplate extends ActivityExpression {
    */
   protected ActivityCreationTemplate() { }
 
+  @Override
+  @SuppressWarnings("unchecked")
+  public <B extends AbstractBuilder<B, AT>,AT extends ActivityExpression> AbstractBuilder<B,AT> getNewBuilder(){
+    return (AbstractBuilder<B, AT>) new Builder();
+  }
 
   public static ActivityCreationTemplate ofType(ActivityType actType){
     var act = new ActivityCreationTemplate();
@@ -64,7 +66,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * a duration)
    * //REVIEW: eventually duration should come from simulation instead
    */
-  public static class Builder extends ActivityExpression.AbstractBuilder<Builder,ActivityCreationTemplate> {
+  public static class Builder extends AbstractBuilder<Builder,ActivityCreationTemplate> {
 
     //REVIEW: perhaps separate search criteria vs default specification,
     //        eg Range(0...5) allowed, but create with 4
@@ -76,16 +78,37 @@ public class ActivityCreationTemplate extends ActivityExpression {
      *        this template. not null
      * @return the same builder object updated with new criteria
      */
-    public @NotNull Builder duration( @NotNull Duration duration ) {
-      this.duration = duration;
+    public @NotNull
+    Builder duration(@NotNull Duration duration ) {
+      this.durationIn = new Range<Duration>(duration, duration);
       return getThis();
     }
-    @Nullable Duration duration; //only null until set!
+    public @NotNull
+    Builder duration(@NotNull Range<Duration> duration ) {
+      this.durationIn = duration;
+      return getThis();
+    }
+
+    @Nullable
+    Range<Duration> duration; //only null until set!
+
+    @Override
+    public Builder basedOn(ActivityCreationTemplate template) {
+      type = template.type;
+      startsIn = template.startRange;
+      endsIn = template.endRange;
+      durationIn = template.durationRange;
+      startsOrEndsIn = template.startOrEndRange;
+      nameMatches = ( template.nameRE != null ) ? template.nameRE.pattern() : null;
+      parameters = template.parameters;
+      return getThis();
+    }
 
     /**
      * {@inheritDoc}
      */
-    public @NotNull Builder getThis() {
+    public @NotNull
+    Builder getThis() {
       return this;
     }
 
@@ -97,8 +120,8 @@ public class ActivityCreationTemplate extends ActivityExpression {
               ? java.util.regex.Pattern.compile(nameMatches) : null;
 
       template.type = type;
-      if(duration != null) {
-        template.durationRange = new Range<Duration>(duration, duration);
+      if(durationIn != null) {
+        template.durationRange =durationIn;
       }
       //REVIEW: probably want to store permissible rane separate from creation
       //        default value
@@ -134,40 +157,65 @@ public class ActivityCreationTemplate extends ActivityExpression {
       return template;
     }
 
-
-
   }
 
   /**
-   * Builder for creating disjunction of activity creation templates
+   * create activity if possible
+   * @param name
+   * @param windows
+   * @return
    */
-  public static class OrBuilder extends AbstractBuilder<ActivityCreationTemplate.OrBuilder, ActivityCreationTemplate> {
-
-    /**
-     * {@inheritDoc}
-     */
-    public @NotNull
-    ActivityCreationTemplate.OrBuilder getThis() {
-      return this;
+  public @NotNull
+  ActivityInstance createActivity(String name , TimeWindows windows) {
+    //REVIEW: how to properly export any flexibility to instance?
+    boolean success = false;
+    for(var window : windows.getRangeSet()) {
+      success = STNProcess(window);
+      if(success){
+        break;
+      }
     }
-
-    @Override
-    public ActivityCreationTemplateDisjunction build() {
-      ActivityCreationTemplateDisjunction dis = new ActivityCreationTemplateDisjunction(exprs);
-      return dis;
+    if(!success){
+      return null;
     }
+    var act = createInstanceForReal(name);
+    return act;
 
-    protected boolean orBuilder = false;
-
-    List<ActivityCreationTemplate> exprs = new ArrayList<ActivityCreationTemplate>();
-
-    public ActivityCreationTemplate.OrBuilder or(ActivityCreationTemplate expr) {
-      exprs.add(expr);
-      return getThis();
-    }
   }
 
 
+  private ActivityInstance createInstanceForReal(String name) {
+    final ActivityInstance act;
+    if (type instanceof AerieActivityType) {
+      act = new AerieActivityInstance(name, (AerieActivityType) type);
+    } else {
+      act = new ActivityInstance(name, type);
+    }
+
+
+    if(startRange != null && durationRange!= null){
+      act.setStartTime(tmpSr.getMinimum());
+      act.setDuration(tmpDr.getMinimum());
+    } else if(endRange != null && durationRange != null){
+      act.setStartTime(tmpEr.getMinimum().minus(tmpDr.getMinimum()));
+    } else if(startRange!= null && endRange!= null){
+      act.setStartTime(tmpSr.getMinimum());
+      act.setDuration(tmpEr.getMinimum().minus(tmpSr.getMinimum()));
+    } else{
+      throw new RuntimeException("ActivityCreationTemplate : Not enough parametrization");
+    }
+
+    for(var param: parameters.entrySet()){
+      if(param.getValue() instanceof ExternalState){
+        @SuppressWarnings("unchecked")
+        ExternalState<?> state = (ExternalState<?>) param.getValue();
+        act.addParameter(param.getKey(),state.getValueAtTime(act.getStartTime()));
+      } else{
+        act.addParameter(param.getKey(),param.getValue());
+      }
+    }
+    return act;
+  }
   /**
    * generate a new activity instance based on template defaults
    *
@@ -183,93 +231,191 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return a newly constructed activity instance with values chosen
    *         according to any specified template criteria
    */
-  public @NotNull ActivityInstance createActivity( String name ) {
-    final var act = new ActivityInstance( name, type );
+  public @NotNull
+  ActivityInstance createActivity(String name ) {
     //REVIEW: how to properly export any flexibility to instance?
-
-    //STNcheck();
-
-    if(startRange != null && durationRange!= null){
-      act.setStartTime(startRange.getMinimum());
-      act.setDuration(durationRange.getMinimum());
-    } else if(endRange != null && durationRange != null){
-      act.setStartTime(endRange.getMinimum().minus(durationRange.getMinimum()));
-    } else if(startRange!= null && endRange!= null){
-      act.setStartTime(startRange.getMinimum());
-      act.setDuration(endRange.getMinimum().minus(startRange.getMinimum()));
-    } else{
-      throw new RuntimeException("ActivityCreationTemplate : Not enough parametrization");
+    boolean stnCheck = STNProcess(null);
+    if(!stnCheck){
+      return null;
     }
-
-    for(var param: parameters.entrySet()){
-      if(param.getValue() instanceof ExternalState){
-        @SuppressWarnings("unchecked")
-        ExternalState<?> state = (ExternalState<?>) param.getValue();
-        act.addParameter(param.getKey(),state.getValueAtTime(act.getStartTime()));
-      } else{
-        act.addParameter(param.getKey(),param.getValue());
-      }
-    }
-
-
+    var act = createInstanceForReal(name);
     return act;
   }
+
+  Range<Time> tmpSr;
+  Range<Time> tmpEr;
+  Range<Duration> tmpDr;
+
 
   /**
    * Experimental feature that checks consistency of temporal constraints with a STN network
    * This becomes useful and easier to read when many types of constraints can be posted for activities
    * TODO: Make this global, rename, clean
    */
-  private boolean STNcheck(){
+  private boolean STNProcess(Range<Time> interval){
 
-    var startHorizon = TimeWindows.startHorizon.toSeconds();
+
+    var sh = TimeWindows.startHorizon.toEpochMilliseconds();
+    var eh = TimeWindows.endHorizon.toEpochMilliseconds();
+
 
 
     //need to do something to convert to int...
-
-    TNGraph<STNEdge> graph = new TNGraph<STNEdge>(STNEdgeInt.class);
-    STN stn = new STN(graph);
-
-    var ts = new LabeledNode("TS");
-    var s = new LabeledNode("S");
-    var e = new LabeledNode("E");
+    var g = GraphTypeBuilder.<String, DefaultWeightedEdge> directed().allowingMultipleEdges(false)
+            .allowingSelfLoops(false).edgeClass(DefaultWeightedEdge.class).weighted(true).buildGraph();
 
 
+    g.addVertex("TS");
+    g.addVertex("S");
+    g.addVertex("E");
 
-    if(startRange != null){
-      var edge1 = new STNEdgeInt();
-      edge1.setValue((int) (startRange.getMinimum().toSeconds()-startHorizon));
-      var edge2 = new STNEdgeInt();
-      edge2.setValue((int) (startRange.getMaximum().toSeconds()-startHorizon));
-      graph.addEdge(edge1, ts, s);
-      graph.addEdge(edge2, s, ts);
+    Range<Time> localSR = startRange;
+    Range<Time> localER = endRange;
+    if(interval!= null){
+
+      g.addVertex("SI");
+      g.addVertex("EI");
+
+      var srMin =interval.getMinimum().toEpochMilliseconds();
+      if(srMin < sh){
+        srMin = sh;
+      }
+      var srMax =interval.getMaximum().toEpochMilliseconds();
+      if(srMax > eh){
+        srMax = eh;
+      }
+      srMin = srMin-sh;
+      srMax = srMax-sh;
+      //System.out.println("Interval constraint " + srMin+" "+srMax);
+
+      var edge1 = g.addEdge("TS", "SI");
+      g.setEdgeWeight(edge1, srMin);
+
+      var edge2 = g.addEdge("SI", "TS");
+      g.setEdgeWeight(edge2, -srMin);
+
+
+      var edge3 = g.addEdge("TS", "EI");
+      g.setEdgeWeight(edge3, srMax);
+
+
+      var edge4= g.addEdge("EI", "TS");
+      g.setEdgeWeight(edge4, -srMax);
+
+
+      var edge5= g.addEdge("S", "SI");
+      g.setEdgeWeight(edge5, 0);
+
+
+      var edge6= g.addEdge("EI", "E");
+      g.setEdgeWeight(edge6, 0);
+
+
+
     }
-    if(endRange != null){
-      var edge1 = new STNEdgeInt();
-      edge1.setValue((int) (endRange.getMinimum().toSeconds() - startHorizon));
-      var edge2 = new STNEdgeInt();
-      edge2.setValue((int) (endRange.getMaximum().toSeconds() - startHorizon));
-      graph.addEdge(edge1, ts, e);
-      graph.addEdge(edge2, e, ts);
+
+
+
+    if(localSR != null){
+
+      var srMin =localSR.getMinimum().toEpochMilliseconds();
+      if(srMin < sh){
+        srMin = sh;
+      }
+      var srMax =localSR.getMaximum().toEpochMilliseconds();
+      if(srMax > eh){
+        srMax = eh;
+      }
+      srMin = srMin-sh;
+      srMax = srMax-sh;
+      //System.out.println(srMin+" "+srMax);
+
+
+
+      var edge1 = g.addEdge("TS", "S");
+      g.setEdgeWeight(edge1, srMax);
+
+      var edge2 = g.addEdge("S", "TS");
+      g.setEdgeWeight(edge2, -srMin);
+
+    }
+    if(localER != null){
+
+      var erMin =localER.getMinimum().toEpochMilliseconds();
+      if(erMin < sh){
+        erMin = sh;
+      }
+      var erMax =localER.getMaximum().toEpochMilliseconds();
+      if(erMax > eh){
+        erMax = eh;
+      }
+      erMin = erMin-sh;
+      erMax = erMax-sh;
+      //System.out.println(erMin+" "+erMax);
+
+
+      var edge1 = g.addEdge("TS", "E");
+      g.setEdgeWeight(edge1, erMax);
+
+      var edge2 = g.addEdge("E", "TS");
+      g.setEdgeWeight(edge2, -erMin);
+
+
     }
     if(durationRange!= null) {
-      var edge1 = new STNEdgeInt();
-      edge1.setValue((int) (durationRange.getMinimum().toSeconds()- startHorizon));
-      var edge2 = new STNEdgeInt();
-      edge2.setValue((int) (durationRange.getMaximum().toSeconds()- startHorizon));
-      graph.addEdge(edge1, s, e);
-      graph.addEdge(edge2, e, s);
+
+      var edge1 = g.addEdge("S", "E");
+      g.setEdgeWeight(edge1, (durationRange.getMaximum().toMilliseconds()));
+
+      var edge2 = g.addEdge("E", "S");
+      g.setEdgeWeight(edge2, -(durationRange.getMinimum().toMilliseconds()));
+
     }
     boolean ret = false;
+    BellmanFordShortestPath<String, DefaultWeightedEdge> algo=null;
     try {
-      ret = stn.consistencyCheck().consistency;
-    } catch (WellDefinitionException wellDefinitionException) {
-      wellDefinitionException.printStackTrace();
+      algo = new BellmanFordShortestPath<String, DefaultWeightedEdge>(g);
+      var a = algo.getPaths("TS");
+      ret = true;
+    } catch(NegativeCycleDetectedException e){
+      //System.out.println("Error ");
     }
-    stn.allPairsShortestPaths();
 
-    graph.getEdges();
-    System.out.println(graph.getEdges());
+
+    if(!ret){
+      return ret;
+    }
+
+    if(localER!=null) {
+
+      long val1 = (long) algo.getPathWeight("E", "TS");
+      long val2 = (long) algo.getPathWeight("TS", "E");
+
+      var endRange = new Range<Time>(Time.fromMilli((-val1 + sh)), Time.fromMilli((val2 + sh)));
+      this.tmpEr = endRange;
+      //System.out.println("End range " + endRange);
+    }
+    if(localSR!=null) {
+
+      long val1 = (long) algo.getPathWeight("S", "TS");
+      long val2 = (long) algo.getPathWeight("TS", "S");
+
+      var startRange = new Range<Time>(Time.fromMilli((-val1 + sh)), Time.fromMilli((val2 + sh)));
+      this.tmpSr = startRange;
+      //System.out.println("Start range " + startRange);
+
+    }
+    if(durationRange!=null) {
+
+      long val1 = (long) algo.getPathWeight("E", "S");
+      long val2 = (long) algo.getPathWeight("S", "E");
+
+      var durationRange = new Range<Duration>(Duration.fromMillis(-val1), Duration.fromMillis(val2));
+      this.tmpDr = durationRange;
+      //System.out.println("Duration range " + durationRange);
+
+    }
+
     return ret;
 
   }

@@ -20,7 +20,7 @@ public class StateConstraintNotEqual<T extends Comparable<T>> extends StateConst
      * @param windows IN set of time ranges in which search is performed
      * @return a set of time ranges in which the constraint is satisfied
      */
-    public TimeWindows findWindowsPart( Plan plan, TimeWindows windows ) {
+    public TimeWindows findWindowsPart(Plan plan, TimeWindows windows ) {
         TimeWindows wins = this.state.whenValueNotEqual(this.valueDefinition.get(0), windows);
         return wins;
     }

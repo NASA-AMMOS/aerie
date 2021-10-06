@@ -23,6 +23,8 @@ public class OptionGoal extends Goal {
     public static class Builder {
 
         List<Goal> goals = new ArrayList<Goal>();
+        private String name;
+
         enum CHOICE{
             ATLEAST,
             ATMOST,
@@ -42,6 +44,10 @@ public class OptionGoal extends Goal {
             return this;
         }
 
+        public Builder named(String name){
+            this.name = name;
+            return this;
+        }
 
         public Builder atLeast(int n){
 
@@ -78,6 +84,7 @@ public class OptionGoal extends Goal {
 
             OptionGoal dg = new OptionGoal();
             dg.goals = goals;
+            dg.name = name;
             dg.optimizer = optimizer;
             switch(choice){
                 case ATLEAST:

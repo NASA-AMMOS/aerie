@@ -15,14 +15,14 @@ public class FilterSequenceMinGapAfter implements TimeWindowsFilter {
     }
 
     @Override
-    public TimeWindows filter(Plan plan,TimeWindows windows) {
+    public TimeWindows filter(Plan plan, TimeWindows windows) {
         List<Range<Time>> filtered = new ArrayList<Range<Time>>();
         List<Range<Time>> windowsTo = windows.getRangeSet();
         if(windowsTo.size() > 1) {
             int nextInd = 1;
             while(nextInd < windowsTo.size()){
                 Range<Time> after = windowsTo.get(nextInd);
-                Range<Time>  cur = windowsTo.get(nextInd-1);
+                Range<Time> cur = windowsTo.get(nextInd-1);
                 if (after.getMinimum().minus(cur.getMaximum()).compareTo(minDelay) >= 0) {
                     filtered.add(cur);
                 }

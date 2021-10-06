@@ -1,9 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * demarks a potentially null value (method return, argument, field, etc)

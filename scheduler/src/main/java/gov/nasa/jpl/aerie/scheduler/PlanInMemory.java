@@ -85,14 +85,25 @@ public class PlanInMemory implements Plan {
   public void remove(ActivityInstance act) {
     //TODO: handle ownership. Constraint propagation ?
     actsByName.remove(act.getName());
-    actsByTime.remove(act.getStartTime());
-    actsByType.remove(act.getType());
+    var acts = actsByTime.get(act.getStartTime());
+    if(acts!=null) acts.remove(act);
+    acts =actsByType.get(act.getType());
+    if(acts!=null)   acts.remove(act);
+  }
+
+  @Override
+  public void removeAllWindows() {
+    var acts =actsByType.get("Window");
+    for(var act : acts){
+      remove(act);
+    }
+
   }
 
   /**
    * {@inheritDoc}
    */
-  @Override public <T extends Comparable<T>> void add( State<T> state ) {
+  @Override public <T extends Comparable<T>> void add( State<T> stateTimeline) {
   }
 
   /**
@@ -122,7 +133,7 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by name
    */
-  private java.util.HashMap<String,ActivityInstance> actsByName
+  private java.util.HashMap<String, ActivityInstance> actsByName
     = new java.util.HashMap<>();
 
   /**

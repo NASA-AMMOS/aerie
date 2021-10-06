@@ -12,6 +12,12 @@ public class ActivityExpressionDisjunction extends ActivityExpression{
         this.actExpressions = new ArrayList<ActivityExpression>(actExpressions);
     }
 
+
+    @SuppressWarnings("unchecked")
+    public <B extends AbstractBuilder<B, AT>,AT extends ActivityExpression> AbstractBuilder<B,AT> getNewBuilder(){
+        return (AbstractBuilder<B, AT>) new OrBuilder();
+    }
+
     /**
      *
      * @param act IN the activity to evaluate against the template criteria.
@@ -27,6 +33,41 @@ public class ActivityExpressionDisjunction extends ActivityExpression{
         }
 
         return false;
+    }
+
+    public static class OrBuilder extends AbstractBuilder<OrBuilder, ActivityExpressionDisjunction> {
+
+        @Override
+        public OrBuilder basedOn(ActivityExpressionDisjunction template) {
+            type = template.type;
+            startsIn = template.startRange;
+            endsIn = template.endRange;
+            durationIn = template.durationRange;
+            startsOrEndsIn = template.startOrEndRange;
+            nameMatches = ( template.nameRE != null ) ? template.nameRE.pattern() : null;
+            parameters = template.parameters;
+            exprs= template.actExpressions;
+            return getThis();    }
+
+        /**
+         * {@inheritDoc}
+         */
+        public @NotNull OrBuilder getThis() {
+            return this;
+        }
+
+        @Override
+        public ActivityExpressionDisjunction build() {
+            ActivityExpressionDisjunction dis = new ActivityExpressionDisjunction(exprs);
+            return dis;
+        }
+
+        List<ActivityExpression> exprs = new ArrayList<ActivityExpression>();
+
+        public OrBuilder or(ActivityExpression expr) {
+            exprs.add(expr);
+            return getThis();
+        }
     }
 
 

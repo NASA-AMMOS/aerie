@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * prototype scheduling algorithm that schedules activities for a plan
@@ -171,16 +172,16 @@ private void satisfyOptionGoal(OptionGoal goal) {
       for (var subgoal : goal.getSubgoals()) {
         satisfyGoal(subgoal);
         var listOfActivitiesInserted = evaluation.forGoal(subgoal).getAssociatedActivities();
-        if (listOfActivitiesInserted.size()>0 &&(currentSatisfiedGoal == null || goal.optimizer.isBetterThanCurrent(new ArrayList<>(listOfActivitiesInserted)))) {
+        if (listOfActivitiesInserted.size()>0 &&( goal.optimizer.isBetterThanCurrent(new ArrayList<>(listOfActivitiesInserted)) || currentSatisfiedGoal == null )) {
 
           actsToInsert = listOfActivitiesInserted;
           currentSatisfiedGoal = subgoal;
-          plan.remove(evaluation.forGoal(subgoal).getAssociatedActivities());
-          //TODO: a score equal to 0 is perfect for this notation so we want to do something else probably
-          evaluation.forGoal(subgoal).setScore(0);
+
 
         }
-
+        plan.remove(evaluation.forGoal(subgoal).getAssociatedActivities());
+        //TODO: a score equal to 0 is perfect for this notation so we want to do something else probably
+        evaluation.forGoal(subgoal).setScore(0);
       }
       //we should have the best solution
       if (currentSatisfiedGoal != null) {
@@ -221,7 +222,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     for(var subgoal: goal.getSubgoals()) {
       satisfyGoal(subgoal);
-      if(evaluation.forGoal(subgoal).getScore() != 0){
+      if(evaluation.forGoal(subgoal).getScore() != 0 && !subgoal.isPartiallySatisfiable()){
         failed = true;
         break;
       }
@@ -280,18 +281,20 @@ private void satisfyOptionGoal(OptionGoal goal) {
         assert missing != null;
 
         //determine the best activities to satisfy the conflict
-        final var acts = getBestNewActivities( missing );
-        assert acts != null;
-        //add the activities to the output plan
-        if( ! acts.isEmpty() ) {
-          plan.add( acts );
-          madeProgress = true;
+        if(missing instanceof MissingActivityInstanceConflict) {
+          final var acts = getBestNewActivities((MissingActivityInstanceConflict)missing);
+          assert acts != null;
+          //add the activities to the output plan
+          if (!acts.isEmpty()) {
+            plan.add(acts);
+            madeProgress = true;
 
-          evaluation.forGoal( goal ).associate( acts );
-          //REVIEW: really association should be via the goal's own query...
+            evaluation.forGoal(goal).associate(acts);
+            //REVIEW: really association should be via the goal's own query...
 
-          //NB: repropagation of new activity effects occurs on demand
-          //    at next constraint query, if relevant
+            //NB: repropagation of new activity effects occurs on demand
+            //    at next constraint query, if relevant
+          }
         }
       }//for(missing)
 
@@ -313,7 +316,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
    * @return the set of missing activity conflicts in the current solution
    *         plan due to the specified goal
    */
-  private Collection<MissingActivityConflict>
+  private Collection<Conflict>
   getMissingConflicts( Goal goal ) {
     assert goal != null;
     assert plan != null;
@@ -325,12 +328,12 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     //filter out any issues that this simple algorithm can't deal with (ie
     //anything that doesn't just require throwing more instances in the plan)
-    final var filteredConflicts = new LinkedList<MissingActivityConflict>();
+    final var filteredConflicts = new LinkedList<Conflict>();
     for( final var conflict : rawConflicts ) {
       assert conflict != null;
-      if( conflict instanceof MissingActivityConflict ) {
-        filteredConflicts.add( (MissingActivityConflict)conflict );
-      }
+      //if( conflict instanceof MissingActivityConflict ) {
+        filteredConflicts.add(conflict );
+      //}
     }
 
     return filteredConflicts;
@@ -434,9 +437,9 @@ private void satisfyOptionGoal(OptionGoal goal) {
         final var missingInstance = (MissingActivityInstanceConflict)missing;
         final var act = missingInstance.getInstance();
         newActs.add( new ActivityInstance(act) );
-        final var windows = createWindows( act, startWindows );
-        newActs.addAll( windows );
-      } else if( missing instanceof MissingActivityTemplateConflict ) {
+//        final var windows = createWindows( act, startWindows );
+//        newActs.addAll( windows );
+      } else if( missing instanceof MissingActivityTemplateConflict) {
         final var missingTemplate = (MissingActivityTemplateConflict)missing;
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
@@ -453,8 +456,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
           //REVIEW: won't need windows for all activities; how to tell?
           //REVIEW: what if windows for multiple conflict instances overlap?
           //REVIEW: should this be full windows or just start windows?
-          final var windows = createWindows( act, startWindows );
-          newActs.addAll( windows );
+//          final var windows = createWindows( act, startWindows );
+//          newActs.addAll( windows );
         }//if(act)
       }
 
@@ -462,6 +465,43 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     return newActs;
   }
+
+  private List<ActivityInstance> processConflict(MissingActivityInstanceConflict c, TimeWindows startWindows ){
+    List<ActivityInstance> instances = new ArrayList<ActivityInstance>();
+    //FINISH: clean this up code dupl re windows etc
+    final var act = c.getInstance();
+    instances.add( new ActivityInstance(act) );
+    final var windows = createWindows( act, startWindows );
+    instances.addAll( windows );
+    return instances;
+  }
+
+
+  private List<ActivityInstance> processConflict(MissingActivityTemplateConflict c, TimeWindows startWindows ){
+    List<ActivityInstance> instances = new ArrayList<ActivityInstance>();
+
+    //select the "best" time among the possibilities, and latest among ties
+    //REVIEW: currently not handling preferences / ranked windows
+    final var startT = startWindows.getMaximum();
+
+    //create the new activity instance (but don't place in schedule)
+    //REVIEW: not yet handling multiple activities at a time
+    final var act = c.getGoal().createActivity();
+    if( act != null ) {
+      act.setStartTime( startT );
+      instances.add( act );
+
+      //create a matching "window" for the activity
+      //REVIEW: won't need windows for all activities; how to tell?
+      //REVIEW: what if windows for multiple conflict instances overlap?
+      //REVIEW: should this be full windows or just start windows?
+      final var windows = createWindows( act, startWindows );
+      instances.addAll( windows );
+    }//if(act)
+    return instances;
+
+  }
+
 
   /**
    * creates windows around the specified notional activity
@@ -525,7 +565,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
    *        may be empty (but not null)
    */
   private void narrowByStateConstraints(
-    TimeWindows windows, Collection<StateConstraintExpression> constraints ) {
+      TimeWindows windows, Collection<StateConstraintExpression> constraints ) {
     assert windows != null;
     assert constraints != null;
 
@@ -559,6 +599,12 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
   }
 
+  public void printEvaluation(){
+    System.out.println("Remaining conflicts for goals ");
+    for(var goalEval :evaluation.getGoals()){
+      System.out.println(goalEval.name + " -> " + evaluation.forGoal(goalEval).score);
+    }
+  }
 
   /**
    * the controlling configuration for the solver

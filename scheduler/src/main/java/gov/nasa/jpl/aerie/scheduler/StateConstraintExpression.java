@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
-import java.util.*;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Class describing a constraint on a generic state and providing methods to create all state constraints
@@ -27,8 +29,9 @@ public class StateConstraintExpression {
      * @return time windows in the plan over which the constraint is
      *         satisfied and overlap with the given windows
      */
-    public  TimeWindows findWindows( Plan plan, TimeWindows windows ){
+    public TimeWindows findWindows(Plan plan, TimeWindows windows ){
         TimeWindows tw = sc.findWindows(plan, windows);
+        System.out.println(name + ' ' + tw);
         return new TimeWindows(tw);
     }
 
@@ -47,13 +50,14 @@ public class StateConstraintExpression {
         protected List<StateConstraintExpression> constraints = new LinkedList<StateConstraintExpression>();
 
         boolean forAll = false;
+        private String name="SC_WITHOUT_NAME";
 
-        public StateConstraintExpression.Builder forAll(){
+        public Builder forAll(){
            forAll =true;
             return getThis();
         }
 
-        public StateConstraintExpression.Builder orBuilder(){
+        public Builder orBuilder(){
             if(builderType != null){
                 throw new IllegalArgumentException("Only one type of builder per expression");
             }
@@ -62,7 +66,7 @@ public class StateConstraintExpression {
         }
 
 
-        public StateConstraintExpression.Builder andBuilder(){
+        public Builder andBuilder(){
             if(builderType != null){
                 throw new IllegalArgumentException("Only one type of builder per expression");
             }
@@ -70,36 +74,36 @@ public class StateConstraintExpression {
             return getThis();
         }
 
-        public StateConstraintExpression.Builder satisfied(StateConstraintExpression ste){
+        public Builder satisfied(StateConstraintExpression ste){
             this.constraints.add(ste);
             return getThis();
         }
 
 
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder lessThan(ExternalState<T> state, T value) {
+        public  <T extends Comparable<T>> Builder lessThan(ExternalState<T> state, T value) {
             StateConstraintBelow<T> bca = StateConstraintExpression.lessThan(state, value);
             this.constraints.add(new StateConstraintExpression(bca));
             return getThis();
         }
 
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder between(ExternalState<T> state, T value1, T value2 ) {
+        public  <T extends Comparable<T>> Builder between(ExternalState<T> state, T value1, T value2 ) {
             StateConstraintBetween<T> bca = StateConstraintExpression.buildBetweenConstraint(state, value1, value2);
             this.constraints.add(new StateConstraintExpression(bca));
             return getThis();
         }
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder above(ExternalState<T> state, T value   ) {
+        public  <T extends Comparable<T>> Builder above(ExternalState<T> state, T value   ) {
             StateConstraintAbove<T> sca = StateConstraintExpression.buildAboveConstraint(state, value);
             this.constraints.add(new StateConstraintExpression(sca));
             return getThis();
         }
 
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder equal(ExternalState<T> state, T value   ) {
+        public  <T extends Comparable<T>> Builder equal(ExternalState<T> state, T value   ) {
             StateConstraintEqual<T> sce = StateConstraintExpression.buildEqualConstraint(state, value);
             this.constraints.add(new StateConstraintExpression(sce));
             return getThis();
         }
 
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder equal(List<? extends ExternalState<T>> states, T value) {
+        public  <T extends Comparable<T>> Builder equal(List<? extends ExternalState<T>> states, T value) {
             if(forAll==false){
                 throw new IllegalArgumentException("forAll() should have been used before");
             } else{
@@ -111,8 +115,21 @@ public class StateConstraintExpression {
             return getThis();
         }
 
+        public  <T extends Comparable<T>> Builder equalSet(ExternalState<T> state, List<T> values) {
+            var sced = new StateConstraintExpressionEqualSet(state, values);
+            this.constraints.add(sced);
+            return getThis();
+        }
 
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder notEqual(List<? extends ExternalState<T>> states, T value) {
+        public  <T extends Comparable<T>> Builder transition(ExternalState<T> state, List<T> fromValues, List<T> toValues) {
+            var c1 = new StateConstraintExpressionEqualSet(state, fromValues);
+            var c2 = new StateConstraintExpressionEqualSet(state, toValues);
+            var sced = new StateConstraintExpressionTransition(c1, c2);
+            this.constraints.add(sced);
+            return getThis();
+        }
+
+        public  <T extends Comparable<T>> Builder notEqual(List<? extends ExternalState<T>> states, T value) {
             if(forAll==false){
                 throw new IllegalArgumentException("forAll() should have been used before");
             } else{
@@ -128,7 +145,7 @@ public class StateConstraintExpression {
 
 
 
-        public  <T extends Comparable<T>> StateConstraintExpression.Builder notEqual(ExternalState<T> state, T value   ) {
+        public  <T extends Comparable<T>> Builder notEqual(ExternalState<T> state, T value   ) {
             StateConstraintNotEqual<T> sce = StateConstraintExpression.buildNotEqualConstraint(state, value);
             this.constraints.add(new StateConstraintExpression(sce));
             return getThis();
@@ -146,12 +163,12 @@ public class StateConstraintExpression {
             }
 
             if(builderType== BuilderType.AND){
-                constr = new StateConstraintExpressionConjunction(constraints);
+                constr = new StateConstraintExpressionConjunction(constraints,name);
             } else {
-                constr = new StateConstraintExpressionDisjunction(constraints);
+                constr = new StateConstraintExpressionDisjunction(constraints,name);
             }
 
-
+            this.name = name;
             return constr;
         }
 
@@ -166,10 +183,14 @@ public class StateConstraintExpression {
          *
          * @return reference to the current builder object (specifically typed)
          */
-        protected StateConstraintExpression.Builder getThis(){
+        protected Builder getThis(){
             return this;
         };
 
+        public Builder name(String name) {
+            this.name = name;
+            return getThis();
+        }
 
 
     }
@@ -291,6 +312,8 @@ public class StateConstraintExpression {
         return sc;
     }
 
+
+
     /**
      * Builds an equal constraint
      * @param state the state on which the constraint applies
@@ -307,12 +330,18 @@ public class StateConstraintExpression {
     }
 
 
-    protected  <T extends Comparable<T>> StateConstraintExpression(StateConstraint<T> sc){
+
+    public <T extends Comparable<T>> StateConstraintExpression(StateConstraint<T> sc){
+        this.name = "SC_WITHOUT_NAME";
+        this.sc = sc;
+    }
+    protected  <T extends Comparable<T>> StateConstraintExpression(StateConstraint<T> sc, String name){
+        this.name = name;
         this.sc = sc;
     }
 
     @SuppressWarnings("rawtypes")
     StateConstraint sc;
-
+    String name;
 
 }

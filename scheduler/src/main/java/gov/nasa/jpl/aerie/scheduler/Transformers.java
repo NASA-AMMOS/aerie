@@ -23,23 +23,23 @@ public class Transformers {
         List<TimeRangeExpression> insideExprs = new ArrayList<TimeRangeExpression>();
         TimeRangeExpression resetExpr;
 
-        Transformers.EnveloppeBuilder withinEach(TimeRangeExpression expr){
+        EnveloppeBuilder withinEach(TimeRangeExpression expr){
             this.resetExpr = expr;
             return this;
         }
 
-        Transformers.EnveloppeBuilder when(StateConstraintExpression expr){
+        EnveloppeBuilder when(StateConstraintExpression expr){
             insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
             return this;
         }
 
 
-        Transformers.EnveloppeBuilder when(ActivityExpression expr){
+        EnveloppeBuilder when(ActivityExpression expr){
             insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
             return this;
         }
 
-        Transformers.EnveloppeBuilder when(TimeRangeExpression expr){
+        EnveloppeBuilder when(TimeRangeExpression expr){
             insideExprs.add(expr);
             return this;
         }

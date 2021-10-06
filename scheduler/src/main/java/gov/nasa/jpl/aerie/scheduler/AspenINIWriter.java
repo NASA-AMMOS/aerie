@@ -54,7 +54,7 @@ public class AspenINIWriter {
     }
 
     for( final var act : plan.getActivitiesByTime() ) {
-      final var dur = act.getDuration()==null?Duration.ofSeconds(1):act.getDuration();
+      final var dur = act.getDuration()==null? Duration.ofSeconds(1):act.getDuration();
       ini.println(act.getType().getName()+" "+act.getName().replace('-','_')+" {");
       ini.println("  start_time = " + act.getStartTime().toString() +";");
       ini.println("  duration = " + dur.toMilliseconds()/1000 +";");

@@ -14,22 +14,32 @@ public class FilterWithReset implements TimeWindowsFilter {
         this.resetExpr = reset;
     }
 
-TimeWindowsFilter filter;
-TimeRangeExpression resetExpr;
+    TimeWindowsFilter filter;
+    TimeRangeExpression resetExpr;
 
     @Override
-    public TimeWindows filter(Plan plan, TimeWindows windows) {
+    public TimeWindows filter(Plan plan, TimeWindows windowsToFilter) {
 
-        TimeWindows ret = new TimeWindows();
+        TimeWindows ret = new TimeWindows(true);
 
-        if(!windows.isEmpty()){
+        int totalFiltered = 0;
 
-            //TODO: this is wrong, we should not pass windows
-            List<Range<Time>> resetPeriods = resetExpr.computeRange(plan, TimeWindows.of(new Range<Time>(windows.getMinimum(), windows.getMaximum()))).getRangeSet();
+        if(!windowsToFilter.isEmpty()){
+
+            List<Range<Time>> resetPeriods = resetExpr.computeRange(plan, TimeWindows.spanMax()).getRangeSet();
 
             for(var window : resetPeriods) {
-                TimeWindows cur = windows.intersectionNew(window);
-                ret.union(filter.filter(plan, cur));
+                // get windows to filter that are completely contained in reset period
+                TimeWindows cur = windowsToFilter.subsetFullyContained(window);
+                if(!cur.isEmpty()) {
+                    //apply filter and union result
+                    ret.union(filter.filter(plan, cur));
+                    totalFiltered+=cur.size();
+                }
+                //short circuit
+                if(totalFiltered >= windowsToFilter.size()){
+                    break;
+                }
             }
         }
 

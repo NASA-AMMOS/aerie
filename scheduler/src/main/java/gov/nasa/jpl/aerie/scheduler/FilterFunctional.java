@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class FilterFunctional implements TimeWindowsFilter  {
+public abstract class FilterFunctional implements TimeWindowsFilter {
 
 
     @Override

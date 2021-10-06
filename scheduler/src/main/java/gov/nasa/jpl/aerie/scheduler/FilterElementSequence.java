@@ -10,7 +10,7 @@ import java.util.List;
  * - keep last element
  * - keep an element at a given position (-1 is the last element, -2 is the element before the last etc)
  */
-public class FilterElementSequence implements TimeWindowsFilter{
+public class FilterElementSequence implements TimeWindowsFilter {
 
 
     private int elementIndex;
@@ -39,8 +39,8 @@ public class FilterElementSequence implements TimeWindowsFilter{
             List<Range<Time>> ranges = windows.getRangeSet();
             if (this.elementIndex >= 0 && this.elementIndex < ranges.size()) {
                 ret.add(ranges.get(this.elementIndex));
-            } else if (elementIndex < 0 && Math.abs(this.elementIndex) < ranges.size()) {
-                ret.add(ranges.get(ranges.size() - 1 - elementIndex));
+            } else if (elementIndex < 0 && Math.abs(this.elementIndex) <= ranges.size()) {
+                ret.add(ranges.get(ranges.size()  +elementIndex ));
             }
         }
 

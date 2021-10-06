@@ -20,7 +20,7 @@ public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
     }
 
     @Override
-    public TimeWindows filter(Plan plan,TimeWindows windows) {
+    public TimeWindows filter(Plan plan, TimeWindows windows) {
         Range<Time> before = null;
         Collection<Range<Time>> filtered = new ArrayList<Range<Time>>();
         List<Range<Time>> windowsToFilter = windows.getRangeSet();

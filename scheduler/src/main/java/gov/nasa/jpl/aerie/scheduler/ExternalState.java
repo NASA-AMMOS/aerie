@@ -55,7 +55,7 @@ public interface ExternalState<T> extends QueriableState<T> {
      * @param timeDomain the domain over which the search is performed
      * @return a set of time ranges (not TimeWindows because they would be merged together)
      */
-    TimeWindows whenValueNotEqual(T val,TimeWindows timeDomain);
+    TimeWindows whenValueNotEqual(T val, TimeWindows timeDomain);
 
 
 }

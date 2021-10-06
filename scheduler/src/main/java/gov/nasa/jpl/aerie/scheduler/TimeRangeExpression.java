@@ -11,30 +11,39 @@ import java.util.function.Function;
  */
 public class TimeRangeExpression {
 
+
     /**
      * TODO: for now, acts like a big AND. We need a OR.
      * @param plan x
-     * @param windows x
+     * @param domain x
      * @return x
      */
-    public TimeWindows computeRange(Plan plan, TimeWindows windows) {
+    public TimeWindows computeRange(Plan plan, TimeWindows domain) {
 
-        TimeWindows inter = new TimeWindows(windows);
+        TimeWindows inter = new TimeWindows(domain);
         //particularly important for combining with constant states as they are by definition adjacent values
         inter.doNotMergeAdjacent();
 
+        if(constantWin!=null){
+            inter.intersection(constantWin);
+        }
+
         if(actTemplate != null) {
+            TimeWindows actTw = new TimeWindows();
+            //particularly important for combining with constant states as they are by definition adjacent values
+            actTw.doNotMergeAdjacent();
             final var anchorActSearch = new ActivityExpression.Builder()
                     .basedOn(actTemplate)
-                    .startsIn(new Range<Time>(windows.getMinimum(), windows.getMaximum())).build();
+                    .startsIn(new Range<Time>(domain.getMinimum(), domain.getMaximum())).build();
             final var anchorActs = plan.find(anchorActSearch);
             for (var anchorAct : anchorActs) {
-                inter.union(new Range<Time>(anchorAct.getStartTime(), anchorAct.getEndTime()));
+                actTw.union(new Range<Time>(anchorAct.getStartTime(), anchorAct.getEndTime()));
             }
+            inter = actTw;
         }
 
         for(var otherExpr : timeRangeExpressions){
-            TimeWindows windowsState = otherExpr.computeRange(plan, windows);
+            TimeWindows windowsState = otherExpr.computeRange(plan, domain);
             inter.intersection(windowsState);
             if (inter.isEmpty()) {
                 break;
@@ -42,7 +51,7 @@ public class TimeRangeExpression {
         }
 
         for (var expr : stateExpr) {
-            TimeWindows windowsState =  expr.findWindows(plan, windows);
+            TimeWindows windowsState =  expr.findWindows(plan, domain);
             inter.intersection(windowsState);
             if (inter.isEmpty()) {
                 break;
@@ -50,7 +59,7 @@ public class TimeRangeExpression {
         }
 
         for (var constState : constantsStates) {
-            TimeWindows windowsState = TimeWindows.of(constState.getTimeline(windows).keySet(), true);
+            TimeWindows windowsState = TimeWindows.of(constState.getTimeline(domain).keySet(), true);
             inter.intersection(windowsState);
             if (inter.isEmpty()) {
                 break;
@@ -59,19 +68,25 @@ public class TimeRangeExpression {
         for (var filterOrtransform : filtersAndTransformers) {
             if(filterOrtransform instanceof TimeWindowsFilter){
                 inter = ((TimeWindowsFilter)filterOrtransform).filter(plan, inter);
-            } else if(filterOrtransform instanceof  TimeWindowsTransformer){
+            } else if(filterOrtransform instanceof TimeWindowsTransformer){
                 inter = ((TimeWindowsTransformer)filterOrtransform).transformWindows(plan, inter);
             }
             if(inter.isEmpty()){
                 break;
             }
         }
+        //out.println(name + " -> " + inter);
+
         return inter;
 
     }
 
+    public void setName(String name){
+        this.name =name;
+    }
 
-    protected String name = "TRE_" + new Random().nextInt();
+    protected TimeWindows constantWin;
+    protected String name = "TRE_" + Math.abs(new Random().nextInt());
     protected List<TimeRangeExpression> timeRangeExpressions;
     protected List<Object> filtersAndTransformers;
     protected List<StateConstraintExpression> stateExpr;
@@ -81,9 +96,13 @@ public class TimeRangeExpression {
     //TODO:unused now, not sure it is useful
     protected Range<Time> horizon;
 
-
     public static TimeRangeExpression constantValuesOf(ExternalState<?> sce){
-        TimeRangeExpression tre = new TimeRangeExpression.Builder().ofEachValue(sce).build();
+        TimeRangeExpression tre = new Builder().ofEachValue(sce).build();
+        return tre;
+    }
+
+    public static TimeRangeExpression of(StateConstraintExpression sce) {
+        TimeRangeExpression tre = new Builder().from(sce).build();
         return tre;
     }
 
@@ -92,28 +111,29 @@ public class TimeRangeExpression {
         List<StateConstraintExpression> stateExpr = new ArrayList<StateConstraintExpression>();
         List<ExternalState<?>> constantsStates = new ArrayList<ExternalState<?>>();
         List<TimeRangeExpression> timeRangeExpressions = new ArrayList<TimeRangeExpression>();;
+        List<TimeWindows> constantWin = new ArrayList<TimeWindows>();
 
         Range<Time> horizon = null;
         private ActivityExpression actTemplate;
 
 
-        public TimeRangeExpression.Builder thenFilter(TimeWindowsFilter filter){
+        public Builder thenFilter(TimeWindowsFilter filter){
             filtersAndTransformers.add(filter);
             return getThis();
         }
 
-        public TimeRangeExpression.Builder thenFilter(Function<Range<Time>, Boolean> functionalFilter){
+        public Builder thenFilter(Function<Range<Time>, Boolean> functionalFilter){
             filtersAndTransformers.add(Filters.functionalFilter(functionalFilter));
             return getThis();
         }
 
-        public TimeRangeExpression.Builder thenTransform(TimeWindowsTransformer transformer){
+        public Builder thenTransform(TimeWindowsTransformer transformer){
             filtersAndTransformers.add(transformer);
             return getThis();
         }
 
 
-        public TimeRangeExpression.Builder onHorizon(Range<Time> horizon){
+        public Builder onHorizon(Range<Time> horizon){
             this.horizon = horizon;
             return getThis();
         }
@@ -123,17 +143,22 @@ public class TimeRangeExpression {
          * @param expr x
          * @return x
          */
-        public TimeRangeExpression.Builder from(StateConstraintExpression expr){
+        public Builder from(StateConstraintExpression expr){
             this.stateExpr.add(expr);
             return getThis();
         }
 
-        public TimeRangeExpression.Builder from(TimeRangeExpression expr){
+        public Builder from(TimeWindows constantWin){
+            this.constantWin.add(constantWin);
+            return getThis();
+        }
+
+        public Builder from(TimeRangeExpression expr){
             this.timeRangeExpressions.add(expr);
             return getThis();
         }
 
-        public TimeRangeExpression.Builder from(ActivityExpression actTemplate){
+        public Builder from(ActivityExpression actTemplate){
             this.actTemplate = actTemplate;
             return getThis();
         }
@@ -150,7 +175,7 @@ public class TimeRangeExpression {
          * @param <T> x
          * @return x
          */
-        public <T> TimeRangeExpression.Builder ofEachValue(ExternalState<T> state){
+        public <T> Builder ofEachValue(ExternalState<T> state){
             this.constantsStates.add(state);
             return getThis();
 
@@ -160,7 +185,7 @@ public class TimeRangeExpression {
         public TimeRangeExpression build(){
             TimeRangeExpression tre = new TimeRangeExpression();
 
-            if(constantsStates.isEmpty() && stateExpr.isEmpty() && actTemplate == null && timeRangeExpressions.isEmpty()){
+            if(constantsStates.isEmpty() && stateExpr.isEmpty() && actTemplate == null && timeRangeExpressions.isEmpty() && constantWin.isEmpty()){
                 throw new RuntimeException("either from or constantValuesOf has to be used to build a valid expression");
             }
             tre.filtersAndTransformers = filtersAndTransformers;
@@ -169,13 +194,22 @@ public class TimeRangeExpression {
             tre.horizon = horizon;
             tre.timeRangeExpressions = timeRangeExpressions;
             tre.actTemplate = actTemplate;
+
+            if(constantWin.size()>0) {
+                TimeWindows cstWind = constantWin.get(0);
+                for (var cstWin : constantWin) {
+                    cstWind.intersection(cstWin);
+                }
+                tre.constantWin = cstWind;
+            }
+
             if(name != null) {
                 tre.name = name;
             }
             return tre;
         }
 
-        public TimeRangeExpression.Builder getThis(){
+        public Builder getThis(){
             return this;
         }
 

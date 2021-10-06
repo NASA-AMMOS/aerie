@@ -152,7 +152,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * @param end IN the end time of the span to fill with conflicts
    */
   private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(
-    Time start, Time end ) {
+      Time start, Time end ) {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
     //determine how much flexibility there is in creating activities

@@ -21,7 +21,7 @@ public class StateConstraintAbove<T extends Comparable<T>> extends StateConstrai
      * @param windows IN set of time ranges in which search is performed
      * @return a set of time ranges in which the constraint is satisfied
      */
-    public TimeWindows findWindowsPart( Plan plan, TimeWindows windows ) {
+    public TimeWindows findWindowsPart(Plan plan, TimeWindows windows ) {
         TimeWindows wins = this.state.whenValueAbove(this.valueDefinition.get(0), windows);
         return wins;
     }
