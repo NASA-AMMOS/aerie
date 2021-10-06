@@ -23,14 +23,21 @@ import java.util.Map;
 public class AerieController {
 
     private static final boolean DEBUG = true;
-    private static final String itPlanBasename = "Plan_";
+    private static final String IT_PLAN_BASENAME = "Plan_";
+    private static final java.time.Duration TIMEOUT_HTTP = java.time.Duration.ofMinutes(10);
 
     //TODO: populate these with answers from AERIE
     private final Map<Plan, String> planIds;
+    private final Map<Plan, Map<String, AerieStateCache>> stateCaches;
+    private final Map<Plan, Time> planStartTimes;
+
+
+    private Map<Plan, Map<String, Class<?>>> stateTypes;
+
     private final Map<ActivityInstance, String> activityInstancesIds;
     private final String AMMOS_ADAPTATION_ID;
     private final String distantAerieURL;
-
+    private final String plan_prefix;
 
     //AUTHENTICATION
     private boolean authenticationRequired = false;
@@ -42,16 +49,27 @@ public class AerieController {
 
     public AerieController(String distantAerieURL, String adaptationId, boolean authenticationRequired){
        this(distantAerieURL,adaptationId);
-       this.authenticationRequired = true;
+       this.authenticationRequired = authenticationRequired;
     }
 
     public AerieController(String distantAerieURL, String adaptationId){
+        this(distantAerieURL,adaptationId, "");
+    }
+    public AerieController(String distantAerieURL, String adaptationId, String planPrefix){
         this.distantAerieURL = distantAerieURL;
         this.AMMOS_ADAPTATION_ID = adaptationId;
         planIds = new HashMap<Plan, String>();
+        stateCaches = new HashMap<Plan, Map<String, AerieStateCache>>();
+        stateTypes = new HashMap<Plan, Map<String, Class<?>>>();
         activityInstancesIds = new HashMap<ActivityInstance, String>();
+        planStartTimes = new HashMap<Plan, Time>();
+        plan_prefix = planPrefix;
     }
 
+
+    public Time fromAerieTime(String aerieTime){
+        return Time.fromString(aerieTime.substring(0, aerieTime.length() - 3));
+    }
 
     private String getActivityInstanceId(ActivityInstance act){
         return activityInstancesIds.get(act);
@@ -65,7 +83,7 @@ public class AerieController {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm");
         LocalDateTime localDate = LocalDateTime.now();
         String todayDate = dtf.format(localDate);
-        return itPlanBasename+todayDate;
+        return plan_prefix + IT_PLAN_BASENAME +todayDate;
 
     }
 
@@ -79,8 +97,9 @@ public class AerieController {
                 postRequest(da);
             }
         }
-
     }
+
+
 
     protected boolean isSessionAlive(){
         SessionAliveRequest sar = new SessionAliveRequest();
@@ -109,8 +128,7 @@ public class AerieController {
         HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(distantAerieURL));
 
-        httpRequestBuilder = httpRequestBuilder.timeout(
-                        java.time.Duration.ofMinutes(1))
+        httpRequestBuilder = httpRequestBuilder.timeout(TIMEOUT_HTTP)
                 .header("Content-Type", "application/json")
                 .header("Accept-Encoding", "gzip, deflate, br")
                 .header("Accept", "application/json")
@@ -192,7 +210,8 @@ public class AerieController {
             ret = false;
             System.out.println("Plan have never been sent to Aerie");
         } else{
-            SimulatePlanRequest spr = new SimulatePlanRequest(plan, timestep);
+            var simulationValueCache = stateCaches.get(plan);
+            SimulatePlanRequest spr = new SimulatePlanRequest(plan, timestep,simulationValueCache);
             ret = postRequest(spr);
         }
         return ret;    }
@@ -209,17 +228,31 @@ public class AerieController {
         return ret;
     }
 
-
-    public boolean sendPlan(Plan plan, Time horizonBegin, Time horizonEnd){
+    public boolean initEmptyPlan(Plan plan, Time horizonBegin, Time horizonEnd, Map<String, AerieStateCache> cache){
         boolean ret = true;
-        CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd);
+
+        CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
+        boolean result = postRequest(planRequest);
+        if(!result){
+            ret = false;
+        }
+
+        //StateTypesRequest str = new StateTypesRequest(plan);
+        //ret = postRequest(str);
+        planStartTimes.put(plan, horizonBegin);
+        return ret;
+    }
+
+
+    public boolean sendPlan(Plan plan, Time horizonBegin, Time horizonEnd, Map<String, AerieStateCache> cache){
+        boolean ret = true;
+        CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
         boolean result = postRequest(planRequest);
         if(!result){
             ret = false;
         } else {
-            String planId = planIds.get(plan);
             for (ActivityInstance act : plan.getActivitiesByTime()) {
-                if(act.getType().getName().equals("Window")) continue;
+                //if(act.getType().getName().equals("Window")) continue;
                 CreateActivityInstanceRequest actInstRequest = new CreateActivityInstanceRequest(act, plan);
                 boolean res = postRequest(actInstRequest);
                 if(!res){
@@ -231,10 +264,58 @@ public class AerieController {
                 }
             }
         }
+
+        //StateTypesRequest str = new StateTypesRequest(plan);
+        //ret = postRequest(str);
+        planStartTimes.put(plan, horizonBegin);
+
         return ret;
 
     }
 
+    public Object getDoubleValue(Plan plan, String nameState, Time t){
+        if(this.planIds.get(plan) != null){
+            var statesCache = this.stateCaches.get(plan);
+            var statesTypes = this.stateTypes.get(plan);
+            var stateCache = statesCache.get(nameState);
+
+            Time startPlan = planStartTimes.get(plan);
+
+            if(stateCache== null){
+                simulatePlan(plan, t.minus(startPlan));
+                stateCache = statesCache.get(nameState);
+            }
+
+            if(stateCache != null){
+                var value = stateCache.getValue(t, statesTypes.get(nameState));
+                if(value != null){
+                    return value;
+                } else{
+                    simulatePlan(plan, t.minus(startPlan));
+                    value = stateCache.getValue(t, statesTypes.get(nameState));
+                    if(value == null){
+                        throw new IllegalArgumentException("Even after resimulation, values cannot be computed");
+                    }
+                }
+            } else{
+
+
+
+                System.out.println("Required state with name " + nameState + " has been found in the definition");
+            }
+
+        }
+
+        return null;
+    }
+
+    public Object getStringValue(Plan plan, String nameState, Time t){
+        return  "";
+    }
+
+    public Object getIntegerValue(Plan plan, String nameState, Time t) {
+        return 0;
+    }
 
     protected abstract class GraphRequest {
 
@@ -265,6 +346,51 @@ public class AerieController {
             for (int i=0;i<ids.length();i++){
                 idsL.add(((JSONObject)ids.get(i)).getString("id"));
             }
+            return true;
+        }
+    }
+
+
+    private static final Map<String, Class<?>> AERIETYPE_TO_JAVATYPE = Map.ofEntries(
+            Map.entry("double", Double.class),
+            Map.entry("integer", Integer.class)
+
+    );
+    protected class StateTypesRequest extends GraphRequest{
+        Plan plan;
+
+        public StateTypesRequest(Plan plan){
+            this.plan = plan;
+        }
+
+        public  String getRequest(){
+            StringBuilder sbPlanRequest = new StringBuilder();
+            sbPlanRequest.append("query ResourceTypes { stateTypes( adaptationId: \"");
+            sbPlanRequest.append(AMMOS_ADAPTATION_ID);
+            sbPlanRequest.append("\"){ name schema }}" );
+            return sbPlanRequest.toString();
+        }
+
+        @Override
+        public boolean handleResponse(JSONObject response) {
+
+            var map = stateTypes.get(plan);
+            if(map == null){
+                map =  new HashMap<String, Class<?>>();
+                stateTypes.put(plan,map);
+            }
+
+
+             JSONObject data = (JSONObject) response.get("data");
+             JSONArray stateTypes = data.getJSONArray("stateTypes");
+
+             for(int i = 0;i < stateTypes.length(); i++) {
+                 JSONObject type = stateTypes.getJSONObject(i);
+                 String name = type.getString("name");
+                 String aerieType = ((JSONObject) type.get("schema")).getString("type");
+                 map.put(name, AERIETYPE_TO_JAVATYPE.get(aerieType));
+            }
+
             return true;
         }
     }
@@ -436,11 +562,12 @@ public class AerieController {
         Time horizonBegin;
         Time horizonEnd;
         Plan plan;
-
-        public CreatePlanRequest(Plan plan, Time horizonBegin, Time horizonEnd){
+        Map<String, AerieStateCache> cache;
+        public CreatePlanRequest(Plan plan, Time horizonBegin, Time horizonEnd, Map<String, AerieStateCache> cache){
             this.horizonBegin = horizonBegin;
             this.horizonEnd = horizonEnd;
             this.plan = plan;
+            this.cache = cache;
         }
 
         public String getRequest(){
@@ -460,6 +587,7 @@ public class AerieController {
         public boolean handleResponse(JSONObject response){
             String id = ((JSONObject) ( ((JSONObject) response.get("data")).get("createPlan"))).getString("id");
             addPlanId(plan, id);
+            stateCaches.put(plan, this.cache);
             return true;
         }
 
@@ -488,11 +616,11 @@ public class AerieController {
                 return "\""+((Enum)param).toString()+"\"";
             }
             else if(param instanceof Time){
-                return "\""+((Time) param).toString()+"\"";
+                return "\"" + ((Time) param).toString() + "\"";
             }
             else if(param instanceof StateQueryParam){
                 StateQueryParam sqParam = (StateQueryParam) param;
-                Range<Time> time = sqParam.timeExpr.computeTime(plan,new Range<Time>(instance.getStartTime(), instance.getEndTime()) );
+                Range<Time> time = sqParam.timeExpr.computeTime(plan, new Range<Time>(instance.getStartTime(), instance.getEndTime()) );
                 assert(time.isSingleton());
                 return getGraphlqlVersionOfParameter(sqParam.state.getValueAtTime(time.getMinimum()));
             }
@@ -510,21 +638,30 @@ public class AerieController {
                 throw new RuntimeException("plan request has to be sent before adding activity instances");
             }
 
+            boolean atLeastOne = false;
             sbPlanRequest.append("mutation { createActivityInstances ( activityInstances: {");
-            if(instance.getParameters().size()>0) {
-                sbPlanRequest.append("parameters :[ ");
+            //if(instance.getParameters().size()>0) {
 
+            StringBuilder sbParams = new StringBuilder();
+            sbParams.append("parameters :[ ");
+
+
+                if(instance.getDuration()!= null && !(instance.getType().getName().equals("SimulateAllFakedStates"))) {
+                    sbParams.append("{ name : \"duration_sec\", value :" + ((int) instance.getDuration().toSeconds()) + "},");
+                    atLeastOne = true;
+                }
                 for(Map.Entry<String, Object>  entry: instance.getParameters().entrySet()) {
-
-                    String fakeParamName = entry.getKey();
-                    sbPlanRequest.append("{ name : \""+fakeParamName+"\", value :"+getGraphlqlVersionOfParameter(entry.getValue())+"},");
+                    atLeastOne = true;
+                String fakeParamName = entry.getKey();
+                    sbParams.append("{ name : \""+fakeParamName+"\", value :"+getGraphlqlVersionOfParameter(entry.getValue())+"},");
 
                 }
-                if(instance.getDuration()!= null) {
-                    sbPlanRequest.append("{ name : \"duration_sec\", value :" + ((int) instance.getDuration().toSeconds()) + "},");
+
+            sbParams.append("],");
+                if(atLeastOne){
+                    sbPlanRequest.append(sbParams);
                 }
-                sbPlanRequest.append("],");
-            } else{
+            else{
                 sbPlanRequest.append("parameters :{name :\"\"}, ");
             }
             sbPlanRequest.append("startTimestamp:\"");
@@ -557,10 +694,12 @@ public class AerieController {
 
         private final Duration samplingPeriod;
         private final Plan plan;
+        private Map<String, AerieStateCache> valueCache;
 
-        protected SimulatePlanRequest(Plan plan, Duration samplingPeriod){
+        protected SimulatePlanRequest(Plan plan, Duration samplingPeriod, Map<String, AerieStateCache> simulationValueCache){
             this.plan = plan;
             this.samplingPeriod = samplingPeriod;
+            this.valueCache = simulationValueCache;
         }
 
         public String getRequest(){
@@ -569,11 +708,51 @@ public class AerieController {
             sbPlanRequest.append(getPlanId(plan));
             sbPlanRequest.append("\", samplingPeriod :");
             sbPlanRequest.append(samplingPeriod.toMilliseconds()*1000);
-            sbPlanRequest.append("){ message success activities results { name start}}}");
+            sbPlanRequest.append("){ message success results { name start values {x y}}}}");
             return sbPlanRequest.toString();
         }
 
         public boolean handleResponse(JSONObject response){
+            JSONArray id = ((JSONObject) ( ((JSONObject) response.get("data")).get("simulate"))).getJSONArray("results");
+
+            for(int i = 0; i < id.length(); i++){
+                JSONObject stateNameValues = id.getJSONObject(i);
+                String name = stateNameValues.getString("name");
+
+                AerieStateCache map;
+                map = valueCache.get(name);
+
+                if(map == null){
+
+                    if (Double.class.equals(stateTypes.get(plan).get(name))) {
+                        valueCache.put(name, new AerieStateCache(name, Double.class));
+                    } else if(Integer.class.equals(stateTypes.get(plan).get(name))){
+                        valueCache.put(name, new AerieStateCache(name, Integer.class));
+                    } else if(String.class.equals(stateTypes.get(plan).get(name))){
+                        valueCache.put(name, new AerieStateCache(name, String.class));
+                    }
+
+                    valueCache.put(name, new AerieStateCache(name, Double.class));
+                    map = valueCache.get(name);
+                }
+
+                Time startSim = fromAerieTime(stateNameValues.getString("start"));
+                JSONArray values = stateNameValues.getJSONArray("values");
+                for(int j = 0; j < values.length(); j++){
+                    JSONObject xy = values.getJSONObject(j);
+                    Duration elapsed = Duration.ofSeconds((xy.getLong("x")/1000000));
+                    Object value = xy.get("y");
+                    if (Double.class.equals(stateTypes.get(plan).get(name))) {
+                        value = xy.getDouble("y");
+                    } else if(Integer.class.equals(stateTypes.get(plan).get(name))){
+                        value = xy.getInt("y");
+                    } else if(String.class.equals(stateTypes.get(plan).get(name))){
+                        value = xy.getString("y");
+                    }
+                    map.setValue(startSim.plus(elapsed), value);
+                }
+            }
+
             return true;
         }
 

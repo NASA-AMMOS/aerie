@@ -103,6 +103,16 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
       && ( probe.compareTo( maximum ) <= 0 );
   }
 
+  public List<Range<T>> subsetFullyContained(List<Range<T>> windows){
+    List<Range<T>> ret = new ArrayList<Range<T>>();
+    for(var win:windows){
+      if(this.contains(win)){
+        ret.add(win);
+      }
+    }
+    return ret;
+  }
+
   /**
    * Returns new range from intersection with other range
    * @param otherRange range to be intersected with
@@ -147,11 +157,16 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
   }
 
   public boolean isBefore( @NotNull Range<T> otherRange){
-    return this.getMaximum().compareTo(otherRange.getMinimum()) <= 0;
+    return this.getMaximum().compareTo(otherRange.getMinimum()) < 0;
   }
   public boolean isAfter(Range<T> otherRange){
-    return this.getMinimum().compareTo(otherRange.getMaximum()) >= 0;
+    return this.getMinimum().compareTo(otherRange.getMaximum()) > 0;
   }
+
+  public boolean isAdjacent(Range<T> otherRange){
+    return this.getMinimum().compareTo(otherRange.getMaximum()) == 0 || this.getMaximum().compareTo(otherRange.getMinimum()) == 0;
+  }
+
 
   /**
    * return a range enveloping the two passed ranges

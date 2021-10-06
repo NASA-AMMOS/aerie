@@ -21,11 +21,11 @@ public class Filters {
             return this;
         }
 
-        Filters.LatchingBuilder filterFirstBy(FilterFunctional filter){
+        LatchingBuilder filterFirstBy(FilterFunctional filter){
             filter1 = filter;
             return this;
         }
-        Filters.LatchingBuilder thenFilterBy(FilterFunctional filter){
+        LatchingBuilder thenFilterBy(FilterFunctional filter){
             filter2 = filter;
             return this;
         }

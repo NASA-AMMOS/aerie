@@ -163,7 +163,7 @@ public class ProceduralCreationGoal extends ActivityExistentialGoal {
    *         are deemed relevant to this goal (eg within the temporal context
    *         of this goal)
    */
-  private Collection<ActivityInstance> getRelevantGeneratedActivities( Plan plan ) {
+  private Collection<ActivityInstance> getRelevantGeneratedActivities(Plan plan ) {
 
     //run the generator in the plan context
     final var allActs = generator.apply( plan );

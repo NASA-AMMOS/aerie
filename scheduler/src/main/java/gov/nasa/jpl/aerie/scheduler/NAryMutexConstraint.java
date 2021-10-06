@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 /**
  * Class implementing a n-ary mutex constraint between activity types
  */
-public class NAryMutexConstraint extends GlobalConstraint {
+public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
     Set<ActivityExpression> actTypes;
 
@@ -21,11 +21,11 @@ public class NAryMutexConstraint extends GlobalConstraint {
 
 
 
-    public TimeWindows findWindows( Plan plan, TimeWindows windows, Conflict conflict) {
+    public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
         if(conflict instanceof MissingActivityInstanceConflict){
             return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
         }
-        else if(conflict instanceof  MissingActivityTemplateConflict){
+        else if(conflict instanceof MissingActivityTemplateConflict){
             return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().desiredActTemplate.type );
         }
         else{
@@ -35,7 +35,7 @@ public class NAryMutexConstraint extends GlobalConstraint {
 
 
 
-    private TimeWindows findWindows( Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
+    private TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
         TimeWindows validWindows = new TimeWindows(windows);
         for(var type : actTypes) {
             if(!type.equals(actToBeScheduled)) {
@@ -56,10 +56,8 @@ public class NAryMutexConstraint extends GlobalConstraint {
 
 
     //Non-incremental checking
-    //TODO: does not help finding where to put acts
+    //TODO : uncomment and verify
     public ConstraintState isEnforced(Plan plan, TimeWindows windows){
-
-        //TODO
 
         /*TimeWindows violationWindows = new TimeWindows();
 

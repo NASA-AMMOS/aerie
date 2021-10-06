@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CardinalityConstraint extends GlobalConstraint {
+public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
     private int max;
     private Range<Time> interval;
@@ -23,24 +23,24 @@ public class CardinalityConstraint extends GlobalConstraint {
         private Range<Time> interval;
         private ActivityInstance instance;
 
-        public  CardinalityConstraint.Builder type(ActivityType type){
+        public  Builder type(ActivityType type){
             this.type = type;
             return getThis();
         }
 
-        public  CardinalityConstraint.Builder instanceIsPresent(ActivityInstance instance){
+        public  Builder instanceIsPresent(ActivityInstance instance){
             this.instance = instance;
             return getThis();
         }
 
 
-        public  CardinalityConstraint.Builder inInterval(Range<Time> interval){
+        public  Builder inInterval(Range<Time> interval){
             this.interval = interval;
             return getThis();
         }
 
 
-        public  CardinalityConstraint.Builder atMost(int max){
+        public  Builder atMost(int max){
             this.max = max;
             return getThis();
 
@@ -53,7 +53,7 @@ public class CardinalityConstraint extends GlobalConstraint {
         /**
          * {@inheritDoc}
          */
-         protected CardinalityConstraint.Builder  getThis() { return this; }
+         protected Builder  getThis() { return this; }
 
         /**
          * populates the provided goal with specifiers from this builder and above

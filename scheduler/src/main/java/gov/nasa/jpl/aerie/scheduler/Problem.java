@@ -30,7 +30,7 @@ public class Problem {
   /**
    * container of all goals in the problem, indexed by name
    */
-  private java.util.HashMap<String,Goal> goalsByName = new java.util.HashMap<>();
+  private java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
 
   /**
    * fetches the mission model that this problem is based on

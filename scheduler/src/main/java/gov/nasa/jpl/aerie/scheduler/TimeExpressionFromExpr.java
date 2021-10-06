@@ -2,13 +2,15 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import java.util.Map;
 
-public class TimeExpressionFromExpr extends TimeExpression{
+public class TimeExpressionFromExpr extends TimeExpression {
 
     protected TimeExpression expression;
     protected boolean fixed = true;
+    protected String name;
 
-    public TimeExpressionFromExpr(TimeExpression expression){
+    public TimeExpressionFromExpr(TimeExpression expression, String name){
         this.expression = expression;
+        this.name = name;
     }
 
     @Override

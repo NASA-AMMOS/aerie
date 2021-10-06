@@ -20,7 +20,7 @@ public abstract class TimeExpression {
 
 
     public static TimeExpression fromAnchor(TimeAnchor anchor){
-        return new TimeExpressionRelative(anchor,true);
+        return new TimeExpressionRelative(anchor,true,DEF_NAME);
     }
 
     /**
@@ -32,16 +32,16 @@ public abstract class TimeExpression {
         TimeExpression expr2;
         TimeRangeExpression expr;
 
-        TimeExpression.LatchingBuilder withinEach(TimeRangeExpression expr){
+        LatchingBuilder withinEach(TimeRangeExpression expr){
             this.expr = expr;
             return this;
         }
 
-        TimeExpression.LatchingBuilder first(TimeExpression filter){
+        LatchingBuilder first(TimeExpression filter){
             expr1 = filter;
             return this;
         }
-        TimeExpression.LatchingBuilder andThen(TimeExpression filter){
+        LatchingBuilder andThen(TimeExpression filter){
             expr2 = filter;
             return this;
         }
@@ -55,95 +55,104 @@ public abstract class TimeExpression {
     }
 
     public static final TimeExpression atStart(){
-        return new TimeExpressionRelative(TimeAnchor.START, true);
+        return new TimeExpressionRelative(TimeAnchor.START, true,DEF_NAME);
     }
 
     public static final TimeExpression offsetByAfterStart(Duration dur){
-            TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, true);
+            TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, true,DEF_NAME);
             te.operations.put(Time.Operator.PLUS, dur);
             return te;
     }
 
 
     public static final TimeExpression offsetByBeforeStart(Duration dur){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, true);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, true,DEF_NAME);
         te.operations.put(Time.Operator.MINUS, dur);
         return te;
     }
 
 
     public static final TimeExpression offsetByAfterEnd(Duration dur){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, true);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, true,DEF_NAME);
         te.operations.put(Time.Operator.PLUS, dur);
         return te;
     }
 
 
     public static final TimeExpression offsetByBeforeEnd(Duration dur){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, true);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, true,DEF_NAME);
         te.operations.put(Time.Operator.MINUS, dur);
         return te;
     }
 
     public static final TimeExpression beforeEnd(){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false,DEF_NAME);
         te.operations.put(Time.Operator.MINUS, Duration.ofMaxDur());
         return te;
     }
 
     public static final TimeExpression beforeStart(){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false,DEF_NAME);
         te.operations.put(Time.Operator.MINUS, Duration.ofMaxDur());
         return te;
     }
     public static final TimeExpression afterEnd(){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false,DEF_NAME);
         te.operations.put(Time.Operator.PLUS, Duration.ofMaxDur());
         return te;
     }
 
     public static TimeExpression afterStart(){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false,DEF_NAME);
         te.operations.put(Time.Operator.PLUS, Duration.ofMaxDur());
         return te;
     }
 
     public static final TimeExpression withinAfterStart(Duration dur){
-        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false);
+        TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false,DEF_NAME);
         te.operations.put(Time.Operator.PLUS, dur);
         return te;
     }
 
+
+    public static String DEF_NAME = "NO_NAME_TIME_EXPR";
+
     public static class Builder {
         private boolean interval = false;
+        private String name = DEF_NAME;
 
-        public TimeExpression.Builder getThis(){
+        public Builder getThis(){
             return this;
         }
 
-        public TimeExpression.Builder from(TimeExpression otherExpr){
+
+        public Builder name(String name){
+            this.name = name;
+            return getThis();
+        }
+        public Builder from(TimeExpression otherExpr){
             fromExpression = otherExpr;
             return getThis();
         }
         TimeExpression fromExpression;
 
-        public TimeExpression.Builder from(TimeAnchor anchor){
+        public Builder from(TimeAnchor anchor){
             fromAnchor = anchor;
             return getThis();
         }
         TimeAnchor fromAnchor;
 
-        public TimeExpression.Builder minus(Duration dur){
+        public Builder minus(Duration dur){
             operations.put(Time.Operator.MINUS, dur);
             return getThis();
         }
 
-        public TimeExpression.Builder interval(){
+        public Builder interval(){
             this.interval = true;
             return getThis();
         }
 
-        public TimeExpression.Builder plus(Duration dur){
+        public Builder plus(Duration dur){
             operations.put(Time.Operator.PLUS, dur);
             return getThis();
         }
@@ -151,9 +160,13 @@ public abstract class TimeExpression {
 
         public TimeExpression build(){
             if(fromExpression != null){
-                return new TimeExpressionFromExpr(fromExpression);
+                var expr = new TimeExpressionFromExpr(fromExpression, name);
+                expr.operations = operations;
+                return expr;
             } else if (fromAnchor != null){
-                return new TimeExpressionRelative(fromAnchor, interval);
+                var expr = new TimeExpressionRelative(fromAnchor, interval,name);
+                expr.operations = operations;
+                return expr;
             } else {
                 throw new RuntimeException("Time expression must either be another time expression or a time anchor");
             }

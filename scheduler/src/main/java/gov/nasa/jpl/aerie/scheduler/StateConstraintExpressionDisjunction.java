@@ -8,9 +8,13 @@ import java.util.List;
  */
 public class StateConstraintExpressionDisjunction extends StateConstraintExpression {
 
+    public StateConstraintExpressionDisjunction(List<StateConstraintExpression> constraints) {
+        this(constraints, null);
+    }
 
-    protected StateConstraintExpressionDisjunction(List<StateConstraintExpression> constraints){
-        super(null);
+    protected StateConstraintExpressionDisjunction(List<StateConstraintExpression> constraints,String name){
+        super(null,name);
+
         disjunction = new LinkedList<StateConstraintExpression>(constraints);
         cache = new ValidityCache() {
             @Override
@@ -46,7 +50,7 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
          * @return the time ranges in which the disjunction of constraints is satisfied
          */
     @Override
-    public TimeWindows findWindows( Plan plan, TimeWindows windows ) {
+    public TimeWindows findWindows(Plan plan, TimeWindows windows ) {
         if(ACTIVATE_CACHE){
             return cache.findWindowsCache(plan, windows);
         }

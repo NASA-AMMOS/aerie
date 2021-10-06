@@ -31,7 +31,7 @@ public class ActivityInstance {
    *        by this activity instance
    * @param start IN the time at which the activity is scheduled
    */
-  public ActivityInstance( String name, ActivityType type, Time start ) {
+  public ActivityInstance(String name, ActivityType type, Time start ) {
     this( name, type );
     this.startTime = start;
     //TODO: should guess duration from activity type bounds
@@ -46,7 +46,7 @@ public class ActivityInstance {
    * @param start IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public ActivityInstance( String name, ActivityType type, Time start, Duration duration ) {
+  public ActivityInstance(String name, ActivityType type, Time start, Duration duration ) {
     this( name, type, start );
     if(duration.toMilliseconds() < 0){
       throw new RuntimeException("Negative duration");

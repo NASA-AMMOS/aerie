@@ -9,6 +9,13 @@ import java.util.List;
  */
 public class Goal {
 
+  /**Set to true if partial satisfaction is ok, the scheduler will try to do its best*/
+  private boolean partialSatisfaction = false;
+
+  public boolean isPartiallySatisfiable(){
+    return partialSatisfaction;
+  }
+
   /**
    * the builder can construct goals piecemeal via a series of specifier calls
    *
@@ -108,6 +115,12 @@ public class Goal {
     }
     protected List<StateConstraintExpression> constraints = new LinkedList<StateConstraintExpression>();
 
+    public T partialSatisfaction(){
+      this.partialSatisfaction = true;
+      return getThis();
+    }
+    boolean partialSatisfaction;
+
     /**
      * uses all pending specifications to construct a matching new goal object
      *
@@ -128,6 +141,7 @@ public class Goal {
      */
     protected abstract T getThis();
 
+
     /**
      * populates the provided goal with specifiers from this builder and above
      *
@@ -144,6 +158,8 @@ public class Goal {
       goal.name = name;
 
       goal.priority = priority;
+
+      goal.partialSatisfaction = true;
 
       goal.stateConstraints =null;
       if(this.constraints.size()>0){
@@ -165,7 +181,7 @@ public class Goal {
       if( range != null ) {
         goal.temporalContext = range;
       } else {
-        goal.temporalContext = new Range<Time>( starting, ending );
+        goal.temporalContext = new Range<Time>(starting, ending );
       }
 
       return goal;

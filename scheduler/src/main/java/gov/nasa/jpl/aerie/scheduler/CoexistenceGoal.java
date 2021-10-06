@@ -86,7 +86,8 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
      * but there was no corresponding target activity instance (and one
      * should probably be created!)
      */
-    public java.util.Collection<Conflict> getConflicts( Plan plan ) {
+    @SuppressWarnings({"unchecked","rawtypes"})
+    public java.util.Collection<Conflict> getConflicts(Plan plan ) {
         final var conflicts = new java.util.LinkedList<Conflict>();
 
         TimeWindows anchors = expr.computeRange(plan, TimeWindows.spanMax());
@@ -95,7 +96,18 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
             //System.out.println("Anchor for coexist act : " + window.toString());
 
-            ActivityCreationTemplate.Builder actTB = new ActivityCreationTemplate.Builder();
+            //ActivityExpression.AbstractBuilder<?, ? extends ActivityCreationTemplate> actTB = this.desiredActTemplate.getNewBuilder();
+            boolean disj = false;
+            ActivityExpression.AbstractBuilder actTB =null;
+            if(this.desiredActTemplate instanceof ActivityCreationTemplateDisjunction){
+                disj = true;
+                actTB = new ActivityCreationTemplateDisjunction.OrBuilder();
+            }
+            else if(this.desiredActTemplate instanceof ActivityCreationTemplate){
+                actTB = new ActivityCreationTemplate.Builder();
+            }
+
+            //ActivityCreationTemplate.Builder actTB = new ActivityCreationTemplate.Builder();
             actTB.basedOn(this.desiredActTemplate);
 
             Range<Time> startTimeRange = null;
@@ -131,10 +143,16 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
             } else{
                 //all is null. default behavior is starts or ends in the interval
                 startTimeRange = new Range<Time>(window.getMinimum().minus(desiredActTemplate.getDurationRange().getMaximum()), window.getMaximum());
-                actTB.startsOrEndsIn(new Range<Time>(window.getMinimum(), window.getMaximum()));
+                actTB.startsOrEndsIn(new Range<Time>(startTimeRange.getMinimum(), startTimeRange.getMaximum()));
             }
 
-            ActivityCreationTemplate temp = actTB.build();
+            ActivityCreationTemplate temp;
+            if(disj){
+                temp = (ActivityCreationTemplateDisjunction) actTB.build();
+            } else{
+                temp =  (ActivityCreationTemplate)actTB.build();
+
+            }
             final var existingActs = plan.find(temp);
 
             //TODO: enforcement of Solely custody strategy
@@ -142,12 +160,20 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
             //create conflict if no matching target activity found
             if( existingActs.isEmpty() ) {
                 final var actName = getName() + "_" + java.util.UUID.randomUUID();
+                ActivityInstance act;
+                var stateConstraints = getStateConstraints();
+                if(getStateConstraints() != null){
+                    var valid = stateConstraints.findWindows(plan, TimeWindows.spanMax());
+                    act = temp.createActivity(actName, valid);
+                } else {
+                    act = temp.createActivity(actName, TimeWindows.spanMax());
 
-                ActivityInstance act = temp.createActivity(actName);
-
-                conflicts.add(new MissingActivityInstanceConflict(this, act));
-
-
+                }
+                if (act == null) {
+                    conflicts.add(new UnsatisfiableMissingActivityConflict(this));
+                } else {
+                    conflicts.add(new MissingActivityInstanceConflict(this, act));
+                }
               //  conflicts.add( new MissingActivityTemplateConflict(
               //          this, TimeWindows.of( startTimeRange ) ) );
             } else {

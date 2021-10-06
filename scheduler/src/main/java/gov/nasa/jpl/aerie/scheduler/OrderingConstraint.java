@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.scheduler;
 /**
  * Work in progress for specialization of globalconstraint for ordering constraints
  */
-public class OrderingConstraint extends GlobalConstraint{
+public class OrderingConstraint extends GlobalConstraintWithIntrospection {
 
     ActivityType actType;
     ActivityType otherActType;
@@ -14,7 +14,7 @@ public class OrderingConstraint extends GlobalConstraint{
         return mc;
     }
 
-    public TimeWindows findWindows( Plan plan, TimeWindows windows, ActivityType actToBeScheduled ) {
+    public TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled ) {
         return null;
     }
 

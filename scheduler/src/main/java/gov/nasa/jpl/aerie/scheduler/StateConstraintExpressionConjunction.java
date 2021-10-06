@@ -9,8 +9,8 @@ import java.util.List;
 public class StateConstraintExpressionConjunction extends StateConstraintExpression {
 
 
-    protected StateConstraintExpressionConjunction(List<StateConstraintExpression> constraints){
-        super(null);
+    protected StateConstraintExpressionConjunction(List<StateConstraintExpression> constraints,String name){
+        super(null,name);
         conjonction = new LinkedList<StateConstraintExpression>(constraints);
         cache = new ValidityCache() {
             @Override
@@ -35,7 +35,7 @@ public class StateConstraintExpressionConjunction extends StateConstraintExpress
      * @return x
      */
     @Override
-    public TimeWindows findWindows( Plan plan, TimeWindows windows ) {
+    public TimeWindows findWindows(Plan plan, TimeWindows windows ) {
         if(ACTIVATE_CACHE) {
             return cache.findWindowsCache(plan, windows);
         }

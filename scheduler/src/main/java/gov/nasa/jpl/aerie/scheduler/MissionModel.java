@@ -102,7 +102,7 @@ public class MissionModel {
 
 
   /**
-   * activity type definitions in the mission model, indexed by name
+   * global constraints in the mission model, indexed by name
    */
   private List<GlobalConstraint> globalConstraints
           = new java.util.LinkedList<>();

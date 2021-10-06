@@ -21,11 +21,11 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
 
 
-    public TimeWindows findWindows( Plan plan, TimeWindows windows, Conflict conflict) {
+    public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
         if(conflict instanceof MissingActivityInstanceConflict){
             return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
         }
-        else if(conflict instanceof  MissingActivityTemplateConflict){
+        else if(conflict instanceof MissingActivityTemplateConflict){
             return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().desiredActTemplate.type );
         }
         else{
@@ -35,7 +35,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
 
 
-    private TimeWindows findWindows( Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
+    private TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
 
         if(!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))){
             throw new IllegalArgumentException("Activity type must be one of the mutexed types");

@@ -24,6 +24,10 @@ public class Duration implements Comparable<Duration> {
     return maxDur;
   }
 
+  public static Duration ofMicroseconds(long microsecs) {
+    return new Duration(microsecs / 1000000.0);
+  }
+
   /**
    * creates a duration representing the given number of seconds
    *
@@ -130,6 +134,9 @@ public class Duration implements Comparable<Duration> {
     return new Duration( this.jplET_s - subtrahend.jplET_s );
   }
 
+  public double div(Duration divend){
+    return this.jplET_s / divend.jplET_s;
+  }
 
   /**
    * {@inheritDoc}
@@ -162,6 +169,10 @@ public class Duration implements Comparable<Duration> {
    */
   public long toMilliseconds() {
     return (long)( jplET_s * 1000.0 );
+  }
+
+  public long toMicroseconds() {
+    return (long) (jplET_s * 1000000);
   }
 
 
@@ -201,7 +212,9 @@ public class Duration implements Comparable<Duration> {
     return new Duration( java.time.Duration.parse( s ).toMillis() / 1000.0 );
   }
 
-
+public static Duration fromMillis(long milliseconds){
+    return new Duration(milliseconds/1000.);
+}
   /**
    * internal ctor creates a duration matching provided ephemeris seconds
    *

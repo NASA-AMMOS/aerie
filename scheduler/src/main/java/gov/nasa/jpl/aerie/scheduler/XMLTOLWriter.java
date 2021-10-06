@@ -69,7 +69,7 @@ public class XMLTOLWriter {
    *         the input plan
    */
   //TODO: use some multimap library eg guava
-  private java.util.TreeMap<Time,java.util.List<TolRecord>> collectRecords( Plan plan ) {
+  private java.util.TreeMap<Time,java.util.List<TolRecord>> collectRecords(Plan plan ) {
     final var timedLists = new java.util.TreeMap<Time,java.util.List<TolRecord>>();
     for( final var act : plan.getActivitiesByTime() ) {
       addRecord( new ActivityStartRecord( act ), timedLists );
@@ -160,7 +160,7 @@ public class XMLTOLWriter {
      * @param time IN the plan time at which the recorded event occured
      * @param act IN the activity that is being described by the record
      */
-    public ActivityRecord( Time time, ActivityInstance act ) {
+    public ActivityRecord(Time time, ActivityInstance act ) {
       super(time);
       this.act = act;
     }
@@ -208,7 +208,7 @@ public class XMLTOLWriter {
     @Override public void write() {
       writeHeader();
       final var act = getAct();
-      final var dur = act.getDuration()==null?Duration.ofSeconds(1):act.getDuration();
+      final var dur = act.getDuration()==null? Duration.ofSeconds(1):act.getDuration();
       xml.println("    <Instance>");
       xml.println("      <ID>" + act.getName() + "</ID>");
       xml.println("        <Name>"+act.getType().getName()+"</Name>");
@@ -259,7 +259,7 @@ public class XMLTOLWriter {
      * @param act IN the activity to record the end of
      */
     public ActivityEndRecord( ActivityInstance act ) {
-      super( act.getStartTime().plus( act.getDuration()==null?Duration.ofSeconds(1):act.getDuration() ), act );
+      super( act.getStartTime().plus( act.getDuration()==null? Duration.ofSeconds(1):act.getDuration() ), act );
     }
 
     /**

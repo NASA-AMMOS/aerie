@@ -1,4 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler;
+
 import java.util.*;
 
 /**
@@ -58,7 +59,9 @@ public class TimeWindows {
     this.startToEnd = new TreeMap<>( o.startToEnd );
   }
 
-
+  public TimeWindows subsetFullyContained(Range<Time> interval){
+    return TimeWindows.of(interval.subsetFullyContained(this.getRangeSet()), true);
+  }
 
   @Override
   public boolean equals(Object o) {
@@ -94,7 +97,7 @@ public class TimeWindows {
    * @param doNotMergeAdjacent x
    * @return a new set containing just the single provided time range
    */
-  public static TimeWindows of( Range<Time> range , boolean doNotMergeAdjacent) {
+  public static TimeWindows of(Range<Time> range , boolean doNotMergeAdjacent) {
     final var windows = new TimeWindows();
     if(doNotMergeAdjacent){
       windows.doNotMergeAdjacent();
@@ -123,6 +126,17 @@ public class TimeWindows {
     return windows;
   }
 
+  public List<ActivityInstance> toWindowActInst(String prefix){
+    List<ActivityInstance> list = new ArrayList<ActivityInstance>();
+    int i = 0;
+    var at = new ActivityType("Window");
+    for(var win : startToEnd.entrySet()){
+      list.add(new ActivityInstance(prefix+i, at, win.getKey(), win.getValue().minus(win.getKey())));
+      i+=1;
+    }
+    return list;
+  }
+
   /**
    * creates a new set of just the single instant
    *
@@ -143,7 +157,7 @@ public class TimeWindows {
    * @param doNotMergeAdjacent x
    * @return a new set containing just the single provided time point
    */
-  public static TimeWindows of( Time instant, boolean doNotMergeAdjacent ) {
+  public static TimeWindows of(Time instant, boolean doNotMergeAdjacent ) {
     TimeWindows windows = of(instant);
     if(doNotMergeAdjacent)
       windows.doNotMergeAdjacent();
@@ -166,7 +180,7 @@ public class TimeWindows {
    *        ie the distance to bring each end back toward the past
    */
   //REVIEW: should this be non-mutating and just return the contracted set?
-  public void contractBy( Duration front, Duration back ) {
+  public void contractBy(Duration front, Duration back ) {
 
     //TODO: for now can only contract (not extend) since haven't implemented
     //window merging functionality yet
@@ -332,9 +346,15 @@ public class TimeWindows {
         if (end.compareTo(entry.getKey()) < 0) {
           break;
         }
-        // if begin of merging window is lower than end of current window, add current window to record
+        // otherwise, end >= start of entry. Then,if begin of merging window is lower than end of current window, add current window to record
         if ( begin.compareTo(entry.getValue()) < 0 ) {
           intervals.add(entry);
+        }
+
+        //completely contained
+        if(begin.compareTo(entry.getKey()) >= 0 && end.compareTo(entry.getValue()) <=0 ){
+          intervals.add(entry);
+          break;
         }
 
         //if end of merging window is contained in current window, add current window to record and break
@@ -364,10 +384,12 @@ public class TimeWindows {
     startToEnd.put(newBegin,newEnd);
 
   }
-
+  public void intersection(TimeWindows other) {
+    intersection(other, false);
+  }
   /* intersect this set of windows with another
    */
-  public void intersection(TimeWindows other){
+  public void intersection(TimeWindows other, boolean noInstant){
 
     List<Range<Time>> toInsert = new ArrayList<Range<Time>>();
 
@@ -377,16 +399,18 @@ public class TimeWindows {
         Range<Time> range = new Range<Time>(entry.getKey(), entry.getValue());
         var intersection = range.intersect(window);
         //if intersection exists and is not single timepoint
-        if(intersection!= null && intersection.getMaximum().minus(intersection.getMinimum()).compareTo(Duration.ofZero())>0){
-          toInsert.add(intersection);
+        if (intersection != null) {
+          if (!noInstant || (noInstant && intersection.getMaximum().minus(intersection.getMinimum()).compareTo(Duration.ofZero()) > 0)) {
+            toInsert.add(intersection);
+          }
         }
       }
-
     }
 
     startToEnd.clear();
     for(var ran : toInsert){
-      startToEnd.put(ran.getMinimum(), ran.getMaximum());
+      this.union(ran);
+      //startToEnd.put(ran.getMinimum(), ran.getMaximum());
     }
   }
 
@@ -397,7 +421,7 @@ public class TimeWindows {
   public void substraction(TimeWindows tw){
     TimeWindows complTw = new TimeWindows(tw);
     complTw.complement();
-    intersection(complTw);
+    intersection(complTw, true);
   }
 
   /**
@@ -425,6 +449,10 @@ public class TimeWindows {
     TimeWindows ret = new TimeWindows(this);
     ret.intersection(TimeWindows.of(window));
     return ret;
+  }
+
+  public boolean intersects(Range<Time> window){
+    return !(intersectionNew(window).isEmpty());
   }
 
     /**
@@ -497,10 +525,10 @@ public class TimeWindows {
    * @return an unmodifiable collection of time ranges representing the
    *         windows in the set
    */
-  public List< Range<Time> > getRangeSet() {
+  public List<Range<Time>> getRangeSet() {
     //TODO: there are some tricky ways to get actual view to work with eg
     //      iterator transformers
-    final var ranges = new ArrayList< Range<Time> >( startToEnd.size() );
+    final var ranges = new ArrayList<Range<Time>>( startToEnd.size() );
     for( var entry : startToEnd.entrySet() ) {
       ranges.add( new Range<>( entry.getKey(), entry.getValue() ) );
     }
@@ -522,6 +550,9 @@ public class TimeWindows {
     return out;
   }
 
+  public int size(){
+    return startToEnd.size();
+  }
 
   /**
    * the set of windows in the set as a start-to-end time mapping
@@ -531,7 +562,8 @@ public class TimeWindows {
    *
    * this representation allows for easy navigation and minimal duplication
    */
-  private TreeMap< Time, Time > startToEnd
+  private TreeMap<Time, Time> startToEnd
           = new TreeMap<>();
+
 
 }

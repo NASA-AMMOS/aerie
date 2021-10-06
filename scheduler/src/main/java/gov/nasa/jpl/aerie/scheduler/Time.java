@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Objects;
 
 /**
@@ -207,6 +211,9 @@ public class Time implements Comparable<Time>{
     this.jplET_s =jplET_s;
   }
 
+  public static Time fromMilli(long milli){
+    return new Time(milli/1000.0);
+  }
 
   /**
    * span of time since the reference epoch
@@ -235,9 +242,10 @@ public class Time implements Comparable<Time>{
    *
    * produces UTC times in the form 2020-122T14:33:66.221
    */
-  private static java.time.format.DateTimeFormatter formatDOY
-    = java.time.format.DateTimeFormatter.ofPattern("yyyy-DDD'T'HH:mm:ss.SSS")
-    .withZone( java.time.ZoneId.of("Z") );
+  private static final DateTimeFormatter formatDOY =
+          new DateTimeFormatterBuilder().appendPattern("uuuu-DDD'T'HH:mm:ss")
+                  .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).toFormatter()
+                  .withZone(ZoneId.of("Z"));
 
 
   /**
@@ -245,9 +253,9 @@ public class Time implements Comparable<Time>{
    *
    * produces UTC times in the form 2020-11-30T14:33:66.221
    */
-  private static java.time.format.DateTimeFormatter formatDOM
-    = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    .withZone( java.time.ZoneId.of("Z") );
+  private static DateTimeFormatter formatDOM
+    = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+    .withZone( ZoneId.of("Z") );
 
   public enum Operator{
     PLUS,

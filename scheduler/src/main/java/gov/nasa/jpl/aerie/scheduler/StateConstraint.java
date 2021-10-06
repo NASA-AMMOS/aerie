@@ -29,7 +29,7 @@ public abstract class StateConstraint<T extends Comparable<T>> {
 
     protected TimeWindows timeDomain;
 
-    public TimeWindows findWindows( Plan plan, TimeWindows windows ) {
+    public TimeWindows findWindows(Plan plan, TimeWindows windows ) {
         restrictToTimeDomain(windows);
         if(ACTIVATE_CACHE){
             return new TimeWindows(cache.findWindowsCache(plan,windows));

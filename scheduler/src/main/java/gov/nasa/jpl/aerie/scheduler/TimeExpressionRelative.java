@@ -6,9 +6,12 @@ public class TimeExpressionRelative extends TimeExpression{
 
     protected TimeAnchor anchor;
     protected boolean fixed = true;
+    protected String name;
 
-    public TimeExpressionRelative(TimeAnchor anchor, boolean fixed){
+    public TimeExpressionRelative(TimeAnchor anchor, boolean fixed, String name){
+        this.fixed = fixed;
         this.anchor = anchor;
+        this.name = name;
     }
 
     @Override

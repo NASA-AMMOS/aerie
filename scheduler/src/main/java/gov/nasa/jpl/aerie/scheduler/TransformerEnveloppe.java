@@ -12,25 +12,23 @@ public class TransformerEnveloppe implements TimeWindowsTransformer{
     }
 
     @Override
-    public TimeWindows transformWindows(Plan plan, TimeWindows windows) {
+    public TimeWindows transformWindows(Plan plan, TimeWindows windowsToTransform) {
 
         TimeWindows ret = new TimeWindows();
 
-        Time min = windows.getMaximum(), max = windows.getMinimum();
-        boolean present = true;
+        Time min = windowsToTransform.getMaximum(), max = windowsToTransform.getMinimum();
+        boolean atLeastOne = false;
         for(var insideExpr : insideExprs){
 
-            var rangeExpr = insideExpr.computeRange(plan, windows);
-            if(rangeExpr.isEmpty()){
-                present = false;
-                break;
-            } else{
+            var rangeExpr = insideExpr.computeRange(plan, windowsToTransform);
+            if(!rangeExpr.isEmpty()){
+                atLeastOne = true;
                 min = Time.min(min, rangeExpr.getMinimum());
                 max = Time.max(max, rangeExpr.getMaximum());
             }
         }
 
-        if(present){
+        if(atLeastOne){
             //register new transformed window
             ret.union(new Range<Time>(min, max));
         }
