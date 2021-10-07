@@ -12,6 +12,8 @@ public class TestCardinalityGoal {
   @Test
   public void testone() {
     Range<Time> period = new Range<Time>(new Time(0), new Time(20));
+    final var horizon = new Range<>(new Time(0),new Time(25));
+    TimeWindows.setHorizon(horizon.getMinimum(),horizon.getMaximum());
 
     var periodTre = new TimeRangeExpression.Builder()
         .from(TimeWindows.of(period))
@@ -55,6 +57,8 @@ public class TestCardinalityGoal {
 
     Range<Time> period = new Range<Time>(new Time(0), new Time(10));
     Range<Time> period2 = new Range<Time>(new Time(13), new Time(20));
+    final var horizon = new Range<>(new Time(0),new Time(25));
+    TimeWindows.setHorizon(horizon.getMinimum(),horizon.getMaximum());
 
 
     var periodTre = new TimeRangeExpression.Builder()

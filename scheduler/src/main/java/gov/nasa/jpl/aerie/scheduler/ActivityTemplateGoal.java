@@ -57,6 +57,10 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
 
   }//Builder
 
+  public ActivityCreationTemplate getActTemplate() {
+    return desiredActTemplate;
+  }
+
   /**
    * returns the set of constraints required by the created activity type
    *

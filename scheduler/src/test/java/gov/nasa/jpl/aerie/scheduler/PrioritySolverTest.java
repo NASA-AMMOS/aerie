@@ -70,11 +70,20 @@ public class PrioritySolverTest {
   private final static Duration d1hr = Duration.ofHours(1.0);
   private final static Time t1hr = t0.plus(d1hr);
   private final static Time t2hr = t0.plus(d1hr.times(2.0));
+  private final static Time t3hr = t0.plus(d1hr.times(2.0));
 
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory(problem.getMissionModel());
     final var actTypeA = problem.getMissionModel().getActivityType("A");
     plan.add(new ActivityInstance("a0", actTypeA, t0, d1min));
+    plan.add(new ActivityInstance("a1", actTypeA, t1hr, d1min));
+    plan.add(new ActivityInstance("a2", actTypeA, t2hr, d1min));
+    return plan;
+  }
+
+  private static PlanInMemory makePlanA12(Problem problem) {
+    final var plan = new PlanInMemory(problem.getMissionModel());
+    final var actTypeA = problem.getMissionModel().getActivityType("A");
     plan.add(new ActivityInstance("a1", actTypeA, t1hr, d1min));
     plan.add(new ActivityInstance("a2", actTypeA, t2hr, d1min));
     return plan;
@@ -159,15 +168,15 @@ public class PrioritySolverTest {
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime());
   }
 
-
-
-  @Disabled("still trying to get this working: not generating activities")
   @Test
   public void getNextSolution_recurrenceGoalWorks() {
+    //hack to reset horizon pending AMaillard fix to remove setHorizon static semantics
+    TimeWindows.setHorizon(horizon.getMinimum(), horizon.getMaximum());
+
     final var problem = new Problem(makeTestMissionAB());
     final var goal = new RecurrenceGoal.Builder()
         .named("g0")
-        .startingAt(t0).endingAt(t2hr)
+        .startingAt(t0).endingAt(t2hr.plus(Duration.ofMinutes(10)))
         .repeatingEvery(d1hr)
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(problem.getMissionModel().getActivityType("A"))
@@ -179,17 +188,22 @@ public class PrioritySolverTest {
 
     final var plan = solver.getNextSolution().orElseThrow();
 
-    final var expectedPlan = makePlanA012(problem);
+    final var expectedPlan = makePlanA12(problem);
     //TODO: evaluation should have association of instances to goal
     //TODO: should ensure no other spurious acts yet need to ignore special window activities
+    //TODO: may want looser expectation (eg allow flexibility as long as right repeat pattern met)
+    assertThat(equalsExceptInName(plan.getActivitiesByTime().get(0), expectedPlan.getActivitiesByTime().get(0)))
+        .isTrue();
     assertThat(plan.getActivitiesByTime())
         .comparingElementsUsing(equalExceptInName)
         .containsExactlyElementsIn(expectedPlan.getActivitiesByTime()).inOrder();
   }
 
-  @Disabled("still trying to get this working: having out of memory error")
   @Test
   public void getNextSolution_coexistenceGoalOnActivityWorks() {
+    //hack to reset horizon pending AMaillard fix to remove setHorizon static semantics
+    TimeWindows.setHorizon(horizon.getMinimum(), horizon.getMaximum());
+
     final var problem = new Problem(makeTestMissionAB());
     problem.setInitialPlan(makePlanA012(problem));
     final var actTypeA = problem.getMissionModel().getActivityType("A");

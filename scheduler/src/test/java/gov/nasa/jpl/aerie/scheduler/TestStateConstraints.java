@@ -116,7 +116,6 @@ public class TestStateConstraints {
    * In this test, one of the flavor of ConstraintGoal is created
    */
   @Test
-  @Disabled("having out of memory issues, likely bug")
   public void testconstraintgoal() {
 
     final var dur = Duration.ofHours(1.0);
@@ -134,6 +133,7 @@ public class TestStateConstraints {
         .above(altitudeDerivativeState, 0.0)
         .build();
 
+    TimeWindows.setHorizon(Time.fromString("2020-001T00:00:00.000"),Time.fromString("2040-001T00:00:00.000"));
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
         .named("OrbitStateGoal")
         .forAllTimeIn(horizon)

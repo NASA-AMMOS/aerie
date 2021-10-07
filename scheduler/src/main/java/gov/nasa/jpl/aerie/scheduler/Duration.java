@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.Objects;
+
 /**
  * represents a span of time between two time points on the same timeline
  */
@@ -152,6 +154,18 @@ public class Duration implements Comparable<Duration> {
     return Double.compare(this.jplET_s, o.jplET_s);
   }
 
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Duration duration = (Duration) o;
+    return Double.compare(duration.jplET_s, jplET_s) == 0;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(jplET_s);
+  }
 
   /**
    * converts this duration into a number of ephemeris time seconds
