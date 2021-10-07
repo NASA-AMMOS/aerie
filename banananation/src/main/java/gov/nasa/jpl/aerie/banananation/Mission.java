@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.banananation;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
 
 import gov.nasa.jpl.aerie.contrib.models.counters.Counter;
 import gov.nasa.jpl.aerie.contrib.models.Register;
@@ -12,6 +13,10 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.EnumValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 public final class Mission {
   public final AdditiveRegister fruit = AdditiveRegister.create(4.0);
@@ -34,6 +39,7 @@ public final class Mission {
     registrar.discrete("/plant", this.plant, new IntegerValueMapper());
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
+    registrar.topic("/producer", this.producer.ref, new StringValueMapper());
   }
 
   private static int countLines(final Path path) {
