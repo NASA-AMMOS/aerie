@@ -8,35 +8,35 @@ import java.util.List;
  */
 public class CompositeAndGoal extends Goal {
 
-    List<Goal> goals;
+  List<Goal> goals;
 
-    private CompositeAndGoal(){}
+  private CompositeAndGoal() {}
 
-public static class Builder extends Goal.Builder<Builder>{
+  public static class Builder extends Goal.Builder<Builder> {
 
     List<Goal> goals = new ArrayList<Goal>();
 
-    public Builder and(Goal goal){
-        goals.add(goal);
-        return this;
+    public Builder and(Goal goal) {
+      goals.add(goal);
+      return this;
     }
 
 
-    public CompositeAndGoal build(){
-        CompositeAndGoal cg = new CompositeAndGoal();
-        fill(cg);
-        cg.goals = new ArrayList<>(goals);
-        return cg;
-    }
-    public Builder getThis(){
-        return this;
-    }
-}
-
-    public List<Goal> getSubgoals(){
-        return goals;
+    public CompositeAndGoal build() {
+      CompositeAndGoal cg = new CompositeAndGoal();
+      fill(cg);
+      cg.goals = new ArrayList<>(goals);
+      return cg;
     }
 
+    public Builder getThis() {
+      return this;
+    }
+  }
+
+  public List<Goal> getSubgoals() {
+    return goals;
+  }
 
 
 }

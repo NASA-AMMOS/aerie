@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 /**
  * describes how a goal is satisfied by shared activity instances
- *
  */
 public enum ChildCustody {
 

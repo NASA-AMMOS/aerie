@@ -14,7 +14,6 @@ import java.util.*;
  *
  * ranges may have the same minimum and maximum value, in which case it admits
  * only values that compare equal to those bounds
- *
  */
 //TODO: use some standard library type
 //TODO: probably want some expression of open/half-open intervals too
@@ -27,17 +26,21 @@ public class NewRange<T extends Comparable<T>> implements Comparable<NewRange<T>
    *
    * @param singleton IN the single value that is admitted by the new range
    */
-  public NewRange(T singleton ) {
-    if( singleton == null ) { throw new IllegalArgumentException(
-        "creating range with null Rangesingleton value" ); }
-    range = Range.closed(singleton,singleton);
+  public NewRange(T singleton) {
+    if (singleton == null) {
+      throw new IllegalArgumentException(
+          "creating range with null Rangesingleton value");
+    }
+    range = Range.closed(singleton, singleton);
 
   }
 
-  public NewRange(Range<T> range ) {
-    if( range == null ) { throw new IllegalArgumentException(
-            "creating range with null Rangesingleton value" ); }
-   this.range = range;
+  public NewRange(Range<T> range) {
+    if (range == null) {
+      throw new IllegalArgumentException(
+          "creating range with null Rangesingleton value");
+    }
+    this.range = range;
 
   }
 
@@ -51,19 +54,24 @@ public class NewRange<T extends Comparable<T>> implements Comparable<NewRange<T>
    * @param minimum IN the inclusive minimum bound of the new range
    * @param maximum IN the inclusive maximum bound of the new range
    */
-  public NewRange(T minimum, T maximum ) {
+  public NewRange(T minimum, T maximum) {
     //TODO: consider allowing unbounded ranges via null min/max
-    if( minimum == null ) { throw new IllegalArgumentException(
-        "creating range with null minimum" ); }
-    if( maximum == null ) { throw new IllegalArgumentException(
-        "creating range with null maximum" ); }
-    if( minimum.compareTo( maximum ) > 0 ) { throw new IllegalArgumentException(
-        "creating range with mis-ordered minimum=" + minimum
-        + " maximum=" + maximum ); }
-    range = Range.closed(minimum,maximum);
+    if (minimum == null) {
+      throw new IllegalArgumentException(
+          "creating range with null minimum");
+    }
+    if (maximum == null) {
+      throw new IllegalArgumentException(
+          "creating range with null maximum");
+    }
+    if (minimum.compareTo(maximum) > 0) {
+      throw new IllegalArgumentException(
+          "creating range with mis-ordered minimum=" + minimum
+          + " maximum=" + maximum);
+    }
+    range = Range.closed(minimum, maximum);
 
   }
-
 
 
   /**
@@ -91,32 +99,32 @@ public class NewRange<T extends Comparable<T>> implements Comparable<NewRange<T>
    * as well as any value between the two
    *
    * @param probe IN the value to test if it is in the range
-   *
    * @return true iff the queried value is within the inclusive range, false
-   *         otherwise
+   *     otherwise
    */
-  public boolean contains( T probe ) {
+  public boolean contains(T probe) {
 
-    return( probe.compareTo( range.lowerEndpoint() ) >= 0 )
-      && ( probe.compareTo( range.upperEndpoint() ) <= 0 );
+    return (probe.compareTo(range.lowerEndpoint()) >= 0)
+           && (probe.compareTo(range.upperEndpoint()) <= 0);
   }
 
   /**
    * Returns new range from intersection with other range
+   *
    * @param otherRange range to be intersected with
    * @return a new range from intersection with otherRange
    */
-  public NewRange<T> intersect(NewRange<T> otherRange){
+  public NewRange<T> intersect(NewRange<T> otherRange) {
     return new NewRange<T>(range.intersection(otherRange.range));
 
   }
 
-  public List<NewRange<T>> subtract(NewRange<T> otherRange){
+  public List<NewRange<T>> subtract(NewRange<T> otherRange) {
     TreeRangeSet<T> a = TreeRangeSet.create();
     a.add(range);
     a.remove(otherRange.range);
     List<NewRange<T>> ret = new ArrayList<NewRange<T>>();
-    for(var c : a.asRanges()){
+    for (var c : a.asRanges()) {
       ret.add(new NewRange<T>(c));
     }
 
@@ -124,43 +132,48 @@ public class NewRange<T extends Comparable<T>> implements Comparable<NewRange<T>
 
   }
 
-  public boolean isBefore( @NotNull NewRange<T> otherRange){
+  public boolean isBefore(@NotNull NewRange<T> otherRange) {
     return this.getMaximum().compareTo(otherRange.getMinimum()) <= 0;
   }
-  public boolean isAfter(NewRange<T> otherRange){
+
+  public boolean isAfter(NewRange<T> otherRange) {
     return this.getMinimum().compareTo(otherRange.getMaximum()) >= 0;
   }
 
   /**
    * return a range enveloping the two passed ranges
+   *
    * @param <T> the value type of the ranges
    * @param range1 the first range to consider
    * @param range2 the second range to consider
    * @return a range enveloping the two passed ranges
    */
-  public <T extends Comparable<T>> NewRange<T> envelop(@NotNull NewRange<T> range1, @NotNull NewRange<T> range2){
-    return new NewRange<T>(Collections.min(Arrays.asList(range1.getMinimum(), range2.getMinimum())), Collections.max(Arrays.asList(range1.getMaximum(),range2.getMaximum())));
+  public <T extends Comparable<T>> NewRange<T> envelop(@NotNull NewRange<T> range1, @NotNull NewRange<T> range2) {
+    return new NewRange<T>(
+        Collections.min(Arrays.asList(range1.getMinimum(), range2.getMinimum())),
+        Collections.max(Arrays.asList(range1.getMaximum(), range2.getMaximum())));
   }
 
-  public boolean contains(@NotNull NewRange<T> otherRange){
-    return otherRange.getMinimum().compareTo(this.getMinimum())>=0 && otherRange.getMaximum().compareTo(this.getMaximum())<=0;
+  public boolean contains(@NotNull NewRange<T> otherRange) {
+    return otherRange.getMinimum().compareTo(this.getMinimum()) >= 0
+           && otherRange.getMaximum().compareTo(this.getMaximum()) <= 0;
   }
 
   @Override
-  public int hashCode(){
+  public int hashCode() {
     return Objects.hash(this.getMinimum(), this.getMaximum());
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public boolean equals(Object o){
-    if(o instanceof NewRange<?>){
+  public boolean equals(Object o) {
+    if (o instanceof NewRange<?>) {
       return equalsRange((NewRange<T>) o);
     }
     return false;
   }
 
-  public boolean equalsRange(NewRange<T> otherRange){
+  public boolean equalsRange(NewRange<T> otherRange) {
     return this.getMinimum() == otherRange.getMinimum() && this.getMaximum() == otherRange.getMaximum();
   }
 
@@ -169,7 +182,8 @@ public class NewRange<T extends Comparable<T>> implements Comparable<NewRange<T>
    *
    * gives a simple human-readable reprsentation of the closed interval range
    */
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "[" + getMinimum() + "," + getMaximum() + "]";
   }
 

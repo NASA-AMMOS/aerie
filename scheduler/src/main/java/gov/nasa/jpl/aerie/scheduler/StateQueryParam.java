@@ -5,12 +5,12 @@ package gov.nasa.jpl.aerie.scheduler;
  */
 public class StateQueryParam {
 
-    public QueriableState<?> state;
-    public TimeExpression timeExpr;
+  public QueriableState<?> state;
+  public TimeExpression timeExpr;
 
-    public StateQueryParam(QueriableState<?> state, TimeExpression timeExpression){
-        this.state = state;
-        this.timeExpr = timeExpression;
-    }
+  public StateQueryParam(QueriableState<?> state, TimeExpression timeExpression) {
+    this.state = state;
+    this.timeExpr = timeExpression;
+  }
 
 }

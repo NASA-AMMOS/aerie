@@ -13,37 +13,38 @@ import java.util.List;
 public class FilterElementSequence implements TimeWindowsFilter {
 
 
-    private int elementIndex;
+  private int elementIndex;
 
-    private FilterElementSequence(int numberInSequence){
-        elementIndex = numberInSequence;
+  private FilterElementSequence(int numberInSequence) {
+    elementIndex = numberInSequence;
+  }
+
+  public static FilterElementSequence first() {
+    return new FilterElementSequence(0);
+  }
+
+  public static FilterElementSequence last() {
+    return new FilterElementSequence(-1);
+  }
+
+  public static FilterElementSequence numbered(int i) {
+    return new FilterElementSequence(i);
+  }
+
+  @Override
+  public TimeWindows filter(Plan plan, TimeWindows windows) {
+    List<Range<Time>> ret = new ArrayList<Range<Time>>();
+
+    if (!windows.isEmpty()) {
+
+      List<Range<Time>> ranges = windows.getRangeSet();
+      if (this.elementIndex >= 0 && this.elementIndex < ranges.size()) {
+        ret.add(ranges.get(this.elementIndex));
+      } else if (elementIndex < 0 && Math.abs(this.elementIndex) <= ranges.size()) {
+        ret.add(ranges.get(ranges.size() + elementIndex));
+      }
     }
 
-    public static FilterElementSequence first(){
-        return new FilterElementSequence(0);
-    }
-
-    public static FilterElementSequence last(){
-        return new FilterElementSequence(-1);
-    }
-    public static FilterElementSequence numbered(int i){
-        return new FilterElementSequence(i);
-    }
-
-    @Override
-    public TimeWindows filter(Plan plan, TimeWindows windows) {
-        List<Range<Time>> ret = new ArrayList<Range<Time>>();
-
-        if(!windows.isEmpty()) {
-
-            List<Range<Time>> ranges = windows.getRangeSet();
-            if (this.elementIndex >= 0 && this.elementIndex < ranges.size()) {
-                ret.add(ranges.get(this.elementIndex));
-            } else if (elementIndex < 0 && Math.abs(this.elementIndex) <= ranges.size()) {
-                ret.add(ranges.get(ranges.size()  +elementIndex ));
-            }
-        }
-
-        return TimeWindows.of(ret, true);
-    }
+    return TimeWindows.of(ret, true);
+  }
 }

@@ -35,22 +35,24 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, ActivityTypesQuery.Data, ActivityTypesQuery.Variables> {
+public final class ActivityTypesQuery
+    implements Query<ActivityTypesQuery.Data, ActivityTypesQuery.Data, ActivityTypesQuery.Variables>
+{
   public static final String OPERATION_ID = "961baf9169e67fefdc1b821df5ba3b0f05482539cf150a4194d2f8dbbfc8a6a7";
 
   public static final String QUERY_DOCUMENT = QueryDocumentMinifier.minify(
-    "query ActivityTypes($adaptationId: ID!) {\n"
-        + "  activityTypes(adaptationId: $adaptationId) {\n"
-        + "    __typename\n"
-        + "    name\n"
-        + "    parameters {\n"
-        + "      __typename\n"
-        + "      name\n"
-        + "      default\n"
-        + "      schema\n"
-        + "    }\n"
-        + "  }\n"
-        + "}"
+      "query ActivityTypes($adaptationId: ID!) {\n"
+      + "  activityTypes(adaptationId: $adaptationId) {\n"
+      + "    __typename\n"
+      + "    name\n"
+      + "    parameters {\n"
+      + "      __typename\n"
+      + "      name\n"
+      + "      default\n"
+      + "      schema\n"
+      + "    }\n"
+      + "  }\n"
+      + "}"
   );
 
   public static final OperationName OPERATION_NAME = new OperationName() {
@@ -103,29 +105,35 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
   @Override
   @NotNull
-  public Response<Data> parse(@NotNull final BufferedSource source,
-                              @NotNull final ScalarTypeAdapters scalarTypeAdapters) throws IOException {
+  public Response<Data> parse(
+      @NotNull final BufferedSource source,
+      @NotNull final ScalarTypeAdapters scalarTypeAdapters) throws IOException
+  {
     return SimpleOperationResponseParser.parse(source, this, scalarTypeAdapters);
   }
 
   @Override
   @NotNull
-  public Response<Data> parse(@NotNull final ByteString byteString,
-                              @NotNull final ScalarTypeAdapters scalarTypeAdapters) throws IOException {
+  public Response<Data> parse(
+      @NotNull final ByteString byteString,
+      @NotNull final ScalarTypeAdapters scalarTypeAdapters) throws IOException
+  {
     return parse(new Buffer().write(byteString), scalarTypeAdapters);
   }
 
   @Override
   @NotNull
   public Response<Data> parse(@NotNull final BufferedSource source) throws
-      IOException {
+                                                                    IOException
+  {
     return parse(source, ScalarTypeAdapters.DEFAULT);
   }
 
   @Override
   @NotNull
   public Response<Data> parse(@NotNull final ByteString byteString) throws
-      IOException {
+                                                                    IOException
+  {
     return parse(byteString, ScalarTypeAdapters.DEFAULT);
   }
 
@@ -143,8 +151,10 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
   @Override
   @NotNull
-  public ByteString composeRequestBody(final boolean autoPersistQueries,
-      final boolean withQueryDocument, @NotNull final ScalarTypeAdapters scalarTypeAdapters) {
+  public ByteString composeRequestBody(
+      final boolean autoPersistQueries,
+      final boolean withQueryDocument, @NotNull final ScalarTypeAdapters scalarTypeAdapters)
+  {
     return OperationRequestBodyComposer.compose(this, autoPersistQueries, withQueryDocument, scalarTypeAdapters);
   }
 
@@ -175,7 +185,8 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
       this.valueMap.put("adaptationId", adaptationId);
     }
 
-    public @NotNull String adaptationId() {
+    public @NotNull
+    String adaptationId() {
       return adaptationId;
     }
 
@@ -200,12 +211,12 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
    */
   public static class Data implements Operation.Data {
     static final ResponseField[] $responseFields = {
-      ResponseField.forList("activityTypes", "activityTypes", new UnmodifiableMapBuilder<String, Object>(1)
-      .put("adaptationId", new UnmodifiableMapBuilder<String, Object>(2)
-        .put("kind", "Variable")
-        .put("variableName", "adaptationId")
-        .build())
-      .build(), false, Collections.<ResponseField.Condition>emptyList())
+        ResponseField.forList("activityTypes", "activityTypes", new UnmodifiableMapBuilder<String, Object>(1)
+            .put("adaptationId", new UnmodifiableMapBuilder<String, Object>(2)
+                .put("kind", "Variable")
+                .put("variableName", "adaptationId")
+                .build())
+            .build(), false, Collections.<ResponseField.Condition>emptyList())
     };
 
     final @NotNull List<ActivityType> activityTypes;
@@ -220,7 +231,8 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
       this.activityTypes = Utils.checkNotNull(activityTypes, "activityTypes == null");
     }
 
-    public @NotNull List<ActivityType> activityTypes() {
+    public @NotNull
+    List<ActivityType> activityTypes() {
       return this.activityTypes;
     }
 
@@ -245,8 +257,8 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
     public String toString() {
       if ($toString == null) {
         $toString = "Data{"
-          + "activityTypes=" + activityTypes
-          + "}";
+                    + "activityTypes=" + activityTypes
+                    + "}";
       }
       return $toString;
     }
@@ -280,17 +292,19 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
       @Override
       public Data map(ResponseReader reader) {
-        final List<ActivityType> activityTypes = reader.readList($responseFields[0], new ResponseReader.ListReader<ActivityType>() {
-          @Override
-          public ActivityType read(ResponseReader.ListItemReader listItemReader) {
-            return listItemReader.readObject(new ResponseReader.ObjectReader<ActivityType>() {
+        final List<ActivityType> activityTypes = reader.readList(
+            $responseFields[0],
+            new ResponseReader.ListReader<ActivityType>() {
               @Override
-              public ActivityType read(ResponseReader reader) {
-                return activityTypeFieldMapper.map(reader);
+              public ActivityType read(ResponseReader.ListItemReader listItemReader) {
+                return listItemReader.readObject(new ResponseReader.ObjectReader<ActivityType>() {
+                  @Override
+                  public ActivityType read(ResponseReader reader) {
+                    return activityTypeFieldMapper.map(reader);
+                  }
+                });
               }
             });
-          }
-        });
         return new Data(activityTypes);
       }
     }
@@ -298,9 +312,14 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
   public static class ActivityType {
     static final ResponseField[] $responseFields = {
-      ResponseField.forString("__typename", "__typename", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forString("name", "name", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forList("parameters", "parameters", null, false, Collections.<ResponseField.Condition>emptyList())
+        ResponseField.forString(
+            "__typename",
+            "__typename",
+            null,
+            false,
+            Collections.<ResponseField.Condition>emptyList()),
+        ResponseField.forString("name", "name", null, false, Collections.<ResponseField.Condition>emptyList()),
+        ResponseField.forList("parameters", "parameters", null, false, Collections.<ResponseField.Condition>emptyList())
     };
 
     final @NotNull String __typename;
@@ -315,22 +334,27 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
     private transient volatile boolean $hashCodeMemoized;
 
-    public ActivityType(@NotNull String __typename, @NotNull String name,
-        @NotNull List<Parameter> parameters) {
+    public ActivityType(
+        @NotNull String __typename, @NotNull String name,
+        @NotNull List<Parameter> parameters)
+    {
       this.__typename = Utils.checkNotNull(__typename, "__typename == null");
       this.name = Utils.checkNotNull(name, "name == null");
       this.parameters = Utils.checkNotNull(parameters, "parameters == null");
     }
 
-    public @NotNull String __typename() {
+    public @NotNull
+    String __typename() {
       return this.__typename;
     }
 
-    public @NotNull String name() {
+    public @NotNull
+    String name() {
       return this.name;
     }
 
-    public @NotNull List<Parameter> parameters() {
+    public @NotNull
+    List<Parameter> parameters() {
       return this.parameters;
     }
 
@@ -357,10 +381,10 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
     public String toString() {
       if ($toString == null) {
         $toString = "ActivityType{"
-          + "__typename=" + __typename + ", "
-          + "name=" + name + ", "
-          + "parameters=" + parameters
-          + "}";
+                    + "__typename=" + __typename + ", "
+                    + "name=" + name + ", "
+                    + "parameters=" + parameters
+                    + "}";
       }
       return $toString;
     }
@@ -373,8 +397,8 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
       if (o instanceof ActivityType) {
         ActivityType that = (ActivityType) o;
         return this.__typename.equals(that.__typename)
-         && this.name.equals(that.name)
-         && this.parameters.equals(that.parameters);
+               && this.name.equals(that.name)
+               && this.parameters.equals(that.parameters);
       }
       return false;
     }
@@ -402,17 +426,19 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
       public ActivityType map(ResponseReader reader) {
         final String __typename = reader.readString($responseFields[0]);
         final String name = reader.readString($responseFields[1]);
-        final List<Parameter> parameters = reader.readList($responseFields[2], new ResponseReader.ListReader<Parameter>() {
-          @Override
-          public Parameter read(ResponseReader.ListItemReader listItemReader) {
-            return listItemReader.readObject(new ResponseReader.ObjectReader<Parameter>() {
+        final List<Parameter> parameters = reader.readList(
+            $responseFields[2],
+            new ResponseReader.ListReader<Parameter>() {
               @Override
-              public Parameter read(ResponseReader reader) {
-                return parameterFieldMapper.map(reader);
+              public Parameter read(ResponseReader.ListItemReader listItemReader) {
+                return listItemReader.readObject(new ResponseReader.ObjectReader<Parameter>() {
+                  @Override
+                  public Parameter read(ResponseReader reader) {
+                    return parameterFieldMapper.map(reader);
+                  }
+                });
               }
             });
-          }
-        });
         return new ActivityType(__typename, name, parameters);
       }
     }
@@ -420,10 +446,27 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
   public static class Parameter {
     static final ResponseField[] $responseFields = {
-      ResponseField.forString("__typename", "__typename", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forString("name", "name", null, false, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forCustomType("default", "default", null, true, CustomType.ACTIVITYTYPEPARAMETERDEFAULT, Collections.<ResponseField.Condition>emptyList()),
-      ResponseField.forCustomType("schema", "schema", null, true, CustomType.ACTIVITYTYPEPARAMETERSCHEMA, Collections.<ResponseField.Condition>emptyList())
+        ResponseField.forString(
+            "__typename",
+            "__typename",
+            null,
+            false,
+            Collections.<ResponseField.Condition>emptyList()),
+        ResponseField.forString("name", "name", null, false, Collections.<ResponseField.Condition>emptyList()),
+        ResponseField.forCustomType(
+            "default",
+            "default",
+            null,
+            true,
+            CustomType.ACTIVITYTYPEPARAMETERDEFAULT,
+            Collections.<ResponseField.Condition>emptyList()),
+        ResponseField.forCustomType(
+            "schema",
+            "schema",
+            null,
+            true,
+            CustomType.ACTIVITYTYPEPARAMETERSCHEMA,
+            Collections.<ResponseField.Condition>emptyList())
     };
 
     final @NotNull String __typename;
@@ -440,27 +483,33 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
 
     private transient volatile boolean $hashCodeMemoized;
 
-    public Parameter(@NotNull String __typename, @NotNull String name, @Nullable Object default_,
-        @Nullable Object schema) {
+    public Parameter(
+        @NotNull String __typename, @NotNull String name, @Nullable Object default_,
+        @Nullable Object schema)
+    {
       this.__typename = Utils.checkNotNull(__typename, "__typename == null");
       this.name = Utils.checkNotNull(name, "name == null");
       this.default_ = default_;
       this.schema = schema;
     }
 
-    public @NotNull String __typename() {
+    public @NotNull
+    String __typename() {
       return this.__typename;
     }
 
-    public @NotNull String name() {
+    public @NotNull
+    String name() {
       return this.name;
     }
 
-    public @Nullable Object default_() {
+    public @Nullable
+    Object default_() {
       return this.default_;
     }
 
-    public @Nullable Object schema() {
+    public @Nullable
+    Object schema() {
       return this.schema;
     }
 
@@ -481,11 +530,11 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
     public String toString() {
       if ($toString == null) {
         $toString = "Parameter{"
-          + "__typename=" + __typename + ", "
-          + "name=" + name + ", "
-          + "default_=" + default_ + ", "
-          + "schema=" + schema
-          + "}";
+                    + "__typename=" + __typename + ", "
+                    + "name=" + name + ", "
+                    + "default_=" + default_ + ", "
+                    + "schema=" + schema
+                    + "}";
       }
       return $toString;
     }
@@ -498,9 +547,9 @@ public final class ActivityTypesQuery implements Query<ActivityTypesQuery.Data, 
       if (o instanceof Parameter) {
         Parameter that = (Parameter) o;
         return this.__typename.equals(that.__typename)
-         && this.name.equals(that.name)
-         && ((this.default_ == null) ? (that.default_ == null) : this.default_.equals(that.default_))
-         && ((this.schema == null) ? (that.schema == null) : this.schema.equals(that.schema));
+               && this.name.equals(that.name)
+               && ((this.default_ == null) ? (that.default_ == null) : this.default_.equals(that.default_))
+               && ((this.schema == null) ? (that.schema == null) : this.schema.equals(that.schema));
       }
       return false;
     }

@@ -3,6 +3,9 @@ package gov.nasa.jpl.aerie.scheduler;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+
 /**
  * general re-usable description of a modeled system behavior
  *
@@ -20,9 +23,8 @@ public class ActivityType {
    *
    * @param name IN the identifier of the activity type
    */
-  public ActivityType( String name ) {
-    if( name == null ) { throw new IllegalArgumentException(
-        "creating activity type with null name" ); }
+  public ActivityType(String name) {
+    checkNotNull(name, "creating activity type with null name");
     this.name = name;
   }
 
@@ -34,12 +36,10 @@ public class ActivityType {
    * @param constraints constraints for the activity type
    */
   public ActivityType(String name, StateConstraintExpression constraints) {
-    if( name == null ) { throw new IllegalArgumentException(
-            "creating activity type with null name" ); }
+    this(name);
+    checkNotNull(constraints, "creating activity type with null constraints");
     this.activityConstraints = constraints;
-    this.name = name;
   }
-
 
 
   /**
@@ -51,8 +51,10 @@ public class ActivityType {
     return name;
   }
 
-  public void setParameter(String name, Object param){
-    parameters.put(name, param);
+  public void setParameter(String name, Object value) {
+    checkNotNull(name, "setting parameter with null name");
+    checkNotNull(value, "setting parameter with null value");
+    parameters.put(name, value);
   }
 
 
@@ -63,8 +65,8 @@ public class ActivityType {
    * type are dependent on all of the activity type constraints being met
    *
    * @return an immutable, possibly empty, list of the constraints associated
-   *         with this activity type and inherited by all matching activity
-   *         instances
+   *     with this activity type and inherited by all matching activity
+   *     instances
    */
   public StateConstraintExpression getStateConstraints() {
     return activityConstraints;
@@ -76,13 +78,13 @@ public class ActivityType {
    * returns null if the allowable durations are unbounded
    *
    * @return a range of allowable durations for instances adhering to this
-   *         activity type, or null if the duration is unbounded
+   *     activity type, or null if the duration is unbounded
    */
   public Range<Duration> getDurationRange() {
     return null;
   }
 
-  public Map<String, Object> getParameters(){
+  public Map<String, Object> getParameters() {
     return parameters;
   }
 

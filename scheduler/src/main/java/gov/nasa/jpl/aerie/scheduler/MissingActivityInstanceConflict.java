@@ -14,20 +14,24 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    * @param instance IN STORED the specific activity instance that is
-   *        desired in the plan
+   *     desired in the plan
    */
   public MissingActivityInstanceConflict(
-    ActivityExistentialGoal goal,
-    ActivityInstance instance ) {
-    super( goal );
+      ActivityExistentialGoal goal,
+      ActivityInstance instance)
+  {
+    super(goal);
 
-    if( instance == null ) { throw new IllegalArgumentException(
-        "creating specific missing instance conflict required non-null instance" ); }
+    if (instance == null) {
+      throw new IllegalArgumentException(
+          "creating specific missing instance conflict required non-null instance");
+    }
     this.instance = instance;
   }
+
   @Override
-  public String toString(){
-    if(this.instance != null){
+  public String toString() {
+    if (this.instance != null) {
       return "Conflict : missing activity instance " + this.instance.toString();
     }
     return "Empty conflict";
@@ -47,7 +51,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   @Override
   public TimeWindows getTemporalContext() {
-    return TimeWindows.of( instance.getStartTime() );
+    return TimeWindows.of(instance.getStartTime());
   }
 
   /**
@@ -57,7 +61,7 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    */
   @Override
   public ActivityExistentialGoal getGoal() {
-    return (ActivityExistentialGoal)super.getGoal();
+    return (ActivityExistentialGoal) super.getGoal();
   }
 
   /**

@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 /**
  * describes the desired existence of an activity within the solution plan
- *
  */
 public class ActivityExistentialGoal extends Goal {
 
@@ -20,13 +19,18 @@ public class ActivityExistentialGoal extends Goal {
      * @param custody IN the custody strategy for the goal to adopt
      * @return this builder, ready for additional specification
      */
-    public T owned( ChildCustody custody ) { childCustody = custody; return getThis(); }
+    public T owned(ChildCustody custody) {
+      childCustody = custody;
+      return getThis();
+    }
+
     protected ChildCustody childCustody = ChildCustody.Jointly;
 
     /**
      * {@inheritDoc}
      */
-    @Override public ActivityExistentialGoal build() { return fill( new ActivityExistentialGoal() ); }
+    @Override
+    public ActivityExistentialGoal build() { return fill(new ActivityExistentialGoal()); }
 
     /**
      * populates the provided goal with specifiers from this builder and above
@@ -35,15 +39,17 @@ public class ActivityExistentialGoal extends Goal {
      * specifiers managed at this builder level and above
      *
      * @param goal IN/OUT a goal object to be filled with specifiers from this
-     *        level of builder and above
+     *     level of builder and above
      * @return the provided goal object, with details filled in
      */
-    protected ActivityExistentialGoal fill( ActivityExistentialGoal goal ) {
+    protected ActivityExistentialGoal fill(ActivityExistentialGoal goal) {
       //first fill in any general specifiers from parent
-      super.fill( goal );
+      super.fill(goal);
 
-      if( childCustody == null ) { throw new IllegalArgumentException(
-          "activity existential goal requires non-null childCustody policy" ); }
+      if (childCustody == null) {
+        throw new IllegalArgumentException(
+            "activity existential goal requires non-null childCustody policy");
+      }
       goal.childCustody = childCustody;
 
       return goal;

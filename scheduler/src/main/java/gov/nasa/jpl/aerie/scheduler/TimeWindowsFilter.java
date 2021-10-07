@@ -5,7 +5,7 @@ package gov.nasa.jpl.aerie.scheduler;
  */
 public interface TimeWindowsFilter {
 
-    public TimeWindows filter(Plan plan, TimeWindows windowsToFilter);
+  public TimeWindows filter(Plan plan, TimeWindows windowsToFilter);
 
 
 }
