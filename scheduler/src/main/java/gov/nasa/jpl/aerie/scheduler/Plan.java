@@ -22,7 +22,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to schedule into the plan
    */
-  public void add( java.util.Collection<ActivityInstance> acts );
+  public void add(java.util.Collection<ActivityInstance> acts);
 
   /**
    * adds the given activity instance to the scheduled plan solution
@@ -31,7 +31,7 @@ public interface Plan {
    *
    * @param act IN activity instance to schedule into the plan
    */
-  public void add( ActivityInstance act );
+  public void add(ActivityInstance act);
   /**
    * adds the given activity instances to the scheduled plan solution
    *
@@ -39,7 +39,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to remove from the plan
    */
-  public void remove( java.util.Collection<ActivityInstance> acts );
+  public void remove(java.util.Collection<ActivityInstance> acts);
 
   /**
    * removes the given activity instance to the scheduled plan solution
@@ -48,7 +48,7 @@ public interface Plan {
    *
    * @param act IN activity instance to remove from the plan
    */
-  public void remove( ActivityInstance act );
+  public void remove(ActivityInstance act);
 
   public void removeAllWindows();
 
@@ -58,7 +58,7 @@ public interface Plan {
    * @param stateTimeline IN the state value history to add to the plan
    * @param <T> the value type of the state
    */
-  public <T extends Comparable<T>> void add( State<T> stateTimeline);
+  public <T extends Comparable<T>> void add(State<T> stateTimeline);
 
   /**
    * fetches activities in the plan ordered by start time
@@ -72,7 +72,7 @@ public interface Plan {
    *
    * @return map of all activities in the plan by type
    */
-  public java.util.Map<String,java.util.List<ActivityInstance>> getActivitiesByType();
+  public java.util.Map<String, java.util.List<ActivityInstance>> getActivitiesByType();
 
   /**
    * finds activity instances in the plan that meet the given criteria
@@ -81,7 +81,7 @@ public interface Plan {
    * @return collection of instances that match the given template
    */
   public java.util.Collection<ActivityInstance> find(
-    ActivityExpression template );
+      ActivityExpression template);
 
   /**
    * adds a new evaluation to the plan
@@ -91,7 +91,7 @@ public interface Plan {
    *
    * @param eval IN the new evaluation to add to the plan
    */
-  public void addEvaluation( Evaluation eval );
+  public void addEvaluation(Evaluation eval);
 
   /**
    * fetches all of the evaluations posted to the plan

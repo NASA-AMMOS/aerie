@@ -13,8 +13,9 @@ public abstract class MissingActivityConflict extends Conflict {
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    */
   public MissingActivityConflict(
-    ActivityExistentialGoal goal ) {
-    super( goal );
+      ActivityExistentialGoal goal)
+  {
+    super(goal);
   }
 
   /**

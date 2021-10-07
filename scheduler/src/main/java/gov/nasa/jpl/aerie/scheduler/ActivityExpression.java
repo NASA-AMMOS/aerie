@@ -19,14 +19,13 @@ import java.util.Map;
  *
  * templates may be fluently constructed via builders that parse like first
  * order logic predicate clauses, used in building up scheduling rules
- *
  */
 public class ActivityExpression {
 
   private TimeWindows startOrEndRangeW;
 
   @SuppressWarnings("unchecked")
-  public <B extends AbstractBuilder<B, AT>,AT extends ActivityExpression> AbstractBuilder<B,AT> getNewBuilder(){
+  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
     return (AbstractBuilder<B, AT>) new Builder();
   }
 
@@ -55,26 +54,26 @@ public class ActivityExpression {
    * the final build() call
    *
    * @param <B> concrete builder type, used to ensure right builder returned
-   *            by each chained operation (ref curiously recuring template
-   *            pattern)
+   *     by each chained operation (ref curiously recuring template
+   *     pattern)
    * @param <AT> concrete activity template type constructed by the builder
    */
-  public abstract static class AbstractBuilder<B extends AbstractBuilder<B,AT>, AT extends ActivityExpression> {
+  public abstract static class AbstractBuilder<B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> {
 
 
     Map<String, Object> parameters = new HashMap<String, Object>();
 
-    public B withParameter(String param, QueriableState<?> state, TimeExpression timeToQuery){
+    public B withParameter(String param, QueriableState<?> state, TimeExpression timeToQuery) {
       parameters.put(param, new StateQueryParam(state, timeToQuery));
       return getThis();
     }
 
-    public B withParameter(String param, QueriableState<?> state){
+    public B withParameter(String param, QueriableState<?> state) {
       parameters.put(param, new StateQueryParam(state, TimeExpression.atStart()));
       return getThis();
     }
 
-    public B withParameter(String param, Object val){
+    public B withParameter(String param, Object val) {
       parameters.put(param, val);
       return getThis();
     }
@@ -86,15 +85,16 @@ public class ActivityExpression {
      * the requested type, akin to java instanceof semantics
      *
      * @param type IN STORED required activity type for matching instances,
-     *        which should not change while the template exists, or null
-     *        if no specific type is required
+     *     which should not change while the template exists, or null
+     *     if no specific type is required
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B ofType(@Nullable ActivityType type ) {
+    B ofType(@Nullable ActivityType type) {
       this.type = type;
       return getThis();
     }
+
     protected @Nullable
     ActivityType type;
 
@@ -104,16 +104,17 @@ public class ActivityExpression {
      * activities without a concrete scheduled start time will not match
      *
      * @param range IN STORED the range of allowed values for start time, or
-     *        null if no specific start time is required. should not change
-     *        while the template exists. the range itself determines if
-     *        inclusive or exclusive at its end points
+     *     null if no specific start time is required. should not change
+     *     while the template exists. the range itself determines if
+     *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsIn(@Nullable Range<Time> range ) {
+    B startsIn(@Nullable Range<Time> range) {
       this.startsIn = range;
       return getThis();
     }
+
     protected @Nullable Range<Time> startsIn;
 
     /**
@@ -122,16 +123,17 @@ public class ActivityExpression {
      * activities without a concrete scheduled start time will not match
      *
      * @param range IN STORED the range of allowed values for start time, or
-     *        null if no specific start time is required. should not change
-     *        while the template exists. the range itself determines if
-     *        inclusive or exclusive at its end points
+     *     null if no specific start time is required. should not change
+     *     while the template exists. the range itself determines if
+     *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsOrEndsIn(@Nullable Range<Time> range ) {
+    B startsOrEndsIn(@Nullable Range<Time> range) {
       this.startsOrEndsIn = range;
       return getThis();
     }
+
     protected @Nullable Range<Time> startsOrEndsIn;
 
     /**
@@ -140,16 +142,17 @@ public class ActivityExpression {
      * activities without a concrete scheduled start time will not match
      *
      * @param windows IN STORED the range of allowed values for start time, or
-     *        null if no specific start time is required. should not change
-     *        while the template exists. the range itself determines if
-     *        inclusive or exclusive at its end points
+     *     null if no specific start time is required. should not change
+     *     while the template exists. the range itself determines if
+     *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsOrEndsIn(@Nullable TimeWindows windows ) {
+    B startsOrEndsIn(@Nullable TimeWindows windows) {
       this.startsOrEndsInW = windows;
       return getThis();
     }
+
     protected @Nullable
     TimeWindows startsOrEndsInW;
 
@@ -159,23 +162,25 @@ public class ActivityExpression {
      * activities without a concrete scheduled start time will not match
      *
      * @param range IN STORED the range of allowed values for start time, or
-     *        null if no specific start time is required. should not change
-     *        while the template exists. the range itself determines if
-     *        inclusive or exclusive at its end points
+     *     null if no specific start time is required. should not change
+     *     while the template exists. the range itself determines if
+     *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B endsIn(@Nullable Range<Time> range ) {
+    B endsIn(@Nullable Range<Time> range) {
       this.endsIn = range;
       return getThis();
     }
+
     protected @Nullable Range<Time> endsIn;
 
     public @NotNull
-    B startsIn(TimeWindows ranges){
+    B startsIn(TimeWindows ranges) {
       this.startsInR = ranges;
       return getThis();
     }
+
     protected TimeWindows startsInR;
 
     /**
@@ -184,16 +189,17 @@ public class ActivityExpression {
      * activities without a concrete simulated duration will not match
      *
      * @param range IN STORED the range of allowed values for duration, or
-     *        null if no specific duration is required. should not change
-     *        while the template exists. the range itself determines if
-     *        inclusive or exclusive at its end points
+     *     null if no specific duration is required. should not change
+     *     while the template exists. the range itself determines if
+     *     inclusive or exclusive at its end points
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B durationIn(@Nullable Range<Duration> range ) {
+    B durationIn(@Nullable Range<Duration> range) {
       this.durationIn = range;
       return getThis();
     }
+
     protected @Nullable Range<Duration> durationIn;
 
     /**
@@ -202,14 +208,15 @@ public class ActivityExpression {
      * the regular expression semantics is as for java.util.regex.Pattern
      *
      * @param pattern IN the regular expression for the allowed activity
-     *        instance names, or null if no specific name pattern is required
+     *     instance names, or null if no specific name pattern is required
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B nameMatches(@Nullable String pattern ) {
+    B nameMatches(@Nullable String pattern) {
       this.nameMatches = pattern;
       return getThis();
     }
+
     protected @Nullable String nameMatches;
 
     /**
@@ -220,11 +227,11 @@ public class ActivityExpression {
      * existing terms
      *
      * @param template IN the template whose criteria should be duplicated
-     *        into this builder. must not be null.
+     *     into this builder. must not be null.
      * @return the same builder object updated with new criteria
      */
     public abstract @NotNull
-    B basedOn(@NotNull AT template ) ;
+    B basedOn(@NotNull AT template);
 
     /**
      * bootstraps a new query builder based on an existing activity instance
@@ -234,22 +241,22 @@ public class ActivityExpression {
      * existing terms
      *
      * @param existingAct IN the activity instance that serves as the
-     *        prototype for the new search criteria. must not be null.
+     *     prototype for the new search criteria. must not be null.
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B basedOn(@NotNull ActivityInstance existingAct ) {
+    B basedOn(@NotNull ActivityInstance existingAct) {
       type = existingAct.getType();
 
-      if( existingAct.getStartTime() != null ) {
-        startsIn = new Range<Time>( existingAct.getStartTime() );
+      if (existingAct.getStartTime() != null) {
+        startsIn = new Range<Time>(existingAct.getStartTime());
       }
 
-      if( existingAct.getDuration() != null ) {
-        durationIn = new Range<Duration>( existingAct.getDuration() );
+      if (existingAct.getDuration() != null) {
+        durationIn = new Range<Duration>(existingAct.getDuration());
       }
 
-      if( existingAct.getName() != null ) {
+      if (existingAct.getName() != null) {
         nameMatches = existingAct.getName();
       }
 
@@ -279,7 +286,7 @@ public class ActivityExpression {
      * possible to construct predicates that will never match any activities
      *
      * @return a newly constructed template that matches activities meeting
-     *         the conjunction of all criteria specified to the builder
+     *     the conjunction of all criteria specified to the builder
      */
     public abstract @NotNull
     AT build();
@@ -301,30 +308,31 @@ public class ActivityExpression {
     Builder getThis() {
       return this;
     }
+
     @Override
     public @NotNull
-    Builder basedOn(@NotNull ActivityExpression template ) {
+    Builder basedOn(@NotNull ActivityExpression template) {
       type = template.type;
       startsIn = template.startRange;
       endsIn = template.endRange;
       durationIn = template.durationRange;
       startsOrEndsIn = template.startOrEndRange;
-      nameMatches = ( template.nameRE != null ) ? template.nameRE.pattern() : null;
+      nameMatches = (template.nameRE != null) ? template.nameRE.pattern() : null;
       parameters = template.parameters;
 
       return getThis();
     }
 
 
-    protected ActivityExpression fill(ActivityExpression template){
+    protected ActivityExpression fill(ActivityExpression template) {
       template.type = type;
       template.startRange = startsIn;
-      template.endRange  = endsIn;
+      template.endRange = endsIn;
       template.durationRange = durationIn;
       template.startOrEndRange = startsOrEndsIn;
       template.startOrEndRangeW = startsOrEndsInW;
-      template.nameRE = ( nameMatches != null )
-              ? java.util.regex.Pattern.compile(nameMatches) : null;
+      template.nameRE = (nameMatches != null)
+          ? java.util.regex.Pattern.compile(nameMatches) : null;
 
       template.parameters = parameters;
       return template;
@@ -340,7 +348,6 @@ public class ActivityExpression {
       return template;
     }
   }
-
 
 
   /**
@@ -401,7 +408,7 @@ public class ActivityExpression {
    * regular expression of matching activity instance names
    *
    * activities with null names do not match any non-null regular expression
-
+   *
    * null if no limit on activity instance name
    */
   protected @Nullable java.util.regex.Pattern nameRE;
@@ -410,23 +417,25 @@ public class ActivityExpression {
    * fetch the range of allowed starting times matched by this template
    *
    * @return the allowed range of start times for matching activities, or null
-   *         if no limit on start time
+   *     if no limit on start time
    */
-  public @Nullable Range<Time> getStartRange() { return startRange; }
+  public @Nullable
+  Range<Time> getStartRange() { return startRange; }
 
   /**
    * fetch the range of allowed simulation durations matched by this template
    *
    * @return the allowed range of durations for matching activities, or null
-   *         if no limit on duration
+   *     if no limit on duration
    */
-  public @Nullable Range<Duration> getDurationRange() { return durationRange; }
+  public @Nullable
+  Range<Duration> getDurationRange() { return durationRange; }
 
   /**
    * fetch the bounding super type of activities matched by this template
    *
    * @return the super type for matching activities, or null if no limit on
-   *         activity type
+   *     activity type
    */
   public @Nullable
   ActivityType getType() { return type; }
@@ -439,13 +448,13 @@ public class ActivityExpression {
    * Builder().ofType(t).build().
    *
    * @param type IN STORED the required activity type for matching activities.
-   *        not null.
+   *     not null.
    * @return an activity template that matches only activities with the
-   *         specified super type
+   *     specified super type
    */
   public static @NotNull
-  ActivityExpression ofType(@NotNull ActivityType type ) {
-    return new Builder().ofType( type ).build();
+  ActivityExpression ofType(@NotNull ActivityType type) {
+    return new Builder().ofType(type).build();
   }
 
 
@@ -457,62 +466,66 @@ public class ActivityExpression {
    * if no criteria have been specified, any activity matches the template
    *
    * @param act IN the activity to evaluate against the template criteria.
-   *        not null.
+   *     not null.
    * @return true iff the given activity meets all of the criteria specified
-   *         by this template, or false if it does not meet one or more of
-   *         the template criteria
+   *     by this template, or false if it does not meet one or more of
+   *     the template criteria
    */
-  public boolean matches( @NotNull ActivityInstance act ) {
+  public boolean matches(@NotNull ActivityInstance act) {
     boolean match = true;
 
     //REVIEW: literal object equality is probably correct for type
-    match = match && ( type == null || type == act.getType() );
+    match = match && (type == null || type == act.getType());
 
-    if( match && startRange != null ) {
+    if (match && startRange != null) {
       final var startT = act.getStartTime();
-      match = ( startT != null ) && startRange.contains( startT );
+      match = (startT != null) && startRange.contains(startT);
     }
 
-    if(match && startOrEndRange != null){
-      final var startT = act.getStartTime();
-      final var endT = act.getEndTime();
-      match = ((startT != null) && startOrEndRange.contains( startT )) ||( endT != null ) && startOrEndRange.contains( endT );
-    }
-
-    if(match &&startOrEndRangeW!= null){
+    if (match && startOrEndRange != null) {
       final var startT = act.getStartTime();
       final var endT = act.getEndTime();
-      match = ((startT != null) && startOrEndRangeW.intersects( new Range<Time>(startT) )) ||( endT != null ) && startOrEndRangeW.intersects( new Range<Time>(endT) );
+      match =
+          ((startT != null) && startOrEndRange.contains(startT)) || (endT != null) && startOrEndRange.contains(endT);
     }
 
-    if( match && endRange != null ) {
+    if (match && startOrEndRangeW != null) {
+      final var startT = act.getStartTime();
       final var endT = act.getEndTime();
-      match = ( endT != null ) && endRange.contains( endT );
+      match = ((startT != null) && startOrEndRangeW.intersects(new Range<Time>(startT)))
+              || (endT != null) && startOrEndRangeW.intersects(new Range<Time>(endT));
     }
 
-    if( match && durationRange != null ) {
+    if (match && endRange != null) {
+      final var endT = act.getEndTime();
+      match = (endT != null) && endRange.contains(endT);
+    }
+
+    if (match && durationRange != null) {
       final var dur = act.getDuration();
-      match = ( dur != null ) && durationRange.contains( dur );
+      match = (dur != null) && durationRange.contains(dur);
     }
 
-    if( match && nameRE != null ) {
+    if (match && nameRE != null) {
       final var name = act.getName();
       match = nameRE.matcher(name).matches();
     }
 
-    if(match && parameters!=null){
+    if (match && parameters != null) {
       Map<String, Object> params = act.getParameters();
-      for(var param : parameters.entrySet()){
-        if(params.containsKey(param.getKey())){
+      for (var param : parameters.entrySet()) {
+        if (params.containsKey(param.getKey())) {
 
-          if(param.getValue() instanceof ExternalState<?>){
-            match = params.get(param.getKey()).equals(((ExternalState<?>) param.getValue()).getValueAtTime(act.getStartTime()));
-          } else{
+          if (param.getValue() instanceof ExternalState<?>) {
+            match = params
+                .get(param.getKey())
+                .equals(((ExternalState<?>) param.getValue()).getValueAtTime(act.getStartTime()));
+          } else {
             match = params.get(param.getKey()).equals(param.getValue());
           }
 
         }
-        if(!match){
+        if (!match) {
           break;
         }
       }

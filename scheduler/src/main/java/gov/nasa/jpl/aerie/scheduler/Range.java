@@ -11,7 +11,6 @@ import java.util.*;
  *
  * ranges may have the same minimum and maximum value, in which case it admits
  * only values that compare equal to those bounds
- *
  */
 //TODO: use some standard library type
 //TODO: probably want some expression of open/half-open intervals too
@@ -22,15 +21,17 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
    *
    * @param singleton IN the single value that is admitted by the new range
    */
-  public Range( T singleton ) {
-    if( singleton == null ) { throw new IllegalArgumentException(
-        "creating range with null Rangesingleton value" ); }
+  public Range(T singleton) {
+    if (singleton == null) {
+      throw new IllegalArgumentException(
+          "creating range with null Rangesingleton value");
+    }
 
     this.minimum = singleton;
     this.maximum = singleton;
   }
 
-  public boolean isSingleton(){
+  public boolean isSingleton() {
     return this.minimum.equals(this.maximum);
   }
 
@@ -44,15 +45,21 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
    * @param minimum IN the inclusive minimum bound of the new range
    * @param maximum IN the inclusive maximum bound of the new range
    */
-  public Range( T minimum, T maximum ) {
+  public Range(T minimum, T maximum) {
     //TODO: consider allowing unbounded ranges via null min/max
-    if( minimum == null ) { throw new IllegalArgumentException(
-        "creating range with null minimum" ); }
-    if( maximum == null ) { throw new IllegalArgumentException(
-        "creating range with null maximum" ); }
-    if( minimum.compareTo( maximum ) > 0 ) { throw new IllegalArgumentException(
-        "creating range with mis-ordered minimum=" + minimum
-        + " maximum=" + maximum ); }
+    if (minimum == null) {
+      throw new IllegalArgumentException(
+          "creating range with null minimum");
+    }
+    if (maximum == null) {
+      throw new IllegalArgumentException(
+          "creating range with null maximum");
+    }
+    if (minimum.compareTo(maximum) > 0) {
+      throw new IllegalArgumentException(
+          "creating range with mis-ordered minimum=" + minimum
+          + " maximum=" + maximum);
+    }
 
     this.minimum = minimum;
     this.maximum = maximum;
@@ -93,20 +100,19 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
    * as well as any value between the two
    *
    * @param probe IN the value to test if it is in the range
-   *
    * @return true iff the queried value is within the inclusive range, false
-   *         otherwise
+   *     otherwise
    */
-  public boolean contains( T probe ) {
+  public boolean contains(T probe) {
 
-    return( probe.compareTo( minimum ) >= 0 )
-      && ( probe.compareTo( maximum ) <= 0 );
+    return (probe.compareTo(minimum) >= 0)
+           && (probe.compareTo(maximum) <= 0);
   }
 
-  public List<Range<T>> subsetFullyContained(List<Range<T>> windows){
+  public List<Range<T>> subsetFullyContained(List<Range<T>> windows) {
     List<Range<T>> ret = new ArrayList<Range<T>>();
-    for(var win:windows){
-      if(this.contains(win)){
+    for (var win : windows) {
+      if (this.contains(win)) {
         ret.add(win);
       }
     }
@@ -115,40 +121,45 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
 
   /**
    * Returns new range from intersection with other range
+   *
    * @param otherRange range to be intersected with
    * @return a new range from intersection with otherRange
    */
-  public Range<T> intersect(Range<T> otherRange){
-    if(otherRange.minimum.compareTo(this.maximum) > 0 || this.minimum.compareTo(otherRange.maximum)>0 ){
+  public Range<T> intersect(Range<T> otherRange) {
+    if (otherRange.minimum.compareTo(this.maximum) > 0 || this.minimum.compareTo(otherRange.maximum) > 0) {
       return null;
-    } else{
-      return new Range<T>(Collections.max(Arrays.asList(this.minimum, otherRange.minimum)), Collections.min(Arrays.asList(this.maximum, otherRange.maximum)));
+    } else {
+      return new Range<T>(
+          Collections.max(Arrays.asList(this.minimum, otherRange.minimum)),
+          Collections.min(Arrays.asList(this.maximum, otherRange.maximum)));
     }
   }
 
-  public List<Range<T>> subtract(Range<T> otherRange){
+  public List<Range<T>> subtract(Range<T> otherRange) {
     List<Range<T>> retList = new ArrayList<Range<T>>();
-     var intersect = intersect(otherRange);
-    if(intersect == null){
+    var intersect = intersect(otherRange);
+    if (intersect == null) {
       //case 1 : disjoint => return this interval
       retList.add(new Range<T>(this.minimum, this.maximum));
-    } else{
-      if(intersect.equalsRange(this)){
+    } else {
+      if (intersect.equalsRange(this)) {
         //case 2, return nothing
-      } else if(this.contains(otherRange)){
+      } else if (this.contains(otherRange)) {
         // case 3 : make two
-        if(this.getMinimum().compareTo(intersect.getMinimum())!=0)
+        if (this.getMinimum().compareTo(intersect.getMinimum()) != 0) {
           retList.add(new Range<T>(this.getMinimum(), intersect.getMinimum()));
-        if(this.getMaximum().compareTo(intersect.getMaximum())!=0)
+        }
+        if (this.getMaximum().compareTo(intersect.getMaximum()) != 0) {
           retList.add(new Range<T>(intersect.getMaximum(), this.getMaximum()));
+        }
       } else {
         //simple intersection
         //other is before
-        if(intersect.contains(this.getMinimum())){
+        if (intersect.contains(this.getMinimum())) {
           retList.add(new Range<T>(intersect.getMaximum(), this.getMaximum()));
           //other is after
-        } else if( intersect.contains(this.getMaximum())){
-          retList.add(new Range<T>(this.getMinimum(),intersect.getMinimum()));
+        } else if (intersect.contains(this.getMaximum())) {
+          retList.add(new Range<T>(this.getMinimum(), intersect.getMinimum()));
         }
       }
     }
@@ -156,49 +167,56 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
     return retList;
   }
 
-  public boolean isBefore( @NotNull Range<T> otherRange){
+  public boolean isBefore(@NotNull Range<T> otherRange) {
     return this.getMaximum().compareTo(otherRange.getMinimum()) < 0;
   }
-  public boolean isAfter(Range<T> otherRange){
+
+  public boolean isAfter(Range<T> otherRange) {
     return this.getMinimum().compareTo(otherRange.getMaximum()) > 0;
   }
 
-  public boolean isAdjacent(Range<T> otherRange){
-    return this.getMinimum().compareTo(otherRange.getMaximum()) == 0 || this.getMaximum().compareTo(otherRange.getMinimum()) == 0;
+  public boolean isAdjacent(Range<T> otherRange) {
+    return this.getMinimum().compareTo(otherRange.getMaximum()) == 0
+           || this.getMaximum().compareTo(otherRange.getMinimum()) == 0;
   }
 
 
   /**
    * return a range enveloping the two passed ranges
+   *
    * @param <T> the value type of the ranges
    * @param range1 the first range to consider
    * @param range2 the second range to consider
    * @return a range enveloping the two passed ranges
    */
-  public <T extends Comparable<T>> Range<T> envelop(@NotNull Range<T> range1, @NotNull Range<T> range2){
-    return new Range<T>(Collections.min(Arrays.asList(range1.getMinimum(), range2.getMinimum())), Collections.max(Arrays.asList(range1.getMaximum(),range2.getMaximum())));
+  public <T extends Comparable<T>> Range<T> envelop(@NotNull Range<T> range1, @NotNull Range<T> range2) {
+    return new Range<T>(
+        Collections.min(Arrays.asList(range1.getMinimum(), range2.getMinimum())),
+        Collections.max(Arrays.asList(range1.getMaximum(), range2.getMaximum())));
   }
 
-  public boolean contains(@NotNull Range<T> otherRange){
-    return otherRange.getMinimum().compareTo(this.getMinimum())>=0 && otherRange.getMaximum().compareTo(this.getMaximum())<=0;
+  public boolean contains(@NotNull Range<T> otherRange) {
+    return otherRange.getMinimum().compareTo(this.getMinimum()) >= 0
+           && otherRange.getMaximum().compareTo(this.getMaximum()) <= 0;
   }
 
   @Override
-  public int hashCode(){
+  public int hashCode() {
     return Objects.hash(this.minimum, this.maximum);
   }
 
   @Override
   @SuppressWarnings("unchecked")
-  public boolean equals(Object o){
-    if(o instanceof Range<?>){
+  public boolean equals(Object o) {
+    if (o instanceof Range<?>) {
       return equalsRange((Range<T>) o);
     }
     return false;
   }
 
-  public boolean equalsRange(Range<T> otherRange){
-    return this.getMinimum().compareTo(otherRange.getMinimum())==0 && this.getMaximum().compareTo(otherRange.getMaximum()) ==0;
+  public boolean equalsRange(Range<T> otherRange) {
+    return this.getMinimum().compareTo(otherRange.getMinimum()) == 0
+           && this.getMaximum().compareTo(otherRange.getMaximum()) == 0;
   }
 
   /**
@@ -206,7 +224,8 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
    *
    * gives a simple human-readable reprsentation of the closed interval range
    */
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "[" + minimum + "," + maximum + "]";
   }
 

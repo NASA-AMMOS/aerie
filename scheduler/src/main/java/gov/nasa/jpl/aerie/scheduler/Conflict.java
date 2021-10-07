@@ -19,9 +19,11 @@ public abstract class Conflict {
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    */
-  public Conflict( Goal goal ) {
-    if( goal == null ) { throw new IllegalArgumentException(
-        "creating conflict from null goal" ); }
+  public Conflict(Goal goal) {
+    if (goal == null) {
+      throw new IllegalArgumentException(
+          "creating conflict from null goal");
+    }
 
     this.goal = goal;
   }

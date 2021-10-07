@@ -10,13 +10,13 @@ public class AspenINIWriter {
    *
    * @param config IN the controlling configuration for the output operations
    */
-  public AspenINIWriter( HuginnConfiguration config ) {
+  public AspenINIWriter(HuginnConfiguration config) {
     this.config = config;
     try {
-      this.mdl = new java.io.PrintStream( config.getOutputStem() + ".mdl" );
-      this.ini = new java.io.PrintStream( config.getOutputStem() + ".ini" );
-    } catch( java.io.FileNotFoundException e ) {
-      throw new RuntimeException( e );
+      this.mdl = new java.io.PrintStream(config.getOutputStem() + ".mdl");
+      this.ini = new java.io.PrintStream(config.getOutputStem() + ".ini");
+    } catch (java.io.FileNotFoundException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -40,7 +40,7 @@ public class AspenINIWriter {
    *
    * @param plan IN the plan to serialize to configured output streams
    */
-  public void write( Plan plan ) {
+  public void write(Plan plan) {
 
     //model header info
     mdl.println("model test {");
@@ -49,15 +49,15 @@ public class AspenINIWriter {
     mdl.println("  horizon_duration = 740d;");
     mdl.println("}");
 
-    for( final var actTypeName : collectActTypes(plan) ) {
-      mdl.println("activity "+actTypeName+" { };");
+    for (final var actTypeName : collectActTypes(plan)) {
+      mdl.println("activity " + actTypeName + " { };");
     }
 
-    for( final var act : plan.getActivitiesByTime() ) {
-      final var dur = act.getDuration()==null? Duration.ofSeconds(1):act.getDuration();
-      ini.println(act.getType().getName()+" "+act.getName().replace('-','_')+" {");
-      ini.println("  start_time = " + act.getStartTime().toString() +";");
-      ini.println("  duration = " + dur.toMilliseconds()/1000 +";");
+    for (final var act : plan.getActivitiesByTime()) {
+      final var dur = act.getDuration() == null ? Duration.ofSeconds(1) : act.getDuration();
+      ini.println(act.getType().getName() + " " + act.getName().replace('-', '_') + " {");
+      ini.println("  start_time = " + act.getStartTime().toString() + ";");
+      ini.println("  duration = " + dur.toMilliseconds() / 1000 + ";");
       ini.println("};");
     }
 
@@ -68,10 +68,10 @@ public class AspenINIWriter {
    *
    * @return the names of all activity types used in the plan
    */
-  java.util.Set<String> collectActTypes( Plan plan ) {
+  java.util.Set<String> collectActTypes(Plan plan) {
     final var set = new java.util.TreeSet<String>();
-    for( final var act : plan.getActivitiesByTime() ) {
-      set.add( act.getType().getName() );
+    for (final var act : plan.getActivitiesByTime()) {
+      set.add(act.getType().getName());
     }
     return set;
   }

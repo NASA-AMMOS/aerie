@@ -6,9 +6,9 @@ package gov.nasa.jpl.aerie.scheduler;
  */
 public abstract class GlobalConstraintWithIntrospection extends GlobalConstraint {
 
-    //specific to introspectable constraint : find the windows in which we can insert activities without violating
-    //the constraint
-    public abstract TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict);
+  //specific to introspectable constraint : find the windows in which we can insert activities without violating
+  //the constraint
+  public abstract TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict);
 
 
 }

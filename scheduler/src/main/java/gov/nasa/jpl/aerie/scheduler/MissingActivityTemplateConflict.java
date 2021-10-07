@@ -13,16 +13,19 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    *
    * @param goal IN STORED the dissatisfied goal that issued the conflict
    * @param temporalContext IN STORED the times in the plan when the goal was
-   *        disatisfied enough to induce this conflict (including just the
-   *        desired start times of the activity, not necessarily the end time)
+   *     disatisfied enough to induce this conflict (including just the
+   *     desired start times of the activity, not necessarily the end time)
    */
   public MissingActivityTemplateConflict(
-    ActivityTemplateGoal goal,
-    TimeWindows temporalContext ) {
-    super( goal );
+      ActivityTemplateGoal goal,
+      TimeWindows temporalContext)
+  {
+    super(goal);
 
-    if( temporalContext == null ) { throw new IllegalArgumentException(
-        "creating missing activity template conflict requires non-null temporal context" ); }
+    if (temporalContext == null) {
+      throw new IllegalArgumentException(
+          "creating missing activity template conflict requires non-null temporal context");
+    }
     this.temporalContext = temporalContext;
   }
 
@@ -49,7 +52,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    */
   @Override
   public ActivityTemplateGoal getGoal() {
-    return (ActivityTemplateGoal)super.getGoal();
+    return (ActivityTemplateGoal) super.getGoal();
   }
 
   /**

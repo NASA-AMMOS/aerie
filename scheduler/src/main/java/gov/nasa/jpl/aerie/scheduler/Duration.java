@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 /**
  * represents a span of time between two time points on the same timeline
- *
  */
 public class Duration implements Comparable<Duration> {
 
@@ -18,6 +17,7 @@ public class Duration implements Comparable<Duration> {
   /**
    * return reference to maximum duration.
    * (created for handling open-ended temporal constraints)
+   *
    * @return the maximum duration
    */
   public static Duration ofMaxDur() {
@@ -37,8 +37,8 @@ public class Duration implements Comparable<Duration> {
    * @param secs IN the number of elapsed seconds
    * @return a new duration representing the given number of seconds
    */
-  public static Duration ofSeconds( double secs ) {
-    return new Duration( secs );
+  public static Duration ofSeconds(double secs) {
+    return new Duration(secs);
   }
 
 
@@ -51,8 +51,8 @@ public class Duration implements Comparable<Duration> {
    * @param mins IN the number of elapsed minutes
    * @return a new duration representing the given number of minutes
    */
-  public static Duration ofMinutes( double mins ) {
-    return new Duration( 60.0 * mins );
+  public static Duration ofMinutes(double mins) {
+    return new Duration(60.0 * mins);
   }
 
 
@@ -65,8 +65,8 @@ public class Duration implements Comparable<Duration> {
    * @param hours IN the number of elapsed hours
    * @return a new duration representing the given number of hours
    */
-  public static Duration ofHours( double hours ) {
-    return new Duration( 60.0 * 60.0 * hours );
+  public static Duration ofHours(double hours) {
+    return new Duration(60.0 * 60.0 * hours);
   }
 
 
@@ -79,8 +79,8 @@ public class Duration implements Comparable<Duration> {
    * @param days IN the number of elapsed days
    * @return a new duration representing the given number of days
    */
-  public static Duration ofDays( double days ) {
-    return new Duration( 24.0 * 60.0 * 60.0 * days );
+  public static Duration ofDays(double days) {
+    return new Duration(24.0 * 60.0 * 60.0 * days);
   }
 
 
@@ -90,7 +90,7 @@ public class Duration implements Comparable<Duration> {
    * @return a new duration representing the additive inverse of this
    */
   public Duration negate() {
-    return new Duration( - this.jplET_s );
+    return new Duration(-this.jplET_s);
   }
 
 
@@ -103,8 +103,8 @@ public class Duration implements Comparable<Duration> {
    * @param factor IN the linear scaling factor to apply
    * @return a new duration that is this duration linearly scaled by the factor
    */
-  public Duration times( double factor ) {
-    return new Duration( this.jplET_s * factor );
+  public Duration times(double factor) {
+    return new Duration(this.jplET_s * factor);
   }
 
 
@@ -116,8 +116,8 @@ public class Duration implements Comparable<Duration> {
    * @param addend IN additional duration to combine into the result
    * @return a new duration representing the sum of this and the addend
    */
-  public Duration plus( Duration addend ) {
-    return new Duration( this.jplET_s + addend.jplET_s );
+  public Duration plus(Duration addend) {
+    return new Duration(this.jplET_s + addend.jplET_s);
   }
 
 
@@ -128,13 +128,13 @@ public class Duration implements Comparable<Duration> {
    *
    * @param subtrahend IN duration to discount from the result
    * @return a new duration difference representing the subtraction of this
-   *         minuend minus the given subtrahend
+   *     minuend minus the given subtrahend
    */
-  public Duration minus( Duration subtrahend ) {
-    return new Duration( this.jplET_s - subtrahend.jplET_s );
+  public Duration minus(Duration subtrahend) {
+    return new Duration(this.jplET_s - subtrahend.jplET_s);
   }
 
-  public double div(Duration divend){
+  public double div(Duration divend) {
     return this.jplET_s / divend.jplET_s;
   }
 
@@ -144,11 +144,12 @@ public class Duration implements Comparable<Duration> {
    * naturally orders durations based on their length (which may be negative)
    *
    * @return a negative, zero, or positive number in the event this duration
-   *         is, respectively, less, equal, or greater than the provided
-   *         duration argument
+   *     is, respectively, less, equal, or greater than the provided
+   *     duration argument
    */
-  @Override public int compareTo( Duration o ) {
-    return Double.compare( this.jplET_s, o.jplET_s );
+  @Override
+  public int compareTo(Duration o) {
+    return Double.compare(this.jplET_s, o.jplET_s);
   }
 
 
@@ -168,7 +169,7 @@ public class Duration implements Comparable<Duration> {
    * @return the number of ephemeris time milliseconds represented by this duration
    */
   public long toMilliseconds() {
-    return (long)( jplET_s * 1000.0 );
+    return (long) (jplET_s * 1000.0);
   }
 
   public long toMicroseconds() {
@@ -182,17 +183,18 @@ public class Duration implements Comparable<Duration> {
    * serializes this duration into a format amenable to use by jpl seq
    * toolchain tools (apgen, raven, etc)
    */
-  @Override public String toString() {
+  @Override
+  public String toString() {
     //or could produce standard xml durations (which aren't apgen/raven friendly?)
     //    return java.time.Duration.ofMillis( (long)( jplET_s * 1000.0 ) ).toString();
-    final var dur = java.time.Duration.ofMillis( (long)( jplET_s * 1000.0 ) );
+    final var dur = java.time.Duration.ofMillis((long) (jplET_s * 1000.0));
     final var hmsfStr = String.format(
-      "%d:%02d:%02d.%03d",
-      dur.toHours(),
-      dur.toMinutesPart(),
-      dur.toSecondsPart(),
-      dur.toMillisPart()
-      );
+        "%d:%02d:%02d.%03d",
+        dur.toHours(),
+        dur.toMinutesPart(),
+        dur.toSecondsPart(),
+        dur.toMillisPart()
+    );
     return hmsfStr;
   }
 
@@ -208,20 +210,21 @@ public class Duration implements Comparable<Duration> {
    * @param s IN the string to parse as an xml duration
    * @return a new duration object representing the time span from the string
    */
-  public static Duration fromString( String s ) {
-    return new Duration( java.time.Duration.parse( s ).toMillis() / 1000.0 );
+  public static Duration fromString(String s) {
+    return new Duration(java.time.Duration.parse(s).toMillis() / 1000.0);
   }
 
-public static Duration fromMillis(long milliseconds){
-    return new Duration(milliseconds/1000.);
-}
+  public static Duration fromMillis(long milliseconds) {
+    return new Duration(milliseconds / 1000.);
+  }
+
   /**
    * internal ctor creates a duration matching provided ephemeris seconds
    *
    * @param jplET_s IN the positive or negative number of ephemeris time
-   *        seconds that the new duration should represent
+   *     seconds that the new duration should represent
    */
-  protected Duration( double jplET_s ) {
+  protected Duration(double jplET_s) {
     this.jplET_s = jplET_s;
   }
 
@@ -243,12 +246,12 @@ public static Duration fromMillis(long milliseconds){
   /**
    * the constant object representing a zero duration
    */
-  private static Duration zeroConstant = new Duration( 0.0 );
+  private static Duration zeroConstant = new Duration(0.0);
 
 
   /**
    * TODO:
    */
-  private static Duration maxDur = new Duration(Double.MAX_VALUE-1);
+  private static Duration maxDur = new Duration(Double.MAX_VALUE - 1);
 
 }

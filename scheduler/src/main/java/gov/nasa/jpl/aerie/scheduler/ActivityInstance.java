@@ -1,6 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.*;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * descriptor of a specific execution of a mission behavior
@@ -14,10 +20,10 @@ public class ActivityInstance {
    *
    * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
-   *        by this activity instance
+   *     by this activity instance
    */
   //TODO: reconsider unscheduled activity instances
-  public ActivityInstance( String name, ActivityType type ) {
+  public ActivityInstance(String name, ActivityType type) {
     this.name = name;
     this.type = type;
     //TODO: should guess duration from activity type bounds
@@ -28,11 +34,11 @@ public class ActivityInstance {
    *
    * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
-   *        by this activity instance
+   *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    */
-  public ActivityInstance(String name, ActivityType type, Time start ) {
-    this( name, type );
+  public ActivityInstance(String name, ActivityType type, Time start) {
+    this(name, type);
     this.startTime = start;
     //TODO: should guess duration from activity type bounds
   }
@@ -42,13 +48,13 @@ public class ActivityInstance {
    *
    * @param name IN the human legible name of the activity instance
    * @param type IN the datatype signature of and behavior descriptor invoked
-   *        by this activity instance
+   *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public ActivityInstance(String name, ActivityType type, Time start, Duration duration ) {
-    this( name, type, start );
-    if(duration.toMilliseconds() < 0){
+  public ActivityInstance(String name, ActivityType type, Time start, Duration duration) {
+    this(name, type, start);
+    if (duration.toMilliseconds() < 0) {
       throw new RuntimeException("Negative duration");
     }
     this.duration = duration;
@@ -59,14 +65,14 @@ public class ActivityInstance {
    *
    * @param o IN the activity instance to copy from
    */
-  public ActivityInstance( ActivityInstance o ) {
+  public ActivityInstance(ActivityInstance o) {
     this.name = o.name; //TODO: names should probably not be replicated
     this.type = o.type;
     this.startTime = o.startTime;
     this.duration = o.duration;
     this.parameters = o.parameters;
 
-    if(duration.toMilliseconds() < 0){
+    if (duration.toMilliseconds() < 0) {
       throw new RuntimeException("Negative duration");
     }
   }
@@ -77,8 +83,8 @@ public class ActivityInstance {
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithEarliestEndTtime(List<ActivityInstance> acts){
-    if(acts.size()>0) {
+  public static ActivityInstance getActWithEarliestEndTtime(List<ActivityInstance> acts) {
+    if (acts.size() > 0) {
       Collections.sort(acts, new Comparator<ActivityInstance>() {
         @Override
         public int compare(ActivityInstance u1, ActivityInstance u2) {
@@ -96,8 +102,8 @@ public class ActivityInstance {
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithLatestEndTtime(List<ActivityInstance> acts){
-    if(acts.size()>0) {
+  public static ActivityInstance getActWithLatestEndTtime(List<ActivityInstance> acts) {
+    if (acts.size() > 0) {
       Collections.sort(acts, new Comparator<ActivityInstance>() {
         @Override
         public int compare(ActivityInstance u1, ActivityInstance u2) {
@@ -105,7 +111,7 @@ public class ActivityInstance {
         }
       });
 
-      return acts.get(acts.size()-1);
+      return acts.get(acts.size() - 1);
     }
     return null;
   }
@@ -115,8 +121,8 @@ public class ActivityInstance {
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithEarliestStartTtime(List<ActivityInstance> acts){
-    if(acts.size()>0) {
+  public static ActivityInstance getActWithEarliestStartTtime(List<ActivityInstance> acts) {
+    if (acts.size() > 0) {
       Collections.sort(acts, new Comparator<ActivityInstance>() {
         @Override
         public int compare(ActivityInstance u1, ActivityInstance u2) {
@@ -134,16 +140,16 @@ public class ActivityInstance {
    *
    * @return the activity
    */
-  public static ActivityInstance getActWithLatestStartTtime(List<ActivityInstance> acts){
-    if(acts.size()>0) {
+  public static ActivityInstance getActWithLatestStartTtime(List<ActivityInstance> acts) {
+    if (acts.size() > 0) {
       Collections.sort(acts, new Comparator<ActivityInstance>() {
-      @Override
-      public int compare(ActivityInstance u1, ActivityInstance u2) {
-        return u1.getStartTime().compareTo(u2.getStartTime());
-      }
-    });
+        @Override
+        public int compare(ActivityInstance u1, ActivityInstance u2) {
+          return u1.getStartTime().compareTo(u2.getStartTime());
+        }
+      });
 
-    return acts.get(acts.size()-1);
+      return acts.get(acts.size() - 1);
     }
     return null;
   }
@@ -160,9 +166,10 @@ public class ActivityInstance {
 
   /**
    * sets the time at which this activity starts
+   *
    * @param newStartT the time at which this activity starts
    */
-  public void setStartTime( Time newStartT ) {
+  public void setStartTime(Time newStartT) {
     this.startTime = newStartT;
   }
 
@@ -175,16 +182,17 @@ public class ActivityInstance {
     return this.duration;
   }
 
-  public Time getEndTime(){
+  public Time getEndTime() {
     return this.startTime.plus(this.duration);
   }
 
   /**
    * sets the duration over which this activity lasts
+   *
    * @param newDur the new duration to use
    */
-  public void setDuration( Duration newDur ) {
-    if(newDur.toMilliseconds() < 0){
+  public void setDuration(Duration newDur) {
+    if (newDur.toMilliseconds() < 0) {
       throw new RuntimeException("Negative duration");
     }
     this.duration = newDur;
@@ -208,8 +216,8 @@ public class ActivityInstance {
     return type;
   }
 
-  public String toString(){
-    return "["+this.name+","+this.getStartTime()+","+this.getEndTime()+"]";
+  public String toString() {
+    return "[" + this.name + "," + this.getStartTime() + "," + this.getEndTime() + "]";
   }
 
   @Override
@@ -217,12 +225,24 @@ public class ActivityInstance {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     ActivityInstance that = (ActivityInstance) o;
-    return name.equals(that.name) && type.equals(that.type) && duration.equals(that.duration) && startTime.equals(that.startTime);
+    return name.equals(that.name)
+           && type.equals(that.type)
+           && duration.equals(that.duration)
+           && startTime.equals(that.startTime);
+/* TODO: should handle parameters too!
+    return Objects.equals(this.name, that.name)
+           && Objects.equals(this.type,that.type)
+           && Objects.equals(this.startTime, that.startTime)
+           && Objects.equals(this.duration, that.duration)
+           && Objects.equals(this.parameters, that.parameters);
+ */
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(name, type, duration, startTime);
+//TODO: should handle parameters too!
+//    return Objects.hash(name, type, duration, startTime, parameters);
   }
 
   /**
@@ -247,25 +267,29 @@ public class ActivityInstance {
 
   /**
    * adds a parameter to the activity instance
+   *
    * @param name name of the parameter
    * @param param value of the parameter
    */
-  public void addParameter(String name, Object param){
+  public void addParameter(String name, Object param) {
     parameters.put(name, param);
   }
 
   /**
    * Sets all the parameters of the activity instance
+   *
    * @param params a name/value map of parameters
    */
-  public void setParameters(Map<String, Object> params){
+  public void setParameters(Map<String, Object> params) {
     this.parameters = params;
   }
+
   /**
    * gets all the parameters of the activity instance
-  * @return a name/value map of parameters for this instance
+   *
+   * @return a name/value map of parameters for this instance
    */
-  public Map<String, Object> getParameters(){
+  public Map<String, Object> getParameters() {
     return parameters;
   }
 
