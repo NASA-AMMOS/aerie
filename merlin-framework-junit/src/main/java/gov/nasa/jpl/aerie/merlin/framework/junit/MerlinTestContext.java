@@ -9,7 +9,7 @@ public final class MerlinTestContext<Model> {
 
   private final Registrar registrar;
   private Model model;
-  private Map<String, TaskSpecType<Model, ?>> activityTypes;
+  private Map<String, TaskSpecType<Model, ?>> activityTypes = Map.of();
 
   public MerlinTestContext(final Registrar registrar) {
     this.registrar = registrar;

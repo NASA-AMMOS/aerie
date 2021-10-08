@@ -6,6 +6,8 @@ import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinTestContext;
 import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.spawn;
@@ -13,6 +15,7 @@ import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+@TestInstance(Lifecycle.PER_CLASS)
 public final class FooActivityTest {
 
   // The `@RegisterExtension` annotation programmatically injects the given extension into JUnit's testing apparatus.
