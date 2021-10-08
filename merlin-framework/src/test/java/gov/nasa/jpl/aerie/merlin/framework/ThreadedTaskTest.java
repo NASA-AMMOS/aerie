@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -49,14 +50,20 @@ public final class ThreadedTaskTest {
       }
     };
 
-    class TestException extends RuntimeException {}
+    final var pool = Executors.newCachedThreadPool();
+    try {
+      class TestException extends RuntimeException {}
 
-    final var task = new ThreadedTask<$Timeline>(Scoped.create(), () -> {
-      throw new TestException();
-    });
+      final var task = new ThreadedTask<$Timeline>(
+        pool,
+        Scoped.create(),
+        () -> { throw new TestException(); });
 
-    final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler));
-    assertSuppressed(ThreadedTask.TaskFailureException.class, ex);
+      final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler));
+      assertSuppressed(ThreadedTask.TaskFailureException.class, ex);
+    } finally {
+      pool.shutdown();
+    }
   }
 
   private static void assertSuppressed(final Class<? extends Throwable> expected, final Throwable ex) {

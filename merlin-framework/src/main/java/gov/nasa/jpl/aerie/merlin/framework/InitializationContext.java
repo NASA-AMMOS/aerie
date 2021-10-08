@@ -4,22 +4,27 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 public final class InitializationContext<$Schema> implements Context {
+  private final ExecutorService executor;
   private final Initializer<$Schema> builder;
 
-  public InitializationContext(final Initializer<$Schema> builder) {
+  public InitializationContext(final ExecutorService executor, final Initializer<$Schema> builder) {
+    this.executor = Objects.requireNonNull(executor);
     this.builder = Objects.requireNonNull(builder);
   }
 
-  public static <T> T initializing(final Initializer<?> builder, final Supplier<T> initializer) {
-    try (final var restore = ModelActions.context.set(new InitializationContext<>(builder))) {
+  public static <$Schema, T>
+  T initializing(final ExecutorService executor, final Initializer<$Schema> builder, final Supplier<T> initializer) {
+    try (final var restore = ModelActions.context.set(new InitializationContext<>(executor, builder))) {
       return initializer.get();
     }
   }
@@ -52,7 +57,12 @@ public final class InitializationContext<$Schema> implements Context {
 
   @Override
   public String spawn(final TaskFactory task) {
-    return this.builder.daemon(task::create);
+    return this.builder.daemon(new Initializer.TaskFactory<>() {
+      @Override
+      public <$Timeline extends $Schema> Task<$Timeline> create() {
+        return task.create(InitializationContext.this.executor);
+      }
+    });
   }
 
   @Override

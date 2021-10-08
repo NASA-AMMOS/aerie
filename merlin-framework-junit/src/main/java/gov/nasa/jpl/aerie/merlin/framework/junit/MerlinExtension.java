@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
+import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import org.junit.jupiter.api.TestInstance;
@@ -113,7 +113,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
     public AdaptationBuilder<$Schema> builder;
     public MerlinTestContext<Model> context;
 
-    public Adaptation<$Schema, Model> adaptation = null;
+    public Adaptation<$Schema, RootModel<?, Model>> adaptation = null;
 
     public State(final AdaptationBuilder<$Schema> builder) {
       this.builder = Objects.requireNonNull(builder);
@@ -121,9 +121,11 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
     }
 
     public <T> T constructModel(final Invocation<T> invocation) throws Throwable {
+      final var executor = RootModel.makeExecutorService();
+
       final T value;
       try {
-        value = InitializationContext.initializing(this.builder, () -> {
+        value = InitializationContext.initializing(executor, this.builder, () -> {
           try {
             return invocation.proceed();
           } catch (final RuntimeException ex) {
@@ -136,7 +138,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
         throw ex.wrapped;
       }
 
-      this.adaptation = this.builder.build(new Phantom<>(this.context.model()), this.context.activityTypes());
+      this.adaptation = this.builder.build(new RootModel<$Schema, Model>(this.context.model(), executor).toPhantom(), this.context.activityTypes());
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;
@@ -165,7 +167,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
               completed.value = true;
             }
           })
-          .<$Timeline>create();
+          .<$Timeline>create(RootModel.fromPhantom(this.adaptation.getModel()).executor());
 
       try {
         SimulationDriver.simulateTask(this.adaptation, timeline, task);
