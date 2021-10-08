@@ -46,7 +46,7 @@ public final class Event {
       if (this.topic != otherTopic) return Optional.empty();
 
       // SAFETY: If `this.topic` and `otherTopic` are identical references, then their types are also equal.
-      //  So `Topic<EventType> = Topic<Other>`, and since Java generics are injective families, `EventType = Other`.
+      //  So `SerializableTopic<EventType> = SerializableTopic<Other>`, and since Java generics are injective families, `EventType = Other`.
       @SuppressWarnings("unchecked")
       final var event = (Other) this.event;
 

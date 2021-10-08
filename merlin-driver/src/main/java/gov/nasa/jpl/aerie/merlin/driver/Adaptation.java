@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -19,6 +20,7 @@ public final class Adaptation<$Schema, Model> {
   private final Phantom<$Schema, Model> model;
   private final LiveCells initialCells;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
+  private final List<SerializableTopic<?>> topics;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
   private final List<Initializer.TaskFactory<$Schema>> daemons;
 
@@ -26,12 +28,14 @@ public final class Adaptation<$Schema, Model> {
       final Phantom<$Schema, Model> model,
       final LiveCells initialCells,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
+      final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory<$Schema>> daemons,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
+    this.topics = Collections.unmodifiableList(topics);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
@@ -70,5 +74,9 @@ public final class Adaptation<$Schema, Model> {
 
   public LiveCells getInitialCells() {
     return this.initialCells;
+  }
+
+  public Iterable<SerializableTopic<?>> getTopics() {
+    return this.topics;
   }
 }

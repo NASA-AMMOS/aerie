@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.driver;
 
+import gov.nasa.jpl.aerie.merlin.protocol.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
@@ -15,6 +16,7 @@ public interface Initializer<$Schema> {
   String daemon(TaskFactory<$Schema> factory);
 
   <Dynamics> void resourceFamily(ResourceFamily<$Schema, Dynamics> resourceFamily);
+  <Event> void topic(SerializableTopic<Event> topic);
 
   interface TaskFactory<$Schema> {
     <$Timeline extends $Schema> Task<$Timeline> create();

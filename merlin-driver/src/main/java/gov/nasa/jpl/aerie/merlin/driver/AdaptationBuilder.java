@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
@@ -45,6 +46,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   }
 
   @Override
+  public <Event> void topic(final SerializableTopic<Event> topic) {
+    this.state.topic(topic);
+  }
+
+  @Override
   public String daemon(final TaskFactory<$Schema> task) {
     return this.state.daemon(task);
   }
@@ -77,6 +83,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
     private final List<TaskFactory<$Schema>> daemons = new ArrayList<>();
+    private List<SerializableTopic<?>> topics = new ArrayList<>();
 
     @Override
     public <CellType> CellType getInitialState(
@@ -118,6 +125,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
+    public <Event> void topic(final SerializableTopic<Event> topic) {
+      this.topics.add(topic);
+    }
+
+    @Override
     public String daemon(final TaskFactory<$Schema> task) {
       this.daemons.add(task);
       return null;  // TODO: get some way to refer to the daemon task
@@ -130,6 +142,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
           model,
           this.initialCells,
           this.resourceFamilies,
+          this.topics,
           this.daemons,
           taskSpecTypes);
 
@@ -160,6 +173,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     @Override
     public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
+    }
+
+    @Override
+    public <Event> void topic(final SerializableTopic<Event> topic) {
+      throw new IllegalStateException("Topics cannot be added after the schema is built");
     }
 
     @Override

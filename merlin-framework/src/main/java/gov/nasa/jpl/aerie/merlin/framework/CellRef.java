@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import java.util.function.Function;
 
 public final class CellRef<Event, CellType> {
-  private final Query<?, Event, CellType> query;
+  public final Query<?, Event, CellType> query;
 
   private CellRef(Query<?, Event, CellType> query) {
     this.query = query;
