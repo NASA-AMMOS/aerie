@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 /**
  * serializes output for use in an xml tol file, eg for raven input
- *
  */
 //TODO: surely there is already an java implementation of this somewhere
 public class XMLTOLWriter {
@@ -12,12 +11,12 @@ public class XMLTOLWriter {
    *
    * @param config IN the controlling configuration for the output operations
    */
-  public XMLTOLWriter( HuginnConfiguration config ) {
+  public XMLTOLWriter(HuginnConfiguration config) {
     this.config = config;
     try {
-      this.xml = new java.io.PrintStream( config.getOutputStem() + "_tol.xml" );
-    } catch( java.io.FileNotFoundException e ) {
-      throw new RuntimeException( e );
+      this.xml = new java.io.PrintStream(config.getOutputStem() + "_tol.xml");
+    } catch (java.io.FileNotFoundException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -36,16 +35,16 @@ public class XMLTOLWriter {
    *
    * @param plan IN the plan to serialize to configured output stream
    */
-  public void write( Plan plan ) {
+  public void write(Plan plan) {
 
     //xml/xmltol header info
     xml.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
     xml.println("<XML_TOL>");
 
     //output time-ordered TOLrecord entries
-    final var recordMap = collectRecords( plan );
-    for( final var recordList : recordMap.values() ) {
-      for( final var record : recordList ) {
+    final var recordMap = collectRecords(plan);
+    for (final var recordList : recordMap.values()) {
+      for (final var record : recordList) {
         record.write();
       }
     }
@@ -64,16 +63,15 @@ public class XMLTOLWriter {
    * TOL format requires time-ordered output
    *
    * @param plan IN the plan of activity instances to create records for
-   *
    * @return an time-indexed container of all the activity records from
-   *         the input plan
+   *     the input plan
    */
   //TODO: use some multimap library eg guava
-  private java.util.TreeMap<Time,java.util.List<TolRecord>> collectRecords(Plan plan ) {
-    final var timedLists = new java.util.TreeMap<Time,java.util.List<TolRecord>>();
-    for( final var act : plan.getActivitiesByTime() ) {
-      addRecord( new ActivityStartRecord( act ), timedLists );
-      addRecord( new ActivityEndRecord( act ), timedLists );
+  private java.util.TreeMap<Time, java.util.List<TolRecord>> collectRecords(Plan plan) {
+    final var timedLists = new java.util.TreeMap<Time, java.util.List<TolRecord>>();
+    for (final var act : plan.getActivitiesByTime()) {
+      addRecord(new ActivityStartRecord(act), timedLists);
+      addRecord(new ActivityEndRecord(act), timedLists);
     }
     return timedLists;
   }
@@ -85,13 +83,13 @@ public class XMLTOLWriter {
    * @param timedLists IN the time-indexed container to add the record to
    */
   //TODO: use some multimap library eg guava
-  private void addRecord( TolRecord record, java.util.TreeMap<Time,java.util.List<TolRecord>> timedLists ) {
+  private void addRecord(TolRecord record, java.util.TreeMap<Time, java.util.List<TolRecord>> timedLists) {
     final var t = record.getTime();
     var list = timedLists.get(t);
-    if( list == null ) {
-      timedLists.put( t, list = new java.util.LinkedList<TolRecord>() );
+    if (list == null) {
+      timedLists.put(t, list = new java.util.LinkedList<TolRecord>());
     }
-    list.add( record );
+    list.add(record);
   }
 
   /**
@@ -109,7 +107,7 @@ public class XMLTOLWriter {
      *
      * @param time IN the plan time at which the record is relevant
      */
-    TolRecord( Time time ) {
+    TolRecord(Time time) {
       this.time = time;
     }
 
@@ -138,7 +136,7 @@ public class XMLTOLWriter {
      * write the generic leading portion of the tol record to output
      */
     public void writeHeader() {
-      xml.println("  <TOLrecord type=\"" + getTypeString() +"\">");
+      xml.println("  <TOLrecord type=\"" + getTypeString() + "\">");
       xml.println("    <TimeStamp>" + getTime() + "</TimeStamp>");
     }
 
@@ -149,6 +147,7 @@ public class XMLTOLWriter {
       xml.println("  </TOLrecord>");
     }
   }
+
   /**
    * a tol record that details an activity-related event
    */
@@ -160,7 +159,7 @@ public class XMLTOLWriter {
      * @param time IN the plan time at which the recorded event occured
      * @param act IN the activity that is being described by the record
      */
-    public ActivityRecord(Time time, ActivityInstance act ) {
+    public ActivityRecord(Time time, ActivityInstance act) {
       super(time);
       this.act = act;
     }
@@ -179,6 +178,7 @@ public class XMLTOLWriter {
       return act;
     }
   }
+
   /**
    * a tol record for the beginning of an activity
    */
@@ -190,14 +190,15 @@ public class XMLTOLWriter {
      *
      * @param act the activity that is described by the record
      */
-    public ActivityStartRecord( ActivityInstance act ) {
-      super( act.getStartTime(), act );
+    public ActivityStartRecord(ActivityInstance act) {
+      super(act.getStartTime(), act);
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override public String getTypeString() { return "ACT_START"; }
+    @Override
+    public String getTypeString() { return "ACT_START"; }
 
     /**
      * {@inheritDoc}
@@ -205,24 +206,31 @@ public class XMLTOLWriter {
      * outputs the details of the activity, including attributes (like display
      * color!) and parameter values
      */
-    @Override public void write() {
+    @Override
+    public void write() {
       writeHeader();
       final var act = getAct();
-      final var dur = act.getDuration()==null? Duration.ofSeconds(1):act.getDuration();
+      final var dur = act.getDuration() == null ? Duration.ofSeconds(1) : act.getDuration();
       xml.println("    <Instance>");
       xml.println("      <ID>" + act.getName() + "</ID>");
-      xml.println("        <Name>"+act.getType().getName()+"</Name>");
-      xml.println("        <Type>"+act.getType().getName()+"</Type>");
+      xml.println("        <Name>" + act.getType().getName() + "</Name>");
+      xml.println("        <Type>" + act.getType().getName() + "</Type>");
       xml.println("        <Parent></Parent>");
       xml.println("        <Visibility>visible</Visibility>");
       xml.println("        <Attributes>");
       xml.println("            <Attribute>");
       xml.println("                <Name>start</Name>");
-      xml.println("                <TimeValue milliseconds=\""+act.getStartTime().toEpochMilliseconds()+"\">"+act.getStartTime().toString()+"</TimeValue>");
+      xml.println("                <TimeValue milliseconds=\"" + act.getStartTime().toEpochMilliseconds() + "\">" + act
+          .getStartTime()
+          .toString() + "</TimeValue>");
       xml.println("            </Attribute>");
       xml.println("            <Attribute>");
       xml.println("                <Name>span</Name>");
-      xml.println("                <DurationValue milliseconds=\""+dur.toMilliseconds()+"\">"+dur.toString()+"</DurationValue>");
+      xml.println("                <DurationValue milliseconds=\""
+                  + dur.toMilliseconds()
+                  + "\">"
+                  + dur.toString()
+                  + "</DurationValue>");
       xml.println("            </Attribute>");
       xml.println("            <Attribute>");
       xml.println("                <Name>subsystem</Name>");
@@ -230,23 +238,24 @@ public class XMLTOLWriter {
       xml.println("            </Attribute>");
       xml.println("            <Attribute>");
       xml.println("              <Name>Color</Name>");
-      xml.println("              <StringValue>"+getColor(this)+"</StringValue>");
+      xml.println("              <StringValue>" + getColor(this) + "</StringValue>");
       xml.println("             </Attribute>");
       xml.println("        </Attributes>");
       xml.println("        <Parameters>");
       xml.println("            <Parameter>");
       xml.println("                <Name>arg1</Name>");
-      xml.println("                <DurationValue>"+dur.toString()+"</DurationValue>");
+      xml.println("                <DurationValue>" + dur.toString() + "</DurationValue>");
       xml.println("            </Parameter>");
       xml.println("            <Parameter>");
       xml.println("                <Name>arg2</Name>");
-      xml.println("                <StringValue>"+act.getType().getName()+"</StringValue>");
+      xml.println("                <StringValue>" + act.getType().getName() + "</StringValue>");
       xml.println("            </Parameter>");
       xml.println("        </Parameters>");
       xml.println("    </Instance>");
       writeFooter();
     }
   }
+
   /**
    * a tol record for the end of an activity
    */
@@ -258,24 +267,27 @@ public class XMLTOLWriter {
      *
      * @param act IN the activity to record the end of
      */
-    public ActivityEndRecord( ActivityInstance act ) {
-      super( act.getStartTime().plus( act.getDuration()==null? Duration.ofSeconds(1):act.getDuration() ), act );
+    public ActivityEndRecord(ActivityInstance act) {
+      super(act.getStartTime().plus(act.getDuration() == null ? Duration.ofSeconds(1) : act.getDuration()), act);
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override public String getTypeString() { return "ACT_END"; }
+    @Override
+    public String getTypeString() { return "ACT_END"; }
 
     /**
      * {@inheritDoc}
      */
-    @Override public void write() {
+    @Override
+    public void write() {
       writeHeader();
       xml.println("    <ActivityID>" + getAct().getName() + "</ActivityID>");
       writeFooter();
     }
   }
+
   /**
    * a tol record representing a change in state value
    */
@@ -285,24 +297,27 @@ public class XMLTOLWriter {
      *
      * @param time IN the plan time of the value change
      */
-    public ResourceValue( Time time ) {
+    public ResourceValue(Time time) {
       super(time);
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override public String getTypeString() { return "RES_VAL"; }
+    @Override
+    public String getTypeString() { return "RES_VAL"; }
 
     /**
      * {@inheritDoc}
      */
-    @Override public void write() {
+    @Override
+    public void write() {
       writeHeader();
       //TODO: didn't need state output yet
       writeFooter();
     }
   }
+
   /**
    * create a record for the outgoing final value of a state
    *
@@ -315,19 +330,21 @@ public class XMLTOLWriter {
      *
      * @param time IN the plan time of the end of the plan
      */
-    public ResourceFinalValue( Time time ) {
+    public ResourceFinalValue(Time time) {
       super(time);
     }
 
     /**
      * {@inheritDoc}
      */
-    @Override public String getTypeString() { return "RES_FINAL_VAL"; }
+    @Override
+    public String getTypeString() { return "RES_FINAL_VAL"; }
 
     /**
      * {@inheritDoc}
      */
-    @Override public void write() {
+    @Override
+    public void write() {
       writeHeader();
       //TODO: didn't need state output yet
       writeFooter();
@@ -341,19 +358,18 @@ public class XMLTOLWriter {
    * name to determine the color to apply from a configuration map
    *
    * @param record IN the record of the activity to determine color of
-   *
    * @return a string represenging the color to use for the activity
-   *         in a visualization, as a web hexadecimal color code
+   *     in a visualization, as a web hexadecimal color code
    */
-  private String getColor( ActivityRecord record ) {
+  private String getColor(ActivityRecord record) {
     final var act = record.getAct();
     final var name = act.getName();
     final var type = act.getType().getName();
     String color = "#000000"; //black default
 
     //TODO: reconsider where this configuration lives
-    for( final var colorEntry : config.getActColorMap().entrySet() ) {
-      if( name.matches( colorEntry.getKey() ) ) {
+    for (final var colorEntry : config.getActColorMap().entrySet()) {
+      if (name.matches(colorEntry.getKey())) {
         color = colorEntry.getValue();
         break;
       }

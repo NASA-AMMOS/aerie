@@ -8,31 +8,31 @@ import java.util.List;
  */
 public class FilterSequenceMaxGapAfter implements TimeWindowsFilter {
 
-    private Duration maxDelay;
+  private Duration maxDelay;
 
-    public FilterSequenceMaxGapAfter(Duration maxDelay){
-        this.maxDelay = maxDelay;
-    }
+  public FilterSequenceMaxGapAfter(Duration maxDelay) {
+    this.maxDelay = maxDelay;
+  }
 
-    @Override
-    public TimeWindows filter(Plan plan, TimeWindows windows) {
-        List<Range<Time>> filtered = new ArrayList<Range<Time>>();
-        List<Range<Time>> windowsTo = windows.getRangeSet();
-        if(windowsTo.size() > 1) {
-            int nextInd = 1;
-            while(nextInd < windowsTo.size()){
-                Range<Time> after = windowsTo.get(nextInd);
-                Range<Time>  cur = windowsTo.get(nextInd-1);
+  @Override
+  public TimeWindows filter(Plan plan, TimeWindows windows) {
+    List<Range<Time>> filtered = new ArrayList<Range<Time>>();
+    List<Range<Time>> windowsTo = windows.getRangeSet();
+    if (windowsTo.size() > 1) {
+      int nextInd = 1;
+      while (nextInd < windowsTo.size()) {
+        Range<Time> after = windowsTo.get(nextInd);
+        Range<Time> cur = windowsTo.get(nextInd - 1);
 
-                if (after.getMinimum().minus(cur.getMaximum()).compareTo(maxDelay) <= 0) {
-                    filtered.add(cur);
-                }
-                nextInd++;
-            }
+        if (after.getMinimum().minus(cur.getMaximum()).compareTo(maxDelay) <= 0) {
+          filtered.add(cur);
         }
-        return TimeWindows.of(filtered, true);
-
+        nextInd++;
+      }
     }
+    return TimeWindows.of(filtered, true);
+
+  }
 
 
 }

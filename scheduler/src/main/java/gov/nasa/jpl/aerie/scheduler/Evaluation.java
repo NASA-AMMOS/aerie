@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.Objects;
+
 /**
  * description of how well a plan satisfies its goals
  *
@@ -21,12 +23,14 @@ public class Evaluation {
      * more positive scores are more satisfied
      *
      * scores are only comparable if generaged by the same scheduler
+     *
      * @param score the score to assign
      */
-    public void setScore( double score ) { this.score = score; }
+    public void setScore(double score) { this.score = score; }
 
     /**
      * fetches the numeric evaluation score for the goal
+     *
      * @return the numeric evaluation score for the goal
      */
     public double getScore() { return score; }
@@ -40,18 +44,18 @@ public class Evaluation {
      * flags given activity as contributing to the goal's (dis)satisfaction
      *
      * @param act IN the activity instance that contributed to the goal's
-     *        evaluation
+     *     evaluation
      */
-    public void associate( ActivityInstance act ) { acts.add( act ); }
+    public void associate(ActivityInstance act) { acts.add(act); }
 
     /**
      * flags all given activities as contributing to the goal's (dis)satisfaction
      *
      * @param acts IN container of activities that contributed to the goal's
-     *        evaluation
+     *     evaluation
      */
-    public void associate( java.util.Collection<ActivityInstance> acts ) {
-      this.acts.addAll( acts );
+    public void associate(java.util.Collection<ActivityInstance> acts) {
+      this.acts.addAll(acts);
     }
 
     /**
@@ -60,7 +64,7 @@ public class Evaluation {
      * @return the set of all activities that contributed to the evaluation
      */
     public java.util.Collection<ActivityInstance> getAssociatedActivities() {
-      return java.util.Collections.unmodifiableSet( acts );
+      return java.util.Collections.unmodifiableSet(acts);
     }
 
     /**
@@ -79,12 +83,13 @@ public class Evaluation {
    * @param goal the goal to evaluate
    * @return the evaluation of the specified goal
    */
-  public GoalEvaluation forGoal( Goal goal ) {
-    return goalEvals.computeIfAbsent( goal, k->new GoalEvaluation() );
+  public GoalEvaluation forGoal(Goal goal) {
+    return goalEvals.computeIfAbsent(goal, k -> new GoalEvaluation());
   }
 
   /**
    * fetches the set of all goals evaluated
+   *
    * @return the goals that are evaluated
    */
   public java.util.Collection<Goal> getGoals() {
@@ -94,7 +99,20 @@ public class Evaluation {
   /**
    * the set of all per-goal evaluations
    */
-  protected java.util.HashMap<Goal,GoalEvaluation> goalEvals = new java.util.HashMap<>();
+  protected java.util.HashMap<Goal, GoalEvaluation> goalEvals = new java.util.HashMap<>();
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Evaluation that = (Evaluation) o;
+    return Objects.equals(goalEvals, that.goalEvals);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(goalEvals);
+  }
 
 
 }

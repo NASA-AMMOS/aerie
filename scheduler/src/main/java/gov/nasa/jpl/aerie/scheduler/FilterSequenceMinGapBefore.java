@@ -13,30 +13,30 @@ import java.util.List;
 // output: ......[======]........................[=====].......
 public class FilterSequenceMinGapBefore implements TimeWindowsFilter {
 
-    private Duration delay;
+  private Duration delay;
 
-    public FilterSequenceMinGapBefore(Duration delay){
-        this.delay = delay;
-    }
+  public FilterSequenceMinGapBefore(Duration delay) {
+    this.delay = delay;
+  }
 
-    @Override
-    public TimeWindows filter(Plan plan, TimeWindows windows) {
-        Range<Time> before = null;
-        Collection<Range<Time>> filtered = new ArrayList<Range<Time>>();
-        List<Range<Time>> windowsToFilter = windows.getRangeSet();
-        if(windowsToFilter.size()>0) {
-            filtered.add(windowsToFilter.get(0));
-            for (Range<Time> range : windowsToFilter) {
-                if (before != null) {
-                    if (range.getMinimum().minus(before.getMaximum()).compareTo(delay) >= 0) {
-                        filtered.add(range);
-                    }
-                }
-                before = range;
-            }
+  @Override
+  public TimeWindows filter(Plan plan, TimeWindows windows) {
+    Range<Time> before = null;
+    Collection<Range<Time>> filtered = new ArrayList<Range<Time>>();
+    List<Range<Time>> windowsToFilter = windows.getRangeSet();
+    if (windowsToFilter.size() > 0) {
+      filtered.add(windowsToFilter.get(0));
+      for (Range<Time> range : windowsToFilter) {
+        if (before != null) {
+          if (range.getMinimum().minus(before.getMaximum()).compareTo(delay) >= 0) {
+            filtered.add(range);
+          }
         }
-        return TimeWindows.of(filtered, true);
+        before = range;
+      }
     }
+    return TimeWindows.of(filtered, true);
+  }
 
 
 }

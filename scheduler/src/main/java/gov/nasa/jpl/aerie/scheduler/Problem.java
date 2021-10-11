@@ -10,11 +10,13 @@ public class Problem {
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem( MissionModel mission ) {
-    if( mission == null ) { throw new IllegalArgumentException(
-        "creating problem descriptor with null mission model" ); }
+  public Problem(MissionModel mission) {
+    if (mission == null) {
+      throw new IllegalArgumentException(
+          "creating problem descriptor with null mission model");
+    }
     this.mission = mission;
-    this.initialPlan = new PlanInMemory( mission );
+    this.initialPlan = new PlanInMemory(mission);
   }
 
   /**
@@ -34,6 +36,7 @@ public class Problem {
 
   /**
    * fetches the mission model that this problem is based on
+   *
    * @return the mission model that this problem is based on
    */
   public MissionModel getMissionModel() {
@@ -42,6 +45,7 @@ public class Problem {
 
   /**
    * fetches the initial seed plan that schedulers may start from
+   *
    * @return the initial seed plan that schedulers may start from
    */
   public Plan getInitialPlan() {
@@ -50,9 +54,10 @@ public class Problem {
 
   /**
    * sets the initial seed plan that schedulers may start from
+   *
    * @param plan the initial seed plan that schedulers may start from
    */
-  public void setInitialPlan( Plan plan ) {
+  public void setInitialPlan(Plan plan) {
     initialPlan = plan;
   }
 
@@ -61,14 +66,18 @@ public class Problem {
    *
    * @param goal IN the new goal to add to the problem
    */
-  public void add( Goal goal ) {
-    if( goal == null ) { throw new IllegalArgumentException(
-        "inserting null goal into problem" ); }
+  public void add(Goal goal) {
+    if (goal == null) {
+      throw new IllegalArgumentException(
+          "inserting null goal into problem");
+    }
     final var goalName = goal.getName();
     assert goalName != null;
-    if( goalsByName.containsKey( goalName ) ) { throw new IllegalArgumentException(
-        "inserting goal with duplicate name=" + goalName + " into problem" ); }
-    goalsByName.put( goalName, goal );
+    if (goalsByName.containsKey(goalName)) {
+      throw new IllegalArgumentException(
+          "inserting goal with duplicate name=" + goalName + " into problem");
+    }
+    goalsByName.put(goalName, goal);
   }
 
   /**
@@ -82,7 +91,7 @@ public class Problem {
    * @return an un-modifiable container of the goals requested for this plan
    */
   public java.util.Collection<Goal> getGoals() {
-    return java.util.Collections.unmodifiableCollection( goalsByName.values() );
+    return java.util.Collections.unmodifiableCollection(goalsByName.values());
   }
 
 

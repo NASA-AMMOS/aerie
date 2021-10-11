@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.Optional;
+
 /**
  * interface to a scheduling algorithm that produces schedules for input plans
  *
@@ -29,18 +31,17 @@ public interface Solver {
    * between successive calls, though some algorithms may optionally support
    * changing problem specification
    *
-   * the algorithm may return a null solution in the event the solver has
+   * the algorithm may return no solution in the event the solver has
    * expended all of its solutions (eg by reaching a requested quality
    * threshold, proving an optimum solution, exhausting the configured
-   * alternative search space, etc). in general, the solver will return null
-   * for all solution requests thereafter, but some algorithms may optionally
-   * support further solutions (eg on optional input/configuration
-   * modification)
+   * alternative search space, etc). in general, the solver will return no
+   * solution for all requests thereafter, but some algorithms may optionally
+   * support further solutions (eg on some input/configuration modification)
    *
    * @return an output schedule/plan that (possibly partially) solves the
-   *         previously specified planning problem, or null if the solver
-   *         cannot provide any more solutions
+   *     previously specified planning problem, or empty if the solver
+   *     cannot provide any more solutions right now
    */
-  public Plan getNextSolution();
+  Optional<Plan> getNextSolution();
 
 }

@@ -10,54 +10,50 @@ import java.util.stream.Collectors;
  */
 public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
-    Set<ActivityExpression> actTypes;
+  Set<ActivityExpression> actTypes;
 
-    public static NAryMutexConstraint buildMutexConstraint(List<ActivityExpression> actTypes){
-        NAryMutexConstraint mc = new NAryMutexConstraint();
-        mc.actTypes = new HashSet<ActivityExpression>(actTypes);
-        return mc;
+  public static NAryMutexConstraint buildMutexConstraint(List<ActivityExpression> actTypes) {
+    NAryMutexConstraint mc = new NAryMutexConstraint();
+    mc.actTypes = new HashSet<ActivityExpression>(actTypes);
+    return mc;
+  }
+
+
+  public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
+    if (conflict instanceof MissingActivityInstanceConflict) {
+      return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
+    } else if (conflict instanceof MissingActivityTemplateConflict) {
+      return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().desiredActTemplate.type);
+    } else {
+      throw new IllegalArgumentException("method implemented for two types of conflict");
     }
+  }
 
 
+  private TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
+    TimeWindows validWindows = new TimeWindows(windows);
+    for (var type : actTypes) {
+      if (!type.equals(actToBeScheduled)) {
+        //final var actSearch = ;
 
+        final var acts = new java.util.LinkedList<>(plan.find(type));
 
-    public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
-        if(conflict instanceof MissingActivityInstanceConflict){
-            return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
-        }
-        else if(conflict instanceof MissingActivityTemplateConflict){
-            return findWindows(plan, windows, ((MissingActivityTemplateConflict) conflict).getGoal().desiredActTemplate.type );
-        }
-        else{
-            throw new IllegalArgumentException("method implemented for two types of conflict");
-        }
+        List<Range<Time>> rangesActs = acts
+            .stream()
+            .map(a -> new Range<Time>(a.getStartTime(), a.getEndTime()))
+            .collect(Collectors.toList());
+        TimeWindows twActs = TimeWindows.of(rangesActs);
+
+        validWindows.substraction(twActs);
+      }
     }
+    return validWindows;
+  }
 
 
-
-    private TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
-        TimeWindows validWindows = new TimeWindows(windows);
-        for(var type : actTypes) {
-            if(!type.equals(actToBeScheduled)) {
-                //final var actSearch = ;
-
-                final var acts = new java.util.LinkedList<>(plan.find(type));
-
-                List<Range<Time>> rangesActs = acts.stream().map(a -> new Range<Time>(a.getStartTime(), a.getEndTime())).collect(Collectors.toList());
-                TimeWindows twActs = TimeWindows.of(rangesActs);
-
-                validWindows.substraction(twActs);
-            }
-        }
-        return validWindows;
-    }
-
-
-
-
-    //Non-incremental checking
-    //TODO : uncomment and verify
-    public ConstraintState isEnforced(Plan plan, TimeWindows windows){
+  //Non-incremental checking
+  //TODO : uncomment and verify
+  public ConstraintState isEnforced(Plan plan, TimeWindows windows) {
 
         /*TimeWindows violationWindows = new TimeWindows();
 
@@ -87,7 +83,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
             cState = new ConstraintState(this,false, null);
         }
         return cState;*/
-        return null;
-    }
+    return null;
+  }
 
 }

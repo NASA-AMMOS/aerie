@@ -5,14 +5,13 @@ import java.util.List;
 
 /**
  * describes some criteria that is desired in the solution plans
- *
  */
 public class Goal {
 
-  /**Set to true if partial satisfaction is ok, the scheduler will try to do its best*/
+  /** Set to true if partial satisfaction is ok, the scheduler will try to do its best */
   private boolean partialSatisfaction = false;
 
-  public boolean isPartiallySatisfiable(){
+  public boolean isPartiallySatisfiable() {
     return partialSatisfaction;
   }
 
@@ -45,7 +44,11 @@ public class Goal {
      * @param name IN the human legible name of the goal
      * @return this builder, ready for additional specification
      */
-    public T named( String name ) { this.name = name; return getThis(); }
+    public T named(String name) {
+      this.name = name;
+      return getThis();
+    }
+
     protected String name;
 
     /**
@@ -60,8 +63,12 @@ public class Goal {
      * @return this builder, ready for additional specification
      */
     //TODO: externalize prioritization from goal specification
-    public T withPriority( double priority ) { this.priority = priority; return getThis(); }
-    protected double priority= 0.0;
+    public T withPriority(double priority) {
+      this.priority = priority;
+      return getThis();
+    }
+
+    protected double priority = 0.0;
 
     /**
      * sets the beginning of the time interval over which the goal is relevant
@@ -73,7 +80,11 @@ public class Goal {
      * @param start IN the beginning of the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T startingAt( Time start ) { this.starting = start; return getThis(); }
+    public T startingAt(Time start) {
+      this.starting = start;
+      return getThis();
+    }
+
     protected Time starting;
 
     /**
@@ -87,7 +98,11 @@ public class Goal {
      * @param end IN the end of the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T endingAt( Time end ) { this.ending = end; return getThis(); }
+    public T endingAt(Time end) {
+      this.ending = end;
+      return getThis();
+    }
+
     protected Time ending;
 
     /**
@@ -100,12 +115,17 @@ public class Goal {
      * @param range IN the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T forAllTimeIn( Range<Time> range ) { this.range = range; return getThis(); }
+    public T forAllTimeIn(Range<Time> range) {
+      this.range = range;
+      return getThis();
+    }
+
     protected Range<Time> range;
 
 
     /**
      * allows to attach state constraints to the goal
+     *
      * @param constraint IN the state constraints
      * @return this builder, ready for additional specification
      */
@@ -113,12 +133,14 @@ public class Goal {
       this.constraints.add(constraint);
       return getThis();
     }
+
     protected List<StateConstraintExpression> constraints = new LinkedList<StateConstraintExpression>();
 
-    public T partialSatisfaction(){
+    public T partialSatisfaction() {
       this.partialSatisfaction = true;
       return getThis();
     }
+
     boolean partialSatisfaction;
 
     /**
@@ -130,7 +152,7 @@ public class Goal {
      *
      * @return a newly allocated goal object matching all specifications
      */
-    public Goal build() { return fill( new Goal() ); }
+    public Goal build() { return fill(new Goal()); }
 
     /**
      * returns the current builder object (but typed at the lowest level)
@@ -149,39 +171,43 @@ public class Goal {
      * specifiers managed at this builder level and above
      *
      * @param goal IN/OUT a goal object to be filled with specifiers from this
-     *        level of builder and above
+     *     level of builder and above
      * @return the provided goal object with details filled in
      */
-    protected Goal fill( Goal goal ) {
-      if( name == null ) { throw new IllegalArgumentException(
-          "creating goal requires non-null name" ); }
+    protected Goal fill(Goal goal) {
+      if (name == null) {
+        throw new IllegalArgumentException(
+            "creating goal requires non-null name");
+      }
       goal.name = name;
 
       goal.priority = priority;
 
       goal.partialSatisfaction = true;
 
-      goal.stateConstraints =null;
-      if(this.constraints.size()>0){
-        if(this.constraints.size()>1){
+      goal.stateConstraints = null;
+      if (this.constraints.size() > 0) {
+        if (this.constraints.size() > 1) {
           StateConstraintExpression.Builder build = new StateConstraintExpression.Builder();
-          for(var constraint : constraints) {
-            build= build.satisfied(constraint);
+          for (var constraint : constraints) {
+            build = build.satisfied(constraint);
           }
           goal.stateConstraints = build.build();
-        }else{
+        } else {
           goal.stateConstraints = constraints.get(0);
         }
       }
 
       //REVIEW: collapse boolean logic
-      if( ( ( starting != null || ending != null ) && ( range != null ) )
-          || ( starting == null && ending == null && range == null ) ) { throw new IllegalArgumentException(
-          "creating goal requires either startingAt/endingAt terms or an \"forAllTime\" range, but not both" ); }
-      if( range != null ) {
+      if (((starting != null || ending != null) && (range != null))
+          || (starting == null && ending == null && range == null)) {
+        throw new IllegalArgumentException(
+            "creating goal requires either startingAt/endingAt terms or an \"forAllTime\" range, but not both");
+      }
+      if (range != null) {
         goal.temporalContext = range;
       } else {
-        goal.temporalContext = new Range<Time>(starting, ending );
+        goal.temporalContext = new Range<Time>(starting, ending);
       }
 
       return goal;
@@ -206,7 +232,7 @@ public class Goal {
    *
    * @param newPriority IN the new priority rank to assign to this goal
    */
-  public void setPriority( double newPriority ) {
+  public void setPriority(double newPriority) {
     priority = newPriority;
   }
 
@@ -238,14 +264,13 @@ public class Goal {
    * plan that this goal would care to improve upon
    *
    * @param plan IN: the plan that this goal should be evaluated against
-   *
    * @return a list of issues in the plan that diminish goal satisfaction
    */
-  public java.util.Collection<Conflict> getConflicts( Plan plan ) {
+  public java.util.Collection<Conflict> getConflicts(Plan plan) {
     return java.util.Collections.<Conflict>emptyList();
   }
 
-  public StateConstraintExpression getStateConstraints(){
+  public StateConstraintExpression getStateConstraints() {
     return stateConstraints;
   }
 
@@ -261,9 +286,11 @@ public class Goal {
    *
    * @param name IN the human legible name of the goal
    */
-  protected Goal( String name ) {
-    if( name == null ) { throw new IllegalArgumentException(
-        "creating goal with null name" ); }
+  protected Goal(String name) {
+    if (name == null) {
+      throw new IllegalArgumentException(
+          "creating goal with null name");
+    }
     this.name = name;
   }
 

@@ -8,9 +8,8 @@ import java.util.Objects;
 
 /**
  * represents an particular single instant on a given timeline
- *
  */
-public class Time implements Comparable<Time>{
+public class Time implements Comparable<Time> {
 
   /**
    * returns reference to time point at exactly the reference epoch
@@ -23,29 +22,32 @@ public class Time implements Comparable<Time>{
 
   /**
    * Hardcoded max time (created to handle state cache)
+   *
    * @return the max time
    */
-  public static Time ofMax(){
+  public static Time ofMax() {
     return fromDOM("2500-01-01T00:00:00.000");
   }
 
   /**
    * returns the minimum between two times
+   *
    * @param t1 a time
    * @param t2 a time
    * @return the minimum betwwen two times
    */
-  public static Time min(Time t1, Time t2){
-    return t1.compareTo(t2) >=0 ? t2 : t1;
+  public static Time min(Time t1, Time t2) {
+    return t1.compareTo(t2) >= 0 ? t2 : t1;
   }
 
   /**
    * returns the maximum between two times
+   *
    * @param t1 a time
    * @param t2 a time
    * @return the maximum betwwen two times
    */
-  public static Time max(Time t1, Time t2){
+  public static Time max(Time t1, Time t2) {
     return t1.compareTo(t2) <= 0 ? t2 : t1;
   }
 
@@ -68,12 +70,12 @@ public class Time implements Comparable<Time>{
    * note that the input may be negative, resulting in a subtraction
    *
    * @param duration IN the duration forward from this time to return a
-   *        timepoint for
+   *     timepoint for
    * @return a new time object that is advanced from this time by the
-   *         provided duration object
+   *     provided duration object
    */
-  public Time plus( Duration duration ) {
-    return new Time( Math.min(this.jplET_s + duration.toSeconds(), Double.MAX_VALUE) );
+  public Time plus(Duration duration) {
+    return new Time(Math.min(this.jplET_s + duration.toSeconds(), Double.MAX_VALUE));
   }
 
 
@@ -83,12 +85,12 @@ public class Time implements Comparable<Time>{
    * note that the input may be negative, resulting in an addition
    *
    * @param duration IN the duration backwards from this time to return a
-   *        timepoint for
+   *     timepoint for
    * @return a new time object that is prior to this time by the provided
-   *         duration object
+   *     duration object
    */
-  public Time minus( Duration duration ) {
-    return new Time( Math.max(this.jplET_s - duration.toSeconds(), 0.0 ));
+  public Time minus(Duration duration) {
+    return new Time(Math.max(this.jplET_s - duration.toSeconds(), 0.0));
   }
 
 
@@ -100,10 +102,10 @@ public class Time implements Comparable<Time>{
    *
    * @param o IN the time to calculate the duration difference to
    * @return a new duration object representing the duration elapsed from
-   *         this time up to the provided argument time, possibly negative
+   *     this time up to the provided argument time, possibly negative
    */
-  public Duration minus( Time o ) {
-    return Duration.ofSeconds( this.jplET_s - o.jplET_s );
+  public Duration minus(Time o) {
+    return Duration.ofSeconds(this.jplET_s - o.jplET_s);
   }
 
 
@@ -114,18 +116,19 @@ public class Time implements Comparable<Time>{
    * may be negative)
    *
    * @return a negative, zero, or positive number in the event this time
-   *         is, respectively, less, equal, or greater than the provided
-   *         time argument
+   *     is, respectively, less, equal, or greater than the provided
+   *     time argument
    */
-  @Override public int compareTo( Time o ) {
-    return Double.compare( this.jplET_s, o.jplET_s );
+  @Override
+  public int compareTo(Time o) {
+    return Double.compare(this.jplET_s, o.jplET_s);
   }
 
-  public boolean biggerThan(Time otherTime){
+  public boolean biggerThan(Time otherTime) {
     return compareTo(otherTime) > 0;
   }
 
-  public boolean smallerThan(Time otherTime){
+  public boolean smallerThan(Time otherTime) {
     return compareTo(otherTime) < 0;
   }
 
@@ -136,13 +139,13 @@ public class Time implements Comparable<Time>{
    * epoch time point
    *
    * @return the number of milliseconds of ephemeris time elapsed since the
-   *         reference epoch up to this time point
+   *     reference epoch up to this time point
    */
   public long toEpochMilliseconds() {
-    return (long)( jplET_s * 1000.0 );
+    return (long) (jplET_s * 1000.0);
   }
 
-  public long toSeconds(){
+  public long toSeconds() {
     return (long) jplET_s;
   }
 
@@ -154,7 +157,8 @@ public class Time implements Comparable<Time>{
    *
    * output is in UTC time zone
    */
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return formatDOY.format(toInstant());
   }
 
@@ -164,7 +168,7 @@ public class Time implements Comparable<Time>{
    * @return the java instant matching this time
    */
   public java.time.Instant toInstant() {
-    return java.time.Instant.ofEpochMilli( (long)( jplET_s * 1000.0 ));
+    return java.time.Instant.ofEpochMilli((long) (jplET_s * 1000.0));
   }
 
   /**
@@ -177,9 +181,9 @@ public class Time implements Comparable<Time>{
    * @param s IN the string to parse as a seq timestamp
    * @return a new time object representing the time specified by the string
    */
-  public static Time fromString( String s ) {
-    return new Time( java.time.Instant.from( formatDOY.parse( s ) )
-                     .toEpochMilli() / 1000.0 );
+  public static Time fromString(String s) {
+    return new Time(java.time.Instant.from(formatDOY.parse(s))
+                                     .toEpochMilli() / 1000.0);
   }
 
 
@@ -193,9 +197,9 @@ public class Time implements Comparable<Time>{
    * @param s IN the string to parse as a year, month, day timestamp
    * @return a new time object representing the time specified by the string
    */
-  public static Time fromDOM( String s ) {
-    return new Time( java.time.Instant.from( formatDOM.parse( s ) )
-                     .toEpochMilli() / 1000.0 );
+  public static Time fromDOM(String s) {
+    return new Time(java.time.Instant.from(formatDOM.parse(s))
+                                     .toEpochMilli() / 1000.0);
   }
 
 
@@ -205,14 +209,14 @@ public class Time implements Comparable<Time>{
    * client code should use the other factories / add methods
    *
    * @param jplET_s IN the duration from the reference epoch measured in
-   *        ephemeris time seconds
+   *     ephemeris time seconds
    */
-  protected Time( double jplET_s ) {
-    this.jplET_s =jplET_s;
+  protected Time(double jplET_s) {
+    this.jplET_s = jplET_s;
   }
 
-  public static Time fromMilli(long milli){
-    return new Time(milli/1000.0);
+  public static Time fromMilli(long milli) {
+    return new Time(milli / 1000.0);
   }
 
   /**
@@ -234,7 +238,7 @@ public class Time implements Comparable<Time>{
    * the constant object representing the zero time, ie the reference epoch
    * time point
    */
-  private static Time zeroConstant = new Time( 0.0 );
+  private static Time zeroConstant = new Time(0.0);
 
 
   /**
@@ -243,9 +247,9 @@ public class Time implements Comparable<Time>{
    * produces UTC times in the form 2020-122T14:33:66.221
    */
   private static final DateTimeFormatter formatDOY =
-          new DateTimeFormatterBuilder().appendPattern("uuuu-DDD'T'HH:mm:ss")
-                  .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).toFormatter()
-                  .withZone(ZoneId.of("Z"));
+      new DateTimeFormatterBuilder().appendPattern("uuuu-DDD'T'HH:mm:ss")
+                                    .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true).toFormatter()
+                                    .withZone(ZoneId.of("Z"));
 
 
   /**
@@ -254,16 +258,16 @@ public class Time implements Comparable<Time>{
    * produces UTC times in the form 2020-11-30T14:33:66.221
    */
   private static DateTimeFormatter formatDOM
-    = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-    .withZone( ZoneId.of("Z") );
+      = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
+                         .withZone(ZoneId.of("Z"));
 
-  public enum Operator{
+  public enum Operator {
     PLUS,
     MINUS,
   }
 
-  public static Time performOperation(Operator op, Time t1, Duration d){
-    switch (op){
+  public static Time performOperation(Operator op, Time t1, Duration d) {
+    switch (op) {
       case PLUS:
         return t1.plus(d);
       case MINUS:
