@@ -75,11 +75,34 @@ public abstract class ProductParsers {
     }
 
     public <S> VariadicProductParser<S> field(final String key, final JsonParser<S> valueParser) {
-      return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, false)));
+      return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, false)), false);
     }
 
     public <S> VariadicProductParser<Optional<S>> optionalField(final String key, final JsonParser<S> valueParser) {
-      return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, true)));
+      return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, true)), false);
+    }
+
+    public JsonObjectParser<Unit> rest() {
+      return new JsonObjectParser<>() {
+        @Override
+        public JsonObject getSchema(final Map<Object, String> anchors) {
+          return Json
+              .createObjectBuilder()
+              .add("type", "object")
+              .build();
+        }
+
+        @Override
+        public JsonParseResult<Unit> parse(final JsonValue json) {
+          if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
+          return JsonParseResult.success(Unit.UNIT);
+        }
+
+        @Override
+        public JsonObject unparse(final Unit value) {
+          return Json.createObjectBuilder().build();
+        }
+      };
     }
   }
 
@@ -87,31 +110,35 @@ public abstract class ProductParsers {
   public static final class VariadicProductParser<T> implements JsonObjectParser<T> {
     // INVARIANT: `fields` must be non-empty.
     private final List<FieldSpec<?>> fields;
+    private final boolean acceptUnspecified;
 
     /** @param fields must be non-empty. */
-    private VariadicProductParser(final @Owned List<FieldSpec<?>> fields) {
+    private VariadicProductParser(final @Owned List<FieldSpec<?>> fields, final boolean acceptUnspecified) {
       this.fields = fields;
+      this.acceptUnspecified = acceptUnspecified;
     }
 
     @Override
     public JsonParseResult<T> parse(final JsonValue json) {
       if (!(json instanceof JsonObject obj)) return JsonParseResult.failure("expected object");
 
-      // Detect unexpected fields in the json
-      // TODO: We should return all unexpected fields, but currently
-      //       we can only return one failure reason, with one set of
-      //       breadcrumbs. When we allow multiple failure reasons
-      //       this should be updated to build a failure reason for
-      //       each unexpected parameter provided
-      for (final var param : obj.entrySet()) {
-        final var name = param.getKey();
+      if (!this.acceptUnspecified) {
+        // Detect unexpected fields in the json
+        // TODO: We should return all unexpected fields, but currently
+        //       we can only return one failure reason, with one set of
+        //       breadcrumbs. When we allow multiple failure reasons
+        //       this should be updated to build a failure reason for
+        //       each unexpected parameter provided
+        for (final var param : obj.entrySet()) {
+          final var name = param.getKey();
 
-        if (getFieldSpec(name).isEmpty()) {
-          return JsonParseResult
-              .<T>failure("Unexpected field present")
-              .prependBreadcrumb(
-                  Breadcrumb.ofString(name)
-              );
+          if (getFieldSpec(name).isEmpty()) {
+            return JsonParseResult
+                .<T>failure("Unexpected field present")
+                .prependBreadcrumb(
+                    Breadcrumb.ofString(name)
+                );
+          }
         }
       }
 
@@ -179,8 +206,10 @@ public abstract class ProductParsers {
           // an object containing all and only the listed properties
           .add("type", "object")
           .add("properties", fieldSchemas)
-          .add("required", requiredFields)  // all
-          .add("additionalProperties", JsonValue.FALSE)  // only
+          .add("required", // all
+               requiredFields)
+          .add("additionalProperties", // and only
+               (this.acceptUnspecified) ? JsonValue.TRUE : JsonValue.FALSE)
           .build();
     }
 
@@ -233,14 +262,18 @@ public abstract class ProductParsers {
     VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {
       throwIfKeyExists(key);
 
-      return new VariadicProductParser<>(extend(this.fields, new FieldSpec<>(key, valueParser, false)));
+      return new VariadicProductParser<>(
+          extend(this.fields, new FieldSpec<>(key, valueParser, false)),
+          this.acceptUnspecified);
     }
 
     public <S>
     VariadicProductParser<Pair<T, Optional<S>>> optionalField(final String key, final JsonParser<S> valueParser) {
       throwIfKeyExists(key);
 
-      return new VariadicProductParser<>(extend(this.fields, new FieldSpec<>(key, valueParser, true)));
+      return new VariadicProductParser<>(
+          extend(this.fields, new FieldSpec<>(key, valueParser, true)),
+          this.acceptUnspecified);
     }
 
     private void throwIfKeyExists(final String key) {
@@ -249,6 +282,10 @@ public abstract class ProductParsers {
           throw new RuntimeException("Parser already defined for key `" + key + "`");
         }
       }
+    }
+
+    public JsonParser<T> rest() {
+      return new VariadicProductParser<>(this.fields, true);
     }
 
     private static <T> List<T> extend(final List<T> list, final T element) {
