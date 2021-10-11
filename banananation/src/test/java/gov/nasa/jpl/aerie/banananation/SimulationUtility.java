@@ -21,6 +21,7 @@ public final class SimulationUtility {
 
   private static <$Schema> Adaptation<$Schema, ?> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
     final var factory = new GeneratedAdaptationFactory();
+    // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
   }

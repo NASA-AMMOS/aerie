@@ -160,6 +160,7 @@ public final class LocalAdaptationService implements AdaptationService {
   public Map<String, ValueSchema> getStatesSchemas(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
+    // TODO: [AERIE-1516] Teardown the adaptation after use to release any system resources (e.g. threads).
     return loadConfiguredAdaptation(adaptationId).getStateSchemas();
   }
 
@@ -218,6 +219,7 @@ public final class LocalAdaptationService implements AdaptationService {
   throws NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoadException
   {
     try {
+      // TODO: [AERIE-1516] Teardown the adaptation after use to release any system resources (e.g. threads).
       return this.loadConfiguredAdaptation(adaptationId)
                  .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
     } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
@@ -251,6 +253,7 @@ public final class LocalAdaptationService implements AdaptationService {
           "No mission model configuration defined for adaptation. Simulations will receive an empty set of configuration arguments.");
     }
 
+    // TODO: [AERIE-1516] Teardown the adaptation after use to release any system resources (e.g. threads).
     return loadConfiguredAdaptation(message.adaptationId(), SerializedValue.of(config))
         .simulate(message.activityInstances(), message.samplingDuration(), message.startTime());
   }

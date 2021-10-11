@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +36,11 @@ public final class AdaptationTest {
         final var factory = new GeneratedAdaptationFactory();
         final var model = factory.instantiate(config, builder);
         return new AdaptationFacade<>(builder.build(model, factory.getTaskSpecTypes()));
+    }
+
+    @AfterEach
+    public void teardown() {
+      // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
     }
 
     @Test

@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
+import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
@@ -27,7 +28,8 @@ public class SimulateMapSchedule {
     simulateWithMapSchedule();
   }
 
-  private static <$Schema> Adaptation<$Schema, ?> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
+  private static <$Schema> Adaptation<$Schema, RootModel<?, Mission>>
+  makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
     final var factory = new GeneratedAdaptationFactory();
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
@@ -39,24 +41,28 @@ public class SimulateMapSchedule {
     final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
     final var adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
 
-    final var schedule = loadSchedule();
-    final var startTime = Instant.now();
-    final var simulationDuration = duration(25, SECONDS);
+    try {
+      final var schedule = loadSchedule();
+      final var startTime = Instant.now();
+      final var simulationDuration = duration(25, SECONDS);
 
-    final var simulationResults = SimulationDriver.simulate(
-        adaptation,
-        schedule,
-        startTime,
-        simulationDuration);
+      final var simulationResults = SimulationDriver.simulate(
+          adaptation,
+          schedule,
+          startTime,
+          simulationDuration);
 
-    simulationResults.resourceSamples.forEach((name, samples) -> {
-      System.out.println(name + ":");
-      samples.forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
-    });
+      simulationResults.resourceSamples.forEach((name, samples) -> {
+        System.out.println(name + ":");
+        samples.forEach(point -> System.out.format("\t%s\t%s\n", point.getKey(), point.getValue()));
+      });
 
-    simulationResults.simulatedActivities.forEach((name, activity) -> {
-      System.out.println(name + ": " + activity.start + " for " + activity.duration);
-    });
+      simulationResults.simulatedActivities.forEach((name, activity) -> {
+        System.out.println(name + ": " + activity.start + " for " + activity.duration);
+      });
+    } finally {
+      RootModel.fromPhantom(adaptation.getModel()).close();
+    }
   }
 
   private static Map<String, Pair<Duration, SerializedActivity>> loadSchedule() {

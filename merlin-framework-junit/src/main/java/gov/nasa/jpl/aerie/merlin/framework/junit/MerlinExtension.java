@@ -106,6 +106,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
   public void preDestroyTestInstance(final ExtensionContext extensionContext) {
     final var state = this.getState(extensionContext);
 
+    RootModel.fromPhantom(state.adaptation.getModel()).close();
     state.adaptation = null;
   }
 
