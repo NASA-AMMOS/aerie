@@ -60,7 +60,7 @@ import java.util.Map;
       final var adaptationId = Long.toString(results.getLong(2));
       final var startTimestamp = Timestamp.fromString(results.getString(3));
       final var endTimestamp = Timestamp.fromString(results.getString(4));
-      final var activities = PostgresRepository.parseActivitiesJson(results.getString(5), startTimestamp);
+      final var activities = PostgresPlanRepository.parseActivitiesJson(results.getString(5), startTimestamp);
 
       // @TODO comeback and thread through the sim configuration with this query and the data model,
       //  removing the empty map

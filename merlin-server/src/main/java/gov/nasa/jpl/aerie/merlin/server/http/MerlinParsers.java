@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -205,4 +206,12 @@ public abstract class MerlinParsers {
       .map(Iso.of(
           untuple((name, activityInput, session) -> new HasuraAction<>(name, activityInput, session)),
           $ -> tuple($.name(), $.input(), $.session())));
+
+  public static final JsonParser<HasuraAction<HasuraAction.SimulationInput>> hasuraSimulationActionP
+      = hasuraActionP(
+      productP.field("planId", stringP))
+      .map(Iso.of(
+          untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.SimulationInput(planId), session)),
+          $ -> tuple($.name(), $.input().planId(), $.session())));
+
 }

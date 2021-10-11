@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -11,41 +11,41 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-/*package-local*/ final class GetModelConstraintsAction implements AutoCloseable {
-  // We left join through the mission_model table in order to distinguish
-  //   a mission model without any constraints from a non-existent mission model.
-  // A mission model without constraints will produce a placeholder row with nulls.
+/*package local*/ final class GetPlanConstraintsAction implements AutoCloseable {
+  // We left join through the plan table in order to distinguish
+  //   a plan without any constraints from a non-existent plan.
+  // A plan without constraints will produce a placeholder row with nulls.
   private static final @Language("SQL") String sql = """
     select c.id, c.name, c.summary, c.description, c.definition
-    from mission_model AS m
+    from plan AS p
     left join condition AS c
-      on m.id = c.model_id
-    where m.id = ?
+      on p.id = c.plan_id
+    where p.id = ?
     """;
 
   private final PreparedStatement statement;
 
-  public GetModelConstraintsAction(final Connection connection) throws SQLException {
+  public GetPlanConstraintsAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<String, Constraint> get(final long modelId)
-  throws SQLException, AdaptationRepository.NoSuchAdaptationException
+  public Map<String, Constraint> get(final long planId)
+  throws SQLException, NoSuchPlanException
   {
-    this.statement.setLong(1, modelId);
+    this.statement.setLong(1, planId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new AdaptationRepository.NoSuchAdaptationException();
+      if (!results.next()) throw new NoSuchPlanException(Long.toString(planId));
 
       final var constraints = new HashMap<String, Constraint>();
       do {
         if (isColumnNull(results, 1)) continue;
 
         final var constraint = new Constraint(
-          results.getString(2),
-          results.getString(3),
-          results.getString(4),
-          results.getString(5));
+            results.getString(2),
+            results.getString(3),
+            results.getString(4),
+            results.getString(5));
 
         constraints.put(constraint.name(), constraint);
       } while (results.next());

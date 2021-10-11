@@ -55,7 +55,7 @@ import java.util.function.Supplier;
 
       final var startTimestamp = Timestamp.fromString(results.getString(2));
       final var type = results.getString(3);
-      final var activityArguments = PostgresRepository.parseActivityArgumentsJson(results.getString(4));
+      final var activityArguments = PostgresPlanRepository.parseActivityArgumentsJson(results.getString(4));
 
       return new ActivityInstance(type, startTimestamp, activityArguments);
     }

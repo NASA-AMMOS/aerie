@@ -4,7 +4,7 @@ import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 
 public class PostgresRepositoryActionTest {
 
@@ -23,7 +23,7 @@ public class PostgresRepositoryActionTest {
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);
 
-    final var plans = new PostgresRepository(hikariDataSource);
+    final var plans = new PostgresPlanRepository(hikariDataSource);
 
     System.out.println(plans.getAllPlans());
   }
