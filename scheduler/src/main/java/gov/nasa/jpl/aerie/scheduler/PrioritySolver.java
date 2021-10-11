@@ -284,8 +284,8 @@ public class PrioritySolver implements Solver {
         assert missing != null;
 
         //determine the best activities to satisfy the conflict
-        if (missing instanceof MissingActivityInstanceConflict) {
-          final var acts = getBestNewActivities((MissingActivityInstanceConflict) missing);
+        if (missing instanceof MissingActivityInstanceConflict || missing instanceof MissingActivityTemplateConflict) {
+          final var acts = getBestNewActivities((MissingActivityConflict) missing);
           assert acts != null;
           //add the activities to the output plan
           if (!acts.isEmpty()) {
@@ -449,9 +449,12 @@ public class PrioritySolver implements Solver {
 
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
-        final var act = missingTemplate.getGoal().createActivity();
+        final var template = missingTemplate.getGoal().getActTemplate();
+        final var completeTemplate = new ActivityCreationTemplate.Builder()
+            .basedOn(template).startsIn(new Range<>(startT, startT)).build();
+        final var act = completeTemplate.createActivity(
+            goal.getName() + "_" + java.util.UUID.randomUUID());
         if (act != null) {
-          act.setStartTime(startT);
           newActs.add(act);
 
           //create a matching "window" for the activity
