@@ -7,15 +7,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   private AdaptationBuilderState<$Schema> state;
@@ -71,7 +68,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   }
 
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
-    private final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries = new HashMap<>();
     private final Schema.Builder<$Schema> schemaBuilder;
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
@@ -85,14 +81,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     public <CellType> CellType getInitialState(
         final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> token)
     {
-      // SAFETY: For every entry in the queries map, the type parameters line up.
+      // SAFETY: The only `Query` objects the model should have were returned by `UnbuiltState#allocate`.
       @SuppressWarnings("unchecked")
-      final var query = (Query<$Schema, ?, CellType>) this.queries.get(token);
+      final var query = (EngineQuery<$Schema, ?, CellType>) token;
 
-      return Optional
-          .ofNullable(query)
-          .orElseThrow(() -> new IllegalArgumentException("Unrecognized query"))
-          .getInitialValue();
+      return query.query().getInitialValue();
     }
 
     @Override
@@ -101,11 +94,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
       final var query = this.schemaBuilder.register(projection, applicator);
 
-      final var token = new EngineQuery<>(query);
-
-      this.queries.put(token, query);
-
-      return token;
+      return new EngineQuery<>(query);
     }
 
     @Override
@@ -124,7 +113,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
       final var adaptation = new Adaptation<>(
           model,
-          this.queries,
           this.schemaBuilder.build(),
           this.resourceFamilies,
           this.daemons,
