@@ -264,9 +264,18 @@ public final class ResponseSerializers {
         .add("defaults", serializeArgumentMap(activityType.defaults))
         .build();
   }
+  public static JsonValue serializeActivityTypeAction(final ActivityType activityType) {
+    return Json
+        .createObjectBuilder()
+        .add("name", activityType.name)
+        .add("parameters", serializeActivityType(activityType))
+        .build();
+  }
 
   public static JsonValue serializeActivityTypes(final Map<String, ActivityType> activityTypes) {
-    return serializeMap(ResponseSerializers::serializeActivityType, activityTypes);
+    final var builder = Json.createArrayBuilder();
+    activityTypes.forEach((k, v) -> builder.add(serializeActivityTypeAction(v)));
+    return builder.build();
   }
 
   public static JsonValue serializeConfigurationSchema(final List<Parameter> parameterSchemas) {
