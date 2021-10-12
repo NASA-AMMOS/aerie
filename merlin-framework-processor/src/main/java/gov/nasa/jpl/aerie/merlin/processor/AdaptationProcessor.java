@@ -12,6 +12,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
+import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
 import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
@@ -23,6 +24,9 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -40,12 +44,15 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -282,7 +289,6 @@ public final class AdaptationProcessor implements Processor {
      */
     final var activityDefinitionStyle = this.getActivityDefinitionStyle(activityTypeElement);
 
-
     return new ActivityTypeRecord(activityTypeElement, name, mapper,
                                   validations, parameters, effectModel, activityDefinitionStyle);
   }
@@ -293,13 +299,18 @@ public final class AdaptationProcessor implements Processor {
   {
 
     for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getAnnotation(ActivityType.Parameter.class) != null) return ActivityDefinitionStyle.Classic;
-      if (element.getAnnotation(ActivityType.Template.class) != null) return ActivityDefinitionStyle.AllOptional;
+      if (element.getAnnotation(ActivityType.Parameter.class) != null)
+        return ActivityDefinitionStyle.Classic;
+      if (element.getAnnotation(ActivityType.Template.class) != null)
+        return ActivityDefinitionStyle.AllOptional;
+      if (element.getAnnotation(ActivityType.WithDefaults.class) != null)
+        return ActivityDefinitionStyle.SomeOptional;
     }
 
-    //No @Parameter annotations (not classic)
-    //No @Template annotations (not All Optional)
-    //Must be All required
+    // No @Parameter annotations (not classic)
+    // No @Template annotations (not All Optional)
+    // No @WithDefaults annotations (not Some Optional)
+    // Must be All required
     return ActivityDefinitionStyle.AllRequired;
 
   }
@@ -381,7 +392,7 @@ public final class AdaptationProcessor implements Processor {
         any non-static fields in the record decomposition as a class must
         be parameters defined in the record header definition.
       */
-      case AllOptional, AllRequired -> {
+      case AllOptional, AllRequired, SomeOptional -> {
         for (final var element : activityTypeElement.getEnclosedElements()) {
 
           if (element.getKind() != ElementKind.FIELD) continue;
@@ -455,7 +466,7 @@ public final class AdaptationProcessor implements Processor {
         }
         break;
 
-      case AllRequired:
+      case AllRequired, SomeOptional:
         //There are no defaults if the activity has AllRequired parameters
         //As a result, no method shall be created.
         //Unless there are 0 parameters, in which case a default no-arg constructor may be called.
@@ -471,11 +482,9 @@ public final class AdaptationProcessor implements Processor {
             Diagnostic.Kind.ERROR,
             "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
         );
-
     }
 
     return methodBuilder.build();
-
   }
 
   private MethodSpec
@@ -511,7 +520,7 @@ public final class AdaptationProcessor implements Processor {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("final var template = $T.$L()", activityType.declaration, templateName);
+          methodBuilder = methodBuilder.addStatement("final var template = $N.$N()", activityTypeName, templateName);
           methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
           methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
           break;
@@ -523,64 +532,107 @@ public final class AdaptationProcessor implements Processor {
         methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
         break;
 
+      case SomeOptional:
+        for (final var element : activityType.declaration.getEnclosedElements()) {
+          if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
+          final var defaultsName = element.getSimpleName().toString();
+          methodBuilder = methodBuilder.addStatement(
+              "final var defaults = new $N.$N()",
+              activityTypeName,
+              defaultsName);
+          methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
+          methodBuilder = produceParametersFromDefaultsClass(activityType, methodBuilder);
+          methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
+        }
+        break;
+
       default:
         messager.printMessage(
             Diagnostic.Kind.ERROR,
-            "No matching activity definition style: " + activityDefinitionStyle + " for " + activityTypeName
+            "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
         );
     }
 
+    // Ensure all parameters are non-null
+    methodBuilder = methodBuilder.addCode(
+        activityType.parameters
+            .stream()
+            .map(parameter -> CodeBlock
+                .builder()
+                .addStatement(
+                    "if (!$L.isPresent()) throw new $T()",
+                    parameter.name,
+                    EmptyParameterException.class)
+            ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+            .build()
+    ).addCode("\n");
+
+    // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return $L",
-
         switch (activityType.activityDefinitionStyle) {
           case Classic -> "template";
-          case AllOptional, AllRequired -> getRecordInstantiatorWithParams(
+          case AllOptional, AllRequired, SomeOptional -> getRecordInstantiatorWithParams(
               activityType.declaration.getSimpleName().toString(),
               activityType.parameters
           );
-          case SomeOptional -> "null";
         }
     );
 
     return methodBuilder.build();
+  }
 
+  private MethodSpec.Builder
+  produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, final MethodSpec.Builder methodBuilder)
+  {
+    final var optDefaultsClass = activityType.declaration.getEnclosedElements().stream()
+        .filter(e -> e.getAnnotation(ActivityType.WithDefaults.class) != null).findFirst();
+
+    return optDefaultsClass
+        .map(defaultsClass ->
+            methodBuilder.addCode(
+                defaultsClass.getEnclosedElements().stream()
+                    .filter(e -> e.getKind() == ElementKind.FIELD)
+                    .map(fieldName -> CodeBlock
+                        .builder()
+                        .addStatement(
+                            "$L = Optional.ofNullable($L.$L)",
+                            fieldName,
+                            "defaults",
+                            fieldName
+                        )
+                    ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build())
+                .addCode("\n"))
+        .orElse(methodBuilder);
   }
 
   private MethodSpec.Builder
   produceParametersFromTemplate(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
   {
-
     return methodBuilder.addCode(
-                            activityType.parameters
-                                .stream()
-                                .map(parameter -> CodeBlock
-                                    .builder()
-                                    .addStatement(
-                                        "$T $L = $L",
-                                        parameter.type,
-                                        parameter.name,
-                                        (
-                                            switch (activityType.activityDefinitionStyle) {
-                                              case Classic -> "template." + parameter.name;
-                                              case AllOptional, SomeOptional -> "template." + parameter.name + "()";
-                                              case AllRequired -> (
-                                                  List.of("int", "boolean").contains(parameter.type.toString())
-                                                      ? "0"
-                                                      : "null"
-                                              );
-                                            }
-                                        )
-                                    )
-                                )
-                                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                                .build()).addCode("\n");
+        activityType.parameters
+            .stream()
+            .map(parameter -> CodeBlock
+                .builder()
+                .addStatement(
+                    "$T $L = $T$L",
+                    new TypePattern.ClassPattern(ClassName.get(Optional.class), List.of(TypePattern.from(parameter.type))).render(),
+                    parameter.name,
+                    Optional.class,
+                    switch (activityType.activityDefinitionStyle) {
+                      case Classic -> ".ofNullable(template." + parameter.name + ")";
+                      case AllOptional -> ".ofNullable(template." + parameter.name + "())";
+                      case AllRequired, SomeOptional -> ".empty()";
+                    }
+                )
+            )
+            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+            .build()).addCode("\n");
   }
 
   private MethodSpec.Builder
   produceArgumentExtractor(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
   {
-
     return methodBuilder.beginControlFlow(
                             "for (final var $L : $L.entrySet())",
                             "entry",
@@ -596,12 +648,14 @@ public final class AdaptationProcessor implements Processor {
                                     .add("case $S:\n", parameter.name)
                                     .indent()
                                     .addStatement(
-                                        "$L$L = this.mapper_$L"
+                                        "$L$L = $L(this.mapper_$L"
                                         + "\n" + ".deserializeValue($L.getValue())"
-                                        + "\n" + ".getSuccessOrThrow($$ -> new $T())",
+                                        + "\n" + ".getSuccessOrThrow($$ -> new $T()))",
                                         (activityType.activityDefinitionStyle
                                          != ActivityDefinitionStyle.Classic ? "" : "template."),
                                         parameter.name,
+                                        (activityType.activityDefinitionStyle
+                                         != ActivityDefinitionStyle.Classic ? "Optional.ofNullable" : ""),
                                         parameter.name,
                                         "entry",
                                         gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
@@ -744,9 +798,11 @@ public final class AdaptationProcessor implements Processor {
   private String
   getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params)
   {
-    return "new %s(%s)".formatted(
-      declarationName,
-      params.stream().map(parameter -> parameter.name).collect(Collectors.joining(", ")));
+    return "new "
+           + declarationName
+           + "("
+           + params.stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", "))
+           + ")";
   }
 
   private Optional<Map<String, CodeBlock>>
@@ -769,8 +825,7 @@ public final class AdaptationProcessor implements Processor {
       }
     }
 
-    if (failed) return Optional.empty();
-    return Optional.of(mapperBlocks);
+    return failed ? Optional.empty() : Optional.of(mapperBlocks);
   }
 
   private CodeBlock buildConfigurationMapperBlock(final AdaptationRecord adaptation, final TypeElement typeElem) {
