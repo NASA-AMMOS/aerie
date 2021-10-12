@@ -325,7 +325,7 @@ public final class LocalAdaptationService implements AdaptationService {
     try {
       final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
       final var adaptation =
-          AdaptationLoader.loadAdaptationFactory(adaptationJar.path, adaptationJar.name, adaptationJar.version);
+          AdaptationLoader.loadAdaptationFactory(missionModelDataPath.resolve(adaptationJar.path), adaptationJar.name, adaptationJar.version);
       return new AdaptationFacade.Unconfigured<>(adaptation);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
@@ -366,7 +366,7 @@ public final class LocalAdaptationService implements AdaptationService {
     try {
       final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
       final var adaptation =
-          AdaptationLoader.loadAdaptation(configuration, adaptationJar.path, adaptationJar.name, adaptationJar.version);
+          AdaptationLoader.loadAdaptation(configuration, missionModelDataPath.resolve(adaptationJar.path), adaptationJar.name, adaptationJar.version);
       return new AdaptationFacade<>(adaptation);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);

@@ -53,8 +53,7 @@ public final class AerieAppDriver {
     final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
-    final var missionModelDataPath = makeMissionModelDataPath(configuration);
-    final var adaptationController = new LocalAdaptationService(missionModelDataPath, stores.adaptations());
+    final var adaptationController = new LocalAdaptationService(configuration.merlinFileStore(), stores.adaptations());
     final var planController = new LocalPlanService(stores.plans(), adaptationController);
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
