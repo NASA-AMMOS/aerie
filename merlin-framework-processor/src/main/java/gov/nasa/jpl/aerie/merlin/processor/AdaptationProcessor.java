@@ -16,6 +16,11 @@ import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
 import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.ActivityMapperInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllOptionalInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllRequiredInsantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.ClassicInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.SomeOptionalInstantiator;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -25,8 +30,6 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
-import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
@@ -44,15 +47,12 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Repeatable;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -102,10 +102,10 @@ public final class AdaptationProcessor implements Processor {
 
   @Override
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    ///Accumulate any information added in this round.
+    /// Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
 
-    //Iterate over all elements annotated with @Adaptation
+    // Iterate over all elements annotated with @Adaptation
     for (final var element : roundEnv.getElementsAnnotatedWith(Adaptation.class)) {
       final var packageElement = (PackageElement) element;
 
@@ -170,7 +170,7 @@ public final class AdaptationProcessor implements Processor {
       }
     }
 
-    ///Allow other annotation processors to process the framework annotations.
+    /// Allow other annotation processors to process the framework annotations.
     return false;
   }
 
@@ -182,6 +182,15 @@ public final class AdaptationProcessor implements Processor {
       final String userText)
   {
     return Collections::emptyIterator;
+  }
+
+  private ActivityMapperInstantiator getMapperInstantiator(final ActivityDefinitionStyle style) {
+    return switch (style) {
+      case AllOptional -> new AllOptionalInstantiator();
+      case AllRequired -> new AllRequiredInsantiator();
+      case Classic -> new ClassicInstantiator();
+      case SomeOptional -> new SomeOptionalInstantiator();
+    };
   }
 
   private AdaptationRecord
@@ -293,11 +302,8 @@ public final class AdaptationProcessor implements Processor {
                                   validations, parameters, effectModel, activityDefinitionStyle);
   }
 
-  private ActivityDefinitionStyle
-  getActivityDefinitionStyle(final TypeElement activityTypeElement)
-  throws InvalidAdaptationException
+  private ActivityDefinitionStyle getActivityDefinitionStyle(final TypeElement activityTypeElement)
   {
-
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.Parameter.class) != null)
         return ActivityDefinitionStyle.Classic;
@@ -307,12 +313,11 @@ public final class AdaptationProcessor implements Processor {
         return ActivityDefinitionStyle.SomeOptional;
     }
 
-    // No @Parameter annotations (not classic)
-    // No @Template annotations (not All Optional)
-    // No @WithDefaults annotations (not Some Optional)
-    // Must be All required
+    // No @Parameter annotations (not Classic)
+    // No @Template annotations (not AllOptional)
+    // No @WithDefaults annotations (not SomeOptional)
+    // Must be AllRequired
     return ActivityDefinitionStyle.AllRequired;
-
   }
 
   private String
@@ -375,56 +380,13 @@ public final class AdaptationProcessor implements Processor {
     return validations;
   }
 
-  private List<ActivityParameterRecord>
-  getActivityParameters(final TypeElement activityTypeElement) throws InvalidAdaptationException
+  private List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
   {
-    final var parameters = new ArrayList<ActivityParameterRecord>();
-
-    var activityDefinitionStyle = this.getActivityDefinitionStyle(activityTypeElement);
-
-    switch (activityDefinitionStyle) {
-
-      /*
-        Record-style parameter extraction does not require reading for the
-        @Parameter tag, due to record styles having parameters built
-        into the record definition itself. As a result, since any additional
-        fields not defined in the header definition of a record must be static,
-        any non-static fields in the record decomposition as a class must
-        be parameters defined in the record header definition.
-      */
-      case AllOptional, AllRequired, SomeOptional -> {
-        for (final var element : activityTypeElement.getEnclosedElements()) {
-
-          if (element.getKind() != ElementKind.FIELD) continue;
-          if (element.getModifiers().contains(Modifier.STATIC)) continue;
-
-          final var name = element.getSimpleName().toString();
-          final var type = element.asType();
-
-          parameters.add(new ActivityParameterRecord(name, type, element));
-
-        }
-      }
-
-      case Classic -> {
-        for (final var element : activityTypeElement.getEnclosedElements()) {
-          if (element.getKind() != ElementKind.FIELD) continue;
-          if (element.getAnnotation(ActivityType.Parameter.class) == null) continue;
-
-          final var name = element.getSimpleName().toString();
-          final var type = element.asType();
-
-          parameters.add(new ActivityParameterRecord(name, type, element));
-        }
-      }
-
-    }
-
-    return parameters;
-
+    return getMapperInstantiator(this.getActivityDefinitionStyle(activityTypeElement))
+        .getActivityParameters(activityTypeElement);
   }
 
-  /*
+  /**
   Returns the default template factory method or constructor for a given activity
   type depending on whether it was written as a Java 16 record-style activity or
   an traditional non-record class activity.
@@ -436,11 +398,9 @@ public final class AdaptationProcessor implements Processor {
   returns "new BiteBananaActivity.defaults()"
   where "defaults" is the factory method annotated with the @Template annotation
    */
-
   private MethodSpec
   generateInstantiateDefaultMethod(final ActivityTypeRecord activityType)
   {
-
     final var activityDefinitionStyle = activityType.activityDefinitionStyle;
 
     var methodBuilder = MethodSpec.methodBuilder("instantiateDefault")
@@ -456,7 +416,7 @@ public final class AdaptationProcessor implements Processor {
         break;
 
       case AllOptional:
-        //Exists @Template method
+        // Exists @Template method
         for (final var element : activityType.declaration.getEnclosedElements()) {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
@@ -467,9 +427,9 @@ public final class AdaptationProcessor implements Processor {
         break;
 
       case AllRequired, SomeOptional:
-        //There are no defaults if the activity has AllRequired parameters
-        //As a result, no method shall be created.
-        //Unless there are 0 parameters, in which case a default no-arg constructor may be called.
+        // There are no defaults if the activity has AllRequired parameters
+        // As a result, no method shall be created.
+        // Unless there are 0 parameters, in which case a default no-arg constructor may be called.
         if (activityType.parameters.size() != 0) {
           methodBuilder.addStatement("throw new $T()", NoDefaultInstanceException.class);
         } else {
@@ -490,7 +450,6 @@ public final class AdaptationProcessor implements Processor {
   private MethodSpec
   generateInstantiateMethod(final ActivityTypeRecord activityType)
   {
-
     var activityDefinitionStyle = activityType.activityDefinitionStyle;
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
@@ -520,7 +479,7 @@ public final class AdaptationProcessor implements Processor {
           if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
           if (element.getAnnotation(ActivityType.Template.class) == null) continue;
           var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("final var template = $N.$N()", activityTypeName, templateName);
+          methodBuilder = methodBuilder.addStatement("final var template = $T.$L()", activityTypeName, templateName);
           methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
           methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
           break;
@@ -537,7 +496,7 @@ public final class AdaptationProcessor implements Processor {
           if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
           final var defaultsName = element.getSimpleName().toString();
           methodBuilder = methodBuilder.addStatement(
-              "final var defaults = new $N.$N()",
+              "final var defaults = new $T.$L()",
               activityTypeName,
               defaultsName);
           methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
@@ -941,48 +900,9 @@ public final class AdaptationProcessor implements Processor {
                         "return $L",
                         "parameters")
                     .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("getArguments")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(
-                        java.util.Map.class,
-                        String.class,
-                        gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
-                    .addParameter(
-                        TypeName.get(activityType.declaration.asType()),
-                        "activity",
-                        Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = new $T()",
-                        "arguments",
-                        ParameterizedTypeName.get(
-                            java.util.HashMap.class,
-                            String.class,
-                            gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
-                    .addCode(
-                        activityType.parameters
-                            .stream()
-                            .map(parameter -> CodeBlock
-                                .builder()
-                                .addStatement(
-                                    "$L.put($S, this.mapper_$L.serializeValue($L.$L))",
-                                    "arguments",
-                                    parameter.name,
-                                    parameter.name,
-                                    "activity",
-                                    parameter.name + (activityType.activityDefinitionStyle
-                                                      != ActivityDefinitionStyle.Classic ? "()" : "")
-                                ))
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                            .build())
-                    .addStatement(
-                        "return $L",
-                        "arguments")
-                    .build())
-            .addMethod(generateInstantiateDefaultMethod(activityType))
-            .addMethod(generateInstantiateMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefinitionStyle).makeGetArgumentsMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefinitionStyle).makeInstantiateDefaultMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefinitionStyle).makeInstantiateMethod(activityType))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getValidationFailures")
