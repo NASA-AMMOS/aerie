@@ -193,13 +193,6 @@ public abstract class MerlinParsers {
           untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
           $ -> tuple($.name(), $.input().planId(), $.session())));
 
-  public static final JsonParser<HasuraAction<HasuraAction.SimulationInput>> hasuraSimulationActionP
-      = hasuraActionP(
-      productP.field("planId", stringP))
-      .map(Iso.of(
-          untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.SimulationInput(planId), session)),
-          $ -> tuple($.name(), $.input().planId(), $.session())));
-
   private static final JsonParser<Long> hasuraEventDataNewP
       = productP
       .field("id", longP)

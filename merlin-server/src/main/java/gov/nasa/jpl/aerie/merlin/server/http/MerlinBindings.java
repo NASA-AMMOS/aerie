@@ -36,7 +36,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstan
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstancePatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraSimulationActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
@@ -197,7 +197,7 @@ public final class MerlinBindings implements Plugin {
 
   private void getSimulationResults(final Context ctx) {
     try {
-      final var body = parseJson(ctx.body(), hasuraSimulationActionP);
+      final var body = parseJson(ctx.body(), hasuraPlanActionP);
       final var planId = body.input().planId();
 
       final var response = this.simulationAction.run(planId);
