@@ -281,6 +281,17 @@ public final class LocalAdaptationService implements AdaptationService {
     Files.delete(path);
   }
 
+  @Override
+  public void updateDerivedData(final String adaptationId)
+  throws NoSuchAdaptationException
+  {
+    try {
+      this.adaptationRepository.updateAdaptationDerivedData(adaptationId, getModelParameters(adaptationId), getActivityTypes(adaptationId));
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
+  }
+
   private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)
   throws IOException, AdaptationRejectedException {
     final var jarFile = new JarFile(jarPath.toFile());

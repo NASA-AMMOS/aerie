@@ -3,12 +3,12 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.json.ProductParsers;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.json.BasicParsers.boolP;
+import static gov.nasa.jpl.aerie.json.BasicParsers.anyP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -214,4 +214,46 @@ public abstract class MerlinParsers {
           untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.SimulationInput(planId), session)),
           $ -> tuple($.name(), $.input().planId(), $.session())));
 
+  private static final JsonParser<Long> hasuraEventDataNewP
+      = productP
+      .field("id", longP)
+      .optionalField("jar_id", longP)
+      .optionalField("mission", stringP)
+      .optionalField("name", stringP)
+      .optionalField("owner", anyP)
+      .optionalField("revision", longP)
+      .optionalField("version", stringP)
+      .map(Iso.of(
+          untuple((id, jarId, mission, name, owner, revision, version) -> id),
+          $ -> tuple($, Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty())));
+
+  private static final JsonParser<Long> hasuraEventDataP
+      = productP
+      .field("new", hasuraEventDataNewP)
+      .optionalField("old", anyP)
+      .map(Iso.of(
+          untuple((newDataId, oldData) -> newDataId),
+          $ -> tuple($, Optional.empty())));
+
+  private static final JsonParser<Long> hasuraEventP
+      = productP
+      .field("data", hasuraEventDataP)
+      .optionalField("op", anyP)
+      .optionalField("session_variables", anyP)
+      .optionalField("trace_context", anyP)
+      .map(Iso.of(
+          untuple((dataId, op, sessionVars, traceCtx) -> dataId),
+          $ -> tuple($, Optional.empty(), Optional.empty(), Optional.empty())));
+
+  public static final JsonParser<HasuraMissionModelEvent> hasuraMissionModelEventTriggerP
+      = productP
+      .optionalField("created_at", anyP)
+      .optionalField("delivery_info", anyP)
+      .field("event", hasuraEventP)
+      .optionalField("id", anyP)
+      .optionalField("table", anyP)
+      .optionalField("trigger", anyP)
+      .map(Iso.of(
+          untuple((createdAt, deliveryInfo, adaptationId, id, table, trigger) -> new HasuraMissionModelEvent(String.valueOf(adaptationId))),
+          $ -> tuple(Optional.empty(), Optional.empty(), Long.parseLong($.adaptationId()), Optional.empty(), Optional.empty(), Optional.empty())));
 }

@@ -217,4 +217,9 @@ public final class StubAdaptationService implements AdaptationService {
   public void deleteFile(final String path) throws FileNotFoundException
   {
   }
+
+  @Override
+  public void updateDerivedData(final String adaptationId) throws NoSuchAdaptationException
+  {
+  }
 }

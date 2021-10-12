@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -224,5 +226,29 @@ public final class MerlinParsersTest {
 
       assertThat(hasuraActivityActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
     }
+  }
+
+  @Test
+  public void testHasuraMissionModelEventParser() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("event", Json
+            .createObjectBuilder()
+            .add("data", Json
+            .createObjectBuilder()
+                .add("new", Json
+                    .createObjectBuilder()
+                    .add("id", 1)
+                    .build())
+                .add("old", JsonValue.NULL)
+                .build())
+            .add("op", "INSERT")
+            .build())
+        .add("id", "8907a407-28a5-440a-8de6-240b80c58a8b")
+        .build();
+
+    final var expected = new HasuraMissionModelEvent("1");
+
+    assertThat(hasuraMissionModelEventTriggerP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
   }
 }
