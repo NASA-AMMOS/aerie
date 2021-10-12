@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 /*package-local*/ final class CreateModelParametersAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     insert into mission_model_parameters (model_id, parameters)
-    values (?, to_json(?::json))
-    on conflict (model_id) do update set parameters = to_json(?::json)
+    values (?, ?::json)
+    on conflict (model_id) do update set parameters = ?::json
     returning model_id
     """;
 
