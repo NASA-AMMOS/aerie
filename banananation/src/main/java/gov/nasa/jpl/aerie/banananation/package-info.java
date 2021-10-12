@@ -15,9 +15,11 @@
 @WithActivityType(LineCountBananaActivity.class)
 @WithActivityType(DecomposingActivity.ParentActivity.class)
 @WithActivityType(DecomposingActivity.ChildActivity.class)
+@WithActivityType(BakeBananaBreadActivity.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.banananation.activities.BakeBananaBreadActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
