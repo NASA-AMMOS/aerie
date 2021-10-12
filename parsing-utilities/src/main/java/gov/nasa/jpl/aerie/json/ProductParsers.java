@@ -6,7 +6,10 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,7 +24,7 @@ public abstract class ProductParsers {
   public interface JsonObjectParser<T> extends JsonParser<T> {
     @Override JsonObject unparse(final T value);
 
-    default <S> JsonObjectParser<S> map(final Iso<T, S> transform) {
+    @Override default <S> JsonObjectParser<S> map(final Iso<T, S> transform) {
       Objects.requireNonNull(transform);
 
       final var self = this;
@@ -72,41 +75,27 @@ public abstract class ProductParsers {
     }
 
     public <S> VariadicProductParser<S> field(final String key, final JsonParser<S> valueParser) {
-      return new VariadicProductParser<>(new FieldSpec<>(key, valueParser, false));
+      return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, false)));
     }
 
     public <S> VariadicProductParser<Optional<S>> optionalField(final String key, final JsonParser<S> valueParser) {
-      return new VariadicProductParser<>(new FieldSpec<>(key, valueParser, true));
+      return new VariadicProductParser<>(List.of(new FieldSpec<>(key, valueParser, true)));
     }
   }
 
   // INVARIANT: T must be of the form Pair<...Pair<Pair<T1, T2>, T3>..., Tn>.
   public static final class VariadicProductParser<T> implements JsonObjectParser<T> {
-    private final ArrayList<FieldSpec<?>> fields;
+    // INVARIANT: `fields` must be non-empty.
+    private final List<FieldSpec<?>> fields;
 
-    private VariadicProductParser(final FieldSpec<?> fieldSpec) {
-      this.fields = new ArrayList<>();
-      this.fields.add(fieldSpec);
-    }
-
-    private VariadicProductParser(final ArrayList<FieldSpec<?>> fields, final FieldSpec<?> fieldSpec) {
-      for (final var field : fields) {
-        if (Objects.equals(field.name, fieldSpec.name)) {
-          throw new RuntimeException("Parser already defined for key `" + fieldSpec.name + "`");
-        }
-      }
-
-      // It's pretty inefficient to copy the set of field specs every time.
-      // We don't expect our sets to grow very large, so this probably isn't a problem.
-      // In the future, we can use a persistent collections library to efficiently append.
-      this.fields = new ArrayList<>(fields);
-      this.fields.add(fieldSpec);
+    /** @param fields must be non-empty. */
+    private VariadicProductParser(final @Owned List<FieldSpec<?>> fields) {
+      this.fields = fields;
     }
 
     @Override
     public JsonParseResult<T> parse(final JsonValue json) {
-      if (!(json instanceof JsonObject)) return JsonParseResult.failure("expected object");
-      final var obj = (JsonObject) json;
+      if (!(json instanceof JsonObject obj)) return JsonParseResult.failure("expected object");
 
       // Detect unexpected fields in the json
       // TODO: We should return all unexpected fields, but currently
@@ -240,27 +229,47 @@ public abstract class ProductParsers {
       }
     }
 
-    public <S> VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {
-      return new VariadicProductParser<>(this.fields, new FieldSpec<>(key, valueParser, false));
+    public <S>
+    VariadicProductParser<Pair<T, S>> field(final String key, final JsonParser<S> valueParser) {
+      throwIfKeyExists(key);
+
+      return new VariadicProductParser<>(extend(this.fields, new FieldSpec<>(key, valueParser, false)));
     }
 
-    public <S> VariadicProductParser<Pair<T, Optional<S>>> optionalField(
-        final String key,
-        final JsonParser<S> valueParser)
-    {
-      return new VariadicProductParser<>(this.fields, new FieldSpec<>(key, valueParser, true));
+    public <S>
+    VariadicProductParser<Pair<T, Optional<S>>> optionalField(final String key, final JsonParser<S> valueParser) {
+      throwIfKeyExists(key);
+
+      return new VariadicProductParser<>(extend(this.fields, new FieldSpec<>(key, valueParser, true)));
+    }
+
+    private void throwIfKeyExists(final String key) {
+      for (final var field : fields) {
+        if (Objects.equals(field.name, key)) {
+          throw new RuntimeException("Parser already defined for key `" + key + "`");
+        }
+      }
+    }
+
+    private static <T> List<T> extend(final List<T> list, final T element) {
+      // It's pretty inefficient to copy the set of field specs every time.
+      // We don't expect our sets to grow very large, so this probably isn't a problem.
+      // In the future, we can use a persistent collections library to efficiently append.
+      final var fields = new ArrayList<>(list);
+      fields.add(element);
+      return fields;
     }
   }
 
-  private static final class FieldSpec<S> {
-    public final String name;
-    public final JsonParser<S> valueParser;
-    public final boolean isOptional;
+  private record FieldSpec<S>(String name, JsonParser<S> valueParser, boolean isOptional) {}
 
-    public FieldSpec(final String name, final JsonParser<S> valueParser, final boolean isOptional) {
-      this.name = name;
-      this.valueParser = valueParser;
-      this.isOptional = isOptional;
-    }
-  }
+  /**
+   * Documents a parameter that takes ownership of a provided value.
+   *
+   * For instance, after invoking a method {@code void foo(@Owned List<?> list)} as {@code foo(xs)},
+   * the value held by the variable {@code xs} should be considered moved and inaccessible to the caller.
+   */
+  // Amusingly, TYPE_USE is necessary for IntelliJ to display the annotation in completions.
+  @Target(ElementType.TYPE_USE)
+  private @interface Owned {}
 }
