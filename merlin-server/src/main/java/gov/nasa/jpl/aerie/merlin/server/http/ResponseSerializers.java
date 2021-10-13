@@ -327,6 +327,19 @@ public final class ResponseSerializers {
     }
   }
 
+  public static JsonValue serializeFailures(final List<String> failures) {
+    if (failures.size() > 0) {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.FALSE)
+                 .add("errors", Json.createArrayBuilder(failures))
+                 .build();
+    } else {
+      return Json.createObjectBuilder()
+                 .add("success", JsonValue.TRUE)
+                 .build();
+    }
+  }
+
   public static JsonValue serializeValidationMessage(final List<Breadcrumb> breadcrumbs, final String message) {
     return Json.createObjectBuilder()
         .add("breadcrumbs", serializeIterable(ResponseSerializers::serializeBreadcrumb, breadcrumbs))
