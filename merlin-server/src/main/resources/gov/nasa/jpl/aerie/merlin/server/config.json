@@ -3,11 +3,9 @@
       "logging": true,
       "file-store": "/usr/src/app/merlin_file_store" },
   "store":
-    { "type": "mongo",
-      "uri": "mongodb://merlin_mongo:27020",
-      "database": "merlin",
-      "collections":
-        { "mission-models": "adaptations",
-          "plans": "plans",
-          "activities": "activities",
-          "results": "simulationResults" } } }
+    { "type": "postgres",
+      "server": "postgres",
+      "port": 5432,
+      "user": "aerie",
+      "password": "aerie",
+      "database": "aerie" } }
