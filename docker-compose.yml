@@ -1,35 +1,29 @@
 version: "3.7"
 services:
-  merlin_mongo:
-    command: ["mongod", "--port", "27020", "--smallfiles"]
-    image: mongo:3.2
-    ports: ["27020:27020"]
-    volumes: ["merlin_mongo_data:/data/db"]
   merlin:
     build:
       context: .
       dockerfile: scripts/dockerfiles/merlin.Dockerfile
-    depends_on: ["merlin_mongo"]
+    depends_on: ["postgres"]
     ports: ["27183:27183"]
     restart: always
     volumes:
       - file_store:/usr/src/app/merlin_file_store
   postgres:
-    image: postgres
-    ports: ["5432:5432"]
     environment:
       POSTGRES_DB: aerie
       POSTGRES_PASSWORD: aerie
       POSTGRES_USER: aerie
+    image: postgres
+    ports: ["5432:5432"]
     restart: always
-    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
   aerie_ui:
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
     depends_on: ["postgres"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
     ports: ["80:80"]
-  aerie_apollo:
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-apollo:develop"
-    ports: ["27184:27184"]
+    restart: always
   aerie_gateway:
     depends_on: ["postgres"]
     image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-gateway:develop"
@@ -39,17 +33,16 @@ services:
       - file_store:/app/files
   hasura:
     depends_on: ["postgres"]
-    image: "hasura/graphql-engine:v2.0.9"
-    ports: ["8080:8080"]
-    restart: always
     environment:
       AERIE_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
+    image: "hasura/graphql-engine:v2.0.9"
+    ports: ["8080:8080"]
+    restart: always
 
 volumes:
   file_store:
-  merlin_mongo_data:
   postgres_data:
