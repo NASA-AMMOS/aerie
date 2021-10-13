@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.ValidationException;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +40,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.constraintP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraValidateActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.newPlanP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planPatchP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
@@ -124,7 +127,7 @@ public final class MerlinBindings implements Plugin {
             path(":activityTypeId", () -> {
               get(this::getActivityType);
               path("validate", () -> {
-                post(this::validateActivityParameters);
+                post(this::validateActivityParametersLegacy);
               });
             });
           });
@@ -155,6 +158,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("modelUpdate", () -> {
         post(this::postModelUpdate);
+      });
+      path("validateActivityArguments", () -> {
+        post(this::validateActivityArguments);
       });
     });
 
@@ -640,7 +646,29 @@ public final class MerlinBindings implements Plugin {
     }
   }
 
-  private void validateActivityParameters(final Context ctx) {
+  private void validateActivityArguments(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraValidateActivityActionP).input();
+
+      final var missionModelId = input.missionModelId();
+      final var activityTypeName = input.activityTypeName();
+      final var activityArguments = input.arguments();
+
+      final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
+
+      final var failures = this.adaptationService.validateActivityParameters(missionModelId, serializedActivity);
+
+      ctx.result(ResponseSerializers.serializeFailures(failures).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void validateActivityParametersLegacy(final Context ctx) {
     try {
       final var adaptationId = ctx.pathParam("adaptationId");
       final var activityTypeId = ctx.pathParam("activityTypeId");
