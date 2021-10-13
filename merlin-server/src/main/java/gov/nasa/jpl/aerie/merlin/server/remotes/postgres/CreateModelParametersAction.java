@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -13,8 +12,8 @@ import java.util.stream.Collectors;
 /*package-local*/ final class CreateModelParametersAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     insert into mission_model_parameters (model_id, parameters)
-    values (?, to_json(?::json))
-    on conflict (model_id) do update set parameters = to_json(?::json)
+    values (?, ?::json)
+    on conflict (model_id) do update set parameters = ?::json
     returning model_id
     """;
 
@@ -27,9 +26,8 @@ import java.util.stream.Collectors;
   public long apply(final long modelId, final List<Parameter> parameters) throws SQLException, FailedInsertException {
     this.statement.setLong(1, modelId);
     final var paramMap = parameters.stream().collect(Collectors.toMap(Parameter::name, Parameter::schema));
-    final var paramJson = ResponseSerializers.serializeMap(ResponseSerializers::serializeValueSchema, paramMap).toString();
-    this.statement.setString(2, paramJson);
-    this.statement.setString(3, paramJson);
+    PreparedStatements.setValueSchemaMap(this.statement, 2, paramMap);
+    PreparedStatements.setValueSchemaMap(this.statement, 3, paramMap);
 
     try (final var results = statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("mission_model_parameters");

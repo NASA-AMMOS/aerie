@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
@@ -9,6 +10,7 @@ import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.Map;
 
 public final class PreparedStatements {
   private PreparedStatements() {}
@@ -28,5 +30,10 @@ public final class PreparedStatements {
   public static void setSerializedValue(final PreparedStatement statement, final int parameter, final SerializedValue argument)
   throws SQLException {
     statement.setString(parameter, ResponseSerializers.serializeParameter(argument).toString());
+  }
+
+  public static void setValueSchemaMap(final PreparedStatement statement, final int parameter, final Map<String, ValueSchema> parameters)
+  throws SQLException {
+    statement.setString(parameter, ResponseSerializers.serializeMap(ResponseSerializers::serializeValueSchema, parameters).toString());
   }
 }

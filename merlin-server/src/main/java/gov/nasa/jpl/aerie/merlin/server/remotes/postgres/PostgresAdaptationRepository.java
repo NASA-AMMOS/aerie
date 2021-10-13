@@ -125,8 +125,12 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
           final var createActivityTypeAction = new CreateActivityTypeAction(connection)
       ) {
         final var id = toMissionModelId(adaptationId);
+
         createModelParametersAction.apply(id, modelParameters);
-        // TODO: apply `createActivityTypeAction` here to update activity types on mission model update
+
+        for (final var activityType : activityTypes.values()) {
+          createActivityTypeAction.apply(id, activityType.name, activityType.parameters);
+        }
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
