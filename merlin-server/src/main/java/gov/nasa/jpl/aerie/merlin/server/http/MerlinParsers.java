@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
@@ -224,6 +225,7 @@ public abstract class MerlinParsers {
           untuple((dataId, op, sessionVars, traceCtx) -> dataId),
           $ -> tuple($, Optional.empty(), Optional.empty(), Optional.empty())));
 
+
   public static final JsonParser<HasuraMissionModelEvent> hasuraMissionModelEventTriggerP
       = productP
       .optionalField("created_at", anyP)
@@ -235,4 +237,22 @@ public abstract class MerlinParsers {
       .map(Iso.of(
           untuple((createdAt, deliveryInfo, adaptationId, id, table, trigger) -> new HasuraMissionModelEvent(String.valueOf(adaptationId))),
           $ -> tuple(Optional.empty(), Optional.empty(), Long.parseLong($.adaptationId()), Optional.empty(), Optional.empty(), Optional.empty())));
+
+  private static final JsonParser<HasuraAction.ActivityValidationInput> hasuraValidateActivityInputP
+      = productP
+      .field("missionModelId", stringP)
+      .field("activityTypeName", stringP)
+      .field("activityArguments", mapP(serializedValueP))
+      .map(Iso.of(
+          untuple((missionModelId, activityTypeName, arguments) -> new HasuraAction.ActivityValidationInput(
+              missionModelId,
+              activityTypeName,
+              arguments)),
+          $ -> tuple($.missionModelId(), $.activityTypeName(), $.arguments())));
+
+  public static final JsonParser<HasuraAction<HasuraAction.ActivityValidationInput>> hasuraValidateActivityActionP
+      = hasuraActionP(hasuraValidateActivityInputP)
+      .map(Iso.of(
+          untuple((name, activityValidationInput, session) -> new HasuraAction<>(name, activityValidationInput, session)),
+          $ -> tuple($.name(), $.input(), $.session())));
 }
