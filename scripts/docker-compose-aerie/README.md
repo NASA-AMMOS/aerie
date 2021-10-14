@@ -1,6 +1,6 @@
 # docker-compose-aerie
 
-Run [Aerie](https://github.jpl.nasa.gov/MPS/aerie) locally via Docker.
+Run [Aerie](https://github.jpl.nasa.gov/Aerie/aerie) locally via Docker.
 First make sure you have [Docker](https://docs.docker.com/get-docker/) installed.
 
 ## Configuration
