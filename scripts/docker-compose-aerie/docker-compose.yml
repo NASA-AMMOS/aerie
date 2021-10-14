@@ -1,35 +1,46 @@
 version: "3.7"
 services:
+  aerie_gateway:
+    depends_on: ["postgres"]
+    image: "${AERIE_DOCKER_URL}/aerie-gateway:${DOCKER_TAG}"
+    ports: ["9000:9000"]
+    restart: always
+    volumes:
+      - file_store:/app/files
+  aerie_ui:
+    depends_on: ["postgres"]
+    image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
+    ports: ["80:80"]
+    restart: always
+  hasura:
+    depends_on: ["postgres"]
+    environment:
+      AERIE_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
+    image: "hasura/graphql-engine:v2.0.9"
+    ports: ["8080:8080"]
+    restart: always
   merlin:
+    depends_on: ["postgres"]
     image: "${AERIE_DOCKER_URL}/merlin:${DOCKER_TAG}"
-    depends_on: ["merlin_mongo"]
     ports: ["27183:27183"]
     restart: always
     volumes:
-      - merlin_file_store:/usr/src/app/merlin_file_store
-  merlin_mongo:
-    command: ["mongod", "--port", "27020", "--smallfiles"]
-    image: mongo:3.2
-    ports: ["27020:27020"]
-    volumes: ["merlin_mongo_data:/data/db"]
-  aerie_ui:
-    image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
-    depends_on: ["postgres"]
-    ports: ["80:80"]
-  aerie_apollo:
-    image: "${AERIE_DOCKER_URL}/aerie-apollo:${DOCKER_TAG}"
-    ports: ["27184:27184"]
+      - file_store:/usr/src/app/merlin_file_store
   postgres:
-    image: postgres
-    ports: ["5432:5432"]
     environment:
       POSTGRES_DB: aerie
       POSTGRES_PASSWORD: aerie
       POSTGRES_USER: aerie
+    image: postgres
+    ports: ["5432:5432"]
     restart: always
-    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  merlin_file_store:
-  merlin_mongo_data:
+  file_store:
   postgres_data:
