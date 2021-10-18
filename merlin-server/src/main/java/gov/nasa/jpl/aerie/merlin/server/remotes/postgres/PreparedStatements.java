@@ -12,6 +12,8 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.Map;
 
+import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
+
 public final class PreparedStatements {
   private PreparedStatements() {}
 
@@ -32,8 +34,9 @@ public final class PreparedStatements {
     statement.setString(parameter, ResponseSerializers.serializeParameter(argument).toString());
   }
 
+
   public static void setValueSchemaMap(final PreparedStatement statement, final int parameter, final Map<String, ValueSchema> parameters)
   throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeMap(ResponseSerializers::serializeValueSchema, parameters).toString());
+    statement.setString(parameter, ResponseSerializers.serializeMap(valueSchemaP::unparse, parameters).toString());
   }
 }
