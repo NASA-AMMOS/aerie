@@ -20,6 +20,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
@@ -92,9 +93,7 @@ public final class AerieAppDriver {
       return new Stores(
           new PostgresPlanRepository(hikariDataSource),
           new PostgresAdaptationRepository(hikariDataSource),
-          //new PostgresResultsCellRepository(hikariDataSource));
-          // TODO: TEMPORARY WORKAROUND UNTIL POSTGRES CACHING IS COMPLETE
-          new InMemoryResultsCellRepository());
+          new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore c) {
       return new Stores(
           new InMemoryPlanRepository(),
