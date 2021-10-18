@@ -6,8 +6,9 @@ import org.intellij.lang.annotations.Language;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatements.setSerializedValue;
+import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 /*package-local*/ final class CreateActivityArgumentsAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
@@ -28,7 +29,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
   ) throws SQLException {
     this.statement.setLong(1, activityId);
     this.statement.setString(2, name);
-    setSerializedValue(this.statement, 3, value);
+    this.statement.setString(3, serializedValueP.unparse(value).toString());
 
     this.statement.addBatch();
   }
@@ -37,7 +38,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     try {
       final var results = this.statement.executeBatch();
       for (final var result : results) {
-        if (result != 1) throw new FailedInsertException("activity_argument");
+        if ( result == Statement.EXECUTE_FAILED) throw new FailedInsertException("activity_argument");
       }
     } finally {
       this.statement.clearBatch();
