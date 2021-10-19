@@ -53,7 +53,7 @@ public final class StubAdaptationService implements AdaptationService {
       Map.of(),
       Map.of(),
       Map.of(),
-      Instant.EPOCH);
+      Instant.EPOCH, null);
 
   static {
     EXISTENT_ADAPTATION = new AdaptationJar();

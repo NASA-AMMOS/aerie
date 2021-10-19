@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
@@ -365,8 +366,8 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final SimulationEngine<?> engine,
       final Instant startTime,
       final Duration elapsedTime,
-      final Map<String, String> taskToPlannedDirective
-  ) {
+      final Map<String, String> taskToPlannedDirective,
+      final TemporalEventSource events) {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
@@ -496,7 +497,12 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       }
     });
 
-    return new SimulationResults(realProfiles, discreteProfiles, simulatedActivities, unsimulatedActivities, startTime);
+    return new SimulationResults(realProfiles,
+                                 discreteProfiles,
+                                 simulatedActivities,
+                                 unsimulatedActivities,
+                                 startTime,
+                                 events);
   }
 
   /** A handle for processing requests from a modeled resource or condition. */

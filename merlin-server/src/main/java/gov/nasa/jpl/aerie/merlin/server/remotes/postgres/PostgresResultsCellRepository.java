@@ -341,7 +341,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         discreteProfiles,
         activities,
         unfinishedActivities,
-        simulationStart
+        simulationStart,
+        null
     );
   }
 
