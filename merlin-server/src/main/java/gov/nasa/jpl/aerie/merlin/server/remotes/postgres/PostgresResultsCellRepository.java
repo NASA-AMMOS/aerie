@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -337,12 +338,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
 
+    // TODO: Events are not currently persisted in the database. When they are, this stub will need to be updated.
+    final var events = new TemporalEventSource();
+
     return new SimulationResults(
         realProfiles,
         discreteProfiles,
         activities,
         unfinishedActivities,
-        simulationStart
+        simulationStart,
+        events
     );
   }
 
