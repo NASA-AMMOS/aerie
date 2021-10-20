@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -285,11 +284,22 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public void updateDerivedData(final String adaptationId)
+  public void refreshModelParameters(final String adaptationId)
   throws NoSuchAdaptationException
   {
     try {
-      this.adaptationRepository.updateAdaptationDerivedData(adaptationId, getModelParameters(adaptationId), getActivityTypes(adaptationId));
+      this.adaptationRepository.updateModelParameters(adaptationId, getModelParameters(adaptationId));
+    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+      throw new NoSuchAdaptationException(adaptationId, ex);
+    }
+  }
+
+  @Override
+  public void refreshActivityTypes(final String adaptationId)
+  throws NoSuchAdaptationException
+  {
+    try {
+      this.adaptationRepository.updateActivityTypes(adaptationId, getActivityTypes(adaptationId));
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }

@@ -115,19 +115,25 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
   }
 
   @Override
-  public void updateAdaptationDerivedData(
-      final String adaptationId,
-      final List<Parameter> modelParameters,
-      final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException {
+  public void updateModelParameters(final String adaptationId, final List<Parameter> modelParameters)
+  throws NoSuchAdaptationException {
     try (final var connection = this.dataSource.getConnection()) {
-      try (
-          final var createModelParametersAction = new CreateModelParametersAction(connection);
-          final var createActivityTypeAction = new CreateActivityTypeAction(connection)
-      ) {
+      try (final var createModelParametersAction = new CreateModelParametersAction(connection)) {
         final var id = toMissionModelId(adaptationId);
-
         createModelParametersAction.apply(id, modelParameters);
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to update derived data for mission model with id `%s`".formatted(adaptationId), ex);
+    }
+  }
 
+  @Override
+  public void updateActivityTypes( final String adaptationId, final Map<String, ActivityType> activityTypes)
+  throws NoSuchAdaptationException {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
+        final var id = toMissionModelId(adaptationId);
         for (final var activityType : activityTypes.values()) {
           createActivityTypeAction.apply(id, activityType.name, activityType.parameters);
         }
