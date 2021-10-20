@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
@@ -33,7 +32,7 @@ public final class DevAppDriver {
     final Javalin javalin = Javalin.create(config -> config
         .enableDevLogging()
         .enableCorsForAllOrigins()
-        .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
+        .registerPlugin(new MerlinBindings(adaptationController, simulationAction))
         .registerPlugin(new LocalAppExceptionBindings())
         .registerPlugin(new AdaptationRepositoryExceptionBindings())
         .registerPlugin(new AdaptationExceptionBindings()));

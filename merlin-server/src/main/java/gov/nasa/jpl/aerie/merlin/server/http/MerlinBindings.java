@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
-import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -32,21 +31,18 @@ import static io.javalin.apibuilder.ApiBuilder.post;
  * translating HTTP request bodies into native Java domain objects, and translating native Java domain objects
  * (including thrown exceptions) into HTTP response bodies.
  *
- * The object to be lifted must implement the {@link PlanService} interface. Formally, it is
- * this interface that the {@code MerlinBindings} class lifts into the domain of HTTP; an object implementing
- * this interface defines the action to take for each HTTP request in an HTTP-independent way.
+ * The objects being lifted implement the {@link AdaptationService} and {@link GetSimulationResultsAction} interfaces.
+ * Formally, these interfaces are the ones {@code MerlinBindings} class lifts into the domain of HTTP;
+ * an object implementing the interface defines the action to take for each HTTP request in an HTTP-independent way.
  */
 public final class MerlinBindings implements Plugin {
-  private final PlanService planService;
   private final AdaptationService adaptationService;
   private final GetSimulationResultsAction simulationAction;
 
   public MerlinBindings(
-      final PlanService planService,
       final AdaptationService adaptationService,
       final GetSimulationResultsAction simulationAction)
   {
-    this.planService = planService;
     this.adaptationService = adaptationService;
     this.simulationAction = simulationAction;
   }

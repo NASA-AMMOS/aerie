@@ -24,7 +24,6 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.MongoResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresAdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -32,7 +31,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
-import gov.nasa.jpl.aerie.merlin.server.services.UncachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
 
@@ -60,7 +58,7 @@ public final class AerieAppDriver {
         new SynchronousSimulationAgent(planController, adaptationController));
     final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
     final var simulationAction = new GetSimulationResultsAction(planController, adaptationController, simulationController);
-    final var merlinBindings = new MerlinBindings(planController, adaptationController, simulationAction);
+    final var merlinBindings = new MerlinBindings(adaptationController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
