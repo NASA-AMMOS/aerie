@@ -24,7 +24,6 @@ import static gov.nasa.jpl.aerie.json.SumParsers.sumP;
 import static gov.nasa.jpl.aerie.json.SumParsers.variant;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
-import static gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper.UriJsonParser.uriP;
 
 public final class AppConfigurationJsonMapper {
   public static AppConfiguration fromJson(final JsonValue config) {
@@ -56,41 +55,6 @@ public final class AppConfigurationJsonMapper {
                   Optional.of($.loggingState()),
                   $.merlinFileStore)));
 
-
-  private record Collections(String plans, String activities, String missionModels, String results) {}
-  private static final JsonParser<Collections> mongoCollectionsP =
-      productP
-          .field("plans", stringP)
-          .field("activities", stringP)
-          .field("mission-models", stringP)
-          .field("results", stringP)
-          .map(Iso.of(
-              untuple((plans, activities, missionModels, results) ->
-                  new Collections(plans, activities, missionModels, results)),
-              $ -> tuple($.plans(), $.activities(), $.missionModels(), $.results())));
-
-  private static final JsonObjectParser<MongoStore> mongoStoreP =
-      productP
-          .field("uri", uriP)
-          .field("database", stringP)
-          .field("collections", mongoCollectionsP)
-          .map(Iso.of(
-              untuple((uri, database, collections) -> new MongoStore(
-                  uri,
-                  database,
-                  collections.plans(),
-                  collections.activities(),
-                  collections.missionModels(),
-                  collections.results())),
-              $ -> tuple(
-                  $.uri(),
-                  $.database(),
-                  new Collections(
-                      $.planCollection(),
-                      $.activityCollection(),
-                      $.adaptationCollection(),
-                      $.simulationResultsCollection()))));
-
   private static final JsonObjectParser<PostgresStore> postgresStoreP =
       productP
           .field("server", stringP)
@@ -110,7 +74,6 @@ public final class AppConfigurationJsonMapper {
 
   private static final JsonParser<Store> storeP =
       sumP("type", Store.class, List.of(
-          variant("mongo", MongoStore.class, mongoStoreP),
           variant("postgres", PostgresStore.class, postgresStoreP),
           variant("in-memory", InMemoryStore.class, inMemoryStoreP)));
 

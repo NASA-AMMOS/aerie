@@ -1,13 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
 import com.impossibl.postgres.jdbc.PGDataSource;
-import com.mongodb.client.MongoClients;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
-import gov.nasa.jpl.aerie.merlin.server.config.MongoStore;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
@@ -18,9 +16,6 @@ import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryAdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresAdaptationRepository;
@@ -80,24 +75,7 @@ public final class AerieAppDriver {
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
-    if (store instanceof MongoStore c) {
-      final var mongoDatabase = MongoClients
-          .create(c.uri().toString())
-          .getDatabase(c.database());
-
-      return new Stores(
-          new MongoPlanRepository(
-              mongoDatabase,
-              c.planCollection(),
-              c.activityCollection()),
-          new MongoAdaptationRepository(
-              makeJarsPath(config),
-              mongoDatabase,
-              c.adaptationCollection()),
-          new MongoResultsCellRepository(
-              mongoDatabase,
-              c.simulationResultsCollection()));
-    } else if (store instanceof PostgresStore c) {
+    if (store instanceof PostgresStore c) {
       final var pgDataSource = new PGDataSource();
       pgDataSource.setServerName(c.server());
       pgDataSource.setPortNumber(c.port());
