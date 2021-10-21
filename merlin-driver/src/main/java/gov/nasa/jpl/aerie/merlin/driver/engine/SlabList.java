@@ -1,9 +1,11 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
@@ -16,15 +18,20 @@ import java.util.Objects;
   /** ~4 KiB of elements (or at least, references thereof). */
   private static final int SLAB_SIZE = 1024;
 
-  private final LinkedList<ArrayList<T>> slabs = new LinkedList<>();
-  { this.slabs.addLast(new ArrayList<>(SLAB_SIZE)); }
+  private final Slab<T> head = new Slab<>();
+
+  /*derived*/
+  private Slab<T> tail = this.head;
+  /*derived*/
+  private int size = 0;
 
   public void append(final T element) {
-    final var lastSlab = this.slabs.getLast();
-    lastSlab.add(element);
+    this.tail.elements().add(element);
+    this.size += 1;
 
-    if (lastSlab.size() >= SLAB_SIZE) {
-      this.slabs.addLast(new ArrayList<>(SLAB_SIZE));
+    if (this.size % SLAB_SIZE == 0) {
+      this.tail.next().setValue(new Slab<>());
+      this.tail = this.tail.next().getValue();
     }
   }
 
@@ -32,48 +39,56 @@ import java.util.Objects;
   public boolean equals(final Object o) {
     if (!(o instanceof SlabList<?> other)) return false;
 
-    return Objects.equals(this.slabs, other.slabs);
+    return Objects.equals(this.head, other.head);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.slabs);
+    return Objects.hash(this.head);
   }
 
   @Override
   public String toString() {
-    return SlabList.class.getSimpleName() + "[" +
-           "segments=" + this.slabs + ']';
+    return SlabList.class.getSimpleName() + "[" + this.head + ']';
   }
 
+  /**
+   * Returns an iterator that is stable through appends.
+   *
+   * If hasNext() returns false and then additional elements are added to the list,
+   * the iterator can be reused to continue from where it left off.
+   */
   @Override
   public Iterator<T> iterator() {
     return new Iterator<>() {
-      private final Iterator<ArrayList<T>> slabIterator = SlabList.this.slabs.iterator();
-
-      private Iterator<T> segmentIterator = Collections.emptyIterator();
+      private Slab<T> slab = SlabList.this.head;
+      private int index = 0;
 
       @Override
       public boolean hasNext() {
-        ensureNext();
-        return this.segmentIterator.hasNext();
+        while (this.index >= this.slab.elements().size()) {
+          final var nextSlab = this.slab.next().getValue();
+          if (nextSlab == null) break;
+
+          this.index -= this.slab.elements().size();
+          this.slab = nextSlab;
+        }
+
+        return (this.index < this.slab.elements().size());
       }
 
       @Override
       public T next() {
-        ensureNext();
-        return this.segmentIterator.next();
-      }
+        if (!hasNext()) throw new NoSuchElementException();
 
-      private void ensureNext() {
-        // TERMINATION: The list of slabs is finite.
-        while (true) {
-          if (this.segmentIterator.hasNext()) break;
-          if (!this.slabIterator.hasNext()) break;
-
-          this.segmentIterator = this.slabIterator.next().iterator();
-        }
+        return this.slab.elements().get(this.index++);
       }
     };
+  }
+
+  record Slab<T>(ArrayList<T> elements, Mutable<Slab<T>> next) {
+    public Slab() {
+      this(new ArrayList<>(SLAB_SIZE), new MutableObject<>(null));
+    }
   }
 }
