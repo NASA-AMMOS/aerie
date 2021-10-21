@@ -80,11 +80,12 @@ public final class SimulationTimeline<$Timeline> {
   public <Event, CellType, Effect>
   Query<$Timeline, Event, CellType>
   register(
-      final Projection<Event, Effect> projection,
-      final Applicator<Effect, CellType> applicator)
+      final CellType initialState,
+      final Applicator<Effect, CellType> applicator,
+      final Projection<Event, Effect> projection)
   {
     final var index = this.tables.size();
-    final var query = new Query<$Timeline, Event, CellType>(projection, applicator, index);
+    final var query = new Query<$Timeline, Event, CellType>(initialState, applicator, projection, index);
     this.tables.add(query.createTable(this));
 
     return query;

@@ -23,11 +23,12 @@ public final class Query<$Schema, Event, CellType> {
 
   /* package-local */
   <Effect> Query(
-      final Projection<Event, Effect> projection,
+      final CellType initialState,
       final Applicator<Effect, CellType> applicator,
+      final Projection<Event, Effect> projection,
       final int index)
   {
-    this.inner = new Inner<>(projection, applicator, index);
+    this.inner = new Inner<>(initialState, applicator, projection, index);
   }
 
   /* package-local */
@@ -60,23 +61,26 @@ public final class Query<$Schema, Event, CellType> {
   }
 
   private static final class Inner<$Schema, Event, Effect, CellType> {
-    private final Projection<Event, Effect> projection;
+    private final CellType initialState;
     private final Applicator<Effect, CellType> applicator;
+    private final Projection<Event, Effect> projection;
     private final int tableIndex;
 
     private Inner(
-        final Projection<Event, Effect> projection,
+        final CellType initialState,
         final Applicator<Effect, CellType> applicator,
+        final Projection<Event, Effect> projection,
         final int tableIndex)
     {
-      this.projection = projection;
+      this.initialState = initialState;
       this.applicator = applicator;
+      this.projection = projection;
       this.tableIndex = tableIndex;
     }
 
     public <$Timeline extends $Schema>
     Table<$Timeline, Event, ?, CellType> createTable(final SimulationTimeline<$Timeline> database) {
-      return new Table<>(database, this.projection, this.applicator, this.tableIndex);
+      return new Table<>(database, this.initialState, this.applicator, this.projection, this.tableIndex);
     }
 
     public int getTableIndex() {
@@ -84,7 +88,7 @@ public final class Query<$Schema, Event, CellType> {
     }
 
     public CellType getInitialValue() {
-      return this.applicator.initial();
+      return this.applicator.duplicate(this.initialState);
     }
 
     public Optional<Duration> getCurrentExpiry(final CellType state) {

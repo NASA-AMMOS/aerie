@@ -56,8 +56,9 @@ final class ReplayingReactionContext<$Timeline> implements Context {
 
   @Override
   public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
-      final Projection<Event, Effect> projection,
-      final Applicator<Effect, CellType> applicator)
+      final CellType initialState,
+      final Applicator<Effect, CellType> applicator,
+      final Projection<Event, Effect> projection)
   {
     throw new IllegalStateException("Cannot allocate during simulation");
   }

@@ -23,8 +23,9 @@ public interface Context {
   <Event, Effect, CellType>
   Query<?, Event, CellType>
   allocate(
-      final Projection<Event, Effect> projection,
-      final Applicator<Effect, CellType> applicator);
+      CellType initialState,
+      Applicator<Effect, CellType> applicator,
+      Projection<Event, Effect> projection);
 
   // Usable during simulation
   <Event> void emit(Event event, Query<?, Event, ?> query);

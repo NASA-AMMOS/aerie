@@ -30,9 +30,12 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
   @Override
   public <Event, Effect, CellType>
-  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
-  allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return this.state.allocate(projection, applicator);
+  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType> allocate(
+      final CellType initialState,
+      final Applicator<Effect, CellType> applicator,
+      final Projection<Event, Effect> projection
+  ) {
+    return this.state.allocate(initialState, applicator, projection);
   }
 
   @Override
@@ -57,8 +60,9 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     <Event, Effect, CellType>
     gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
     allocate(
-        Projection<Event, Effect> projection,
-        Applicator<Effect, CellType> applicator);
+        CellType initialState,
+        Applicator<Effect, CellType> applicator,
+        Projection<Event, Effect> projection);
 
     <Model>
     Adaptation<$Schema, Model>
@@ -90,9 +94,12 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     @Override
     public <Event, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
-    allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-      final var query = this.schemaBuilder.register(projection, applicator);
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType> allocate(
+        final CellType initialState,
+        final Applicator<Effect, CellType> applicator,
+        final Projection<Event, Effect> projection
+    ) {
+      final var query = this.schemaBuilder.register(initialState, applicator, projection);
 
       return new EngineQuery<>(query);
     }
@@ -134,8 +141,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     @Override
     public <Event, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType>
-    allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, CellType> allocate(
+        final CellType initialState,
+        final Applicator<Effect, CellType> applicator,
+        final Projection<Event, Effect> projection
+    ) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");
     }
 

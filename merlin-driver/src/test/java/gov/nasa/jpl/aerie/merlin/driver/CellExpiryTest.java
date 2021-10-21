@@ -64,54 +64,52 @@ public final class CellExpiryTest {
   ) {
     final var initializer = new AdaptationBuilder<>(builder);
 
-    final var ref = initializer.allocate(new Projection<>() {
-      @Override
-      public Object atom(final Object atom) {
-        return atom;
-      }
+    final var ref = initializer.allocate(
+        new Object(),
+        new Applicator<>() {
+          @Override
+          public Object duplicate(final Object o) {
+            // no internal state
+            return o;
+          }
 
-      @Override
-      public Object empty() {
-        return new Object();
-      }
+          @Override
+          public void apply(final Object o, final Object o2) {
+            // no internal state
+          }
 
-      @Override
-      public Object sequentially(final Object prefix, final Object suffix) {
-        return empty();
-      }
+          @Override
+          public void step(final Object o, final Duration duration) {
+            // no internal state
+          }
 
-      @Override
-      public Object concurrently(final Object left, final Object right) {
-        return empty();
-      }
-    }, new Applicator<>() {
-      @Override
-      public Object initial() {
-        // no internal state
-        return new Object();
-      }
+          @Override
+          public Optional<Duration> getExpiry(final Object o) {
+            return Optional.of(expiry);
+          }
+        },
+        new Projection<>() {
+          @Override
+          public Object atom(final Object atom) {
+            return atom;
+          }
 
-      @Override
-      public Object duplicate(final Object o) {
-        // no internal state
-        return o;
-      }
+          @Override
+          public Object empty() {
+            return new Object();
+          }
 
-      @Override
-      public void apply(final Object o, final Object o2) {
-        // no internal state
-      }
+          @Override
+          public Object sequentially(final Object prefix, final Object suffix) {
+            return empty();
+          }
 
-      @Override
-      public void step(final Object o, final Duration duration) {
-        // no internal state
-      }
-
-      @Override
-      public Optional<Duration> getExpiry(final Object o) {
-        return Optional.of(expiry);
-      }
-    });
+          @Override
+          public Object concurrently(final Object left, final Object right) {
+            return empty();
+          }
+        }
+    );
 
     initializer.resourceFamily(new ResourceFamily<$Schema, String>() {
       @Override

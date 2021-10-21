@@ -45,9 +45,12 @@ public final class InitializationContext<$Schema> implements Context {
 
   @Override
   public <Event, Effect, CellType>
-  Query<?, Event, CellType>
-  allocate(final Projection<Event, Effect> projection, final Applicator<Effect, CellType> applicator) {
-    return this.builder.allocate(projection, applicator);
+  Query<?, Event, CellType> allocate(
+      final CellType initialState,
+      final Applicator<Effect, CellType> applicator,
+      final Projection<Event, Effect> projection
+  ) {
+    return this.builder.allocate(initialState, applicator, projection);
   }
 
   @Override

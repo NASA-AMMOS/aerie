@@ -16,6 +16,7 @@ import static gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline.START_INDEX;
 /* package-local */
 final class Table<$Timeline, Event, Effect, Model> {
   private final SimulationTimeline<$Timeline> database;
+  private final Model initialState;
   private final Projection<Event, Effect> projection;
   private final Applicator<Effect, Model> applicator;
   private final int tableIndex;
@@ -25,13 +26,15 @@ final class Table<$Timeline, Event, Effect, Model> {
 
   public Table(
       final SimulationTimeline<$Timeline> database,
-      final Projection<Event, Effect> projection,
+      final Model initialState,
       final Applicator<Effect, Model> applicator,
-      final int tableIndex)
-  {
+      final Projection<Event, Effect> projection,
+      final int tableIndex
+  ) {
     this.database = database;
-    this.projection = projection;
+    this.initialState = initialState;
     this.applicator = applicator;
+    this.projection = projection;
     this.tableIndex = tableIndex;
   }
 
@@ -50,7 +53,7 @@ final class Table<$Timeline, Event, Effect, Model> {
   }
 
   public Model getAt(final History<$Timeline> history) {
-    if (history.getIndex() == START_INDEX) return this.applicator.initial();
+    if (history.getIndex() == START_INDEX) return this.applicator.duplicate(this.initialState);
 
     // If we already have a model cached for this time point, we can just bail now.
     final Model model;
@@ -71,7 +74,7 @@ final class Table<$Timeline, Event, Effect, Model> {
           model = this.applicator.duplicate(this.getAt(history.getLastBranchBase()));
         } else {
           // Well, we don't have a previous segment. Start with the initial model.
-          model = this.applicator.initial();
+          model = this.applicator.duplicate(this.initialState);
         }
       } else {
         // We found something! Since we have exclusive ownership over our branch segment, we'll remove it from the cache,

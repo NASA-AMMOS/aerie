@@ -40,10 +40,11 @@ public final class Schema<$Schema> {
     public <Event, Effect, CellType>
     Query<$Schema, Event, CellType>
     register(
-        final Projection<Event, Effect> projection,
-        final Applicator<Effect, CellType> applicator)
-    {
-      return this.state.register(this, projection, applicator);
+        final CellType initialState,
+        final Applicator<Effect, CellType> applicator,
+        final Projection<Event, Effect> projection
+    ) {
+      return this.state.register(this, initialState, applicator, projection);
     }
 
     public Schema<$Schema> build() {
@@ -56,8 +57,9 @@ public final class Schema<$Schema> {
       Query<$Schema, Event, CellType>
       register(
           Builder<$Schema> builder,
-          Projection<Event, Effect> projection,
-          Applicator<Effect, CellType> applicator);
+          CellType initialState,
+          Applicator<Effect, CellType> applicator,
+          Projection<Event, Effect> projection);
 
       Schema<$Schema>
       build(Builder<$Schema> builder);
@@ -67,11 +69,12 @@ public final class Schema<$Schema> {
       @Override
       public <Event, Effect, CellType> Query<$Schema, Event, CellType> register(
           final Builder<$Schema> builder,
-          final Projection<Event, Effect> projection,
-          final Applicator<Effect, CellType> applicator)
-      {
+          final CellType initialState,
+          final Applicator<Effect, CellType> applicator,
+          final Projection<Event, Effect> projection
+      ) {
         final var index = builder.queries.size();
-        final var query = new Query<$Schema, Event, CellType>(projection, applicator, index);
+        final var query = new Query<$Schema, Event, CellType>(initialState, applicator, projection, index);
         builder.queries.add(query);
 
         return query;
@@ -95,9 +98,10 @@ public final class Schema<$Schema> {
       @Override
       public <Event, Effect, CellType> Query<$Schema, Event, CellType> register(
           final Builder<$Schema> builder,
-          final Projection<Event, Effect> projection,
-          final Applicator<Effect, CellType> applicator)
-      {
+          final CellType initialState,
+          final Applicator<Effect, CellType> applicator,
+          final Projection<Event, Effect> projection
+      ) {
         throw new IllegalStateException(
             "A schema has already been built from this builder."
             + " Call Schema#extend() to derive a new schema from the built one.");
