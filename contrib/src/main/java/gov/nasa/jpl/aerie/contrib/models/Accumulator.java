@@ -16,7 +16,7 @@ public final class Accumulator implements RealResource {
   }
 
   public Accumulator(final double initialVolume, final double initialRate) {
-    this.ref = new CellRef<>(new LinearIntegrationCell(initialVolume, initialRate));
+    this.ref = new CellRef<>(new LinearIntegrationCell(initialVolume, initialRate), LinearAccumulationEffect.TRAIT);
   }
 
   @Override

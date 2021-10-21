@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.durative;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -30,11 +29,6 @@ public final class DurativeRealCell implements Cell<Collection<Pair<Duration, Re
   @Override
   public DurativeRealCell duplicate() {
     return new DurativeRealCell(this);
-  }
-
-  @Override
-  public EffectTrait<Collection<Pair<Duration, RealDynamics>>> effectTrait() {
-    return new CollectingEffectTrait<>();
   }
 
   @Override
