@@ -8,8 +8,9 @@ public final class CellRef<Event, CellType extends Cell<Event, CellType>> {
 
   public CellRef(final CellType initialState) {
     this.query = ModelActions.context.get().allocate(
-        Projection.from(initialState.effectTrait(), $ -> $),
-        new CellApplicator<>(initialState));
+        initialState,
+        new CellApplicator<>(),
+        Projection.from(initialState.effectTrait(), $ -> $));
   }
 
   public CellType get() {

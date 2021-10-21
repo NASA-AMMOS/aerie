@@ -10,7 +10,7 @@ public interface Initializer<$Schema> {
 
   <Event, Effect, CellType>
   Query<$Schema, Event, CellType>
-  allocate(Projection<Event, Effect> projection, Applicator<Effect, CellType> applicator);
+  allocate(CellType initialState, Applicator<Effect, CellType> applicator, Projection<Event, Effect> projection);
 
   String daemon(TaskFactory<$Schema> factory);
 
