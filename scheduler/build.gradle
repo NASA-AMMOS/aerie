@@ -16,6 +16,7 @@ test {
 dependencies {
   api 'com.apollographql.apollo:apollo-api:2.5.5'
   compileOnly project(':merlin-framework')
+  compileOnly project(':merlin-driver')
   compileOnly project(':contrib')
 
   implementation 'com.google.guava:guava:29.0-jre'
