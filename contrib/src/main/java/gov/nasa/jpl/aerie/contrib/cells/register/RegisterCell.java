@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCell<T>> {
   private T value;
@@ -21,8 +22,8 @@ public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCe
   }
 
   @Override
-  public RegisterEffectTrait<T> effectTrait() {
-    return new RegisterEffectTrait<>();
+  public EffectTrait<RegisterEffect<T>> effectTrait() {
+    return new RegisterEffect.Trait<>();
   }
 
   @Override
@@ -40,5 +41,10 @@ public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCe
 
   public Boolean isConflicted() {
     return this.conflicted;
+  }
+
+  @Override
+  public String toString() {
+    return "{value=%s, conflicted=%s}".formatted(this.getValue(), this.isConflicted());
   }
 }
