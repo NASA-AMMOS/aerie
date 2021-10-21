@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.models.counters;
 
 import gov.nasa.jpl.aerie.contrib.cells.counters.CounterCell;
+import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
@@ -11,7 +12,9 @@ public final class Counter<T> implements DiscreteResource<T> {
   private final CellRef<T, CounterCell<T>> ref;
 
   public Counter(final T initialValue, final T zero, final BinaryOperator<T> adder) {
-    this.ref = new CellRef<>(new CounterCell<>(initialValue, zero, adder));
+    final var trait = new CommutativeMonoid<>(zero, adder);
+
+    this.ref = new CellRef<>(new CounterCell<>(initialValue, trait::sequentially), trait);
   }
 
   public static Counter<Integer> ofInteger(final Integer initialValue) {
