@@ -3,6 +3,9 @@ package gov.nasa.jpl.aerie.merlin.timeline.effects;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -149,8 +152,7 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a sequence of subgraphs.
    */
-  @SafeVarargs
-  public static <Event> EventGraph<Event> sequentially(final EventGraph<Event>... segments) {
+  public static <Event> EventGraph<Event> sequentially(final List<EventGraph<Event>> segments) {
     var acc = EventGraph.<Event>empty();
     for (final var segment : segments) acc = sequentially(acc, segment);
     return acc;
@@ -163,11 +165,34 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a set of concurrent subgraphs.
    */
-  @SafeVarargs
-  public static <Event> EventGraph<Event> concurrently(final EventGraph<Event>... branches) {
+  public static <Event> EventGraph<Event> concurrently(final Collection<EventGraph<Event>> branches) {
     var acc = EventGraph.<Event>empty();
     for (final var branch : branches) acc = concurrently(acc, branch);
     return acc;
+  }
+
+  /**
+   * Create an event graph by combining multiple event graphs of the same type in sequence.
+   *
+   * @param segments A series of event graphs to combine in sequence.
+   * @param <Event> The type of atomic event contained by these graphs.
+   * @return An event graph consisting of a sequence of subgraphs.
+   */
+  @SafeVarargs
+  public static <Event> EventGraph<Event> sequentially(final EventGraph<Event>... segments) {
+    return sequentially(Arrays.asList(segments));
+  }
+
+  /**
+   * Create an event graph by combining multiple event graphs of the same type in parallel.
+   *
+   * @param branches A set of event graphs to combine in parallel.
+   * @param <Event> The type of atomic event contained by these graphs.
+   * @return An event graph consisting of a set of concurrent subgraphs.
+   */
+  @SafeVarargs
+  public static <Event> EventGraph<Event> concurrently(final EventGraph<Event>... branches) {
+    return concurrently(Arrays.asList(branches));
   }
 
   @Override
