@@ -14,7 +14,7 @@ import java.util.Objects;
  * The fixed-size slabs allow for better cache locality when traversing the list forward,
  * and the chain of links allows for cheap extension when a slab reaches capacity.
  */
-/*package-local*/ final class SlabList<T> implements Iterable<T> {
+public final class SlabList<T> implements Iterable<T> {
   /** ~4 KiB of elements (or at least, references thereof). */
   private static final int SLAB_SIZE = 1024;
 
