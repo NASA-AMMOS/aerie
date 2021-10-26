@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ public final class CellExpiryTest {
   @Test
   @DisplayName("Resource profiles are re-queried by the upstream cells' expiry time")
   public void testResourceProfilingByExpiry() {
-    final var model = makeModel(Schema.builder(), "/key", "value", MILLISECONDS.times(500));
+    final var model = makeModel("/key", "value", MILLISECONDS.times(500));
 
     final var results = SimulationDriver.simulate(model, Map.of(), Instant.now(), Duration.SECONDS.times(5));
 
@@ -57,12 +56,11 @@ public final class CellExpiryTest {
   }
 
   private <$Schema> Adaptation<$Schema, ?> makeModel(
-      final Schema.Builder<$Schema> builder,
       final String resourceName,
       final String resourceValue,
       final Duration expiry
   ) {
-    final var initializer = new AdaptationBuilder<>(builder);
+    final var initializer = new AdaptationBuilder<$Schema>();
 
     final var ref = initializer.allocate(
         new Object(),

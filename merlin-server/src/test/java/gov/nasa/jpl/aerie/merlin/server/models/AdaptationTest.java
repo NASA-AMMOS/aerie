@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +27,7 @@ public final class AdaptationTest {
     public void initialize() throws AdaptationFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
-        this.adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
+        this.adaptation = makeAdaptation(new AdaptationBuilder<>(), serializedConfig);
         this.unconfiguredAdaptation = new AdaptationFacade.Unconfigured<>(new GeneratedAdaptationFactory());
     }
 
