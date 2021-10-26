@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EventGraph;
-
 import java.util.ArrayList;
 import java.util.List;
 
