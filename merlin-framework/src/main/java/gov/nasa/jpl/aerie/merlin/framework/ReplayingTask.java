@@ -7,14 +7,17 @@ import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 
 public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
+  private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final Runnable task;
 
   private final ReactionContext.Memory memory = new ReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
 
-  public ReplayingTask(final Scoped<Context> rootContext, final Runnable task) {
+  public ReplayingTask(final ExecutorService executor, final Scoped<Context> rootContext, final Runnable task) {
+    this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
   }
@@ -22,7 +25,7 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
   @Override
   public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
     final var handle = new ReplayingTaskHandle<$Timeline>();
-    final var context = new ReactionContext<>(this.rootContext, this.memory, scheduler, handle);
+    final var context = new ReactionContext<>(this.executor, this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
       this.task.run();

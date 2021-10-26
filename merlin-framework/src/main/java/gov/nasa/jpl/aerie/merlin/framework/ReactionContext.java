@@ -12,10 +12,12 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /* package-local */
 final class ReactionContext<$Timeline> implements Context {
+  private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final TaskHandle<$Timeline> handle;
   private Scheduler<$Timeline> scheduler;
@@ -23,11 +25,13 @@ final class ReactionContext<$Timeline> implements Context {
   private final MemoryCursor memory;
 
   public ReactionContext(
+      final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Memory memory,
       final Scheduler<$Timeline> scheduler,
       final TaskHandle<$Timeline> handle)
   {
+    this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
     this.memory = new MemoryCursor(memory, new MutableInt(0), new MutableInt(0));
     this.scheduler = scheduler;
@@ -72,7 +76,7 @@ final class ReactionContext<$Timeline> implements Context {
   @Override
   public String spawn(final TaskFactory task) {
     return this.memory.doOnce(() -> {
-      return this.scheduler.spawn(task.create());
+      return this.scheduler.spawn(task.create(this.executor));
     });
   }
 
@@ -86,7 +90,7 @@ final class ReactionContext<$Timeline> implements Context {
   @Override
   public String defer(final Duration duration, final TaskFactory task) {
     return this.memory.doOnce(() -> {
-      return this.scheduler.defer(duration, task.create());
+      return this.scheduler.defer(duration, task.create(this.executor));
     });
   }
 

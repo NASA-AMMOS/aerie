@@ -805,7 +805,10 @@ public final class AdaptationProcessor implements Processor {
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                    ClassName.get(adaptation.topLevelModel),
+                    ParameterizedTypeName.get(
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                        WildcardTypeName.subtypeOf(Object.class),
+                        ClassName.get(adaptation.topLevelModel)),
                     ClassName.get(activityType.declaration)))
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addFields(
@@ -974,33 +977,43 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class),
                             TypeVariableName.get("$Schema"),
-                            ClassName.get(adaptation.topLevelModel)),
-                        "model",
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                WildcardTypeName.subtypeOf(Object.class),
+                                ClassName.get(adaptation.topLevelModel))),
+                        "wrapper",
                         Modifier.FINAL)
                     .addParameter(
                         TypeName.get(activityType.declaration.asType()),
                         "activity",
                         Modifier.FINAL)
+                    .addStatement(
+                        "final var $L = $T.fromPhantom($L)",
+                        "model",
+                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
+                        "wrapper")
                     .addCode(
                         activityType.effectModel
                             .map(effectModel -> switch (effectModel.getRight()) {
                               case Threaded -> CodeBlock
                                   .builder()
                                   .addStatement(
-                                      "return $T.threaded(() -> $L.$L($L.value())).create()",
+                                      "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
                                       gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                       "activity",
                                       effectModel.getLeft(),
+                                      "model",
                                       "model")
                                   .build();
 
                               case Replaying -> CodeBlock
                                   .builder()
                                   .addStatement(
-                                      "return $T.replaying(() -> $L.$L($L.value())).create()",
+                                      "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
                                       gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                       "activity",
                                       effectModel.getLeft(),
+                                      "model",
                                       "model")
                                   .build();
                             })
@@ -1153,7 +1166,10 @@ public final class AdaptationProcessor implements Processor {
             .addSuperinterface(
                 ParameterizedTypeName.get(
                     ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.class),
-                    ClassName.get(adaptation.topLevelModel)))
+                    ParameterizedTypeName.get(
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                        WildcardTypeName.subtypeOf(Object.class),
+                        ClassName.get(adaptation.topLevelModel))))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getTaskSpecTypes")
@@ -1164,7 +1180,10 @@ public final class AdaptationProcessor implements Processor {
                         ClassName.get(String.class),
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                            ClassName.get(adaptation.topLevelModel),
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                WildcardTypeName.subtypeOf(Object.class),
+                                ClassName.get(adaptation.topLevelModel)),
                             WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement("return $T.activityTypes", adaptation.getTypesName())
                     .build())
@@ -1188,12 +1207,19 @@ public final class AdaptationProcessor implements Processor {
                         ParameterizedTypeName.get(
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class),
                             TypeVariableName.get("$Schema"),
-                            ClassName.get(adaptation.topLevelModel)))
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                WildcardTypeName.subtypeOf(Object.class),
+                                ClassName.get(adaptation.topLevelModel))))
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
                         gov.nasa.jpl.aerie.merlin.framework.Registrar.class,
                         "builder")
+                    .addStatement(
+                        "final var $L = $T.makeExecutorService()",
+                        "executor",
+                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class)
                     .addCode("\n")
                     .addCode(
                         adaptation.modelConfiguration
@@ -1209,9 +1235,10 @@ public final class AdaptationProcessor implements Processor {
                                                               "configMapper",
                                                               "configuration")
                                                           .addStatement(
-                                                              "final var $L = $T.initializing($L, () -> new $T($L, $L))",
+                                                              "final var $L = $T.initializing($L, $L, () -> new $T($L, $L))",
                                                               "model",
                                                               gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                                              "executor",
                                                               "builder",
                                                               ClassName.get(adaptation.topLevelModel),
                                                               "registrar",
@@ -1220,18 +1247,22 @@ public final class AdaptationProcessor implements Processor {
                             .orElseGet(() -> CodeBlock  // if configuration is not provided
                                                         .builder()
                                                         .addStatement(
-                                                            "final var $L = $T.initializing($L, () -> new $T($L))",
+                                                            "final var $L = $T.initializing($L, $L, () -> new $T($L))",
                                                             "model",
                                                             gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
+                                                            "executor",
                                                             "builder",
                                                             ClassName.get(adaptation.topLevelModel),
                                                             "registrar")
                                                         .build()))
                     .addCode("\n")
                     .addStatement(
-                        "return new $T<>($L)",
-                        gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class,
-                        "model")
+                        "return new $T<$T, $T>($L, $L).toPhantom()",
+                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
+                        TypeVariableName.get("$Schema"),
+                        ClassName.get(adaptation.topLevelModel),
+                        "model",
+                        "executor")
                     .build())
             .addMethod(
                 MethodSpec
@@ -1282,7 +1313,10 @@ public final class AdaptationProcessor implements Processor {
                             ClassName.get(List.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                                ClassName.get(adaptation.topLevelModel),
+                                ParameterizedTypeName.get(
+                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                    WildcardTypeName.subtypeOf(Object.class),
+                                    ClassName.get(adaptation.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypeList",
                         Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
@@ -1304,7 +1338,10 @@ public final class AdaptationProcessor implements Processor {
                             ClassName.get(String.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                                ClassName.get(adaptation.topLevelModel),
+                                ParameterizedTypeName.get(
+                                    ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                                    WildcardTypeName.subtypeOf(Object.class),
+                                    ClassName.get(adaptation.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypes",
                         Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)

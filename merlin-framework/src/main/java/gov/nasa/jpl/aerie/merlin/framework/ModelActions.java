@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 public /*non-final*/ class ModelActions {
   protected ModelActions() {}
@@ -16,16 +17,16 @@ public /*non-final*/ class ModelActions {
   public static Context.TaskFactory threaded(final Runnable task) {
     return new Context.TaskFactory() {
       @Override
-      public <$Timeline> Task<$Timeline> create() {
-        return new ThreadedTask<>(ModelActions.context, task);
+      public <$Timeline> Task<$Timeline> create(final ExecutorService executor) {
+        return new ThreadedTask<>(executor, ModelActions.context, task);
       }
     };
   }
   public static Context.TaskFactory replaying(final Runnable task) {
     return new Context.TaskFactory() {
       @Override
-      public <$Timeline> Task<$Timeline> create() {
-        return new ReplayingTask<>(ModelActions.context, task);
+      public <$Timeline> Task<$Timeline> create(final ExecutorService executor) {
+        return new ReplayingTask<>(executor, ModelActions.context, task);
       }
     };
   }

@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 public interface Context {
   enum ContextType { Initializing, Reacting, Querying }
@@ -28,7 +29,7 @@ public interface Context {
   // Usable during simulation
   <Event> void emit(Event event, Query<?, Event, ?> query);
 
-  interface TaskFactory { <$Timeline> Task<$Timeline> create(); }
+  interface TaskFactory { <$Timeline> Task<$Timeline> create(ExecutorService executor); }
 
   String spawn(TaskFactory task);
   String spawn(String type, Map<String, SerializedValue> arguments);

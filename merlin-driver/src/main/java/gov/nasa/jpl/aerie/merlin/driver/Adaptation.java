@@ -8,18 +8,14 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class Adaptation<$Schema, Model> {
-  private final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries;
-
   private final Phantom<$Schema, Model> model;
   private final Schema<$Schema> schema;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
@@ -28,14 +24,12 @@ public final class Adaptation<$Schema, Model> {
 
   public Adaptation(
       final Phantom<$Schema, Model> model,
-      final Map<gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, ?, ?>, Query<$Schema, ?, ?>> queries,
       final Schema<$Schema> schema,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
       final List<Initializer.TaskFactory<$Schema>> daemons,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
-    this.queries = Objects.requireNonNull(queries);
     this.schema = Objects.requireNonNull(schema);
     this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
@@ -44,16 +38,6 @@ public final class Adaptation<$Schema, Model> {
 
   public Phantom<$Schema, Model> getModel() {
     return this.model;
-  }
-
-  public <Event, State>
-  Optional<Query<$Schema, Event, State>>
-  getQuery(final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? extends $Schema, Event, State> token) {
-    // SAFETY: For every entry in the queries map, the type parameters line up.
-    @SuppressWarnings("unchecked")
-    final var query = (Query<$Schema, Event, State>) this.queries.get(token);
-
-    return Optional.ofNullable(query);
   }
 
   public Map<String, TaskSpecType<Model, ?>> getTaskSpecificationTypes() {

@@ -8,6 +8,8 @@ import gov.nasa.jpl.aerie.merlin.framework.junit.MerlinExtension;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static gov.nasa.jpl.aerie.fooadaptation.generated.ActivityActions.spawn;
@@ -16,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 public final class MissionConfigurationTest {
+  @TestInstance(Lifecycle.PER_CLASS)
   public @Nested final class Test1 {
 
     @RegisterExtension
@@ -36,6 +39,7 @@ public final class MissionConfigurationTest {
     }
   }
 
+  @TestInstance(Lifecycle.PER_CLASS)
   public @Nested final class Test2 {
 
     @RegisterExtension
