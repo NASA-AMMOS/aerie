@@ -48,7 +48,8 @@ public class SimResource<T extends Comparable<T>> implements
   TreeMap<Range<Time>, T> values;
 
     public boolean isEmpty(){
-        return values == null || values.isEmpty();
+      return simResults == null
+             || ( !simResults.realProfiles.containsKey(name) && !simResults.discreteProfiles.containsKey(name));
     }
 
     public void failIfEmpty(){
