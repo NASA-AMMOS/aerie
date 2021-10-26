@@ -75,12 +75,12 @@ loadScripts(document, 'script');</script>
 <section class="class-description" id="class-description">
 <dl class="notes">
 <dt>All Implemented Interfaces:</dt>
-<dd><code>org.junit.jupiter.api.extension.Extension</code>, <code>org.junit.jupiter.api.extension.InvocationInterceptor</code>, <code>org.junit.jupiter.api.extension.ParameterResolver</code>, <code>org.junit.jupiter.api.extension.TestInstancePreDestroyCallback</code></dd>
+<dd><code>org.junit.jupiter.api.extension.BeforeAllCallback</code>, <code>org.junit.jupiter.api.extension.Extension</code>, <code>org.junit.jupiter.api.extension.InvocationInterceptor</code>, <code>org.junit.jupiter.api.extension.ParameterResolver</code>, <code>org.junit.jupiter.api.extension.TestInstancePreDestroyCallback</code></dd>
 </dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">MerlinExtension&lt;Model&gt;</span>
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.api.extension.InvocationInterceptor, org.junit.jupiter.api.extension.TestInstancePreDestroyCallback</span></div>
+implements org.junit.jupiter.api.extension.BeforeAllCallback, org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.api.extension.InvocationInterceptor, org.junit.jupiter.api.extension.TestInstancePreDestroyCallback</span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
@@ -118,35 +118,38 @@ implements org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptDynamicTest(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptDynamicTest</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;&nbsp;invocation,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#beforeAll(org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">beforeAll</a><wbr>(org.junit.jupiter.api.extension.ExtensionContext&nbsp;context)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptDynamicTest(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptDynamicTest</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;&nbsp;invocation,
+ org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;T&gt;&nbsp;T</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptTestClassConstructor(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ReflectiveInvocationContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptTestClassConstructor</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;T&gt;&nbsp;invocation,
+ org.junit.jupiter.api.extension.ReflectiveInvocationContext&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/Constructor.html" title="class or interface in java.lang.reflect" class="external-link">Constructor</a>&lt;T&gt;&gt;&nbsp;invocationContext,
  org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;T&gt;&nbsp;T</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptTestClassConstructor(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ReflectiveInvocationContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptTestClassConstructor</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;T&gt;&nbsp;invocation,
- org.junit.jupiter.api.extension.ReflectiveInvocationContext&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/Constructor.html" title="class or interface in java.lang.reflect" class="external-link">Constructor</a>&lt;T&gt;&gt;&nbsp;invocationContext,
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptTestMethod(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ReflectiveInvocationContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptTestMethod</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;&nbsp;invocation,
+ org.junit.jupiter.api.extension.ReflectiveInvocationContext&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/Method.html" title="class or interface in java.lang.reflect" class="external-link">Method</a>&gt;&nbsp;invocationContext,
  org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptTestMethod(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ReflectiveInvocationContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptTestMethod</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;&nbsp;invocation,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptTestTemplateMethod(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ReflectiveInvocationContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptTestTemplateMethod</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;&nbsp;invocation,
  org.junit.jupiter.api.extension.ReflectiveInvocationContext&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/Method.html" title="class or interface in java.lang.reflect" class="external-link">Method</a>&gt;&nbsp;invocationContext,
  org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#interceptTestTemplateMethod(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation,org.junit.jupiter.api.extension.ReflectiveInvocationContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">interceptTestTemplateMethod</a><wbr>(org.junit.jupiter.api.extension.InvocationInterceptor.Invocation&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Void.html" title="class or interface in java.lang" class="external-link">Void</a>&gt;&nbsp;invocation,
- org.junit.jupiter.api.extension.ReflectiveInvocationContext&lt;<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/reflect/Method.html" title="class or interface in java.lang.reflect" class="external-link">Method</a>&gt;&nbsp;invocationContext,
- org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#preDestroyTestInstance(org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">preDestroyTestInstance</a><wbr>(org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#preDestroyTestInstance(org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">preDestroyTestInstance</a><wbr>(org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MerlinTestContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework.junit">MerlinTestContext</a>&lt;<a href="MerlinExtension.html" title="type parameter in MerlinExtension">Model</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#resolveParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">resolveParameter</a><wbr>(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
- org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#supportsParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">supportsParameter</a><wbr>(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="MerlinTestContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework.junit">MerlinTestContext</a>&lt;<a href="MerlinExtension.html" title="type parameter in MerlinExtension">Model</a>&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#resolveParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">resolveParameter</a><wbr>(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
  org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#supportsParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)" class="member-name-link">supportsParameter</a><wbr>(org.junit.jupiter.api.extension.ParameterContext&nbsp;parameterContext,
+ org.junit.jupiter.api.extension.ExtensionContext&nbsp;extensionContext)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -181,6 +184,16 @@ implements org.junit.jupiter.api.extension.ParameterResolver, org.junit.jupiter.
 <section class="method-details" id="method-detail">
 <h2>Method Details</h2>
 <ul class="member-list">
+<li>
+<section class="detail" id="beforeAll(org.junit.jupiter.api.extension.ExtensionContext)">
+<h3>beforeAll</h3>
+<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">beforeAll</span><wbr><span class="parameters">(org.junit.jupiter.api.extension.ExtensionContext&nbsp;context)</span></div>
+<dl class="notes">
+<dt>Specified by:</dt>
+<dd><code>beforeAll</code>&nbsp;in interface&nbsp;<code>org.junit.jupiter.api.extension.BeforeAllCallback</code></dd>
+</dl>
+</section>
+</li>
 <li>
 <section class="detail" id="supportsParameter(org.junit.jupiter.api.extension.ParameterContext,org.junit.jupiter.api.extension.ExtensionContext)">
 <h3>supportsParameter</h3>

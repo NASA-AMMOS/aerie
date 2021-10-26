@@ -137,6 +137,8 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html#%3Cinit%3E(CellType)" class="member-name-link">CellRef(CellType)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/CellRef.html" title="class in gov.nasa.jpl.aerie.merlin.framework">CellRef</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#close()" class="member-name-link">close()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html#close()" class="member-name-link">close()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Condition.html" class="type-name-link" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a> - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
@@ -147,12 +149,12 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html" class="type-name-link" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a> - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html#create()" class="member-name-link">create()</a> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a></dt>
-<dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.html#create()" class="member-name-link">create()</a> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped</a></dt>
 <dd>
 <div class="block">Create a dynamically-scoped cell containing values of type <a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.html" title="class in gov.nasa.jpl.aerie.merlin.framework"><code>Scoped</code></a>.</div>
 </dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html#create(java.util.concurrent.ExecutorService)" class="member-name-link">create(ExecutorService)</a> - Method in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.TaskFactory.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context.TaskFactory</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:D">D</h2>
 <dl class="index">
@@ -227,9 +229,17 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.html#equals(java.lang.Object)" class="member-name-link">equals(Object)</a> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#equals(java.lang.Object)" class="member-name-link">equals(Object)</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>
+<div class="block">Indicates whether some other object is "equal to" this one.</div>
+</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html#equals(java.lang.Object)" class="member-name-link">equals(Object)</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a></dt>
 <dd>
 <div class="block">Indicates whether some other object is "equal to" this one.</div>
+</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#executor()" class="member-name-link">executor()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>
+<div class="block">Returns the value of the <code>executor</code> record component.</div>
 </dd>
 </dl>
 <h2 class="title" id="I:F">F</h2>
@@ -241,6 +251,8 @@ loadScripts(document, 'script');</script>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.Kind.html#Failure" class="member-name-link">Failure</a> - Enum constant in enum class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Result.Kind.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework">Result.Kind</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Condition.html#FALSE" class="member-name-link">FALSE</a> - Static variable in interface gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Condition.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Condition</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#fromPhantom(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom)" class="member-name-link">fromPhantom(Phantom&lt;$Schema, RootModel&lt;?, Model&gt;&gt;)</a> - Static method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:G">G</h2>
@@ -320,6 +332,10 @@ loadScripts(document, 'script');</script>
 <dl class="index">
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.html#hashCode()" class="member-name-link">hashCode()</a> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#hashCode()" class="member-name-link">hashCode()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>
+<div class="block">Returns a hash code value for this object.</div>
+</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html#hashCode()" class="member-name-link">hashCode()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a></dt>
 <dd>
 <div class="block">Returns a hash code value for this object.</div>
@@ -331,9 +347,9 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="type parameter in InitializationContext">$Schema</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer)" class="member-name-link">InitializationContext(Initializer&lt;$Schema&gt;)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#%3Cinit%3E(java.util.concurrent.ExecutorService,gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer)" class="member-name-link">InitializationContext(ExecutorService, Initializer&lt;$Schema&gt;)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#initializing(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer,java.util.function.Supplier)" class="member-name-link">initializing(Initializer&lt;?&gt;, Supplier&lt;T&gt;)</a> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html#initializing(java.util.concurrent.ExecutorService,gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer,java.util.function.Supplier)" class="member-name-link">initializing(ExecutorService, Initializer&lt;$Schema&gt;, Supplier&lt;T&gt;)</a> - Static method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/InitializationContext.html" title="class in gov.nasa.jpl.aerie.merlin.framework">InitializationContext</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Context.ContextType.html#Initializing" class="member-name-link">Initializing</a> - Enum constant in enum class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Context.ContextType.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework">Context.ContextType</a></dt>
 <dd>&nbsp;</dd>
@@ -356,6 +372,8 @@ loadScripts(document, 'script');</script>
 </dl>
 <h2 class="title" id="I:M">M</h2>
 <dl class="index">
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#makeExecutorService()" class="member-name-link">makeExecutorService()</a> - Static method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.html#map(gov.nasa.jpl.aerie.merlin.framework.Result.VisitorCase,gov.nasa.jpl.aerie.merlin.framework.Result.VisitorCase)" class="member-name-link">map(Result.VisitorCase&lt;Success, OutputSuccess, Throws&gt;, Result.VisitorCase&lt;Failure, OutputFailure, Throws&gt;)</a> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/resources/discrete/DiscreteResource.html#map(java.util.function.Function)" class="member-name-link">map(Function&lt;T, S&gt;)</a> - Method in interface gov.nasa.jpl.aerie.merlin.framework.resources.discrete.<a href="gov/nasa/jpl/aerie/merlin/framework/resources/discrete/DiscreteResource.html" title="interface in gov.nasa.jpl.aerie.merlin.framework.resources.discrete">DiscreteResource</a></dt>
@@ -376,6 +394,10 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/annotations/Adaptation.html#model()" class="member-name-link">model()</a> - Element in annotation interface gov.nasa.jpl.aerie.merlin.framework.annotations.<a href="gov/nasa/jpl/aerie/merlin/framework/annotations/Adaptation.html" title="annotation interface in gov.nasa.jpl.aerie.merlin.framework.annotations">Adaptation</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#model()" class="member-name-link">model()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>
+<div class="block">Returns the value of the <code>model</code> record component.</div>
+</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a> - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#%3Cinit%3E()" class="member-name-link">ModelActions()</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ModelActions.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ModelActions</a></dt>
@@ -455,7 +477,7 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">ReplayingTask</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html" title="type parameter in ReplayingTask">$Timeline</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)" class="member-name-link">ReplayingTask(Scoped&lt;Context&gt;, Runnable)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ReplayingTask</a></dt>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html#%3Cinit%3E(java.util.concurrent.ExecutorService,gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)" class="member-name-link">ReplayingTask(ExecutorService, Scoped&lt;Context&gt;, Runnable)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ReplayingTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ReplayingTask</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/OneShotTask.html#reset()" class="member-name-link">reset()</a> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/OneShotTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">OneShotTask</a></dt>
 <dd>&nbsp;</dd>
@@ -476,6 +498,14 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.VisitorCase.html" class="type-name-link" title="interface in gov.nasa.jpl.aerie.merlin.framework">Result.VisitorCase</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/Result.VisitorCase.html" title="type parameter in Result.VisitorCase">Input</a>,<wbr><a href="gov/nasa/jpl/aerie/merlin/framework/Result.VisitorCase.html" title="type parameter in Result.VisitorCase">Output</a>,<wbr><a href="gov/nasa/jpl/aerie/merlin/framework/Result.VisitorCase.html" title="type parameter in Result.VisitorCase">Throws</a> extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&gt; - Interface in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="type parameter in RootModel">$Schema</a>,<wbr><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="type parameter in RootModel">Model</a>&gt; - Record Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
+<dd>
+<div class="block">The top-level mission model managed by the Merlin framework.</div>
+</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#%3Cinit%3E(Model,java.util.concurrent.ExecutorService)" class="member-name-link">RootModel(Model, ExecutorService)</a> - Constructor for record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>
+<div class="block">Creates an instance of a <code>RootModel</code> record class.</div>
+</dd>
 </dl>
 <h2 class="title" id="I:S">S</h2>
 <dl class="index">
@@ -548,14 +578,20 @@ loadScripts(document, 'script');</script>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a>&lt;<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="type parameter in ThreadedTask">$Timeline</a>&gt; - Class in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
 <dd>&nbsp;</dd>
-<dt><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html#%3Cinit%3E(gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)" class="member-name-link">ThreadedTask(Scoped&lt;Context&gt;, Runnable)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a></dt>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html#%3Cinit%3E(java.util.concurrent.ExecutorService,gov.nasa.jpl.aerie.merlin.framework.Scoped,java.lang.Runnable)" class="member-name-link">ThreadedTask(ExecutorService, Scoped&lt;Context&gt;, Runnable)</a> - Constructor for class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.html" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/ThreadedTask.TaskFailureException.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.framework">ThreadedTask.TaskFailureException</a> - Exception in <a href="gov/nasa/jpl/aerie/merlin/framework/package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#toPhantom()" class="member-name-link">toPhantom()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.Kind.html#toString()" class="member-name-link">toString()</a> - Method in enum class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Result.Kind.html" title="enum class in gov.nasa.jpl.aerie.merlin.framework">Result.Kind</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Result.html#toString()" class="member-name-link">toString()</a> - Method in class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html#toString()" class="member-name-link">toString()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a></dt>
+<dd>
+<div class="block">Returns a string representation of this record class.</div>
+</dd>
 <dt><a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html#toString()" class="member-name-link">toString()</a> - Method in record class gov.nasa.jpl.aerie.merlin.framework.<a href="gov/nasa/jpl/aerie/merlin/framework/Scoped.UndoToken.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Scoped.UndoToken</a></dt>
 <dd>
 <div class="block">Returns a string representation of this record class.</div>
