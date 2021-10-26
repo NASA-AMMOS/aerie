@@ -1,11 +1,18 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import com.google.common.collect.Maps;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfile;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfile;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
@@ -13,12 +20,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.DiscreteApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
@@ -94,10 +104,10 @@ public class SimulationFacade {
      * @return the duration if found in the last simulation, null otherwise
      */
     public gov.nasa.jpl.aerie.scheduler.Duration getActivityDuration(ActivityInstance activityInstance){
-        if(lastResults == null){
+        if(lastSimDriverResults == null){
             System.out.println("You need to simulate before requesting activity duration");
         }
-        var simAct = lastResults.simulatedActivities.get(activityInstance.getName());
+        var simAct = lastSimDriverResults.simulatedActivities.get(activityInstance.getName());
         if(simAct!= null) {
            long durMilli = simAct.duration.in(Duration.MILLISECOND);
            gov.nasa.jpl.aerie.scheduler.Duration schedDur = gov.nasa.jpl.aerie.scheduler.Duration.fromMillis(durMilli);
@@ -134,8 +144,7 @@ public class SimulationFacade {
         Instant.now(),
         simulationDuration);
 
-        lastResults = results;
-        handleSimulationResults(lastResults);
+        handleSimulationResults(results);
 
     }
 
@@ -169,13 +178,15 @@ public class SimulationFacade {
         return schemas;
     }
 
-    /**
+     /**
      * Updates resource feeders with results from a simulation.
      * @param results
      */
     private void handleSimulationResults(SimulationResults results){
+      this.lastSimDriverResults = results;
+      this.lastConstraintModelResults = convertToConstraintModelResults(results);
 
-        var sc  = getResourceSchemas();
+      var sc  = getResourceSchemas();
         nameToType = new HashMap<String, String>();
 
         for(var schema : sc.entrySet()){
@@ -266,17 +277,97 @@ public class SimulationFacade {
             String type = nameToType.get(entry.getKey());
             if(!unsupportedResources.contains(name)) {
                 switch (type) {
-                    case INTEGER -> getIntResource(name).initFromSimRes(deserialize(entry.getValue(), new IntegerValueMapper()), this.planningHorizon.getMinimum());
-                    case BOOLEAN -> getBooleanResource(name).initFromSimRes(deserialize(entry.getValue(), new BooleanValueMapper()), this.planningHorizon.getMinimum());
-                    case DOUBLE -> getDoubleResource(name).initFromSimRes(deserialize(entry.getValue(), new DoubleValueMapper()), this.planningHorizon.getMinimum());
-                    case STRING -> getStringResource(name).initFromSimRes(deserialize(entry.getValue(), new StringValueMapper()), this.planningHorizon.getMinimum());
+                    case INTEGER -> getIntResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new IntegerValueMapper()), this.planningHorizon.getMinimum());
+                    case BOOLEAN -> getBooleanResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new BooleanValueMapper()), this.planningHorizon.getMinimum());
+                    case DOUBLE -> getDoubleResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new DoubleValueMapper()), this.planningHorizon.getMinimum());
+                    case STRING -> getStringResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new StringValueMapper()), this.planningHorizon.getMinimum());
                     default -> throw new IllegalArgumentException("Not supported");
                 }
             }
        }
     }
 
-    private <T> List<Pair<Duration, T>> deserialize(List<Pair<Duration, SerializedValue>> values, ValueMapper<T> mapper){
+  /**
+   * convert a simulation driver SimulationResult to a constraint evaluation engine SimulationResult
+   *
+   * @param driverResults the recorded results of a simulation run from the simulation driver
+   * @return the same results rearranged to be suitable for use by the constraint evaluation engine
+   */
+  gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(
+      SimulationResults driverResults)
+  {
+    final var planDuration = Duration.of(
+        planningHorizon.getMaximum().minus(planningHorizon.getMinimum()).toMicroseconds(), Duration.MICROSECONDS);
+
+    return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
+        Window.between(Duration.ZERO, planDuration),
+        driverResults.simulatedActivities.entrySet().stream()
+                                         .map(e -> convertToConstraintModelActivityInstance(e.getKey(), e.getValue()))
+                                         .collect(Collectors.toList()),
+        Maps.transformValues(driverResults.realProfiles, this::convertToConstraintModelLinearProfile),
+        Maps.transformValues(driverResults.discreteProfiles, this::convertToConstraintModelDiscreteProfile)
+    );
+  }
+
+  /**
+   * convert an activity entry output by the simulation driver to one suitable for the constraint evaluation engine
+   *
+   * @param id the name of the activity instance
+   * @param driverActivity the completed activity instance details from a driver SimulationResult
+   * @return an activity instance suitable for a constraint model SimulationResult
+   */
+  private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
+      String id, SimulatedActivity driverActivity)
+  {
+    final Instant planStartT = this.planningHorizon.getMinimum().toInstant();
+    final var startT = Duration.of(planStartT.until(driverActivity.start, ChronoUnit.MICROS), MICROSECONDS);
+    final var endT = startT.plus(driverActivity.duration);
+    return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
+        id, driverActivity.type, driverActivity.parameters,
+        Window.between(startT, endT));
+  }
+
+  /**
+   * convert a linear profile output from the simulation driver to one suitable for the constraint evaluation engine
+   *
+   * @param driverProfile the as-simulated real profile from a driver SimulationResult
+   * @return a real profile suitable for a constraint model SimulationResult, starting from the zero duration
+   */
+  private LinearProfile convertToConstraintModelLinearProfile(
+      List<Pair<Duration, RealDynamics>> driverProfile)
+  {
+    final var pieces = new ArrayList<LinearProfilePiece>(driverProfile.size());
+    var elapsed = Duration.ZERO;
+    for (final var piece : driverProfile) {
+      final var extent = piece.getLeft();
+      final var value = piece.getRight();
+      pieces.add(new LinearProfilePiece(Window.between(elapsed, elapsed.plus(extent)), value.initial, value.rate));
+      elapsed = elapsed.plus(extent);
+    }
+    return new LinearProfile(pieces);
+  }
+
+  /**
+   * convert a discrete profile output from the simulation driver to one suitable for the constraint evaluation engine
+   *
+   * @param driverProfile the as-simulated discrete profile from a driver SimulationResult
+   * @return a discrete profile suitable for a constraint model SimulationResult, starting from the zero duration
+   */
+  private DiscreteProfile convertToConstraintModelDiscreteProfile(
+      Pair<ValueSchema, List<Pair<Duration, SerializedValue>>> driverProfile)
+  {
+    final var pieces = new ArrayList<DiscreteProfilePiece>(driverProfile.getRight().size());
+    var elapsed = Duration.ZERO;
+    for (final var piece : driverProfile.getRight()) {
+      final var extent = piece.getLeft();
+      final var value = piece.getRight();
+      pieces.add(new DiscreteProfilePiece(Window.between(elapsed, elapsed.plus(extent)), value));
+      elapsed = elapsed.plus(extent);
+    }
+    return new DiscreteProfile(pieces);
+  }
+
+  private <T> List<Pair<Duration, T>> deserialize(List<Pair<Duration, SerializedValue>> values, ValueMapper<T> mapper){
         List<Pair<Duration, T>> deserialized = new ArrayList<Pair<Duration, T>>();
         for(var el : values){
             var des = mapper.deserializeValue(el.getValue()).getSuccessOrThrow();
@@ -328,8 +419,11 @@ public class SimulationFacade {
     // stores the names of resources unsupported by the simulation facade due to type conversion
     private Set<String> unsupportedResources = new HashSet<String>();
 
-    //simulation results from the last simulation
-    private SimulationResults lastResults;
+    //simulation results from the last simulation, as output directly by simulation driver
+    private SimulationResults lastSimDriverResults;
+
+    //simulation results from the last simulation, as converted for use by the constraint evaluation engine
+    private gov.nasa.jpl.aerie.constraints.model.SimulationResults lastConstraintModelResults;
 
 
 }
