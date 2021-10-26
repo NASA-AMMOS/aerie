@@ -277,10 +277,10 @@ public class SimulationFacade {
             String type = nameToType.get(entry.getKey());
             if(!unsupportedResources.contains(name)) {
                 switch (type) {
-                    case INTEGER -> getIntResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new IntegerValueMapper()), this.planningHorizon.getMinimum());
-                    case BOOLEAN -> getBooleanResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new BooleanValueMapper()), this.planningHorizon.getMinimum());
-                    case DOUBLE -> getDoubleResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new DoubleValueMapper()), this.planningHorizon.getMinimum());
-                    case STRING -> getStringResource(name).initFromSimRes(name,this.lastConstraintModelResults,deserialize(entry.getValue(), new StringValueMapper()), this.planningHorizon.getMinimum());
+                    case INTEGER -> getIntResource(name).initFromSimRes(name,new IntegerValueMapper(),this.lastConstraintModelResults,deserialize(entry.getValue(), new IntegerValueMapper()), this.planningHorizon.getMinimum());
+                    case BOOLEAN -> getBooleanResource(name).initFromSimRes(name,new BooleanValueMapper(),this.lastConstraintModelResults,deserialize(entry.getValue(), new BooleanValueMapper()), this.planningHorizon.getMinimum());
+                    case DOUBLE -> getDoubleResource(name).initFromSimRes(name,new DoubleValueMapper(),this.lastConstraintModelResults,deserialize(entry.getValue(), new DoubleValueMapper()), this.planningHorizon.getMinimum());
+                    case STRING -> getStringResource(name).initFromSimRes(name,new StringValueMapper(),this.lastConstraintModelResults,deserialize(entry.getValue(), new StringValueMapper()), this.planningHorizon.getMinimum());
                     default -> throw new IllegalArgumentException("Not supported");
                 }
             }

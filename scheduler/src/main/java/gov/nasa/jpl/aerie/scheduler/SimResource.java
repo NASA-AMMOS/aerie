@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import com.google.common.collect.Lists;
+import gov.nasa.jpl.aerie.constraints.model.DiscreteProfilePiece;
+import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.model.SimulationResults;
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.constraints.tree.And;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
@@ -14,11 +18,13 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * Class mocking the behavior of an externally defined state and implementing ExternalState interface
@@ -36,7 +42,10 @@ public class SimResource<T extends Comparable<T>> implements
     /** the scheduler time stamp at the beginning of the horizon, used to contextualize offset-duration results */
     private Time horizonStart;
 
-    TreeMap<Range<Time>, T> values;
+    /** handles conversions between SerializedValue storage type and the desired in-core data type */
+    ValueMapper<T> valueMapper;
+
+  TreeMap<Range<Time>, T> values;
 
     public boolean isEmpty(){
         return values == null || values.isEmpty();
@@ -48,8 +57,9 @@ public class SimResource<T extends Comparable<T>> implements
         }
     }
 
-    public void initFromSimRes(String name, SimulationResults simResults, List<Pair<Duration, T>> fileValues, Time planningHorizonStart){
+    public void initFromSimRes(String name, ValueMapper<T> valueMapper, SimulationResults simResults, List<Pair<Duration, T>> fileValues, Time planningHorizonStart){
         this.name = name;
+        this.valueMapper = valueMapper;
         this.simResults = simResults;
         this.horizonStart = planningHorizonStart;
 
@@ -104,16 +114,38 @@ public class SimResource<T extends Comparable<T>> implements
 
     public T getValueAtTime(Time t){
         failIfEmpty();
+        final var queryT = convertToConstraintOffsetDuration(t);
 
-        //NB: reverse iteration so that the inclusive contains() queries encounter the latest-starting range first
-        //TODO: could be vastly improved by leveraging the non-overlapping data invariant and tree map floorKey queries
-        for(Map.Entry<Range<Time>,T> intv : values.descendingMap().entrySet()){
-            if(intv.getKey().contains(t)){
-                return intv.getValue();
-            }
+        //TODO: unify necessary generic profile operations in Profile interface to avoid special casing
+        if( this.simResults.realProfiles.containsKey(this.name)) {
+          //TODO: improve the profile data structure to allow fast time-keyed query
+          //TODO: improve Window to allow querying containment in interval directly
+          //for now we look for the last matching profile segment, if any (last to get latest if any overlaps)
+          final var profile = this.simResults.realProfiles.get(this.name);
+          final Predicate<LinearProfilePiece> containsQueryTimeP = (piece)
+              -> !Window.intersect(piece.window, Window.at(queryT)).isEmpty();
+          final var matchPiece = Lists.reverse(profile.profilePieces).stream()
+                                      .filter(containsQueryTimeP).findFirst();
+          final var dblVal = matchPiece.map(piece->piece.valueAt(queryT)).orElse(null);
+          //TODO: better type handling from profiles (maybe type vars?)
+          //queries on real profiles can only ever return doubles anyway (but what about SimResource<Float>?)
+          @SuppressWarnings("unchecked")
+          final var castVal = (T)dblVal;
+          return castVal;
+        } else if (this.simResults.discreteProfiles.containsKey(this.name)) {
+          //TODO: improve the profile data structure to allow fast time-keyed query
+          //TODO: improve Window to allow querying containment in interval directly
+          //for now we look for the last matching profile segment, if any (last to get latest if any overlaps)
+          final var profile = this.simResults.discreteProfiles.get(this.name);
+          final Predicate<DiscreteProfilePiece> containsQueryTimeP = (piece)
+              -> !Window.intersect(piece.window, Window.at(queryT)).isEmpty();
+          final var matchPiece = Lists.reverse(profile.profilePieces).stream()
+                                      .filter(containsQueryTimeP).findFirst();
+          return matchPiece.map(piece->valueMapper.deserializeValue(piece.value).getSuccessOrThrow()).orElse(null);
+        } else {
+          return null;
         }
-        return null;
-    }
+   }
 
     public TimeWindows whenValueBetween(T inf, T sup, TimeWindows windows){
         failIfEmpty();
