@@ -156,10 +156,16 @@ public final class TaskFrame<Signal> {
     public void signal(final Signal target) {
       if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
 
-      this.branches.push(Triple.of(this.events, this.cells, target));
+      // If we haven't emitted any events, subscribe the target to the previous branch point instead.
+      // This avoids making long chains of LiveCells over segments where no events have actually been accumulated.
+      if (this.events.points().isEmpty() && !this.branches.isEmpty()) {
+        this.branches.push(Triple.of(new CausalEventSource(), this.branches.peek().getMiddle(), target));
+      } else {
+        this.branches.push(Triple.of(this.events, this.cells, target));
 
-      this.events = new CausalEventSource();
-      this.cells = new LiveCells(this.events, this.cells);
+        this.events = new CausalEventSource();
+        this.cells = new LiveCells(this.events, this.cells);
+      }
     }
   }
 }
