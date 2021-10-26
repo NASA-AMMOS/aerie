@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SlabList;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.timeline.effects.EventGraph;
 
 public record TemporalEventSource(SlabList<TimePoint> points) implements EventSource {
   public TemporalEventSource() {
