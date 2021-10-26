@@ -31,9 +31,13 @@ public class PrioritySolver implements Solver {
   public PrioritySolver(HuginnConfiguration config, Problem problem) {
     checkNotNull(config, "creating solver with null configuration");
     checkNotNull(problem, "creating solver with null input problem descriptor");
-
+    this.checkSimBeforeInsertingActivities = false;
     this.config = config;
     this.problem = problem;
+  }
+
+  public void checkSimBeforeInsertingActInPlan(){
+    this.checkSimBeforeInsertingActivities = true;
   }
 
   /**
@@ -62,6 +66,52 @@ public class PrioritySolver implements Solver {
     }
   }
 
+  private SimulationFacade getSimFacade(){
+    return problem.getMissionModel().simFacade;
+  }
+
+  private boolean checkAndInsertAct(ActivityInstance act){
+    return checkAndInsertActs(List.of(act));
+  }
+
+  /**
+   * Tries to insert a collection of activity instances in plan. Simulates each of the activity and checks whether the expected
+   * duration is equal to the simulated duration.
+   * @param acts the activities to insert in the plan
+   * @return false if at least one activity has a simulated duration not equal to the expected duration, true otherwise
+   */
+  private boolean checkAndInsertActs(Collection<ActivityInstance> acts){
+    boolean allGood = true;
+
+    for(var act: acts){
+      plan.add(act);
+      if(checkSimBeforeInsertingActivities) {
+        getSimFacade().simulatePlan(plan);
+        var simDur = getSimFacade().getActivityDuration(act);
+        if (simDur == null) {
+          System.out.println("Activity " + act.toString() + " could not be simulated");
+          allGood = false;
+          break;
+        }
+        if (act.getDuration() == null) {
+          act.setDuration(simDur);
+        } else if (simDur.compareTo(act.getDuration()) != 0) {
+          allGood = false;
+          System.out.println("When simulated, activity " + act.toString() + " has a different duration than expected (exp=" + act.getDuration() + ", real=" + simDur + ")");
+          break;
+        }
+      }
+    }
+
+  /**
+   * creates internal storage space to build up partial solutions in
+   **/
+    if(!allGood) {
+      plan.remove(acts);
+    }
+    return allGood;
+  }
+
   /**
    * creates internal storage space to build up partial solutions in
    **/
@@ -69,9 +119,11 @@ public class PrioritySolver implements Solver {
     plan = new PlanInMemory(problem.getMissionModel());
 
     problem.getInitialPlan().getActivitiesByTime().stream()
-           .filter(act -> (act.getStartTime() == null)
-                          || config.getHorizon().contains(act.getStartTime()))
-           .forEach(act -> plan.add(act));
+      .filter( act -> (act.getStartTime()==null)
+               || config.getHorizon().contains( act.getStartTime() ) )
+      .forEach( act->{
+        checkAndInsertAct(act);
+      } );
 
     evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
@@ -164,49 +216,47 @@ public class PrioritySolver implements Solver {
   }
 
 
-  private void satisfyOptionGoal(OptionGoal goal) {
-    if (goal.namongp.isSingleton() && goal.namongp.getMaximum() == 1) {
-      if (goal.optimizer != null) {
-        //try to satisfy all and see what is best
-        Goal currentSatisfiedGoal = null;
-        Collection<ActivityInstance> actsToInsert = null;
-        for (var subgoal : goal.getSubgoals()) {
-          satisfyGoal(subgoal);
-          var listOfActivitiesInserted = evaluation.forGoal(subgoal).getAssociatedActivities();
-          if (listOfActivitiesInserted.size() > 0 && (goal.optimizer.isBetterThanCurrent(new ArrayList<>(
-              listOfActivitiesInserted)) || currentSatisfiedGoal == null)) {
-
-            actsToInsert = listOfActivitiesInserted;
-            currentSatisfiedGoal = subgoal;
-
-
-          }
-          plan.remove(evaluation.forGoal(subgoal).getAssociatedActivities());
-          //TODO: a score equal to 0 is perfect for this notation so we want to do something else probably
-          evaluation.forGoal(subgoal).setScore(0);
+private void satisfyOptionGoal(OptionGoal goal) {
+  if (goal.namongp.isSingleton() && goal.namongp.getMaximum() == 1) {
+    if (goal.optimizer != null) {
+      //try to satisfy all and see what is best
+      Goal currentSatisfiedGoal = null;
+      Collection<ActivityInstance> actsToInsert = null;
+      for (var subgoal : goal.getSubgoals()) {
+        satisfyGoal(subgoal);
+        var listOfActivitiesInserted = evaluation.forGoal(subgoal).getAssociatedActivities();
+        if (listOfActivitiesInserted.size()>0 &&( goal.optimizer.isBetterThanCurrent(new ArrayList<>(listOfActivitiesInserted))
+                || currentSatisfiedGoal == null )) {
+          actsToInsert = listOfActivitiesInserted;
+          currentSatisfiedGoal = subgoal;
         }
-        //we should have the best solution
-        if (currentSatisfiedGoal != null) {
-          plan.add(actsToInsert);
+        plan.remove(evaluation.forGoal(subgoal).getAssociatedActivities());
+        //TODO: a score equal to 0 is perfect for this notation so we want to do something else probably
+        evaluation.forGoal(subgoal).setScore(0);
+      }
+      //we should have the best solution
+      if (currentSatisfiedGoal != null) {
+        if(checkAndInsertActs(actsToInsert)) {
           evaluation.forGoal(currentSatisfiedGoal).associate(actsToInsert);
           evaluation.forGoal(goal).setScore(0);
-        } else {
-          //number of subgoals needed to achieve supergoal
-          evaluation.forGoal(goal).setScore(goal.namongp.getMaximum() - goal.namongp.getMinimum());
         }
       } else {
-        //just satisfy any goal
-        //must be completely satisfied
-        Collection<ActivityInstance> actsToInsert = null;
-        for (var subgoal : goal.getSubgoals()) {
-          satisfyGoal(subgoal);
-          actsToInsert = evaluation.forGoal(subgoal).getAssociatedActivities();
-          if (evaluation.forGoal(subgoal).getScore() == 0) {
-            break;
-          }
+        //number of subgoals needed to achieve supergoal
+        evaluation.forGoal(goal).setScore(goal.namongp.getMaximum() - goal.namongp.getMinimum());
+      }
+    } else {
+      //just satisfy any goal
+      //must be completely satisfied
+      Collection<ActivityInstance> actsToInsert = null;
+      for (var subgoal : goal.getSubgoals()) {
+        satisfyGoal(subgoal);
+        actsToInsert = evaluation.forGoal(subgoal).getAssociatedActivities();
+        if (evaluation.forGoal(subgoal).getScore() == 0) {
+          break;
         }
-        evaluation.forGoal(goal).associate(actsToInsert);
-        evaluation.forGoal(goal).setScore(0);
+      }
+      evaluation.forGoal(goal).associate(actsToInsert);
+      evaluation.forGoal(goal).setScore(0);
 
       }
     } else {
@@ -289,14 +339,16 @@ public class PrioritySolver implements Solver {
           assert acts != null;
           //add the activities to the output plan
           if (!acts.isEmpty()) {
-            plan.add(acts);
-            madeProgress = true;
+            var actsCanBeInserted = checkAndInsertActs(acts);
+            if(actsCanBeInserted){
+              madeProgress = true;
 
-            evaluation.forGoal(goal).associate(acts);
-            //REVIEW: really association should be via the goal's own query...
+              evaluation.forGoal(goal).associate(acts);
+              //REVIEW: really association should be via the goal's own query...
 
-            //NB: repropagation of new activity effects occurs on demand
-            //    at next constraint query, if relevant
+              //NB: repropagation of new activity effects occurs on demand
+              //    at next constraint query, if relevant
+            }
           }
         }
       }//for(missing)
@@ -616,6 +668,8 @@ public class PrioritySolver implements Solver {
       System.out.println(goalEval.name + " -> " + evaluation.forGoal(goalEval).score);
     }
   }
+
+  boolean checkSimBeforeInsertingActivities;
 
   /**
    * the controlling configuration for the solver
