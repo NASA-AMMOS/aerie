@@ -80,6 +80,20 @@ public class TimeWindows {
   }
 
   /**
+   * creates a new set of just a single window between the two time points
+   *
+   * @param min IN the start of the single time window to include in the new window set
+   * @param max IN the end of the single time window to include in the new window set
+   * @return a new set containing just the single provided time range
+   */
+  public static TimeWindows of(Time min, Time max) {
+    final var windows = new TimeWindows();
+    assert min.compareTo(max) <= 0;
+    windows.startToEnd.put(min, max);
+    return windows;
+  }
+
+  /**
    * creates a new set of just the single given window
    *
    * @param range IN the single time range to include in the new window set
