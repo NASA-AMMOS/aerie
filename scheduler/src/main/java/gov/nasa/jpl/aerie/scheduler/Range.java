@@ -245,6 +245,8 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
 
   @Override
   public int compareTo(Range<T> o) {
-    return this.getMinimum().compareTo(o.getMinimum());
+    final var comparator = Comparator.comparing(Range<T>::getMinimum).thenComparing(Range::getMaximum);
+    return comparator.compare(this,o);
   }
+
 }
