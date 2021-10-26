@@ -36,24 +36,56 @@ import java.util.function.Function;
  * @see Projection
  * @see EffectTrait
  */
-public abstract class EventGraph<Event> implements EffectExpression<Event> {
-  private EventGraph() {}
+public sealed interface EventGraph<Event> extends EffectExpression<Event> {
+  /** Use {@link EventGraph#empty()} instead of instantiating this class directly. */
+  record Empty<Event>() implements EventGraph<Event> {
+    // The behavior of the empty graph is independent of the parameterized Event type,
+    // so we cache a single instance and re-use it for all Event types.
+    private static final EventGraph<?> EMPTY = new Empty<>();
 
-  public abstract boolean isEmpty();
-
-  // The behavior of the empty graph is independent of the parameterized Event type,
-  // so we cache a single instance and re-use it for all Event types.
-  private static final EventGraph<?> EMPTY = new EventGraph<>() {
     @Override
-    public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Object, Effect> substitution) {
+    public String toString() {
+      return EffectExpressionDisplay.displayGraph(this);
+    }
+  }
+
+  /** Use {@link EventGraph#atom(Event)} instead of instantiating this class directly. */
+  record Atom<Event>(Event atom) implements EventGraph<Event> {
+    @Override
+    public String toString() {
+      return EffectExpressionDisplay.displayGraph(this);
+    }
+  }
+
+  /** Use {@link EventGraph#sequentially(EventGraph[])}} instead of instantiating this class directly. */
+  record Sequentially<Event>(EventGraph<Event> prefix, EventGraph<Event> suffix) implements EventGraph<Event> {
+    @Override
+    public String toString() {
+      return EffectExpressionDisplay.displayGraph(this);
+    }
+  }
+
+  /** Use {@link EventGraph#concurrently(EventGraph[])}} instead of instantiating this class directly. */
+  record Concurrently<Event>(EventGraph<Event> left, EventGraph<Event> right) implements EventGraph<Event> {
+    @Override
+    public String toString() {
+      return EffectExpressionDisplay.displayGraph(this);
+    }
+  }
+
+  default <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
+    if (this instanceof Empty<Event> g) {
       return trait.empty();
+    } else if (this instanceof Atom<Event> g) {
+      return substitution.apply(g.atom());
+    } else if (this instanceof Sequentially<Event> g) {
+      return trait.sequentially(g.prefix().evaluate(trait, substitution), g.suffix().evaluate(trait, substitution));
+    } else if (this instanceof Concurrently<Event> g) {
+      return trait.concurrently(g.left().evaluate(trait, substitution), g.right().evaluate(trait, substitution));
+    } else {
+      throw new IllegalArgumentException();
     }
-
-    @Override
-    public boolean isEmpty() {
-      return true;
-    }
-  };
+  }
 
   /**
    * Create an empty event graph.
@@ -62,8 +94,8 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @return An empty event graph.
    */
   @SuppressWarnings("unchecked")
-  public static <Event> EventGraph<Event> empty() {
-    return (EventGraph<Event>) EventGraph.EMPTY;
+  static <Event> EventGraph<Event> empty() {
+    return (EventGraph<Event>) Empty.EMPTY;
   }
 
   /**
@@ -73,20 +105,8 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of the given atomic event.
    * @return An event graph consisting of a single atomic event.
    */
-  public static <Event> EventGraph<Event> atom(final Event atom) {
-    Objects.requireNonNull(atom);
-
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-        return substitution.apply(atom);
-      }
-
-      @Override
-      public boolean isEmpty() {
-        return false;
-      }
-    };
+  static <Event> EventGraph<Event> atom(final Event atom) {
+    return new Atom<>(Objects.requireNonNull(atom));
   }
 
   /**
@@ -97,24 +117,11 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a sequence of subgraphs.
    */
-  public static <Event> EventGraph<Event> sequentially(final EventGraph<Event> prefix, final EventGraph<Event> suffix) {
-    Objects.requireNonNull(prefix);
-    Objects.requireNonNull(suffix);
+  static <Event> EventGraph<Event> sequentially(final EventGraph<Event> prefix, final EventGraph<Event> suffix) {
+    if (prefix instanceof Empty) return suffix;
+    if (suffix instanceof Empty) return prefix;
 
-    if (prefix.isEmpty()) return suffix;
-    if (suffix.isEmpty()) return prefix;
-
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-        return trait.sequentially(prefix.evaluate(trait, substitution), suffix.evaluate(trait, substitution));
-      }
-
-      @Override
-      public boolean isEmpty() {
-        return false;
-      }
-    };
+    return new Sequentially<>(Objects.requireNonNull(prefix), Objects.requireNonNull(suffix));
   }
 
   /**
@@ -125,24 +132,11 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a set of concurrent subgraphs.
    */
-  public static <Event> EventGraph<Event> concurrently(final EventGraph<Event> left, final EventGraph<Event> right) {
-    Objects.requireNonNull(left);
-    Objects.requireNonNull(right);
+  static <Event> EventGraph<Event> concurrently(final EventGraph<Event> left, final EventGraph<Event> right) {
+    if (left instanceof Empty) return right;
+    if (right instanceof Empty) return left;
 
-    if (left.isEmpty()) return right;
-    if (right.isEmpty()) return left;
-
-    return new EventGraph<>() {
-      @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-        return trait.concurrently(left.evaluate(trait, substitution), right.evaluate(trait, substitution));
-      }
-
-      @Override
-      public boolean isEmpty() {
-        return false;
-      }
-    };
+    return new Sequentially<>(Objects.requireNonNull(left), Objects.requireNonNull(right));
   }
 
   /**
@@ -152,7 +146,7 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a sequence of subgraphs.
    */
-  public static <Event> EventGraph<Event> sequentially(final List<EventGraph<Event>> segments) {
+  static <Event> EventGraph<Event> sequentially(final List<EventGraph<Event>> segments) {
     var acc = EventGraph.<Event>empty();
     for (final var segment : segments) acc = sequentially(acc, segment);
     return acc;
@@ -165,7 +159,7 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @param <Event> The type of atomic event contained by these graphs.
    * @return An event graph consisting of a set of concurrent subgraphs.
    */
-  public static <Event> EventGraph<Event> concurrently(final Collection<EventGraph<Event>> branches) {
+  static <Event> EventGraph<Event> concurrently(final Collection<EventGraph<Event>> branches) {
     var acc = EventGraph.<Event>empty();
     for (final var branch : branches) acc = concurrently(acc, branch);
     return acc;
@@ -179,7 +173,7 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @return An event graph consisting of a sequence of subgraphs.
    */
   @SafeVarargs
-  public static <Event> EventGraph<Event> sequentially(final EventGraph<Event>... segments) {
+  static <Event> EventGraph<Event> sequentially(final EventGraph<Event>... segments) {
     return sequentially(Arrays.asList(segments));
   }
 
@@ -191,12 +185,7 @@ public abstract class EventGraph<Event> implements EffectExpression<Event> {
    * @return An event graph consisting of a set of concurrent subgraphs.
    */
   @SafeVarargs
-  public static <Event> EventGraph<Event> concurrently(final EventGraph<Event>... branches) {
+  static <Event> EventGraph<Event> concurrently(final EventGraph<Event>... branches) {
     return concurrently(Arrays.asList(branches));
-  }
-
-  @Override
-  public String toString() {
-    return EffectExpressionDisplay.displayGraph(this);
   }
 }
