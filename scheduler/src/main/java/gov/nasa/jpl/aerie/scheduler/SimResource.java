@@ -12,7 +12,7 @@ import java.util.*;
 public class SimResource<T extends Comparable<T>> implements
         ExternalState<T> {
 
-    Map<Range<Time>, T> values;
+    TreeMap<Range<Time>, T> values;
 
     public boolean isEmpty(){
         return values == null || values.isEmpty();
@@ -50,7 +50,9 @@ public class SimResource<T extends Comparable<T>> implements
 
     public T getValueAtTime(Time t){
         failIfEmpty();
-        for(Map.Entry<Range<Time>,T> intv : values.entrySet()){
+        //NB: reverse iteration so that the inclusive contains() queries encounter the latest-starting range first
+        //TODO: could be vastly improved by leveraging the non-overlapping data invariant and tree map floorKey queries
+        for(Map.Entry<Range<Time>,T> intv : values.descendingMap().entrySet()){
             if(intv.getKey().contains(t)){
                 return intv.getValue();
             }
