@@ -66,6 +66,20 @@ public class Range<T extends Comparable<T>> implements Comparable<Range<T>> {
   }
 
   /**
+   * factory creates a new range with given minimum and maximum bounds
+   *
+   * the range admits both endpoints and any value between them
+   *
+   * the minimum and maximum may be the same value
+   *
+   * @param minimum IN the inclusive minimum bound of the new range
+   * @param maximum IN the inclusive maximum bound of the new range
+   */
+  public static <T extends Comparable<T>> Range<T> of(T minimum, T maximum) {
+    return new Range<>(minimum,maximum);
+  }
+
+  /**
    * the inclusive lower bound of the range
    */
   private T minimum;
