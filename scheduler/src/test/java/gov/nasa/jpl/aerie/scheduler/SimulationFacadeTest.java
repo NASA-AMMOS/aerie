@@ -7,118 +7,147 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static com.google.common.truth.Truth.assertThat;
 
 public class SimulationFacadeTest {
 
- Adaptation<?,?> adaptation;
- Time beginHorizon;
- Time endHorizon;
- Range<Time> planningHorizon;
- MissionModel missionModel;
- SimulationFacade facade;
+  Adaptation<?, ?> adaptation;
+  MissionModel missionModel;
+  SimulationFacade facade;
 
+  //concrete named time points used to setup tests and validate expectations
+  private static final Time beginHorizon = Time.fromMilli(0);
+  private static final Time endHorizon = Time.fromMilli(5000);
+  private static final Time t0 = Time.fromMilli(0);
+  private static final Time t1 = Time.fromMilli(1500);
 
- @BeforeEach
- public void setUp() throws Exception {
-  adaptation = SimulationUtility.getAdaptation();
-  beginHorizon = Time.fromMilli(0);
-  endHorizon = Time.fromMilli(5000);
+  //hard-coded range of scheduling/simulation operations
+  private static final Range<Time> planningHorizon = new Range<>(beginHorizon, endHorizon);
+  private static final TimeWindows entireHorizon = TimeWindows.of(planningHorizon);
 
-  planningHorizon = new Range<Time>(beginHorizon,endHorizon);
+  //scheduler-side mirrors of test activity types used
+  //TODO: should eventually mirror these from the adaptation itself
+  private static final ActivityType actTypeBite = new ActivityType("BiteBanana");
+  private static final ActivityType actTypePeel = new ActivityType("PeelBanana");
 
-  missionModel= new MissionModel(adaptation,planningHorizon);
+  /** fetch reference to the fruit resource in the mission model **/
+  private SimResource<Double> getFruitRes() {
+    return facade.getDoubleResource("/fruit");
+  }
 
-  facade = new SimulationFacade(planningHorizon, adaptation);
- }
+  /** fetch reference to the conflicted marker on the flag resource in the mission model **/
+  private SimResource<Boolean> getFlagConflictedRes() {
+    return facade.getBooleanResource("/flag/conflicted");
+  }
 
- @AfterEach
- public void tearDown() throws Exception {
-  adaptation = null;
-  beginHorizon =  null;
-  endHorizon = null;
-  planningHorizon =  null;
-  missionModel=  null;
-  facade =  null;
- }
+  /** fetch reference to the flag resource in the mission model **/
+  private SimResource<String> getFlagRes() {
+    return facade.getStringResource("/flag");
+  }
 
- @Test
- public void boolResourceFetched(){
-  var plantRes = facade.getBooleanResource("/flag/conflicted");
-  StateConstraintEqual equalCst = StateConstraintExpression.buildEqualConstraint(plantRes, false);
-  Plan emptyPlan = new PlanInMemory(missionModel);
-  facade.simulatePlan(emptyPlan);
-  var winWithoutActs = equalCst.findWindows(emptyPlan, TimeWindows.of(planningHorizon));
-  TimeWindows expected = TimeWindows.of(planningHorizon);
-  assertEquals(winWithoutActs, expected);
- }
+  /** fetch reference to the plant resource in the mission model **/
+  private SimResource<Integer> getPlantRes() {
+    return facade.getIntResource("/plant");
+  }
 
- @Test
- public void stringResourceFetched(){
-  var flagRes = facade.getStringResource("/flag");
-  StateConstraintEqual equalCst = StateConstraintExpression.buildEqualConstraint(flagRes, "A");
-  Plan emptyPlan = new PlanInMemory(missionModel);
-  facade.simulatePlan(emptyPlan);
-  var winWithoutActs = equalCst.findWindows(emptyPlan, TimeWindows.of(planningHorizon));
-  TimeWindows expected = TimeWindows.of(planningHorizon);
-  assertEquals(winWithoutActs, expected);
- }
+  @BeforeEach
+  public void setUp() {
+    adaptation = SimulationUtility.getAdaptation();
 
- @Test
- public void intResourceFetched(){
-  var plantRes = facade.getIntResource("/plant");
-  StateConstraintEqual equalCst = StateConstraintExpression.buildEqualConstraint(plantRes, 200);
-  Plan emptyPlan = new PlanInMemory(missionModel);
-  facade.simulatePlan(emptyPlan);
-  var winWithoutActs = equalCst.findWindows(emptyPlan, TimeWindows.of(planningHorizon));
-  TimeWindows expected = TimeWindows.of(planningHorizon);
-  assertEquals(winWithoutActs, expected);
- }
+    missionModel = new MissionModel(adaptation, planningHorizon);
+    missionModel.add(actTypeBite);
+    missionModel.add(actTypePeel);
 
+    facade = new SimulationFacade(planningHorizon, adaptation);
+  }
 
- @Test
- public void failsWhenNotSimulated(){
-  Plan plan = new PlanInMemory(missionModel);
-  var fruitRes = facade.getDoubleResource("/fruit");
-  StateConstraintAbove aboveCst = StateConstraintExpression.buildAboveConstraint(fruitRes, 2.9);
-  assertThrows(IllegalArgumentException.class, () -> aboveCst.findWindows(plan, TimeWindows.of(planningHorizon)));
- }
+  @AfterEach
+  public void tearDown() {
+    adaptation = null;
+    missionModel = null;
+    facade = null;
+  }
 
- @Test
- public void canCreateConstraints(){
-  Plan plan = new PlanInMemory(missionModel);
-  var fruitRes = facade.getDoubleResource("/fruit");
-  StateConstraintAbove aboveCst = StateConstraintExpression.buildAboveConstraint(fruitRes, 2.9);
-  facade.simulatePlan(plan);
-  var winWithoutActs = aboveCst.findWindows(plan, TimeWindows.of(planningHorizon));
-  TimeWindows expected = TimeWindows.of(planningHorizon);
-  assertEquals(winWithoutActs, expected);
- }
+  /** constructs an empty plan with the test model/horizon **/
+  private PlanInMemory makeEmptyPlan() {
+    return new PlanInMemory(missionModel);
+  }
 
- @Test
- public void doubleResourceAreFetchedFromSim() {
+  @Test
+  public void constraintEvalWithoutSimulationThrowsIAE() {
+    final var constraint = StateConstraintExpression.buildAboveConstraint(getFruitRes(), 2.9);
+    final var plan = makeEmptyPlan();
+    assertThrows(IllegalArgumentException.class, () -> constraint.findWindows(plan, entireHorizon));
+  }
 
-  Time t1 = Time.fromMilli(1500);
-  var fruitRes = facade.getDoubleResource("/fruit");
+  @Test
+  public void doubleConstraintEvalOnEmptyPlan() {
+    final var constraint = StateConstraintExpression.buildAboveConstraint(getFruitRes(), 2.9);
+    final var plan = makeEmptyPlan();
+    facade.simulatePlan(plan);
+    var actual = constraint.findWindows(plan, entireHorizon);
+    assertThat(actual).isEqualTo(entireHorizon);
+  }
 
-  Plan plan = new PlanInMemory(missionModel);
+  @Test
+  public void boolConstraintEvalOnEmptyPlan() {
+    final var constraint = StateConstraintExpression.buildEqualConstraint(getFlagConflictedRes(), false);
+    final var plan = makeEmptyPlan();
+    facade.simulatePlan(plan);
+    final var actual = constraint.findWindows(plan, entireHorizon);
+    assertThat(actual).isEqualTo(entireHorizon);
+  }
 
-  var actTypeBb = new ActivityType("BiteBanana");
-  var actTypePb = new ActivityType("PeelBanana");
-  var act1 =new ActivityInstance("PeelBanana1",actTypePb,beginHorizon);
-  act1.setParameters(Map.of("peelDirection", "fromStem"));
-  var act2 =new ActivityInstance("BiteBanana1",actTypeBb, t1);
-  act2.setParameters(Map.of("biteSize", 0.1));
-  plan.add(act1);
-  plan.add(act2);
+  @Test
+  public void stringConstraintEvalOnEmptyPlan() {
+    final var constraint = StateConstraintExpression.buildEqualConstraint(getFlagRes(), "A");
+    final var plan = makeEmptyPlan();
+    facade.simulatePlan(plan);
+    var actual = constraint.findWindows(plan, entireHorizon);
+    assertThat(actual).isEqualTo(entireHorizon);
+  }
 
-  facade.simulatePlan(plan);
+  @Test
+  public void intConstraintEvalOnEmptyPlan() {
+    final var constraint = StateConstraintExpression.buildEqualConstraint(getPlantRes(), 200);
+    final var plan = makeEmptyPlan();
+    facade.simulatePlan(plan);
+    final var actual = constraint.findWindows(plan, entireHorizon);
+    assertThat(actual).isEqualTo(entireHorizon);
+  }
 
-  var when = fruitRes.whenValueAbove(2.9, TimeWindows.of(planningHorizon));
-  var expected =  TimeWindows.of(new Range<Time>(beginHorizon, t1));
-  assertEquals(when,expected);
+  /**
+   * constructs a simple test plan with one peel and bite:
+   * time:-------|t0--------|t1-------->
+   * |peel(fS)  |bite(0.1)
+   *
+   * should result in resource histories:
+   * time:-------|t0--------|t1-------->
+   * peel:4.0----|3.0------------------>
+   * fruit:4.0----|3.0-------|2.9------->
+   **/
+  private PlanInMemory makeTestPlanP0B1() {
+    final var plan = makeEmptyPlan();
 
- }
+    var act1 = new ActivityInstance("PeelBanana1", actTypePeel, t0);
+    act1.setParameters(Map.of("peelDirection", "fromStem"));
+    plan.add(act1);
+
+    var act2 = new ActivityInstance("BiteBanana1", actTypeBite, t1);
+    act2.setParameters(Map.of("biteSize", 0.1));
+    plan.add(act2);
+
+    return plan;
+  }
+
+  @Test
+  public void doubleWhenValueAboveOnSimplePlan() {
+    facade.simulatePlan(makeTestPlanP0B1());
+    var actual = getFruitRes().whenValueAbove(2.9, entireHorizon);
+    var expected = TimeWindows.of(t0, t1);
+    assertThat(actual).isEqualTo(expected);
+  }
+
 
 }
