@@ -2,13 +2,14 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine.JobId;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
@@ -21,29 +22,19 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 public final class SimulationDriver {
-  public static <$Schema> SimulationResults simulate(
-      final Adaptation<$Schema, ?> adaptation,
-      final Map<String, Pair<Duration, SerializedActivity>> schedule,
-      final Instant startTime,
-      final Duration simulationDuration)
-  {
-    return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration);
-  }
-
-  private static <$Timeline, Model>
+  public static <$Timeline, Model>
   SimulationResults simulate(
       final Adaptation<? super $Timeline, Model> missionModel,
-      final SimulationTimeline<$Timeline> events,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration
   ) {
     try (final var engine = new SimulationEngine<$Timeline>()) {
-      /* The current causal time. */
-      var now = events.origin();
+      /* The top-level simulation timeline. */
+      var timeline = new TemporalEventSource();
+      var cells = new LiveCells(timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
-      /* The current set of jobs remaining to perform. */
 
       // Begin tracking all resources.
       for (final var family : missionModel.getResourceFamilies()) {
@@ -60,7 +51,8 @@ public final class SimulationDriver {
       // Start daemon task(s) immediately, before anything else happens.
       {
         final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
-        now = engine.performJobs(Set.of(JobId.forTask(daemon)), now, elapsedTime, simulationDuration, missionModel);
+        final var commit = engine.performJobs(Set.of(JobId.forTask(daemon)), cells, elapsedTime, simulationDuration, missionModel);
+        timeline.add(commit);
       }
 
       // Drive the engine until we're out of time.
@@ -69,10 +61,9 @@ public final class SimulationDriver {
         final var batch = engine.extractNextJobs(simulationDuration);
 
         // Increment real time, if necessary.
-        if (batch.offsetFromStart().longerThan(elapsedTime)) {
-          now = now.wait(batch.offsetFromStart().minus(elapsedTime));
-          elapsedTime = batch.offsetFromStart();
-        }
+        final var delta = batch.offsetFromStart().minus(elapsedTime);
+        elapsedTime = batch.offsetFromStart();
+        timeline.add(delta);
         // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
         //   even if they occur at the same real time.
 
@@ -81,7 +72,8 @@ public final class SimulationDriver {
         }
 
         // Run the jobs in this batch.
-        now = engine.performJobs(batch.jobs(), now, elapsedTime, simulationDuration, missionModel);
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration, missionModel);
+        timeline.add(commit);
       }
 
       return engine.computeResults(engine, startTime, elapsedTime, controlTask.extractTaskToPlannedDirective());
@@ -89,17 +81,13 @@ public final class SimulationDriver {
   }
 
   public static <$Schema, $Timeline extends $Schema, Model>
-  void simulateTask(
-      final Adaptation<? super $Timeline, Model> missionModel,
-      final SimulationTimeline<$Timeline> events,
-      final Task<$Timeline> task
-  ) {
+  void simulateTask(final Adaptation<? super $Timeline, Model> missionModel, final Task<$Timeline> task) {
     try (final var engine = new SimulationEngine<$Timeline>()) {
-      /* The current causal time. */
-      var now = events.origin();
+      /* The top-level simulation timeline. */
+      var timeline = new TemporalEventSource();
+      var cells = new LiveCells(timeline, missionModel.getInitialCells());
       /* The current real time. */
       var elapsedTime = Duration.ZERO;
-      /* The current set of jobs remaining to perform. */
 
       // Begin tracking all resources.
       for (final var family : missionModel.getResourceFamilies()) {
@@ -113,7 +101,8 @@ public final class SimulationDriver {
       // Start daemon task(s) immediately, before anything else happens.
       {
         final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
-        now = engine.performJobs(Set.of(JobId.forTask(daemon)), now, elapsedTime, Duration.MAX_VALUE, missionModel);
+        final var commit = engine.performJobs(Set.of(JobId.forTask(daemon)), cells, elapsedTime, Duration.MAX_VALUE, missionModel);
+        timeline.add(commit);
       }
 
       // Drive the engine until we're out of time.
@@ -122,15 +111,15 @@ public final class SimulationDriver {
         final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
 
         // Increment real time, if necessary.
-        if (batch.offsetFromStart().longerThan(elapsedTime)) {
-          now = now.wait(batch.offsetFromStart().minus(elapsedTime));
-          elapsedTime = batch.offsetFromStart();
-        }
+        final var delta = batch.offsetFromStart().minus(elapsedTime);
+        elapsedTime = batch.offsetFromStart();
+        timeline.add(delta);
         // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
         //   even if they occur at the same real time.
 
         // Run the jobs in this batch.
-        now = engine.performJobs(batch.jobs(), now, elapsedTime, Duration.MAX_VALUE, missionModel);
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, missionModel);
+        timeline.add(commit);
       }
     }
   }

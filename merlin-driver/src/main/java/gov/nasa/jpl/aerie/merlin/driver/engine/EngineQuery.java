@@ -1,15 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 
-import java.util.Optional;
-
-public record EngineQuery<$Schema, Event, State>(
-    gov.nasa.jpl.aerie.merlin.timeline.Query<$Schema, Event, State> query
-) implements Query<$Schema, Event, State> {
-  public Optional<Duration> getCurrentExpiry(final History<? extends $Schema> now) {
-    return query.getCurrentExpiry(now.ask(query));
-  }
-}
+public record EngineQuery<$Schema, Event, State> (Topic<Event> topic, Query<State> query)
+    implements gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, Event, State>
+{}

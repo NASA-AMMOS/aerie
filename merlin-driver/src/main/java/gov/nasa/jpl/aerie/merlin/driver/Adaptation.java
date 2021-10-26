@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
@@ -8,7 +9,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,20 +17,20 @@ import java.util.Objects;
 
 public final class Adaptation<$Schema, Model> {
   private final Phantom<$Schema, Model> model;
-  private final Schema<$Schema> schema;
+  private final LiveCells initialCells;
   private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
   private final List<Initializer.TaskFactory<$Schema>> daemons;
 
   public Adaptation(
       final Phantom<$Schema, Model> model,
-      final Schema<$Schema> schema,
+      final LiveCells initialCells,
       final List<ResourceFamily<$Schema, ?>> resourceFamilies,
       final List<Initializer.TaskFactory<$Schema>> daemons,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
-    this.schema = Objects.requireNonNull(schema);
+    this.initialCells = Objects.requireNonNull(initialCells);
     this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
@@ -68,7 +68,7 @@ public final class Adaptation<$Schema, Model> {
     return this.resourceFamilies;
   }
 
-  public Schema<$Schema> getSchema() {
-    return this.schema;
+  public LiveCells getInitialCells() {
+    return this.initialCells;
   }
 }

@@ -126,7 +126,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     if (left instanceof Empty) return right;
     if (right instanceof Empty) return left;
 
-    return new Sequentially<>(Objects.requireNonNull(left), Objects.requireNonNull(right));
+    return new Concurrently<>(Objects.requireNonNull(left), Objects.requireNonNull(right));
   }
 
   /**
