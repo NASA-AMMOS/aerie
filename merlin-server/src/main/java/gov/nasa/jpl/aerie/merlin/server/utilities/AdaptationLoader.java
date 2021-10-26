@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,7 +31,7 @@ public final class AdaptationLoader {
     {
         final var service = loadAdaptationProvider(path, name, version);
         final var factory = service.getFactory();
-        final var builder = new AdaptationBuilder<>(Schema.builder());
+        final var builder = new AdaptationBuilder<>();
         return loadAdaptation(missionModelConfig, factory, builder);
     }
 

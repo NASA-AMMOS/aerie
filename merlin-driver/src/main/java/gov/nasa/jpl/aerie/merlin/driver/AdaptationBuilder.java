@@ -13,18 +13,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
-  private AdaptationBuilderState<$Schema> state;
-
-  public AdaptationBuilder(final Schema.Builder<$Schema> schemaBuilder) {
-    this.state = new UnbuiltState(schemaBuilder);
-  }
+  private AdaptationBuilderState<$Schema> state = new UnbuiltState();
 
   @Override
   public <CellType> CellType getInitialState(
@@ -81,8 +76,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
     private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
     private final List<TaskFactory<$Schema>> daemons = new ArrayList<>();
-
-    public UnbuiltState(final Schema.Builder<$Schema> schemaBuilder) {}
 
     @Override
     public <CellType> CellType getInitialState(

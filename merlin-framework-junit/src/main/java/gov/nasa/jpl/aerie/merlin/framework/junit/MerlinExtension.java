@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -31,7 +30,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
 
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
-        .getOrComputeIfAbsent("state", $ -> new State<>(new AdaptationBuilder<>(Schema.builder())), stateClass);
+        .getOrComputeIfAbsent("state", $ -> new State<>(new AdaptationBuilder<>()), stateClass);
   }
 
 

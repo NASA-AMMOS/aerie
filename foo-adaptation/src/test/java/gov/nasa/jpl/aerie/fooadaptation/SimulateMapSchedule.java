@@ -10,7 +10,6 @@ import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
@@ -39,7 +38,7 @@ public class SimulateMapSchedule {
   void simulateWithMapSchedule() {
     final var config = new Configuration();
     final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
-    final var adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
+    final var adaptation = makeAdaptation(new AdaptationBuilder<>(), serializedConfig);
 
     try {
       final var schedule = loadSchedule();

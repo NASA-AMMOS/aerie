@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
@@ -31,7 +30,7 @@ public final class SimulationUtility {
     final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);
-    final var adaptation = makeAdaptation(new AdaptationBuilder<>(Schema.builder()), serializedConfig);
+    final var adaptation = makeAdaptation(new AdaptationBuilder<>(), serializedConfig);
     final var startTime = Instant.now();
 
     return SimulationDriver.simulate(
