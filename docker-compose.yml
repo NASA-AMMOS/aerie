@@ -21,6 +21,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
   aerie_ui:
     depends_on: ["postgres"]
+    environment:
+      CAM_API_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
+      CAM_ENABLED: true
+      GATEWAY_URL: http://localhost:9000
+      HASURA_URL: http://localhost:8080/v1/graphql
+      POSTGRES_DATABASE: aerie
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: aerie
     image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
     ports: ["80:80"]
     restart: always
