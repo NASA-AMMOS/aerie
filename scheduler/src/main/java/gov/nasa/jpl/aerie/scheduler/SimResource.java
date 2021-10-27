@@ -23,13 +23,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 
 /**
- * Class mocking the behavior of an externally defined state and implementing ExternalState interface
+ * Class mocking the behavior of an externally defined resource and implementing ExternalState interface
  *
- * @param <T> the type of the variable managed by the state
+ * @param <T> the type of the variable managed by the resource
  */
 public class SimResource<T extends Comparable<T>> implements
     ExternalState<T>

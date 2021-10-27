@@ -27,7 +27,12 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
@@ -39,6 +44,33 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
  * (2) providing durations of activity instances
  */
 public class SimulationFacade {
+
+
+  // Resource feeders, mapping resource names to their corresponding resource accessor resulting from simulation results
+  private final Map<String, SimResource<Integer>> feedersInt;
+  private final Map<String, SimResource<Double>> feedersDouble;
+  private final Map<String, SimResource<Boolean>> feedersBool;
+  private final Map<String, SimResource<String>> feedersString;
+
+  private final Adaptation<?, ?> adaptation;
+
+  // planning horizon
+  private final Range<Time> planningHorizon;
+
+  // local types for resources
+  final private static String STRING = "String";
+  final private static String INTEGER = "Integer";
+  final private static String DOUBLE = "Double";
+  final private static String BOOLEAN = "Boolean";
+
+  // maps resource names to their local type
+  private Map<String, String> nameToType;
+
+  // stores the names of resources unsupported by the simulation facade due to type conversion
+  private final Set<String> unsupportedResources = new HashSet<>();
+
+  //simulation results from the last simulation, as output directly by simulation driver
+  private SimulationResults lastSimDriverResults;
 
   /**
    * Accessor for integer resource feeders
@@ -419,7 +451,7 @@ public class SimulationFacade {
       return SerializedValue.of((String) paramValue);
     }
     if (paramValue instanceof Enum) {
-      return SerializedValue.of(((Enum) paramValue).name());
+      return SerializedValue.of(((Enum<?>) paramValue).name());
     }
     if (paramValue instanceof Long) {
       return SerializedValue.of((Long) paramValue);
@@ -432,33 +464,5 @@ public class SimulationFacade {
     }
     return null;
   }
-
-
-  // Resource feeders, mapping resource names to their corresponding resource accessor resulting from simulation results
-  private final Map<String, SimResource<Integer>> feedersInt;
-  private final Map<String, SimResource<Double>> feedersDouble;
-  private final Map<String, SimResource<Boolean>> feedersBool;
-  private final Map<String, SimResource<String>> feedersString;
-
-  private final Adaptation<?, ?> adaptation;
-
-  // planning horizon
-  private final Range<Time> planningHorizon;
-
-  // local types for resources
-  final private static String STRING = "String";
-  final private static String INTEGER = "Integer";
-  final private static String DOUBLE = "Double";
-  final private static String BOOLEAN = "Boolean";
-
-  // maps resource names to their local type
-  private Map<String, String> nameToType;
-
-  // stores the names of resources unsupported by the simulation facade due to type conversion
-  private final Set<String> unsupportedResources = new HashSet<>();
-
-  //simulation results from the last simulation, as output directly by simulation driver
-  private SimulationResults lastSimDriverResults;
-
 
 }
