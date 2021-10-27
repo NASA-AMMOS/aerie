@@ -45,7 +45,6 @@ import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
  */
 public class SimulationFacade {
 
-
   // Resource feeders, mapping resource names to their corresponding resource accessor resulting from simulation results
   private final Map<String, SimResource<Integer>> feedersInt;
   private final Map<String, SimResource<Double>> feedersDouble;
@@ -144,7 +143,7 @@ public class SimulationFacade {
     if (lastSimDriverResults == null) {
       System.out.println("You need to simulate before requesting activity duration");
     }
-    var simAct = lastSimDriverResults.simulatedActivities.get(activityInstance.getName());
+    final var simAct = lastSimDriverResults.simulatedActivities.get(activityInstance.getName());
     if (simAct != null) {
       long durMilli = simAct.duration.in(Duration.MILLISECOND);
       return gov.nasa.jpl.aerie.scheduler.Duration.fromMillis(durMilli);
@@ -168,7 +167,7 @@ public class SimulationFacade {
     final var actsInPlan = plan.getActivitiesByTime();
     final var schedule = new HashMap<String, Pair<Duration, SerializedActivity>>();
 
-    for (var act : actsInPlan) {
+    for (final var act : actsInPlan) {
 
       Map<String, SerializedValue> params = new HashMap<>();
       act.getParameters().forEach((name, value) -> params.put(name, this.serialize(value)));
@@ -231,18 +230,18 @@ public class SimulationFacade {
   private void handleSimulationResults(SimulationResults results) {
     this.lastSimDriverResults = results;
     //simulation results from the last simulation, as converted for use by the constraint evaluation engine
-    gov.nasa.jpl.aerie.constraints.model.SimulationResults lastConstraintModelResults = convertToConstraintModelResults(
+    final var lastConstraintModelResults = convertToConstraintModelResults(
         results);
 
-    var sc = getResourceSchemas();
+    final var sc = getResourceSchemas();
     nameToType = new HashMap<>();
 
-    for (var schema : sc.entrySet()) {
+    for (final var schema : sc.entrySet()) {
       schema.getValue().match(new ValueSchema.Visitor<String>() {
 
         @Override
         public String onReal() {
-          String nameRes = schema.getKey();
+          final var nameRes = schema.getKey();
           nameToType.put(nameRes, DOUBLE);
           if (!feedersDouble.containsKey(nameRes)) {
             feedersDouble.put(nameRes, new SimResource<>());
@@ -252,7 +251,7 @@ public class SimulationFacade {
 
         @Override
         public String onInt() {
-          String nameRes = schema.getKey();
+          final var nameRes = schema.getKey();
           nameToType.put(nameRes, INTEGER);
           if (!feedersInt.containsKey(nameRes)) {
             feedersInt.put(nameRes, new SimResource<>());
@@ -262,7 +261,7 @@ public class SimulationFacade {
 
         @Override
         public String onBoolean() {
-          String nameRes = schema.getKey();
+          final var nameRes = schema.getKey();
           nameToType.put(nameRes, BOOLEAN);
           if (!feedersBool.containsKey(nameRes)) {
             feedersBool.put(nameRes, new SimResource<>());
@@ -272,7 +271,7 @@ public class SimulationFacade {
 
         @Override
         public String onString() {
-          String nameRes = schema.getKey();
+          final var nameRes = schema.getKey();
           nameToType.put(nameRes, STRING);
           if (feedersString.containsKey(nameRes)) {
             feedersString.put(nameRes, new SimResource<>());
@@ -288,7 +287,7 @@ public class SimulationFacade {
 
         @Override
         public String onPath() {
-          String nameRes = schema.getKey();
+          final var nameRes = schema.getKey();
           nameToType.put(nameRes, STRING);
           if (!feedersString.containsKey(nameRes)) {
             feedersString.put(nameRes, new SimResource<>());
@@ -310,7 +309,7 @@ public class SimulationFacade {
 
         @Override
         public String onVariant(List<ValueSchema.Variant> variants) {
-          String nameRes = schema.getKey();
+          final var nameRes = schema.getKey();
           nameToType.put(nameRes, STRING);
           if (!feedersString.containsKey(nameRes)) {
             feedersString.put(nameRes, new SimResource<>());
@@ -320,9 +319,9 @@ public class SimulationFacade {
       });
 
     }
-    for (Map.Entry<String, List<Pair<Duration, SerializedValue>>> entry : results.resourceSamples.entrySet()) {
-      String name = entry.getKey();
-      String type = nameToType.get(entry.getKey());
+    for (final var entry : results.resourceSamples.entrySet()) {
+      final var name = entry.getKey();
+      final var type = nameToType.get(entry.getKey());
       if (!unsupportedResources.contains(name)) {
         switch (type) {
           case INTEGER -> getIntResource(name).initFromSimRes(
@@ -389,7 +388,7 @@ public class SimulationFacade {
   private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
       String id, SimulatedActivity driverActivity)
   {
-    final Instant planStartT = this.planningHorizon.getMinimum().toInstant();
+    final var planStartT = this.planningHorizon.getMinimum().toInstant();
     final var startT = Duration.of(planStartT.until(driverActivity.start, ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
@@ -438,8 +437,8 @@ public class SimulationFacade {
   }
 
   private <T> List<Pair<Duration, T>> deserialize(List<Pair<Duration, SerializedValue>> values, ValueMapper<T> mapper) {
-    List<Pair<Duration, T>> deserialized = new ArrayList<>();
-    for (var el : values) {
+    final var deserialized = new ArrayList<Pair<Duration, T>>();
+    for (final var el : values) {
       var des = mapper.deserializeValue(el.getValue()).getSuccessOrThrow();
       deserialized.add(Pair.of(el.getKey(), des));
     }
