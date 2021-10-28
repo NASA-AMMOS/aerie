@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -21,6 +22,13 @@ public record Selector<Effect>(List<SelectorRow<?, Effect>> rows) {
       if (event != null) return event;
     }
     return orElse.get();
+  }
+
+  public boolean matchesAny(final Collection<Topic<?>> topics) {
+    for (final var row : this.rows) {
+      if (topics.contains(row.topic)) return true;
+    }
+    return false;
   }
 
   public record SelectorRow<EventType, Effect>(Topic<EventType> topic, Function<EventType, Effect> transform) {
