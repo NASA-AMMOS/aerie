@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Optional;
+import java.util.Set;
 
 /** Binds the state of a cell together with its dynamical behavior. */
 public final class Cell<State> {
@@ -44,6 +45,10 @@ public final class Cell<State> {
 
   public State getState() {
     return this.inner.applicator.duplicate(this.state);
+  }
+
+  public boolean isInterestedIn(final Set<Topic<?>> topics) {
+    return this.inner.selector.matchesAny(topics);
   }
 
   @Override

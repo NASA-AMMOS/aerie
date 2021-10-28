@@ -26,6 +26,10 @@ public final class Event {
     return this.inner.extract(topic, $ -> $);
   }
 
+  public Topic<?> topic() {
+    return this.inner.topic();
+  }
+
   @Override
   public String toString() {
     return "<@%s, %s>".formatted(System.identityHashCode(this.inner.topic), this.inner.event);
