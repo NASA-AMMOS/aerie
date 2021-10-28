@@ -3,9 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
-import org.apache.commons.lang3.mutable.MutableInt;
 
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +16,6 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   private final ArrayBlockingQueue<TaskRequest<$Timeline>> hostToTask = new ArrayBlockingQueue<>(1);
   private final ArrayBlockingQueue<TaskResponse<$Timeline>> taskToHost = new ArrayBlockingQueue<>(1);
 
-  private final ReactionContext.Memory memory = new ReactionContext.Memory(new ArrayList<>(), new MutableInt(0));
   private Lifecycle lifecycle = Lifecycle.Inactive;
 
   public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Runnable task) {
@@ -124,7 +121,6 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
     }
 
     this.lifecycle = Lifecycle.Inactive;
-    this.memory.clear();
   }
 
   private final class ThreadedTaskHandle implements TaskHandle<$Timeline> {
@@ -134,10 +130,9 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       if (request instanceof TaskRequest.Resume) {
         final var scheduler = ((TaskRequest.Resume<$Timeline>) request).scheduler;
 
-        final var context = new ReactionContext<>(
+        final var context = new ThreadedReactionContext<>(
             ThreadedTask.this.executor,
             ThreadedTask.this.rootContext,
-            ThreadedTask.this.memory,
             scheduler,
             this);
 
