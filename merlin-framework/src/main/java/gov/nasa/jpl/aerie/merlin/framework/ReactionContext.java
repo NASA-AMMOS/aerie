@@ -139,8 +139,9 @@ final class ReactionContext<$Timeline> implements Context {
   private record MemoryCursor(Memory memory, MutableInt nextRead, MutableInt nextWrite) {
     public void doOnce(final Runnable action) {
       if (!hasCachedWrite()) {
-        action.run();
+        // Flag a write *before* we run, because we'll likely yield out via exception.
         this.memory.writes().add(1);
+        action.run();
       }
 
       this.nextWrite.add(1);
