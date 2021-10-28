@@ -30,8 +30,8 @@ public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCe
   public void react(final RegisterEffect<T> concurrentValues) {
     concurrentValues.newValue.ifPresent(newValue -> this.value = newValue);
 
-    if (concurrentValues.conflictingValues.size() > 0) {
-      this.conflicted = (concurrentValues.conflictingValues.size() > 1);
+    if (concurrentValues.writes > 0) {
+      this.conflicted = (concurrentValues.writes > 1);
     }
   }
 
