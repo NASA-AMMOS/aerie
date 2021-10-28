@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /* package-local */
-final class ReactionContext<$Timeline> implements Context {
+final class ReplayingReactionContext<$Timeline> implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final TaskHandle<$Timeline> handle;
@@ -24,7 +24,7 @@ final class ReactionContext<$Timeline> implements Context {
 
   private final MemoryCursor memory;
 
-  public ReactionContext(
+  public ReplayingReactionContext(
       final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Memory memory,
