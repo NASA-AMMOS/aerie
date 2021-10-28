@@ -24,6 +24,11 @@ public final class RegisterEffect<T> {
     return new RegisterEffect<>(Optional.of(newValue), 1);
   }
 
+  @Override
+  public String toString() {
+    return (this.newValue.isPresent()) ? "set(%s)".formatted(this.newValue.get()) : "noop()";
+  }
+
 
   public static final class Trait<T> implements EffectTrait<RegisterEffect<T>> {
     @Override

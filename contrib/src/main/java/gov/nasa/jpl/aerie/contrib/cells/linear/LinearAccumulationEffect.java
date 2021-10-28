@@ -22,4 +22,13 @@ public final class LinearAccumulationEffect {
   public static LinearAccumulationEffect empty() {
     return new LinearAccumulationEffect(0, false);
   }
+
+  @Override
+  public String toString() {
+    if (this.deltaRate == 0) {
+      return (this.clearVolume) ? "clear" : "noop";
+    } else {
+      return ((this.clearVolume) ? "clear," : "") + this.deltaRate;
+    }
+  }
 }
