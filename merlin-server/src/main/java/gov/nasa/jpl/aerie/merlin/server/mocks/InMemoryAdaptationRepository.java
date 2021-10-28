@@ -51,10 +51,14 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
     }
 
     @Override
-    public void updateAdaptationDerivedData(
-        final String adaptationId,
-        final List<Parameter> modelParameters,
-        final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException
+    public void updateModelParameters(final String adaptationId, final List<Parameter> modelParameters)
+    throws NoSuchAdaptationException
+    {
+    }
+
+    @Override
+    public void updateActivityTypes(final String adaptationId, final Map<String, ActivityType> activityTypes)
+    throws NoSuchAdaptationException
     {
     }
 

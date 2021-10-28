@@ -116,10 +116,15 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
     }
 
     @Override
-    public void updateAdaptationDerivedData(
-        final String adaptationId,
-        final List<Parameter> modelParameters,
-        final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException
+    public void updateModelParameters(final String adaptationId, final List<Parameter> modelParameters)
+    throws NoSuchAdaptationException
+    {
+        throw new NotImplementedException("If this is needed on the Mongo repository then implement it");
+    }
+
+    @Override
+    public void updateActivityTypes(final String adaptationId, final Map<String, ActivityType> activityTypes)
+    throws NoSuchAdaptationException
     {
         throw new NotImplementedException("If this is needed on the Mongo repository then implement it");
     }

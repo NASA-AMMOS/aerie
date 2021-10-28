@@ -156,8 +156,11 @@ public final class MerlinBindings implements Plugin {
       path("getSimulationResults", () -> {
         post(this::getSimulationResults);
       });
-      path("modelUpdate", () -> {
-        post(this::postModelUpdate);
+      path("refreshModelParameters", () -> {
+        post(this::postRefreshModelParameters);
+      });
+      path("refreshActivityTypes", () -> {
+        post(this::postRefreshActivityTypes);
       });
       path("validateActivityArguments", () -> {
         post(this::validateActivityArguments);
@@ -171,10 +174,24 @@ public final class MerlinBindings implements Plugin {
         .contentType("application/json"));
   }
 
-  private void postModelUpdate(final Context ctx) {
+  private void postRefreshModelParameters(final Context ctx) {
     try {
       final var adaptationId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).adaptationId();
-      this.adaptationService.updateDerivedData(adaptationId);
+      this.adaptationService.refreshModelParameters(adaptationId);
+      ctx.status(200);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    }
+  }
+
+  private void postRefreshActivityTypes(final Context ctx) {
+    try {
+      final var adaptationId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).adaptationId();
+      this.adaptationService.refreshActivityTypes(adaptationId);
       ctx.status(200);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());

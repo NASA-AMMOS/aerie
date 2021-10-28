@@ -219,7 +219,12 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public void updateDerivedData(final String adaptationId) throws NoSuchAdaptationException
+  public void refreshModelParameters(final String adaptationId) throws NoSuchAdaptationException
+  {
+  }
+
+  @Override
+  public void refreshActivityTypes(final String adaptationId) throws NoSuchAdaptationException
   {
   }
 }
