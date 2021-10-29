@@ -13,7 +13,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
 import io.javalin.core.util.FileUtil;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
