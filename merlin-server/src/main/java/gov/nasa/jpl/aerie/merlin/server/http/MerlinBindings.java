@@ -16,7 +16,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
-import gov.nasa.jpl.aerie.merlin.server.utilities.AdaptationLoader;
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
