@@ -1,5 +1,36 @@
 version: "3.7"
 services:
+  aerie_gateway:
+    depends_on: ["postgres"]
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-gateway:develop"
+    ports: ["9000:9000"]
+    restart: always
+    volumes:
+      - file_store:/app/files
+  aerie_ui:
+    depends_on: ["postgres"]
+    environment:
+      GATEWAY_URL: http://localhost:9000
+      HASURA_URL: http://localhost:8080/v1/graphql
+      POSTGRES_DATABASE: aerie
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: aerie
+    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
+    ports: ["80:80"]
+    restart: always
+  hasura:
+    depends_on: ["postgres"]
+    environment:
+      AERIE_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
+    image: "hasura/graphql-engine:v2.0.9"
+    ports: ["8080:8080"]
+    restart: always
   merlin:
     build:
       context: .
@@ -19,39 +50,6 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  aerie_ui:
-    depends_on: ["postgres"]
-    environment:
-      CAM_API_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
-      CAM_ENABLED: true
-      GATEWAY_URL: http://localhost:9000
-      HASURA_URL: http://localhost:8080/v1/graphql
-      POSTGRES_DATABASE: aerie
-      POSTGRES_HOST: postgres
-      POSTGRES_PASSWORD: aerie
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: aerie
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
-    ports: ["80:80"]
-    restart: always
-  aerie_gateway:
-    depends_on: ["postgres"]
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-gateway:develop"
-    ports: ["9000:9000"]
-    restart: always
-    volumes:
-      - file_store:/app/files
-  hasura:
-    depends_on: ["postgres"]
-    environment:
-      AERIE_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie
-    image: "hasura/graphql-engine:v2.0.9"
-    ports: ["8080:8080"]
-    restart: always
 
 volumes:
   file_store:
