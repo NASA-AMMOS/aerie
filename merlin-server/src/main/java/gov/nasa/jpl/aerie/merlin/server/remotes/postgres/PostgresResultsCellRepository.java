@@ -424,7 +424,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final long planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction.get(planId).startTimestamp;
+      return getPlanAction.get(planId).startTime();
     }
   }
 
