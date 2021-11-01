@@ -45,7 +45,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
     final var planId = Long.parseLong(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlan(connection, planId).startTimestamp;
+      final var planStart = getPlanStart(connection, planId);
       // TODO: At the time of writing, simulation starts at the plan start every time
       //       When that changes, we will need to update the simulation start here as well
       final var simulationStart = planStart;
@@ -55,7 +55,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       if (simulation$.isPresent()) {
         simulation = simulation$.get();
       } else {
-        simulation = createSimulation(connection, planId);
+        simulation = createSimulation(connection, planId, Map.of());
       }
 
       // Cancel datasets with lower revisions
@@ -151,11 +151,12 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static SimulationRecord createSimulation(
       final Connection connection,
-      final long planId
+      final long planId,
+      final Map<String, SerializedValue> arguments
   ) throws SQLException
   {
     try (final var createSimulationAction = new CreateSimulationAction(connection)) {
-      return createSimulationAction.apply(planId);
+      return createSimulationAction.apply(planId, arguments);
     }
   }
 
@@ -409,8 +410,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final DatasetRecord dataset
   ) throws SQLException {
     try {
-      return getPlan(connection, dataset.planId())
-          .startTimestamp
+      return getPlanStart(connection, dataset.planId())
           .plusMicros(dataset.offsetFromPlanStart().dividedBy(Duration.MICROSECONDS))
           .time
           .toInstant();
@@ -419,12 +419,12 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Plan getPlan(
+  private static Timestamp getPlanStart(
       final Connection connection,
       final long planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction.get(planId);
+      return getPlanAction.get(planId).startTimestamp;
     }
   }
 

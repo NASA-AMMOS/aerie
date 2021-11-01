@@ -69,6 +69,7 @@ public final class PostgresParsers {
   }
 
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
+  public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
   public static final JsonParser<Pair<Optional<String>, Map<String, SerializedValue>>> activityAttributesP = productP
       .optionalField("directiveId", stringP)
