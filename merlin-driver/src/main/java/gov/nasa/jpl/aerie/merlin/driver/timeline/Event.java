@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import java.util.Objects;
+
 /** A heterogeneous event represented by a value and a topic over that value's type. */
 public final class Event {
   private final Event.GenericEvent<?> inner;
@@ -26,6 +28,11 @@ public final class Event {
   }
 
   private record GenericEvent<EventType>(Topic<EventType> topic, EventType event) {
+    private GenericEvent {
+      Objects.requireNonNull(topic);
+      Objects.requireNonNull(event);
+    }
+
     private <Other> Other extract(final Topic<Other> otherTopic) {
       if (this.topic != otherTopic) return null;
 
