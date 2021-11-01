@@ -59,6 +59,12 @@ public final class InitializationContext<$Schema> implements Context {
   }
 
   @Override
+  public String spawn(final Runnable task) {
+    // TODO: Pick threaded() or replaying() based on default specified in package-info.java
+    return this.spawn(ModelActions.threaded(task));
+  }
+
+  @Override
   public String spawn(final TaskFactory task) {
     return this.builder.daemon(new Initializer.TaskFactory<>() {
       @Override
@@ -71,6 +77,11 @@ public final class InitializationContext<$Schema> implements Context {
   @Override
   public String spawn(final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities during initialization");
+  }
+
+  @Override
+  public String defer(final Duration duration, final Runnable task) {
+    throw new IllegalStateException("Cannot schedule tasks during initialization");
   }
 
   @Override

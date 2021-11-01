@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
 import com.squareup.javapoet.ClassName;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -14,17 +15,20 @@ public final class AdaptationRecord {
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
   public final Optional<TypeElement> modelConfiguration;
+  public final ActivityType.Executor defaultExecutor;
 
   public AdaptationRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
       final Optional<TypeElement> modelConfiguration,
+      final ActivityType.Executor defaultExecutor,
       final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes)
   {
     this.$package = Objects.requireNonNull($package);
     this.topLevelModel = Objects.requireNonNull(topLevelModel);
     this.modelConfiguration = Objects.requireNonNull(modelConfiguration);
+    this.defaultExecutor = Objects.requireNonNull(defaultExecutor);
     this.typeRules = Objects.requireNonNull(typeRules);
     this.activityTypes = Objects.requireNonNull(activityTypes);
   }

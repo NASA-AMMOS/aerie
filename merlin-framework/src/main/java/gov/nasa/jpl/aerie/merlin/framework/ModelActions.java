@@ -33,7 +33,7 @@ public /*non-final*/ class ModelActions {
 
 
   public static String spawn(final Runnable task) {
-    return spawn(threaded(task));
+    return context.get().spawn(task);
   }
 
   public static String spawn(final Context.TaskFactory task) {
@@ -45,7 +45,7 @@ public /*non-final*/ class ModelActions {
   }
 
   public static void call(final Runnable task) {
-    call(threaded(task));
+    waitFor(spawn(task));
   }
 
   public static void call(final Context.TaskFactory task) {
@@ -57,7 +57,7 @@ public /*non-final*/ class ModelActions {
   }
 
   public static String defer(final Duration duration, final Runnable task) {
-    return defer(duration, threaded(task));
+    return context.get().defer(duration, task);
   }
 
   public static String defer(final Duration duration, final Context.TaskFactory task) {
@@ -69,7 +69,7 @@ public /*non-final*/ class ModelActions {
   }
 
   public static String defer(final long quantity, final Duration unit, final Runnable task) {
-    return defer(unit.times(quantity), threaded(task));
+    return defer(unit.times(quantity), task);
   }
 
   public static String defer(final long quantity, final Duration unit, final String type, final Map<String, SerializedValue> arguments) {

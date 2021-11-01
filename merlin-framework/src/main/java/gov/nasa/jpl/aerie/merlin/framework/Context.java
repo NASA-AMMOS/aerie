@@ -32,9 +32,11 @@ public interface Context {
 
   interface TaskFactory { <$Timeline> Task<$Timeline> create(ExecutorService executor); }
 
+  String spawn(Runnable task);
   String spawn(TaskFactory task);
   String spawn(String type, Map<String, SerializedValue> arguments);
 
+  String defer(Duration duration, Runnable task);
   String defer(Duration duration, TaskFactory task);
   String defer(Duration duration, String type, Map<String, SerializedValue> arguments);
 

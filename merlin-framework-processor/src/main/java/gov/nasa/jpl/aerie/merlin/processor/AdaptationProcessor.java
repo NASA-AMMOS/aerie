@@ -183,6 +183,7 @@ public final class AdaptationProcessor implements Processor {
   {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var modelConfiguration = this.getAdaptationConfiguration(adaptationElement);
+    final var defaultExecutor = this.getDefaultExecutor(adaptationElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     final var typeRules = new ArrayList<TypeRule>();
 
@@ -191,10 +192,10 @@ public final class AdaptationProcessor implements Processor {
     }
 
     for (final var activityTypeElement : this.getAdaptationActivityTypes(adaptationElement)) {
-      activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
+      activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement, defaultExecutor));
     }
 
-    return new AdaptationRecord(adaptationElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
+    return new AdaptationRecord(adaptationElement, topLevelModel, modelConfiguration, defaultExecutor, typeRules, activityTypes);
   }
 
   private List<TypeRule>
@@ -261,15 +262,16 @@ public final class AdaptationProcessor implements Processor {
     return enumBoundedTypeParameters;
   }
 
-  private ActivityTypeRecord
-  parseActivityType(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException
-  {
+  private ActivityTypeRecord parseActivityType(
+      final PackageElement adaptationElement,
+      final TypeElement activityTypeElement,
+      final ActivityType.Executor defaultExecutor
+  ) throws InvalidAdaptationException {
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getActivityMapper(adaptationElement, activityTypeElement);
     final var validations = this.getActivityValidations(activityTypeElement);
     final var parameters = this.getActivityParameters(activityTypeElement);
-    final var effectModel = this.getActivityEffectModel(activityTypeElement);
+    final var effectModel = this.getActivityEffectModel(activityTypeElement, defaultExecutor);
 
     /*
     The following parameter was created as a result of AERIE-1295/1296/1297 on JIRA
@@ -624,7 +626,7 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<Pair<String, ActivityType.Executor>>
-  getActivityEffectModel(final TypeElement activityTypeElement)
+  getActivityEffectModel(final TypeElement activityTypeElement, final ActivityType.Executor defaultExecutor)
   {
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD) continue;
@@ -632,7 +634,11 @@ public final class AdaptationProcessor implements Processor {
       final var executorAnnotation = element.getAnnotation(ActivityType.EffectModel.class);
       if (executorAnnotation == null) continue;
 
-      return Optional.of(Pair.of(element.getSimpleName().toString(), executorAnnotation.value()));
+      final var executor = (executorAnnotation.value() == ActivityType.Executor.Default)
+          ? defaultExecutor
+          : executorAnnotation.value();
+
+      return Optional.of(Pair.of(element.getSimpleName().toString(), executor));
     }
 
     return Optional.empty();
@@ -739,6 +745,13 @@ public final class AdaptationProcessor implements Processor {
     }
 
     return Optional.of((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
+  }
+
+  private ActivityType.Executor getDefaultExecutor(final PackageElement adaptationElement) {
+    final var executorAnnotation = adaptationElement.getAnnotation(Adaptation.WithDefaultExecutor.class);
+    if (executorAnnotation == null) return ActivityType.Executor.Default;
+
+    return executorAnnotation.value();
   }
 
   private String
@@ -995,7 +1008,7 @@ public final class AdaptationProcessor implements Processor {
                     .addCode(
                         activityType.effectModel
                             .map(effectModel -> switch (effectModel.getRight()) {
-                              case Threaded -> CodeBlock
+                              case Default, Threaded -> CodeBlock
                                   .builder()
                                   .addStatement(
                                       "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",

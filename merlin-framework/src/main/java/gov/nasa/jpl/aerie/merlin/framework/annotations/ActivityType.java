@@ -53,11 +53,11 @@ public @interface ActivityType {
     String value();
   }
 
-  enum Executor { Threaded, Replaying }
+  enum Executor { Threaded, Replaying, Default }
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.METHOD)
   @interface EffectModel {
-    Executor value() default Executor.Threaded;
+    Executor value() default Executor.Default;
   }
 }

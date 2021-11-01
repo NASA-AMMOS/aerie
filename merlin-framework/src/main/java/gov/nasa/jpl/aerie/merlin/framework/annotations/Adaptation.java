@@ -19,16 +19,9 @@ public @interface Adaptation {
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
-  @interface AllActivityTypes {
-    WithActivityType[] value();
+  @interface WithDefaultExecutor{
+    ActivityType.Executor value() default ActivityType.Executor.Default;
   }
-
-  @Retention(RetentionPolicy.CLASS)
-  @Target(ElementType.PACKAGE)
-  @interface AllMappers {
-    WithMappers[] value();
-  }
-
 
   @Retention(RetentionPolicy.CLASS)
   @Target(ElementType.PACKAGE)
@@ -42,5 +35,18 @@ public @interface Adaptation {
   @Repeatable(AllMappers.class)
   @interface WithMappers {
     Class<?> value();
+  }
+
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @interface AllActivityTypes {
+    WithActivityType[] value();
+  }
+
+  @Retention(RetentionPolicy.CLASS)
+  @Target(ElementType.PACKAGE)
+  @interface AllMappers {
+    WithMappers[] value();
   }
 }
