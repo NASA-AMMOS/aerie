@@ -18,7 +18,6 @@ public class PostgresRepositoryActionTest {
     final var hikariConfig = new HikariConfig();
     hikariConfig.setUsername("aerie");
     hikariConfig.setPassword("aerie");
-    hikariConfig.setSchema("merlin");
     hikariConfig.setDataSource(pgDataSource);
 
     final var hikariDataSource = new HikariDataSource(hikariConfig);

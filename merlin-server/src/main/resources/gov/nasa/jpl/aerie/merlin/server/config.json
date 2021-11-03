@@ -8,4 +8,4 @@
       "port": 5432,
       "user": "aerie",
       "password": "aerie",
-      "database": "aerie" } }
+      "database": "aerie_merlin" } }
