@@ -1,3 +1,6 @@
+-- This file contains seed data for testing and local development.
+-- The contents of this file are not used for production deployments.
+
 -- for mission_model.jar_path
 set bytea_output = escape;
 
