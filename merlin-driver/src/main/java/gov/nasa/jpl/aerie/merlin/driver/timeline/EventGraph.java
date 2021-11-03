@@ -178,4 +178,22 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   static <Event> EventGraph<Event> concurrently(final EventGraph<Event>... branches) {
     return concurrently(Arrays.asList(branches));
   }
+
+  /** A "no-op" algebra that reconstructs an event graph from its pieces. */
+  final class IdentityTrait<T> implements EffectTrait<EventGraph<T>> {
+    @Override
+    public EventGraph<T> empty() {
+      return EventGraph.empty();
+    }
+
+    @Override
+    public EventGraph<T> sequentially(final EventGraph<T> prefix, final EventGraph<T> suffix) {
+      return EventGraph.sequentially(prefix, suffix);
+    }
+
+    @Override
+    public EventGraph<T> concurrently(final EventGraph<T> left, final EventGraph<T> right) {
+      return EventGraph.concurrently(left, right);
+    }
+  }
 }
