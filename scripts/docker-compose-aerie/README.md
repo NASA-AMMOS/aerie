@@ -5,7 +5,9 @@ First make sure you have [Docker](https://docs.docker.com/get-docker/) installed
 
 ## Configuration
 
-- The Postgres database specifies a default `POSTGRES_USER` and `POSTGRES_PASSWORD`, these should be updated when deploying to production.
+- We provide default [Postgres initialization scripts](./postgres-init-db) to provision Postgres with the proper databases, users, and privileges for a standard Aerie deployment.
+- Note that these initialization scripts will only run if the Postgres container data directory is empty. Any pre-existing database will be left untouched on container startup.
+- We recommend you update the database user passwords to the non-defaults for your deployment.
 
 ## Start
 
