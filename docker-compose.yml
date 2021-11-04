@@ -10,8 +10,10 @@ services:
   aerie_ui:
     depends_on: ["postgres"]
     environment:
-      GATEWAY_URL: http://localhost:9000
-      HASURA_URL: http://localhost:8080/v1/graphql
+      GATEWAY_CLIENT_URL: http://localhost:9000
+      GATEWAY_SERVER_URL: http://aerie_gateway:9000
+      HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
+      HASURA_SERVER_URL: http://hasura:8080/v1/graphql
     image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
     ports: ["80:80"]
     restart: always
