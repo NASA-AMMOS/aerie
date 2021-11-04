@@ -6,10 +6,10 @@ import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 public final class Register<Value> implements DiscreteResource<Value> {
-  private final CellRef<RegisterEffect<Value>, RegisterCell<Value>> ref;
+  private final CellRef<Value, RegisterCell<Value>> ref;
 
   private Register(final Value initialValue) {
-    this.ref = CellRef.allocate(new RegisterCell<>(initialValue), new RegisterEffect.Trait<>());
+    this.ref = RegisterCell.allocate(initialValue, RegisterEffect::set);
   }
 
   public static <Value>
@@ -28,7 +28,7 @@ public final class Register<Value> implements DiscreteResource<Value> {
   }
 
   public void set(final Value value) {
-    this.ref.emit(RegisterEffect.set(value));
+    this.ref.emit(value);
   }
 
   @Deprecated
