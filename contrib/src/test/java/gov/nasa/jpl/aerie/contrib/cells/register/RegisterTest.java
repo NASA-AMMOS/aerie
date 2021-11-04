@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ExtendWith(MerlinExtension.class)
 @TestInstance(Lifecycle.PER_CLASS)
 public final class RegisterTest {
-  private final Register<Integer> register = Register.create(0);
+  private final Register<Integer> register = Register.forImmutable(0);
 
   @Test
   @DisplayName("Conflicting writes with different values should mark the conflict flag and have no other effect")

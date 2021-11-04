@@ -5,27 +5,32 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class RegisterCell<T> {
+  private final UnaryOperator<T> duplicator;
+
   private T value;
   private boolean conflicted;
 
-  public RegisterCell(final T initialValue, final boolean conflicted) {
+  public RegisterCell(final UnaryOperator<T> duplicator, final T initialValue, final boolean conflicted) {
+    this.duplicator = Objects.requireNonNull(duplicator);
     this.value = Objects.requireNonNull(initialValue);
     this.conflicted = conflicted;
   }
 
   public static <Event, T> CellRef<Event, RegisterCell<T>>
-  allocate(final T initialValue, final Function<Event, RegisterEffect<T>> interpreter) {
+  allocate(final UnaryOperator<T> duplicator, final T initialValue, final Function<Event, RegisterEffect<T>> interpreter) {
     return CellRef.allocate(
-        new RegisterCell<>(initialValue, false),
+        new RegisterCell<>(duplicator, initialValue, false),
         new RegisterApplicator<>(),
         new RegisterEffect.Trait<>(),
         interpreter);
   }
 
   public T getValue() {
-    return this.value;
+    // Perform a defensive copy to prevent callers from accidentally mutating this Register.
+    return this.duplicator.apply(this.value);
   }
 
   public boolean isConflicted() {
@@ -40,7 +45,7 @@ public final class RegisterCell<T> {
   public static final class RegisterApplicator<T> implements Applicator<RegisterEffect<T>, RegisterCell<T>> {
     @Override
     public RegisterCell<T> duplicate(final RegisterCell<T> cell) {
-      return new RegisterCell<>(cell.value, cell.conflicted);
+      return new RegisterCell<>(cell.duplicator, cell.value, cell.conflicted);
     }
 
     @Override

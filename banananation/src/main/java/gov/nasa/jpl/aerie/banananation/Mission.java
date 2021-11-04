@@ -16,16 +16,16 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 public final class Mission {
   public final AdditiveRegister fruit = AdditiveRegister.create(4.0);
   public final AdditiveRegister peel = AdditiveRegister.create(4.0);
-  public final Register<Flag> flag = Register.create(Flag.A);
-  public final Register<Integer> lineCount = Register.create(0);
+  public final Register<Flag> flag = Register.forImmutable(Flag.A);
+  public final Register<Integer> lineCount = Register.forImmutable(0);
   public final Counter<Integer> plant;
   public final Register<String> producer;
   public final Register<Integer> dataLineCount;
 
   public Mission(final Registrar registrar, final Configuration config) {
     this.plant = Counter.ofInteger(config.initialPlantCount());
-    this.producer = Register.create(config.initialProducer());
-    this.dataLineCount = Register.create(countLines(config.initialDataPath()));
+    this.producer = Register.forImmutable(config.initialProducer());
+    this.dataLineCount = Register.forImmutable(countLines(config.initialDataPath()));
 
     registrar.discrete("/flag", this.flag, new EnumValueMapper<>(Flag.class));
     registrar.discrete("/flag/conflicted", this.flag::isConflicted, new BooleanValueMapper());

@@ -18,8 +18,8 @@ public final class Imager {
   public Imager(final double bitsPerPixel, final ImagerMode mode, final double frameRate) {
     this.bitsPerPixel = bitsPerPixel;
 
-    this.mode = Register.create(mode);
-    this.frameRate = Register.create(frameRate);
+    this.mode = Register.forImmutable(mode);
+    this.frameRate = Register.forImmutable(frameRate);
     this.imagedBits = new Accumulator();
 
     this.volume = this.imagedBits;
