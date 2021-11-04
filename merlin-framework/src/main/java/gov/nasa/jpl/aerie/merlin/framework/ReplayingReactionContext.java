@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 /* package-local */
-final class ReactionContext<$Timeline> implements Context {
+final class ReplayingReactionContext<$Timeline> implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final TaskHandle<$Timeline> handle;
@@ -24,7 +24,7 @@ final class ReactionContext<$Timeline> implements Context {
 
   private final MemoryCursor memory;
 
-  public ReactionContext(
+  public ReplayingReactionContext(
       final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Memory memory,
@@ -56,8 +56,9 @@ final class ReactionContext<$Timeline> implements Context {
 
   @Override
   public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
-      final Projection<Event, Effect> projection,
-      final Applicator<Effect, CellType> applicator)
+      final CellType initialState,
+      final Applicator<Effect, CellType> applicator,
+      final Projection<Event, Effect> projection)
   {
     throw new IllegalStateException("Cannot allocate during simulation");
   }
@@ -139,8 +140,9 @@ final class ReactionContext<$Timeline> implements Context {
   private record MemoryCursor(Memory memory, MutableInt nextRead, MutableInt nextWrite) {
     public void doOnce(final Runnable action) {
       if (!hasCachedWrite()) {
-        action.run();
+        // Flag a write *before* we run, because we'll likely yield out via exception.
         this.memory.writes().add(1);
+        action.run();
       }
 
       this.nextWrite.add(1);

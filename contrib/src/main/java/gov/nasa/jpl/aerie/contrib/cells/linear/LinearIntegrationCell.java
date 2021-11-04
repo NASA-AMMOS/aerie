@@ -1,8 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
-import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.Cell;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
@@ -27,13 +25,6 @@ public final class LinearIntegrationCell implements Cell<LinearAccumulationEffec
   @Override
   public LinearIntegrationCell duplicate() {
     return new LinearIntegrationCell(this.initialVolume, this.rate, this.accumulatedVolume);
-  }
-
-  @Override
-  public EffectTrait<LinearAccumulationEffect> effectTrait() {
-    return new CommutativeMonoid<>(
-      LinearAccumulationEffect.empty(),
-      (left, right) -> new LinearAccumulationEffect(left.deltaRate + right.deltaRate, left.clearVolume || right.clearVolume));
   }
 
   @Override

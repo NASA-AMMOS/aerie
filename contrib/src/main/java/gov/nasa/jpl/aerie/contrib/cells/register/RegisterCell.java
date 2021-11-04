@@ -21,16 +21,11 @@ public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCe
   }
 
   @Override
-  public RegisterEffectTrait<T> effectTrait() {
-    return new RegisterEffectTrait<>();
-  }
-
-  @Override
   public void react(final RegisterEffect<T> concurrentValues) {
     concurrentValues.newValue.ifPresent(newValue -> this.value = newValue);
 
-    if (concurrentValues.conflictingValues.size() > 0) {
-      this.conflicted = (concurrentValues.conflictingValues.size() > 1);
+    if (concurrentValues.writes > 0) {
+      this.conflicted = (concurrentValues.writes > 1);
     }
   }
 
@@ -40,5 +35,10 @@ public final class RegisterCell<T> implements Cell<RegisterEffect<T>, RegisterCe
 
   public Boolean isConflicted() {
     return this.conflicted;
+  }
+
+  @Override
+  public String toString() {
+    return "{value=%s, conflicted=%s}".formatted(this.getValue(), this.isConflicted());
   }
 }

@@ -7,8 +7,6 @@ import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -32,7 +30,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
 
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
-        .getOrComputeIfAbsent("state", $ -> new State<>(new AdaptationBuilder<>(Schema.builder())), stateClass);
+        .getOrComputeIfAbsent("state", $ -> new State<>(new AdaptationBuilder<>()), stateClass);
   }
 
 
@@ -148,14 +146,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
       return value;
     }
 
-    public void simulate(final Invocation<Void> invocation) throws Throwable {
-      simulate(SimulationTimeline.create(this.adaptation.getSchema()), invocation);
-    }
-
-    private <$Timeline extends $Schema>
-    void simulate(final SimulationTimeline<$Timeline> timeline, final Invocation<Void> invocation)
-    throws Throwable
-    {
+    private <$Timeline extends $Schema> void simulate(final Invocation<Void> invocation) throws Throwable {
       final var completed = new Object() { boolean value = false; };
 
       final var task = ModelActions
@@ -171,7 +162,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
           .<$Timeline>create(RootModel.fromPhantom(this.adaptation.getModel()).executor());
 
       try {
-        SimulationDriver.simulateTask(this.adaptation, timeline, task);
+        SimulationDriver.simulateTask(this.adaptation, task);
       } catch (final WrappedException ex) {
         throw ex.wrapped;
       }

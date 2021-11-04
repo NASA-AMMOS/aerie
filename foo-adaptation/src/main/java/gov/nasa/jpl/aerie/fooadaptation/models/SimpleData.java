@@ -13,8 +13,8 @@ public final class SimpleData {
   public final RealResource totalVolume;
 
   public SimpleData() {
-    this.a = new InstrumentData(10.0, new CellRef<>(new LinearIntegrationCell(0, 0)));
-    this.b = new InstrumentData(5.0, new CellRef<>(new LinearIntegrationCell(0, 0)));
+    this.a = new InstrumentData(10.0);
+    this.b = new InstrumentData(5.0);
     this.totalVolume = RealResource.add(this.a.volume, this.b.volume);
   }
 
@@ -29,11 +29,8 @@ public final class SimpleData {
 
     public final RealResource volume, rate;
 
-    private InstrumentData(
-        final double activeRate,
-        final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref)
-    {
-      this.ref = ref;
+    private InstrumentData(final double activeRate) {
+      this.ref = new CellRef<>(new LinearIntegrationCell(0, 0), LinearAccumulationEffect.TRAIT);
       this.activeRate = activeRate;
       this.volume = () -> this.ref.get().getVolume();
       this.rate = () -> this.ref.get().getRate();

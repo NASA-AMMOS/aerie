@@ -1,76 +1,95 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Deque;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public final class TaskFrame<$Timeline, Signal> {
-  private History<$Timeline> tip;
-  private final Deque<Pair<History<$Timeline>, Signal>> branches;
-  private final Optional<TaskFrame<$Timeline, Signal>> continuation;
+/**
+ * A TaskFrame is a record of a completed task and its remaining branches.
+ *
+ * <p>
+ * <pre>
+ *   |-> branches[0].left |-> branches[1].left   ... |-> branches[n].left     |-> tip
+ *   +-> sibling          +-> branches[0].right      +-> branches[n-1].right  +-> branches[n].right
+ * </pre>
+ * </p>
+ *
+ * <p>
+ * When there are no branches, this simplifies to:
+ * <pre>
+ *   |-> tip
+ *   +-> sibling
+ * </pre>
+ * In which case, the frame can evolve no further; we can bind the tip and sibling concurrently
+ * and commit it to a parent timeline.
+ * </p>
+*/
+public final class TaskFrame<Signal> {
+  private final Optional<TaskFrame<Signal>> continuation;
+  private final EventGraph<Event> sibling;
 
-  private TaskFrame(FrameBuilder<$Timeline, Signal> builder) {
-    this.tip = builder.tip;
-    this.branches = builder.branches;
+  private CausalEventSource events;
+  private final Deque<Triple<CausalEventSource, LiveCells, Signal>> branches;
+
+  private TaskFrame(final FrameBuilder<Signal> builder) {
     this.continuation = builder.continuation;
+    this.sibling = builder.sibling;
+
+    this.events = builder.events;
+    this.branches = builder.branches;
   }
 
-  public static <$Timeline, Signal>
-  TaskFrame<$Timeline, Signal>
-  of(final History<$Timeline> tip, final Consumer<FrameBuilder<$Timeline, Signal>> body) {
-    final var builder = new FrameBuilder<$Timeline, Signal>(tip, Optional.empty());
+  public static <Signal>
+  TaskFrame<Signal> of(final LiveCells context, final Consumer<FrameBuilder<Signal>> body) {
+    final var builder = new FrameBuilder<Signal>(EventGraph.empty(), context, Optional.empty());
     body.accept(builder);
     return builder.yield();
   }
 
-  public static <$Timeline, Signal>
-  History<$Timeline> runToCompletion(
-      final Collection<Signal> jobs,
-      final History<$Timeline> now,
-      final BiConsumer<Signal, FrameBuilder<$Timeline, Signal>> executor
+  public static <Signal>
+  EventGraph<Event> runToCompletion(
+      final Iterable<Signal> jobs,
+      final LiveCells context,
+      final BiConsumer<Signal, FrameBuilder<Signal>> executor
   ) {
-    var frame = TaskFrame.<$Timeline, Signal>of(now, builder -> jobs.forEach(builder::signal));
+    var frame = TaskFrame.<Signal>of(context, builder -> jobs.forEach(builder::signal));
 
     while (!frame.isDone()) frame = frame.step(executor);
 
-    return frame.getTip();
-  }
-
-  public static <$Timeline, Signal>
-  History<$Timeline> runToCompletion(
-      TaskFrame<$Timeline, Signal> frame,
-      final BiConsumer<Signal, FrameBuilder<$Timeline, Signal>> executor)
-  {
-    while (!frame.isDone()) frame = frame.step(executor);
-
-    return frame.getTip();
+    return frame.commit();
   }
 
 
-  public History<$Timeline> getTip() {
-    return this.tip;
+  public EventGraph<Event> commit() {
+    return EventGraph.concurrently(this.sibling, this.events.commit());
   }
 
   public boolean isDone() {
     return this.branches.isEmpty() && this.continuation.isEmpty();
   }
 
-  public TaskFrame<$Timeline, Signal> step(final BiConsumer<Signal, FrameBuilder<$Timeline, Signal>> executor) {
+  public TaskFrame<Signal> step(final BiConsumer<Signal, FrameBuilder<Signal>> executor) {
     if (!this.branches.isEmpty()) {
       // We have uncommitted child branches.
       // Start wandering down the next one.
       final var branch = this.branches.pop();
-      final var branchTip = branch.getLeft();
+      final var branchBase = branch.getLeft();
+      final var branchContext = branch.getMiddle();
       final var signal = branch.getRight();
 
-      final var builder = new FrameBuilder<>(branchTip, Optional.of(this));
+      final var builder = new FrameBuilder<>(this.events.commit(), branchContext, Optional.of(this));
+      this.events = branchBase;
+
       executor.accept(signal, builder);
 
       return builder.yield();
@@ -78,49 +97,75 @@ public final class TaskFrame<$Timeline, Signal> {
       // We're done here, but a parent frame is waiting for us to finish.
       // Commit our tip back up to the parent.
       final var parent = this.continuation.orElseThrow();
-      parent.tip = parent.tip.join(this.tip);
+      parent.events.add(this.commit());
       return parent;
     } else {
       // There's nothing at all left to do.
+      assert this.isDone();
       return this;
     }
   }
 
+  public static final class FrameBuilder<Signal> {
+    private final Optional<TaskFrame<Signal>> continuation;
+    private final EventGraph<Event> sibling;
 
-  public static final class FrameBuilder<$Timeline, Signal> {
+    private CausalEventSource events;
+    private LiveCells cells;
+    private final Deque<Triple<CausalEventSource, LiveCells, Signal>> branches = new ArrayDeque<>();
+
     private boolean yielded = false;
-    private History<$Timeline> tip;
-    private final Deque<Pair<History<$Timeline>, Signal>> branches = new ArrayDeque<>();
-    private final Optional<TaskFrame<$Timeline, Signal>> continuation;
 
-    private FrameBuilder(final History<$Timeline> tip, final Optional<TaskFrame<$Timeline, Signal>> continuation) {
-      this.tip = tip;
+    private FrameBuilder(
+        final EventGraph<Event> sibling,
+        final LiveCells context,
+        final Optional<TaskFrame<Signal>> continuation
+    ) {
       this.continuation = continuation;
+      this.sibling = sibling;
+
+      this.events = new CausalEventSource();
+      this.cells = new LiveCells(this.events, context);
     }
 
-    private TaskFrame<$Timeline, Signal> yield() {
+    private TaskFrame<Signal> yield() {
+      if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
       this.yielded = true;
+
       return new TaskFrame<>(this);
     }
 
-
-    public History<$Timeline> now() {
+    public <State> Optional<State> getState(final Query<State> query) {
       if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
 
-      return this.tip;
+      return this.cells.getState(query);
     }
 
-    public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
+    public Optional<Duration> getExpiry(final Query<?> query) {
       if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
 
-      this.tip = this.tip.emit(event, query);
+      return this.cells.getExpiry(query);
+    }
+
+    public void emit(final Event event) {
+      if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
+
+      this.events.add(EventGraph.atom(event));
     }
 
     public void signal(final Signal target) {
       if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
 
-      this.tip = this.tip.fork();
-      this.branches.push(Pair.of(this.tip, target));
+      // If we haven't emitted any events, subscribe the target to the previous branch point instead.
+      // This avoids making long chains of LiveCells over segments where no events have actually been accumulated.
+      if (this.events.points().isEmpty() && !this.branches.isEmpty()) {
+        this.branches.push(Triple.of(new CausalEventSource(), this.branches.peek().getMiddle(), target));
+      } else {
+        this.branches.push(Triple.of(this.events, this.cells, target));
+
+        this.events = new CausalEventSource();
+        this.cells = new LiveCells(this.events, this.cells);
+      }
     }
   }
 }

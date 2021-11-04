@@ -4,6 +4,10 @@ import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -19,7 +23,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -49,9 +52,9 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   /** The set of all jobs waiting on a given signal. */
   private final Subscriptions<SignalId, TaskId> waitingTasks = new Subscriptions<>();
   /** The set of conditions depending on a given set of topics. */
-  private final Subscriptions<TopicId, ConditionId> waitingConditions = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ConditionId> waitingConditions = new Subscriptions<>();
   /** The set of queries depending on a given set of topics. */
-  private final Subscriptions<TopicId, ResourceId> waitingResources = new Subscriptions<>();
+  private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
   /** The execution state for every task. */
   private final Map<TaskId, ExecutionState<$Timeline>> tasks = new HashMap<>();
@@ -123,7 +126,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** Schedules any conditions or resources dependent on the given topic to be re-checked at the given time. */
-  public void invalidateTopic(final TopicId topic, final Duration invalidationTime) {
+  public void invalidateTopic(final Topic<?> topic, final Duration invalidationTime) {
     final var resources = this.waitingResources.invalidateTopic(topic);
     for (final var resource : resources) {
       this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(invalidationTime));
@@ -144,22 +147,22 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
-  public History<$Timeline> performJobs(
+  public EventGraph<Event> performJobs(
       final Collection<JobId> jobs,
-      final History<$Timeline> now,
+      final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime,
       final Adaptation<? super $Timeline, ?> model
   ) {
-    return TaskFrame.runToCompletion(jobs, now, (job, builder) -> {
+    return TaskFrame.runToCompletion(jobs, context, (job, builder) -> {
       this.performJob(job, builder, currentTime, maximumTime, model);
     });
   }
 
   /** Performs a single job. */
-  private void performJob(
+  public void performJob(
       final JobId job,
-      final TaskFrame.FrameBuilder<$Timeline, JobId> builder,
+      final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
       final Duration maximumTime,
       final Adaptation<? super $Timeline, ?> model
@@ -169,9 +172,9 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     } else if (job instanceof JobId.SignalJobId j) {
       this.stepSignalledTasks(j.id(), builder);
     } else if (job instanceof JobId.ConditionJobId j) {
-      this.updateCondition(j.id(), builder.now(), currentTime, maximumTime);
+      this.updateCondition(j.id(), builder, currentTime, maximumTime);
     } else if (job instanceof JobId.ResourceJobId j) {
-      this.updateResource(j.id(), builder.now(), currentTime);
+      this.updateResource(j.id(), builder, currentTime);
     } else {
       throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
     }
@@ -180,7 +183,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   /** Perform the next step of a modeled task. */
   public void stepTask(
       final TaskId task,
-      final TaskFrame.FrameBuilder<$Timeline, JobId> builder,
+      final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
       final Adaptation<? super $Timeline, ?> model
   ) {
@@ -207,7 +210,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   private void stepEffectModel(
       final TaskId task,
       final ExecutionState.InProgress<$Timeline> progress,
-      final TaskFrame.FrameBuilder<$Timeline, JobId> builder,
+      final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
       final Adaptation<? super $Timeline, ?> model
   ) {
@@ -257,7 +260,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   private void stepWaitingTask(
       final TaskId task,
       final ExecutionState.AwaitingChildren<$Timeline> awaiting,
-      final TaskFrame.FrameBuilder<$Timeline, JobId> builder,
+      final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime
   ) {
     // TERMINATION: We break when there are no remaining children,
@@ -282,7 +285,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** Cause any tasks waiting on the given signal to be resumed concurrently with other jobs in the current frame. */
-  public void stepSignalledTasks(final SignalId signal, final TaskFrame.FrameBuilder<$Timeline, JobId> builder) {
+  public void stepSignalledTasks(final SignalId signal, final TaskFrame.FrameBuilder<JobId> builder) {
     final var tasks = this.waitingTasks.invalidateTopic(signal);
     for (final var task : tasks) builder.signal(JobId.forTask(task));
 
@@ -295,8 +298,13 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */
-  public void updateCondition(final ConditionId condition, final History<$Timeline> now, final Duration currentTime, final Duration horizonTime) {
-    final var querier = new EngineQuerier(now);
+  public void updateCondition(
+      final ConditionId condition,
+      final TaskFrame.FrameBuilder<JobId> builder,
+      final Duration currentTime,
+      final Duration horizonTime
+  ) {
+    final var querier = new EngineQuerier(builder);
     final var prediction = this.conditions
         .get(condition)
         .nextSatisfied(querier, horizonTime.minus(currentTime))
@@ -315,8 +323,12 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
-  public void updateResource(final ResourceId resource, final History<$Timeline> now, final Duration currentTime) {
-    final var querier = new EngineQuerier(now);
+  public void updateResource(
+      final ResourceId resource,
+      final TaskFrame.FrameBuilder<JobId> builder,
+      final Duration currentTime
+  ) {
+    final var querier = new EngineQuerier(builder);
     this.resources.get(resource).append(currentTime, querier);
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
@@ -488,28 +500,28 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
   /** A handle for processing requests from a modeled resource or condition. */
   private final class EngineQuerier implements Querier<$Timeline> {
-    private final History<$Timeline> history;
-    private final Set<TopicId> referencedTopics = new HashSet<>();
+    private final TaskFrame.FrameBuilder<JobId> builder;
+    private final Set<Topic<?>> referencedTopics = new HashSet<>();
     private Optional<Duration> expiry = Optional.empty();
 
-    public EngineQuerier(final History<$Timeline> history) {
-      this.history = Objects.requireNonNull(history);
+    public EngineQuerier(final TaskFrame.FrameBuilder<JobId> builder) {
+      this.builder = Objects.requireNonNull(builder);
     }
 
     @Override
     public <State> State getState(final Query<? super $Timeline, ?, State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
       @SuppressWarnings("unchecked")
-      final var query = ((EngineQuery<? super $Timeline, ?, State>) token).query();
+      final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
+
+      this.expiry = map2(this.expiry, this.builder.getExpiry(query.query()), Duration::min);
+      this.referencedTopics.add(query.topic());
 
       // TODO: Cache the state (until the query returns) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
-      final var state = this.history.ask(query);
+      final var state$ = this.builder.getState(query.query());
 
-      this.expiry = map2(this.expiry, query.getCurrentExpiry(state), Duration::min);
-      this.referencedTopics.add(new TopicId(query.getTableIndex()));
-
-      return state;
+      return state$.orElseThrow(IllegalArgumentException::new);
     }
 
     private static <T> Optional<T> map2(final Optional<T> a, final Optional<T> b, final BinaryOperator<T> f) {
@@ -525,15 +537,15 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     private final Duration currentTime;
     private final TaskId activeTask;
-    private final TaskFrame.FrameBuilder<$Timeline, JobId> builder;
-    private final Set<TopicId> referencedTopics = new HashSet<>();
-    private final Set<TopicId> affectedTopics = new HashSet<>();
+    private final TaskFrame.FrameBuilder<JobId> builder;
+    private final Set<Topic<?>> referencedTopics = new HashSet<>();
+    private final Set<Topic<?>> affectedTopics = new HashSet<>();
 
     public EngineScheduler(
         final Adaptation<? super $Timeline, ?> model,
         final Duration currentTime,
         final TaskId activeTask,
-        final TaskFrame.FrameBuilder<$Timeline, JobId> builder
+        final TaskFrame.FrameBuilder<JobId> builder
     ) {
       this.model = Objects.requireNonNull(model);
       this.currentTime = Objects.requireNonNull(currentTime);
@@ -545,29 +557,24 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     public <State> State get(final Query<? super $Timeline, ?, State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
       @SuppressWarnings("unchecked")
-      final var query = ((EngineQuery<? super $Timeline, ?, State>) token).query();
+      final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
-      this.referencedTopics.add(new TopicId(query.getTableIndex()));
+      this.referencedTopics.add(query.topic());
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
-      return this.builder.now().ask(query);
+      final var state$ = this.builder.getState(query.query());
+      return state$.orElseThrow(IllegalArgumentException::new);
     }
 
     @Override
-    public <Event> void emit(final Event event, final Query<? super $Timeline, ? super Event, ?> token) {
-      final TopicId topic;
+    public <EventType> void emit(final EventType event, final Query<? super $Timeline, ? super EventType, ?> token) {
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      @SuppressWarnings("unchecked")
+      final var topic = ((EngineQuery<? super $Timeline, ? super EventType, ?>) token).topic();
 
       // Append this event to the timeline.
-      {
-        // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
-        @SuppressWarnings("unchecked")
-        final var query = ((EngineQuery<? super $Timeline, ? super Event, ?>) token).query();
-
-        this.builder.emit(event, query);
-
-        topic = new TopicId(query.getTableIndex());
-      }
+      this.builder.emit(Event.create(topic, event));
 
       this.affectedTopics.add(topic);
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);

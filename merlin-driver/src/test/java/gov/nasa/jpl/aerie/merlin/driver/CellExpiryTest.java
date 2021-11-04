@@ -11,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ public final class CellExpiryTest {
   @Test
   @DisplayName("Resource profiles are re-queried by the upstream cells' expiry time")
   public void testResourceProfilingByExpiry() {
-    final var model = makeModel(Schema.builder(), "/key", "value", MILLISECONDS.times(500));
+    final var model = makeModel("/key", "value", MILLISECONDS.times(500));
 
     final var results = SimulationDriver.simulate(model, Map.of(), Instant.now(), Duration.SECONDS.times(5));
 
@@ -57,61 +56,58 @@ public final class CellExpiryTest {
   }
 
   private <$Schema> Adaptation<$Schema, ?> makeModel(
-      final Schema.Builder<$Schema> builder,
       final String resourceName,
       final String resourceValue,
       final Duration expiry
   ) {
-    final var initializer = new AdaptationBuilder<>(builder);
+    final var initializer = new AdaptationBuilder<$Schema>();
 
-    final var ref = initializer.allocate(new Projection<>() {
-      @Override
-      public Object atom(final Object atom) {
-        return atom;
-      }
+    final var ref = initializer.allocate(
+        new Object(),
+        new Applicator<>() {
+          @Override
+          public Object duplicate(final Object o) {
+            // no internal state
+            return o;
+          }
 
-      @Override
-      public Object empty() {
-        return new Object();
-      }
+          @Override
+          public void apply(final Object o, final Object o2) {
+            // no internal state
+          }
 
-      @Override
-      public Object sequentially(final Object prefix, final Object suffix) {
-        return empty();
-      }
+          @Override
+          public void step(final Object o, final Duration duration) {
+            // no internal state
+          }
 
-      @Override
-      public Object concurrently(final Object left, final Object right) {
-        return empty();
-      }
-    }, new Applicator<>() {
-      @Override
-      public Object initial() {
-        // no internal state
-        return new Object();
-      }
+          @Override
+          public Optional<Duration> getExpiry(final Object o) {
+            return Optional.of(expiry);
+          }
+        },
+        new Projection<>() {
+          @Override
+          public Object atom(final Object atom) {
+            return atom;
+          }
 
-      @Override
-      public Object duplicate(final Object o) {
-        // no internal state
-        return o;
-      }
+          @Override
+          public Object empty() {
+            return new Object();
+          }
 
-      @Override
-      public void apply(final Object o, final Object o2) {
-        // no internal state
-      }
+          @Override
+          public Object sequentially(final Object prefix, final Object suffix) {
+            return empty();
+          }
 
-      @Override
-      public void step(final Object o, final Duration duration) {
-        // no internal state
-      }
-
-      @Override
-      public Optional<Duration> getExpiry(final Object o) {
-        return Optional.of(expiry);
-      }
-    });
+          @Override
+          public Object concurrently(final Object left, final Object right) {
+            return empty();
+          }
+        }
+    );
 
     initializer.resourceFamily(new ResourceFamily<$Schema, String>() {
       @Override
