@@ -94,13 +94,9 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(T,gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid)" class="member-name-link">CounterCell</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
- <a href="../../traits/CommutativeMonoid.html" title="class in gov.nasa.jpl.aerie.contrib.traits">CommutativeMonoid</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;trait)</code></div>
-<div class="col-last even-row-color">&nbsp;</div>
-<div class="col-constructor-name odd-row-color"><code><a href="#%3Cinit%3E(T,T,java.util.function.BinaryOperator)" class="member-name-link">CounterCell</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
- <a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;zero,
+<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(T,java.util.function.BinaryOperator)" class="member-name-link">CounterCell</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;adder)</code></div>
-<div class="col-last odd-row-color">&nbsp;</div>
+<div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
 </li>
@@ -118,15 +114,12 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#duplicate()" class="member-name-link">duplicate</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#effectTrait()" class="member-name-link">effectTrait</a>()</code></div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="CounterCell.html" title="type parameter in CounterCell">T</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getValue()" class="member-name-link">getValue</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="CounterCell.html" title="type parameter in CounterCell">T</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getValue()" class="member-name-link">getValue</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#react(T)" class="member-name-link">react</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;t)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#react(T)" class="member-name-link">react</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;t)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -135,7 +128,7 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-gov.nasa.jpl.aerie.merlin.framework.Cell">Methods inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.framework.Cell</h3>
-<code>step</code></div>
+<code>getExpiry, step</code></div>
 </section>
 </li>
 </ul>
@@ -148,17 +141,9 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(T,gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid)">
-<h3 id="&lt;init&gt;(java.lang.Object,gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid)">CounterCell</h3>
+<section class="detail" id="&lt;init&gt;(T,java.util.function.BinaryOperator)">
+<h3 id="&lt;init&gt;(java.lang.Object,java.util.function.BinaryOperator)">CounterCell</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">CounterCell</span><wbr><span class="parameters">(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
- <a href="../../traits/CommutativeMonoid.html" title="class in gov.nasa.jpl.aerie.contrib.traits">CommutativeMonoid</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;trait)</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="&lt;init&gt;(T,T,java.util.function.BinaryOperator)">
-<h3 id="&lt;init&gt;(java.lang.Object,java.lang.Object,java.util.function.BinaryOperator)">CounterCell</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">CounterCell</span><wbr><span class="parameters">(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
- <a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;zero,
  <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;adder)</span></div>
 </section>
 </li>
@@ -177,16 +162,6 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <dl class="notes">
 <dt>Specified by:</dt>
 <dd><code>duplicate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.Cell&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="effectTrait()">
-<h3>effectTrait</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;</span>&nbsp;<span class="element-name">effectTrait</span>()</div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>effectTrait</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.Cell&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&gt;</code></dd>
 </dl>
 </section>
 </li>

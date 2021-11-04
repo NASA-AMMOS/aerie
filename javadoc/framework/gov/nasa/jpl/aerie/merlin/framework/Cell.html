@@ -90,9 +90,11 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="Cell.html" title="type parameter in Cell">Self</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#duplicate()" class="member-name-link">duplicate</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait&lt;<a href="Cell.html" title="type parameter in Cell">Effect</a>&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#effectTrait()" class="member-name-link">effectTrait</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code>default <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.types.Duration&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code><a href="#getExpiry()" class="member-name-link">getExpiry</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5">
+<div class="block">Get the (positive) amount of time that this cell is valid for, or empty if it's valid forever.</div>
+</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>void</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#react(Effect)" class="member-name-link">react</a><wbr>(<a href="Cell.html" title="type parameter in Cell">Effect</a>&nbsp;effect)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
@@ -120,12 +122,6 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
-<section class="detail" id="effectTrait()">
-<h3>effectTrait</h3>
-<div class="member-signature"><span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait&lt;<a href="Cell.html" title="type parameter in Cell">Effect</a>&gt;</span>&nbsp;<span class="element-name">effectTrait</span>()</div>
-</section>
-</li>
-<li>
 <section class="detail" id="react(Effect)">
 <h3 id="react(java.lang.Object)">react</h3>
 <div class="member-signature"><span class="return-type">void</span>&nbsp;<span class="element-name">react</span><wbr><span class="parameters">(<a href="Cell.html" title="type parameter in Cell">Effect</a>&nbsp;effect)</span></div>
@@ -135,6 +131,13 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="step(gov.nasa.jpl.aerie.merlin.protocol.types.Duration)">
 <h3>step</h3>
 <div class="member-signature"><span class="modifiers">default</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">step</span><wbr><span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.Duration&nbsp;duration)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="getExpiry()">
+<h3>getExpiry</h3>
+<div class="member-signature"><span class="modifiers">default</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/Optional.html" title="class or interface in java.util" class="external-link">Optional</a>&lt;gov.nasa.jpl.aerie.merlin.protocol.types.Duration&gt;</span>&nbsp;<span class="element-name">getExpiry</span>()</div>
+<div class="block">Get the (positive) amount of time that this cell is valid for, or empty if it's valid forever.</div>
 </section>
 </li>
 </ul>
