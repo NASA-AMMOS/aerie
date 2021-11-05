@@ -1,16 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public final class Registrar {
   private final Initializer<?> builder;
@@ -23,24 +20,76 @@ public final class Registrar {
     return (ModelActions.context.get().getContextType() != Context.ContextType.Initializing);
   }
 
-  public <Value>
-  DiscreteResource<Value>
-  discrete(final String name, final Resource<Value> resource, final ValueMapper<Value> mapper) {
-    this.builder.resourceFamily(new DiscreteResourceFamily<>(
-        ModelActions.context,
-        mapper,
-        Map.of(name, resource)));
-
-    return resource::getDynamics;
+  public <Value> void discrete(final String name, final Resource<Value> resource, final ValueMapper<Value> mapper) {
+    addDiscreteResource(this.builder, name, resource, mapper);
   }
 
-  public
-  RealResource
-  real(final String name, final Resource<RealDynamics> resource) {
-    this.builder.resourceFamily(new RealResourceFamily<>(
-        ModelActions.context,
-        Map.of(name, resource)));
+  public void real(final String name, final Resource<RealDynamics> resource) {
+    addRealResource(this.builder, name, resource);
+  }
 
-    return resource::getDynamics;
+  private static <$Schema, Value> void addDiscreteResource(
+      final Initializer<$Schema> initializer,
+      final String name,
+      final Resource<Value> resource,
+      final ValueMapper<Value> mapper
+  ) {
+    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<$Schema, Value>() {
+      @Override
+      public String getType() {
+        return "discrete";
+      }
+
+      @Override
+      public ValueSchema getSchema() {
+        return mapper.getValueSchema();
+      }
+
+      @Override
+      public Value getDynamics(final Querier<? extends $Schema> querier) {
+        try (final var _token = ModelActions.context.set(new QueryContext<>(querier))) {
+          return resource.getDynamics();
+        }
+      }
+
+      @Override
+      public SerializedValue serialize(final Value value) {
+        return mapper.serializeValue(value);
+      }
+    });
+  }
+
+  private static <$Schema> void addRealResource(
+      final Initializer<$Schema> initializer,
+      final String name,
+      final Resource<RealDynamics> resource
+  ) {
+    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<$Schema, RealDynamics>() {
+      @Override
+      public String getType() {
+        return "real";
+      }
+
+      @Override
+      public ValueSchema getSchema() {
+        return ValueSchema.ofStruct(Map.of(
+            "initial", ValueSchema.REAL,
+            "rate", ValueSchema.REAL));
+      }
+
+      @Override
+      public RealDynamics getDynamics(final Querier<? extends $Schema> querier) {
+        try (final var _token = ModelActions.context.set(new QueryContext<>(querier))) {
+          return resource.getDynamics();
+        }
+      }
+
+      @Override
+      public SerializedValue serialize(final RealDynamics dynamics) {
+        return SerializedValue.of(Map.of(
+            "initial", SerializedValue.of(dynamics.initial),
+            "rate", SerializedValue.of(dynamics.rate)));
+      }
+    });
   }
 }

@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
@@ -18,20 +18,20 @@ import java.util.Objects;
 public final class Adaptation<$Schema, Model> {
   private final Phantom<$Schema, Model> model;
   private final LiveCells initialCells;
-  private final List<ResourceFamily<$Schema, ?>> resourceFamilies;
+  private final Map<String, Resource<? super $Schema, ?>> resources;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
   private final List<Initializer.TaskFactory<$Schema>> daemons;
 
   public Adaptation(
       final Phantom<$Schema, Model> model,
       final LiveCells initialCells,
-      final List<ResourceFamily<$Schema, ?>> resourceFamilies,
+      final Map<String, Resource<? super $Schema, ?>> resources,
       final List<Initializer.TaskFactory<$Schema>> daemons,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
-    this.resourceFamilies = Collections.unmodifiableList(resourceFamilies);
+    this.resources = Collections.unmodifiableMap(resources);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
@@ -64,8 +64,8 @@ public final class Adaptation<$Schema, Model> {
     };
   }
 
-  public Iterable<ResourceFamily<$Schema, ?>> getResourceFamilies() {
-    return this.resourceFamilies;
+  public Map<String, Resource<? super $Schema, ?>> getResources() {
+    return this.resources;
   }
 
   public LiveCells getInitialCells() {

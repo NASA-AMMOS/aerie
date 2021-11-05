@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.protocol.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 
 public interface Initializer<$Schema> {
@@ -14,9 +14,10 @@ public interface Initializer<$Schema> {
 
   String daemon(TaskFactory<$Schema> factory);
 
-  <Dynamics> void resourceFamily(ResourceFamily<$Schema, Dynamics> resourceFamily);
+  void resource(String name, Resource<? super $Schema, ?> resource);
 
   interface TaskFactory<$Schema> {
     <$Timeline extends $Schema> Task<$Timeline> create();
   }
+
 }

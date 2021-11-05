@@ -5,9 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.model.DiscreteApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.RealApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -37,26 +34,12 @@ public final class AdaptationFacade<$Schema> {
   }
 
   public Map<String, ValueSchema> getStateSchemas() {
-    final class SchemaGetter<T> implements ResourceSolver.ApproximatorVisitor<T, ValueSchema> {
-      @Override
-      public ValueSchema real(final RealApproximator<T> approximator) {
-        return ValueSchema.REAL;
-      }
-
-      @Override
-      public ValueSchema discrete(final DiscreteApproximator<T> approximator) {
-        return approximator.getSchema();
-      }
-    }
-
     final var schemas = new HashMap<String, ValueSchema>();
 
-    for (final var family : this.adaptation.getResourceFamilies()) {
-      final var schema = family.getSolver().approximate(new SchemaGetter<>());
-
-      for (final var name : family.getResources().keySet()) {
-        schemas.put(name, schema);
-      }
+    for (final var entry : this.adaptation.getResources().entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+      schemas.put(name, resource.getSchema());
     }
 
     return schemas;

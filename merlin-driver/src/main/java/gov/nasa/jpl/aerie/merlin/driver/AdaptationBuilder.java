@@ -11,11 +11,12 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +41,8 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   }
 
   @Override
-  public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
-    this.state.resourceFamily(resourceFamily);
+  public void resource(final String name, final Resource<? super $Schema, ?> resource) {
+    this.state.resource(name, resource);
   }
 
   @Override
@@ -75,7 +76,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
     private final LiveCells initialCells = new LiveCells(new CausalEventSource());
 
-    private final List<ResourceFamily<$Schema, ?>> resourceFamilies = new ArrayList<>();
+    private final Map<String, Resource<? super $Schema, ?>> resources = new HashMap<>();
     private final List<TaskFactory<$Schema>> daemons = new ArrayList<>();
 
     @Override
@@ -113,8 +114,8 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
-    public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
-      this.resourceFamilies.add(resourceFamily);
+    public void resource(final String name, final Resource<? super $Schema, ?> resource) {
+      this.resources.put(name, resource);
     }
 
     @Override
@@ -129,7 +130,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
       final var adaptation = new Adaptation<>(
           model,
           this.initialCells,
-          this.resourceFamilies,
+          this.resources,
           this.daemons,
           taskSpecTypes);
 
@@ -158,7 +159,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
-    public <Dynamics> void resourceFamily(final ResourceFamily<$Schema, Dynamics> resourceFamily) {
+    public void resource(final String name, final Resource<? super $Schema, ?> resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 

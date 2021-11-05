@@ -7,12 +7,6 @@
  * </p>
  *
  * <p>
- *   At any given time, a resource is in a given <b>state</b>, and its time-varying behavior -- its <b>dynamics</b> --
- *   depends only upon that state. The {@link gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver} interface
- *   defines this relationship between state and dynamics.
- * </p>
- *
- * <p>
  *   Multiple resources may be determined by the same shared state.
  *   Such resources are defined by a <b>model</b> which determines the dynamics of each of the coupled resources.
  *   Thus, a <i>resource</i> is defined by a <i>model</i>.
@@ -34,9 +28,5 @@
  *   <li>
  *     Determining the next time at which some condition is held true.
  * </ul>
- * <p>
- *   The {@link gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver} interface captures these capabilities
- *   for a given choice of types for resource values, dynamics, and conditions.
- * </p>
  */
 package gov.nasa.jpl.aerie.merlin.framework.resources;
