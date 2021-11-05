@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
 import java.util.List;
+import java.util.function.Function;
 
 /** Simple data model inspired by Clipper's example data system model diagrams. */
 public final class SimpleData {
@@ -30,7 +31,7 @@ public final class SimpleData {
     public final RealResource volume, rate;
 
     private InstrumentData(final double activeRate) {
-      this.ref = CellRef.allocate(new LinearIntegrationCell(0, 0), LinearAccumulationEffect.TRAIT);
+      this.ref = LinearIntegrationCell.allocate(0, 0, Function.identity());
       this.activeRate = activeRate;
       this.volume = () -> this.ref.get().getVolume();
       this.rate = () -> this.ref.get().getRate();

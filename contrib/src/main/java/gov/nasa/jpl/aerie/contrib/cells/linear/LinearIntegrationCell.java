@@ -1,10 +1,13 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
-import gov.nasa.jpl.aerie.merlin.framework.Cell;
+import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
-public final class LinearIntegrationCell implements Cell<LinearAccumulationEffect, LinearIntegrationCell> {
+import java.util.function.Function;
+
+public final class LinearIntegrationCell {
   // We split `initialVolume` from `accumulatedVolume` to avoid loss of floating-point precision.
   // The rate is usually smaller than the volume by some orders of magnitude,
   // so accumulated deltas will usually be closer to each other in magnitude than to the current volume.
@@ -22,24 +25,13 @@ public final class LinearIntegrationCell implements Cell<LinearAccumulationEffec
     this(initialVolume, rate, 0.0);
   }
 
-  @Override
-  public LinearIntegrationCell duplicate() {
-    return new LinearIntegrationCell(this.initialVolume, this.rate, this.accumulatedVolume);
-  }
-
-  @Override
-  public void react(final LinearAccumulationEffect effect) {
-    this.rate += effect.deltaRate;
-    if (effect.clearVolume) {
-      this.initialVolume = 0;
-      this.accumulatedVolume = 0;
-    }
-  }
-
-  @Override
-  public void step(final Duration elapsedTime) {
-    // Law: The passage of time shall not alter a valid dynamics.
-    this.accumulatedVolume += this.rate * elapsedTime.ratioOver(Duration.SECOND);
+  public static <Event> CellRef<Event, LinearIntegrationCell>
+  allocate(final double initialVolume, final double rate, final Function<Event, LinearAccumulationEffect> interpreter) {
+    return CellRef.allocate(
+        new LinearIntegrationCell(initialVolume, rate),
+        new LinearIntegrationApplicator(),
+        LinearAccumulationEffect.TRAIT,
+        interpreter);
   }
 
   public RealDynamics getVolume() {
@@ -48,5 +40,29 @@ public final class LinearIntegrationCell implements Cell<LinearAccumulationEffec
 
   public RealDynamics getRate() {
     return RealDynamics.constant(this.rate);
+  }
+
+  public static final class LinearIntegrationApplicator
+      implements Applicator<LinearAccumulationEffect, LinearIntegrationCell>
+  {
+    @Override
+    public LinearIntegrationCell duplicate(final LinearIntegrationCell cell) {
+      return new LinearIntegrationCell(cell.initialVolume, cell.rate, cell.accumulatedVolume);
+    }
+
+    @Override
+    public void apply(final LinearIntegrationCell cell, final LinearAccumulationEffect effect) {
+      cell.rate += effect.deltaRate;
+      if (effect.clearVolume) {
+        cell.initialVolume = 0;
+        cell.accumulatedVolume = 0;
+      }
+    }
+
+    @Override
+    public void step(final LinearIntegrationCell cell, final Duration elapsedTime) {
+      // Law: The passage of time shall not alter a valid dynamics.
+      cell.accumulatedVolume += cell.rate * elapsedTime.ratioOver(Duration.SECOND);
+    }
   }
 }

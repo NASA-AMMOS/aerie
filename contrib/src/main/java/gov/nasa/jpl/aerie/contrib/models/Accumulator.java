@@ -6,6 +6,8 @@ import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 
+import java.util.function.Function;
+
 public final class Accumulator implements RealResource {
   private final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref;
 
@@ -16,7 +18,7 @@ public final class Accumulator implements RealResource {
   }
 
   public Accumulator(final double initialVolume, final double initialRate) {
-    this.ref = CellRef.allocate(new LinearIntegrationCell(initialVolume, initialRate), LinearAccumulationEffect.TRAIT);
+    this.ref = LinearIntegrationCell.allocate(initialVolume, initialRate, Function.identity());
   }
 
   @Override
