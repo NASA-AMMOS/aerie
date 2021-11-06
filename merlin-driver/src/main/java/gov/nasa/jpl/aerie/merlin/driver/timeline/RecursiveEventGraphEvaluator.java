@@ -3,30 +3,26 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
   @Override
-  public <EventType, Effect> Optional<Effect> evaluateOptional(
-      final EffectTrait<Effect> trait,
-      final Function<EventType, Optional<Effect>> substitution,
-      final EventGraph<EventType> graph)
-  {
+  public <Effect> Optional<Effect>
+  evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, final EventGraph<Event> graph) {
     if (graph instanceof EventGraph.Empty) {
       return Optional.empty();
-    } else if (graph instanceof EventGraph.Atom<EventType> g) {
-      return substitution.apply(g.atom());
-    } else if (graph instanceof EventGraph.Sequentially<EventType> g) {
-      final var prefix = evaluateOptional(trait, substitution, g.prefix());
-      final var suffix = evaluateOptional(trait, substitution, g.suffix());
+    } else if (graph instanceof EventGraph.Atom<Event> g) {
+      return selector.select(g.atom());
+    } else if (graph instanceof EventGraph.Sequentially<Event> g) {
+      final var prefix = evaluate(trait, selector, g.prefix());
+      final var suffix = evaluate(trait, selector, g.suffix());
 
       if (prefix.isEmpty()) return suffix;
       if (suffix.isEmpty()) return prefix;
 
       return Optional.of(trait.sequentially(prefix.get(), suffix.get()));
-    } else if (graph instanceof EventGraph.Concurrently<EventType> g) {
-      final var left = evaluateOptional(trait, substitution, g.left());
-      final var right = evaluateOptional(trait, substitution, g.right());
+    } else if (graph instanceof EventGraph.Concurrently<Event> g) {
+      final var left = evaluate(trait, selector, g.left());
+      final var right = evaluate(trait, selector, g.right());
 
       if (left.isEmpty()) return right;
       if (right.isEmpty()) return left;

@@ -72,7 +72,21 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   }
 
   default <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
-    return new RecursiveEventGraphEvaluator().evaluate(trait, substitution, this);
+    if (this instanceof EventGraph.Empty) {
+      return trait.empty();
+    } else if (this instanceof EventGraph.Atom<Event> g) {
+      return substitution.apply(g.atom());
+    } else if (this instanceof EventGraph.Sequentially<Event> g) {
+      return trait.sequentially(
+          g.prefix().evaluate(trait, substitution),
+          g.suffix().evaluate(trait, substitution));
+    } else if (this instanceof EventGraph.Concurrently<Event> g) {
+      return trait.concurrently(
+          g.left().evaluate(trait, substitution),
+          g.right().evaluate(trait, substitution));
+    } else {
+      throw new IllegalArgumentException();
+    }
   }
 
   /**

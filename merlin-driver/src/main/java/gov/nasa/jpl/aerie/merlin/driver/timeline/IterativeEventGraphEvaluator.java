@@ -3,30 +3,25 @@ package gov.nasa.jpl.aerie.merlin.driver.timeline;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
   @Override
-  public <EventType, Effect>
-  Optional<Effect> evaluateOptional(
-      final EffectTrait<Effect> trait,
-      final Function<EventType, Optional<Effect>> substitution,
-      EventGraph<EventType> graph
-  ) {
-    Continuation<EventType, Effect> andThen = new Continuation.Empty<>();
+  public <Effect> Optional<Effect>
+  evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, EventGraph<Event> graph) {
+    Continuation<Event, Effect> andThen = new Continuation.Empty<>();
 
     while (true) {
       // Drill down the leftmost branches of the par-seq graph until we hit a leaf.
       Optional<Effect> effect$;
       while (true) {
-        if (graph instanceof EventGraph.Sequentially<EventType> g) {
+        if (graph instanceof EventGraph.Sequentially<Event> g) {
           graph = g.prefix();
           andThen = new Continuation.Right<>(Combiner.Sequentially, g.suffix(), andThen);
-        } else if (graph instanceof EventGraph.Concurrently<EventType> g) {
+        } else if (graph instanceof EventGraph.Concurrently<Event> g) {
           graph = g.left();
           andThen = new Continuation.Right<>(Combiner.Concurrently, g.right(), andThen);
-        } else if (graph instanceof EventGraph.Atom<EventType> g) {
-          effect$ = substitution.apply(g.atom());
+        } else if (graph instanceof EventGraph.Atom<Event> g) {
+          effect$ = selector.select(g.atom());
           break;
         } else if (graph instanceof EventGraph.Empty) {
           effect$ = Optional.empty();
@@ -41,10 +36,10 @@ public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
       if (effect$.isPresent()) {
         effect = effect$.get();
       } else {
-        if (andThen instanceof Continuation.Combine<EventType, Effect> f) {
+        if (andThen instanceof Continuation.Combine<Event, Effect> f) {
           andThen = f.andThen();
           effect = f.left();
-        } else if (andThen instanceof Continuation.Right<EventType, Effect> f) {
+        } else if (andThen instanceof Continuation.Right<Event, Effect> f) {
           andThen = f.andThen();
           graph = f.right();
           continue;
@@ -57,13 +52,13 @@ public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
 
       // Retrace our steps, accumulating the result until we need to drill down again.
       while (true) {
-        if (andThen instanceof Continuation.Combine<EventType, Effect> f) {
+        if (andThen instanceof Continuation.Combine<Event, Effect> f) {
           andThen = f.andThen();
           effect = switch (f.combiner()) {
             case Sequentially -> trait.sequentially(f.left(), effect);
             case Concurrently -> trait.concurrently(f.left(), effect);
           };
-        } else if (andThen instanceof Continuation.Right<EventType, Effect> f) {
+        } else if (andThen instanceof Continuation.Right<Event, Effect> f) {
           andThen = new Continuation.Combine<>(f.combiner(), effect, f.andThen());
           graph = f.right();
           break;

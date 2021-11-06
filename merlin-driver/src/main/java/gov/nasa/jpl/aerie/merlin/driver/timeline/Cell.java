@@ -71,7 +71,7 @@ public final class Cell<State> {
       EventGraphEvaluator evaluator
   ) {
     public void apply(final State state, final EventGraph<Event> events) {
-      final var effect$ = this.evaluator.evaluateOptional(this.algebra, this.selector::select, events);
+      final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events);
       if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
     }
 
