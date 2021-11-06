@@ -24,7 +24,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,7 +49,7 @@ public final class TaskFrameTest {
 
 	@Property
   @Label("TaskFrame should faithfully reassemble event graphs")
-  public boolean producedGraphIsCorrect(@ForAll("fanout") EventGraph<Integer> graph) {
+  public void producedGraphIsCorrect(@ForAll("fanout") EventGraph<Integer> graph) {
     final var events = new CausalEventSource();
     final var cells = new LiveCells(events);
     final var topic = new Topic<Integer>();
@@ -60,7 +59,7 @@ public final class TaskFrameTest {
         .map($ -> EventGraph.atom($.extract(topic).orElseThrow()));
 
     // Equivalent graphs have equal string representations.
-    return Objects.equals(
+    assertEquals(
         EffectExpressionDisplay.displayGraph(graph),
         EffectExpressionDisplay.displayGraph(result));
   }
