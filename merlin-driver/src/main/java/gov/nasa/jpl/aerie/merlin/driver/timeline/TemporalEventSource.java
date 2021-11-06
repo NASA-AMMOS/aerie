@@ -12,10 +12,12 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
   }
 
   public void add(final Duration delta) {
+    if (delta.isZero()) return;
     this.points.append(new TimePoint.Delta(delta));
   }
 
   public void add(final EventGraph<Event> graph) {
+    if (graph instanceof EventGraph.Empty) return;
     this.points.append(new TimePoint.Commit(graph, extractTopics(graph)));
   }
 
