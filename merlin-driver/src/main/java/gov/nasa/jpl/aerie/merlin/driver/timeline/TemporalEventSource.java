@@ -20,29 +20,34 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
   }
 
   @Override
-  public Cursor cursor() {
-    final var iterator = this.points.iterator();
-
-    return new Cursor() {
-      @Override
-      public boolean hasNext() {
-        return iterator.hasNext();
-      }
-
-      @Override
-      public void step(final Cell<?> cell) {
-        final var point = iterator.next();
-
-        if (point instanceof TimePoint.Delta p) {
-          cell.step(p.delta());
-        } else if (point instanceof TimePoint.Commit p) {
-          if (cell.isInterestedIn(p.topics())) cell.apply(p.events());
-        } else {
-          throw new IllegalStateException();
-        }
-      }
-    };
+  public TemporalCursor cursor() {
+    return new TemporalCursor();
   }
+
+  public final class TemporalCursor implements Cursor {
+    private final SlabList<TimePoint>.SlabIterator iterator = TemporalEventSource.this.points.iterator();
+
+    private TemporalCursor() {}
+
+    @Override
+    public boolean hasNext() {
+      return this.iterator.hasNext();
+    }
+
+    @Override
+    public void step(final Cell<?> cell) {
+      final var point = this.iterator.next();
+
+      if (point instanceof TimePoint.Delta p) {
+        cell.step(p.delta());
+      } else if (point instanceof TimePoint.Commit p) {
+        if (cell.isInterestedIn(p.topics())) cell.apply(p.events());
+      } else {
+        throw new IllegalStateException();
+      }
+    }
+  }
+
 
   private static Set<Topic<?>> extractTopics(final EventGraph<Event> graph) {
     final var set = new ReferenceOpenHashSet<Topic<?>>();

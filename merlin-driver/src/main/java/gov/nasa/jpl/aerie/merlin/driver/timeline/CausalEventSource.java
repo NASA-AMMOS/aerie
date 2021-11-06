@@ -17,21 +17,23 @@ public record CausalEventSource(List<EventGraph<Event>> points) implements Event
   }
 
   @Override
-  public Cursor cursor() {
-    return new Cursor() {
-      private int index = 0;
+  public CausalCursor cursor() {
+    return new CausalCursor();
+  }
 
-      @Override
-      public boolean hasNext() {
-        return (this.index < points.size());
-      }
+  public final class CausalCursor implements Cursor {
+    private int index = 0;
 
-      @Override
-      public void step(final Cell<?> cell) {
-        if (!hasNext()) return;
+    @Override
+    public boolean hasNext() {
+      return (this.index < points.size());
+    }
 
-        cell.apply(points.get(this.index++));
-      }
-    };
+    @Override
+    public void step(final Cell<?> cell) {
+      if (!hasNext()) return;
+
+      cell.apply(points.get(this.index++));
+    }
   }
 }
