@@ -71,15 +71,13 @@ public final class Cell<State> {
       EventGraphEvaluator evaluator
   ) {
     public void apply(final State state, final EventGraph<Event> events) {
-      this.applicator.apply(state, this.evaluator
-          .evaluateOptional(this.algebra, this.selector::select, events)
-          .orElseGet(this.algebra::empty));
+      final var effect$ = this.evaluator.evaluateOptional(this.algebra, this.selector::select, events);
+      if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
     }
 
     public void apply(final State state, final Event event) {
-      this.applicator.apply(state, this.selector
-          .select(event)
-          .orElseGet(this.algebra::empty));
+      final var effect$ = this.selector.select(event);
+      if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
     }
 
     public void apply(final State state, final Event[] events, int from, final int to) {
