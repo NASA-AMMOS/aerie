@@ -75,15 +75,15 @@ public final class SlabList<T> implements Iterable<T> {
 
     @Override
     public boolean hasNext() {
-      while (this.index >= this.slab.elements().size()) {
-        final var nextSlab = this.slab.next().getValue();
-        if (nextSlab == null) break;
+      if (this.index < this.slab.elements().size()) return true;
 
-        this.index -= this.slab.elements().size();
-        this.slab = nextSlab;
-      }
+      final var nextSlab = this.slab.next().getValue();
+      if (nextSlab == null || nextSlab.elements().isEmpty()) return false;
 
-      return (this.index < this.slab.elements().size());
+      this.index -= this.slab.elements().size();
+      this.slab = nextSlab;
+
+      return true;
     }
 
     @Override
