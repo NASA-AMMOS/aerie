@@ -39,6 +39,10 @@ public final class Cell<State> {
     this.inner.apply(this.state, events);
   }
 
+  public void apply(final Event event) {
+    this.inner.apply(this.state, event);
+  }
+
   public Optional<Duration> getExpiry() {
     return this.inner.applicator.getExpiry(this.state);
   }
@@ -65,6 +69,12 @@ public final class Cell<State> {
     public void apply(final State state, final EventGraph<Event> events) {
       this.applicator.apply(state, this.evaluator
           .evaluateOptional(this.algebra, this.selector::select, events)
+          .orElseGet(this.algebra::empty));
+    }
+
+    public void apply(final State state, final Event event) {
+      this.applicator.apply(state, this.selector
+          .select(event)
           .orElseGet(this.algebra::empty));
     }
   }

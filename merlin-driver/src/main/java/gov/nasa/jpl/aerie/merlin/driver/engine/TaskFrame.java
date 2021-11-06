@@ -49,7 +49,7 @@ public final class TaskFrame<Signal> {
     this.parent = parent;
     this.base = base;
 
-    this.tip = builder.events.commit();
+    this.tip = builder.events.commit(EventGraph.empty());
     this.branches = builder.branches;
   }
 
@@ -70,7 +70,7 @@ public final class TaskFrame<Signal> {
 
     while (!frame.isDone()) frame = frame.step(executor);
 
-    return EventGraph.sequentially(frame.base.commit(), frame.tip);
+    return frame.base.commit(frame.tip);
   }
 
   public boolean isDone() {
@@ -94,7 +94,7 @@ public final class TaskFrame<Signal> {
       // We're done here, but a parent frame is waiting for us to finish.
       // Commit our tip back up to the parent.
       final var parent = this.parent.orElseThrow();
-      parent.tip = EventGraph.sequentially(this.base.commit(), EventGraph.concurrently(parent.tip, this.tip));
+      parent.tip = this.base.commit(EventGraph.concurrently(parent.tip, this.tip));
       return parent;
     } else {
       // There's nothing at all left to do.
@@ -122,13 +122,13 @@ public final class TaskFrame<Signal> {
     }
 
     public void emit(final Event event) {
-      this.events.add(EventGraph.atom(event));
+      this.events.add(event);
     }
 
     public void signal(final Signal target) {
       // If we haven't emitted any events, subscribe the target to the previous branch point instead.
       // This avoids making long chains of LiveCells over segments where no events have actually been accumulated.
-      if (this.events.points().isEmpty() && !this.branches.isEmpty()) {
+      if (this.events.isEmpty() && !this.branches.isEmpty()) {
         this.branches.push(Triple.of(new CausalEventSource(), this.branches.peek().getMiddle(), target));
       } else {
         this.branches.push(Triple.of(this.events, this.cells, target));
