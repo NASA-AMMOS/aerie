@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   private AdaptationBuilderState<$Schema> state = new UnbuiltState();
@@ -35,9 +36,10 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
   gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
-      final Projection<EventType, Effect> projection
+      final EffectTrait<Effect> trait,
+      final Function<EventType, Effect> projection
   ) {
-    return this.state.allocate(initialState, applicator, projection);
+    return this.state.allocate(initialState, applicator, trait, projection);
   }
 
   @Override
@@ -57,15 +59,6 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
 
   private interface AdaptationBuilderState<$Schema> extends Initializer<$Schema> {
-    // Provide a more specific return type.
-    @Override
-    <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType>
-    allocate(
-        CellType initialState,
-        Applicator<Effect, CellType> applicator,
-        Projection<EventType, Effect> projection);
-
     <Model>
     Adaptation<$Schema, Model>
     build(
@@ -97,10 +90,11 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
-        final Projection<EventType, Effect> projection
+        final EffectTrait<Effect> trait,
+        final Function<EventType, Effect> projection
     ) {
       final var topic = new Topic<EventType>();
-      final var selector = new Selector<>(topic, projection::atom);
+      final var selector = new Selector<>(topic, projection);
 
       // TODO: The evaluator should probably be specified later, after the model is built.
       //   To achieve this, we'll need to defer the construction of the initial `LiveCells` until later,
@@ -108,7 +102,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
       final var evaluator = new RecursiveEventGraphEvaluator();
 
       final var query = new Query<CellType>();
-      this.initialCells.put(query, new Cell<>(applicator, projection, selector, evaluator, initialState));
+      this.initialCells.put(query, new Cell<>(applicator, trait, selector, evaluator, initialState));
 
       return new EngineQuery<>(topic, query);
     }
@@ -153,7 +147,8 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
-        final Projection<EventType, Effect> projection
+        final EffectTrait<Effect> trait,
+        final Function<EventType, Effect> projection
     ) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");
     }

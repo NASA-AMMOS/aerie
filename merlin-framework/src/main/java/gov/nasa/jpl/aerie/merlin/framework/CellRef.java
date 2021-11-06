@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
 import java.util.function.Function;
 
@@ -24,7 +23,8 @@ public final class CellRef<Event, CellType> {
     final var query = ModelActions.context.get().allocate(
         initialState,
         applicator,
-        Projection.from(trait, eventToEffect));
+        trait,
+        eventToEffect);
     return new CellRef<>(query);
   }
 

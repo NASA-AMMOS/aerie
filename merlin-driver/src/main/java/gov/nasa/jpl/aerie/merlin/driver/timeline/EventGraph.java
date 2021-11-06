@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,11 +18,11 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * As with many recursive tree-like structures, an event graph is utilized by accepting a {@link Projection} object and
- * traversing the series-parallel structure recursively. A projection provides methods for each type of node in the tree
- * representation (empty, atomic event, sequential composition, and parallel composition). For each node, the projection
- * computes a result that will be provided to the same projection at the parent node. The result of the traversal is the
- * value computed by the projection at the root node.
+ * As with many recursive tree-like structures, an event graph is utilized by accepting an {@link EffectTrait} visitor
+ * and traversing the series-parallel structure recursively. This trait provides methods for each type of node in the
+ * tree representation (empty, sequential composition, and parallel composition). For each node, the trait combines
+ * the results from its children into a result that will be provided to the same trait at the node's parent. The result
+ * of the traversal is the value computed by the trait at the root node.
  * </p>
  *
  * <p>
@@ -33,7 +32,6 @@ import java.util.function.Function;
  * </p>
  *
  * @param <Event> The type of event to be stored in the graph structure.
- * @see Projection
  * @see EffectTrait
  */
 public sealed interface EventGraph<Event> extends EffectExpression<Event> {

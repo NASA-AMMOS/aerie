@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
@@ -83,12 +84,7 @@ public final class CellExpiryTest {
             return Optional.of(expiry);
           }
         },
-        new Projection<>() {
-          @Override
-          public Object atom(final Object atom) {
-            return atom;
-          }
-
+        new EffectTrait<>() {
           @Override
           public Object empty() {
             return new Object();
@@ -103,7 +99,8 @@ public final class CellExpiryTest {
           public Object concurrently(final Object left, final Object right) {
             return empty();
           }
-        }
+        },
+        Function.identity()
     );
 
     final var resource = new Resource<$Schema, String>() {

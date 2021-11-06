@@ -14,9 +14,10 @@
  * </p>
  *
  * <p>
- *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time. A resource, then,
- *   also gives the current extent of validity for its current dynamics.
- *   The {@link gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics} class describes this mechanism.
+ *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time.
+ *   As a resource is derived from zero or more backing states, we may take the minimum over calls
+ *   to {@link gov.nasa.jpl.aerie.merlin.protocol.model.Applicator#getExpiry(java.lang.Object)} as the amount of time
+ *   for which a resource's current dynamics is legal.
  * </p>
  *
  * <p>

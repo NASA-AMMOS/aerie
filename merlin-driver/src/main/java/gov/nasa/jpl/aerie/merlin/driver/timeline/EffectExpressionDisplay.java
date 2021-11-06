@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -53,7 +52,7 @@ public final class EffectExpressionDisplay {
    */
   public static <Event> String displayGraph(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
-        .evaluate(new DisplayEffectProjection<>(stringifier))
+        .evaluate(new DisplayEffectTrait(), event -> Optional.of($ -> stringifier.apply(event)))
         .map(f -> f.apply(Parent.Unrestricted))
         .orElse("");
   }
@@ -61,20 +60,7 @@ public final class EffectExpressionDisplay {
   private enum Parent { Unrestricted, Par, Seq }
 
   // An effect algebra for computing string representations of transactions.
-  private static final class DisplayEffectProjection<Event>
-      implements Projection<Event, Optional<Function<Parent, String>>>
-  {
-    private final Function<Event, String> stringifier;
-
-    public DisplayEffectProjection(final Function<Event, String> stringifier) {
-      this.stringifier = stringifier;
-    }
-
-    @Override
-    public Optional<Function<Parent, String>> atom(final Event atom) {
-      return Optional.of(_ctx -> this.stringifier.apply(atom));
-    }
-
+  private static final class DisplayEffectTrait implements EffectTrait<Optional<Function<Parent, String>>> {
     @Override
     public Optional<Function<Parent, String>> empty() {
       return Optional.empty();

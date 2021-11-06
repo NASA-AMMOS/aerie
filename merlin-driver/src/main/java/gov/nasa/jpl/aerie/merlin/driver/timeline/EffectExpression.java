@@ -1,33 +1,28 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 
 import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Declares the ability of an object to be evaluated under any {@link Projection}.
+ * Declares the ability of an object to be evaluated under an {@link EffectTrait}.
  *
  * <p>
  * Effect expressions describe a series-parallel graph of abstract effects called "events". The {@link EventGraph} class
  * is a concrete realization of this idea. However, if the expression is immediately consumed after construction,
  * the <code>EventGraph</code> imposes construction of needless intermediate data. Producers of effects will
  * typically want to return a custom implementor of this class that will directly produce the desired expression
- * for any given <code>Projection</code>.
+ * for a given {@link EffectTrait}.
  * </p>
  *
  * @param <Event> The type of abstract effect in this expression.
  * @see EventGraph
- * @see Projection
+ * @see EffectTrait
  */
 public interface EffectExpression<Event> {
   /**
    * Produce an effect in the domain of effects described by the provided trait and event substitution.
-   *
-   * <p>
-   * The parameters of this method taken together are equivalent to an instance of {@link Projection}.
-   * </p>
    *
    * @param trait A visitor to be used to compose effects in sequence or concurrently.
    * @param substitution A visitor to be applied at any atomic events.
@@ -35,18 +30,6 @@ public interface EffectExpression<Event> {
    * @return The effect described by this object, within the provided domain of effects.
    */
   <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution);
-
-  /**
-   * Produce an effect in the domain of effects described by the provided {@link Projection}.
-   *
-   * @param projection A visitor to be used to compose effects in sequence or concurrently,
-   *                   and to generate effects from events.
-   * @param <Effect> The type of effect produced by the visitor.
-   * @return The effect described by this object, within the provided domain of effects.
-   */
-  default <Effect> Effect evaluate(final Projection<Event, Effect> projection) {
-    return this.evaluate(projection, projection::atom);
-  }
 
   /**
    * Produce an effect in the domain of effects described by the provided {@link EffectTrait}.
