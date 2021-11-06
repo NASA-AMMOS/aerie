@@ -50,25 +50,28 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
 
   private static Set<Topic<?>> extractTopics(final EventGraph<Event> graph) {
     final var set = new ReferenceOpenHashSet<Topic<?>>();
-    extractTopics(graph, set);
+    extractTopics(set, graph);
     set.trim();
     return set;
   }
 
-  private static void extractTopics(final EventGraph<Event> graph, final Set<Topic<?>> accumulator) {
-    if (graph instanceof EventGraph.Empty) {
-      // There are no events here!
-      return;
-    } else if (graph instanceof EventGraph.Atom<Event> g) {
-      accumulator.add(g.atom().topic());
-    } else if (graph instanceof EventGraph.Sequentially<Event> g) {
-      extractTopics(g.prefix(), accumulator);
-      extractTopics(g.suffix(), accumulator);
-    } else if (graph instanceof EventGraph.Concurrently<Event> g) {
-      extractTopics(g.left(), accumulator);
-      extractTopics(g.right(), accumulator);
-    } else {
-      throw new IllegalArgumentException();
+  private static void extractTopics(final Set<Topic<?>> accumulator, EventGraph<Event> graph) {
+    while (true) {
+      if (graph instanceof EventGraph.Empty) {
+        // There are no events here!
+        return;
+      } else if (graph instanceof EventGraph.Atom<Event> g) {
+        accumulator.add(g.atom().topic());
+        return;
+      } else if (graph instanceof EventGraph.Sequentially<Event> g) {
+        extractTopics(accumulator, g.prefix());
+        graph = g.suffix();
+      } else if (graph instanceof EventGraph.Concurrently<Event> g) {
+        extractTopics(accumulator, g.left());
+        graph = g.right();
+      } else {
+        throw new IllegalArgumentException();
+      }
     }
   }
 

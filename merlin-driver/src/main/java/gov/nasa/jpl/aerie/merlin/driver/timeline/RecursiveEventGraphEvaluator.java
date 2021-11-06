@@ -8,28 +8,46 @@ public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
   @Override
   public <Effect> Optional<Effect>
   evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, final EventGraph<Event> graph) {
-    if (graph instanceof EventGraph.Empty) {
-      return Optional.empty();
-    } else if (graph instanceof EventGraph.Atom<Event> g) {
+    if (graph instanceof EventGraph.Atom<Event> g) {
       return selector.select(g.atom());
     } else if (graph instanceof EventGraph.Sequentially<Event> g) {
-      final var prefix = evaluate(trait, selector, g.prefix());
-      final var suffix = evaluate(trait, selector, g.suffix());
+      var effect = evaluate(trait, selector, g.prefix());
 
-      if (prefix.isEmpty()) return suffix;
-      if (suffix.isEmpty()) return prefix;
+      while (g.suffix() instanceof EventGraph.Sequentially<Event> rest) {
+        effect = sequence(trait, effect, evaluate(trait, selector, rest.prefix()));
+        g = rest;
+      }
 
-      return Optional.of(trait.sequentially(prefix.get(), suffix.get()));
+      return sequence(trait, effect, evaluate(trait, selector, g.suffix()));
     } else if (graph instanceof EventGraph.Concurrently<Event> g) {
-      final var left = evaluate(trait, selector, g.left());
-      final var right = evaluate(trait, selector, g.right());
+      var effect = evaluate(trait, selector, g.right());
 
-      if (left.isEmpty()) return right;
-      if (right.isEmpty()) return left;
+      while (g.left() instanceof EventGraph.Concurrently<Event> rest) {
+        effect = merge(trait, evaluate(trait, selector, rest.right()), effect);
+        g = rest;
+      }
 
-      return Optional.of(trait.concurrently(left.get(), right.get()));
+      return merge(trait, evaluate(trait, selector, g.left()), effect);
+    } else if (graph instanceof EventGraph.Empty) {
+      return Optional.empty();
     } else {
       throw new IllegalArgumentException();
     }
+  }
+
+  private <Effect>
+  Optional<Effect> sequence(final EffectTrait<Effect> trait, final Optional<Effect> a, final Optional<Effect> b) {
+    if (a.isEmpty()) return b;
+    if (b.isEmpty()) return a;
+
+    return Optional.of(trait.sequentially(a.get(), b.get()));
+  }
+
+  private <Effect>
+  Optional<Effect> merge(final EffectTrait<Effect> trait, final Optional<Effect> a, final Optional<Effect> b) {
+    if (a.isEmpty()) return b;
+    if (b.isEmpty()) return a;
+
+    return Optional.of(trait.concurrently(a.get(), b.get()));
   }
 }
