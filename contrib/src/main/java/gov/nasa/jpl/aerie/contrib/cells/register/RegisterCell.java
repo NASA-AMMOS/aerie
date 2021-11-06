@@ -50,10 +50,11 @@ public final class RegisterCell<T> {
 
     @Override
     public void apply(final RegisterCell<T> cell, final RegisterEffect<T> effect) {
-      effect.newValue.ifPresent(newValue -> cell.value = newValue);
-
-      if (effect.writes > 0) {
-        cell.conflicted = (effect.writes > 1);
+      if (effect.newValue != null) {
+        cell.value = effect.newValue;
+        cell.conflicted = false;
+      } else if (effect.conflicted) {
+        cell.conflicted = true;
       }
     }
   }
