@@ -9,7 +9,7 @@ public final class RecursiveEventGraphEvaluator implements EventGraphEvaluator {
   public <Effect> Optional<Effect>
   evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, final EventGraph<Event> graph) {
     if (graph instanceof EventGraph.Atom<Event> g) {
-      return selector.select(g.atom());
+      return selector.select(trait, g.atom());
     } else if (graph instanceof EventGraph.Sequentially<Event> g) {
       var effect = evaluate(trait, selector, g.prefix());
 

@@ -76,7 +76,7 @@ public final class Cell<State> {
     }
 
     public void apply(final State state, final Event event) {
-      final var effect$ = this.selector.select(event);
+      final var effect$ = this.selector.select(this.algebra, event);
       if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
     }
 

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
@@ -12,15 +14,22 @@ public record Selector<Effect>(SelectorRow<?, Effect>... rows) {
     this(new SelectorRow<>(topic, transform));
   }
 
-  public Optional<Effect> select(final Event event) {
+  public Optional<Effect> select(final EffectTrait<Effect> trait, final Event event) {
     // Bail out as fast as possible if we're in a trivial (and incredibly common) case.
     if (this.rows.length == 1) return this.rows[0].select(event);
+    else if (this.rows.length == 0) return Optional.empty();
 
-    for (final var row : this.rows) {
-      final var effect = row.select(event);
-      if (effect.isPresent()) return effect;
+    var iter = 0;
+    var accumulator = this.rows[iter++].select(event);
+    while (iter < this.rows.length) {
+      final var effect = this.rows[iter++].select(event);
+
+      if (effect.isEmpty()) continue;
+      else if (accumulator.isEmpty()) accumulator = effect;
+      else accumulator = Optional.of(trait.concurrently(accumulator.get(), effect.get()));
     }
-    return Optional.empty();
+
+    return accumulator;
   }
 
   public boolean matchesAny(final Collection<Topic<?>> topics) {

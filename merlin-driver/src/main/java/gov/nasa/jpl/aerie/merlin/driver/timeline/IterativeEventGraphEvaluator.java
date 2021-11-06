@@ -21,7 +21,7 @@ public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
           graph = g.left();
           andThen = new Continuation.Right<>(Combiner.Concurrently, g.right(), andThen);
         } else if (graph instanceof EventGraph.Atom<Event> g) {
-          effect$ = selector.select(g.atom());
+          effect$ = selector.select(trait, g.atom());
           break;
         } else if (graph instanceof EventGraph.Empty) {
           effect$ = Optional.empty();
