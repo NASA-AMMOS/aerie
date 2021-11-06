@@ -460,7 +460,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final ProfilingState<?, Dynamics> state,
       final Translator<Target> translator
   ) {
-    final var profile = new ArrayList<Pair<Duration, Target>>();
+    final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
 
     final var iter = state.profile().segments().iterator();
     if (iter.hasNext()) {
