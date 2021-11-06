@@ -36,15 +36,9 @@ public final class CausalEventSource implements EventSource {
     private int index = 0;
 
     @Override
-    public boolean hasNext() {
-      return (this.index < size);
-    }
-
-    @Override
-    public void step(final Cell<?> cell) {
-      if (!hasNext()) return;
-
-      cell.apply(points[this.index++]);
+    public void stepUp(final Cell<?> cell) {
+      cell.apply(points, this.index, size);
+      this.index = size;
     }
   }
 }

@@ -43,6 +43,10 @@ public final class Cell<State> {
     this.inner.apply(this.state, event);
   }
 
+  public void apply(final Event[] events, final int from, final int to) {
+    this.inner.apply(this.state, events, from, to);
+  }
+
   public Optional<Duration> getExpiry() {
     return this.inner.applicator.getExpiry(this.state);
   }
@@ -76,6 +80,10 @@ public final class Cell<State> {
       this.applicator.apply(state, this.selector
           .select(event)
           .orElseGet(this.algebra::empty));
+    }
+
+    public void apply(final State state, final Event[] events, int from, final int to) {
+      while (from < to) apply(state, events[from++]);
     }
   }
 }

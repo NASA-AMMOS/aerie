@@ -32,20 +32,17 @@ public record TemporalEventSource(SlabList<TimePoint> points) implements EventSo
     private TemporalCursor() {}
 
     @Override
-    public boolean hasNext() {
-      return this.iterator.hasNext();
-    }
+    public void stepUp(final Cell<?> cell) {
+      while (this.iterator.hasNext()) {
+        final var point = this.iterator.next();
 
-    @Override
-    public void step(final Cell<?> cell) {
-      final var point = this.iterator.next();
-
-      if (point instanceof TimePoint.Delta p) {
-        cell.step(p.delta());
-      } else if (point instanceof TimePoint.Commit p) {
-        if (cell.isInterestedIn(p.topics())) cell.apply(p.events());
-      } else {
-        throw new IllegalStateException();
+        if (point instanceof TimePoint.Delta p) {
+          cell.step(p.delta());
+        } else if (point instanceof TimePoint.Commit p) {
+          if (cell.isInterestedIn(p.topics())) cell.apply(p.events());
+        } else {
+          throw new IllegalStateException();
+        }
       }
     }
   }

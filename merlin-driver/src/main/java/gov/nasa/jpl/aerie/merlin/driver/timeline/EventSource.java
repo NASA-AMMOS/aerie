@@ -4,7 +4,6 @@ public interface EventSource {
   Cursor cursor();
 
   interface Cursor {
-    boolean hasNext();
-    void step(Cell<?> cell);
+    void stepUp(Cell<?> cell);
   }
 }
