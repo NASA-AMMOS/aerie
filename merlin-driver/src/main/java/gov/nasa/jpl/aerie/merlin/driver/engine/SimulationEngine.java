@@ -39,7 +39,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -522,7 +521,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
-      this.expiry = map2(this.expiry, this.builder.getExpiry(query.query()), Duration::min);
+      this.expiry = min(this.expiry, this.builder.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
 
       // TODO: Cache the state (until the query returns) to avoid unnecessary copies
@@ -532,10 +531,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       return state$.orElseThrow(IllegalArgumentException::new);
     }
 
-    private static <T> Optional<T> map2(final Optional<T> a, final Optional<T> b, final BinaryOperator<T> f) {
+    private static Optional<Duration> min(final Optional<Duration> a, final Optional<Duration> b) {
       if (a.isEmpty()) return b;
       if (b.isEmpty()) return a;
-      return Optional.of(f.apply(a.get(), b.get()));
+      return Optional.of(Duration.min(a.get(), b.get()));
     }
   }
 
