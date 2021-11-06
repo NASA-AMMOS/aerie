@@ -546,8 +546,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     private final Duration currentTime;
     private final TaskId activeTask;
     private final TaskFrame.FrameBuilder<JobId> builder;
-    private final Set<Topic<?>> referencedTopics = new HashSet<>();
-    private final Set<Topic<?>> affectedTopics = new HashSet<>();
 
     public EngineScheduler(
         final Adaptation<? super $Timeline, ?> model,
@@ -567,8 +565,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
-      this.referencedTopics.add(query.topic());
-
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
       final var state$ = this.builder.getState(query.query());
@@ -584,7 +580,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       // Append this event to the timeline.
       this.builder.emit(Event.create(topic, event));
 
-      this.affectedTopics.add(topic);
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
 
