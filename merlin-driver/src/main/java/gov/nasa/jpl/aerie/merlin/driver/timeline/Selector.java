@@ -1,24 +1,20 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-public record Selector<Effect>(List<SelectorRow<?, Effect>> rows) {
-  public <EventType> Selector(final Topic<EventType> topic, final Function<EventType, Effect> transform) {
-    this(List.of(new SelectorRow<>(topic, transform)));
-  }
-
+public record Selector<Effect>(SelectorRow<?, Effect>... rows) {
   @SafeVarargs
-  public Selector(final SelectorRow<?, Effect>... selectors) {
-    this(Arrays.asList(selectors));
+  public Selector {}
+
+  public <EventType> Selector(final Topic<EventType> topic, final Function<EventType, Effect> transform) {
+    this(new SelectorRow<>(topic, transform));
   }
 
   public Optional<Effect> select(final Event event) {
     // Bail out as fast as possible if we're in a trivial (and incredibly common) case.
-    if (this.rows.size() == 1) return this.rows.get(0).select(event);
+    if (this.rows.length == 1) return this.rows[0].select(event);
 
     for (final var row : this.rows) {
       final var effect = row.select(event);
@@ -29,7 +25,7 @@ public record Selector<Effect>(List<SelectorRow<?, Effect>> rows) {
 
   public boolean matchesAny(final Collection<Topic<?>> topics) {
     // Bail out as fast as possible if we're in a trivial (and incredibly common) case.
-    if (this.rows.size() == 1) return topics.contains(this.rows.get(0).topic());
+    if (this.rows.length == 1) return topics.contains(this.rows[0].topic());
 
     for (final var row : this.rows) {
       if (topics.contains(row.topic)) return true;
