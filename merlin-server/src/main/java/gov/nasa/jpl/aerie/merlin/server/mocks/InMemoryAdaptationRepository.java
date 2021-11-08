@@ -4,8 +4,8 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationAccessException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MongoAdaptationRepository;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,7 +38,7 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
         try {
             Files.copy(adaptationJar.path, location);
         } catch (final IOException e) {
-            throw new MongoAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
+            throw new AdaptationAccessException(adaptationJar.path, e);
         }
 
         final AdaptationJar newJar = new AdaptationJar(adaptationJar);
@@ -70,25 +70,13 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
         try {
             Files.deleteIfExists(adaptationJar.path);
         } catch (final IOException e) {
-            throw new MongoAdaptationRepository.AdaptationAccessException(adaptationJar.path, e);
+            throw new AdaptationAccessException(adaptationJar.path, e);
         }
 
         this.adaptations.remove(adaptationId);
     }
 
-    @Override
-    public void replaceAdaptationConstraints(final String adaptationId, final Map<String, Constraint> constraints)
-    throws NoSuchAdaptationException
-    {
-    }
-
-    @Override
-    public void deleteAdaptationConstraint(final String adaptationId, final String constraintName)
-    throws NoSuchAdaptationException
-    {
-    }
-
-    @Override
+  @Override
     public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
         final AdaptationJar adaptation = Optional
                 .ofNullable(this.adaptations.get(adaptationId))

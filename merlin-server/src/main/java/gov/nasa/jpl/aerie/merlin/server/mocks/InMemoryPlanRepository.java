@@ -68,20 +68,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public ActivityInstance getActivityInPlanById(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    final Plan plan = Optional
-        .ofNullable(this.plans.get(planId))
-        .orElseThrow(() -> new NoSuchPlanException(planId))
-        .getRight();
-
-    final ActivityInstance activityInstance = Optional
-        .ofNullable(plan.activityInstances.get(activityId))
-        .orElseThrow(() -> new NoSuchActivityInstanceException(planId, activityId));
-
-    return new ActivityInstance(activityInstance);
-  }
-
-  @Override
   public CreatedPlan createPlan(final NewPlan newPlan) {
     final String planId = Objects.toString(this.nextPlanId++);
 
@@ -117,40 +103,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public List<String> replacePlan(final String id, final NewPlan newPlan) throws NoSuchPlanException {
-    if (!this.plans.containsKey(id)) {
-      throw new NoSuchPlanException(id);
-    }
-
-    final var revision = this.plans.get(id).getLeft() + 1;
-
-    final Plan plan = new Plan();
-    plan.name = newPlan.name;
-    plan.startTimestamp = newPlan.startTimestamp;
-    plan.endTimestamp = newPlan.endTimestamp;
-    plan.configuration = newPlan.configuration;
-    plan.adaptationId = newPlan.adaptationId;
-    plan.activityInstances = new HashMap<>();
-
-    final List<String> activityIds;
-    if (newPlan.activityInstances == null) {
-      activityIds = new ArrayList<>();
-    } else {
-      activityIds = new ArrayList<>(newPlan.activityInstances.size());
-      for (final var activity : newPlan.activityInstances) {
-        final String activityId = Objects.toString(this.nextActivityId++);
-
-        activityIds.add(activityId);
-        plan.activityInstances.put(activityId, new ActivityInstance(activity));
-      }
-    }
-
-    this.plans.put(id, Pair.of(revision, plan));
-
-    return activityIds;
-  }
-
-  @Override
   public void deletePlan(final String id) throws NoSuchPlanException {
     if (!this.plans.containsKey(id)) {
       throw new NoSuchPlanException(id);
@@ -176,43 +128,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public ActivityTransaction updateActivity(final String planId, final String activityId) {
-    return new MockActivityTransaction(planId, activityId);
-  }
-
-  @Override
-  public void replaceActivity(final String planId, final String activityId, final ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    final var entry = this.plans.get(planId);
-    if (entry == null) throw new NoSuchPlanException(planId);
-
-    final var plan = entry.getRight();
-    final var revision = entry.getLeft() + 1;
-
-    if (!plan.activityInstances.containsKey(activityId)) {
-      throw new NoSuchActivityInstanceException(planId, activityId);
-    }
-
-    plan.activityInstances.put(activityId, activity);
-    this.plans.put(planId, Pair.of(revision, plan));
-  }
-
-  @Override
-  public void deleteActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    final var entry = this.plans.get(planId);
-    if (entry == null) throw new NoSuchPlanException(planId);
-
-    final var plan = entry.getRight();
-    final var revision = entry.getLeft() + 1;
-
-    if (!plan.activityInstances.containsKey(activityId)) {
-      throw new NoSuchActivityInstanceException(planId, activityId);
-    }
-
-    plan.activityInstances.remove(activityId);
-    this.plans.put(planId, Pair.of(revision, plan));
-  }
-
-  @Override
   public void deleteAllActivities(final String planId) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
@@ -227,17 +142,6 @@ public final class InMemoryPlanRepository implements PlanRepository {
   @Override
   public Map<String, Constraint> getAllConstraintsInPlan(final String planId) throws NoSuchPlanException {
     return Map.of();
-  }
-
-  @Override
-  public void replacePlanConstraints(final String planId, final Map<String, Constraint> constraints)
-  throws NoSuchPlanException {
-  }
-
-  @Override
-  public void deleteConstraintInPlanById(final String planId, final String constraintId)
-  throws NoSuchPlanException
-  {
   }
 
   private class MockPlanTransaction implements PlanTransaction {

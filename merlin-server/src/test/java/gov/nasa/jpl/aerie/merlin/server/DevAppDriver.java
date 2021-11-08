@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.merlin.server;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
@@ -23,7 +22,7 @@ public final class DevAppDriver {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
     final var adaptationController = new LocalAdaptationService(Path.of("/dev/null"), new InMemoryAdaptationRepository());
-    final var planController = new LocalPlanService(fixtures.planRepository, adaptationController);
+    final var planController = new LocalPlanService(fixtures.planRepository);
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         adaptationController,
@@ -33,7 +32,7 @@ public final class DevAppDriver {
     final Javalin javalin = Javalin.create(config -> config
         .enableDevLogging()
         .enableCorsForAllOrigins()
-        .registerPlugin(new MerlinBindings(planController, adaptationController, simulationAction))
+        .registerPlugin(new MerlinBindings(adaptationController, simulationAction))
         .registerPlugin(new LocalAppExceptionBindings())
         .registerPlugin(new AdaptationRepositoryExceptionBindings())
         .registerPlugin(new AdaptationExceptionBindings()));

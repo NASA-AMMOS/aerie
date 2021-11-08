@@ -168,54 +168,6 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
     }
   }
 
-  @Override
-  public void replaceAdaptationConstraints(final String adaptationId, final Map<String, Constraint> constraints)
-  throws NoSuchAdaptationException
-  {
-    try (final var connection = this.dataSource.getConnection()) {
-      try (final var replaceModelConstraintsAction = new ReplaceModelConstraintsAction(connection)) {
-        for (final var constraint : constraints.values()) {
-          replaceModelConstraintsAction.add(toMissionModelId(adaptationId), constraint);
-        }
-
-        replaceModelConstraintsAction.apply();
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException(
-          "Failed to retrieve constraints for mission model with id `%s`".formatted(adaptationId), ex);
-    }
-  }
-
-  @Override
-  public void deleteAdaptationConstraint(final String adaptationId, final String constraintId) throws NoSuchAdaptationException {
-    try (
-        final var connection = this.dataSource.getConnection();
-        // Since we might perform multiple queries here, let's make sure we have a consistent view on the data store.
-        final var transactionContext = new TransactionContext(connection)
-    ) {
-      try (
-          final var deleteModelConstraintAction = new DeleteModelConstraintAction(connection);
-          final var getModelExistenceAction = new GetModelExistenceAction(connection)
-      ) {
-        final var success = deleteModelConstraintAction.apply(toMissionModelId(adaptationId), constraintId);
-
-        if (!success) {
-          if (!getModelExistenceAction.get(toMissionModelId(adaptationId))) {
-            throw new NoSuchAdaptationException();
-          } else {
-            // Would throw a NoSuchConditionException, but we don't have one,
-            //   and anyway, the condition doesn't exist, just like the client wanted!
-          }
-        }
-
-        transactionContext.commit();
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException(
-          "Failed to retrieve constraints for mission model with id `%s`".formatted(adaptationId), ex);
-    }
-  }
-
   private static long toMissionModelId(final String modelId)
   throws NoSuchAdaptationException
   {

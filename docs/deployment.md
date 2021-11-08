@@ -84,7 +84,6 @@ For more information regarding the `NFS_EXPORT_0` export please see the offical 
 Clients may mount the shared directory by making use of a Docker volume:
 ```yaml
 volumes:
-  merlin_mongo_data:
   postgres_data:
   merlin_file_store:
     driver: local

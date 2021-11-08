@@ -3,7 +3,6 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -11,27 +10,13 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
-import io.javalin.core.util.FileUtil;
-import org.apache.bcel.classfile.ClassParser;
-import org.apache.bcel.classfile.JavaClass;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
-import java.util.jar.JarFile;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * Implements the adaptation service {@link AdaptationService} interface on a set of local domain objects.
@@ -70,86 +55,9 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public String addAdaptation(NewAdaptation adaptation) throws AdaptationRejectedException {
-    final Path path;
-    try {
-      path = Files.createTempFile("adaptation", ".jar");
-    } catch (final IOException ex) {
-      throw new Error(ex);
-    }
-    FileUtil.streamToFile(adaptation.jarSource, path.toString());
-
-    final String adClassStr;
-    try {
-      adClassStr = getImplementingClassName(path, MerlinPlugin.class);
-    } catch (final IOException ex) {
-      throw new AdaptationRejectedException(ex);
-    }
-
-    try {
-      final var adClass = new ClassParser(path.toString(), getClasspathRelativePath(adClassStr));
-      final var javaAdClass = adClass.parse();
-
-      if (!isClassCompatibleWithThisVM(javaAdClass)) {
-        throw new AdaptationRejectedException(String.format(
-            "Adaptation was compiled with an older Java version. Please compile with Java %d.",
-            Runtime.version().feature()));
-      }
-    } catch (final IOException ex) {
-      throw new AdaptationRejectedException(ex);
-    }
-
-    try {
-      AdaptationLoader.loadAdaptationProvider(path, adaptation.name, adaptation.version);
-    } catch (final AdaptationLoader.AdaptationLoadException ex) {
-      throw new AdaptationRejectedException(ex);
-    }
-
-    final AdaptationJar adaptationJar = new AdaptationJar();
-    adaptationJar.name = adaptation.name;
-    adaptationJar.version = adaptation.version;
-    adaptationJar.mission = adaptation.mission;
-    adaptationJar.owner = adaptation.owner;
-    adaptationJar.path = path;
-
-    return this.adaptationRepository.createAdaptation(adaptationJar);
-  }
-
-  @Override
-  public void removeAdaptation(String id) throws NoSuchAdaptationException {
-    try {
-      this.adaptationRepository.deleteAdaptation(id);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
-      throw new NoSuchAdaptationException(id, ex);
-    }
-  }
-
-  @Override
   public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
     try {
       return this.adaptationRepository.getConstraints(adaptationId);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
-      throw new NoSuchAdaptationException(adaptationId, ex);
-    }
-  }
-
-  @Override
-  public void replaceConstraints(final String adaptationId, final Map<String, Constraint> constraints)
-  throws NoSuchAdaptationException
-  {
-    try {
-      this.adaptationRepository.replaceAdaptationConstraints(adaptationId, constraints);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
-      throw new NoSuchAdaptationException(adaptationId, ex);
-    }
-  }
-
-  @Override
-  public void deleteConstraint(final String adaptationId, final String constraintName)
-  throws NoSuchAdaptationException
-  {
-    try {
-      this.adaptationRepository.deleteAdaptationConstraint(adaptationId, constraintName);
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
@@ -178,28 +86,6 @@ public final class LocalAdaptationService implements AdaptationService {
   {
     return loadUnconfiguredAdaptation(adaptationId)
         .getActivityTypes();
-  }
-
-  /**
-   * Get information about the named activity type in the named adaptation.
-   *
-   * @param adaptationId The ID of the adaptation to load.
-   * @param activityTypeId The ID of the activity type to query in the named adaptation.
-   * @return Information about the named activity type.
-   * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
-   * @throws NoSuchActivityTypeException If no activity type exists for the given serialized activity.
-   * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
-   * it contains may not abide by the expected contract at load time.
-   */
-  @Override
-  public ActivityType getActivityType(String adaptationId, String activityTypeId)
-  throws NoSuchAdaptationException, NoSuchActivityTypeException, AdaptationLoadException
-  {
-    try {
-      return loadUnconfiguredAdaptation(adaptationId).getActivityType(activityTypeId);
-    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
-      throw new NoSuchActivityTypeException(activityTypeId, ex);
-    }
   }
 
   /**
@@ -258,32 +144,6 @@ public final class LocalAdaptationService implements AdaptationService {
   }
 
   @Override
-  public List<Path> getAvailableFilePaths() throws IOException {
-    return Files
-        .list(missionModelDataPath)
-        .map(missionModelDataPath::relativize)
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public void createFile(final String filename, final InputStream content) throws IOException {
-    final var path = missionModelDataPath.resolve(filename).toAbsolutePath().normalize();
-    if (!path.startsWith(missionModelDataPath.toAbsolutePath())) { // Only allow sub-paths
-      throw new FileNotFoundException(path.toString());
-    }
-    Files.copy(content, path, StandardCopyOption.REPLACE_EXISTING);
-  }
-
-  @Override
-  public void deleteFile(final String filename) throws IOException {
-    final var path = missionModelDataPath.resolve(filename).toAbsolutePath().normalize();
-    if (!path.startsWith(missionModelDataPath.toAbsolutePath())) { // Only allow sub-paths
-      throw new FileNotFoundException(path.toString());
-    }
-    Files.delete(path);
-  }
-
-  @Override
   public void refreshModelParameters(final String adaptationId)
   throws NoSuchAdaptationException
   {
@@ -303,33 +163,6 @@ public final class LocalAdaptationService implements AdaptationService {
     } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
-  }
-
-  private static String getImplementingClassName(final Path jarPath, final Class<?> javaClass)
-  throws IOException, AdaptationRejectedException {
-    final var jarFile = new JarFile(jarPath.toFile());
-    final var jarEntry = jarFile.getEntry("META-INF/services/" + javaClass.getCanonicalName());
-    final var inputStream = jarFile.getInputStream(jarEntry);
-
-    final var classPathList = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-        .lines()
-        .collect(Collectors.toList());
-
-    if (classPathList.size() != 1) {
-      throw new AdaptationRejectedException(
-          "Adaptation contains zero/multiple registered implementations of %s.".formatted(javaClass));
-    }
-
-    return classPathList.get(0);
-  }
-
-  private static String getClasspathRelativePath(final String className) {
-    return className.replaceAll("\\.", "/").concat(".class");
-  }
-
-  private static boolean isClassCompatibleWithThisVM(final JavaClass javaClass) {
-    // Refer to this link https://docs.oracle.com/javase/specs/jvms/se15/html/jvms-4.html
-    return Runtime.version().feature() + 44 >= javaClass.getMajor();
   }
 
   private AdaptationFacade.Unconfigured<?> loadUnconfiguredAdaptation(final String adaptationId)

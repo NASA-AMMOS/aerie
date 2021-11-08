@@ -26,23 +26,16 @@ public interface PlanRepository {
   Plan getPlan(String id) throws NoSuchPlanException;
   long getPlanRevision(String id) throws NoSuchPlanException;
   Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
-  ActivityInstance getActivityInPlanById(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
 
   // Mutations
   CreatedPlan createPlan(NewPlan plan) throws AdaptationRepository.NoSuchAdaptationException;
   PlanTransaction updatePlan(String id) throws NoSuchPlanException;
-  List<String> replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
 
   String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
-  ActivityTransaction updateActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
-  void replaceActivity(String planId, String activityId, ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException;
-  void deleteActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void deleteAllActivities(String planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getAllConstraintsInPlan(String planId) throws NoSuchPlanException;
-  void replacePlanConstraints(String planId, Map<String, Constraint> constraints) throws NoSuchPlanException;
-  void deleteConstraintInPlanById(String planId, String constraintId) throws NoSuchPlanException;
 
   record CreatedPlan(String planId, List<String> activityIds) {}
 
