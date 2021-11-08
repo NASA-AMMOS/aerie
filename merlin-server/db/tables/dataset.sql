@@ -1,6 +1,9 @@
 create table dataset (
   id integer generated always as identity,
   revision integer not null default 0,
+  state text not null,
+  reason text null,
+  canceled boolean not null,
 
   -- In the future, we might want to share datasets across multiple plans.
   -- In that case, the scoping plan_id and anchoring offset_from_plan_start should be moved into a new junction table
@@ -24,6 +27,12 @@ comment on table dataset is e''
   'A time-series dataset consisting of profiles and traces.';
 comment on column dataset.id is e''
   'The synthetic identifier for this dataset.';
+comment on column simulation_dataset.state is e''
+  'The state of the corresponding simulation.';
+comment on column simulation_dataset.reason is e''
+  'The reason for failure if the simulation state is failed.'
+comment on column simulation_dataset.canceled is e''
+  'Whether this simulation has been canceled';
 comment on column dataset.plan_id is e''
   'The plan under which this dataset is scoped.';
 comment on column dataset.offset_from_plan_start is e''

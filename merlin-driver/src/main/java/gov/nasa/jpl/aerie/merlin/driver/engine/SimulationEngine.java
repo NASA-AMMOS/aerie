@@ -486,7 +486,8 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
             startTime.plus(e.startOffset().in(Duration.MICROSECONDS), ChronoUnit.MICROS),
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
-            activityChildren.getOrDefault(activityId, Collections.emptyList())
+            activityChildren.getOrDefault(activityId, Collections.emptyList()),
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
         ));
       } else {
         unsimulatedActivities.put(activityId, new SerializedActivity(
