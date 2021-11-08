@@ -8,16 +8,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.models.NewAdaptation;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,8 +22,6 @@ public final class StubAdaptationService implements AdaptationService {
   public static final String EXISTENT_ADAPTATION_ID = "abc";
   public static final String NONEXISTENT_ADAPTATION_ID = "def";
   public static final AdaptationJar EXISTENT_ADAPTATION;
-  public static final Map<String, Object> VALID_NEW_ADAPTATION;
-  public static final Map<String, Object> INVALID_NEW_ADAPTATION;
 
   public static final String EXISTENT_ACTIVITY_TYPE = "activity";
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
@@ -62,26 +56,6 @@ public final class StubAdaptationService implements AdaptationService {
       Instant.EPOCH);
 
   static {
-    VALID_NEW_ADAPTATION = new HashMap<>();
-    VALID_NEW_ADAPTATION.put("name", "adaptation");
-    VALID_NEW_ADAPTATION.put("version", "1.0");
-    VALID_NEW_ADAPTATION.put("mission", "mission");
-    VALID_NEW_ADAPTATION.put("owner", "owner");
-    VALID_NEW_ADAPTATION.put("file", new FakeFile(
-        "adaptation.jar",
-        "application/java-archive",
-        "valid-adaptation-file"));
-
-    INVALID_NEW_ADAPTATION = new HashMap<>();
-    INVALID_NEW_ADAPTATION.put("name", "adaptation");
-    INVALID_NEW_ADAPTATION.put("version", "FAILFAILFAILFAILFAIL");
-    INVALID_NEW_ADAPTATION.put("mission", "mission");
-    INVALID_NEW_ADAPTATION.put("owner", "owner");
-    INVALID_NEW_ADAPTATION.put("file", new FakeFile(
-        "adaptation.jar",
-        "application/java-archive",
-        "invalid-adaptation-file"));
-
     EXISTENT_ADAPTATION = new AdaptationJar();
     EXISTENT_ADAPTATION.name = "adaptation";
     EXISTENT_ADAPTATION.version = "1.0a";
@@ -105,36 +79,8 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public String addAdaptation(final NewAdaptation adaptation) throws AdaptationRejectedException {
-    if (adaptation.version.equals("FAILFAILFAILFAILFAIL")) {
-      throw new AdaptationRejectedException("could not load adaptation");
-    }
-
-    return EXISTENT_ADAPTATION_ID;
-  }
-
-  @Override
-  public void removeAdaptation(final String adaptationId) throws NoSuchAdaptationException {
-    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationId);
-    }
-  }
-
-  @Override
   public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
     return Map.of();
-  }
-
-  @Override
-  public void replaceConstraints(final String adaptationId, final Map<String, Constraint> constraints)
-  throws NoSuchAdaptationException
-  {
-  }
-
-  @Override
-  public void deleteConstraint(final String adaptationId, final String constraintName)
-  throws NoSuchAdaptationException
-  {
   }
 
   @Override
@@ -153,21 +99,6 @@ public final class StubAdaptationService implements AdaptationService {
     }
 
     return Map.of(EXISTENT_ACTIVITY_TYPE, EXISTENT_ACTIVITY);
-  }
-
-  @Override
-  public ActivityType getActivityType(final String adaptationId, final String activityType)
-  throws NoSuchAdaptationException, NoSuchActivityTypeException
-  {
-    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationId);
-    }
-
-    if (!Objects.equals(activityType, EXISTENT_ACTIVITY_TYPE)) {
-      throw new NoSuchActivityTypeException(activityType);
-    }
-
-    return EXISTENT_ACTIVITY;
   }
 
   @Override
@@ -201,21 +132,6 @@ public final class StubAdaptationService implements AdaptationService {
     }
 
     return SUCCESSFUL_SIMULATION_RESULTS;
-  }
-
-  @Override
-  public List<Path> getAvailableFilePaths() {
-    return List.of();
-  }
-
-  @Override
-  public void createFile(final String filename, final InputStream content) throws FileNotFoundException
-  {
-  }
-
-  @Override
-  public void deleteFile(final String path) throws FileNotFoundException
-  {
   }
 
   @Override

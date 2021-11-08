@@ -76,19 +76,7 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
         this.adaptations.remove(adaptationId);
     }
 
-    @Override
-    public void replaceAdaptationConstraints(final String adaptationId, final Map<String, Constraint> constraints)
-    throws NoSuchAdaptationException
-    {
-    }
-
-    @Override
-    public void deleteAdaptationConstraint(final String adaptationId, final String constraintName)
-    throws NoSuchAdaptationException
-    {
-    }
-
-    @Override
+  @Override
     public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
         final AdaptationJar adaptation = Optional
                 .ofNullable(this.adaptations.get(adaptationId))

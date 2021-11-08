@@ -88,19 +88,6 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public ActivityInstance getActivityInPlanById(final String planId, final String activityId)
-  throws NoSuchPlanException, NoSuchActivityInstanceException
-  {
-    try (final var connection = this.dataSource.getConnection()) {
-      try (final var getActivityAction = new GetActivityAction(connection)) {
-        return getActivityAction.get(toPlanId(planId), toActivityId(planId, activityId));
-      }
-    } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to get activity from plan", ex);
-    }
-  }
-
-  @Override
   public CreatedPlan createPlan(final NewPlan plan) throws NoSuchAdaptationException, IntegrationFailureException {
     try (
         final var connection = this.dataSource.getConnection();
@@ -159,37 +146,12 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public List<String> replacePlan(final String id, final NewPlan plan)
-  throws NoSuchPlanException
-  {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
   public void deletePlan(final String id) {
     throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
   }
 
   @Override
   public String createActivity(final String planId, final ActivityInstance activity) {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
-  public ActivityTransaction updateActivity(final String planId, final String activityId)
-  {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
-  public void replaceActivity(final String planId, final String activityId, final ActivityInstance activity)
-  {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
-  public void deleteActivity(final String planId, final String activityId)
-  {
     throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
   }
 
@@ -208,17 +170,6 @@ public final class PostgresPlanRepository implements PlanRepository {
       throw new DatabaseException(
           "Failed to retrieve constraints for plan with id `%s`".formatted(planId), ex);
     }
-  }
-
-  @Override
-  public void replacePlanConstraints(final String planId, final Map<String, Constraint> constraints)
-  {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
-  }
-
-  @Override
-  public void deleteConstraintInPlanById(final String planId, final String constraintId) {
-    throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
   }
 
   private static long toPlanId(final String id) throws NoSuchPlanException {

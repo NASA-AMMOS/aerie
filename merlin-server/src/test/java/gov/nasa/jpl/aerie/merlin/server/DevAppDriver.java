@@ -22,7 +22,7 @@ public final class DevAppDriver {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
     final var adaptationController = new LocalAdaptationService(Path.of("/dev/null"), new InMemoryAdaptationRepository());
-    final var planController = new LocalPlanService(fixtures.planRepository, adaptationController);
+    final var planController = new LocalPlanService(fixtures.planRepository);
     final var simulationAction = new GetSimulationResultsAction(
         planController,
         adaptationController,

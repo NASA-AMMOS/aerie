@@ -143,54 +143,7 @@ public final class MongoAdaptationRepository implements AdaptationRepository {
         this.adaptationCollection.deleteOne(adaptationById(adaptationId));
     }
 
-    @Override
-    public void replaceAdaptationConstraints(final String id, final Map<String, Constraint> newConstraints)
-    throws NoSuchAdaptationException
-    {
-        final Document adaptationDocument;
-        try {
-            adaptationDocument = this.adaptationCollection.find(adaptationById(id)).first();
-        } catch (IllegalArgumentException e) {
-            throw new NoSuchAdaptationException();
-        }
-
-        if (adaptationDocument == null) {
-            throw new NoSuchAdaptationException();
-        }
-
-        final var constraints = adaptationDocument.get("constraints", Document.class);
-        for (final var entry : newConstraints.entrySet()) {
-          constraints.put(entry.getKey(), this.toDocument(entry.getValue()));
-        }
-
-        adaptationDocument.put("constraints", constraints);
-
-        this.adaptationCollection.replaceOne(adaptationById(id), adaptationDocument);
-    }
-
-    @Override
-    public void deleteAdaptationConstraint(final String adaptationId, final String constraintName)
-    throws NoSuchAdaptationException
-    {
-        final Document adaptationDocument;
-        try {
-            adaptationDocument = this.adaptationCollection.find(adaptationById(adaptationId)).first();
-        } catch (IllegalArgumentException e) {
-            throw new NoSuchAdaptationException();
-        }
-
-        if (adaptationDocument == null) {
-            throw new NoSuchAdaptationException();
-        }
-
-        final var constraints = adaptationDocument.get("constraints", Document.class);
-        constraints.remove(constraintName);
-        adaptationDocument.put("constraints", constraints);
-
-        this.adaptationCollection.replaceOne(adaptationById(adaptationId), adaptationDocument);
-    }
-
-    private AdaptationJar adaptationFromDocuments(final Document adaptationDocument) {
+  private AdaptationJar adaptationFromDocuments(final Document adaptationDocument) {
         final AdaptationJar adaptationJar = new AdaptationJar();
         adaptationJar.name = adaptationDocument.getString("name");
         adaptationJar.version = adaptationDocument.getString("version");

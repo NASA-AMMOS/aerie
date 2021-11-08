@@ -110,22 +110,7 @@ public final class MongoPlanRepository implements PlanRepository {
             (document) -> activityFromDocument(document)));
   }
 
-  @Override
-  public ActivityInstance getActivityInPlanById(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    ensurePlanExists(planId);
-
-    final Document document = this.activityCollection
-        .find(activityById(makePlanObjectId(planId), makeActivityObjectId(planId, activityId)))
-        .first();
-
-    if (document == null) {
-      throw new NoSuchActivityInstanceException(planId, activityId);
-    }
-
-    return activityFromDocument(document);
-  }
-
-  @Override
+    @Override
   public CreatedPlan createPlan(final NewPlan plan) {
     final String planId;
     {
@@ -155,38 +140,6 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public List<String> replacePlan(final String planId, final NewPlan plan) throws NoSuchPlanException {
-    final var revisionDoc = this.planCollection
-        .find(planById(makePlanObjectId(planId)))
-        .projection(new Document("revision", 1))
-        .first();
-    if (revisionDoc == null) throw new NoSuchPlanException(planId);
-
-    final var revision = revisionDoc.getLong("revision");
-
-    final var planDocument = toDocument(plan);
-    planDocument.put("revision", new org.bson.BsonInt64(revision + 1));
-
-    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
-
-    this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
-
-    final List<String> activityIds;
-    if (plan.activityInstances == null) {
-      activityIds = new ArrayList<>();
-    } else {
-      activityIds = new ArrayList<>(plan.activityInstances.size());
-      for (final var activity : plan.activityInstances) {
-        final var activityDocument = toDocument(planId, activity);
-        this.activityCollection.insertOne(activityDocument);
-        activityIds.add(activityDocument.getObjectId("_id").toString());
-      }
-    }
-
-    return activityIds;
-  }
-
-  @Override
   public void deletePlan(final String planId) throws NoSuchPlanException {
     this.deleteAllActivities(planId);
 
@@ -209,41 +162,6 @@ public final class MongoPlanRepository implements PlanRepository {
   }
 
   @Override
-  public ActivityTransaction updateActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    return new MongoActivityTransaction(
-        makePlanObjectId(planId),
-        makeActivityObjectId(planId, activityId));
-  }
-
-  @Override
-  public void replaceActivity(final String planId, final String activityId, final ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    ensurePlanExists(planId);
-
-    final var result = this.activityCollection.replaceOne(
-        activityById(makePlanObjectId(planId), makeActivityObjectId(planId, activityId)),
-        toDocument(planId, activity));
-    if (result.getMatchedCount() <= 0) {
-      throw new NoSuchActivityInstanceException(planId, activityId);
-    }
-
-    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
-  }
-
-  @Override
-  public void deleteActivity(final String planId, final String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException {
-    ensurePlanExists(planId);
-
-    final var result = this.activityCollection.deleteOne(activityById(
-        makePlanObjectId(planId),
-        makeActivityObjectId(planId, activityId)));
-    if (result.getDeletedCount() <= 0) {
-      throw new NoSuchActivityInstanceException(planId, activityId);
-    }
-
-    this.planCollection.updateOne(planById(makePlanObjectId(planId)), inc("revision", 1));
-  }
-
-  @Override
   public void deleteAllActivities(final String planId) throws NoSuchPlanException {
     ensurePlanExists(planId);
     this.activityCollection.deleteMany(activityByPlan(makePlanObjectId(planId)));
@@ -261,32 +179,6 @@ public final class MongoPlanRepository implements PlanRepository {
     }
 
     return constraints;
-  }
-
-  @Override
-  public void replacePlanConstraints(final String planId, final Map<String, Constraint> constraints) throws NoSuchPlanException {
-    final var planDocument = this.getPlanFromCollection(planId);
-
-    final var constraintsDocument = planDocument.get("constraints", Document.class);
-    for (final var entry : constraints.entrySet()) {
-      constraintsDocument.put(entry.getKey(), this.toDocument(entry.getValue()));
-    }
-
-    planDocument.put("constraints", constraintsDocument);
-
-    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
-  }
-
-  @Override
-  public void deleteConstraintInPlanById(final String planId, final String constraintId)
-  throws NoSuchPlanException
-  {
-    final var planDocument = this.getPlanFromCollection(planId);
-    final var constraintsDocument = planDocument.get("constraints", Document.class);
-    constraintsDocument.remove(constraintId);
-    planDocument.put("constraints", constraintsDocument);
-
-    this.planCollection.replaceOne(planById(makePlanObjectId(planId)), planDocument);
   }
 
   private Bson activityByPlan(final ObjectId planId) {
