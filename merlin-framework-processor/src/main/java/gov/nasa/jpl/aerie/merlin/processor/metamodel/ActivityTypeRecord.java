@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import gov.nasa.jpl.aerie.merlin.processor.ActivityDefinitionStyle;
+import gov.nasa.jpl.aerie.merlin.processor.ActivityDefaultsStyle;
 
 public final class ActivityTypeRecord {
   public final TypeElement declaration;
@@ -16,7 +16,7 @@ public final class ActivityTypeRecord {
   public final List<ActivityValidationRecord> validations;
   public final List<ActivityParameterRecord> parameters;
   public final Optional<Pair<String, ActivityType.Executor>> effectModel;
-  public final ActivityDefinitionStyle activityDefinitionStyle;
+  public final ActivityDefaultsStyle activityDefaultsStyle;
 
   public ActivityTypeRecord(
       final TypeElement declaration,
@@ -25,7 +25,7 @@ public final class ActivityTypeRecord {
       final List<ActivityValidationRecord> validations,
       final List<ActivityParameterRecord> parameters,
       final Optional<Pair<String, ActivityType.Executor>> effectModel,
-      final ActivityDefinitionStyle activityDefinitionStyle)
+      final ActivityDefaultsStyle activityDefaultsStyle)
   {
     this.declaration = Objects.requireNonNull(declaration);
     this.name = Objects.requireNonNull(name);
@@ -33,6 +33,6 @@ public final class ActivityTypeRecord {
     this.validations = Objects.requireNonNull(validations);
     this.parameters = Objects.requireNonNull(parameters);
     this.effectModel = Objects.requireNonNull(effectModel);
-    this.activityDefinitionStyle = Objects.requireNonNull(activityDefinitionStyle);
+    this.activityDefaultsStyle = Objects.requireNonNull(activityDefaultsStyle);
   }
 }

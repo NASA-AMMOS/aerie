@@ -8,21 +8,18 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
 import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
-import gov.nasa.jpl.aerie.merlin.processor.ActivityDefinitionStyle;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class SomeOptionalInstantiator implements ActivityMapperInstantiator {
+public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstantiator {
 
   @Override
   public MethodSpec makeInstantiateDefaultMethod(final ActivityTypeRecord activityType) {
@@ -173,60 +170,5 @@ public class SomeOptionalInstantiator implements ActivityMapperInstantiator {
                     "defaults",
                     fieldName))
             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build()).addCode("\n");
-  }
-
-  @Override
-  public MethodSpec makeGetArgumentsMethod(final ActivityTypeRecord activityType) {
-    return MethodSpec
-        .methodBuilder("getArguments")
-        .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(Override.class)
-        .returns(ParameterizedTypeName.get(
-            java.util.Map.class,
-            String.class,
-            gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
-        .addParameter(
-            TypeName.get(activityType.declaration.asType()),
-            "activity",
-            Modifier.FINAL)
-        .addStatement(
-            "final var $L = new $T()",
-            "arguments",
-            ParameterizedTypeName.get(
-                java.util.HashMap.class,
-                String.class,
-                gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
-        .addCode(
-            activityType.parameters
-                .stream()
-                .map(parameter -> CodeBlock
-                    .builder()
-                    .addStatement(
-                        "$L.put($S, this.mapper_$L.serializeValue($L.$L()))",
-                        "arguments",
-                        parameter.name,
-                        parameter.name,
-                        "activity",
-                        parameter.name
-                    ))
-                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                .build())
-        .addStatement(
-            "return $L",
-            "arguments")
-        .build();
-  }
-
-  @Override
-  public List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement) {
-    final var parameters = new ArrayList<ActivityParameterRecord>();
-    for (final var element : activityTypeElement.getEnclosedElements()) {
-      if (element.getKind() != ElementKind.FIELD) continue;
-      if (element.getModifiers().contains(Modifier.STATIC)) continue;
-      final var name = element.getSimpleName().toString();
-      final var type = element.asType();
-      parameters.add(new ActivityParameterRecord(name, type, element));
-    }
-    return parameters;
   }
 }

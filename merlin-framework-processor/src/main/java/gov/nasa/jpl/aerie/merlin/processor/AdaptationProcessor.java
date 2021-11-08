@@ -17,10 +17,10 @@ import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
 import gov.nasa.jpl.aerie.merlin.processor.instantiators.ActivityMapperInstantiator;
-import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllOptionalInstantiator;
-import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllRequiredInsantiator;
-import gov.nasa.jpl.aerie.merlin.processor.instantiators.ClassicInstantiator;
-import gov.nasa.jpl.aerie.merlin.processor.instantiators.SomeOptionalInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllStaticallyDefinedInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.NoneDefinedInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllDefinedInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.instantiators.SomeStaticallyDefinedInstantiator;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -184,12 +184,12 @@ public final class AdaptationProcessor implements Processor {
     return Collections::emptyIterator;
   }
 
-  private ActivityMapperInstantiator getMapperInstantiator(final ActivityDefinitionStyle style) {
+  private ActivityMapperInstantiator getMapperInstantiator(final ActivityDefaultsStyle style) {
     return switch (style) {
-      case AllOptional -> new AllOptionalInstantiator();
-      case AllRequired -> new AllRequiredInsantiator();
-      case Classic -> new ClassicInstantiator();
-      case SomeOptional -> new SomeOptionalInstantiator();
+      case AllStaticallyDefined -> new AllStaticallyDefinedInstantiator();
+      case NoneDefined -> new NoneDefinedInstantiator();
+      case AllDefined -> new AllDefinedInstantiator();
+      case SomeStaticallyDefined -> new SomeStaticallyDefinedInstantiator();
     };
   }
 
@@ -296,28 +296,23 @@ public final class AdaptationProcessor implements Processor {
     class (old-style) or as a record (new-style) by determining
     whether there are @Parameter tags (old-style) or not
      */
-    final var activityDefinitionStyle = this.getActivityDefinitionStyle(activityTypeElement);
+    final var activityDefaultsStyle = this.getActivityDefaultsStyle(activityTypeElement);
 
     return new ActivityTypeRecord(activityTypeElement, name, mapper,
-                                  validations, parameters, effectModel, activityDefinitionStyle);
+                                  validations, parameters, effectModel, activityDefaultsStyle);
   }
 
-  private ActivityDefinitionStyle getActivityDefinitionStyle(final TypeElement activityTypeElement)
+  private ActivityDefaultsStyle getActivityDefaultsStyle(final TypeElement activityTypeElement)
   {
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.Parameter.class) != null)
-        return ActivityDefinitionStyle.Classic;
+        return ActivityDefaultsStyle.AllDefined;
       if (element.getAnnotation(ActivityType.Template.class) != null)
-        return ActivityDefinitionStyle.AllOptional;
+        return ActivityDefaultsStyle.AllStaticallyDefined;
       if (element.getAnnotation(ActivityType.WithDefaults.class) != null)
-        return ActivityDefinitionStyle.SomeOptional;
+        return ActivityDefaultsStyle.SomeStaticallyDefined;
     }
-
-    // No @Parameter annotations (not Classic)
-    // No @Template annotations (not AllOptional)
-    // No @WithDefaults annotations (not SomeOptional)
-    // Must be AllRequired
-    return ActivityDefinitionStyle.AllRequired;
+    return ActivityDefaultsStyle.NoneDefined; // No default arguments provided
   }
 
   private String
@@ -382,258 +377,8 @@ public final class AdaptationProcessor implements Processor {
 
   private List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
   {
-    return getMapperInstantiator(this.getActivityDefinitionStyle(activityTypeElement))
+    return getMapperInstantiator(this.getActivityDefaultsStyle(activityTypeElement))
         .getActivityParameters(activityTypeElement);
-  }
-
-  /**
-  Returns the default template factory method or constructor for a given activity
-  type depending on whether it was written as a Java 16 record-style activity or
-  an traditional non-record class activity.
-
-  Ex. Non-record class
-  returns "new BiteBananaActivity()"
-
-  Ex. Record-Style
-  returns "new BiteBananaActivity.defaults()"
-  where "defaults" is the factory method annotated with the @Template annotation
-   */
-  private MethodSpec
-  generateInstantiateDefaultMethod(final ActivityTypeRecord activityType)
-  {
-    final var activityDefinitionStyle = activityType.activityDefinitionStyle;
-
-    var methodBuilder = MethodSpec.methodBuilder("instantiateDefault")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()));
-
-    var activityTypeName = activityType.declaration.getSimpleName().toString();
-
-    switch (activityDefinitionStyle) {
-      case Classic:
-        methodBuilder = methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
-        break;
-
-      case AllOptional:
-        // Exists @Template method
-        for (final var element : activityType.declaration.getEnclosedElements()) {
-          if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
-          if (element.getAnnotation(ActivityType.Template.class) == null) continue;
-          var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("return $T.$N()", TypeName.get(activityType.declaration.asType()), templateName);
-          break;
-        }
-        break;
-
-      case AllRequired, SomeOptional:
-        // There are no defaults if the activity has AllRequired parameters
-        // As a result, no method shall be created.
-        // Unless there are 0 parameters, in which case a default no-arg constructor may be called.
-        if (activityType.parameters.size() != 0) {
-          methodBuilder.addStatement("throw new $T()", NoDefaultInstanceException.class);
-        } else {
-          methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
-        }
-        break;
-
-      default:
-        messager.printMessage(
-            Diagnostic.Kind.ERROR,
-            "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
-        );
-    }
-
-    return methodBuilder.build();
-  }
-
-  private MethodSpec
-  generateInstantiateMethod(final ActivityTypeRecord activityType)
-  {
-    var activityDefinitionStyle = activityType.activityDefinitionStyle;
-
-    var methodBuilder = MethodSpec.methodBuilder("instantiate")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()))
-                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
-                                  .addParameter(
-                                      ParameterizedTypeName.get(
-                                          java.util.Map.class,
-                                          String.class,
-                                          gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
-                                      "arguments",
-                                      Modifier.FINAL);
-
-    var activityTypeName = activityType.declaration.getSimpleName().toString();
-
-    switch (activityDefinitionStyle) {
-      case Classic:
-        methodBuilder = methodBuilder.addStatement("final var template = new $T()", TypeName.get(activityType.declaration.asType()));
-        methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
-        methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
-        break;
-
-      case AllOptional:
-        for (final var element : activityType.declaration.getEnclosedElements()) {
-          if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
-          if (element.getAnnotation(ActivityType.Template.class) == null) continue;
-          var templateName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement("final var template = $T.$L()", activityTypeName, templateName);
-          methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
-          methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
-          break;
-        }
-        break;
-
-      case AllRequired:
-        methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
-        methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
-        break;
-
-      case SomeOptional:
-        for (final var element : activityType.declaration.getEnclosedElements()) {
-          if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
-          final var defaultsName = element.getSimpleName().toString();
-          methodBuilder = methodBuilder.addStatement(
-              "final var defaults = new $T.$L()",
-              activityTypeName,
-              defaultsName);
-          methodBuilder = produceParametersFromTemplate(activityType, methodBuilder);
-          methodBuilder = produceParametersFromDefaultsClass(activityType, methodBuilder);
-          methodBuilder = produceArgumentExtractor(activityType, methodBuilder);
-        }
-        break;
-
-      default:
-        messager.printMessage(
-            Diagnostic.Kind.ERROR,
-            "No matching activity definition style: %s for %s".formatted(activityDefinitionStyle, activityTypeName)
-        );
-    }
-
-    // Ensure all parameters are non-null
-    methodBuilder = methodBuilder.addCode(
-        activityType.parameters
-            .stream()
-            .map(parameter -> CodeBlock
-                .builder()
-                .addStatement(
-                    "if (!$L.isPresent()) throw new $T()",
-                    parameter.name,
-                    EmptyParameterException.class)
-            ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-            .build()
-    ).addCode("\n");
-
-    // Add return statement with instantiation of class with parameters
-    methodBuilder = methodBuilder.addStatement(
-        "return $L",
-        switch (activityType.activityDefinitionStyle) {
-          case Classic -> "template";
-          case AllOptional, AllRequired, SomeOptional -> getRecordInstantiatorWithParams(
-              activityType.declaration.getSimpleName().toString(),
-              activityType.parameters
-          );
-        }
-    );
-
-    return methodBuilder.build();
-  }
-
-  private MethodSpec.Builder
-  produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, final MethodSpec.Builder methodBuilder)
-  {
-    final var optDefaultsClass = activityType.declaration.getEnclosedElements().stream()
-        .filter(e -> e.getAnnotation(ActivityType.WithDefaults.class) != null).findFirst();
-
-    return optDefaultsClass
-        .map(defaultsClass ->
-            methodBuilder.addCode(
-                defaultsClass.getEnclosedElements().stream()
-                    .filter(e -> e.getKind() == ElementKind.FIELD)
-                    .map(fieldName -> CodeBlock
-                        .builder()
-                        .addStatement(
-                            "$L = Optional.ofNullable($L.$L)",
-                            fieldName,
-                            "defaults",
-                            fieldName
-                        )
-                    ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build())
-                .addCode("\n"))
-        .orElse(methodBuilder);
-  }
-
-  private MethodSpec.Builder
-  produceParametersFromTemplate(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
-  {
-    return methodBuilder.addCode(
-        activityType.parameters
-            .stream()
-            .map(parameter -> CodeBlock
-                .builder()
-                .addStatement(
-                    "$T $L = $T$L",
-                    new TypePattern.ClassPattern(ClassName.get(Optional.class), List.of(TypePattern.from(parameter.type))).render(),
-                    parameter.name,
-                    Optional.class,
-                    switch (activityType.activityDefinitionStyle) {
-                      case Classic -> ".ofNullable(template." + parameter.name + ")";
-                      case AllOptional -> ".ofNullable(template." + parameter.name + "())";
-                      case AllRequired, SomeOptional -> ".empty()";
-                    }
-                )
-            )
-            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-            .build()).addCode("\n");
-  }
-
-  private MethodSpec.Builder
-  produceArgumentExtractor(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
-  {
-    return methodBuilder.beginControlFlow(
-                            "for (final var $L : $L.entrySet())",
-                            "entry",
-                            "arguments")
-                        .beginControlFlow(
-                            "switch ($L.getKey())",
-                            "entry")
-                        .addCode(
-                            activityType.parameters
-                                .stream()
-                                .map(parameter -> CodeBlock
-                                    .builder()
-                                    .add("case $S:\n", parameter.name)
-                                    .indent()
-                                    .addStatement(
-                                        "$L$L = $L(this.mapper_$L"
-                                        + "\n" + ".deserializeValue($L.getValue())"
-                                        + "\n" + ".getSuccessOrThrow($$ -> new $T()))",
-                                        (activityType.activityDefinitionStyle
-                                         != ActivityDefinitionStyle.Classic ? "" : "template."),
-                                        parameter.name,
-                                        (activityType.activityDefinitionStyle
-                                         != ActivityDefinitionStyle.Classic ? "Optional.ofNullable" : ""),
-                                        parameter.name,
-                                        "entry",
-                                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
-                                    .addStatement("break")
-                                    .unindent())
-                                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                                .build())
-                        .addCode(
-                            CodeBlock
-                                .builder()
-                                .add("default:\n")
-                                .indent()
-                                .addStatement(
-                                    "throw new $T()",
-                                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
-                                .unindent()
-                                .build())
-                        .endControlFlow()
-                        .endControlFlow().addCode("\n");
   }
 
   private Optional<Pair<String, ActivityType.Executor>>
@@ -900,9 +645,9 @@ public final class AdaptationProcessor implements Processor {
                         "return $L",
                         "parameters")
                     .build())
-            .addMethod(getMapperInstantiator(activityType.activityDefinitionStyle).makeGetArgumentsMethod(activityType))
-            .addMethod(getMapperInstantiator(activityType.activityDefinitionStyle).makeInstantiateDefaultMethod(activityType))
-            .addMethod(getMapperInstantiator(activityType.activityDefinitionStyle).makeInstantiateMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetArgumentsMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateDefaultMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateMethod(activityType))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getValidationFailures")
