@@ -143,7 +143,21 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
   /** Removes and returns the next set of jobs to be performed concurrently. */
   public JobSchedule.Batch<JobId> extractNextJobs(final Duration maximumTime) {
-    return this.scheduledJobs.extractNextJobs(maximumTime);
+    final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
+
+    // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
+    // Otherwise, we could see a race if one of the tasks running at this time invalidates state
+    // that the condition depends on, in which case we might accidentally schedule an update for a condition
+    // that no longer exists.
+    for (final var job : batch.jobs()) {
+      if (!(job instanceof JobId.SignalJobId j)) continue;
+      if (!(j.id() instanceof SignalId.ConditionSignalId s)) continue;
+
+      this.conditions.remove(s.id());
+      this.waitingConditions.unsubscribeQuery(s.id());
+    }
+
+    return batch;
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
@@ -288,13 +302,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   public void stepSignalledTasks(final SignalId signal, final TaskFrame.FrameBuilder<JobId> builder) {
     final var tasks = this.waitingTasks.invalidateTopic(signal);
     for (final var task : tasks) builder.signal(JobId.forTask(task));
-
-    if (signal instanceof SignalId.ConditionSignalId s) {
-      // Since we're resuming the tasks blocked on this condition,
-      // we can (and should!) untrack the condition.
-      this.conditions.remove(s.id());
-      this.waitingConditions.unsubscribeQuery(s.id());
-    }
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */

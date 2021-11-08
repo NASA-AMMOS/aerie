@@ -45,12 +45,12 @@ public final class JobSchedule<JobRef, TimeRef extends DurationLike & Comparable
     while (true) {
       final var entry = this.queue.peek();
       if (entry == null) break;
-      if (entry.getKey().compareTo(time) > 0) break;
+      if (entry.getLeft().compareTo(time) > 0) break;
 
-      this.scheduledJobs.remove(entry.getValue());
+      this.scheduledJobs.remove(entry.getRight());
       this.queue.remove();
 
-      readyJobs.add(entry.getValue());
+      readyJobs.add(entry.getRight());
     }
 
     return new Batch<>(time.project(), readyJobs);
