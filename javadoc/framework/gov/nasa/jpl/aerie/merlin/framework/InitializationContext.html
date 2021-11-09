@@ -122,9 +122,10 @@ implements <a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;Event,<wbr>
 Effect,<wbr>
 CellType&gt;<br>gov.nasa.jpl.aerie.merlin.protocol.driver.Query&lt;?,<wbr>Event,<wbr>CellType&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#allocate(CellType,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.Projection)" class="member-name-link">allocate</a><wbr>(CellType&nbsp;initialState,
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#allocate(CellType,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait,java.util.function.Function)" class="member-name-link">allocate</a><wbr>(CellType&nbsp;initialState,
  gov.nasa.jpl.aerie.merlin.protocol.model.Applicator&lt;Effect,<wbr>CellType&gt;&nbsp;applicator,
- gov.nasa.jpl.aerie.merlin.protocol.model.Projection&lt;Event,<wbr>Effect&gt;&nbsp;projection)</code></div>
+ gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait&lt;Effect&gt;&nbsp;trait,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;Event,<wbr>Effect&gt;&nbsp;projection)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>&lt;CellType&gt;&nbsp;CellType</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#ask(gov.nasa.jpl.aerie.merlin.protocol.driver.Query)" class="member-name-link">ask</a><wbr>(gov.nasa.jpl.aerie.merlin.protocol.driver.Query&lt;?,<wbr>?,<wbr>CellType&gt;&nbsp;query)</code></div>
@@ -229,17 +230,18 @@ T&gt;</span>&nbsp;<span class="return-type">T</span>&nbsp;<span class="element-n
 </section>
 </li>
 <li>
-<section class="detail" id="allocate(CellType,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.Projection)">
-<h3 id="allocate(java.lang.Object,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.Projection)">allocate</h3>
+<section class="detail" id="allocate(CellType,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait,java.util.function.Function)">
+<h3 id="allocate(java.lang.Object,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait,java.util.function.Function)">allocate</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="type-parameters">&lt;Event,<wbr>
 Effect,<wbr>
 CellType&gt;</span>
 <span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.driver.Query&lt;?,<wbr>Event,<wbr>CellType&gt;</span>&nbsp;<span class="element-name">allocate</span><wbr><span class="parameters">(CellType&nbsp;initialState,
  gov.nasa.jpl.aerie.merlin.protocol.model.Applicator&lt;Effect,<wbr>CellType&gt;&nbsp;applicator,
- gov.nasa.jpl.aerie.merlin.protocol.model.Projection&lt;Event,<wbr>Effect&gt;&nbsp;projection)</span></div>
+ gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait&lt;Effect&gt;&nbsp;trait,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;Event,<wbr>Effect&gt;&nbsp;projection)</span></div>
 <dl class="notes">
 <dt>Specified by:</dt>
-<dd><code><a href="Context.html#allocate(CellType,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.Projection)">allocate</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></code></dd>
+<dd><code><a href="Context.html#allocate(CellType,gov.nasa.jpl.aerie.merlin.protocol.model.Applicator,gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait,java.util.function.Function)">allocate</a></code>&nbsp;in interface&nbsp;<code><a href="Context.html" title="interface in gov.nasa.jpl.aerie.merlin.framework">Context</a></code></dd>
 </dl>
 </section>
 </li>
