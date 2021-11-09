@@ -19,27 +19,6 @@ import java.util.stream.Collectors;
 public class AllStaticallyDefinedInstantiator implements ActivityMapperInstantiator {
 
   @Override
-  public MethodSpec makeInstantiateDefaultMethod(final ActivityTypeRecord activityType) {
-    var methodBuilder = MethodSpec.methodBuilder("instantiateDefault")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()));
-    // Exists @Template method
-    for (final var element : activityType.declaration.getEnclosedElements()) {
-      if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
-      if (element.getAnnotation(ActivityType.Template.class) == null) continue;
-      var templateName = element.getSimpleName().toString();
-      methodBuilder = methodBuilder.addStatement(
-          "return $T.$N()",
-          TypeName.get(activityType.declaration.asType()),
-          templateName);
-      break;
-    }
-
-    return methodBuilder.build();
-  }
-
-  @Override
   public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
     var activityTypeName = activityType.declaration.getSimpleName().toString();
 

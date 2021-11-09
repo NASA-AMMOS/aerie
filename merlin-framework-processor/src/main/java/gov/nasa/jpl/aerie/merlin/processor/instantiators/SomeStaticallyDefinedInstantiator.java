@@ -6,7 +6,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
-import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -20,24 +19,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstantiator {
-
-  @Override
-  public MethodSpec makeInstantiateDefaultMethod(final ActivityTypeRecord activityType) {
-    var methodBuilder = MethodSpec.methodBuilder("instantiateDefault")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()));
-
-    // There are no defaults if the activity has AllRequired parameters
-    // As a result, no method shall be created.
-    // Unless there are 0 parameters, in which case a default no-arg constructor may be called.
-    if (activityType.parameters.size() != 0) {
-      methodBuilder.addStatement("throw new $T()", NoDefaultInstanceException.class);
-    } else {
-      methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
-    }
-    return methodBuilder.build();
-  }
 
   @Override
   public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
@@ -140,7 +121,7 @@ public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstanti
     return methodBuilder.build();
   }
 
-  private MethodSpec.Builder
+  private static MethodSpec.Builder
   produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
   {
     Optional<Element> defaultsClass = Optional.empty();

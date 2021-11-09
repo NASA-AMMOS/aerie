@@ -13,7 +13,6 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
-import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
 import gov.nasa.jpl.aerie.merlin.processor.instantiators.ActivityMapperInstantiator;
@@ -646,7 +645,6 @@ public final class AdaptationProcessor implements Processor {
                         "parameters")
                     .build())
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetArgumentsMethod(activityType))
-            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateDefaultMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateMethod(activityType))
             .addMethod(
                 MethodSpec
