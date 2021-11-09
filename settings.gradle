@@ -10,7 +10,7 @@ include 'contrib'
 
 // Adaptations
 include 'banananation'
-include 'foo-adaptation'
+include 'foo-missionmodel'
 include 'insight'
 
 // Service support

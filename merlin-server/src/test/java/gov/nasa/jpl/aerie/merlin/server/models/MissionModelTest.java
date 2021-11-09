@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.fooadaptation.Configuration;
-import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
-import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
+import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
+import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
