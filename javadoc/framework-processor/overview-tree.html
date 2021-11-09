@@ -51,6 +51,7 @@ loadScripts(document, 'script');</script>
 <span class="package-hierarchy-label">Package Hierarchies:</span>
 <ul class="horizontal">
 <li><a href="gov/nasa/jpl/aerie/merlin/processor/package-tree.html">gov.nasa.jpl.aerie.merlin.processor</a>, </li>
+<li><a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/package-tree.html">gov.nasa.jpl.aerie.merlin.processor.instantiators</a>, </li>
 <li><a href="gov/nasa/jpl/aerie/merlin/processor/metamodel/package-tree.html">gov.nasa.jpl.aerie.merlin.processor.metamodel</a></li>
 </ul>
 </div>
@@ -65,7 +66,11 @@ loadScripts(document, 'script');</script>
 <li class="circle">gov.nasa.jpl.aerie.merlin.processor.metamodel.<a href="gov/nasa/jpl/aerie/merlin/processor/metamodel/ActivityValidationRecord.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityValidationRecord</a></li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.processor.<a href="gov/nasa/jpl/aerie/merlin/processor/AdaptationProcessor.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor">AdaptationProcessor</a> (implements javax.annotation.processing.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.compiler/javax/annotation/processing/Processor.html" title="class or interface in javax.annotation.processing" class="external-link">Processor</a>)</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.processor.metamodel.<a href="gov/nasa/jpl/aerie/merlin/processor/metamodel/AdaptationRecord.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">AdaptationRecord</a></li>
+<li class="circle">gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/AllDefinedInstantiator.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor.instantiators">AllDefinedInstantiator</a> (implements gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/ActivityMapperInstantiator.html" title="interface in gov.nasa.jpl.aerie.merlin.processor.instantiators">ActivityMapperInstantiator</a>)</li>
+<li class="circle">gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/AllStaticallyDefinedInstantiator.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor.instantiators">AllStaticallyDefinedInstantiator</a> (implements gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/ActivityMapperInstantiator.html" title="interface in gov.nasa.jpl.aerie.merlin.processor.instantiators">ActivityMapperInstantiator</a>)</li>
+<li class="circle">gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/NoneDefinedInstantiator.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor.instantiators">NoneDefinedInstantiator</a> (implements gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/ActivityMapperInstantiator.html" title="interface in gov.nasa.jpl.aerie.merlin.processor.instantiators">ActivityMapperInstantiator</a>)</li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.processor.<a href="gov/nasa/jpl/aerie/merlin/processor/Resolver.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor">Resolver</a></li>
+<li class="circle">gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/SomeStaticallyDefinedInstantiator.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.merlin.processor.instantiators">SomeStaticallyDefinedInstantiator</a> (implements gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/ActivityMapperInstantiator.html" title="interface in gov.nasa.jpl.aerie.merlin.processor.instantiators">ActivityMapperInstantiator</a>)</li>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html" class="type-name-link external-link" title="class or interface in java.lang">Throwable</a> (implements java.io.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html" title="class or interface in java.io" class="external-link">Serializable</a>)
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Exception.html" class="type-name-link external-link" title="class or interface in java.lang">Exception</a>
@@ -90,13 +95,19 @@ loadScripts(document, 'script');</script>
 </ul>
 </section>
 <section class="hierarchy">
+<h2 title="Interface Hierarchy">Interface Hierarchy</h2>
+<ul>
+<li class="circle">gov.nasa.jpl.aerie.merlin.processor.instantiators.<a href="gov/nasa/jpl/aerie/merlin/processor/instantiators/ActivityMapperInstantiator.html" class="type-name-link" title="interface in gov.nasa.jpl.aerie.merlin.processor.instantiators">ActivityMapperInstantiator</a></li>
+</ul>
+</section>
+<section class="hierarchy">
 <h2 title="Enum Class Hierarchy">Enum Class Hierarchy</h2>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Object.html" class="type-name-link external-link" title="class or interface in java.lang">Object</a>
 <ul>
 <li class="circle">java.lang.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Enum.html" class="type-name-link external-link" title="class or interface in java.lang">Enum</a>&lt;E&gt; (implements java.lang.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Comparable.html" title="class or interface in java.lang" class="external-link">Comparable</a>&lt;T&gt;, java.lang.constant.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/constant/Constable.html" title="class or interface in java.lang.constant" class="external-link">Constable</a>, java.io.<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html" title="class or interface in java.io" class="external-link">Serializable</a>)
 <ul>
-<li class="circle">gov.nasa.jpl.aerie.merlin.processor.<a href="gov/nasa/jpl/aerie/merlin/processor/ActivityDefinitionStyle.html" class="type-name-link" title="enum class in gov.nasa.jpl.aerie.merlin.processor">ActivityDefinitionStyle</a></li>
+<li class="circle">gov.nasa.jpl.aerie.merlin.processor.<a href="gov/nasa/jpl/aerie/merlin/processor/ActivityDefaultsStyle.html" class="type-name-link" title="enum class in gov.nasa.jpl.aerie.merlin.processor">ActivityDefaultsStyle</a></li>
 <li class="circle">gov.nasa.jpl.aerie.merlin.processor.<a href="gov/nasa/jpl/aerie/merlin/processor/TypePattern.Primitive.html" class="type-name-link" title="enum class in gov.nasa.jpl.aerie.merlin.processor">TypePattern.Primitive</a></li>
 </ul>
 </li>
