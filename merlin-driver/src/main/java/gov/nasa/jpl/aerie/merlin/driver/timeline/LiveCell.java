@@ -10,8 +10,7 @@ public final class LiveCell<State> {
   }
 
   public Cell<State> get() {
-    while (this.cursor.hasNext()) this.cursor.step(this.cell);
-
+    this.cursor.stepUp(this.cell);
     return this.cell;
   }
 }

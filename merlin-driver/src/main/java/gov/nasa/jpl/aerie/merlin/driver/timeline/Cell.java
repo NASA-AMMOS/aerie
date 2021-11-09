@@ -39,6 +39,14 @@ public final class Cell<State> {
     this.inner.apply(this.state, events);
   }
 
+  public void apply(final Event event) {
+    this.inner.apply(this.state, event);
+  }
+
+  public void apply(final Event[] events, final int from, final int to) {
+    this.inner.apply(this.state, events, from, to);
+  }
+
   public Optional<Duration> getExpiry() {
     return this.inner.applicator.getExpiry(this.state);
   }
@@ -63,9 +71,17 @@ public final class Cell<State> {
       EventGraphEvaluator evaluator
   ) {
     public void apply(final State state, final EventGraph<Event> events) {
-      this.applicator.apply(state, this.evaluator
-          .evaluateOptional(this.algebra, this.selector::select, events)
-          .orElseGet(this.algebra::empty));
+      final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events);
+      if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
+    }
+
+    public void apply(final State state, final Event event) {
+      final var effect$ = this.selector.select(this.algebra, event);
+      if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
+    }
+
+    public void apply(final State state, final Event[] events, int from, final int to) {
+      while (from < to) apply(state, events[from++]);
     }
   }
 }

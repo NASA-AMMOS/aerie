@@ -63,31 +63,35 @@ public final class SlabList<T> implements Iterable<T> {
    * the iterator can be reused to continue from where it left off.
    */
   @Override
-  public Iterator<T> iterator() {
-    return new Iterator<>() {
-      private Slab<T> slab = SlabList.this.head;
-      private int index = 0;
+  public SlabIterator iterator() {
+    return new SlabIterator();
+  }
 
-      @Override
-      public boolean hasNext() {
-        while (this.index >= this.slab.elements().size()) {
-          final var nextSlab = this.slab.next().getValue();
-          if (nextSlab == null) break;
+  public final class SlabIterator implements Iterator<T> {
+    private Slab<T> slab = SlabList.this.head;
+    private int index = 0;
 
-          this.index -= this.slab.elements().size();
-          this.slab = nextSlab;
-        }
+    private SlabIterator() {}
 
-        return (this.index < this.slab.elements().size());
-      }
+    @Override
+    public boolean hasNext() {
+      if (this.index < this.slab.elements().size()) return true;
 
-      @Override
-      public T next() {
-        if (!hasNext()) throw new NoSuchElementException();
+      final var nextSlab = this.slab.next().getValue();
+      if (nextSlab == null || nextSlab.elements().isEmpty()) return false;
 
-        return this.slab.elements().get(this.index++);
-      }
-    };
+      this.index -= this.slab.elements().size();
+      this.slab = nextSlab;
+
+      return true;
+    }
+
+    @Override
+    public T next() {
+      if (!hasNext()) throw new NoSuchElementException();
+
+      return this.slab.elements().get(this.index++);
+    }
   }
 
   record Slab<T>(ArrayList<T> elements, Mutable<Slab<T>> next) {
