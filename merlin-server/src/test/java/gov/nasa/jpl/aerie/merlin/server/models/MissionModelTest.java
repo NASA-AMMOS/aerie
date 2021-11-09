@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
-import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -28,11 +28,11 @@ public final class MissionModelTest {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
         this.adaptation = makeAdaptation(new MissionModelBuilder<>(), serializedConfig);
-        this.unconfiguredAdaptation = new MissionModelFacade.Unconfigured<>(new GeneratedAdaptationFactory());
+        this.unconfiguredAdaptation = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
     }
 
     private static <$Schema> MissionModelFacade<$Schema> makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
-        final var factory = new GeneratedAdaptationFactory();
+        final var factory = new GeneratedMissionModelFactory();
         final var model = factory.instantiate(config, builder);
         return new MissionModelFacade<>(builder.build(model, factory.getTaskSpecTypes()));
     }

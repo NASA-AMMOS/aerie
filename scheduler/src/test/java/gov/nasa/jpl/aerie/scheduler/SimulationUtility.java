@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.banananation.Configuration;
 import gov.nasa.jpl.aerie.banananation.ConfigurationValueMapper;
-import gov.nasa.jpl.aerie.banananation.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -12,7 +12,7 @@ import java.nio.file.Path;
 public final class SimulationUtility {
 
   private static <$Schema> MissionModel<$Schema, ?> makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
-    final var factory = new GeneratedAdaptationFactory();
+    final var factory = new GeneratedMissionModelFactory();
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
   }

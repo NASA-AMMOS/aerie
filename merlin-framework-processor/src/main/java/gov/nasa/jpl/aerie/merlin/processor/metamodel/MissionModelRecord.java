@@ -34,7 +34,7 @@ public final class MissionModelRecord {
   }
 
   public ClassName getFactoryName() {
-    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedAdaptationFactory");
+    return ClassName.get(this.$package.getQualifiedName() + ".generated", "GeneratedMissionModelFactory");
   }
 
   public ClassName getActivityActionsName() {

@@ -104,22 +104,22 @@ public final class MissionModelProcessor implements Processor {
     /// Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
 
-    // Iterate over all elements annotated with @Adaptation
+    // Iterate over all elements annotated with @MissionModel
     for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
       final var packageElement = (PackageElement) element;
 
       try {
-        final var adaptationRecord = parseAdaptation(packageElement);
+        final var missionModelRecord = parseMissionModel(packageElement);
 
         final var generatedFiles = new ArrayList<JavaFile>();
-        generatedFiles.add(generateMerlinPlugin(adaptationRecord));
-        generatedFiles.add(generateAdaptationFactory(adaptationRecord));
-        generatedFiles.add(generateActivityActions(adaptationRecord));
-        generatedFiles.add(generateActivityTypes(adaptationRecord));
-        for (final var activityRecord : adaptationRecord.activityTypes) {
+        generatedFiles.add(generateMerlinPlugin(missionModelRecord));
+        generatedFiles.add(generateMissionModelFactory(missionModelRecord));
+        generatedFiles.add(generateActivityActions(missionModelRecord));
+        generatedFiles.add(generateActivityTypes(missionModelRecord));
+        for (final var activityRecord : missionModelRecord.activityTypes) {
           this.ownedActivityTypes.add(activityRecord.declaration);
           if (!activityRecord.mapper.isCustom) {
-            generateActivityMapper(adaptationRecord, activityRecord).ifPresent(generatedFiles::add);
+            generateActivityMapper(missionModelRecord, activityRecord).ifPresent(generatedFiles::add);
           }
         }
 
@@ -193,23 +193,24 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private MissionModelRecord
-  parseAdaptation(final PackageElement adaptationElement)
+
+  parseMissionModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
-    final var topLevelModel = this.getAdaptationModel(adaptationElement);
-    final var modelConfiguration = this.getAdaptationConfiguration(adaptationElement);
+    final var topLevelModel = this.getMissionModelModel(missionModelElement);
+    final var modelConfiguration = this.getMissionModelConfiguration(missionModelElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     final var typeRules = new ArrayList<TypeRule>();
 
-    for (final var factory : this.getAdaptationMapperClasses(adaptationElement)) {
+    for (final var factory : this.getMissionModelMapperClasses(missionModelElement)) {
       typeRules.addAll(this.parseValueMappers(factory));
     }
 
-    for (final var activityTypeElement : this.getAdaptationActivityTypes(adaptationElement)) {
-      activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
+    for (final var activityTypeElement : this.getMissionModelActivityTypes(missionModelElement)) {
+      activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
-    return new MissionModelRecord(adaptationElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
+    return new MissionModelRecord(missionModelElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
   }
 
   private List<TypeRule>
@@ -277,11 +278,11 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private ActivityTypeRecord
-  parseActivityType(final PackageElement adaptationElement, final TypeElement activityTypeElement)
+  parseActivityType(final PackageElement missionModelElement, final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {
     final var name = this.getActivityTypeName(activityTypeElement);
-    final var mapper = this.getActivityMapper(adaptationElement, activityTypeElement);
+    final var mapper = this.getActivityMapper(missionModelElement, activityTypeElement);
     final var validations = this.getActivityValidations(activityTypeElement);
     final var parameters = this.getActivityParameters(activityTypeElement);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
@@ -335,14 +336,14 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private ActivityMapperRecord
-  getActivityMapper(final PackageElement adaptationElement, final TypeElement activityTypeElement)
+  getActivityMapper(final PackageElement missionModelElement, final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror = this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
     if (annotationMirror.isEmpty()) {
       return ActivityMapperRecord.generatedFor(
           ClassName.get(activityTypeElement),
-          adaptationElement);
+          missionModelElement);
     }
 
     final var mapperType = (DeclaredType) this
@@ -396,19 +397,19 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private List<TypeElement>
-  getAdaptationMapperClasses(final PackageElement adaptationElement)
+  getMissionModelMapperClasses(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var mapperClassElements = new ArrayList<TypeElement>();
 
-    for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, MissionModel.WithMappers.class)) {
+    for (final var withMappersAnnotation : getRepeatableAnnotation(missionModelElement, MissionModel.WithMappers.class)) {
       final var attribute =
           getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
         throw new InvalidMissionModelException(
             "Mappers class not yet defined",
-            adaptationElement,
+            missionModelElement,
             withMappersAnnotation,
             attribute);
       }
@@ -420,13 +421,13 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private List<TypeElement>
-  getAdaptationActivityTypes(final PackageElement adaptationElement)
+  getMissionModelActivityTypes(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var activityTypeElements = new ArrayList<TypeElement>();
 
     for (final var activityTypeAnnotation : getRepeatableAnnotation(
-        adaptationElement,
+        missionModelElement,
         MissionModel.WithActivityType.class)) {
       final var attribute =
           getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
@@ -434,7 +435,7 @@ public final class MissionModelProcessor implements Processor {
       if (!(attribute.getValue() instanceof DeclaredType)) {
         throw new InvalidMissionModelException(
             "Activity type not yet defined",
-            adaptationElement,
+            missionModelElement,
             activityTypeAnnotation,
             attribute);
       }
@@ -448,21 +449,21 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private TypeElement
-  getAdaptationModel(final PackageElement adaptationElement)
+  getMissionModelModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror = this
-        .getAnnotationMirrorByType(adaptationElement, MissionModel.class)
+        .getAnnotationMirrorByType(missionModelElement, MissionModel.class)
         .orElseThrow(() -> new InvalidMissionModelException(
-            "The adaptation package is somehow missing an @Adaptation annotation",
-            adaptationElement));
+            "The missionModel package is somehow missing an @MissionModel annotation",
+            missionModelElement));
 
     final var modelAttribute =
         getAnnotationAttribute(annotationMirror, "model").orElseThrow();
     if (!(modelAttribute.getValue() instanceof DeclaredType)) {
       throw new InvalidMissionModelException(
           "The top-level model is not yet defined",
-          adaptationElement,
+          missionModelElement,
           annotationMirror,
           modelAttribute);
     }
@@ -479,18 +480,18 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private Optional<TypeElement>
-  getAdaptationConfiguration(final PackageElement adaptationElement)
+  getMissionModelConfiguration(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
-        this.getAnnotationMirrorByType(adaptationElement, MissionModel.WithConfiguration.class);
+        this.getAnnotationMirrorByType(missionModelElement, MissionModel.WithConfiguration.class);
     if (annotationMirror.isEmpty()) return Optional.empty();
 
     final var attribute = getAnnotationAttribute(annotationMirror.get(), "value").orElseThrow();
     if (!(attribute.getValue() instanceof DeclaredType)) {
       throw new InvalidMissionModelException(
-          "Adaptation configuration type not yet defined",
-          adaptationElement,
+          "MissionModel configuration type not yet defined",
+          missionModelElement,
           annotationMirror.get(),
           attribute);
     }
@@ -509,9 +510,9 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private Optional<Map<String, CodeBlock>>
-  buildParameterMapperBlocks(final MissionModelRecord adaptation, final ActivityTypeRecord activityType)
+  buildParameterMapperBlocks(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
   {
-    final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
+    final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
     var failed = false;
     final var mapperBlocks = new HashMap<String, CodeBlock>();
 
@@ -531,8 +532,8 @@ public final class MissionModelProcessor implements Processor {
     return failed ? Optional.empty() : Optional.of(mapperBlocks);
   }
 
-  private CodeBlock buildConfigurationMapperBlock(final MissionModelRecord adaptation, final TypeElement typeElem) {
-    final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
+  private CodeBlock buildConfigurationMapperBlock(final MissionModelRecord missionModel, final TypeElement typeElem) {
+    final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
     final var mapperBlock = resolver.instantiateMapperFor(typeElem.asType());
     if (mapperBlock.isEmpty()) {
       messager.printMessage(Diagnostic.Kind.ERROR, "Failed to generate value mapper for configuration", typeElem);
@@ -541,20 +542,20 @@ public final class MissionModelProcessor implements Processor {
   }
 
   private Optional<JavaFile>
-  generateActivityMapper(final MissionModelRecord adaptation, final ActivityTypeRecord activityType)
+  generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
   {
-    final var maybeMapperBlocks = buildParameterMapperBlocks(adaptation, activityType);
+    final var maybeMapperBlocks = buildParameterMapperBlocks(missionModel, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
     final var mapperBlocks = maybeMapperBlocks.get();
 
     final var typeSpec =
         TypeSpec
             .classBuilder(activityType.mapper.name)
-            // The location of the adaptation package determines where to put this class.
-            .addOriginatingElement(adaptation.$package)
+            // The location of the missionModel package determines where to put this class.
+            .addOriginatingElement(missionModel.$package)
             // The fields and methods of the activity determines the overall behavior of this class.
             .addOriginatingElement(activityType.declaration)
-            // TODO: Add an originating element for each of the mapper rulesets associated with the adaptation.
+            // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
@@ -566,7 +567,7 @@ public final class MissionModelProcessor implements Processor {
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         WildcardTypeName.subtypeOf(Object.class),
-                        ClassName.get(adaptation.topLevelModel)),
+                        ClassName.get(missionModel.topLevelModel)),
                     ClassName.get(activityType.declaration)))
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addFields(
@@ -669,7 +670,7 @@ public final class MissionModelProcessor implements Processor {
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                 WildcardTypeName.subtypeOf(Object.class),
-                                ClassName.get(adaptation.topLevelModel))),
+                                ClassName.get(missionModel.topLevelModel))),
                         "wrapper",
                         Modifier.FINAL)
                     .addParameter(
@@ -721,14 +722,14 @@ public final class MissionModelProcessor implements Processor {
                            .build());
   }
 
-  private JavaFile generateActivityActions(final MissionModelRecord adaptation) {
-    final var typeName = adaptation.getActivityActionsName();
+  private JavaFile generateActivityActions(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getActivityActionsName();
 
     final var typeSpec =
         TypeSpec
             .classBuilder(typeName)
-            // The location of the adaptation package determines where to put this class.
-            .addOriginatingElement(adaptation.$package)
+            // The location of the mission model package determines where to put this class.
+            .addOriginatingElement(missionModel.$package)
             // TODO: List found task spec types as dependencies of this generated file.
             .addAnnotation(
                 AnnotationSpec
@@ -739,7 +740,7 @@ public final class MissionModelProcessor implements Processor {
             .superclass(gov.nasa.jpl.aerie.merlin.framework.ModelActions.class)
             .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PRIVATE).build())
             .addMethods(
-                adaptation.activityTypes
+                missionModel.activityTypes
                     .stream()
                     .flatMap(entry -> List
                         .of(
@@ -840,8 +841,8 @@ public final class MissionModelProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateAdaptationFactory(final MissionModelRecord adaptation) {
-    final var typeName = adaptation.getFactoryName();
+  private JavaFile generateMissionModelFactory(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getFactoryName();
 
     final var typeSpec =
         TypeSpec
@@ -858,7 +859,7 @@ public final class MissionModelProcessor implements Processor {
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         WildcardTypeName.subtypeOf(Object.class),
-                        ClassName.get(adaptation.topLevelModel))))
+                        ClassName.get(missionModel.topLevelModel))))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getTaskSpecTypes")
@@ -872,9 +873,9 @@ public final class MissionModelProcessor implements Processor {
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                 WildcardTypeName.subtypeOf(Object.class),
-                                ClassName.get(adaptation.topLevelModel)),
+                                ClassName.get(missionModel.topLevelModel)),
                             WildcardTypeName.subtypeOf(Object.class))))
-                    .addStatement("return $T.activityTypes", adaptation.getTypesName())
+                    .addStatement("return $T.activityTypes", missionModel.getTypesName())
                     .build())
             .addMethod(
                 MethodSpec
@@ -899,7 +900,7 @@ public final class MissionModelProcessor implements Processor {
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                 WildcardTypeName.subtypeOf(Object.class),
-                                ClassName.get(adaptation.topLevelModel))))
+                                ClassName.get(missionModel.topLevelModel))))
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -911,13 +912,13 @@ public final class MissionModelProcessor implements Processor {
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class)
                     .addCode("\n")
                     .addCode(
-                        adaptation.modelConfiguration
+                        missionModel.modelConfiguration
                             .map(configElem -> CodeBlock  // if configuration is provided
                                                           .builder()
                                                           .addStatement(
                                                               "final var $L = $L",
                                                               "configMapper",
-                                                              buildConfigurationMapperBlock(adaptation, configElem))
+                                                              buildConfigurationMapperBlock(missionModel, configElem))
                                                           .addStatement(
                                                               "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
                                                               "deserializedConfig",
@@ -929,7 +930,7 @@ public final class MissionModelProcessor implements Processor {
                                                               gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
                                                               "executor",
                                                               "builder",
-                                                              ClassName.get(adaptation.topLevelModel),
+                                                              ClassName.get(missionModel.topLevelModel),
                                                               "registrar",
                                                               "deserializedConfig")
                                                           .build())
@@ -941,7 +942,7 @@ public final class MissionModelProcessor implements Processor {
                                                             gov.nasa.jpl.aerie.merlin.framework.InitializationContext.class,
                                                             "executor",
                                                             "builder",
-                                                            ClassName.get(adaptation.topLevelModel),
+                                                            ClassName.get(missionModel.topLevelModel),
                                                             "registrar")
                                                         .build()))
                     .addCode("\n")
@@ -949,7 +950,7 @@ public final class MissionModelProcessor implements Processor {
                         "return new $T<$T, $T>($L, $L).toPhantom()",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
                         TypeVariableName.get("$Schema"),
-                        ClassName.get(adaptation.topLevelModel),
+                        ClassName.get(missionModel.topLevelModel),
                         "model",
                         "executor")
                     .build())
@@ -960,13 +961,13 @@ public final class MissionModelProcessor implements Processor {
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(List.class, Parameter.class))
                     .addCode(
-                        adaptation.modelConfiguration
+                        missionModel.modelConfiguration
                             .map(configElem -> CodeBlock  // if configuration is provided
                                 .builder()
                                 .addStatement("return $L.getValueSchema().asStruct().map(parameterMap ->\n"+
                                               "parameterMap.keySet().stream().map(name -> new $T(name, parameterMap.get(name))).toList())\n"+
                                               ".orElse($T.of())",
-                                    buildConfigurationMapperBlock(adaptation, configElem),
+                                    buildConfigurationMapperBlock(missionModel, configElem),
                                     Parameter.class,
                                     List.class)
                                 .build())
@@ -983,8 +984,8 @@ public final class MissionModelProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateActivityTypes(final MissionModelRecord adaptation) {
-    final var typeName = adaptation.getTypesName();
+  private JavaFile generateActivityTypes(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getTypesName();
 
     final var typeSpec =
         TypeSpec
@@ -1005,14 +1006,14 @@ public final class MissionModelProcessor implements Processor {
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                     WildcardTypeName.subtypeOf(Object.class),
-                                    ClassName.get(adaptation.topLevelModel)),
+                                    ClassName.get(missionModel.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypeList",
                         Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                     .initializer(
                         "$T.of($>$>\n$L$<$<)",
                         List.class,
-                        adaptation.activityTypes
+                        missionModel.activityTypes
                             .stream()
                             .map(activityType -> CodeBlock.builder().add("new $T()", activityType.mapper.name))
                             .reduce((x, y) -> x.add(",\n$L", y.build()))
@@ -1030,7 +1031,7 @@ public final class MissionModelProcessor implements Processor {
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                                     WildcardTypeName.subtypeOf(Object.class),
-                                    ClassName.get(adaptation.topLevelModel)),
+                                    ClassName.get(missionModel.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypes",
                         Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
@@ -1047,8 +1048,8 @@ public final class MissionModelProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateMerlinPlugin(final MissionModelRecord adaptation) {
-    final var typeName = adaptation.getPluginName();
+  private JavaFile generateMerlinPlugin(final MissionModelRecord missionModel) {
+    final var typeName = missionModel.getPluginName();
 
     final var typeSpec =
         TypeSpec
@@ -1065,10 +1066,10 @@ public final class MissionModelProcessor implements Processor {
                     .methodBuilder("getFactory")
                     .addAnnotation(Override.class)
                     .addModifiers(Modifier.PUBLIC)
-                    .returns(adaptation.getFactoryName())
+                    .returns(missionModel.getFactoryName())
                     .addStatement(
                         "return new $T()",
-                        adaptation.getFactoryName())
+                        missionModel.getFactoryName())
                     .build())
             .build();
 

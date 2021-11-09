@@ -19,19 +19,19 @@ public final class ActivityMapperRecord {
   }
 
   public static ActivityMapperRecord
-  generatedFor(final ClassName activityTypeName, final PackageElement adaptationElement) {
-    final var adaptationPackage = adaptationElement.getQualifiedName().toString();
+  generatedFor(final ClassName activityTypeName, final PackageElement missionModelElement) {
+    final var missionModelPackage = missionModelElement.getQualifiedName().toString();
     final var activityPackage = activityTypeName.packageName();
 
     final String generatedSuffix;
-    if ((activityPackage + ".").startsWith(adaptationPackage + ".")) {
-      generatedSuffix = activityPackage.substring(adaptationPackage.length());
+    if ((activityPackage + ".").startsWith(missionModelPackage + ".")) {
+      generatedSuffix = activityPackage.substring(missionModelPackage.length());
     } else {
       generatedSuffix = activityPackage;
     }
 
     final var mapperName = ClassName.get(
-        adaptationPackage + ".generated" + generatedSuffix,
+        missionModelPackage + ".generated" + generatedSuffix,
         activityTypeName.simpleName() + "Mapper");
 
     return new ActivityMapperRecord(mapperName, false);

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedAdaptationFactory;
+import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
@@ -29,7 +29,7 @@ public class SimulateMapSchedule {
 
   private static <$Schema> MissionModel<$Schema, RootModel<?, Mission>>
   makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
-    final var factory = new GeneratedAdaptationFactory();
+    final var factory = new GeneratedMissionModelFactory();
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
   }
