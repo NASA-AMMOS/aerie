@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.services;
 import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -111,6 +112,24 @@ public final class LocalAdaptationService implements AdaptationService {
       return List.of("unknown activity type");
     } catch (final AdaptationFacade.UnconstructableActivityInstanceException ex) {
       return List.of(ex.getMessage());
+    }
+  }
+
+  @Override
+  public Map<String, SerializedValue> getActivityEffectiveArguments(final String adaptationId, final SerializedActivity activity)
+  throws NoSuchAdaptationException,
+         NoSuchActivityTypeException,
+         UnconstructableActivityInstanceException,
+         MissingArgumentException,
+         AdaptationLoadException
+  {
+    try {
+      return this.loadConfiguredAdaptation(adaptationId)
+                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getParameters());
+    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
+      throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
+    } catch (final AdaptationFacade.UnconstructableActivityInstanceException ex) {
+      throw new UnconstructableActivityInstanceException(activity.getTypeName(), ex);
     }
   }
 

@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -69,6 +70,33 @@ public final class AdaptationFacade<$Schema> {
     }
   }
 
+  public Map<String, SerializedValue> getActivityEffectiveArguments(
+      final String typeName,
+      final Map<String, SerializedValue> arguments)
+  throws NoSuchActivityTypeException, UnconstructableActivityInstanceException, MissingArgumentException
+  {
+    final var specType = Optional
+        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
+        .orElseThrow(NoSuchActivityTypeException::new);
+
+    return getActivityEffectiveArguments(specType, arguments);
+  }
+
+  private static <Specification> Map<String, SerializedValue> getActivityEffectiveArguments(
+      final TaskSpecType<?, Specification> specType,
+      final Map<String, SerializedValue> arguments)
+  throws UnconstructableActivityInstanceException, MissingArgumentException
+  {
+    try {
+      final var activity = specType.instantiate(arguments);
+      return specType.getArguments(activity);
+    } catch (final TaskSpecType.UnconstructableTaskSpecException e) {
+      throw new UnconstructableActivityInstanceException(
+          "Unknown failure when deserializing activity -- do the parameters match the schema?",
+          e);
+    }
+  }
+
   public static final class Unconfigured<Model> {
     private final AdaptationFactory<Model> factory;
 
@@ -119,9 +147,7 @@ public final class AdaptationFacade<$Schema> {
     }
 
     public UnconstructableActivityInstanceException(final String message, final Throwable cause) {
-      super(
-          message,
-          cause);
+      super(message, cause);
     }
   }
 }
