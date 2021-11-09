@@ -98,22 +98,28 @@ implements gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResour
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;Value&gt;&nbsp;<a href="Register.html" title="class in gov.nasa.jpl.aerie.contrib.models">Register</a>&lt;Value&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#create(Value)" class="member-name-link">create</a><wbr>(Value&nbsp;initialValue)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#create(Value,java.util.function.UnaryOperator)" class="member-name-link">create</a><wbr>(Value&nbsp;initialValue,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/UnaryOperator.html" title="class or interface in java.util.function" class="external-link">UnaryOperator</a>&lt;Value&gt;&nbsp;duplicator)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code>boolean</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6"><code><a href="#equals(java.lang.Object)" class="member-name-link">equals</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>&nbsp;obj)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4 method-summary-table-tab6">
 <div class="block"><span class="deprecated-label">Deprecated.</span></div>
 </div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="Register.html" title="type parameter in Register">Value</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getDynamics()" class="member-name-link">getDynamics</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#isConflicted()" class="member-name-link">isConflicted</a>()</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;Value&gt;&nbsp;<a href="Register.html" title="class in gov.nasa.jpl.aerie.contrib.models">Register</a>&lt;Value&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#forImmutable(Value)" class="member-name-link">forImmutable</a><wbr>(Value&nbsp;initialValue)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Creates a register for an <b>immutable</b> type, such as an enum or a primitive.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="Register.html" title="type parameter in Register">Value</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getDynamics()" class="member-name-link">getDynamics</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#set(Value)" class="member-name-link">set</a><wbr>(<a href="Register.html" title="type parameter in Register">Value</a>&nbsp;value)</code></div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>boolean</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#isConflicted()" class="member-name-link">isConflicted</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#set(Value)" class="member-name-link">set</a><wbr>(<a href="Register.html" title="type parameter in Register">Value</a>&nbsp;value)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -135,9 +141,19 @@ implements gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResour
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="create(Value)">
-<h3 id="create(java.lang.Object)">create</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;Value&gt;</span>&nbsp;<span class="return-type"><a href="Register.html" title="class in gov.nasa.jpl.aerie.contrib.models">Register</a>&lt;Value&gt;</span>&nbsp;<span class="element-name">create</span><wbr><span class="parameters">(Value&nbsp;initialValue)</span></div>
+<section class="detail" id="create(Value,java.util.function.UnaryOperator)">
+<h3 id="create(java.lang.Object,java.util.function.UnaryOperator)">create</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;Value&gt;</span>&nbsp;<span class="return-type"><a href="Register.html" title="class in gov.nasa.jpl.aerie.contrib.models">Register</a>&lt;Value&gt;</span>&nbsp;<span class="element-name">create</span><wbr><span class="parameters">(Value&nbsp;initialValue,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/UnaryOperator.html" title="class or interface in java.util.function" class="external-link">UnaryOperator</a>&lt;Value&gt;&nbsp;duplicator)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="forImmutable(Value)">
+<h3 id="forImmutable(java.lang.Object)">forImmutable</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;Value&gt;</span>&nbsp;<span class="return-type"><a href="Register.html" title="class in gov.nasa.jpl.aerie.contrib.models">Register</a>&lt;Value&gt;</span>&nbsp;<span class="element-name">forImmutable</span><wbr><span class="parameters">(Value&nbsp;initialValue)</span></div>
+<div class="block">Creates a register for an <b>immutable</b> type, such as an enum or a primitive.
+
+ It is not necessary to make defensive copies for such types.</div>
 </section>
 </li>
 <li>

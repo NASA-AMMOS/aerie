@@ -44,7 +44,7 @@ loadScripts(document, 'script');</script>
 <div>
 <ul class="sub-nav-list">
 <li>Summary:&nbsp;</li>
-<li>Nested&nbsp;|&nbsp;</li>
+<li><a href="#nested-class-summary">Nested</a>&nbsp;|&nbsp;</li>
 <li>Field&nbsp;|&nbsp;</li>
 <li><a href="#constructor-summary">Constr</a>&nbsp;|&nbsp;</li>
 <li><a href="#method-summary">Method</a></li>
@@ -75,17 +75,27 @@ loadScripts(document, 'script');</script>
 <div class="inheritance">gov.nasa.jpl.aerie.contrib.cells.counters.CounterCell&lt;T&gt;</div>
 </div>
 <section class="class-description" id="class-description">
-<dl class="notes">
-<dt>All Implemented Interfaces:</dt>
-<dd><code>gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;T&gt;&gt;</code></dd>
-</dl>
 <hr>
 <div class="type-signature"><span class="modifiers">public final class </span><span class="element-name type-name-label">CounterCell&lt;T&gt;</span>
-<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a>
-implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;T&gt;&gt;</span></div>
+<span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></span></div>
 </section>
 <section class="summary">
 <ul class="summary-list">
+<!-- ======== NESTED CLASS SUMMARY ======== -->
+<li>
+<section class="nested-class-summary" id="nested-class-summary">
+<h2>Nested Class Summary</h2>
+<div class="caption"><span>Nested Classes</span></div>
+<div class="summary-table three-column-summary">
+<div class="table-header col-first">Modifier and Type</div>
+<div class="table-header col-second">Class</div>
+<div class="table-header col-last">Description</div>
+<div class="col-first even-row-color"><code>static final class&nbsp;</code></div>
+<div class="col-second even-row-color"><code><a href="CounterCell.CounterApplicator.html" class="type-name-link" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell.CounterApplicator</a>&lt;<a href="CounterCell.CounterApplicator.html" title="type parameter in CounterCell.CounterApplicator">T</a>&gt;</code></div>
+<div class="col-last even-row-color">&nbsp;</div>
+</div>
+</section>
+</li>
 <!-- ======== CONSTRUCTOR SUMMARY ======== -->
 <li>
 <section class="constructor-summary" id="constructor-summary">
@@ -94,8 +104,9 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <div class="summary-table two-column-summary">
 <div class="table-header col-first">Constructor</div>
 <div class="table-header col-last">Description</div>
-<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(T,java.util.function.BinaryOperator)" class="member-name-link">CounterCell</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;adder)</code></div>
+<div class="col-constructor-name even-row-color"><code><a href="#%3Cinit%3E(T,java.util.function.BinaryOperator,java.util.function.UnaryOperator)" class="member-name-link">CounterCell</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;adder,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/UnaryOperator.html" title="class or interface in java.util.function" class="external-link">UnaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;duplicator)</code></div>
 <div class="col-last even-row-color">&nbsp;</div>
 </div>
 </section>
@@ -105,30 +116,29 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <section class="method-summary" id="method-summary">
 <h2>Method Summary</h2>
 <div id="method-summary-table">
-<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab1" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab1', 3)" class="table-tab">Static Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab4" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab4', 3)" class="table-tab">Concrete Methods</button></div>
 <div id="method-summary-table.tabpanel" role="tabpanel">
 <div class="summary-table three-column-summary" aria-labelledby="method-summary-table-tab0">
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#duplicate()" class="member-name-link">duplicate</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;Event,<wbr>
+T&gt;&nbsp;gov.nasa.jpl.aerie.merlin.framework.CellRef&lt;Event,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;T&gt;&gt;</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#allocate(T,T,java.util.function.BinaryOperator,java.util.function.UnaryOperator,java.util.function.Function)" class="member-name-link">allocate</a><wbr>(T&nbsp;initialValue,
+ T&nbsp;zero,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;T&gt;&nbsp;adder,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/UnaryOperator.html" title="class or interface in java.util.function" class="external-link">UnaryOperator</a>&lt;T&gt;&nbsp;duplicator,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;Event,<wbr>T&gt;&nbsp;interpreter)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="CounterCell.html" title="type parameter in CounterCell">T</a></code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#getValue()" class="member-name-link">getValue</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#react(T)" class="member-name-link">react</a><wbr>(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;t)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
 <div class="inherited-list">
 <h3 id="methods-inherited-from-class-java.lang.Object">Methods inherited from class&nbsp;java.lang.<a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">Object</a></h3>
 <code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#clone()" title="class or interface in java.lang" class="external-link">clone</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#equals(java.lang.Object)" title="class or interface in java.lang" class="external-link">equals</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#finalize()" title="class or interface in java.lang" class="external-link">finalize</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#getClass()" title="class or interface in java.lang" class="external-link">getClass</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#hashCode()" title="class or interface in java.lang" class="external-link">hashCode</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notify()" title="class or interface in java.lang" class="external-link">notify</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#notifyAll()" title="class or interface in java.lang" class="external-link">notifyAll</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#toString()" title="class or interface in java.lang" class="external-link">toString</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait()" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long)" title="class or interface in java.lang" class="external-link">wait</a>, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html#wait(long,int)" title="class or interface in java.lang" class="external-link">wait</a></code></div>
-<div class="inherited-list">
-<h3 id="methods-inherited-from-class-gov.nasa.jpl.aerie.merlin.framework.Cell">Methods inherited from interface&nbsp;gov.nasa.jpl.aerie.merlin.framework.Cell</h3>
-<code>getExpiry, step</code></div>
 </section>
 </li>
 </ul>
@@ -141,10 +151,11 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <h2>Constructor Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="&lt;init&gt;(T,java.util.function.BinaryOperator)">
-<h3 id="&lt;init&gt;(java.lang.Object,java.util.function.BinaryOperator)">CounterCell</h3>
+<section class="detail" id="&lt;init&gt;(T,java.util.function.BinaryOperator,java.util.function.UnaryOperator)">
+<h3 id="&lt;init&gt;(java.lang.Object,java.util.function.BinaryOperator,java.util.function.UnaryOperator)">CounterCell</h3>
 <div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="element-name">CounterCell</span><wbr><span class="parameters">(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;initialValue,
- <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;adder)</span></div>
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;adder,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/UnaryOperator.html" title="class or interface in java.util.function" class="external-link">UnaryOperator</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&nbsp;duplicator)</span></div>
 </section>
 </li>
 </ul>
@@ -156,23 +167,15 @@ implements gov.nasa.jpl.aerie.merlin.framework.Cell&lt;T,<wbr><a href="CounterCe
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="duplicate()">
-<h3>duplicate</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type"><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;</span>&nbsp;<span class="element-name">duplicate</span>()</div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>duplicate</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.Cell&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&gt;</code></dd>
-</dl>
-</section>
-</li>
-<li>
-<section class="detail" id="react(T)">
-<h3 id="react(java.lang.Object)">react</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">react</span><wbr><span class="parameters">(<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&nbsp;t)</span></div>
-<dl class="notes">
-<dt>Specified by:</dt>
-<dd><code>react</code>&nbsp;in interface&nbsp;<code>gov.nasa.jpl.aerie.merlin.framework.Cell&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;<a href="CounterCell.html" title="type parameter in CounterCell">T</a>&gt;&gt;</code></dd>
-</dl>
+<section class="detail" id="allocate(T,T,java.util.function.BinaryOperator,java.util.function.UnaryOperator,java.util.function.Function)">
+<h3 id="allocate(java.lang.Object,java.lang.Object,java.util.function.BinaryOperator,java.util.function.UnaryOperator,java.util.function.Function)">allocate</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;Event,<wbr>
+T&gt;</span>
+<span class="return-type">gov.nasa.jpl.aerie.merlin.framework.CellRef&lt;Event,<wbr><a href="CounterCell.html" title="class in gov.nasa.jpl.aerie.contrib.cells.counters">CounterCell</a>&lt;T&gt;&gt;</span>&nbsp;<span class="element-name">allocate</span><wbr><span class="parameters">(T&nbsp;initialValue,
+ T&nbsp;zero,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/BinaryOperator.html" title="class or interface in java.util.function" class="external-link">BinaryOperator</a>&lt;T&gt;&nbsp;adder,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/UnaryOperator.html" title="class or interface in java.util.function" class="external-link">UnaryOperator</a>&lt;T&gt;&nbsp;duplicator,
+ <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/function/Function.html" title="class or interface in java.util.function" class="external-link">Function</a>&lt;Event,<wbr>T&gt;&nbsp;interpreter)</span></div>
 </section>
 </li>
 <li>
