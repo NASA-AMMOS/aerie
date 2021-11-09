@@ -27,6 +27,11 @@ public final class Main {
             new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(2.0)))),
         Pair.of(
             duration(1500, MILLISECONDS),
+            new SerializedActivity("BakeBananaBread", Map.of(
+                "tbSugar", SerializedValue.of(42),
+                "glutenFree", SerializedValue.of(true)))),
+        Pair.of(
+            duration(1900, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of())));
 
     final var simulationDuration = duration(5, SECONDS);

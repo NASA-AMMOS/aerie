@@ -318,7 +318,7 @@ public abstract class TypePattern {
 
       final var argumentTypeNames = new TypeName[this.arguments.size()];
       for (var i = 0; i < argumentTypeNames.length; i += 1) {
-        argumentTypeNames[i] = this.arguments.get(i).render();
+        argumentTypeNames[i] = this.arguments.get(i).render().box();
       }
 
       return ParameterizedTypeName.get(this.name, argumentTypeNames);
