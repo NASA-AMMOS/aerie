@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.apgen.parser;
 
-import gov.nasa.jpl.aerie.apgen.exceptions.AdaptationParsingException;
+import gov.nasa.jpl.aerie.apgen.exceptions.APGenAdaptationParsingException;
 import gov.nasa.jpl.aerie.apgen.model.ActivityType;
 import gov.nasa.jpl.aerie.apgen.model.ActivityTypeParameter;
 import gov.nasa.jpl.aerie.apgen.model.Adaptation;
@@ -12,13 +12,13 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-public class AdaptationParserTests {
+public class APGenAdaptationParserTests {
     // TODO: Write more complex adaptations and tests
 
     @Test
-    public void testLoadSimpleAdaptation() throws AdaptationParsingException {
-        Path path = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
-        Adaptation adaptation = AdaptationParser.parseFile(path);
+    public void testLoadSimpleAdaptation() throws APGenAdaptationParsingException {
+        Path path = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_missionModel.aaf");
+        Adaptation adaptation = APGenAdaptationParser.parseFile(path);
 
         assertThat(adaptation.hasActivityType("Banana")).isTrue();
         assertThat(adaptation.hasActivityType("Apple")).isTrue();

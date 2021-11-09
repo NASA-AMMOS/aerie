@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.apgen.model.Adaptation;
 import gov.nasa.jpl.aerie.apgen.model.ActivityType;
 import gov.nasa.jpl.aerie.apgen.model.Attribute;
 import gov.nasa.jpl.aerie.apgen.model.ActivityTypeParameter;
-import gov.nasa.jpl.aerie.apgen.exceptions.AdaptationParsingException;
+import gov.nasa.jpl.aerie.apgen.exceptions.APGenAdaptationParsingException;
 import gov.nasa.jpl.aerie.apgen.constants.ApgenPatterns;
 import gov.nasa.jpl.aerie.apgen.parser.utilities.ParsingUtilities;
 
@@ -18,7 +18,7 @@ import java.util.Scanner;
 import java.util.regex.*;
 import java.io.IOException;
 
-public final class AdaptationParser {
+public final class APGenAdaptationParser {
 
     private static enum Mode {
         NONE,
@@ -36,11 +36,13 @@ public final class AdaptationParser {
         DESTRUCTION
     }
 
-    public static Adaptation parseDirectory(Path dir) throws DirectoryNotFoundException, AdaptationParsingException {
+    public static Adaptation parseDirectory(Path dir) throws DirectoryNotFoundException,
+                                                             APGenAdaptationParsingException
+    {
         return parseFiles(getAdaptationFilePaths(dir));
     }
 
-    public static Adaptation parseFiles(List<Path> files) throws AdaptationParsingException {
+    public static Adaptation parseFiles(List<Path> files) throws APGenAdaptationParsingException {
         Adaptation adaptation = new Adaptation();
 
         for (Path file : files) {
@@ -50,18 +52,20 @@ public final class AdaptationParser {
         return adaptation;
     }
 
-    public static Adaptation parseFile(final Path file) throws AdaptationParsingException {
+    public static Adaptation parseFile(final Path file) throws APGenAdaptationParsingException {
         Adaptation adaptation = new Adaptation();
         parseFile(file, adaptation);
         return adaptation;
     }
 
-    private static void parseFile(final Path file, final Adaptation adaptation) throws AdaptationParsingException {
+    private static void parseFile(final Path file, final Adaptation adaptation) throws
+                                                                                    APGenAdaptationParsingException
+    {
         final Scanner scanner;
         try {
             scanner = new Scanner(Files.newBufferedReader(file));
         } catch (IOException e) {
-            throw new AdaptationParsingException(file, e.getMessage());
+            throw new APGenAdaptationParsingException(file, e.getMessage());
         }
 
         ActivityType activityType = null;
@@ -71,7 +75,7 @@ public final class AdaptationParser {
             String line = ParsingUtilities.removeComment(scanner.nextLine());
 
             if ((m = ApgenPatterns.ACTIVITY_TYPE_START_PATTERN.matcher(line)).lookingAt()) {
-                if (mode != Mode.NONE) throw new AdaptationParsingException(file, String.format("Encountered unexpected activity type definition on line %d", lineNumber));
+                if (mode != Mode.NONE) throw new APGenAdaptationParsingException(file, String.format("Encountered unexpected activity type definition on line %d", lineNumber));
 
                 String type = m.group("type");
                 activityType = new ActivityType(type);
@@ -88,7 +92,7 @@ public final class AdaptationParser {
             }
 
             if ((m = ApgenPatterns.ACTIVITY_TYPE_END_PATTERN.matcher(line)).lookingAt()) {
-                if (activityType == null) throw new AdaptationParsingException(file, String.format("Unexpected end of activity on line %d", lineNumber));
+                if (activityType == null) throw new APGenAdaptationParsingException(file, String.format("Unexpected end of activity on line %d", lineNumber));
 
                 adaptation.addActivityType(activityType);
                 activityType = null;
@@ -119,7 +123,7 @@ public final class AdaptationParser {
                     } else if ((m = ApgenPatterns.DICT_ARRAY_PATTERN.matcher(line)).lookingAt()) {
                         defaultValue = m.group("value");
                     } else {
-                        throw new AdaptationParsingException(file, String.format("Expected array value on line %d.", lineNumber));
+                        throw new APGenAdaptationParsingException(file, String.format("Expected array value on line %d.", lineNumber));
                     }
                 }
 
@@ -129,7 +133,7 @@ public final class AdaptationParser {
             }
         }
 
-        if (mode != Mode.NONE) throw new AdaptationParsingException(file, "Unexpected end of file while parsing adaptation");
+        if (mode != Mode.NONE) throw new APGenAdaptationParsingException(file, "Unexpected end of file while parsing adaptation");
     }
 
     private static Mode sectionMatch(String line) {
