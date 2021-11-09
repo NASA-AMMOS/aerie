@@ -56,9 +56,25 @@ public final class PostgresPlanRepository implements PlanRepository {
 
   @Override
   public Plan getPlan(final String id) throws NoSuchPlanException {
+    final var planId = toPlanId(id);
     try (final var connection = this.dataSource.getConnection()) {
-      try (final var getPlanAction = new GetPlanAction(connection)) {
-        return getPlanAction.get(toPlanId(id));
+      try (
+          final var getPlanAction = new GetPlanAction(connection);
+          final var getSimulationAction = new GetSimulationAction(connection);
+          ) {
+        final var planRecord = getPlanAction.get(planId);
+        final var arguments = getSimulationAction
+            .get(planId)
+            .map(SimulationRecord::arguments)
+            .orElseGet(Map::of);
+        return new Plan(
+            planRecord.name(),
+            Long.toString(planRecord.adaptationId()),
+            planRecord.startTime(),
+            planRecord.endTime(),
+            planRecord.activities(),
+            arguments
+        );
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan", ex);

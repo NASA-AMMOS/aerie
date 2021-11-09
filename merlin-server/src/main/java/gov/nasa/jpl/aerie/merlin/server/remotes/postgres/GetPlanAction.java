@@ -34,6 +34,7 @@ import java.util.Map;
           group by a.plan_id )
     select
       p.name,
+      p.revision,
       p.model_id,
       to_char(p.start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time,
       to_char(p.start_time + p.duration, 'YYYY-DDD"T"HH24:MI:SS.FF6') as end_time,
@@ -50,21 +51,20 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Plan get(final long planId) throws SQLException, NoSuchPlanException {
+  public PlanRecord get(final long planId) throws SQLException, NoSuchPlanException {
     this.statement.setLong(1, planId);
 
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) throw new NoSuchPlanException(Long.toString(planId));
 
       final var name = results.getString(1);
-      final var adaptationId = Long.toString(results.getLong(2));
-      final var startTimestamp = Timestamp.fromString(results.getString(3));
-      final var endTimestamp = Timestamp.fromString(results.getString(4));
-      final var activities = PostgresPlanRepository.parseActivitiesJson(results.getString(5), startTimestamp);
+      final var revision = results.getLong(2);
+      final var adaptationId = results.getLong(3);
+      final var startTimestamp = Timestamp.fromString(results.getString(4));
+      final var endTimestamp = Timestamp.fromString(results.getString(5));
+      final var activities = PostgresPlanRepository.parseActivitiesJson(results.getString(6), startTimestamp);
 
-      // @TODO comeback and thread through the sim configuration with this query and the data model,
-      //  removing the empty map
-      return new Plan(name, adaptationId, startTimestamp, endTimestamp, activities, Map.of());
+      return new PlanRecord(planId, revision, name, adaptationId, startTimestamp, endTimestamp, activities);
     }
   }
 
