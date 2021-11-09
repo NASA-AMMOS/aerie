@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
@@ -12,8 +13,8 @@ public class SampledResource<T> implements DiscreteResource<T> {
   private final Register<T> result;
   private final Supplier<T> sampler;
 
-  public SampledResource(final Supplier<T> sampler) {
-    this.result = Register.create(sampler.get());
+  public SampledResource(final Supplier<T> sampler, final UnaryOperator<T> duplicator) {
+    this.result = Register.create(sampler.get(), duplicator);
     this.sampler = Objects.requireNonNull(sampler);
 
     spawn(this::takeSamples);

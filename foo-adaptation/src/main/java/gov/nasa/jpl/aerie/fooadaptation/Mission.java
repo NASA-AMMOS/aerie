@@ -24,7 +24,7 @@ public final class Mission {
   // Need a clear story for external models.
   // Need to generalize RealDynamics to nonlinear polynomials.
 
-  public final Register<Double> foo = Register.create(0.0);
+  public final Register<Double> foo = Register.forImmutable(0.0);
   public final Accumulator data = new Accumulator();
   public final Accumulator source = new Accumulator(100.0, 1.0);
   public final Accumulator sink;
