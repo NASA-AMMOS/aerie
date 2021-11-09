@@ -35,6 +35,10 @@ public final class SlabList<T> implements Iterable<T> {
     }
   }
 
+  public int size() {
+    return this.size;
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (!(o instanceof SlabList<?> other)) return false;

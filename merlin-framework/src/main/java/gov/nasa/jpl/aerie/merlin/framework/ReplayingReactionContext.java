@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /* package-local */
@@ -58,7 +59,8 @@ final class ReplayingReactionContext<$Timeline> implements Context {
   public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
-      final Projection<Event, Effect> projection)
+      final EffectTrait<Effect> trait,
+      final Function<Event, Effect> projection)
   {
     throw new IllegalStateException("Cannot allocate during simulation");
   }

@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public final class InitializationContext<$Schema> implements Context {
@@ -48,9 +49,10 @@ public final class InitializationContext<$Schema> implements Context {
   Query<?, Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
-      final Projection<Event, Effect> projection
+      final EffectTrait<Effect> trait,
+      final Function<Event, Effect> projection
   ) {
-    return this.builder.allocate(initialState, applicator, projection);
+    return this.builder.allocate(initialState, applicator, trait, projection);
   }
 
   @Override

@@ -11,11 +11,8 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Approximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.model.DiscreteApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.RealApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -38,8 +35,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.BinaryOperator;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -107,17 +102,16 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** Register a resource whose profile should be accumulated over time. */
-  public <ResourceType>
+  public <Dynamics>
   void trackResource(
       final String name,
-      final ResourceSolver<? super $Timeline, ResourceType, ?> solver,
-      final ResourceType getter,
+      final Resource<? super $Timeline, Dynamics> resource,
       final Duration nextQueryTime
   ) {
-    final var resource = new ResourceId(name);
+    final var id = new ResourceId(name);
 
-    this.resources.put(resource, ProfilingState.create(getter, solver));
-    this.scheduledJobs.schedule(JobId.forResource(resource), SubInstant.Resources.at(nextQueryTime));
+    this.resources.put(id, ProfilingState.create(resource));
+    this.scheduledJobs.schedule(JobId.forResource(id), SubInstant.Resources.at(nextQueryTime));
   }
 
   /** Schedule a task to be performed at the given time. Overrides any existing scheduling for the given task. */
@@ -143,7 +137,21 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
   /** Removes and returns the next set of jobs to be performed concurrently. */
   public JobSchedule.Batch<JobId> extractNextJobs(final Duration maximumTime) {
-    return this.scheduledJobs.extractNextJobs(maximumTime);
+    final var batch = this.scheduledJobs.extractNextJobs(maximumTime);
+
+    // If we're signaling based on a condition, we need to untrack the condition before any tasks run.
+    // Otherwise, we could see a race if one of the tasks running at this time invalidates state
+    // that the condition depends on, in which case we might accidentally schedule an update for a condition
+    // that no longer exists.
+    for (final var job : batch.jobs()) {
+      if (!(job instanceof JobId.SignalJobId j)) continue;
+      if (!(j.id() instanceof SignalId.ConditionSignalId s)) continue;
+
+      this.conditions.remove(s.id());
+      this.waitingConditions.unsubscribeQuery(s.id());
+    }
+
+    return batch;
   }
 
   /** Performs a collection of tasks concurrently, extending the given timeline by their stateful effects. */
@@ -288,13 +296,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   public void stepSignalledTasks(final SignalId signal, final TaskFrame.FrameBuilder<JobId> builder) {
     final var tasks = this.waitingTasks.invalidateTopic(signal);
     for (final var task : tasks) builder.signal(JobId.forTask(task));
-
-    if (signal instanceof SignalId.ConditionSignalId s) {
-      // Since we're resuming the tasks blocked on this condition,
-      // we can (and should!) untrack the condition.
-      this.conditions.remove(s.id());
-      this.waitingConditions.unsubscribeQuery(s.id());
-    }
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */
@@ -370,79 +371,29 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
-    engine.resources.forEach(new BiConsumer<ResourceId, ProfilingState<?, ?>>() {
-      @Override
-      public void accept(final ResourceId resource, final ProfilingState<?, ?> state) {
-        acceptHelper(resource.id(), state);
+    for (final var entry : engine.resources.entrySet()) {
+      final var id = entry.getKey();
+      final var state = entry.getValue();
+
+      final var name = id.id();
+      final var resource = state.resource();
+
+      switch (resource.getType()) {
+        case "real" -> realProfiles.put(
+            name,
+            serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics));
+
+        case "discrete" -> discreteProfiles.put(
+            name,
+            Pair.of(
+                state.resource().getSchema(),
+                serializeProfile(elapsedTime, state, Resource::serialize)));
+
+        default ->
+            throw new IllegalArgumentException(
+                "Resource `%s` has unknown type `%s`".formatted(name, resource.getType()));
       }
-
-      <Dynamics> void acceptHelper(final String name, final ProfilingState<?, Dynamics> state) {
-        final var solver = state.getter().solver();
-        solver.approximate(new ResourceSolver.ApproximatorVisitor<Dynamics, Void>() {
-          @Override
-          public Void real(final RealApproximator<Dynamics> approximator) {
-            realProfiles.put(name, approximateProfile(approximator));
-
-            return null;
-          }
-
-          @Override
-          public Void discrete(final DiscreteApproximator<Dynamics> approximator) {
-            discreteProfiles.put(name, Pair.of(approximator.getSchema(), approximateProfile(approximator)));
-
-            return null;
-          }
-
-          private <Derived>
-          List<Pair<Duration, Derived>>
-          approximateProfile(final Approximator<Dynamics, Derived> approximator) {
-            final var profile = new ArrayList<Pair<Duration, Derived>>();
-
-            final var segmentsIter = state.profile().iterator();
-            if (segmentsIter.hasNext()) {
-              var segment = segmentsIter.next();
-              while (segmentsIter.hasNext()) {
-                final var nextSegment = segmentsIter.next();
-
-                final var segmentEnd = nextSegment.startOffset();
-                final var segmentStart = segment.startOffset();
-                final var segmentDuration = segmentEnd.minus(segmentStart);
-
-                final var approximation = approximator.approximate(segment.dynamics()).iterator();
-                var partStart = segmentStart;
-                do {
-                  final var part = approximation.next();
-                  final var partExtent = Duration.min(part.extent, segmentDuration);
-
-                  profile.add(Pair.of(partExtent, part.dynamics));
-                  partStart = partStart.plus(partExtent);
-                } while (approximation.hasNext() && partStart.shorterThan(segmentEnd));
-
-                segment = nextSegment;
-              }
-
-              {
-                final var segmentStart = segment.startOffset();
-                final var segmentEnd = elapsedTime;
-                final var segmentDuration = segmentEnd.minus(segmentStart);
-
-                final var approximation = approximator.approximate(segment.dynamics()).iterator();
-                var partStart = segmentStart;
-                do {
-                  final var part = approximation.next();
-                  final var partExtent = Duration.min(part.extent, segmentDuration);
-
-                  profile.add(Pair.of(partExtent, part.dynamics));
-                  partStart = partStart.plus(partExtent);
-                } while (approximation.hasNext() && partStart.noLongerThan(segmentEnd));
-              }
-            }
-
-            return profile;
-          }
-        });
-      }
-    });
+    }
 
     engine.tasks.forEach((task, state) -> {
       final var directive = engine.taskDirective.get(task);
@@ -499,6 +450,47 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     return new SimulationResults(realProfiles, discreteProfiles, simulatedActivities, unsimulatedActivities, startTime);
   }
 
+  private interface Translator<Target> {
+    <Dynamics> Target apply(Resource<?, Dynamics> resource, Dynamics dynamics);
+  }
+
+  private static <Target, Dynamics>
+  List<Pair<Duration, Target>> serializeProfile(
+      final Duration elapsedTime,
+      final ProfilingState<?, Dynamics> state,
+      final Translator<Target> translator
+  ) {
+    final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
+
+    final var iter = state.profile().segments().iterator();
+    if (iter.hasNext()) {
+      var segment = iter.next();
+      while (iter.hasNext()) {
+        final var nextSegment = iter.next();
+
+        profile.add(Pair.of(
+            nextSegment.startOffset().minus(segment.startOffset()),
+            translator.apply(state.resource(), segment.dynamics())));
+        segment = nextSegment;
+      }
+
+      profile.add(Pair.of(
+          elapsedTime.minus(segment.startOffset()),
+          translator.apply(state.resource(), segment.dynamics())));
+    }
+
+    return profile;
+  }
+
+  private static <Dynamics>
+  RealDynamics extractRealDynamics(final Resource<?, Dynamics> resource, final Dynamics dynamics) {
+    final var serializedSegment = resource.serialize(dynamics).asMap().orElseThrow();
+    final var initial = serializedSegment.get("initial").asReal().orElseThrow();
+    final var rate = serializedSegment.get("rate").asReal().orElseThrow();
+
+    return RealDynamics.linear(initial, rate);
+  }
+
   /** A handle for processing requests from a modeled resource or condition. */
   private final class EngineQuerier implements Querier<$Timeline> {
     private final TaskFrame.FrameBuilder<JobId> builder;
@@ -515,7 +507,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
-      this.expiry = map2(this.expiry, this.builder.getExpiry(query.query()), Duration::min);
+      this.expiry = min(this.expiry, this.builder.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
 
       // TODO: Cache the state (until the query returns) to avoid unnecessary copies
@@ -525,10 +517,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       return state$.orElseThrow(IllegalArgumentException::new);
     }
 
-    private static <T> Optional<T> map2(final Optional<T> a, final Optional<T> b, final BinaryOperator<T> f) {
+    private static Optional<Duration> min(final Optional<Duration> a, final Optional<Duration> b) {
       if (a.isEmpty()) return b;
       if (b.isEmpty()) return a;
-      return Optional.of(f.apply(a.get(), b.get()));
+      return Optional.of(Duration.min(a.get(), b.get()));
     }
   }
 
@@ -539,8 +531,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     private final Duration currentTime;
     private final TaskId activeTask;
     private final TaskFrame.FrameBuilder<JobId> builder;
-    private final Set<Topic<?>> referencedTopics = new HashSet<>();
-    private final Set<Topic<?>> affectedTopics = new HashSet<>();
 
     public EngineScheduler(
         final Adaptation<? super $Timeline, ?> model,
@@ -560,8 +550,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
-      this.referencedTopics.add(query.topic());
-
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
       final var state$ = this.builder.getState(query.query());
@@ -577,7 +565,6 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       // Append this event to the timeline.
       this.builder.emit(Event.create(topic, event));
 
-      this.affectedTopics.add(topic);
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
 

@@ -2,11 +2,8 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.DiscreteApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
-import gov.nasa.jpl.aerie.merlin.protocol.types.DelimitedDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -19,6 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
@@ -86,12 +84,7 @@ public final class CellExpiryTest {
             return Optional.of(expiry);
           }
         },
-        new Projection<>() {
-          @Override
-          public Object atom(final Object atom) {
-            return atom;
-          }
-
+        new EffectTrait<>() {
           @Override
           public Object empty() {
             return new Object();
@@ -106,43 +99,35 @@ public final class CellExpiryTest {
           public Object concurrently(final Object left, final Object right) {
             return empty();
           }
-        }
+        },
+        Function.identity()
     );
 
-    initializer.resourceFamily(new ResourceFamily<$Schema, String>() {
+    final var resource = new Resource<$Schema, String>() {
       @Override
-      public Map<String, String> getResources() {
-        return Map.of(resourceName, resourceValue);
+      public String getType() {
+        return "discrete";
       }
 
       @Override
-      public ResourceSolver<$Schema, String, ?> getSolver() {
-        return new ResourceSolver<$Schema, String, String>() {
-          @Override
-          public String getDynamics(final String s, final Querier<? extends $Schema> now) {
-            // Color this resource with the expiry of the cell.
-            now.getState(ref);
-
-            return s;
-          }
-
-          @Override
-          public <Result> Result approximate(final ApproximatorVisitor<String, Result> visitor) {
-            return visitor.discrete(new DiscreteApproximator<>() {
-              @Override
-              public ValueSchema getSchema() {
-                return ValueSchema.STRING;
-              }
-
-              @Override
-              public Iterable<DelimitedDynamics<SerializedValue>> approximate(final String value) {
-                return List.of(DelimitedDynamics.persistent(SerializedValue.of(value)));
-              }
-            });
-          }
-        };
+      public ValueSchema getSchema() {
+        return ValueSchema.STRING;
       }
-    });
+
+      @Override
+      public String getDynamics(final Querier<? extends $Schema> querier) {
+        // Color this resource with the expiry of the cell.
+        querier.getState(ref);
+        return resourceValue;
+      }
+
+      @Override
+      public SerializedValue serialize(final String value) {
+        return SerializedValue.of(value);
+      }
+    };
+
+    initializer.resource(resourceName, resource);
 
     return initializer.build(new Phantom<>(ref), Map.of());
   }

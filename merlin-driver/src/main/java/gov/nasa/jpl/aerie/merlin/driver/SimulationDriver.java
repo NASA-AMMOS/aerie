@@ -5,8 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine.JobId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -37,8 +35,11 @@ public final class SimulationDriver {
       var elapsedTime = Duration.ZERO;
 
       // Begin tracking all resources.
-      for (final var family : missionModel.getResourceFamilies()) {
-        trackResourceFamily(engine, elapsedTime, family);
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
+
+        engine.trackResource(name, resource, elapsedTime);
       }
 
       // Schedule the control task.
@@ -90,8 +91,11 @@ public final class SimulationDriver {
       var elapsedTime = Duration.ZERO;
 
       // Begin tracking all resources.
-      for (final var family : missionModel.getResourceFamilies()) {
-        trackResourceFamily(engine, elapsedTime, family);
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
+
+        engine.trackResource(name, resource, elapsedTime);
       }
 
       // Schedule the control task.
@@ -121,22 +125,6 @@ public final class SimulationDriver {
         final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, missionModel);
         timeline.add(commit);
       }
-    }
-  }
-
-  private static <$Timeline, ResourceType>
-  void trackResourceFamily(
-      final SimulationEngine<$Timeline> engine,
-      final Duration currentTime,
-      final ResourceFamily<? super $Timeline, ResourceType> family
-  ) {
-    final ResourceSolver<? super $Timeline, ResourceType, ?> solver = family.getSolver();
-
-    for (final var entry : family.getResources().entrySet()) {
-      final var name = entry.getKey();
-      final var getter = entry.getValue();
-
-      engine.trackResource(name, solver, getter, currentTime);
     }
   }
 

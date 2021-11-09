@@ -2,13 +2,14 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 public interface Context {
   enum ContextType { Initializing, Reacting, Querying }
@@ -25,7 +26,8 @@ public interface Context {
   allocate(
       CellType initialState,
       Applicator<Effect, CellType> applicator,
-      Projection<Event, Effect> projection);
+      EffectTrait<Effect> trait,
+      Function<Event, Effect> projection);
 
   // Usable during simulation
   <Event> void emit(Event event, Query<?, Event, ?> query);
