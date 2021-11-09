@@ -273,7 +273,6 @@ public final class ResponseSerializers {
     return Json
         .createObjectBuilder()
         .add("parameters", ResponseSerializers.serializeParameters(activityType.parameters))
-        .add("defaults", serializeArgumentMap(activityType.defaults))
         .build();
   }
   public static JsonValue serializeActivityTypeAction(final ActivityType activityType) {

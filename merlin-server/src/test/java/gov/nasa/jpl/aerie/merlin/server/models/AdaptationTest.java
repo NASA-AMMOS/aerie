@@ -51,17 +51,7 @@ public final class AdaptationTest {
                 List.of(
                     new Parameter("x", ValueSchema.INT),
                     new Parameter("y", ValueSchema.STRING),
-                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
-                Map.of(
-                    "x", SerializedValue.of(0),
-                    "y", SerializedValue.of("test"),
-                    "vecs", SerializedValue.of(
-                        List.of(
-                            SerializedValue.of(
-                                List.of(
-                                    SerializedValue.of(0.0),
-                                    SerializedValue.of(0.0),
-                                    SerializedValue.of(0.0))))))));
+                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))))));
         // WHEN
         final Map<String, ActivityType> typeList = unconfiguredAdaptation.getActivityTypes();
 
@@ -77,17 +67,7 @@ public final class AdaptationTest {
             List.of(
                 new Parameter("x", ValueSchema.INT),
                 new Parameter("y", ValueSchema.STRING),
-                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
-            Map.of(
-                "x", SerializedValue.of(0),
-                "y", SerializedValue.of("test"),
-                "vecs", SerializedValue.of(
-                    List.of(
-                        SerializedValue.of(
-                            List.of(
-                                SerializedValue.of(0.0),
-                                SerializedValue.of(0.0),
-                                SerializedValue.of(0.0)))))));
+                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))));
 
         // WHEN
         final ActivityType type = unconfiguredAdaptation.getActivityType(expectedType.name);

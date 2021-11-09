@@ -69,10 +69,6 @@ public final class AdaptationFacade<$Schema> {
     }
   }
 
-  private static <Specification> Map<String, SerializedValue> getDefaultArguments(final TaskSpecType<?, Specification> specType) {
-    return specType.getArguments(specType.instantiateDefault());
-  }
-
   public static final class Unconfigured<Model> {
     private final AdaptationFactory<Model> factory;
 
@@ -85,7 +81,7 @@ public final class AdaptationFacade<$Schema> {
     {
       final var activityTypes = new HashMap<String, ActivityType>();
       factory.getTaskSpecTypes().forEach((name, specType) -> {
-        activityTypes.put(name, new ActivityType(name, specType.getParameters(), getDefaultArguments(specType)));
+        activityTypes.put(name, new ActivityType(name, specType.getParameters()));
       });
       return activityTypes;
     }
@@ -97,7 +93,7 @@ public final class AdaptationFacade<$Schema> {
           .ofNullable(factory.getTaskSpecTypes().get(typeName))
           .orElseThrow(AdaptationFacade.NoSuchActivityTypeException::new);
 
-      return new ActivityType(typeName, specType.getParameters(), getDefaultArguments(specType));
+      return new ActivityType(typeName, specType.getParameters());
     }
 
     public List<Parameter> getParameters() {

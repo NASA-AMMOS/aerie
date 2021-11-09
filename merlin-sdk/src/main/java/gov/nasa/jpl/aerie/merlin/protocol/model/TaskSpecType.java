@@ -11,7 +11,6 @@ public interface TaskSpecType<Model, Specification> {
   String getName();
   List<Parameter> getParameters();
 
-  Specification instantiateDefault();
   Specification instantiate(Map<String, SerializedValue> arguments)
   throws UnconstructableTaskSpecException;
 

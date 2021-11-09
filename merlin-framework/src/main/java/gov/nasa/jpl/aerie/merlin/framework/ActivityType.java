@@ -28,11 +28,6 @@ public abstract class ActivityType<$Schema, Activity>
   }
 
   @Override
-  public final Activity instantiateDefault() {
-    return this.mapper.instantiateDefault();
-  }
-
-  @Override
   public final Activity instantiate(final Map<String, SerializedValue> arguments)
   throws UnconstructableTaskSpecException
   {
