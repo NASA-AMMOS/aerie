@@ -76,7 +76,7 @@ public final class SimulationDriver {
         timeline.add(commit);
       }
 
-      return engine.computeResults(engine, startTime, elapsedTime, controlTask.extractTaskToPlannedDirective(), timeline);
+      return engine.computeResults(engine, startTime, elapsedTime, controlTask.extractTaskToPlannedDirective(), timeline, missionModel);
     }
   }
 

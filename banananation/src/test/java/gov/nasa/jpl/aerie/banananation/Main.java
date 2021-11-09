@@ -34,7 +34,7 @@ public final class Main {
             duration(1900, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of())));
 
-    final var simulationDuration = duration(5, SECONDS);
+    final var simulationDuration = duration(1900, SECONDS);
 
     final var simulationResults = SimulationUtility.simulate(schedule, simulationDuration);
 

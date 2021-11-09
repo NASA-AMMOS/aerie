@@ -9,12 +9,14 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.SerializableTopic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Approximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.DiscreteApproximator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Projection;
 import gov.nasa.jpl.aerie.merlin.protocol.model.RealApproximator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.ResourceSolver;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -25,6 +27,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -367,7 +370,8 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final Instant startTime,
       final Duration elapsedTime,
       final Map<String, String> taskToPlannedDirective,
-      final TemporalEventSource events) {
+      final TemporalEventSource timeline,
+      Adaptation<? super $Timeline, ?> missionModel) {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
@@ -497,12 +501,41 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       }
     });
 
+    final List<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>> serializedTimeline = new ArrayList<>();
+    var time = Duration.ZERO;
+    for (var point : timeline.points()) {
+      if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
+        time = time.plus(delta.delta());
+      } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
+        final var serializedEventGraph = commit.events().substitute(
+            event -> {
+              EventGraph<Triple<String, ValueSchema, SerializedValue>> output = EventGraph.empty();
+              for (final var serializableTopic : missionModel.getTopics()) {
+                Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
+                if (serializedEvent.isPresent()) {
+                  output = EventGraph.concurrently(output, EventGraph.atom(Triple.of(serializableTopic.getName(), serializableTopic.getValueSchema(), serializedEvent.get())));
+                }
+              }
+              return output;
+            }
+        ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
+        if (!(serializedEventGraph instanceof EventGraph.Empty)) {
+          serializedTimeline.add(Pair.of(time, serializedEventGraph));
+        }
+      }
+    }
+
     return new SimulationResults(realProfiles,
                                  discreteProfiles,
                                  simulatedActivities,
                                  unsimulatedActivities,
                                  startTime,
-                                 events);
+                                 serializedTimeline);
+  }
+
+  private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, SerializableTopic<EventType> serializableTopic) {
+    Topic<EventType> topic = ((EngineQuery<?, EventType, ?>) serializableTopic.getQuery()).topic();
+    return event.extract(topic, serializableTopic::serializeEvent);
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
