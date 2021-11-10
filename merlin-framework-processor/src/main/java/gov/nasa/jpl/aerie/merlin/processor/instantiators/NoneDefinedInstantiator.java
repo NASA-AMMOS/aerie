@@ -5,7 +5,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 
@@ -81,19 +80,8 @@ public class NoneDefinedInstantiator implements ActivityMapperInstantiator {
         .endControlFlow()
         .endControlFlow().addCode("\n");
 
-    // Ensure all parameters are non-null
-    methodBuilder = methodBuilder.addCode(
-        activityType.parameters
-            .stream()
-            .map(parameter -> CodeBlock
-                .builder()
-                .addStatement(
-                    "if (!$L.isPresent()) throw new $T()",
-                    parameter.name,
-                    EmptyParameterException.class)
-            ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-            .build()
-    ).addCode("\n");
+    methodBuilder = ActivityMapperInstantiator
+        .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(

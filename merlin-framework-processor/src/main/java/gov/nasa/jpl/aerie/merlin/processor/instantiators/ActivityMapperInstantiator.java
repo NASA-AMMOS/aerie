@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 
@@ -69,5 +70,23 @@ public interface ActivityMapperInstantiator {
       parameters.add(new ActivityParameterRecord(name, type, element));
     }
     return parameters;
+  }
+
+  static MethodSpec.Builder makeArgumentPresentCheck(final MethodSpec.Builder methodBuilder, final ActivityTypeRecord activityType) {
+    // Ensure all parameters are non-null
+    return methodBuilder.addCode(
+        activityType.parameters
+            .stream()
+            .map(parameter -> CodeBlock
+                .builder()
+                .addStatement(
+                    "if (!$L.isPresent()) throw new $T(\"$L\", \"$L\", this.mapper_$L.getValueSchema())",
+                    parameter.name,
+                    MissingArgumentException.class,
+                    activityType.name,
+                    parameter.name,
+                    parameter.name))
+            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+            .build());
   }
 }
