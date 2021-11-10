@@ -13,6 +13,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +51,16 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   @Override
+  public <Event> void topic(
+      final String name,
+      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<Event, ?> query,
+      final ValueSchema schema,
+      final Function<Event, SerializedValue> serializer)
+  {
+    this.state.topic(name, query, schema, serializer);
+  }
+
+  @Override
   public String daemon(final TaskFactory task) {
     return this.state.daemon(task);
   }
@@ -66,6 +80,7 @@ public final class MissionModelBuilder implements Initializer {
 
     private final Map<String, Resource<?>> resources = new HashMap<>();
     private final List<TaskFactory> daemons = new ArrayList<>();
+    private final List<MissionModel.SerializableTopic<?>> topics = new ArrayList<>();
 
     @Override
     public <CellType> CellType getInitialState(
@@ -108,6 +123,16 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
+    public <Event> void topic(
+        final String name,
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<Event, ?> query,
+        final ValueSchema schema,
+        final Function<Event, SerializedValue> serializer)
+    {
+      this.topics.add(new MissionModel.SerializableTopic<>(name, query, schema, serializer));
+    }
+
+    @Override
     public String daemon(final TaskFactory task) {
       this.daemons.add(task);
       return null;  // TODO: get some way to refer to the daemon task
@@ -120,6 +145,7 @@ public final class MissionModelBuilder implements Initializer {
           model,
           this.initialCells,
           this.resources,
+          this.topics,
           this.daemons,
           taskSpecTypes);
 
@@ -151,6 +177,16 @@ public final class MissionModelBuilder implements Initializer {
     @Override
     public void resource(final String name, final Resource<?> resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
+    }
+
+    @Override
+    public <Event> void topic(
+        final String name,
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<Event, ?> query,
+        final ValueSchema schema,
+        final Function<Event, SerializedValue> serializer)
+    {
+      throw new IllegalStateException("Topics cannot be added after the schema is built");
     }
 
     @Override
