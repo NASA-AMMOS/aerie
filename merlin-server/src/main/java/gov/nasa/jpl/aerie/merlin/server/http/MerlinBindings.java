@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
@@ -17,7 +18,7 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraValidateActivityActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
@@ -66,6 +67,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("validateActivityArguments", () -> {
         post(this::validateActivityArguments);
+      });
+      path("getActivityEffectiveArguments", () -> {
+        post(this::getActivityEffectiveArguments);
       });
     });
 
@@ -139,7 +143,7 @@ public final class MerlinBindings implements Plugin {
 
   private void validateActivityArguments(final Context ctx) {
     try {
-      final var input = parseJson(ctx.body(), hasuraValidateActivityActionP).input();
+      final var input = parseJson(ctx.body(), hasuraActivityActionP).input();
 
       final var missionModelId = input.missionModelId();
       final var activityTypeName = input.activityTypeName();
@@ -150,6 +154,34 @@ public final class MerlinBindings implements Plugin {
       final var failures = this.adaptationService.validateActivityParameters(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailures(failures).toString());
+    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+      ctx.status(404);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void getActivityEffectiveArguments(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraActivityActionP).input();
+
+      final var missionModelId = input.missionModelId();
+      final var activityTypeName = input.activityTypeName();
+      final var activityArguments = input.arguments();
+
+      final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
+
+      final var arguments = this.adaptationService.getActivityEffectiveArguments(missionModelId, serializedActivity);
+
+      ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
+    } catch (final MissingArgumentException ex) {
+      ctx.status(200)
+         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+    } catch (final AdaptationService.NoSuchActivityTypeException | AdaptationService.UnconstructableActivityInstanceException ex) {
+      ctx.status(400)
+         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final AdaptationService.NoSuchAdaptationException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {

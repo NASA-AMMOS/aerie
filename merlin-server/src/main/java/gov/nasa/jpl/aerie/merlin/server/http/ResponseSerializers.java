@@ -135,6 +135,13 @@ public final class ResponseSerializers {
     return serializeMap(ResponseSerializers::serializeParameter, fields);
   }
 
+  public static JsonValue serializeEffectiveArgumentMap(final Map<String, SerializedValue> fields) {
+    return Json.createObjectBuilder()
+       .add("success", JsonValue.TRUE)
+       .add("arguments", serializeMap(ResponseSerializers::serializeParameter, fields))
+       .build();
+  }
+
   public static JsonValue serializeActivityInstance(final ActivityInstance activityInstance) {
     if (activityInstance == null) return JsonValue.NULL;
 
