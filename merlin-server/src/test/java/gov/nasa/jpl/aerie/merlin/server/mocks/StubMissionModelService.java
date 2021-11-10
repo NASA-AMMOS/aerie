@@ -14,6 +14,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +55,7 @@ public final class StubMissionModelService implements MissionModelService {
       Map.of(),
       Map.of(),
       Instant.EPOCH,
-      new TemporalEventSource());
+      new ArrayList<>());
 
   static {
     EXISTENT_MISSION_MODEL = new MissionModelJar();
