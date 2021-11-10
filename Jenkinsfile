@@ -164,10 +164,10 @@ pipeline {
 
             ./gradlew assemble
 
-            # For adaptations
-            mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
+            # For mission models
+            mkdir -p ${ASSEMBLE_PREP_DIR}/missionmodels
             cp banananation/build/libs/*.jar \
-               ${ASSEMBLE_PREP_DIR}/adaptations/
+               ${ASSEMBLE_PREP_DIR}/missionmodels/
 
             # For services
             mkdir -p ${ASSEMBLE_PREP_DIR}/services
