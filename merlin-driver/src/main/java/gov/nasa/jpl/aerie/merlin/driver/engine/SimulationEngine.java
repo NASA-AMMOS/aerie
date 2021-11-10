@@ -156,27 +156,32 @@ public final class SimulationEngine implements AutoCloseable {
       final Duration maximumTime,
       final MissionModel<?> model
   ) {
-    return TaskFrame.runToCompletion(jobs, context, (job, builder) -> {
-      this.performJob(job, builder, currentTime, maximumTime, model);
-    });
+    var tip = EventGraph.<Event>empty();
+    for (final var job$ : jobs) {
+      tip = EventGraph.concurrently(tip, TaskFrame.run(job$, context, (job, frame) -> {
+        this.performJob(job, frame, currentTime, maximumTime, model);
+      }));
+    }
+
+    return tip;
   }
 
   /** Performs a single job. */
   public void performJob(
       final JobId job,
-      final TaskFrame.FrameBuilder<JobId> builder,
+      final TaskFrame<JobId> frame,
       final Duration currentTime,
       final Duration maximumTime,
       final MissionModel<?> model
   ) {
     if (job instanceof JobId.TaskJobId j) {
-      this.stepTask(j.id(), builder, currentTime, model);
+      this.stepTask(j.id(), frame, currentTime, model);
     } else if (job instanceof JobId.SignalJobId j) {
-      this.stepSignalledTasks(j.id(), builder);
+      this.stepSignalledTasks(j.id(), frame);
     } else if (job instanceof JobId.ConditionJobId j) {
-      this.updateCondition(j.id(), builder, currentTime, maximumTime);
+      this.updateCondition(j.id(), frame, currentTime, maximumTime);
     } else if (job instanceof JobId.ResourceJobId j) {
-      this.updateResource(j.id(), builder, currentTime);
+      this.updateResource(j.id(), frame, currentTime);
     } else {
       throw new IllegalArgumentException("Unexpected subtype of %s: %s".formatted(JobId.class, job.getClass()));
     }
@@ -185,7 +190,7 @@ public final class SimulationEngine implements AutoCloseable {
   /** Perform the next step of a modeled task. */
   public void stepTask(
       final TaskId task,
-      final TaskFrame.FrameBuilder<JobId> builder,
+      final TaskFrame<JobId> frame,
       final Duration currentTime,
       final MissionModel<?> model
   ) {
@@ -197,11 +202,11 @@ public final class SimulationEngine implements AutoCloseable {
     if (lifecycle instanceof ExecutionState.IllegalSource) {
       // pass -- uninstantiable tasks never progress or complete
     } else if (lifecycle instanceof ExecutionState.NotStarted e) {
-      stepEffectModel(task, e.startedAt(currentTime), builder, currentTime, model);
+      stepEffectModel(task, e.startedAt(currentTime), frame, currentTime, model);
     } else if (lifecycle instanceof ExecutionState.InProgress e) {
-      stepEffectModel(task, e, builder, currentTime, model);
+      stepEffectModel(task, e, frame, currentTime, model);
     } else if (lifecycle instanceof ExecutionState.AwaitingChildren e) {
-      stepWaitingTask(task, e, builder, currentTime);
+      stepWaitingTask(task, e, frame, currentTime);
     } else {
       // TODO: Log this issue to somewhere more general than stderr.
       System.err.println("Task %s is ready but in unexpected execution state %s".formatted(task, lifecycle));
@@ -212,12 +217,12 @@ public final class SimulationEngine implements AutoCloseable {
   private void stepEffectModel(
       final TaskId task,
       final ExecutionState.InProgress progress,
-      final TaskFrame.FrameBuilder<JobId> builder,
+      final TaskFrame<JobId> frame,
       final Duration currentTime,
       final MissionModel<?> model
   ) {
     // Step the modeling state forward.
-    final var scheduler = new EngineScheduler(model, currentTime, task, builder);
+    final var scheduler = new EngineScheduler(model, currentTime, task, frame);
     final var state = progress.state();
     final var status = state.step(scheduler);
 
@@ -229,7 +234,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
       final var awaiting = progress.completedAt(currentTime, children);
-      this.stepWaitingTask(task, awaiting, builder, currentTime);
+      this.stepWaitingTask(task, awaiting, frame, currentTime);
     } else if (status instanceof TaskStatus.Delayed s) {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
@@ -262,7 +267,7 @@ public final class SimulationEngine implements AutoCloseable {
   private void stepWaitingTask(
       final TaskId task,
       final ExecutionState.AwaitingChildren awaiting,
-      final TaskFrame.FrameBuilder<JobId> builder,
+      final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
     // TERMINATION: We break when there are no remaining children,
@@ -270,7 +275,7 @@ public final class SimulationEngine implements AutoCloseable {
     while (true) {
       if (awaiting.remainingChildren().isEmpty()) {
         this.tasks.put(task, awaiting.joinedAt(currentTime));
-        builder.signal(JobId.forSignal(SignalId.forTask(task)));
+        frame.signal(JobId.forSignal(SignalId.forTask(task)));
         break;
       }
 
@@ -287,19 +292,19 @@ public final class SimulationEngine implements AutoCloseable {
   }
 
   /** Cause any tasks waiting on the given signal to be resumed concurrently with other jobs in the current frame. */
-  public void stepSignalledTasks(final SignalId signal, final TaskFrame.FrameBuilder<JobId> builder) {
+  public void stepSignalledTasks(final SignalId signal, final TaskFrame<JobId> frame) {
     final var tasks = this.waitingTasks.invalidateTopic(signal);
-    for (final var task : tasks) builder.signal(JobId.forTask(task));
+    for (final var task : tasks) frame.signal(JobId.forTask(task));
   }
 
   /** Determine when a condition is next true, and schedule a signal to be raised at that time. */
   public void updateCondition(
       final ConditionId condition,
-      final TaskFrame.FrameBuilder<JobId> builder,
+      final TaskFrame<JobId> frame,
       final Duration currentTime,
       final Duration horizonTime
   ) {
-    final var querier = new EngineQuerier(builder);
+    final var querier = new EngineQuerier(frame);
     final var prediction = this.conditions
         .get(condition)
         .nextSatisfied(querier, horizonTime.minus(currentTime))
@@ -320,10 +325,10 @@ public final class SimulationEngine implements AutoCloseable {
   /** Get the current behavior of a given resource and accumulate it into the resource's profile. */
   public void updateResource(
       final ResourceId resource,
-      final TaskFrame.FrameBuilder<JobId> builder,
+      final TaskFrame<JobId> frame,
       final Duration currentTime
   ) {
-    final var querier = new EngineQuerier(builder);
+    final var querier = new EngineQuerier(frame);
     this.resources.get(resource).append(currentTime, querier);
 
     this.waitingResources.subscribeQuery(resource, querier.referencedTopics);
@@ -487,12 +492,12 @@ public final class SimulationEngine implements AutoCloseable {
 
   /** A handle for processing requests from a modeled resource or condition. */
   private static final class EngineQuerier implements Querier {
-    private final TaskFrame.FrameBuilder<JobId> builder;
+    private final TaskFrame<JobId> frame;
     private final Set<Topic<?>> referencedTopics = new HashSet<>();
     private Optional<Duration> expiry = Optional.empty();
 
-    public EngineQuerier(final TaskFrame.FrameBuilder<JobId> builder) {
-      this.builder = Objects.requireNonNull(builder);
+    public EngineQuerier(final TaskFrame<JobId> frame) {
+      this.frame = Objects.requireNonNull(frame);
     }
 
     @Override
@@ -501,12 +506,12 @@ public final class SimulationEngine implements AutoCloseable {
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<?, State>) token);
 
-      this.expiry = min(this.expiry, this.builder.getExpiry(query.query()));
+      this.expiry = min(this.expiry, this.frame.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
 
       // TODO: Cache the state (until the query returns) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
-      final var state$ = this.builder.getState(query.query());
+      final var state$ = this.frame.getState(query.query());
 
       return state$.orElseThrow(IllegalArgumentException::new);
     }
@@ -524,18 +529,18 @@ public final class SimulationEngine implements AutoCloseable {
 
     private final Duration currentTime;
     private final TaskId activeTask;
-    private final TaskFrame.FrameBuilder<JobId> builder;
+    private final TaskFrame<JobId> frame;
 
     public EngineScheduler(
         final MissionModel<?> model,
         final Duration currentTime,
         final TaskId activeTask,
-        final TaskFrame.FrameBuilder<JobId> builder
+        final TaskFrame<JobId> frame
     ) {
       this.model = Objects.requireNonNull(model);
       this.currentTime = Objects.requireNonNull(currentTime);
       this.activeTask = Objects.requireNonNull(activeTask);
-      this.builder = Objects.requireNonNull(builder);
+      this.frame = Objects.requireNonNull(frame);
     }
 
     @Override
@@ -546,7 +551,7 @@ public final class SimulationEngine implements AutoCloseable {
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
-      final var state$ = this.builder.getState(query.query());
+      final var state$ = this.frame.getState(query.query());
       return state$.orElseThrow(IllegalArgumentException::new);
     }
 
@@ -557,7 +562,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var topic = ((EngineQuery<? super EventType, ?>) token).topic();
 
       // Append this event to the timeline.
-      this.builder.emit(Event.create(topic, event));
+      this.frame.emit(Event.create(topic, event));
 
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }
@@ -568,7 +573,7 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      this.builder.signal(JobId.forTask(task));
+      this.frame.signal(JobId.forTask(task));
 
       return task.id();
     }
@@ -578,7 +583,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
-      this.builder.signal(JobId.forTask(task));
+      this.frame.signal(JobId.forTask(task));
 
       return task.id();
     }

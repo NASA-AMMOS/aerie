@@ -23,7 +23,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,7 +54,7 @@ public final class TaskFrameTest {
     final var topic = new Topic<Integer>();
 
     final var result = TaskFrame
-        .runToCompletion(List.of(graph), cells, (job, builder) -> runGraph(topic, builder, job))
+        .run(graph, cells, (job, builder) -> runGraph(topic, builder, job))
         .map($ -> EventGraph.atom($.extract(topic).orElseThrow()));
 
     // Equivalent graphs have equal string representations.
@@ -66,19 +65,19 @@ public final class TaskFrameTest {
 
   private void runGraph(
       final Topic<Integer> topic,
-      final TaskFrame.FrameBuilder<EventGraph<Integer>> builder,
+      final TaskFrame<EventGraph<Integer>> frame,
       final EventGraph<Integer> graph
   ) {
     if (graph instanceof EventGraph.Empty) {
       return;
     } else if (graph instanceof EventGraph.Atom<Integer> g) {
-      builder.emit(Event.create(topic, g.atom()));
+      frame.emit(Event.create(topic, g.atom()));
     } else if (graph instanceof EventGraph.Sequentially<Integer> g) {
-      runGraph(topic, builder, g.prefix());
-      runGraph(topic, builder, g.suffix());
+      runGraph(topic, frame, g.prefix());
+      runGraph(topic, frame, g.suffix());
     } else if (graph instanceof EventGraph.Concurrently<Integer> g) {
-      builder.signal(g.right());
-      runGraph(topic, builder, g.left());
+      frame.signal(g.right());
+      runGraph(topic, frame, g.left());
     } else {
       throw new IllegalArgumentException();
     }
@@ -100,27 +99,27 @@ public final class TaskFrameTest {
     final var cells = new LiveCells(events);
     cells.put(query, new Cell<>(applicator, algebra, selector, evaluator, new MutableObject<>(EventGraph.empty())));
 
-    final var jobs = List.of(HistoryDecoratedGraph.decorate(graph));
-    TaskFrame.runToCompletion(jobs, cells, (job, builder) -> checkHistory(topic, query, builder, job));
+    final var root = HistoryDecoratedGraph.decorate(graph);
+    TaskFrame.run(root, cells, (job, builder) -> checkHistory(topic, query, builder, job));
   }
 
   private void checkHistory(
       final Topic<Integer> topic,
       final Query<MutableObject<EventGraph<Integer>>> query,
-      final TaskFrame.FrameBuilder<EventGraph<Pair<EventGraph<Integer>, Integer>>> builder,
+      final TaskFrame<EventGraph<Pair<EventGraph<Integer>, Integer>>> frame,
       final EventGraph<Pair<EventGraph<Integer>, Integer>> graph
   ) {
     if (graph instanceof EventGraph.Empty) {
       return;
     } else if (graph instanceof EventGraph.Atom<Pair<EventGraph<Integer>, Integer>> g) {
-      assertEquals(g.atom().getLeft().toString(), builder.getState(query).orElseThrow().toString());
-      builder.emit(Event.create(topic, g.atom().getRight()));
+      assertEquals(g.atom().getLeft().toString(), frame.getState(query).orElseThrow().toString());
+      frame.emit(Event.create(topic, g.atom().getRight()));
     } else if (graph instanceof EventGraph.Sequentially<Pair<EventGraph<Integer>, Integer>> g) {
-      checkHistory(topic, query, builder, g.prefix());
-      checkHistory(topic, query, builder, g.suffix());
+      checkHistory(topic, query, frame, g.prefix());
+      checkHistory(topic, query, frame, g.suffix());
     } else if (graph instanceof EventGraph.Concurrently<Pair<EventGraph<Integer>, Integer>> g) {
-      builder.signal(g.right());
-      checkHistory(topic, query, builder, g.left());
+      frame.signal(g.right());
+      checkHistory(topic, query, frame, g.left());
     } else {
       throw new IllegalArgumentException();
     }
