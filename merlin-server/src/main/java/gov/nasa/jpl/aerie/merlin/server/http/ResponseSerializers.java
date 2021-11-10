@@ -29,6 +29,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 import java.time.ZoneOffset;
@@ -76,6 +77,17 @@ public final class ResponseSerializers {
 
     return schema.match(new ValueSchemaSerializer());
   }
+
+  public static JsonValue serializeOrderedEntry(final Map.Entry<Integer,ValueSchema> entry) {
+    if (entry == null) return JsonValue.NULL;
+
+    final JsonObjectBuilder jsonObject = Json.createObjectBuilder();
+    jsonObject.add("schema", entry.getValue().match(new ValueSchemaSerializer()));
+    jsonObject.add("order", entry.getKey());
+
+    return jsonObject.build();
+  }
+
 
   public static JsonValue serializeValueSchemas(final Map<String, ValueSchema> schemas) {
     if (schemas == null) return JsonValue.NULL;

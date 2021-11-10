@@ -32,4 +32,9 @@ public final class PreparedStatements {
   throws SQLException {
     statement.setString(parameter, ResponseSerializers.serializeMap(valueSchemaP::unparse, parameters).toString());
   }
+
+  public static void setValueSchemaOrderedMap(final PreparedStatement statement, final int parameter, final Map<String, Map.Entry<Integer,ValueSchema>> orderedParameters)
+  throws SQLException {
+    statement.setString(parameter, ResponseSerializers.serializeMap(ResponseSerializers::serializeOrderedEntry, orderedParameters).toString());
+  }
 }
