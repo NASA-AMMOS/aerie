@@ -7,16 +7,71 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public interface ActivityMapperInstantiator {
 
   MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType);
+
+  default List<String> getParametersWithDefaults(final ActivityTypeRecord activityType) {
+    return activityType.parameters.stream().map(p -> p.name).toList();
+  }
+
+  default MethodSpec makeGetRequiredParametersMethod(final ActivityTypeRecord activityType) {
+    final var optionalParams = getParametersWithDefaults(activityType);
+    final var requiredParams = activityType.parameters.stream().filter(p -> !optionalParams.contains(p.name)).toList();
+
+    return MethodSpec.methodBuilder("getRequiredParameters")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(ParameterizedTypeName.get(
+            java.util.List.class,
+            String.class))
+        .addStatement(
+            "return $T.of($L)",
+            List.class,
+            requiredParams.stream().map(p -> "\"%s\"".formatted(p.name)).collect(Collectors.joining(", ")))
+        .build();
+  }
+
+  default MethodSpec makeGetParametersMethod(final ActivityTypeRecord activityType) {
+    return MethodSpec.methodBuilder("getParameters")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(ParameterizedTypeName.get(
+            java.util.ArrayList.class,
+            Parameter.class))
+        .addStatement(
+            "final var $L = new $T()",
+            "parameters",
+            ParameterizedTypeName.get(
+                java.util.ArrayList.class,
+                Parameter.class))
+        .addCode(
+            activityType.parameters
+                .stream()
+                .map(parameter -> CodeBlock
+                    .builder()
+                    .addStatement(
+                        "$L.add(new $T($S, this.mapper_$L.getValueSchema()))",
+                        "parameters",
+                        Parameter.class,
+                        parameter.name,
+                        parameter.name))
+                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                .build())
+        .addStatement(
+            "return $L",
+            "parameters")
+        .build();
+  }
 
   default MethodSpec makeGetArgumentsMethod(final ActivityTypeRecord activityType) {
     return MethodSpec

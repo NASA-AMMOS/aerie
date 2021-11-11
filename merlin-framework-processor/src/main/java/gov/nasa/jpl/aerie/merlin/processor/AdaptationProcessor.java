@@ -612,37 +612,8 @@ public final class AdaptationProcessor implements Processor {
                     .returns(String.class)
                     .addStatement("return $S", activityType.name)
                     .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("getParameters")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(
-                        java.util.ArrayList.class,
-                        Parameter.class))
-                    .addStatement(
-                        "final var $L = new $T()",
-                        "parameters",
-                        ParameterizedTypeName.get(
-                            java.util.ArrayList.class,
-                            Parameter.class))
-                    .addCode(
-                        activityType.parameters
-                            .stream()
-                            .map(parameter -> CodeBlock
-                                .builder()
-                                .addStatement(
-                                    "$L.add(new $T($S, this.mapper_$L.getValueSchema()))",
-                                    "parameters",
-                                    Parameter.class,
-                                    parameter.name,
-                                    parameter.name))
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                            .build())
-                    .addStatement(
-                        "return $L",
-                        "parameters")
-                    .build())
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetRequiredParametersMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetParametersMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetArgumentsMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateMethod(activityType))
             .addMethod(

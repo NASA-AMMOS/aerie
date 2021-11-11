@@ -64,7 +64,7 @@ public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstanti
 
       methodBuilder = produceParametersFromDefaultsClass(activityType, methodBuilder);
 
-    methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
+      methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
             activityType.parameters
@@ -109,35 +109,35 @@ public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstanti
     return methodBuilder.build();
   }
 
-  private static MethodSpec.Builder
-  produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
-  {
+  @Override
+  public List<String> getParametersWithDefaults(final ActivityTypeRecord activityType) {
     Optional<Element> defaultsClass = Optional.empty();
-
     for (final var element : activityType.declaration.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
       defaultsClass = Optional.of(element);
     }
 
-    if (defaultsClass.isEmpty()) return methodBuilder;
+    final var fieldNameList = new ArrayList<String>();
+    defaultsClass.ifPresent(c -> {
+      for (final Element fieldElement : c.getEnclosedElements()) {
+        if (fieldElement.getKind() != ElementKind.FIELD) continue;
+        fieldNameList.add(fieldElement.getSimpleName().toString());
+      }
+    });
 
-    List<String> fieldNameList = new ArrayList<>();
+    return fieldNameList;
+  }
 
-    for (final Element fieldElement : defaultsClass.get().getEnclosedElements()) {
-      if (fieldElement.getKind() != ElementKind.FIELD) continue;
-      fieldNameList.add(fieldElement.getSimpleName().toString());
-    }
-
-    return methodBuilder.addCode(
-        fieldNameList
-            .stream()
-            .map(fieldName -> CodeBlock
-                .builder()
-                .addStatement(
-                    "$L = Optional.ofNullable($L.$L)",
-                    fieldName,
-                    "defaults",
-                    fieldName))
-            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build()).addCode("\n");
+  private MethodSpec.Builder produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
+  {
+    return methodBuilder.addCode(getParametersWithDefaults(activityType).stream()
+        .map(fieldName -> CodeBlock
+            .builder()
+            .addStatement(
+                "$L = Optional.ofNullable($L.$L)",
+                fieldName,
+                "defaults",
+                fieldName))
+        .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build()).addCode("\n");
   }
 }

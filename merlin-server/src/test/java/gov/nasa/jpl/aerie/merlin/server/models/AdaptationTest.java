@@ -52,6 +52,7 @@ public final class AdaptationTest {
                     new Parameter("x", ValueSchema.INT),
                     new Parameter("y", ValueSchema.STRING),
                     new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))))));
+
         // WHEN
         final Map<String, ActivityType> typeList = unconfiguredAdaptation.getActivityTypes();
 
