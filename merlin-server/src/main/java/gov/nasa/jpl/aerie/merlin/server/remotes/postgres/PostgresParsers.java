@@ -29,7 +29,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
 import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
 
 public final class PostgresParsers {
-  public final static JsonParser<Pair<String, ValueSchema>> discreteProfileTypeP =
+  public static final JsonParser<Pair<String, ValueSchema>> discreteProfileTypeP =
       productP
           .field("type", literalP("discrete"))
           .field("schema", valueSchemaP)
@@ -37,19 +37,19 @@ public final class PostgresParsers {
               untuple((type, schema) -> Pair.of("discrete", schema)),
               $ -> tuple(Unit.UNIT, $.getRight())));
 
-  public final static JsonParser<Pair<String, ValueSchema>> realProfileTypeP =
+  public static final JsonParser<Pair<String, ValueSchema>> realProfileTypeP =
       productP
           .field("type", literalP("real"))
           .map(Iso.of(
               type -> Pair.of("real", null),
               $ -> Unit.UNIT));
 
-  final static JsonParser<Pair<String, ValueSchema>> profileTypeP =
+  static final JsonParser<Pair<String, ValueSchema>> profileTypeP =
       chooseP(
           discreteProfileTypeP,
           realProfileTypeP);
 
-  final static JsonParser<RealDynamics> realDynamicsP =
+  static final JsonParser<RealDynamics> realDynamicsP =
       productP
           .field("initial", doubleP)
           .field("rate", doubleP)
