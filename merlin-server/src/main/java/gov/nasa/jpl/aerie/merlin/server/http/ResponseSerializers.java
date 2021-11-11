@@ -26,6 +26,8 @@ import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public final class ResponseSerializers {
   public static <T> JsonValue serializeNullable(final Function<T, JsonValue> serializer, final T value) {
@@ -56,13 +58,15 @@ public final class ResponseSerializers {
     return schema.match(new ValueSchemaSerializer());
   }
 
-  public static JsonValue serializeOrderedParameter(final Pair<Integer, Parameter> entry) {
-    if (entry == null) return JsonValue.NULL;
+  public static JsonValue serializeParameters(final List<Parameter> parameters) {
+    final var parameterMap = IntStream.range(0, parameters.size()).boxed()
+        .collect(Collectors.toMap(i -> parameters.get(i).name(), i -> Pair.of(i, parameters.get(i))));
 
-    return Json.createObjectBuilder()
-        .add("schema", entry.getRight().schema().match(new ValueSchemaSerializer()))
-        .add("order", entry.getLeft())
-        .build();
+    return serializeMap(pair -> Json.createObjectBuilder()
+            .add("schema", pair.getRight().schema().match(new ValueSchemaSerializer()))
+            .add("order", pair.getLeft())
+            .build(),
+        parameterMap);
   }
 
   public static JsonValue serializeValueSchemas(final Map<String, ValueSchema> schemas) {
