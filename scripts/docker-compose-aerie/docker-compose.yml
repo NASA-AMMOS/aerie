@@ -2,6 +2,17 @@ version: "3.7"
 services:
   aerie_gateway:
     depends_on: ["postgres"]
+    environment:
+      AUTH_TYPE: cam
+      AUTH_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
+      GQL_API_URL: http://localhost:8080/v1/graphql
+      PORT: 9000
+      POSTGRES_AERIE_MERLIN_DB: aerie_merlin
+      POSTGRES_AERIE_UI_DB: aerie_ui
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: aerie
     image: "${AERIE_DOCKER_URL}/aerie-gateway:${DOCKER_TAG}"
     ports: ["9000:9000"]
     restart: always
