@@ -51,7 +51,7 @@ public final class AdaptationTest {
                 List.of(
                     new Parameter("x", ValueSchema.INT),
                     new Parameter("y", ValueSchema.STRING),
-                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL))))));
+                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of()));
 
         // WHEN
         final Map<String, ActivityType> typeList = unconfiguredAdaptation.getActivityTypes();
@@ -68,10 +68,10 @@ public final class AdaptationTest {
             List.of(
                 new Parameter("x", ValueSchema.INT),
                 new Parameter("y", ValueSchema.STRING),
-                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))));
+                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of());
 
         // WHEN
-        final ActivityType type = unconfiguredAdaptation.getActivityType(expectedType.name);
+        final ActivityType type = unconfiguredAdaptation.getActivityType(expectedType.name());
 
         // THEN
         assertThat(type).isEqualTo(expectedType);

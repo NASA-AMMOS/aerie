@@ -129,13 +129,13 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
   }
 
   @Override
-  public void updateActivityTypes( final String adaptationId, final Map<String, ActivityType> activityTypes)
+  public void updateActivityTypes(final String adaptationId, final Map<String, ActivityType> activityTypes)
   throws NoSuchAdaptationException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
         final var id = toMissionModelId(adaptationId);
         for (final var activityType : activityTypes.values()) {
-          createActivityTypeAction.apply(id, activityType.name, activityType.parameters);
+          createActivityTypeAction.apply(id, activityType.name(), activityType.parameters(), activityType.requiredParameters());
         }
       }
     } catch (final SQLException ex) {

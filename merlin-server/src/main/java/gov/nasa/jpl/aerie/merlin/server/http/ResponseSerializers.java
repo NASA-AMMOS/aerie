@@ -29,7 +29,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
 import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
 import java.time.ZoneOffset;
@@ -78,14 +77,13 @@ public final class ResponseSerializers {
     return schema.match(new ValueSchemaSerializer());
   }
 
-  public static JsonValue serializeOrderedEntry(final Map.Entry<Integer,ValueSchema> entry) {
+  public static JsonValue serializeOrderedParameter(final Pair<Integer, Parameter> entry) {
     if (entry == null) return JsonValue.NULL;
 
-    final JsonObjectBuilder jsonObject = Json.createObjectBuilder();
-    jsonObject.add("schema", entry.getValue().match(new ValueSchemaSerializer()));
-    jsonObject.add("order", entry.getKey());
-
-    return jsonObject.build();
+    return Json.createObjectBuilder()
+        .add("schema", entry.getRight().schema().match(new ValueSchemaSerializer()))
+        .add("order", entry.getLeft())
+        .build();
   }
 
 
@@ -279,13 +277,13 @@ public final class ResponseSerializers {
   public static JsonValue serializeActivityType(final ActivityType activityType) {
     return Json
         .createObjectBuilder()
-        .add("parameters", ResponseSerializers.serializeParameters(activityType.parameters))
+        .add("parameters", ResponseSerializers.serializeParameters(activityType.parameters()))
         .build();
   }
   public static JsonValue serializeActivityTypeAction(final ActivityType activityType) {
     return Json
         .createObjectBuilder()
-        .add("name", activityType.name)
+        .add("name", activityType.name())
         .add("parameters", serializeActivityType(activityType))
         .build();
   }

@@ -109,7 +109,7 @@ public final class AdaptationFacade<$Schema> {
     {
       final var activityTypes = new HashMap<String, ActivityType>();
       factory.getTaskSpecTypes().forEach((name, specType) -> {
-        activityTypes.put(name, new ActivityType(name, specType.getParameters()));
+        activityTypes.put(name, new ActivityType(name, specType.getParameters(), specType.getRequiredParameters()));
       });
       return activityTypes;
     }
@@ -121,7 +121,7 @@ public final class AdaptationFacade<$Schema> {
           .ofNullable(factory.getTaskSpecTypes().get(typeName))
           .orElseThrow(AdaptationFacade.NoSuchActivityTypeException::new);
 
-      return new ActivityType(typeName, specType.getParameters());
+      return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters());
     }
 
     public List<Parameter> getParameters() {

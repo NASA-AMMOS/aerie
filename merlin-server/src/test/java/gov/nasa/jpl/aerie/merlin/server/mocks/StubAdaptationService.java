@@ -29,7 +29,7 @@ public final class StubAdaptationService implements AdaptationService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING)));
+      List.of(new Parameter("Param", ValueSchema.STRING)), List.of());
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
       EXISTENT_ACTIVITY_TYPE,
