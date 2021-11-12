@@ -38,9 +38,12 @@ services:
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_hasura
-    image: "hasura/graphql-engine:v2.0.10"
+      HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
+    image: "hasura/graphql-engine:v2.0.10.cli-migrations-v3"
     ports: ["8080:8080"]
     restart: always
+    volumes:
+      - ./deployment/hasura/metadata:/hasura-metadata
   merlin:
     build:
       context: .

@@ -6,7 +6,6 @@ This document describes how to deploy Aerie.
 - [Environment Variables](#environment-variables)
 - [Starting the Services](#starting-the-services)
 - [Postgres Considerations](#postgres-considerations)
-- [Applying Hasura Metadata](#applying-hasura-metadata)
 - [Stopping the Services](#stopping-the-services)
 - [Troubleshooting](#troubleshooting)
 
@@ -15,10 +14,6 @@ This document describes how to deploy Aerie.
 Before you can deploy Aerie, you must install and configure the following products on your deployment machine:
 
 - [Docker](https://www.docker.com/) which is used to deploy containers for the Aerie services.
-- [Hasura CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html#install-hasura-cli) which is used to upload Hasura metadata to the Hasura container. If you have [Node.js](https://nodejs.org/en/) installed you can install the CLI via:
-  ```
-  npm install hasura-cli -g
-  ```
 
 ## Environment Variables
 
@@ -37,16 +32,6 @@ docker-compose up  --build --detach
 When the Postgres container starts it will run [init-aerie.sh](./postgres-init-db/init-aerie.sh) to initialize the database with the Aerie [database objects](./postgres-init-db/sql).
 
 **Note:** This script is only run if you start the container with a data directory that is empty; any pre-existing database will be left untouched on container startup.
-
-## Applying Hasura Metadata
-
-Apply metadata to Hasura from the [metadata directory](./hasura/metadata), by running the following command:
-
-```
-hasura metadata apply --endpoint http://localhost:8080
-```
-
-You can change the `endpoint` flag to point to a different instance of Hasura if needed.
 
 ## Stopping the Services
 
