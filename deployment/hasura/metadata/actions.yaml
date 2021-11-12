@@ -11,6 +11,10 @@ actions:
   definition:
     kind: ""
     handler: http://merlin:27183/validateActivityArguments
+- name: getActivityEffectiveArguments
+  definition:
+    kind: ""
+    handler: http://merlin:27183/getActivityEffectiveArguments
 custom_types:
   enums:
   - name: MerlinSimulationStatus

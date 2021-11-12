@@ -18,6 +18,14 @@ type Query {
   ): ValidationResponse
 }
 
+type Query {
+  getActivityEffectiveArguments(
+    missionModelId: ID!
+    activityTypeName: String!
+    activityArguments: ActivityArguments!
+  ): EffectiveArgumentsResponse
+}
+
 enum MerlinSimulationStatus {
   complete
   failed
@@ -38,6 +46,12 @@ type MerlinSimulationResponse {
 type ValidationResponse {
   errors: [String!]
   success: Boolean!
+}
+
+type EffectiveArgumentsResponse {
+  success: Boolean!
+  arguments: ActivityArguments
+  errors: [String!]
 }
 
 scalar ResourceSchema
