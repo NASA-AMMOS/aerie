@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static gov.nasa.jpl.aerie.json.BasicParsers.anyP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
@@ -211,21 +210,21 @@ public abstract class MerlinParsers {
           untuple(adaptationId -> new HasuraMissionModelEvent(String.valueOf(adaptationId))),
           $ -> tuple(Long.parseLong($.adaptationId()))));
 
-  private static final JsonParser<HasuraAction.ActivityValidationInput> hasuraValidateActivityInputP
+  private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
       = productP
       .field("missionModelId", stringP)
       .field("activityTypeName", stringP)
       .field("activityArguments", mapP(serializedValueP))
       .map(Iso.of(
-          untuple((missionModelId, activityTypeName, arguments) -> new HasuraAction.ActivityValidationInput(
+          untuple((missionModelId, activityTypeName, arguments) -> new HasuraAction.ActivityInput(
               missionModelId,
               activityTypeName,
               arguments)),
           $ -> tuple($.missionModelId(), $.activityTypeName(), $.arguments())));
 
-  public static final JsonParser<HasuraAction<HasuraAction.ActivityValidationInput>> hasuraValidateActivityActionP
-      = hasuraActionP(hasuraValidateActivityInputP)
+  public static final JsonParser<HasuraAction<HasuraAction.ActivityInput>> hasuraActivityActionP
+      = hasuraActionP(hasuraActivityInputP)
       .map(Iso.of(
-          untuple((name, activityValidationInput, session) -> new HasuraAction<>(name, activityValidationInput, session)),
+          untuple((name, activityInput, session) -> new HasuraAction<>(name, activityInput, session)),
           $ -> tuple($.name(), $.input(), $.session())));
 }

@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
+import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
@@ -27,8 +29,7 @@ public final class StubAdaptationService implements AdaptationService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING)),
-      Map.of("Param", SerializedValue.of("Default")));
+      List.of(new Parameter("Param", ValueSchema.STRING)), List.of());
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
       EXISTENT_ACTIVITY_TYPE,
@@ -118,6 +119,14 @@ public final class StubAdaptationService implements AdaptationService {
     } else {
       return Collections.emptyList();
     }
+  }
+
+  @Override
+  public Map<String, SerializedValue> getActivityEffectiveArguments(
+      final String adaptationId,
+      final SerializedActivity activity)
+  {
+    return Map.of();
   }
 
   @Override

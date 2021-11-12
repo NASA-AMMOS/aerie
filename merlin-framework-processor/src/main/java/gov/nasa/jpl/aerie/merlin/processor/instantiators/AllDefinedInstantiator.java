@@ -5,7 +5,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
@@ -19,16 +18,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class AllDefinedInstantiator implements ActivityMapperInstantiator {
-
-  @Override
-  public MethodSpec makeInstantiateDefaultMethod(final ActivityTypeRecord activityType) {
-    return MethodSpec.methodBuilder("instantiateDefault")
-        .addModifiers(Modifier.PUBLIC)
-        .addAnnotation(Override.class)
-        .returns(TypeName.get(activityType.declaration.asType()))
-        .addStatement("return new $T()", TypeName.get(activityType.declaration.asType()))
-        .build();
-  }
 
   @Override
   public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
@@ -100,19 +89,8 @@ public class AllDefinedInstantiator implements ActivityMapperInstantiator {
         .endControlFlow()
         .endControlFlow().addCode("\n");
 
-    // Ensure all parameters are non-null
-    methodBuilder = methodBuilder.addCode(
-        activityType.parameters
-            .stream()
-            .map(parameter -> CodeBlock
-                .builder()
-                .addStatement(
-                    "if (!$L.isPresent()) throw new $T()",
-                    parameter.name,
-                    EmptyParameterException.class)
-            ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-            .build()
-    ).addCode("\n").addStatement("return template");
+    methodBuilder = ActivityMapperInstantiator
+        .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n").addStatement("return template");
 
     return methodBuilder.build();
   }

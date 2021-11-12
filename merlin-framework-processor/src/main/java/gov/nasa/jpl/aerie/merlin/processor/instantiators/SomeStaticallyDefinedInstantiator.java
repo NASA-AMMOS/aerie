@@ -5,8 +5,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import gov.nasa.jpl.aerie.merlin.framework.EmptyParameterException;
-import gov.nasa.jpl.aerie.merlin.framework.NoDefaultInstanceException;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -20,24 +18,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstantiator {
-
-  @Override
-  public MethodSpec makeInstantiateDefaultMethod(final ActivityTypeRecord activityType) {
-    var methodBuilder = MethodSpec.methodBuilder("instantiateDefault")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()));
-
-    // There are no defaults if the activity has AllRequired parameters
-    // As a result, no method shall be created.
-    // Unless there are 0 parameters, in which case a default no-arg constructor may be called.
-    if (activityType.parameters.size() != 0) {
-      methodBuilder.addStatement("throw new $T()", NoDefaultInstanceException.class);
-    } else {
-      methodBuilder.addStatement("return new $T()", TypeName.get(activityType.declaration.asType()));
-    }
-    return methodBuilder.build();
-  }
 
   @Override
   public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
@@ -84,7 +64,7 @@ public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstanti
 
       methodBuilder = produceParametersFromDefaultsClass(activityType, methodBuilder);
 
-    methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
+      methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
         .beginControlFlow("switch ($L.getKey())", "entry")
         .addCode(
             activityType.parameters
@@ -117,19 +97,8 @@ public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstanti
         .endControlFlow().addCode("\n");
     }
 
-    // Ensure all parameters are non-null
-    methodBuilder = methodBuilder.addCode(
-        activityType.parameters
-            .stream()
-            .map(parameter -> CodeBlock
-                .builder()
-                .addStatement(
-                    "if (!$L.isPresent()) throw new $T()",
-                    parameter.name,
-                    EmptyParameterException.class)
-            ).reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-            .build()
-    ).addCode("\n");
+    methodBuilder = ActivityMapperInstantiator
+        .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
@@ -140,35 +109,35 @@ public class SomeStaticallyDefinedInstantiator implements ActivityMapperInstanti
     return methodBuilder.build();
   }
 
-  private MethodSpec.Builder
-  produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
-  {
+  @Override
+  public List<String> getParametersWithDefaults(final ActivityTypeRecord activityType) {
     Optional<Element> defaultsClass = Optional.empty();
-
     for (final var element : activityType.declaration.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.WithDefaults.class) == null) continue;
       defaultsClass = Optional.of(element);
     }
 
-    if (defaultsClass.isEmpty()) return methodBuilder;
+    final var fieldNameList = new ArrayList<String>();
+    defaultsClass.ifPresent(c -> {
+      for (final Element fieldElement : c.getEnclosedElements()) {
+        if (fieldElement.getKind() != ElementKind.FIELD) continue;
+        fieldNameList.add(fieldElement.getSimpleName().toString());
+      }
+    });
 
-    List<String> fieldNameList = new ArrayList<>();
+    return fieldNameList;
+  }
 
-    for (final Element fieldElement : defaultsClass.get().getEnclosedElements()) {
-      if (fieldElement.getKind() != ElementKind.FIELD) continue;
-      fieldNameList.add(fieldElement.getSimpleName().toString());
-    }
-
-    return methodBuilder.addCode(
-        fieldNameList
-            .stream()
-            .map(fieldName -> CodeBlock
-                .builder()
-                .addStatement(
-                    "$L = Optional.ofNullable($L.$L)",
-                    fieldName,
-                    "defaults",
-                    fieldName))
-            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build()).addCode("\n");
+  private MethodSpec.Builder produceParametersFromDefaultsClass(final ActivityTypeRecord activityType, MethodSpec.Builder methodBuilder)
+  {
+    return methodBuilder.addCode(getParametersWithDefaults(activityType).stream()
+        .map(fieldName -> CodeBlock
+            .builder()
+            .addStatement(
+                "$L = Optional.ofNullable($L.$L)",
+                fieldName,
+                "defaults",
+                fieldName))
+        .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build())).build()).addCode("\n");
   }
 }

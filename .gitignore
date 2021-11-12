@@ -40,3 +40,6 @@
 
 # Ignore Gradle build output directory
 build
+
+# jqwik property-based testing database
+.jqwik-database

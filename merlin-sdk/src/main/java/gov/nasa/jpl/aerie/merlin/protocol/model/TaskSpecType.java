@@ -10,8 +10,8 @@ import java.util.Map;
 public interface TaskSpecType<Model, Specification> {
   String getName();
   List<Parameter> getParameters();
+  List<String> getRequiredParameters();
 
-  Specification instantiateDefault();
   Specification instantiate(Map<String, SerializedValue> arguments)
   throws UnconstructableTaskSpecException;
 

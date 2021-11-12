@@ -2,6 +2,7 @@ create table if not exists activity_type (
   model_id integer not null,
   name text not null,
   parameters merlin_parameter_set not null,
+  required_parameters merlin_required_parameter_set not null,
 
   constraint activity_type_natural_key
     primary key (model_id, name),

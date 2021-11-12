@@ -12,7 +12,6 @@ public interface ActivityMapper<Instance> {
   List<Parameter> getParameters();
   Map<String, SerializedValue> getArguments(Instance activity);
 
-  Instance instantiateDefault();
   Instance instantiate(Map<String, SerializedValue> arguments) throws TaskSpecType.UnconstructableTaskSpecException;
 
   List<String> getValidationFailures(Instance activity);

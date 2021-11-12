@@ -1,14 +1,17 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.List;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
@@ -33,8 +36,13 @@ public final class PreparedStatements {
     statement.setString(parameter, ResponseSerializers.serializeMap(valueSchemaP::unparse, parameters).toString());
   }
 
-  public static void setValueSchemaOrderedMap(final PreparedStatement statement, final int parameter, final Map<String, Map.Entry<Integer,ValueSchema>> orderedParameters)
+  public static void setValueSchemaOrderedMap(final PreparedStatement statement, final int parameter, final Map<String, Pair<Integer, Parameter>> orderedParameters)
   throws SQLException {
-    statement.setString(parameter, ResponseSerializers.serializeMap(ResponseSerializers::serializeOrderedEntry, orderedParameters).toString());
+    statement.setString(parameter, ResponseSerializers.serializeMap(ResponseSerializers::serializeOrderedParameter, orderedParameters).toString());
+  }
+
+  public static void setRequiredParameters(final PreparedStatement statement, final int parameter, final List<String> requiredParameters)
+  throws SQLException {
+    statement.setString(parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
   }
 }
