@@ -1,0 +1,14 @@
+table:
+  name: simulation
+  schema: public
+object_relationships:
+- name: dataset
+  using:
+    foreign_key_constraint_on:
+      column: simulation_id
+      table:
+        name: simulation_dataset
+        schema: public
+- name: plan
+  using:
+    foreign_key_constraint_on: plan_id

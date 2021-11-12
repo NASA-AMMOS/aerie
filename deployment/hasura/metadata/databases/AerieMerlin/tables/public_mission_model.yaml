@@ -1,0 +1,75 @@
+table:
+  name: mission_model
+  schema: public
+object_relationships:
+- name: parameters
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: mission_model_parameters
+        schema: public
+- name: uploaded_file
+  using:
+    foreign_key_constraint_on: jar_id
+array_relationships:
+- name: activity_types
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: activity_type
+        schema: public
+- name: conditions
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: condition
+        schema: public
+- name: plans
+  using:
+    foreign_key_constraint_on:
+      column: model_id
+      table:
+        name: plan
+        schema: public
+event_triggers:
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+    update:
+      columns:
+      - id
+      - revision
+      - jar_id
+      - mission
+      - name
+      - version
+      - owner
+  name: refreshActivityTypes
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: http://merlin:27183/refreshActivityTypes
+- definition:
+    enable_manual: false
+    insert:
+      columns: "*"
+    update:
+      columns:
+      - id
+      - revision
+      - jar_id
+      - mission
+      - name
+      - version
+      - owner
+  name: refreshModelParameters
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+    timeout_sec: 60
+  webhook: http://merlin:27183/refreshModelParameters

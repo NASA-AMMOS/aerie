@@ -1,0 +1,9 @@
+- name: AerieMerlin
+  kind: postgres
+  configuration:
+    connection_info:
+      database_url:
+        from_env: AERIE_MERLIN_DATABASE_URL
+      isolation_level: read-committed
+      use_prepared_statements: false
+  tables: "!include AerieMerlin/tables/tables.yaml"
