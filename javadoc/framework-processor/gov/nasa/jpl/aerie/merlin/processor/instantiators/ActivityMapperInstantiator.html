@@ -85,7 +85,7 @@ loadScripts(document, 'script');</script>
 <section class="method-summary" id="method-summary">
 <h2>Method Summary</h2>
 <div id="method-summary-table">
-<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab3" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab3', 3)" class="table-tab">Abstract Methods</button><button id="method-summary-table-tab5" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab5', 3)" class="table-tab">Default Methods</button></div>
+<div class="table-tabs" role="tablist" aria-orientation="horizontal"><button id="method-summary-table-tab0" role="tab" aria-selected="true" aria-controls="method-summary-table.tabpanel" tabindex="0" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table', 3)" class="active-table-tab">All Methods</button><button id="method-summary-table-tab1" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab1', 3)" class="table-tab">Static Methods</button><button id="method-summary-table-tab2" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab2', 3)" class="table-tab">Instance Methods</button><button id="method-summary-table-tab3" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab3', 3)" class="table-tab">Abstract Methods</button><button id="method-summary-table-tab5" role="tab" aria-selected="false" aria-controls="method-summary-table.tabpanel" tabindex="-1" onkeydown="switchTab(event)" onclick="show('method-summary-table', 'method-summary-table-tab5', 3)" class="table-tab">Default Methods</button></div>
 <div id="method-summary-table.tabpanel" role="tabpanel">
 <div class="summary-table three-column-summary" aria-labelledby="method-summary-table-tab0">
 <div class="table-header col-first">Modifier and Type</div>
@@ -94,19 +94,25 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code>default <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../metamodel/ActivityParameterRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityParameterRecord</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code><a href="#getActivityParameters(javax.lang.model.element.TypeElement)" class="member-name-link">getActivityParameters</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.compiler/javax/lang/model/element/TypeElement.html" title="class or interface in javax.lang.model.element" class="external-link">TypeElement</a>&nbsp;activityTypeElement)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code>default <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code><a href="#getParametersWithDefaults(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">getParametersWithDefaults</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1"><code>static com.squareup.javapoet.MethodSpec.Builder</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1"><code><a href="#makeArgumentPresentCheck(com.squareup.javapoet.MethodSpec.Builder,gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeArgumentPresentCheck</a><wbr>(com.squareup.javapoet.MethodSpec.Builder&nbsp;methodBuilder,
+ <a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code>default com.squareup.javapoet.MethodSpec</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code><a href="#makeGetArgumentsMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeGetArgumentsMethod</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5">&nbsp;</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code>default com.squareup.javapoet.MethodSpec</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code><a href="#makeGetParametersMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeGetParametersMethod</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code>default com.squareup.javapoet.MethodSpec</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5"><code><a href="#makeGetRequiredParametersMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeGetRequiredParametersMethod</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab5">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>com.squareup.javapoet.MethodSpec</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#makeInstantiateDefaultMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeInstantiateDefaultMethod</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">
-<div class="block">Returns the default template factory method or constructor for a given activity
- type depending on whether it was written as a Java 16 record-style activity or
- a traditional non-record class activity.</div>
-</div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>com.squareup.javapoet.MethodSpec</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#makeInstantiateMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeInstantiateMethod</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#makeInstantiateMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)" class="member-name-link">makeInstantiateMethod</a><wbr>(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -122,25 +128,27 @@ loadScripts(document, 'script');</script>
 <h2>Method Details</h2>
 <ul class="member-list">
 <li>
-<section class="detail" id="makeInstantiateDefaultMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)">
-<h3>makeInstantiateDefaultMethod</h3>
-<div class="member-signature"><span class="return-type">com.squareup.javapoet.MethodSpec</span>&nbsp;<span class="element-name">makeInstantiateDefaultMethod</span><wbr><span class="parameters">(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</span></div>
-<div class="block">Returns the default template factory method or constructor for a given activity
- type depending on whether it was written as a Java 16 record-style activity or
- a traditional non-record class activity.
-
- Ex. Non-record class
- returns "new BiteBananaActivity()"
-
- Ex. Record-Style
- returns "new BiteBananaActivity.defaults()"
- where "defaults" is the factory method annotated with the @Template annotation</div>
-</section>
-</li>
-<li>
 <section class="detail" id="makeInstantiateMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)">
 <h3>makeInstantiateMethod</h3>
 <div class="member-signature"><span class="return-type">com.squareup.javapoet.MethodSpec</span>&nbsp;<span class="element-name">makeInstantiateMethod</span><wbr><span class="parameters">(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="getParametersWithDefaults(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)">
+<h3>getParametersWithDefaults</h3>
+<div class="member-signature"><span class="modifiers">default</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">getParametersWithDefaults</span><wbr><span class="parameters">(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="makeGetRequiredParametersMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)">
+<h3>makeGetRequiredParametersMethod</h3>
+<div class="member-signature"><span class="modifiers">default</span>&nbsp;<span class="return-type">com.squareup.javapoet.MethodSpec</span>&nbsp;<span class="element-name">makeGetRequiredParametersMethod</span><wbr><span class="parameters">(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="makeGetParametersMethod(gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)">
+<h3>makeGetParametersMethod</h3>
+<div class="member-signature"><span class="modifiers">default</span>&nbsp;<span class="return-type">com.squareup.javapoet.MethodSpec</span>&nbsp;<span class="element-name">makeGetParametersMethod</span><wbr><span class="parameters">(<a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</span></div>
 </section>
 </li>
 <li>
@@ -153,6 +161,13 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="getActivityParameters(javax.lang.model.element.TypeElement)">
 <h3>getActivityParameters</h3>
 <div class="member-signature"><span class="modifiers">default</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/List.html" title="class or interface in java.util" class="external-link">List</a>&lt;<a href="../metamodel/ActivityParameterRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityParameterRecord</a>&gt;</span>&nbsp;<span class="element-name">getActivityParameters</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.compiler/javax/lang/model/element/TypeElement.html" title="class or interface in javax.lang.model.element" class="external-link">TypeElement</a>&nbsp;activityTypeElement)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="makeArgumentPresentCheck(com.squareup.javapoet.MethodSpec.Builder,gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord)">
+<h3>makeArgumentPresentCheck</h3>
+<div class="member-signature"><span class="modifiers">static</span>&nbsp;<span class="return-type">com.squareup.javapoet.MethodSpec.Builder</span>&nbsp;<span class="element-name">makeArgumentPresentCheck</span><wbr><span class="parameters">(com.squareup.javapoet.MethodSpec.Builder&nbsp;methodBuilder,
+ <a href="../metamodel/ActivityTypeRecord.html" title="class in gov.nasa.jpl.aerie.merlin.processor.metamodel">ActivityTypeRecord</a>&nbsp;activityType)</span></div>
 </section>
 </li>
 </ul>
