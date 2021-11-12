@@ -7,7 +7,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /*package-local*/ final class CreateModelParametersAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
@@ -25,9 +24,8 @@ import java.util.stream.Collectors;
 
   public long apply(final long modelId, final List<Parameter> parameters) throws SQLException, FailedInsertException {
     this.statement.setLong(1, modelId);
-    final var paramMap = parameters.stream().collect(Collectors.toMap(Parameter::name, Parameter::schema));
-    PreparedStatements.setValueSchemaMap(this.statement, 2, paramMap);
-    PreparedStatements.setValueSchemaMap(this.statement, 3, paramMap);
+    PreparedStatements.setParameters(this.statement, 2, parameters);
+    PreparedStatements.setParameters(this.statement, 3, parameters);
 
     try (final var results = statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("mission_model_parameters");

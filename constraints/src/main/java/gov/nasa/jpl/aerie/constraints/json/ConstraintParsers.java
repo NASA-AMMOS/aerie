@@ -131,7 +131,7 @@ public final class ConstraintParsers {
             $ -> tuple(Unit.UNIT, $.profile)));
   }
 
-  private final static JsonParser<RealParameter> realParameterP =
+  private static final JsonParser<RealParameter> realParameterP =
       productP
           .field("type", literalP("RealParameter"))
           .field("alias", stringP)

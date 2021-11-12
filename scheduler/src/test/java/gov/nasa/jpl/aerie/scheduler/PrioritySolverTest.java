@@ -63,14 +63,14 @@ public class PrioritySolverTest {
     return mission;
   }
 
-  private final static HuginnConfiguration defaultConfig = new HuginnConfiguration();
-  private final static Range<Time> horizon = defaultConfig.getHorizon();
-  private final static Time t0 = horizon.getMinimum();
-  private final static Duration d1min = Duration.ofMinutes(1.0);
-  private final static Duration d1hr = Duration.ofHours(1.0);
-  private final static Time t1hr = t0.plus(d1hr);
-  private final static Time t2hr = t0.plus(d1hr.times(2.0));
-  private final static Time t3hr = t0.plus(d1hr.times(2.0));
+  private static final HuginnConfiguration defaultConfig = new HuginnConfiguration();
+  private static final Range<Time> horizon = defaultConfig.getHorizon();
+  private static final Time t0 = horizon.getMinimum();
+  private static final Duration d1min = Duration.ofMinutes(1.0);
+  private static final Duration d1hr = Duration.ofHours(1.0);
+  private static final Time t1hr = t0.plus(d1hr);
+  private static final Time t2hr = t0.plus(d1hr.times(2.0));
+  private static final Time t3hr = t0.plus(d1hr.times(2.0));
 
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory(problem.getMissionModel());
