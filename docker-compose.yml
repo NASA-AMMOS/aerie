@@ -60,7 +60,7 @@ services:
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/docker-compose-aerie/postgres-init-db:/docker-entrypoint-initdb.d
+      - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
 
 volumes:
   file_store:

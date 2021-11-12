@@ -1,0 +1,50 @@
+type Query {
+  resourceTypes(
+    adaptationId: ID!
+  ): [ResourceType!]!
+}
+
+type Query {
+  simulate(
+    planId: Int!
+  ): MerlinSimulationResponse
+}
+
+type Query {
+  validateActivityArguments(
+    activityTypeName: String!
+    missionModelId: ID!
+    activityArguments: ActivityArguments!
+  ): ValidationResponse
+}
+
+enum MerlinSimulationStatus {
+  complete
+  failed
+  incomplete
+}
+
+type ResourceType {
+  name: String!
+  schema: ResourceSchema!
+}
+
+type MerlinSimulationResponse {
+  status: MerlinSimulationStatus!
+  results: MerlinSimulationResults
+  reason: MerlinSimulationFailureReason
+}
+
+type ValidationResponse {
+  errors: [String!]
+  success: Boolean!
+}
+
+scalar ResourceSchema
+
+scalar MerlinSimulationResults
+
+scalar MerlinSimulationFailureReason
+
+scalar ActivityArguments
+

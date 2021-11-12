@@ -1,0 +1,3 @@
+table:
+  name: profile_request
+  schema: public

@@ -174,17 +174,8 @@ pipeline {
             cp merlin-server/build/distributions/*.tar \
                ${ASSEMBLE_PREP_DIR}/services/
 
-            # For docker-compose
-            cp -r ./scripts/docker-compose-aerie ${STAGING_DIR}
-
-            if [[ $GIT_BRANCH =~ staging ]] || [[ $GIT_BRANCH =~ release-.* ]]; then
-                cd ${STAGING_DIR}/docker-compose-aerie
-                echo "# This file contains environment variables used in docker-compose files." > .env
-                echo "AERIE_DOCKER_URL=$ARTIFACT_PATH" >> .env
-                echo "DOCKER_TAG=$DOCKER_TAG" >> .env
-                cd -
-            fi
-
+            # For deployment
+            cp -r ./deployment ${STAGING_DIR}
             tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C ${ASSEMBLE_PREP_DIR}/ .
             tar -czf aerie-docker-compose.tar.gz -C ${STAGING_DIR}/ .
             rm -rfv ${ASSEMBLE_PREP_DIR}
