@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.List;
 import java.util.Map;
 
-public interface AdaptationFactory<Model> {
+public interface MissionModelFactory<Model> {
   Map<String, TaskSpecType<Model, ?>> getTaskSpecTypes();
   List<Parameter> getParameters();
   <$Schema> Phantom<$Schema, Model> instantiate(SerializedValue configuration, Initializer<$Schema> builder);

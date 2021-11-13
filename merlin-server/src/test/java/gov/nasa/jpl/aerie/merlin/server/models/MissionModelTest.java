@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import gov.nasa.jpl.aerie.fooadaptation.Configuration;
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -18,23 +18,23 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-public final class AdaptationTest {
+public final class MissionModelTest {
 
-    private AdaptationFacade<?> adaptation;
-    private AdaptationFacade.Unconfigured<?> unconfiguredAdaptation;
+    private MissionModelFacade<?> adaptation;
+    private MissionModelFacade.Unconfigured<?> unconfiguredAdaptation;
 
     @BeforeEach
-    public void initialize() throws AdaptationFacade.AdaptationContractException {
+    public void initialize() throws MissionModelFacade.AdaptationContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
-        this.adaptation = makeAdaptation(new AdaptationBuilder<>(), serializedConfig);
-        this.unconfiguredAdaptation = new AdaptationFacade.Unconfigured<>(new GeneratedAdaptationFactory());
+        this.adaptation = makeAdaptation(new MissionModelBuilder<>(), serializedConfig);
+        this.unconfiguredAdaptation = new MissionModelFacade.Unconfigured<>(new GeneratedAdaptationFactory());
     }
 
-    private static <$Schema> AdaptationFacade<$Schema> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
+    private static <$Schema> MissionModelFacade<$Schema> makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
         final var factory = new GeneratedAdaptationFactory();
         final var model = factory.instantiate(config, builder);
-        return new AdaptationFacade<>(builder.build(model, factory.getTaskSpecTypes()));
+        return new MissionModelFacade<>(builder.build(model, factory.getTaskSpecTypes()));
     }
 
     @AfterEach
@@ -43,7 +43,7 @@ public final class AdaptationTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws AdaptationFacade.AdaptationContractException {
+    public void shouldGetActivityTypeList() throws MissionModelFacade.AdaptationContractException {
         // GIVEN
         final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
@@ -61,7 +61,7 @@ public final class AdaptationTest {
     }
 
     @Test
-    public void shouldGetActivityType() throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException {
+    public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.AdaptationContractException {
         // GIVEN
         final ActivityType expectedType = new ActivityType(
             "foo",
@@ -86,12 +86,12 @@ public final class AdaptationTest {
         final Throwable thrown = catchThrowable(() -> unconfiguredAdaptation.getActivityType(activityId));
 
         // THEN
-        assertThat(thrown).isInstanceOf(AdaptationFacade.NoSuchActivityTypeException.class);
+        assertThat(thrown).isInstanceOf(MissionModelFacade.NoSuchActivityTypeException.class);
     }
 
     @Test
     public void shouldInstantiateActivityInstance()
-        throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException, AdaptationFacade.UnconstructableActivityInstanceException
+        throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.AdaptationContractException, MissionModelFacade.UnconstructableActivityInstanceException
     {
         // GIVEN
         final var typeName = "foo";
@@ -116,7 +116,7 @@ public final class AdaptationTest {
         final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
 
         // THEN
-        assertThat(thrown).isInstanceOf(AdaptationFacade.UnconstructableActivityInstanceException.class);
+        assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);
     }
 
     @Test
@@ -129,6 +129,6 @@ public final class AdaptationTest {
         final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
 
         // THEN
-        assertThat(thrown).isInstanceOf(AdaptationFacade.UnconstructableActivityInstanceException.class);
+        assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);
     }
 }

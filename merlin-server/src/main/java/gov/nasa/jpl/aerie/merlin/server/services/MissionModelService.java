@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
@@ -8,17 +8,17 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 
 import java.util.List;
 import java.util.Map;
 
-public interface AdaptationService {
-  Map<String, AdaptationJar> getAdaptations();
+public interface MissionModelService {
+  Map<String, MissionModelJar> getAdaptations();
 
-  AdaptationJar getAdaptationById(String adaptationId)
+  MissionModelJar getAdaptationById(String adaptationId)
   throws NoSuchAdaptationException;
 
   Map<String, Constraint> getConstraints(String adaptationId)
@@ -39,10 +39,10 @@ public interface AdaptationService {
     MissingArgumentException;
 
   List<Parameter> getModelParameters(String adaptationId)
-  throws NoSuchAdaptationException, AdaptationLoader.AdaptationLoadException;
+  throws NoSuchAdaptationException, MissionModelLoader.AdaptationLoadException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
-  throws NoSuchAdaptationException, AdaptationFacade.NoSuchActivityTypeException;
+  throws NoSuchAdaptationException, MissionModelFacade.NoSuchActivityTypeException;
 
   void refreshModelParameters(String adaptationId) throws NoSuchAdaptationException;
   void refreshActivityTypes(String adaptationId) throws NoSuchAdaptationException;

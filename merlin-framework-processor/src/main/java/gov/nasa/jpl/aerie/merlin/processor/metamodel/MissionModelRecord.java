@@ -8,14 +8,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public final class AdaptationRecord {
+public final class MissionModelRecord {
   public final PackageElement $package;
   public final TypeElement topLevelModel;
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
   public final Optional<TypeElement> modelConfiguration;
 
-  public AdaptationRecord(
+  public MissionModelRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
       final Optional<TypeElement> modelConfiguration,

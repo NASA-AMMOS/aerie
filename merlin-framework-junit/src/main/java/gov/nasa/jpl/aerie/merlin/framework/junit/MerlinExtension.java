@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
@@ -30,7 +30,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
 
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
-        .getOrComputeIfAbsent("state", $ -> new State<>(new AdaptationBuilder<>()), stateClass);
+        .getOrComputeIfAbsent("state", $ -> new State<>(new MissionModelBuilder<>()), stateClass);
   }
 
 
@@ -109,12 +109,12 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
   }
 
   private static final class State<$Schema, Model> {
-    public AdaptationBuilder<$Schema> builder;
+    public MissionModelBuilder<$Schema> builder;
     public MerlinTestContext<Model> context;
 
-    public Adaptation<$Schema, RootModel<?, Model>> adaptation = null;
+    public MissionModel<$Schema, RootModel<?, Model>> adaptation = null;
 
-    public State(final AdaptationBuilder<$Schema> builder) {
+    public State(final MissionModelBuilder<$Schema> builder) {
       this.builder = Objects.requireNonNull(builder);
       this.context = new MerlinTestContext<>(new Registrar(this.builder));
     }

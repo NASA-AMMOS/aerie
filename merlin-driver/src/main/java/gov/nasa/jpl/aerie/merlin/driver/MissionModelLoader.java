@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -16,28 +16,28 @@ import java.nio.file.Path;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
-public final class AdaptationLoader {
-    public static AdaptationFactory<?> loadAdaptationFactory(final Path path, final String name, final String version)
+public final class MissionModelLoader {
+    public static MissionModelFactory<?> loadAdaptationFactory(final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         final var service = loadAdaptationProvider(path, name, version);
         return service.getFactory();
     }
 
-    public static Adaptation<?, ?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
+    public static MissionModel<?, ?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws AdaptationLoadException
     {
         final var service = loadAdaptationProvider(path, name, version);
         final var factory = service.getFactory();
-        final var builder = new AdaptationBuilder<>();
+        final var builder = new MissionModelBuilder<>();
         return loadAdaptation(missionModelConfig, factory, builder);
     }
 
     private static <$Schema, Model>
-    Adaptation<$Schema, Model> loadAdaptation(
+    MissionModel<$Schema, Model> loadAdaptation(
         final SerializedValue missionModelConfig,
-        final AdaptationFactory<Model> factory,
-        final AdaptationBuilder<$Schema> builder
+        final MissionModelFactory<Model> factory,
+        final MissionModelBuilder<$Schema> builder
     ) {
         final var model = factory.instantiate(missionModelConfig, builder);
         return builder.build(model, factory.getTaskSpecTypes());

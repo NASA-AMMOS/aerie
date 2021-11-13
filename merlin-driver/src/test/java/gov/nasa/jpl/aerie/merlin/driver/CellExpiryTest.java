@@ -53,12 +53,12 @@ public final class CellExpiryTest {
     assertEquals(expected, actual);
   }
 
-  private <$Schema> Adaptation<$Schema, ?> makeModel(
+  private <$Schema> MissionModel<$Schema, ?> makeModel(
       final String resourceName,
       final String resourceValue,
       final Duration expiry
   ) {
-    final var initializer = new AdaptationBuilder<$Schema>();
+    final var initializer = new MissionModelBuilder<$Schema>();
 
     final var ref = initializer.allocate(
         new Object(),

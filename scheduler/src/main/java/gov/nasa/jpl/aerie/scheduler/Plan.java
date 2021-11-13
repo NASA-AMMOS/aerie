@@ -13,7 +13,7 @@ public interface Plan {
    *
    * @return the mission model that the plan is based on
    */
-  public MissionModel getMissionModel();
+  public MissionModelWrapper getMissionModel();
 
   /**
    * adds the given activity instances to the scheduled plan solution

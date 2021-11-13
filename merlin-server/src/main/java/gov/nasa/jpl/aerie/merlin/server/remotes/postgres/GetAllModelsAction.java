@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import org.intellij.lang.annotations.Language;
 
 import java.nio.file.Path;
@@ -23,14 +23,14 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<String, AdaptationJar> get() throws SQLException {
+  public Map<String, MissionModelJar> get() throws SQLException {
     try (final var results = this.statement.executeQuery()) {
-      final var adaptations = new HashMap<String, AdaptationJar>();
+      final var adaptations = new HashMap<String, MissionModelJar>();
 
       while (results.next()) {
         final var id = Long.toString(results.getLong(1));
 
-        final var adaptation = new AdaptationJar();
+        final var adaptation = new MissionModelJar();
         adaptation.mission = results.getString(2);
         adaptation.name = results.getString(3);
         adaptation.version = results.getString(4);

@@ -5,7 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 
 public record SynchronousSimulationAgent (
     PlanService planService,
-    AdaptationService adaptationService
+    MissionModelService adaptationService
 ) implements SimulationAgent {
   public /*sealed*/ interface Response {
     record Failed(String reason) implements Response {}
@@ -52,10 +52,10 @@ public record SynchronousSimulationAgent (
           planDuration,
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
           plan.configuration));
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       writer.failWith("adaptation for existing plan does not exist");
       return;
-    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
+    } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       writer.failWith("activity could not be instantiated");
       return;
     }

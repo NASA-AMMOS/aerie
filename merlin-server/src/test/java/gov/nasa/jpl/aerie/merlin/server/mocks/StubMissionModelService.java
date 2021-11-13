@@ -1,17 +1,15 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
 import java.nio.file.Path;
 import java.time.Instant;
@@ -20,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class StubAdaptationService implements AdaptationService {
+public final class StubMissionModelService implements MissionModelService {
   public static final String EXISTENT_ADAPTATION_ID = "abc";
   public static final String NONEXISTENT_ADAPTATION_ID = "def";
-  public static final AdaptationJar EXISTENT_ADAPTATION;
+  public static final MissionModelJar EXISTENT_ADAPTATION;
 
   public static final String EXISTENT_ACTIVITY_TYPE = "activity";
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
@@ -57,7 +55,7 @@ public final class StubAdaptationService implements AdaptationService {
       Instant.EPOCH);
 
   static {
-    EXISTENT_ADAPTATION = new AdaptationJar();
+    EXISTENT_ADAPTATION = new MissionModelJar();
     EXISTENT_ADAPTATION.name = "adaptation";
     EXISTENT_ADAPTATION.version = "1.0a";
     EXISTENT_ADAPTATION.mission = "mission";
@@ -66,12 +64,12 @@ public final class StubAdaptationService implements AdaptationService {
   }
 
   @Override
-  public Map<String, AdaptationJar> getAdaptations() {
+  public Map<String, MissionModelJar> getAdaptations() {
     return Map.of(EXISTENT_ADAPTATION_ID, EXISTENT_ADAPTATION);
   }
 
   @Override
-  public AdaptationJar getAdaptationById(final String adaptationId) throws NoSuchAdaptationException {
+  public MissionModelJar getAdaptationById(final String adaptationId) throws NoSuchAdaptationException {
     if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
       throw new NoSuchAdaptationException(adaptationId);
     }

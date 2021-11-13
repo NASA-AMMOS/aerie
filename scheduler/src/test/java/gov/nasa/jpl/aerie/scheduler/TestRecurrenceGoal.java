@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class TestRecurrenceGoal {
@@ -18,7 +17,7 @@ public class TestRecurrenceGoal {
         .repeatingEvery(new Duration(5))
         .build();
 
-    MissionModel missionModel = new MissionModel();
+    MissionModelWrapper missionModel = new MissionModelWrapper();
     Problem problem = new Problem(missionModel);
 
     problem.add(goal);

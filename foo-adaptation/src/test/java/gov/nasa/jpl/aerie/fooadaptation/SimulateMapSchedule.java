@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.fooadaptation;
 
 import gov.nasa.jpl.aerie.fooadaptation.generated.GeneratedAdaptationFactory;
 import gov.nasa.jpl.aerie.fooadaptation.mappers.FooValueMappers;
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
@@ -27,8 +27,8 @@ public class SimulateMapSchedule {
     simulateWithMapSchedule();
   }
 
-  private static <$Schema> Adaptation<$Schema, RootModel<?, Mission>>
-  makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
+  private static <$Schema> MissionModel<$Schema, RootModel<?, Mission>>
+  makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
     final var factory = new GeneratedAdaptationFactory();
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
@@ -38,7 +38,7 @@ public class SimulateMapSchedule {
   void simulateWithMapSchedule() {
     final var config = new Configuration();
     final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
-    final var adaptation = makeAdaptation(new AdaptationBuilder<>(), serializedConfig);
+    final var adaptation = makeAdaptation(new MissionModelBuilder<>(), serializedConfig);
 
     try {
       final var schedule = loadSchedule();

@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
@@ -48,7 +48,7 @@ public class SimulationFacade {
   private final Map<String, SimResource<Boolean>> feedersBool;
   private final Map<String, SimResource<String>> feedersString;
 
-  private final Adaptation<?, ?> adaptation;
+  private final MissionModel<?, ?> adaptation;
 
   // planning horizon
   private final Range<Time> planningHorizon;
@@ -120,7 +120,7 @@ public class SimulationFacade {
     return feedersBool.get(resourceName);
   }
 
-  public SimulationFacade(Range<Time> planningHorizon, Adaptation<?, ?> adaptation) {
+  public SimulationFacade(Range<Time> planningHorizon, MissionModel<?, ?> adaptation) {
     this.adaptation = adaptation;
     this.planningHorizon = planningHorizon;
     feedersInt = new HashMap<>();

@@ -1,10 +1,10 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class AdaptationFacade<$Schema> {
-  private final Adaptation<$Schema, ?> adaptation;
+public final class MissionModelFacade<$Schema> {
+  private final MissionModel<$Schema, ?> adaptation;
 
-  public AdaptationFacade(final Adaptation<$Schema, ?> adaptation) throws AdaptationContractException {
+  public MissionModelFacade(final MissionModel<$Schema, ?> adaptation) throws AdaptationContractException {
     this.adaptation = adaptation;
   }
 
@@ -98,14 +98,14 @@ public final class AdaptationFacade<$Schema> {
   }
 
   public static final class Unconfigured<Model> {
-    private final AdaptationFactory<Model> factory;
+    private final MissionModelFactory<Model> factory;
 
-    public Unconfigured(final AdaptationFactory<Model> factory) {
+    public Unconfigured(final MissionModelFactory<Model> factory) {
       this.factory = factory;
     }
 
     public Map<String, ActivityType> getActivityTypes()
-    throws AdaptationFacade.AdaptationContractException
+    throws MissionModelFacade.AdaptationContractException
     {
       final var activityTypes = new HashMap<String, ActivityType>();
       factory.getTaskSpecTypes().forEach((name, specType) -> {
@@ -115,11 +115,11 @@ public final class AdaptationFacade<$Schema> {
     }
 
     public ActivityType getActivityType(final String typeName)
-    throws AdaptationFacade.NoSuchActivityTypeException, AdaptationFacade.AdaptationContractException
+    throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.AdaptationContractException
     {
       final var specType = Optional
           .ofNullable(factory.getTaskSpecTypes().get(typeName))
-          .orElseThrow(AdaptationFacade.NoSuchActivityTypeException::new);
+          .orElseThrow(MissionModelFacade.NoSuchActivityTypeException::new);
 
       return new ActivityType(typeName, specType.getParameters(), specType.getRequiredParameters());
     }

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 public final class Fixtures {
   public final InMemoryPlanRepository planRepository;
-  public final StubAdaptationService adaptationService;
+  public final StubMissionModelService adaptationService;
 
   public final String EXISTENT_ADAPTATION_ID;
   public final String EXISTENT_PLAN_ID;
@@ -24,13 +24,13 @@ public final class Fixtures {
   public Fixtures() {
     try {
       this.planRepository = new InMemoryPlanRepository();
-      this.adaptationService = new StubAdaptationService();
+      this.adaptationService = new StubMissionModelService();
 
-      this.NONEXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.NONEXISTENT_ACTIVITY_TYPE;
-      this.EXISTENT_ACTIVITY_TYPE_ID = StubAdaptationService.EXISTENT_ACTIVITY_TYPE;
+      this.NONEXISTENT_ACTIVITY_TYPE_ID = StubMissionModelService.NONEXISTENT_ACTIVITY_TYPE;
+      this.EXISTENT_ACTIVITY_TYPE_ID = StubMissionModelService.EXISTENT_ACTIVITY_TYPE;
 
-      this.NONEXISTENT_ADAPTATION_ID = StubAdaptationService.NONEXISTENT_ADAPTATION_ID;
-      this.EXISTENT_ADAPTATION_ID = StubAdaptationService.EXISTENT_ADAPTATION_ID;
+      this.NONEXISTENT_ADAPTATION_ID = StubMissionModelService.NONEXISTENT_ADAPTATION_ID;
+      this.EXISTENT_ADAPTATION_ID = StubMissionModelService.EXISTENT_ADAPTATION_ID;
 
       this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1")).planId();
       this.NONEXISTENT_PLAN_ID = "nonexistent plan";
@@ -67,7 +67,7 @@ public final class Fixtures {
 
     activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
     activityInstance.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
-    activityInstance.parameters = StubAdaptationService.VALID_ACTIVITY_INSTANCE.getParameters();
+    activityInstance.parameters = StubMissionModelService.VALID_ACTIVITY_INSTANCE.getParameters();
 
     return activityInstance;
   }

@@ -15,7 +15,7 @@ public class PlanInMemory implements Plan {
    *
    * @param mission IN the mission model that this plan is based on
    */
-  public PlanInMemory(MissionModel mission) {
+  public PlanInMemory(MissionModelWrapper mission) {
     if (mission == null) {
       throw new IllegalArgumentException(
           "creating plan with null mission model");
@@ -30,7 +30,7 @@ public class PlanInMemory implements Plan {
    * @return the mission model that this plan is based on
    */
   @Override
-  public MissionModel getMissionModel() {
+  public MissionModelWrapper getMissionModel() {
     return this.mission;
   }
 
@@ -40,7 +40,7 @@ public class PlanInMemory implements Plan {
    *
    * all instance entities in the plan refer to definitions in the model
    */
-  MissionModel mission;
+  MissionModelWrapper mission;
 
 
   /**

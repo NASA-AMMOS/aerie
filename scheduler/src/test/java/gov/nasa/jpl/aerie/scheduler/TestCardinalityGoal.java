@@ -36,7 +36,7 @@ public class TestCardinalityGoal {
 
         .build();
 
-    MissionModel missionModel = new MissionModel();
+    MissionModelWrapper missionModel = new MissionModelWrapper();
     Problem problem = new Problem(missionModel);
 
     problem.add(goal);
@@ -82,7 +82,7 @@ public class TestCardinalityGoal {
 
         .build();
 
-    MissionModel missionModel = new MissionModel();
+    MissionModelWrapper missionModel = new MissionModelWrapper();
     Problem problem = new Problem(missionModel);
 
     problem.add(goal);

@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.server.mocks.FakeFile;
-import gov.nasa.jpl.aerie.merlin.server.mocks.StubAdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.mocks.StubMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.mocks.StubPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
@@ -36,7 +36,7 @@ public final class MerlinBindingsTest {
   @BeforeAll
   public static void setupServer() {
     final var planApp = new StubPlanService();
-    final var adaptationApp = new StubAdaptationService();
+    final var adaptationApp = new StubMissionModelService();
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
         adaptationApp,

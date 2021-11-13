@@ -2,10 +2,10 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import java.nio.file.Path;
 
-public class AdaptationAccessException extends RuntimeException {
+public class MissionModelAccessException extends RuntimeException {
   private final Path path;
 
-  public AdaptationAccessException(final Path path, final Throwable cause) {
+  public MissionModelAccessException(final Path path, final Throwable cause) {
     super(cause);
     this.path = path;
   }

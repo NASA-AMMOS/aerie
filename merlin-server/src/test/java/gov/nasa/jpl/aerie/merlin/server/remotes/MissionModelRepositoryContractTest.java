@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 // Note:
 //   If the tests fail, please try to update the adaptation jar file.
 //   See the `jarFixturePath` field below for the expected (CLASSPATH-relative) location.
-public abstract class AdaptationRepositoryContractTest {
+public abstract class MissionModelRepositoryContractTest {
     private final Path jarFixturePath;
     {
         try {
@@ -26,7 +26,7 @@ public abstract class AdaptationRepositoryContractTest {
         }
     }
 
-    protected AdaptationRepository adaptationRepository = null;
+    protected MissionModelRepository adaptationRepository = null;
 
     protected abstract void resetRepository();
 
@@ -36,13 +36,13 @@ public abstract class AdaptationRepositoryContractTest {
     }
 
     @Test
-    public void testGetAdaptation() throws AdaptationRepository.NoSuchAdaptationException {
+    public void testGetAdaptation() throws MissionModelRepository.NoSuchAdaptationException {
         // GIVEN
-        final AdaptationJar newAdaptation = createValidAdaptationJar("new-adaptation");
+        final MissionModelJar newAdaptation = createValidAdaptationJar("new-adaptation");
         final String id = this.adaptationRepository.createAdaptation(newAdaptation);
 
         // WHEN
-        final AdaptationJar adaptation = this.adaptationRepository.getAdaptation(id);
+        final MissionModelJar adaptation = this.adaptationRepository.getAdaptation(id);
 
         // THEN
         assertThat(adaptation.mission).isEqualTo(newAdaptation.mission);
@@ -56,7 +56,7 @@ public abstract class AdaptationRepositoryContractTest {
         final String id3 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test3"));
 
         // WHEN
-        final Map<String, AdaptationJar> adaptations = this.adaptationRepository
+        final Map<String, MissionModelJar> adaptations = this.adaptationRepository
                 .getAllAdaptations();
 
         // THEN
@@ -67,7 +67,7 @@ public abstract class AdaptationRepositoryContractTest {
     }
 
     @Test
-    public void testCanDeleteAllAdaptations() throws AdaptationRepository.NoSuchAdaptationException {
+    public void testCanDeleteAllAdaptations() throws MissionModelRepository.NoSuchAdaptationException {
         // GIVEN
         final String id1 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test1"));
         final String id2 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test2"));
@@ -82,8 +82,8 @@ public abstract class AdaptationRepositoryContractTest {
         assertThat(this.adaptationRepository.getAllAdaptations()).isEmpty();
     }
 
-    protected AdaptationJar createValidAdaptationJar(final String mission) {
-        final AdaptationJar adaptation = new AdaptationJar();
+    protected MissionModelJar createValidAdaptationJar(final String mission) {
+        final MissionModelJar adaptation = new MissionModelJar();
         adaptation.name = "foo-adaptation-0.6.0-SNAPSHOT";
         adaptation.version = "0.0.1";
         adaptation.mission = mission;

@@ -14,12 +14,12 @@ public class TestOrderingConstraints {
       Time.fromString("2025-001T00:00:00.000"),
       Time.fromString("2027-001T00:00:00.000"));
 
-  private MissionModel missionModel;
+  private MissionModelWrapper missionModel;
   private Plan plan;
 
   @BeforeEach
   public void setUp() {
-    missionModel = new MissionModel();
+    missionModel = new MissionModelWrapper();
     plan = new PlanInMemory(missionModel);
   }
 

@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,8 +13,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class SimulationFacadeTest {
 
-  Adaptation<?, ?> adaptation;
-  MissionModel missionModel;
+  MissionModel<?, ?> adaptation;
+  MissionModelWrapper missionModel;
   SimulationFacade facade;
 
   //concrete named time points used to setup tests and validate expectations
@@ -57,7 +57,7 @@ public class SimulationFacadeTest {
   public void setUp() {
     adaptation = SimulationUtility.getAdaptation();
 
-    missionModel = new MissionModel(adaptation, horizon);
+    missionModel = new MissionModelWrapper(adaptation, horizon);
     missionModel.add(actTypeBite);
     missionModel.add(actTypePeel);
 

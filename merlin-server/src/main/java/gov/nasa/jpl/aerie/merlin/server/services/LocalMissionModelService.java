@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.services;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelLoader;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
@@ -8,11 +9,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationLoader;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -20,37 +20,37 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * Implements the adaptation service {@link AdaptationService} interface on a set of local domain objects.
+ * Implements the adaptation service {@link MissionModelService} interface on a set of local domain objects.
  *
  * May throw unchecked exceptions:
- * * {@link LocalAdaptationService.AdaptationLoadException}: When an adaptation cannot be loaded from the JAR provided by the
+ * * {@link LocalMissionModelService.AdaptationLoadException}: When an adaptation cannot be loaded from the JAR provided by the
  * connected
  * adaptation repository.
  */
-public final class LocalAdaptationService implements AdaptationService {
-  private static final Logger log = Logger.getLogger(LocalAdaptationService.class.getName());
+public final class LocalMissionModelService implements MissionModelService {
+  private static final Logger log = Logger.getLogger(LocalMissionModelService.class.getName());
 
   private final Path missionModelDataPath;
-  private final AdaptationRepository adaptationRepository;
+  private final MissionModelRepository adaptationRepository;
 
-  public LocalAdaptationService(
+  public LocalMissionModelService(
       final Path missionModelDataPath,
-      final AdaptationRepository adaptationRepository
+      final MissionModelRepository adaptationRepository
   ) {
     this.missionModelDataPath = missionModelDataPath;
     this.adaptationRepository = adaptationRepository;
   }
 
   @Override
-  public Map<String, AdaptationJar> getAdaptations() {
+  public Map<String, MissionModelJar> getAdaptations() {
     return this.adaptationRepository.getAllAdaptations();
   }
 
   @Override
-  public AdaptationJar getAdaptationById(String id) throws NoSuchAdaptationException {
+  public MissionModelJar getAdaptationById(String id) throws NoSuchAdaptationException {
     try {
       return this.adaptationRepository.getAdaptation(id);
-    } catch (AdaptationRepository.NoSuchAdaptationException ex) {
+    } catch (MissionModelRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(id, ex);
     }
   }
@@ -59,7 +59,7 @@ public final class LocalAdaptationService implements AdaptationService {
   public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
     try {
       return this.adaptationRepository.getConstraints(adaptationId);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+    } catch (final MissionModelRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
   }
@@ -96,21 +96,21 @@ public final class LocalAdaptationService implements AdaptationService {
    * @param activityParameters The serialized activity to validate against the named adaptation.
    * @return A list of validation errors that is empty if validation succeeds.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
-   * @throws AdaptationFacade.AdaptationContractException If the named adaptation does not abide by the expected contract.
+   * @throws MissionModelFacade.AdaptationContractException If the named adaptation does not abide by the expected contract.
    * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
    * it contains may not abide by the expected contract at load time.
    */
   @Override
   public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-  throws NoSuchAdaptationException, AdaptationFacade.AdaptationContractException, AdaptationLoadException
+  throws NoSuchAdaptationException, MissionModelFacade.AdaptationContractException, AdaptationLoadException
   {
     try {
       // TODO: [AERIE-1516] Teardown the adaptation after use to release any system resources (e.g. threads).
       return this.loadConfiguredAdaptation(adaptationId)
                  .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
-    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
+    } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
-    } catch (final AdaptationFacade.UnconstructableActivityInstanceException ex) {
+    } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {
       return List.of(ex.getMessage());
     }
   }
@@ -126,9 +126,9 @@ public final class LocalAdaptationService implements AdaptationService {
     try {
       return this.loadConfiguredAdaptation(adaptationId)
                  .getActivityEffectiveArguments(activity.getTypeName(), activity.getParameters());
-    } catch (final AdaptationFacade.NoSuchActivityTypeException ex) {
+    } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
-    } catch (final AdaptationFacade.UnconstructableActivityInstanceException ex) {
+    } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {
       throw new UnconstructableActivityInstanceException(activity.getTypeName(), ex);
     }
   }
@@ -168,7 +168,7 @@ public final class LocalAdaptationService implements AdaptationService {
   {
     try {
       this.adaptationRepository.updateModelParameters(adaptationId, getModelParameters(adaptationId));
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+    } catch (final MissionModelRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
   }
@@ -179,63 +179,63 @@ public final class LocalAdaptationService implements AdaptationService {
   {
     try {
       this.adaptationRepository.updateActivityTypes(adaptationId, getActivityTypes(adaptationId));
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+    } catch (final MissionModelRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
     }
   }
 
-  private AdaptationFacade.Unconfigured<?> loadUnconfiguredAdaptation(final String adaptationId)
+  private MissionModelFacade.Unconfigured<?> loadUnconfiguredAdaptation(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {
       final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
       final var adaptation =
-          AdaptationLoader.loadAdaptationFactory(missionModelDataPath.resolve(adaptationJar.path), adaptationJar.name, adaptationJar.version);
-      return new AdaptationFacade.Unconfigured<>(adaptation);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+          MissionModelLoader.loadAdaptationFactory(missionModelDataPath.resolve(adaptationJar.path), adaptationJar.name, adaptationJar.version);
+      return new MissionModelFacade.Unconfigured<>(adaptation);
+    } catch (final MissionModelRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
-    } catch (final AdaptationLoader.AdaptationLoadException ex) {
+    } catch (final MissionModelLoader.AdaptationLoadException ex) {
       throw new AdaptationLoadException(ex);
     }
   }
 
   /**
-   * Load an {@link Adaptation} from the adaptation repository using the adaptation's default mission model configuration,
-   * and wrap it in an {@link AdaptationFacade} domain object.
+   * Load an {@link MissionModel} from the adaptation repository using the adaptation's default mission model configuration,
+   * and wrap it in an {@link MissionModelFacade} domain object.
    *
    * @param adaptationId The ID of the adaptation in the adaptation repository to load.
-   * @return An {@link AdaptationFacade} domain object allowing use of the loaded adaptation.
+   * @return An {@link MissionModelFacade} domain object allowing use of the loaded adaptation.
    * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
    */
-  private AdaptationFacade<?> loadConfiguredAdaptation(final String adaptationId)
+  private MissionModelFacade<?> loadConfiguredAdaptation(final String adaptationId)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     return loadConfiguredAdaptation(adaptationId, SerializedValue.of(Map.of()));
   }
 
   /**
-   * Load an {@link Adaptation} from the adaptation repository, and wrap it in an {@link AdaptationFacade} domain object.
+   * Load an {@link MissionModel} from the adaptation repository, and wrap it in an {@link MissionModelFacade} domain object.
    *
    * @param adaptationId The ID of the adaptation in the adaptation repository to load.
    * @param configuration The mission model configuration to to load the adaptation with.
-   * @return An {@link AdaptationFacade} domain object allowing use of the loaded adaptation.
+   * @return An {@link MissionModelFacade} domain object allowing use of the loaded adaptation.
    * @throws AdaptationLoadException If the adaptation cannot be loaded -- the JAR may be invalid, or the adaptation
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchAdaptationException If no adaptation is known by the given ID.
    */
-  private AdaptationFacade<?> loadConfiguredAdaptation(final String adaptationId, final SerializedValue configuration)
+  private MissionModelFacade<?> loadConfiguredAdaptation(final String adaptationId, final SerializedValue configuration)
   throws NoSuchAdaptationException, AdaptationLoadException
   {
     try {
       final var adaptationJar = this.adaptationRepository.getAdaptation(adaptationId);
       final var adaptation =
-          AdaptationLoader.loadAdaptation(configuration, missionModelDataPath.resolve(adaptationJar.path), adaptationJar.name, adaptationJar.version);
-      return new AdaptationFacade<>(adaptation);
-    } catch (final AdaptationRepository.NoSuchAdaptationException ex) {
+          MissionModelLoader.loadAdaptation(configuration, missionModelDataPath.resolve(adaptationJar.path), adaptationJar.name, adaptationJar.version);
+      return new MissionModelFacade<>(adaptation);
+    } catch (final MissionModelRepository.NoSuchAdaptationException ex) {
       throw new NoSuchAdaptationException(adaptationId, ex);
-    } catch (final AdaptationLoader.AdaptationLoadException ex) {
+    } catch (final MissionModelLoader.AdaptationLoadException ex) {
       throw new AdaptationLoadException(ex);
     }
   }

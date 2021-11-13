@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import java.nio.file.Path;
 import java.util.Objects;
 
-public final class AdaptationJar {
+public final class MissionModelJar {
     public String name;
     public String version;
     public String mission;
@@ -17,9 +17,9 @@ public final class AdaptationJar {
      */
     public Path path;
 
-    public AdaptationJar() {}
+    public MissionModelJar() {}
 
-    public AdaptationJar(final AdaptationJar other) {
+    public MissionModelJar(final MissionModelJar other) {
         this.name = other.name;
         this.version = other.version;
         this.mission = other.mission;
@@ -29,11 +29,11 @@ public final class AdaptationJar {
 
     @Override
     public boolean equals(final Object object) {
-        if (object.getClass() != AdaptationJar.class) {
+        if (object.getClass() != MissionModelJar.class) {
             return false;
         }
 
-        final AdaptationJar other = (AdaptationJar)object;
+        final MissionModelJar other = (MissionModelJar)object;
         return
                 (  Objects.equals(this.name, other.name)
                 && Objects.equals(this.version, other.version)

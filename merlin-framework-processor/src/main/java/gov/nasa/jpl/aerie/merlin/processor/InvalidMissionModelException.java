@@ -4,12 +4,12 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 
-public class InvalidAdaptationException extends Exception {
+public class InvalidMissionModelException extends Exception {
   public final Element element;
   public final AnnotationMirror annotation;
   public final AnnotationValue attribute;
 
-  public InvalidAdaptationException(
+  public InvalidMissionModelException(
       final String message,
       final Element element,
       final AnnotationMirror annotation,
@@ -21,15 +21,15 @@ public class InvalidAdaptationException extends Exception {
     this.attribute = attribute;
   }
 
-  public InvalidAdaptationException(final String message, final Element element, final AnnotationMirror annotation) {
+  public InvalidMissionModelException(final String message, final Element element, final AnnotationMirror annotation) {
     this(message, element, annotation, null);
   }
 
-  public InvalidAdaptationException(final String message, final Element element) {
+  public InvalidMissionModelException(final String message, final Element element) {
     this(message, element, null);
   }
 
-  public InvalidAdaptationException(final String message) {
+  public InvalidMissionModelException(final String message) {
     this(message, null, null);
   }
 }

@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.PACKAGE)
-public @interface Adaptation {
+public @interface MissionModel {
   Class<?> model();
 
   @Retention(RetentionPolicy.CLASS)

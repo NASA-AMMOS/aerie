@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class AdaptationStateHierarchy {
+public class MissionModelStateHierarchy {
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Duration.class, new DurationTypeAdapter())

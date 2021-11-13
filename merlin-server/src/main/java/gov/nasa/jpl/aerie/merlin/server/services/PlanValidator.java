@@ -17,12 +17,12 @@ import static java.util.Collections.unmodifiableList;
 
 public final class PlanValidator {
   private final PlanRepository planRepository;
-  private final AdaptationService adaptationService;
+  private final MissionModelService adaptationService;
 
   private final BreadcrumbCursor breadcrumbCursor = new BreadcrumbCursor();
   private final List<Pair<List<Breadcrumb>, String>> messages = new ArrayList<>();
 
-  public PlanValidator(final PlanRepository planRepository, final AdaptationService adaptationService) {
+  public PlanValidator(final PlanRepository planRepository, final MissionModelService adaptationService) {
     this.planRepository = planRepository;
     this.adaptationService = adaptationService;
   }
@@ -33,7 +33,7 @@ public final class PlanValidator {
       validationFailures = this.adaptationService.validateActivityParameters(
           adaptationId,
           new SerializedActivity(activityInstance.type, activityInstance.parameters));
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       throw new Error("Unexpectedly nonexistent adaptation, when this should have been validated earlier.", ex);
     }
 
@@ -67,7 +67,7 @@ public final class PlanValidator {
     try {
       this.adaptationService.getAdaptationById(adaptationId);
       return true;
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       return false;
     }
   }

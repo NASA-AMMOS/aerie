@@ -1,7 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
-
 import java.util.List;
 
 /**
@@ -15,7 +13,7 @@ import java.util.List;
  * aerie/services/.../adaptation/models/Adaptation.java)
  */
 //TODO: replace mission model with Merlin provided manifest
-public class MissionModel {
+public class MissionModelWrapper {
 
   SimulationFacade simFacade;
 
@@ -25,7 +23,7 @@ public class MissionModel {
    * the mission model will start with only the bare-bones built-in
    * epoch/state/activity/etc definitions
    */
-  public MissionModel(Adaptation<?,?> adaptation, Range<Time> planningHorizon) {
+  public MissionModelWrapper(gov.nasa.jpl.aerie.merlin.driver.MissionModel<?,?> adaptation, Range<Time> planningHorizon) {
 
     //TODO: change parametrization
     simFacade = new SimulationFacade(planningHorizon, adaptation);
@@ -40,7 +38,7 @@ public class MissionModel {
     add(new ActivityType("HorizonMarker"));
 
   }
-  public MissionModel() {
+  public MissionModelWrapper() {
     this(null, null);
   }
 
@@ -136,4 +134,3 @@ public class MissionModel {
       = new java.util.LinkedList<>();
 
 }
-

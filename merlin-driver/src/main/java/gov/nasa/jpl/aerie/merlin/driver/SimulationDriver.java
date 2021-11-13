@@ -22,7 +22,7 @@ import java.util.Set;
 public final class SimulationDriver {
   public static <$Timeline, Model>
   SimulationResults simulate(
-      final Adaptation<? super $Timeline, Model> missionModel,
+      final MissionModel<? super $Timeline, Model> missionModel,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration
@@ -82,7 +82,7 @@ public final class SimulationDriver {
   }
 
   public static <$Schema, $Timeline extends $Schema, Model>
-  void simulateTask(final Adaptation<? super $Timeline, Model> missionModel, final Task<$Timeline> task) {
+  void simulateTask(final MissionModel<? super $Timeline, Model> missionModel, final Task<$Timeline> task) {
     try (final var engine = new SimulationEngine<$Timeline>()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();

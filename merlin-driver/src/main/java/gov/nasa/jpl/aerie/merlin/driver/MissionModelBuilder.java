@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
+public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> {
   private AdaptationBuilderState<$Schema> state = new UnbuiltState();
 
   @Override
@@ -52,7 +52,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     return this.state.daemon(task);
   }
 
-  public <Model> Adaptation<$Schema, Model>
+  public <Model> MissionModel<$Schema, Model>
   build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
     return this.state.build(model, taskSpecTypes);
   }
@@ -60,7 +60,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
 
   private interface AdaptationBuilderState<$Schema> extends Initializer<$Schema> {
     <Model>
-    Adaptation<$Schema, Model>
+    MissionModel<$Schema, Model>
     build(
         Phantom<$Schema, Model> model,
         Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
@@ -119,16 +119,16 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
-    public <Model> Adaptation<$Schema, Model>
+    public <Model> MissionModel<$Schema, Model>
     build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
-      final var adaptation = new Adaptation<>(
+      final var adaptation = new MissionModel<>(
           model,
           this.initialCells,
           this.resources,
           this.daemons,
           taskSpecTypes);
 
-      AdaptationBuilder.this.state = new BuiltState();
+      MissionModelBuilder.this.state = new BuiltState();
 
       return adaptation;
     }
@@ -164,7 +164,7 @@ public final class AdaptationBuilder<$Schema> implements Initializer<$Schema> {
     }
 
     @Override
-    public <Model> Adaptation<$Schema, Model>
+    public <Model> MissionModel<$Schema, Model>
     build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }

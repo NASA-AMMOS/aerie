@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /*package-local*/ final class UpdatePlanAction
     implements AutoCloseable  /* This isn't necessary, but it's convenient for symmetry with other actions. */

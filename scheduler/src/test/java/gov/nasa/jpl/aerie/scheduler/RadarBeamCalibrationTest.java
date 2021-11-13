@@ -18,12 +18,12 @@ public class RadarBeamCalibrationTest {
   private final AltitudeAboveMoon altitudeAboveMoon = new AltitudeAboveMoon(horizon);
   private final FlybyEnumState flybyEnumState = new FlybyEnumState(horizon);
 
-  private MissionModel missionModel;
+  private MissionModelWrapper missionModel;
   private Plan plan;
 
   @BeforeEach
   public void setUp() throws Exception {
-    missionModel = new MissionModel();
+    missionModel = new MissionModelWrapper();
     plan = new PlanInMemory(missionModel);
   }
 

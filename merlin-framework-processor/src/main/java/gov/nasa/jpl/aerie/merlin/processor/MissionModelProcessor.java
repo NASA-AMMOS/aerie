@@ -13,7 +13,7 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.instantiators.ActivityMapperInstantiator;
 import gov.nasa.jpl.aerie.merlin.processor.instantiators.AllStaticallyDefinedInstantiator;
 import gov.nasa.jpl.aerie.merlin.processor.instantiators.NoneDefinedInstantiator;
@@ -23,9 +23,10 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.AdaptationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -63,7 +64,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class AdaptationProcessor implements Processor {
+public final class MissionModelProcessor implements Processor {
   private Messager messager = null;
   private Filer filer = null;
   private Elements elementUtils = null;
@@ -78,7 +79,7 @@ public final class AdaptationProcessor implements Processor {
   @Override
   public Set<String> getSupportedAnnotationTypes() {
     return Set.of(
-        Adaptation.class.getCanonicalName(),
+        MissionModel.class.getCanonicalName(),
         ActivityType.class.getCanonicalName());
   }
 
@@ -104,7 +105,7 @@ public final class AdaptationProcessor implements Processor {
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
 
     // Iterate over all elements annotated with @Adaptation
-    for (final var element : roundEnv.getElementsAnnotatedWith(Adaptation.class)) {
+    for (final var element : roundEnv.getElementsAnnotatedWith(MissionModel.class)) {
       final var packageElement = (PackageElement) element;
 
       try {
@@ -129,7 +130,7 @@ public final class AdaptationProcessor implements Processor {
 
           generatedFile.writeTo(this.filer);
         }
-      } catch (final InvalidAdaptationException ex) {
+      } catch (final InvalidMissionModelException ex) {
         final var trace = ex.getStackTrace();
         this.messager.printMessage(
             Diagnostic.Kind.ERROR,
@@ -191,9 +192,9 @@ public final class AdaptationProcessor implements Processor {
     };
   }
 
-  private AdaptationRecord
+  private MissionModelRecord
   parseAdaptation(final PackageElement adaptationElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var topLevelModel = this.getAdaptationModel(adaptationElement);
     final var modelConfiguration = this.getAdaptationConfiguration(adaptationElement);
@@ -208,12 +209,12 @@ public final class AdaptationProcessor implements Processor {
       activityTypes.add(this.parseActivityType(adaptationElement, activityTypeElement));
     }
 
-    return new AdaptationRecord(adaptationElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
+    return new MissionModelRecord(adaptationElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
   }
 
   private List<TypeRule>
   parseValueMappers(final TypeElement factory)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var valueMappers = new ArrayList<TypeRule>();
 
@@ -228,10 +229,10 @@ public final class AdaptationProcessor implements Processor {
 
   private TypeRule
   parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
-      throw new InvalidAdaptationException(
+      throw new InvalidMissionModelException(
           "Value Mapper method must be public and static",
           element
       );
@@ -250,7 +251,7 @@ public final class AdaptationProcessor implements Processor {
 
   private Set<String>
   getEnumBoundedTypeParameters(final ExecutableElement element)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var enumBoundedTypeParameters = new HashSet<String>();
     // Check type parameters are bounded only by enum type or not at all
@@ -265,7 +266,7 @@ public final class AdaptationProcessor implements Processor {
         } else if (typeUtils.isSameType(erasure, enumType)) {
           enumBoundedTypeParameters.add(typeParameter.getSimpleName().toString());
         } else {
-          throw new InvalidAdaptationException(
+          throw new InvalidMissionModelException(
               "Value Mapper method type parameter must be unbounded, or bounded by enum type only",
               element
           );
@@ -277,7 +278,7 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityTypeRecord
   parseActivityType(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getActivityMapper(adaptationElement, activityTypeElement);
@@ -315,17 +316,17 @@ public final class AdaptationProcessor implements Processor {
 
   private String
   getActivityTypeName(final TypeElement activityTypeElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var annotationMirror = this
         .getAnnotationMirrorByType(activityTypeElement, ActivityType.class)
-        .orElseThrow(() -> new InvalidAdaptationException(
+        .orElseThrow(() -> new InvalidMissionModelException(
             "An activity is somehow missing an @Activity annotation",
             activityTypeElement));
 
     final var nameAttribute = this
         .getAnnotationAttribute(annotationMirror, "value")
-        .orElseThrow(() -> new InvalidAdaptationException(
+        .orElseThrow(() -> new InvalidMissionModelException(
             "Unable to get value attribute of annotation",
             activityTypeElement,
             annotationMirror));
@@ -335,7 +336,7 @@ public final class AdaptationProcessor implements Processor {
 
   private ActivityMapperRecord
   getActivityMapper(final PackageElement adaptationElement, final TypeElement activityTypeElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var annotationMirror = this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
     if (annotationMirror.isEmpty()) {
@@ -346,7 +347,7 @@ public final class AdaptationProcessor implements Processor {
 
     final var mapperType = (DeclaredType) this
         .getAnnotationAttribute(annotationMirror.get(), "value")
-        .orElseThrow(() -> new InvalidAdaptationException(
+        .orElseThrow(() -> new InvalidMissionModelException(
             "Unable to get value attribute of annotation",
             activityTypeElement,
             annotationMirror.get()))
@@ -396,16 +397,16 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeElement>
   getAdaptationMapperClasses(final PackageElement adaptationElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var mapperClassElements = new ArrayList<TypeElement>();
 
-    for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, Adaptation.WithMappers.class)) {
+    for (final var withMappersAnnotation : getRepeatableAnnotation(adaptationElement, MissionModel.WithMappers.class)) {
       final var attribute =
           getAnnotationAttribute(withMappersAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
-        throw new InvalidAdaptationException(
+        throw new InvalidMissionModelException(
             "Mappers class not yet defined",
             adaptationElement,
             withMappersAnnotation,
@@ -420,18 +421,18 @@ public final class AdaptationProcessor implements Processor {
 
   private List<TypeElement>
   getAdaptationActivityTypes(final PackageElement adaptationElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var activityTypeElements = new ArrayList<TypeElement>();
 
     for (final var activityTypeAnnotation : getRepeatableAnnotation(
         adaptationElement,
-        Adaptation.WithActivityType.class)) {
+        MissionModel.WithActivityType.class)) {
       final var attribute =
           getAnnotationAttribute(activityTypeAnnotation, "value").orElseThrow();
 
       if (!(attribute.getValue() instanceof DeclaredType)) {
-        throw new InvalidAdaptationException(
+        throw new InvalidMissionModelException(
             "Activity type not yet defined",
             adaptationElement,
             activityTypeAnnotation,
@@ -448,18 +449,18 @@ public final class AdaptationProcessor implements Processor {
 
   private TypeElement
   getAdaptationModel(final PackageElement adaptationElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var annotationMirror = this
-        .getAnnotationMirrorByType(adaptationElement, Adaptation.class)
-        .orElseThrow(() -> new InvalidAdaptationException(
+        .getAnnotationMirrorByType(adaptationElement, MissionModel.class)
+        .orElseThrow(() -> new InvalidMissionModelException(
             "The adaptation package is somehow missing an @Adaptation annotation",
             adaptationElement));
 
     final var modelAttribute =
         getAnnotationAttribute(annotationMirror, "model").orElseThrow();
     if (!(modelAttribute.getValue() instanceof DeclaredType)) {
-      throw new InvalidAdaptationException(
+      throw new InvalidMissionModelException(
           "The top-level model is not yet defined",
           adaptationElement,
           annotationMirror,
@@ -479,15 +480,15 @@ public final class AdaptationProcessor implements Processor {
 
   private Optional<TypeElement>
   getAdaptationConfiguration(final PackageElement adaptationElement)
-  throws InvalidAdaptationException
+  throws InvalidMissionModelException
   {
     final var annotationMirror =
-        this.getAnnotationMirrorByType(adaptationElement, Adaptation.WithConfiguration.class);
+        this.getAnnotationMirrorByType(adaptationElement, MissionModel.WithConfiguration.class);
     if (annotationMirror.isEmpty()) return Optional.empty();
 
     final var attribute = getAnnotationAttribute(annotationMirror.get(), "value").orElseThrow();
     if (!(attribute.getValue() instanceof DeclaredType)) {
-      throw new InvalidAdaptationException(
+      throw new InvalidMissionModelException(
           "Adaptation configuration type not yet defined",
           adaptationElement,
           annotationMirror.get(),
@@ -508,7 +509,7 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<Map<String, CodeBlock>>
-  buildParameterMapperBlocks(final AdaptationRecord adaptation, final ActivityTypeRecord activityType)
+  buildParameterMapperBlocks(final MissionModelRecord adaptation, final ActivityTypeRecord activityType)
   {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
     var failed = false;
@@ -530,7 +531,7 @@ public final class AdaptationProcessor implements Processor {
     return failed ? Optional.empty() : Optional.of(mapperBlocks);
   }
 
-  private CodeBlock buildConfigurationMapperBlock(final AdaptationRecord adaptation, final TypeElement typeElem) {
+  private CodeBlock buildConfigurationMapperBlock(final MissionModelRecord adaptation, final TypeElement typeElem) {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, adaptation.typeRules);
     final var mapperBlock = resolver.instantiateMapperFor(typeElem.asType());
     if (mapperBlock.isEmpty()) {
@@ -540,7 +541,7 @@ public final class AdaptationProcessor implements Processor {
   }
 
   private Optional<JavaFile>
-  generateActivityMapper(final AdaptationRecord adaptation, final ActivityTypeRecord activityType)
+  generateActivityMapper(final MissionModelRecord adaptation, final ActivityTypeRecord activityType)
   {
     final var maybeMapperBlocks = buildParameterMapperBlocks(adaptation, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
@@ -557,7 +558,7 @@ public final class AdaptationProcessor implements Processor {
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addSuperinterface(
                 ParameterizedTypeName.get(
@@ -720,7 +721,7 @@ public final class AdaptationProcessor implements Processor {
                            .build());
   }
 
-  private JavaFile generateActivityActions(final AdaptationRecord adaptation) {
+  private JavaFile generateActivityActions(final MissionModelRecord adaptation) {
     final var typeName = adaptation.getActivityActionsName();
 
     final var typeSpec =
@@ -732,7 +733,7 @@ public final class AdaptationProcessor implements Processor {
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC)
             .superclass(gov.nasa.jpl.aerie.merlin.framework.ModelActions.class)
@@ -839,7 +840,7 @@ public final class AdaptationProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateAdaptationFactory(final AdaptationRecord adaptation) {
+  private JavaFile generateAdaptationFactory(final MissionModelRecord adaptation) {
     final var typeName = adaptation.getFactoryName();
 
     final var typeSpec =
@@ -848,12 +849,12 @@ public final class AdaptationProcessor implements Processor {
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addSuperinterface(
                 ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.AdaptationFactory.class),
+                    ClassName.get(MissionModelFactory.class),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         WildcardTypeName.subtypeOf(Object.class),
@@ -982,7 +983,7 @@ public final class AdaptationProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateActivityTypes(final AdaptationRecord adaptation) {
+  private JavaFile generateActivityTypes(final MissionModelRecord adaptation) {
     final var typeName = adaptation.getTypesName();
 
     final var typeSpec =
@@ -991,7 +992,7 @@ public final class AdaptationProcessor implements Processor {
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addField(
@@ -1046,7 +1047,7 @@ public final class AdaptationProcessor implements Processor {
         .build();
   }
 
-  private JavaFile generateMerlinPlugin(final AdaptationRecord adaptation) {
+  private JavaFile generateMerlinPlugin(final MissionModelRecord adaptation) {
     final var typeName = adaptation.getPluginName();
 
     final var typeSpec =
@@ -1055,7 +1056,7 @@ public final class AdaptationProcessor implements Processor {
             .addAnnotation(
                 AnnotationSpec
                     .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", AdaptationProcessor.class.getCanonicalName())
+                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
                     .build())
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
             .addSuperinterface(MerlinPlugin.class)

@@ -2,9 +2,9 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -15,16 +15,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class PostgresAdaptationRepository implements AdaptationRepository {
+public final class PostgresMissionModelRepository implements MissionModelRepository {
   private final Path adaptationsPath = Path.of("merlin_file_store").toAbsolutePath();
   private final DataSource dataSource;
 
-  public PostgresAdaptationRepository(final DataSource dataSource) {
+  public PostgresMissionModelRepository(final DataSource dataSource) {
     this.dataSource = dataSource;
   }
 
   @Override
-  public Map<String, AdaptationJar> getAllAdaptations() {
+  public Map<String, MissionModelJar> getAllAdaptations() {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getAllMissionModelsAction = new GetAllModelsAction(connection)) {
         return getAllMissionModelsAction.get();
@@ -35,7 +35,7 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
   }
 
   @Override
-  public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
+  public MissionModelJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getMissionModelAction = new GetModelAction(connection)) {
         return getMissionModelAction.get(toMissionModelId(adaptationId));
@@ -58,7 +58,7 @@ public final class PostgresAdaptationRepository implements AdaptationRepository 
   }
 
   @Override
-  public String createAdaptation(final AdaptationJar adaptationJar) {
+  public String createAdaptation(final MissionModelJar adaptationJar) {
     // TODO: Separate JAR upload from adaptation registration.
     //   A client should be able to upload any file, then reference that file for any purpose,
     //   be it as a mission model source or as an input file argument for activities/configuration.

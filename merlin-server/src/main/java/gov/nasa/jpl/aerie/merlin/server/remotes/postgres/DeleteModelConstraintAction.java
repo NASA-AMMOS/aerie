@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -22,7 +22,7 @@ import java.sql.SQLException;
 
   /** Returns true if the constraint was successfully deleted. */
   public boolean apply(final long modelId, final String name)
-  throws SQLException, AdaptationRepository.NoSuchAdaptationException
+  throws SQLException, MissionModelRepository.NoSuchAdaptationException
   {
     this.statement.setLong(1, modelId);
     this.statement.setString(2, name);

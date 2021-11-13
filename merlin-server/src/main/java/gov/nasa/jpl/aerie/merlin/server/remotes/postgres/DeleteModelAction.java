@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -19,12 +19,12 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(final long modelId) throws SQLException, AdaptationRepository.NoSuchAdaptationException {
+  public void apply(final long modelId) throws SQLException, MissionModelRepository.NoSuchAdaptationException {
     this.statement.setLong(1, modelId);
 
     final var count = this.statement.executeUpdate();
 
-    if (count == 0) throw new AdaptationRepository.NoSuchAdaptationException();
+    if (count == 0) throw new MissionModelRepository.NoSuchAdaptationException();
   }
 
   @Override

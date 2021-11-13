@@ -3,14 +3,14 @@ package gov.nasa.jpl.aerie.merlin.server.models;
 import java.io.InputStream;
 import java.util.Objects;
 
-public final class NewAdaptation {
+public final class NewMissionModel {
     public final String name;
     public final String version;
     public final String mission;
     public final String owner;
     public final InputStream jarSource;
 
-    private NewAdaptation(final Builder builder) {
+    private NewMissionModel(final Builder builder) {
         this.name = Objects.requireNonNull(builder.name);
         this.version = Objects.requireNonNull(builder.version);
         this.mission = Objects.requireNonNull(builder.mission);
@@ -56,8 +56,8 @@ public final class NewAdaptation {
             return this;
         }
 
-        public NewAdaptation build() {
-            final var result = new NewAdaptation(this);
+        public NewMissionModel build() {
+            final var result = new NewMissionModel(this);
             this.jarSource = null;
             return result;
         }

@@ -5,15 +5,15 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationFacade;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationAccessException;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelFacade;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
-import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -226,7 +226,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeAdaptationContractException(final AdaptationFacade.AdaptationContractException ex) {
+  public static JsonValue serializeAdaptationContractException(final MissionModelFacade.AdaptationContractException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())
@@ -234,7 +234,7 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeAdaptationLoadException(
-      final LocalAdaptationService.AdaptationLoadException ex)
+      final LocalMissionModelService.AdaptationLoadException ex)
   {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
@@ -242,7 +242,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeAdaptationAccessException(final AdaptationAccessException ex) {
+  public static JsonValue serializeAdaptationAccessException(final MissionModelAccessException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())

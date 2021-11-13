@@ -2,10 +2,10 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationAccessException;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelAccessException;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,12 +18,12 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.utilities.FileUtils.getUniqueFilePath;
 
-public final class InMemoryAdaptationRepository implements AdaptationRepository {
+public final class InMemoryMissionModelRepository implements MissionModelRepository {
     private final Path ADAPTATION_FILE_PATH;
-    private final Map<String, AdaptationJar> adaptations = new HashMap<>();
+    private final Map<String, MissionModelJar> adaptations = new HashMap<>();
     private int nextAdaptationId;
 
-    public InMemoryAdaptationRepository() {
+    public InMemoryMissionModelRepository() {
         try {
             ADAPTATION_FILE_PATH = Files.createTempDirectory("mock_adaptation_files").toAbsolutePath();
         } catch (final IOException ex) {
@@ -32,16 +32,16 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
     }
 
     @Override
-    public String createAdaptation(final AdaptationJar adaptationJar) {
+    public String createAdaptation(final MissionModelJar adaptationJar) {
         // Store Adaptation JAR
         final Path location = getUniqueFilePath(adaptationJar, ADAPTATION_FILE_PATH);
         try {
             Files.copy(adaptationJar.path, location);
         } catch (final IOException e) {
-            throw new AdaptationAccessException(adaptationJar.path, e);
+            throw new MissionModelAccessException(adaptationJar.path, e);
         }
 
-        final AdaptationJar newJar = new AdaptationJar(adaptationJar);
+        final MissionModelJar newJar = new MissionModelJar(adaptationJar);
         newJar.path = location;
 
         final String adaptationId = Objects.toString(this.nextAdaptationId++);
@@ -64,25 +64,25 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
 
     @Override
     public void deleteAdaptation(final String adaptationId) throws NoSuchAdaptationException {
-        final AdaptationJar adaptationJar = getAdaptation(adaptationId);
+        final MissionModelJar adaptationJar = getAdaptation(adaptationId);
 
         // Delete adaptation JAR
         try {
             Files.deleteIfExists(adaptationJar.path);
         } catch (final IOException e) {
-            throw new AdaptationAccessException(adaptationJar.path, e);
+            throw new MissionModelAccessException(adaptationJar.path, e);
         }
 
         this.adaptations.remove(adaptationId);
     }
 
   @Override
-    public AdaptationJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
-        final AdaptationJar adaptation = Optional
+    public MissionModelJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
+        final MissionModelJar adaptation = Optional
                 .ofNullable(this.adaptations.get(adaptationId))
                 .orElseThrow(NoSuchAdaptationException::new);
 
-        return new AdaptationJar(adaptation);
+        return new MissionModelJar(adaptation);
     }
 
     @Override
@@ -91,7 +91,7 @@ public final class InMemoryAdaptationRepository implements AdaptationRepository 
     }
 
     @Override
-    public Map<String, AdaptationJar> getAllAdaptations() {
+    public Map<String, MissionModelJar> getAllAdaptations() {
         return new HashMap<>(this.adaptations);
     }
 }

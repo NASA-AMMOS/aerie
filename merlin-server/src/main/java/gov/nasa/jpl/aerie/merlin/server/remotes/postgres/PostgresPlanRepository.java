@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository.NoSuchAdaptationException;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchAdaptationException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.NotImplementedException;
 

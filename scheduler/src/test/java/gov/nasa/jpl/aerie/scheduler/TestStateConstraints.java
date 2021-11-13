@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -24,12 +23,12 @@ public class TestStateConstraints {
   private final AltitudeIntegerState altitudeIntegerState = new AltitudeIntegerState(horizon);
   private final EncounterEnumState encounterEnumState = new EncounterEnumState(horizon);
 
-  private MissionModel missionModel;
+  private MissionModelWrapper missionModel;
   private Plan plan;
 
   @BeforeEach
   public void setUp() {
-    missionModel = new MissionModel();
+    missionModel = new MissionModelWrapper();
     plan = new PlanInMemory(missionModel);
   }
 

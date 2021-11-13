@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -30,12 +30,12 @@ import java.util.Map;
   }
 
   public Map<String, Constraint> get(final long modelId)
-  throws SQLException, AdaptationRepository.NoSuchAdaptationException
+  throws SQLException, MissionModelRepository.NoSuchAdaptationException
   {
     this.statement.setLong(1, modelId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new AdaptationRepository.NoSuchAdaptationException();
+      if (!results.next()) throw new MissionModelRepository.NoSuchAdaptationException();
 
       final var constraints = new HashMap<String, Constraint>();
       do {

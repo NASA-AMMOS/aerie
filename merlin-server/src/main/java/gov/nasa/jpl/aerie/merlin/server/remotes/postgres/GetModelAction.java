@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
-import gov.nasa.jpl.aerie.merlin.server.models.AdaptationJar;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import org.intellij.lang.annotations.Language;
 
 import java.nio.file.Path;
@@ -24,13 +24,13 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public AdaptationJar get(final long modelId) throws SQLException, AdaptationRepository.NoSuchAdaptationException {
+  public MissionModelJar get(final long modelId) throws SQLException, MissionModelRepository.NoSuchAdaptationException {
     this.statement.setLong(1, modelId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new AdaptationRepository.NoSuchAdaptationException();
+      if (!results.next()) throw new MissionModelRepository.NoSuchAdaptationException();
 
-      final var adaptation = new AdaptationJar();
+      final var adaptation = new MissionModelJar();
       adaptation.mission = results.getString(1);
       adaptation.name = results.getString(2);
       adaptation.version = results.getString(3);

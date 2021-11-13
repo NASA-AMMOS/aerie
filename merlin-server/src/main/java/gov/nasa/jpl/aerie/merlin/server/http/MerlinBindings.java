@@ -4,8 +4,8 @@ import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.services.AdaptationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
+import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -15,10 +15,10 @@ import javax.json.stream.JsonParsingException;
 import java.io.StringReader;
 import java.util.List;
 
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
@@ -32,16 +32,16 @@ import static io.javalin.apibuilder.ApiBuilder.post;
  * translating HTTP request bodies into native Java domain objects, and translating native Java domain objects
  * (including thrown exceptions) into HTTP response bodies.
  *
- * The objects being lifted implement the {@link AdaptationService} and {@link GetSimulationResultsAction} interfaces.
+ * The objects being lifted implement the {@link MissionModelService} and {@link GetSimulationResultsAction} interfaces.
  * Formally, these interfaces are the ones {@code MerlinBindings} class lifts into the domain of HTTP;
  * an object implementing the interface defines the action to take for each HTTP request in an HTTP-independent way.
  */
 public final class MerlinBindings implements Plugin {
-  private final AdaptationService adaptationService;
+  private final MissionModelService adaptationService;
   private final GetSimulationResultsAction simulationAction;
 
   public MerlinBindings(
-      final AdaptationService adaptationService,
+      final MissionModelService adaptationService,
       final GetSimulationResultsAction simulationAction)
   {
     this.adaptationService = adaptationService;
@@ -89,7 +89,7 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -103,7 +103,7 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -119,7 +119,7 @@ public final class MerlinBindings implements Plugin {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       ctx.status(404);
     }
   }
@@ -154,7 +154,7 @@ public final class MerlinBindings implements Plugin {
       final var failures = this.adaptationService.validateActivityParameters(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailures(failures).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
@@ -179,10 +179,10 @@ public final class MerlinBindings implements Plugin {
     } catch (final MissingArgumentException ex) {
       ctx.status(200)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
-    } catch (final AdaptationService.NoSuchActivityTypeException | AdaptationService.UnconstructableActivityInstanceException ex) {
+    } catch (final MissionModelService.NoSuchActivityTypeException | MissionModelService.UnconstructableActivityInstanceException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
-    } catch (final AdaptationService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchAdaptationException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());

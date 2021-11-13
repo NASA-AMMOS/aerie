@@ -15,14 +15,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class Adaptation<$Schema, Model> {
+public final class MissionModel<$Schema, Model> {
   private final Phantom<$Schema, Model> model;
   private final LiveCells initialCells;
   private final Map<String, Resource<? super $Schema, ?>> resources;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
   private final List<Initializer.TaskFactory<$Schema>> daemons;
 
-  public Adaptation(
+  public MissionModel(
       final Phantom<$Schema, Model> model,
       final LiveCells initialCells,
       final Map<String, Resource<? super $Schema, ?>> resources,
@@ -54,7 +54,7 @@ public final class Adaptation<$Schema, Model> {
     return new Task<>() {
       @Override
       public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
-        Adaptation.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
+        MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
         return TaskStatus.completed();
       }
 
