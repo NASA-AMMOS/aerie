@@ -28,7 +28,7 @@ public interface PlanRepository {
   Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
 
   // Mutations
-  CreatedPlan createPlan(NewPlan plan) throws AdaptationRepository.NoSuchAdaptationException;
+  CreatedPlan createPlan(NewPlan plan) throws MissionModelRepository.NoSuchMissionModelException;
   PlanTransaction updatePlan(String id) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
 

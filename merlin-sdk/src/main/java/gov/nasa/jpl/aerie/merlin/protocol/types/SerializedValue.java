@@ -6,9 +6,9 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * A serializable representation of an adaptation-specific activity parameter domain object.
+ * A serializable representation of an mission model-specific activity parameter domain object.
  *
- * A {@link SerializedValue} is an adaptation-agnostic representation of the data in such an
+ * A {@link SerializedValue} is an mission model-agnostic representation of the data in such an
  * activity parameter, structured as serializable primitives composed using sequences and maps.
  *
  * This class is implemented using the Visitor pattern, following the approach considered at

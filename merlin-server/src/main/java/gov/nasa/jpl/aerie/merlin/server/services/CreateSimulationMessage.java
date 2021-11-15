@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public final record CreateSimulationMessage(
-  String adaptationId,
+  String missionModelId,
   Instant startTime,
   Duration samplingDuration,
   Map<String, Pair<Duration, SerializedActivity>> activityInstances,
@@ -18,7 +18,7 @@ public final record CreateSimulationMessage(
 )
 {
   public CreateSimulationMessage {
-    Objects.requireNonNull(adaptationId);
+    Objects.requireNonNull(missionModelId);
     Objects.requireNonNull(startTime);
     Objects.requireNonNull(samplingDuration);
     Objects.requireNonNull(activityInstances);

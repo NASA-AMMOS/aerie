@@ -22,23 +22,23 @@ public final class ApfParser {
         PARAMETERS
     }
 
-    public static Plan parseFiles(List<Path> files, Adaptation adaptation) throws PlanParsingException {
+    public static Plan parseFiles(List<Path> files, Adaptation missionModel) throws PlanParsingException {
         Plan plan = new Plan();
 
         for (Path file : files) {
-            parseFile(file, plan, adaptation);
+            parseFile(file, plan, missionModel);
         }
 
         return plan;
     }
 
-    public static Plan parseFile(Path file, Adaptation adaptation) throws PlanParsingException {
+    public static Plan parseFile(Path file, Adaptation missionModel) throws PlanParsingException {
         Plan plan = new Plan();
-        parseFile(file, plan, adaptation);
+        parseFile(file, plan, missionModel);
         return plan;
     }
 
-    private static void parseFile(Path file, Plan plan, Adaptation adaptation) throws PlanParsingException {
+    private static void parseFile(Path file, Plan plan, Adaptation missionModel) throws PlanParsingException {
         final Scanner scanner;
         try {
             scanner = new Scanner(Files.newBufferedReader(file));
@@ -63,7 +63,7 @@ public final class ApfParser {
                 activityInstance = new ActivityInstance(type, name, id);
                 mode = Mode.ACTIVITY;
 
-                activityType = adaptation.getActivityType(type);
+                activityType = missionModel.getActivityType(type);
                 if (activityType == null) {
                     throw new PlanParsingException(file, String.format("Encountered unknown activity type %s on line %d", type, lineNumber));
                 }

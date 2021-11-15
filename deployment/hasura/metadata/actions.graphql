@@ -1,6 +1,6 @@
 type Query {
   resourceTypes(
-    adaptationId: ID!
+    missionModelId: ID!
   ): [ResourceType!]!
 }
 
@@ -61,4 +61,3 @@ scalar MerlinSimulationResults
 scalar MerlinSimulationFailureReason
 
 scalar ActivityArguments
-

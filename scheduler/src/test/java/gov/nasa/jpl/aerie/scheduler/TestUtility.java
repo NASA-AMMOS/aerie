@@ -11,7 +11,7 @@ public class TestUtility {
 
 
   public static final String LOCAL_AERIE = "http://localhost:27184";
-  public static final String ADAPTATION_ID = latest;
+  public static final String MISSION_MODEL_ID = latest;
 
   public static void visPlan(Plan plan) {
     PlanVisualizer.visualizePlan(plan);

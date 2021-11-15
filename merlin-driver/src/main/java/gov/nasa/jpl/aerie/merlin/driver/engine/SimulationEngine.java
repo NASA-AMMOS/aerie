@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -68,7 +68,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
-  TaskId initiateTaskFromInput(final Adaptation<? super $Timeline, Model> model, final SerializedActivity input) {
+  TaskId initiateTaskFromInput(final MissionModel<? super $Timeline, Model> model, final SerializedActivity input) {
     final var task = TaskId.generate();
 
     final Directive<Model, ?> directive;
@@ -160,7 +160,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime,
-      final Adaptation<? super $Timeline, ?> model
+      final MissionModel<? super $Timeline, ?> model
   ) {
     return TaskFrame.runToCompletion(jobs, context, (job, builder) -> {
       this.performJob(job, builder, currentTime, maximumTime, model);
@@ -173,7 +173,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
       final Duration maximumTime,
-      final Adaptation<? super $Timeline, ?> model
+      final MissionModel<? super $Timeline, ?> model
   ) {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), builder, currentTime, model);
@@ -193,7 +193,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final TaskId task,
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
-      final Adaptation<? super $Timeline, ?> model
+      final MissionModel<? super $Timeline, ?> model
   ) {
     // The handler for each individual task stage is responsible
     //   for putting an updated lifecycle back into the task set.
@@ -220,7 +220,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final ExecutionState.InProgress<$Timeline> progress,
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
-      final Adaptation<? super $Timeline, ?> model
+      final MissionModel<? super $Timeline, ?> model
   ) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(model, currentTime, task, builder);
@@ -503,7 +503,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     @Override
     public <State> State getState(final Query<? super $Timeline, ?, State> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
@@ -526,14 +526,14 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
   /** A handle for processing requests and effects from a modeled task. */
   private final class EngineScheduler implements Scheduler<$Timeline> {
-    private final Adaptation<? super $Timeline, ?> model;
+    private final MissionModel<? super $Timeline, ?> model;
 
     private final Duration currentTime;
     private final TaskId activeTask;
     private final TaskFrame.FrameBuilder<JobId> builder;
 
     public EngineScheduler(
-        final Adaptation<? super $Timeline, ?> model,
+        final MissionModel<? super $Timeline, ?> model,
         final Duration currentTime,
         final TaskId activeTask,
         final TaskFrame.FrameBuilder<JobId> builder
@@ -546,7 +546,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     @Override
     public <State> State get(final Query<? super $Timeline, ?, State> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
@@ -558,7 +558,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     @Override
     public <EventType> void emit(final EventType event, final Query<? super $Timeline, ? super EventType, ?> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var topic = ((EngineQuery<? super $Timeline, ? super EventType, ?>) token).topic();
 

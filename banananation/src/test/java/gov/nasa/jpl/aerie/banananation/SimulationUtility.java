@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import gov.nasa.jpl.aerie.banananation.generated.GeneratedAdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -18,8 +18,8 @@ import java.util.UUID;
 
 public final class SimulationUtility {
 
-  private static <$Schema> Adaptation<$Schema, ?> makeAdaptation(final AdaptationBuilder<$Schema> builder, final SerializedValue config) {
-    final var factory = new GeneratedAdaptationFactory();
+  private static <$Schema> MissionModel<$Schema, ?> makeMissionModel(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
+    final var factory = new GeneratedMissionModelFactory();
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
@@ -30,11 +30,11 @@ public final class SimulationUtility {
     final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);
-    final var adaptation = makeAdaptation(new AdaptationBuilder<>(), serializedConfig);
+    final var missionModel = makeMissionModel(new MissionModelBuilder<>(), serializedConfig);
     final var startTime = Instant.now();
 
     return SimulationDriver.simulate(
-        adaptation,
+        missionModel,
         schedule,
         startTime,
         simulationDuration);

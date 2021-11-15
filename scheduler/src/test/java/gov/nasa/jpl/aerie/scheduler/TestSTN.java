@@ -40,7 +40,7 @@ public class TestSTN {
         .endsBefore(TimeAnchor.END)
         .build();
 
-    MissionModel missionModel = new MissionModel();
+    MissionModelWrapper missionModel = new MissionModelWrapper();
 
     Problem problem = new Problem(missionModel);
     problem.add(rollGoal);

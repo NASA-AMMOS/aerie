@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import com.google.common.testing.NullPointerTester;
 import com.google.common.truth.Correspondence;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Objects;
@@ -13,7 +12,7 @@ import static com.google.common.truth.Truth8.assertThat;
 public class PrioritySolverTest {
 
   private static PrioritySolver makeEmptyProblemSolver() {
-    return new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModel()));
+    return new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModelWrapper()));
   }
 
   private static PrioritySolver makeProblemSolver(Problem problem) {
@@ -22,12 +21,12 @@ public class PrioritySolverTest {
 
   @Test
   public void ctor_onEmptyProblemWorks() {
-    new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModel()));
+    new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModelWrapper()));
   }
 
   private static final NullPointerTester NULL_POINTER_TESTER = new NullPointerTester()
       .setDefault(HuginnConfiguration.class, new HuginnConfiguration())
-      .setDefault(Problem.class, new Problem(new MissionModel()));
+      .setDefault(Problem.class, new Problem(new MissionModelWrapper()));
 
   @Test
   void ctors_nullArgThrowsNPE() {
@@ -54,8 +53,8 @@ public class PrioritySolverTest {
   }
 
   //test mission with two primitive activity types
-  private static MissionModel makeTestMissionAB() {
-    final var mission = new MissionModel();
+  private static MissionModelWrapper makeTestMissionAB() {
+    final var mission = new MissionModelWrapper();
     final var actA = new ActivityType("A");
     mission.add(actA);
     final var actB = new ActivityType("B");

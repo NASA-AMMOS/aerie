@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 public final class NewPlan {
   public String name;
-  public String adaptationId;
+  public String missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
   public List<ActivityInstance> activityInstances;
@@ -20,7 +20,7 @@ public final class NewPlan {
 
   public NewPlan(final Plan template) {
     this.name = template.name;
-    this.adaptationId = template.adaptationId;
+    this.missionModelId = template.missionModelId;
     this.startTimestamp = template.startTimestamp;
     this.endTimestamp = template.endTimestamp;
 
@@ -36,14 +36,14 @@ public final class NewPlan {
 
   public NewPlan(
       final String name,
-      final String adaptationId,
+      final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
       final List<ActivityInstance> activityInstances,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;
-    this.adaptationId = adaptationId;
+    this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
     this.activityInstances = List.copyOf(activityInstances);
@@ -59,7 +59,7 @@ public final class NewPlan {
     final var other = (NewPlan)object;
     return
         (  Objects.equals(this.name, other.name)
-        && Objects.equals(this.adaptationId, other.adaptationId)
+        && Objects.equals(this.missionModelId, other.missionModelId)
         && Objects.equals(this.startTimestamp, other.startTimestamp)
         && Objects.equals(this.endTimestamp, other.endTimestamp)
         && Objects.equals(this.activityInstances, other.activityInstances)

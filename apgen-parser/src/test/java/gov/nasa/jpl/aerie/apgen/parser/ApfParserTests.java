@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.apgen.parser;
 
-import gov.nasa.jpl.aerie.apgen.exceptions.AdaptationParsingException;
+import gov.nasa.jpl.aerie.apgen.exceptions.APGenAdaptationParsingException;
 import gov.nasa.jpl.aerie.apgen.exceptions.PlanParsingException;
 import gov.nasa.jpl.aerie.apgen.model.ActivityInstance;
 import gov.nasa.jpl.aerie.apgen.model.ActivityInstanceParameter;
@@ -18,10 +18,10 @@ public class ApfParserTests {
     // TODO: Create more plans and tests
 
     @Test
-    public void testParseSimplePlan() throws AdaptationParsingException, PlanParsingException {
-          Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
+    public void testParseSimplePlan() throws APGenAdaptationParsingException, PlanParsingException {
+        Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
         Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_plan.apf");
-        Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
+        Adaptation adaptation = APGenAdaptationParser.parseFile(adaptationPath);
         Plan plan = ApfParser.parseFile(planPath, adaptation);
 
         assertThat(plan.getActivityInstance("Apple_1")).isNotNull();
@@ -49,10 +49,10 @@ public class ApfParserTests {
     }
 
     @Test
-    public void testParsePlanTooFewParameters() throws AdaptationParsingException {
+    public void testParsePlanTooFewParameters() throws APGenAdaptationParsingException {
         Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
         Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/too_few_parameters.apf");
-        Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
+        Adaptation adaptation = APGenAdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
 
@@ -61,10 +61,10 @@ public class ApfParserTests {
     }
 
     @Test
-    public void testParsePlanTooManyParameters() throws AdaptationParsingException {
+    public void testParsePlanTooManyParameters() throws APGenAdaptationParsingException {
         Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
         Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/too_many_parameters.apf");
-        Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
+        Adaptation adaptation = APGenAdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
 
@@ -73,10 +73,10 @@ public class ApfParserTests {
     }
 
     @Test
-    public void testParsePlanIncomplete() throws AdaptationParsingException {
+    public void testParsePlanIncomplete() throws APGenAdaptationParsingException {
         Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
         Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/incomplete.apf");
-        Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
+        Adaptation adaptation = APGenAdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
 
@@ -85,10 +85,10 @@ public class ApfParserTests {
     }
 
     @Test
-    public void testParsePlanUnexpectedActivityEnd() throws AdaptationParsingException {
+    public void testParsePlanUnexpectedActivityEnd() throws APGenAdaptationParsingException {
         Path adaptationPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/simple_adaptation.aaf");
         Path planPath = resourcePath("/gov/nasa/jpl/aerie/apgen/simple/unexpected_activity_end.apf");
-        Adaptation adaptation = AdaptationParser.parseFile(adaptationPath);
+        Adaptation adaptation = APGenAdaptationParser.parseFile(adaptationPath);
 
         final Throwable thrown = catchThrowable(() -> ApfParser.parseFile(planPath, adaptation));
 

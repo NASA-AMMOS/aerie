@@ -10,7 +10,7 @@ public class Problem {
    *
    * @param mission IN the mission model that this problem is based on
    */
-  public Problem(MissionModel mission) {
+  public Problem(MissionModelWrapper mission) {
     if (mission == null) {
       throw new IllegalArgumentException(
           "creating problem descriptor with null mission model");
@@ -22,7 +22,7 @@ public class Problem {
   /**
    * the mission model that this problem is based on
    */
-  private MissionModel mission;
+  private MissionModelWrapper mission;
 
   /**
    * the initial seed plan to start scheduling from
@@ -39,7 +39,7 @@ public class Problem {
    *
    * @return the mission model that this problem is based on
    */
-  public MissionModel getMissionModel() {
+  public MissionModelWrapper getMissionModel() {
     return mission;
   }
 

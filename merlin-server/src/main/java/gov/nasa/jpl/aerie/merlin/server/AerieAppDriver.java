@@ -8,22 +8,22 @@ import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
-import gov.nasa.jpl.aerie.merlin.server.http.AdaptationExceptionBindings;
-import gov.nasa.jpl.aerie.merlin.server.http.AdaptationRepositoryExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
 import gov.nasa.jpl.aerie.merlin.server.http.MerlinBindings;
-import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.http.MissionModelExceptionBindings;
+import gov.nasa.jpl.aerie.merlin.server.http.MissionModelRepositoryExceptionBindings;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.AdaptationRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
-import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresAdaptationRepository;
+import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresMissionModelRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepository;
 import gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresResultsCellRepository;
 import gov.nasa.jpl.aerie.merlin.server.services.CachedSimulationService;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
-import gov.nasa.jpl.aerie.merlin.server.services.LocalAdaptationService;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalPlanService;
 import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
@@ -47,14 +47,14 @@ public final class AerieAppDriver {
     final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
-    final var adaptationController = new LocalAdaptationService(configuration.merlinFileStore(), stores.adaptations());
+    final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
     final var planController = new LocalPlanService(stores.plans());
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
-        new SynchronousSimulationAgent(planController, adaptationController));
+        new SynchronousSimulationAgent(planController, missionModelController));
     final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
-    final var simulationAction = new GetSimulationResultsAction(planController, adaptationController, simulationController);
-    final var merlinBindings = new MerlinBindings(adaptationController, simulationAction);
+    final var simulationAction = new GetSimulationResultsAction(planController, missionModelController, simulationController);
+    final var merlinBindings = new MerlinBindings(missionModelController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
@@ -64,15 +64,15 @@ public final class AerieAppDriver {
           .enableCorsForAllOrigins()
           .registerPlugin(merlinBindings)
           .registerPlugin(new LocalAppExceptionBindings())
-          .registerPlugin(new AdaptationRepositoryExceptionBindings())
-          .registerPlugin(new AdaptationExceptionBindings());
+          .registerPlugin(new MissionModelRepositoryExceptionBindings())
+          .registerPlugin(new MissionModelExceptionBindings());
     });
 
     // Start the HTTP server.
     javalin.start(configuration.httpPort());
   }
 
-  private record Stores (PlanRepository plans, AdaptationRepository adaptations, ResultsCellRepository results) {}
+  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results) {}
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();
@@ -92,12 +92,12 @@ public final class AerieAppDriver {
 
       return new Stores(
           new PostgresPlanRepository(hikariDataSource),
-          new PostgresAdaptationRepository(hikariDataSource),
+          new PostgresMissionModelRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore c) {
       return new Stores(
           new InMemoryPlanRepository(),
-          new InMemoryAdaptationRepository(),
+          new InMemoryMissionModelRepository(),
           new InMemoryResultsCellRepository());
 
     } else {

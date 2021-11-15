@@ -76,7 +76,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     plan.startTimestamp = newPlan.startTimestamp;
     plan.endTimestamp = newPlan.endTimestamp;
     plan.configuration = newPlan.configuration;
-    plan.adaptationId = newPlan.adaptationId;
+    plan.missionModelId = newPlan.missionModelId;
     plan.activityInstances = new HashMap<>();
 
     final List<String> activityIds;
@@ -151,7 +151,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Timestamp> endTimestamp = Optional.empty();
     private Optional<Map<String, SerializedValue>> configuration = Optional.empty();
-    private Optional<String> adaptationId = Optional.empty();
+    private Optional<String> missionModelId = Optional.empty();
 
     public MockPlanTransaction(final String planId) {
       this.planId = planId;
@@ -169,7 +169,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
       this.startTimestamp.ifPresent(startTimestamp -> plan.startTimestamp = startTimestamp);
       this.endTimestamp.ifPresent(endTimestamp -> plan.endTimestamp = endTimestamp);
       this.configuration.ifPresent(configuration -> plan.configuration = configuration);
-      this.adaptationId.ifPresent(adaptationId -> plan.adaptationId = adaptationId);
+      this.missionModelId.ifPresent(missionModelId -> plan.missionModelId = missionModelId);
 
       InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
     }

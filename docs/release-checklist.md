@@ -44,8 +44,7 @@
 >
 >Artifacts that make up the release are available at JPL Artifactory under these directories:
 >
->docker-release-local/gov/nasa/jpl/aerie/**adaptation**/release-X.X.X
->docker-release-local/gov/nasa/jpl/aerie/**plan**/release-X.X.X
+>docker-release-local/gov/nasa/jpl/aerie/**merlin-server**/release-X.X.X
 >docker-release-local/gov/nasa/jpl/**aerie-apollo**/release-X.X.X
 >docker-release-local/gov/nasa/jpl/**aerie-ui**/release-X.X.X
 >

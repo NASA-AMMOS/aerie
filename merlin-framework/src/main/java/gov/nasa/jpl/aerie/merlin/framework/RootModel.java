@@ -13,7 +13,7 @@ public record RootModel<$Schema, Model>(Model model, ExecutorService executor) i
   public static ExecutorService makeExecutorService() {
     return Executors.newCachedThreadPool($ -> {
       final var t = new Thread($);
-      // TODO: Make threads non-daemons once the model can be closed via the `AdaptationFactory` interface.
+      // TODO: Make threads non-daemons once the model can be closed via the `MissionModelFactory` interface.
       //  We're marking these as daemons right now solely to ensure that the JVM shuts down cleanly in lieu of
       //  proper model lifecycle management.
       //  In fact, daemon threads can mask bad memory leaks: a hanging thread is almost indistinguishable
