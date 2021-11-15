@@ -17,24 +17,24 @@ import static java.util.Collections.unmodifiableList;
 
 public final class PlanValidator {
   private final PlanRepository planRepository;
-  private final MissionModelService adaptationService;
+  private final MissionModelService missionModelService;
 
   private final BreadcrumbCursor breadcrumbCursor = new BreadcrumbCursor();
   private final List<Pair<List<Breadcrumb>, String>> messages = new ArrayList<>();
 
-  public PlanValidator(final PlanRepository planRepository, final MissionModelService adaptationService) {
+  public PlanValidator(final PlanRepository planRepository, final MissionModelService missionModelService) {
     this.planRepository = planRepository;
-    this.adaptationService = adaptationService;
+    this.missionModelService = missionModelService;
   }
 
-  public void validateActivity(final String adaptationId, final ActivityInstance activityInstance) {
+  public void validateActivity(final String missionModelId, final ActivityInstance activityInstance) {
     final List<String> validationFailures;
     try {
-      validationFailures = this.adaptationService.validateActivityParameters(
-          adaptationId,
+      validationFailures = this.missionModelService.validateActivityParameters(
+          missionModelId,
           new SerializedActivity(activityInstance.type, activityInstance.parameters));
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
-      throw new Error("Unexpectedly nonexistent adaptation, when this should have been validated earlier.", ex);
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      throw new Error("Unexpectedly nonexistent mission model, when this should have been validated earlier.", ex);
     }
 
     for (final var failure : validationFailures) addError(failure);
@@ -43,10 +43,10 @@ public final class PlanValidator {
     if (activityInstance.type == null) with("type", () -> addError("must be non-null"));
   }
 
-  public void validateActivityList(final String adaptationId, final Collection<ActivityInstance> activityInstances) {
+  public void validateActivityList(final String missionModelId, final Collection<ActivityInstance> activityInstances) {
     int index = 0;
     for (final ActivityInstance activityInstance : activityInstances) {
-      with(index++, () -> validateActivity(adaptationId, activityInstance));
+      with(index++, () -> validateActivity(missionModelId, activityInstance));
     }
   }
 
@@ -54,26 +54,26 @@ public final class PlanValidator {
     if (plan.name == null) with("name", () -> addError("must be non-null"));
     if (plan.startTimestamp == null) with("startTimestamp", () -> addError("must be non-null"));
     if (plan.endTimestamp == null) with("endTimestamp", () -> addError("must be non-null"));
-    if (plan.adaptationId == null) {
-      with("adaptationId", () -> addError("must be non-null"));
-    } else if (!adaptationExists(plan.adaptationId)) {
-      with("adaptationId", () -> addError("is not a defined mission model"));
+    if (plan.missionModelId == null) {
+      with("missionModelId", () -> addError("must be non-null"));
+    } else if (!missionModelExists(plan.missionModelId)) {
+      with("missionModelId", () -> addError("is not a defined mission model"));
     } else if (plan.activityInstances != null) {
-      with("activityInstances", () -> validateActivityList(plan.adaptationId, plan.activityInstances));
+      with("activityInstances", () -> validateActivityList(plan.missionModelId, plan.activityInstances));
     }
   }
 
-  private boolean adaptationExists(final String adaptationId) {
+  private boolean missionModelExists(final String missionModelId) {
     try {
-      this.adaptationService.getAdaptationById(adaptationId);
+      this.missionModelService.getMissionModelById(missionModelId);
       return true;
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
       return false;
     }
   }
 
-  public void validatePlanPatch(final String adaptationId, final String planId, final Plan patch) throws NoSuchPlanException {
-    if (patch.adaptationId != null) with("adaptationId", () -> addError("cannot be changed after creation"));
+  public void validatePlanPatch(final String missionModelId, final String planId, final Plan patch) throws NoSuchPlanException {
+    if (patch.missionModelId != null) with("missionModelId", () -> addError("cannot be changed after creation"));
 
     if (patch.activityInstances != null) {
       final Set<String> validActivityIds = this.planRepository
@@ -89,7 +89,7 @@ public final class PlanValidator {
           }
 
           if (activityInstance != null)
-            with(activityId, () -> validateActivity(adaptationId, activityInstance));
+            with(activityId, () -> validateActivity(missionModelId, activityInstance));
         }
       });
     }

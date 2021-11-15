@@ -23,7 +23,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
@@ -86,7 +86,7 @@ public final class MerlinParsersTest {
   public void testCreateSimulationMessageParser() {
     final var json = Json
         . createObjectBuilder()
-        . add("adaptationId", "hello")
+        . add("missionModelId", "hello")
         . add("startTime", "1992-224T01:30:00")
         . add("samplingDuration", 5_000_000 /* microseconds */)
         . add("activities", Json
@@ -158,7 +158,7 @@ public final class MerlinParsersTest {
               .build())
           .add("input", Json
               .createObjectBuilder()
-              .add("adaptationId", "1")
+              .add("missionModelId", "1")
               .build())
           .add("session_variables", Json
               .createObjectBuilder()
@@ -168,10 +168,10 @@ public final class MerlinParsersTest {
 
       final var expected = new HasuraAction<>(
           "testAction",
-          new HasuraAction.AdaptationInput("1"),
+          new HasuraAction.MissionModelInput("1"),
           new HasuraAction.Session("admin", ""));
 
-      assertThat(hasuraAdaptationActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+      assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
     }
 
     {
@@ -183,7 +183,7 @@ public final class MerlinParsersTest {
               .build())
           .add("input", Json
               .createObjectBuilder()
-              .add("adaptationId", "1")
+              .add("missionModelId", "1")
               .build())
           .add("session_variables", Json
               .createObjectBuilder()
@@ -194,10 +194,10 @@ public final class MerlinParsersTest {
 
       final var expected = new HasuraAction<>(
           "testAction",
-          new HasuraAction.AdaptationInput("1"),
+          new HasuraAction.MissionModelInput("1"),
           new HasuraAction.Session("admin", "userId"));
 
-      assertThat(hasuraAdaptationActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+      assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
     }
   }
 

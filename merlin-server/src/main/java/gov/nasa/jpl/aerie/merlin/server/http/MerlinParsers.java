@@ -98,36 +98,36 @@ public abstract class MerlinParsers {
   public static final JsonParser<NewPlan> newPlanP
       = productP
       . field("name", stringP)
-      . field("adaptationId", stringP)
+      . field("missionModelId", stringP)
       . field("startTimestamp", timestampP)
       . field("endTimestamp", timestampP)
       . optionalField("activityInstances", listP(activityInstanceP))
       . optionalField("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          untuple((name, adaptationId, startTimestamp, endTimestamp, activityInstances, configuration) ->
-              new NewPlan(name, adaptationId, startTimestamp, endTimestamp, activityInstances.orElse(List.of()), configuration.orElse(Map.of()))),
-          $ -> tuple($.name, $.adaptationId, $.startTimestamp, $.endTimestamp, Optional.of($.activityInstances), Optional.of($.configuration))));
+          untuple((name, missionModelId, startTimestamp, endTimestamp, activityInstances, configuration) ->
+              new NewPlan(name, missionModelId, startTimestamp, endTimestamp, activityInstances.orElse(List.of()), configuration.orElse(Map.of()))),
+          $ -> tuple($.name, $.missionModelId, $.startTimestamp, $.endTimestamp, Optional.of($.activityInstances), Optional.of($.configuration))));
 
   public static final JsonParser<Plan> planPatchP
       = productP
       . optionalField("name", stringP)
-      . optionalField("adaptationId", stringP)
+      . optionalField("missionModelId", stringP)
       . optionalField("startTimestamp", timestampP)
       . optionalField("endTimestamp", timestampP)
       . optionalField("activityInstances", mapP(activityInstanceP))
       . optionalField("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          untuple((name, adaptationId, startTimestamp, endTimestamp, activityInstances, configuration) ->
+          untuple((name, missionModelId, startTimestamp, endTimestamp, activityInstances, configuration) ->
               new Plan(
                   name.orElse(null),
-                  adaptationId.orElse(null),
+                  missionModelId.orElse(null),
                   startTimestamp.orElse(null),
                   endTimestamp.orElse(null),
                   activityInstances.orElse(null),
                   configuration.orElse(Map.of()))),
           $ -> tuple(
               Optional.ofNullable($.name),
-              Optional.ofNullable($.adaptationId),
+              Optional.ofNullable($.missionModelId),
               Optional.ofNullable($.startTimestamp),
               Optional.ofNullable($.endTimestamp),
               Optional.ofNullable($.activityInstances),
@@ -145,15 +145,15 @@ public abstract class MerlinParsers {
 
   public static final JsonParser<CreateSimulationMessage> createSimulationMessageP
       = productP
-      . field("adaptationId", stringP)
+      . field("missionModelId", stringP)
       . field("startTime", timestampP.map(Iso.of(Timestamp::toInstant, Timestamp::new)))
       . field("samplingDuration", durationP)
       . field("activities", mapP(scheduledActivityP))
       . field("configuration", mapP(serializedValueP))
       . map(Iso.of(
-          untuple((adaptationId, startTime, samplingDuration, activities, configuration) ->
-              new CreateSimulationMessage(adaptationId, startTime, samplingDuration, activities, configuration)),
-          $ -> tuple($.adaptationId(), $.startTime(), $.samplingDuration(), $.activityInstances(), $.configuration())));
+          untuple((missionModelId, startTime, samplingDuration, activities, configuration) ->
+              new CreateSimulationMessage(missionModelId, startTime, samplingDuration, activities, configuration)),
+          $ -> tuple($.missionModelId(), $.startTime(), $.samplingDuration(), $.activityInstances(), $.configuration())));
 
   public static final JsonParser<Constraint> constraintP
       = productP
@@ -181,11 +181,11 @@ public abstract class MerlinParsers {
         .field("session_variables", hasuraActionSessionP);
   }
 
-  public static final JsonParser<HasuraAction<HasuraAction.AdaptationInput>> hasuraAdaptationActionP
-      = hasuraActionP(productP.field("adaptationId", stringP))
+  public static final JsonParser<HasuraAction<HasuraAction.MissionModelInput>> hasuraMissionModelActionP
+      = hasuraActionP(productP.field("missionModelId", stringP))
       .map(Iso.of(
-          untuple((name, adaptationId, session) -> new HasuraAction<>(name, new HasuraAction.AdaptationInput(adaptationId), session)),
-          $ -> tuple($.name(), $.input().adaptationId(), $.session())));
+          untuple((name, missionModelId, session) -> new HasuraAction<>(name, new HasuraAction.MissionModelInput(missionModelId), session)),
+          $ -> tuple($.name(), $.input().missionModelId(), $.session())));
 
   public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
       = hasuraActionP(productP.field("planId", stringP))
@@ -207,8 +207,8 @@ public abstract class MerlinParsers {
           .map(Iso.of(untuple(dataId -> dataId), Uncurry::tuple)))
       .rest()
       .map(Iso.of(
-          untuple(adaptationId -> new HasuraMissionModelEvent(String.valueOf(adaptationId))),
-          $ -> tuple(Long.parseLong($.adaptationId()))));
+          untuple(missionModelId -> new HasuraMissionModelEvent(String.valueOf(missionModelId))),
+          $ -> tuple(Long.parseLong($.missionModelId()))));
 
   private static final JsonParser<HasuraAction.ActivityInput> hasuraActivityInputP
       = productP

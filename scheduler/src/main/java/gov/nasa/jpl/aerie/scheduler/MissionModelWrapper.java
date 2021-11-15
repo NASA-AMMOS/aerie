@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+
 import java.util.List;
 
 /**
@@ -9,8 +11,7 @@ import java.util.List;
  * behavior that has been encoded in a mission model codebase/jar, including
  * activity type definitions, states, and global constraints
  *
- * (similar in spirit to the raw maps currently manipulated by
- * aerie/services/.../adaptation/models/Adaptation.java)
+ * (similar in spirit to the raw maps currently manipulated by {@link MissionModel})
  */
 //TODO: replace mission model with Merlin provided manifest
 public class MissionModelWrapper {
@@ -23,10 +24,10 @@ public class MissionModelWrapper {
    * the mission model will start with only the bare-bones built-in
    * epoch/state/activity/etc definitions
    */
-  public MissionModelWrapper(gov.nasa.jpl.aerie.merlin.driver.MissionModel<?,?> adaptation, Range<Time> planningHorizon) {
+  public MissionModelWrapper(MissionModel<?,?> missionModel, Range<Time> planningHorizon) {
 
     //TODO: change parametrization
-    simFacade = new SimulationFacade(planningHorizon, adaptation);
+    simFacade = new SimulationFacade(planningHorizon, missionModel);
 
     //TODO: find cleaner way to handle built-in act types
 
@@ -36,25 +37,21 @@ public class MissionModelWrapper {
 
     //include special activity type for marking plan horizon
     add(new ActivityType("HorizonMarker"));
-
   }
+
   public MissionModelWrapper() {
     this(null, null);
   }
 
-
-
   public ExternalState<Integer> getIntState(String name){
     return simFacade.getIntResource(name);
   }
-
   public ExternalState<Double> getDoubleState(String name){
     return simFacade.getDoubleResource(name);
   }
   public ExternalState<Boolean> getBoolState(String name){
     return simFacade.getBooleanResource(name);
   }
-
 
   /**
    * adds a new state definition to the mission model
@@ -107,7 +104,6 @@ public class MissionModelWrapper {
     this.actTypeByName.put(name, actType);
   }
 
-
   /**
    * fetches the activity type object with the given name
    *
@@ -119,18 +115,15 @@ public class MissionModelWrapper {
     return actTypeByName.get(name);
   }
 
-
   /**
    * activity type definitions in the mission model, indexed by name
    */
   private java.util.Map<String, ActivityType> actTypeByName
       = new java.util.HashMap<>();
 
-
   /**
    * global constraints in the mission model, indexed by name
    */
   private List<GlobalConstraint> globalConstraints
       = new java.util.LinkedList<>();
-
 }

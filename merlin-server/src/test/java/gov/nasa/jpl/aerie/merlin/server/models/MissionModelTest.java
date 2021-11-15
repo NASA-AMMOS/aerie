@@ -20,18 +20,18 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class MissionModelTest {
 
-    private MissionModelFacade<?> adaptation;
-    private MissionModelFacade.Unconfigured<?> unconfiguredAdaptation;
+    private MissionModelFacade<?> missionModel;
+    private MissionModelFacade.Unconfigured<?> unconfiguredMissionModel;
 
     @BeforeEach
-    public void initialize() throws MissionModelFacade.AdaptationContractException {
+    public void initialize() throws MissionModelFacade.MissionModelContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
-        this.adaptation = makeAdaptation(new MissionModelBuilder<>(), serializedConfig);
-        this.unconfiguredAdaptation = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
+        this.missionModel = makeMissionModel(new MissionModelBuilder<>(), serializedConfig);
+        this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
     }
 
-    private static <$Schema> MissionModelFacade<$Schema> makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
+    private static <$Schema> MissionModelFacade<$Schema> makeMissionModel(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
         final var factory = new GeneratedMissionModelFactory();
         final var model = factory.instantiate(config, builder);
         return new MissionModelFacade<>(builder.build(model, factory.getTaskSpecTypes()));
@@ -43,7 +43,7 @@ public final class MissionModelTest {
     }
 
     @Test
-    public void shouldGetActivityTypeList() throws MissionModelFacade.AdaptationContractException {
+    public void shouldGetActivityTypeList() throws MissionModelFacade.MissionModelContractException {
         // GIVEN
         final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
@@ -54,14 +54,14 @@ public final class MissionModelTest {
                     new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of()));
 
         // WHEN
-        final Map<String, ActivityType> typeList = unconfiguredAdaptation.getActivityTypes();
+        final Map<String, ActivityType> typeList = unconfiguredMissionModel.getActivityTypes();
 
         // THEN
         assertThat(typeList).containsAllEntriesOf(expectedTypes);
     }
 
     @Test
-    public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.AdaptationContractException {
+    public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException {
         // GIVEN
         final ActivityType expectedType = new ActivityType(
             "foo",
@@ -71,7 +71,7 @@ public final class MissionModelTest {
                 new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of());
 
         // WHEN
-        final ActivityType type = unconfiguredAdaptation.getActivityType(expectedType.name());
+        final ActivityType type = unconfiguredMissionModel.getActivityType(expectedType.name());
 
         // THEN
         assertThat(type).isEqualTo(expectedType);
@@ -83,7 +83,7 @@ public final class MissionModelTest {
         final String activityId = "nonexistent activity type";
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> unconfiguredAdaptation.getActivityType(activityId));
+        final Throwable thrown = catchThrowable(() -> unconfiguredMissionModel.getActivityType(activityId));
 
         // THEN
         assertThat(thrown).isInstanceOf(MissionModelFacade.NoSuchActivityTypeException.class);
@@ -91,7 +91,7 @@ public final class MissionModelTest {
 
     @Test
     public void shouldInstantiateActivityInstance()
-        throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.AdaptationContractException, MissionModelFacade.UnconstructableActivityInstanceException
+        throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException, MissionModelFacade.UnconstructableActivityInstanceException
     {
         // GIVEN
         final var typeName = "foo";
@@ -99,7 +99,7 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of("test")));
 
         // WHEN
-        final var failures = adaptation.validateActivity(typeName, parameters);
+        final var failures = missionModel.validateActivity(typeName, parameters);
 
         // THEN
         assertThat(failures).isEmpty();
@@ -113,7 +113,7 @@ public final class MissionModelTest {
                                                     "y", SerializedValue.of(1.0)));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
+        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(typeName, parameters));
 
         // THEN
         assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);
@@ -126,7 +126,7 @@ public final class MissionModelTest {
         final var parameters = new HashMap<>(Map.of("Nonexistent", SerializedValue.of("")));
 
         // WHEN
-        final Throwable thrown = catchThrowable(() -> adaptation.validateActivity(typeName, parameters));
+        final Throwable thrown = catchThrowable(() -> missionModel.validateActivity(typeName, parameters));
 
         // THEN
         assertThat(thrown).isInstanceOf(MissionModelFacade.UnconstructableActivityInstanceException.class);

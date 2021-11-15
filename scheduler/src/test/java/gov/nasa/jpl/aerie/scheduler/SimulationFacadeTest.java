@@ -13,8 +13,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class SimulationFacadeTest {
 
-  MissionModel<?, ?> adaptation;
-  MissionModelWrapper missionModel;
+  MissionModel<?, ?> missionModel;
+  MissionModelWrapper wrappedMissionModel;
   SimulationFacade facade;
 
   //concrete named time points used to setup tests and validate expectations
@@ -29,7 +29,7 @@ public class SimulationFacadeTest {
   private static final TimeWindows entireHorizon = TimeWindows.of(horizon);
 
   //scheduler-side mirrors of test activity types used
-  //TODO: should eventually mirror these from the adaptation itself
+  //TODO: should eventually mirror these from the mission model itself
   private static final ActivityType actTypeBite = new ActivityType("BiteBanana");
   private static final ActivityType actTypePeel = new ActivityType("PeelBanana");
 
@@ -55,25 +55,25 @@ public class SimulationFacadeTest {
 
   @BeforeEach
   public void setUp() {
-    adaptation = SimulationUtility.getAdaptation();
+    missionModel = SimulationUtility.getMissionModel();
 
-    missionModel = new MissionModelWrapper(adaptation, horizon);
-    missionModel.add(actTypeBite);
-    missionModel.add(actTypePeel);
+    wrappedMissionModel = new MissionModelWrapper(missionModel, horizon);
+    wrappedMissionModel.add(actTypeBite);
+    wrappedMissionModel.add(actTypePeel);
 
-    facade = new SimulationFacade(horizon, adaptation);
+    facade = new SimulationFacade(horizon, missionModel);
   }
 
   @AfterEach
   public void tearDown() {
-    adaptation = null;
     missionModel = null;
+    wrappedMissionModel = null;
     facade = null;
   }
 
   /** constructs an empty plan with the test model/horizon **/
   private PlanInMemory makeEmptyPlan() {
-    return new PlanInMemory(missionModel);
+    return new PlanInMemory(wrappedMissionModel);
   }
 
   @Test

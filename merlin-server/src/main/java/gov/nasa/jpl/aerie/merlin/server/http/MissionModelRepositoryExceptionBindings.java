@@ -9,7 +9,7 @@ public final class MissionModelRepositoryExceptionBindings implements Plugin {
     public void apply(final Javalin javalin) {
         javalin.exception(MissionModelAccessException.class, (ex, ctx) -> ctx
             .status(500)
-            .result(ResponseSerializers.serializeAdaptationAccessException(ex).toString())
+            .result(ResponseSerializers.serializeMissionModelAccessException(ex).toString())
             .contentType("application/json"));
     }
 }

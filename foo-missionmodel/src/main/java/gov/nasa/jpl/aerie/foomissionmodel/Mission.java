@@ -44,7 +44,7 @@ public final class Mission {
 
     spawn(this::test);
 
-    // Assert adaptation is unbuilt
+    // Assert mission model is unbuilt
     if (registrar.isInitializationComplete())
       throw new AssertionError("Registrar should not report initialization as complete");
 
@@ -81,7 +81,7 @@ public final class Mission {
     this.simpleData.a.activate();
     this.simpleData.b.activate();
 
-    // Assert adaptation is built
+    // Assert mission model is built
     if (!cachedRegistrar.isInitializationComplete())
       throw new AssertionError("Registrar should report initialization as complete");
   }

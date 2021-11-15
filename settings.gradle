@@ -1,6 +1,6 @@
 rootProject.name = 'aerie'
 
-// Adaptation support
+// Mission Model support
 include 'merlin-sdk'
 include 'merlin-driver'
 include 'merlin-framework'
@@ -8,7 +8,7 @@ include 'merlin-framework-junit'
 include 'merlin-framework-processor'
 include 'contrib'
 
-// Adaptations
+// Mission Model
 include 'banananation'
 include 'foo-missionmodel'
 include 'insight'

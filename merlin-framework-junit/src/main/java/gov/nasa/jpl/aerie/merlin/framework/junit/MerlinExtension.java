@@ -104,15 +104,15 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
   public void preDestroyTestInstance(final ExtensionContext extensionContext) {
     final var state = this.getState(extensionContext);
 
-    RootModel.fromPhantom(state.adaptation.getModel()).close();
-    state.adaptation = null;
+    RootModel.fromPhantom(state.missionModel.getModel()).close();
+    state.missionModel = null;
   }
 
   private static final class State<$Schema, Model> {
     public MissionModelBuilder<$Schema> builder;
     public MerlinTestContext<Model> context;
 
-    public MissionModel<$Schema, RootModel<?, Model>> adaptation = null;
+    public MissionModel<$Schema, RootModel<?, Model>> missionModel = null;
 
     public State(final MissionModelBuilder<$Schema> builder) {
       this.builder = Objects.requireNonNull(builder);
@@ -137,7 +137,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
         throw ex.wrapped;
       }
 
-      this.adaptation = this.builder.build(new RootModel<$Schema, Model>(this.context.model(), executor).toPhantom(), this.context.activityTypes());
+      this.missionModel = this.builder.build(new RootModel<$Schema, Model>(this.context.model(), executor).toPhantom(), this.context.activityTypes());
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;
@@ -159,10 +159,10 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
               completed.value = true;
             }
           })
-          .<$Timeline>create(RootModel.fromPhantom(this.adaptation.getModel()).executor());
+          .<$Timeline>create(RootModel.fromPhantom(this.missionModel.getModel()).executor());
 
       try {
-        SimulationDriver.simulateTask(this.adaptation, task);
+        SimulationDriver.simulateTask(this.missionModel, task);
       } catch (final WrappedException ex) {
         throw ex.wrapped;
       }

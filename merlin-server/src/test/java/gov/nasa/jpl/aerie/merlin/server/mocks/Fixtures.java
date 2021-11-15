@@ -9,14 +9,14 @@ import java.util.ArrayList;
 
 public final class Fixtures {
   public final InMemoryPlanRepository planRepository;
-  public final StubMissionModelService adaptationService;
+  public final StubMissionModelService missionModelService;
 
-  public final String EXISTENT_ADAPTATION_ID;
+  public final String EXISTENT_MISSION_MODEL_ID;
   public final String EXISTENT_PLAN_ID;
   public final String EXISTENT_ACTIVITY_TYPE_ID;
   public final String EXISTENT_ACTIVITY_INSTANCE_ID;
   public final ActivityInstance EXISTENT_ACTIVITY_INSTANCE;
-  public final String NONEXISTENT_ADAPTATION_ID;
+  public final String NONEXISTENT_MISSION_MODEL_ID;
   public final String NONEXISTENT_PLAN_ID;
   public final String NONEXISTENT_ACTIVITY_TYPE_ID;
   public final String NONEXISTENT_ACTIVITY_INSTANCE_ID;
@@ -24,13 +24,13 @@ public final class Fixtures {
   public Fixtures() {
     try {
       this.planRepository = new InMemoryPlanRepository();
-      this.adaptationService = new StubMissionModelService();
+      this.missionModelService = new StubMissionModelService();
 
       this.NONEXISTENT_ACTIVITY_TYPE_ID = StubMissionModelService.NONEXISTENT_ACTIVITY_TYPE;
       this.EXISTENT_ACTIVITY_TYPE_ID = StubMissionModelService.EXISTENT_ACTIVITY_TYPE;
 
-      this.NONEXISTENT_ADAPTATION_ID = StubMissionModelService.NONEXISTENT_ADAPTATION_ID;
-      this.EXISTENT_ADAPTATION_ID = StubMissionModelService.EXISTENT_ADAPTATION_ID;
+      this.NONEXISTENT_MISSION_MODEL_ID = StubMissionModelService.NONEXISTENT_MISSION_MODEL_ID;
+      this.EXISTENT_MISSION_MODEL_ID = StubMissionModelService.EXISTENT_MISSION_MODEL_ID;
 
       this.EXISTENT_PLAN_ID = this.planRepository.createPlan(createValidNewPlan("plan 1")).planId();
       this.NONEXISTENT_PLAN_ID = "nonexistent plan";
@@ -53,7 +53,7 @@ public final class Fixtures {
   public NewPlan createValidNewPlan(final String name) {
     final NewPlan plan = new NewPlan();
 
-    plan.adaptationId = this.EXISTENT_ADAPTATION_ID;
+    plan.missionModelId = this.EXISTENT_MISSION_MODEL_ID;
     plan.name = name;
     plan.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
     plan.endTimestamp = Timestamp.fromString("1111-222T00:44:55");

@@ -16,52 +16,52 @@ import java.util.List;
 import java.util.Map;
 
 public interface MissionModelService {
-  Map<String, MissionModelJar> getAdaptations();
+  Map<String, MissionModelJar> getMissionModels();
 
-  MissionModelJar getAdaptationById(String adaptationId)
-  throws NoSuchAdaptationException;
+  MissionModelJar getMissionModelById(String missionModelId)
+  throws NoSuchMissionModelException;
 
-  Map<String, Constraint> getConstraints(String adaptationId)
-  throws NoSuchAdaptationException;
+  Map<String, Constraint> getConstraints(String missionModelId)
+  throws NoSuchMissionModelException;
 
-  Map<String, ValueSchema> getStatesSchemas(String adaptationId)
-  throws NoSuchAdaptationException;
-  Map<String, ActivityType> getActivityTypes(String adaptationId)
-  throws NoSuchAdaptationException;
+  Map<String, ValueSchema> getStatesSchemas(String missionModelId)
+  throws NoSuchMissionModelException;
+  Map<String, ActivityType> getActivityTypes(String missionModelId)
+  throws NoSuchMissionModelException;
   // TODO: Provide a finer-scoped validation return type. Mere strings make all validations equally severe.
-  List<String> validateActivityParameters(String adaptationId, SerializedActivity activityParameters)
-  throws NoSuchAdaptationException;
+  List<String> validateActivityParameters(String missionModelId, SerializedActivity activityParameters)
+  throws NoSuchMissionModelException;
 
-  Map<String, SerializedValue> getActivityEffectiveArguments(String adaptationId, SerializedActivity activity)
-  throws NoSuchAdaptationException,
+  Map<String, SerializedValue> getActivityEffectiveArguments(String missionModelId, SerializedActivity activity)
+  throws NoSuchMissionModelException,
     NoSuchActivityTypeException,
     UnconstructableActivityInstanceException,
     MissingArgumentException;
 
-  List<Parameter> getModelParameters(String adaptationId)
-  throws NoSuchAdaptationException, MissionModelLoader.AdaptationLoadException;
+  List<Parameter> getModelParameters(String missionModelId)
+  throws NoSuchMissionModelException, MissionModelLoader.MissionModelLoadException;
 
   SimulationResults runSimulation(CreateSimulationMessage message)
-  throws NoSuchAdaptationException, MissionModelFacade.NoSuchActivityTypeException;
+          throws NoSuchMissionModelException, MissionModelFacade.NoSuchActivityTypeException;
 
-  void refreshModelParameters(String adaptationId) throws NoSuchAdaptationException;
-  void refreshActivityTypes(String adaptationId) throws NoSuchAdaptationException;
+  void refreshModelParameters(String missionModelId) throws NoSuchMissionModelException;
+  void refreshActivityTypes(String missionModelId) throws NoSuchMissionModelException;
 
-  class AdaptationRejectedException extends Exception {
-    public AdaptationRejectedException(final String message) { super(message); }
+  class MissionModelRejectedException extends Exception {
+    public MissionModelRejectedException(final String message) { super(message); }
   }
 
-  class NoSuchAdaptationException extends Exception {
+  class NoSuchMissionModelException extends Exception {
     private final String id;
 
-    public NoSuchAdaptationException(final String id, final Throwable cause) {
-      super("No adaptation exists with id `" + id + "`", cause);
+    public NoSuchMissionModelException(final String id, final Throwable cause) {
+      super("No mission model exists with id `" + id + "`", cause);
       this.id = id;
     }
 
-    public NoSuchAdaptationException(final String id) { this(id, null); }
+    public NoSuchMissionModelException(final String id) { this(id, null); }
 
-    public String getInvalidAdaptationId() { return this.id; }
+    public String getInvalidMissionModelId() { return this.id; }
   }
 
   class NoSuchActivityTypeException extends Exception {

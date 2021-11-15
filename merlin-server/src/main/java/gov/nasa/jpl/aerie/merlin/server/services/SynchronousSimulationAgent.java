@@ -16,7 +16,7 @@ import java.util.Map;
 
 public record SynchronousSimulationAgent (
     PlanService planService,
-    MissionModelService adaptationService
+    MissionModelService missionModelService
 ) implements SimulationAgent {
   public /*sealed*/ interface Response {
     record Failed(String reason) implements Response {}
@@ -46,14 +46,14 @@ public record SynchronousSimulationAgent (
 
     final SimulationResults results;
     try {
-      results = this.adaptationService.runSimulation(new CreateSimulationMessage(
-          plan.adaptationId,
+      results = this.missionModelService.runSimulation(new CreateSimulationMessage(
+          plan.missionModelId,
           plan.startTimestamp.toInstant(),
           planDuration,
           serializeScheduledActivities(plan.startTimestamp.toInstant(), plan.activityInstances),
           plan.configuration));
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
-      writer.failWith("adaptation for existing plan does not exist");
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      writer.failWith("mission model for existing plan does not exist");
       return;
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       writer.failWith("activity could not be instantiated");

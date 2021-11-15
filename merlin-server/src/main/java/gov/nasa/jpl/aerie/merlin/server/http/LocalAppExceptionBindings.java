@@ -7,9 +7,9 @@ import io.javalin.core.plugin.Plugin;
 public final class LocalAppExceptionBindings implements Plugin {
     @Override
     public void apply(final Javalin javalin) {
-        javalin.exception(LocalMissionModelService.AdaptationLoadException.class, (ex, ctx) -> ctx
+        javalin.exception(LocalMissionModelService.MissionModelLoadException.class, (ex, ctx) -> ctx
             .status(500)
-            .result(ResponseSerializers.serializeAdaptationLoadException(ex).toString())
+            .result(ResponseSerializers.serializeMissionModelLoadException(ex).toString())
             .contentType("application/json"));
     }
 }

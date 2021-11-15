@@ -24,20 +24,20 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public MissionModelJar get(final long modelId) throws SQLException, MissionModelRepository.NoSuchAdaptationException {
+  public MissionModelJar get(final long modelId) throws SQLException, MissionModelRepository.NoSuchMissionModelException {
     this.statement.setLong(1, modelId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new MissionModelRepository.NoSuchAdaptationException();
+      if (!results.next()) throw new MissionModelRepository.NoSuchMissionModelException();
 
-      final var adaptation = new MissionModelJar();
-      adaptation.mission = results.getString(1);
-      adaptation.name = results.getString(2);
-      adaptation.version = results.getString(3);
-      adaptation.owner = results.getString(4);
-      adaptation.path = Path.of(results.getString(5));
+      final var missionModel = new MissionModelJar();
+      missionModel.mission = results.getString(1);
+      missionModel.name = results.getString(2);
+      missionModel.version = results.getString(3);
+      missionModel.owner = results.getString(4);
+      missionModel.path = Path.of(results.getString(5));
 
-      return adaptation;
+      return missionModel;
     }
   }
 

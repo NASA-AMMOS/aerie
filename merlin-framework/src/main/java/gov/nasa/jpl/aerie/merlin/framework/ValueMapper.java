@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 /**
- * A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a
+ * A mapping between (a) the mission-specific representation of a data type defined by a mission model (b) to a
  * mission-agnostic representation of that data type.
  */
 public interface ValueMapper<T> {
@@ -16,17 +16,17 @@ public interface ValueMapper<T> {
   ValueSchema getValueSchema();
 
   /**
-    * Produces an adaptation-specific domain value from a mission-agnostic representation.
+    * Produces an mission model-specific domain value from a mission-agnostic representation.
    *
    * @param serializedValue A mission-agnostic representation of a domain value.
-   * @return Either an adaptation-specific domain object, or a deserialization failure.
+   * @return Either an mission model-specific domain object, or a deserialization failure.
    */
   Result<T, String> deserializeValue(SerializedValue serializedValue);
 
   /**
-   * Produces a mission-agnostic representation of an adaptation-specific domain value.
+   * Produces a mission-agnostic representation of an mission model-specific domain value.
    *
-   * @param value An adaptation-specific domain object.
+   * @param value An mission model-specific domain object.
    * @return A mission-agnostic representation of {@code value}.
    */
   SerializedValue serializeValue(T value);

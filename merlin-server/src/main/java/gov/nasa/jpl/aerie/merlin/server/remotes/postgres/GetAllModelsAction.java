@@ -25,22 +25,22 @@ import java.util.Map;
 
   public Map<String, MissionModelJar> get() throws SQLException {
     try (final var results = this.statement.executeQuery()) {
-      final var adaptations = new HashMap<String, MissionModelJar>();
+      final var missionModels = new HashMap<String, MissionModelJar>();
 
       while (results.next()) {
         final var id = Long.toString(results.getLong(1));
 
-        final var adaptation = new MissionModelJar();
-        adaptation.mission = results.getString(2);
-        adaptation.name = results.getString(3);
-        adaptation.version = results.getString(4);
-        adaptation.owner = results.getString(5);
-        adaptation.path = Path.of(results.getString(6));
+        final var missionModel = new MissionModelJar();
+        missionModel.mission = results.getString(2);
+        missionModel.name = results.getString(3);
+        missionModel.version = results.getString(4);
+        missionModel.owner = results.getString(5);
+        missionModel.path = Path.of(results.getString(6));
 
-        adaptations.put(id, adaptation);
+        missionModels.put(id, missionModel);
       }
 
-      return adaptations;
+      return missionModels;
     }
   }
 

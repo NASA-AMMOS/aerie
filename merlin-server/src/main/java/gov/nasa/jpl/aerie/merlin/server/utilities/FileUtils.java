@@ -6,8 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class FileUtils {
-    public static Path getUniqueFilePath(final MissionModelJar adaptationJar, final Path basePath) {
-        final String basename = adaptationJar.name;
+    public static Path getUniqueFilePath(final MissionModelJar missionModelJar, final Path basePath) {
+        final String basename = missionModelJar.name;
         Path path = basePath.resolve(basename + ".jar");
         for (int i = 0; Files.exists(path); ++i) {
             path = basePath.resolve(basename + "_" + i + ".jar");

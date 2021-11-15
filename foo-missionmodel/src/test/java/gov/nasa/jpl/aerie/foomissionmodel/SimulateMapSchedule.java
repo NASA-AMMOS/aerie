@@ -28,7 +28,7 @@ public class SimulateMapSchedule {
   }
 
   private static <$Schema> MissionModel<$Schema, RootModel<?, Mission>>
-  makeAdaptation(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
+  makeMissionModel(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
     final var factory = new GeneratedMissionModelFactory();
     final var model = factory.instantiate(config, builder);
     return builder.build(model, factory.getTaskSpecTypes());
@@ -38,7 +38,7 @@ public class SimulateMapSchedule {
   void simulateWithMapSchedule() {
     final var config = new Configuration();
     final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
-    final var adaptation = makeAdaptation(new MissionModelBuilder<>(), serializedConfig);
+    final var missionModel = makeMissionModel(new MissionModelBuilder<>(), serializedConfig);
 
     try {
       final var schedule = loadSchedule();
@@ -46,7 +46,7 @@ public class SimulateMapSchedule {
       final var simulationDuration = duration(25, SECONDS);
 
       final var simulationResults = SimulationDriver.simulate(
-          adaptation,
+          missionModel,
           schedule,
           startTime,
           simulationDuration);
@@ -60,7 +60,7 @@ public class SimulateMapSchedule {
         System.out.println(name + ": " + activity.start + " for " + activity.duration);
       });
     } finally {
-      RootModel.fromPhantom(adaptation.getModel()).close();
+      RootModel.fromPhantom(missionModel.getModel()).close();
     }
   }
 

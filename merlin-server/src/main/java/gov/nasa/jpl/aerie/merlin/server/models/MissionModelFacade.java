@@ -20,10 +20,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class MissionModelFacade<$Schema> {
-  private final MissionModel<$Schema, ?> adaptation;
+  private final MissionModel<$Schema, ?> missionModel;
 
-  public MissionModelFacade(final MissionModel<$Schema, ?> adaptation) throws AdaptationContractException {
-    this.adaptation = adaptation;
+  public MissionModelFacade(final MissionModel<$Schema, ?> missionModel) throws MissionModelContractException {
+    this.missionModel = missionModel;
   }
 
   public SimulationResults simulate(
@@ -31,13 +31,13 @@ public final class MissionModelFacade<$Schema> {
       final Duration simulationDuration,
       final Instant startTime
   ) {
-    return SimulationDriver.simulate(this.adaptation, schedule, startTime, simulationDuration);
+    return SimulationDriver.simulate(this.missionModel, schedule, startTime, simulationDuration);
   }
 
   public Map<String, ValueSchema> getStateSchemas() {
     final var schemas = new HashMap<String, ValueSchema>();
 
-    for (final var entry : this.adaptation.getResources().entrySet()) {
+    for (final var entry : this.missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
       schemas.put(name, resource.getSchema());
@@ -50,7 +50,7 @@ public final class MissionModelFacade<$Schema> {
   throws NoSuchActivityTypeException, UnconstructableActivityInstanceException
   {
     final var specType = Optional
-        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
+        .ofNullable(this.missionModel.getTaskSpecificationTypes().get(typeName))
         .orElseThrow(NoSuchActivityTypeException::new);
 
     return getValidationFailures(specType, arguments);
@@ -76,7 +76,7 @@ public final class MissionModelFacade<$Schema> {
   throws NoSuchActivityTypeException, UnconstructableActivityInstanceException, MissingArgumentException
   {
     final var specType = Optional
-        .ofNullable(this.adaptation.getTaskSpecificationTypes().get(typeName))
+        .ofNullable(this.missionModel.getTaskSpecificationTypes().get(typeName))
         .orElseThrow(NoSuchActivityTypeException::new);
 
     return getActivityEffectiveArguments(specType, arguments);
@@ -105,7 +105,7 @@ public final class MissionModelFacade<$Schema> {
     }
 
     public Map<String, ActivityType> getActivityTypes()
-    throws MissionModelFacade.AdaptationContractException
+    throws MissionModelFacade.MissionModelContractException
     {
       final var activityTypes = new HashMap<String, ActivityType>();
       factory.getTaskSpecTypes().forEach((name, specType) -> {
@@ -115,7 +115,7 @@ public final class MissionModelFacade<$Schema> {
     }
 
     public ActivityType getActivityType(final String typeName)
-    throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.AdaptationContractException
+    throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException
     {
       final var specType = Optional
           .ofNullable(factory.getTaskSpecTypes().get(typeName))
@@ -129,12 +129,12 @@ public final class MissionModelFacade<$Schema> {
     }
   }
 
-  public static class AdaptationContractException extends RuntimeException {
-    public AdaptationContractException(final String message) {
+  public static class MissionModelContractException extends RuntimeException {
+    public MissionModelContractException(final String message) {
       super(message);
     }
 
-    public AdaptationContractException(final String message, final Throwable cause) {
+    public MissionModelContractException(final String message, final Throwable cause) {
       super(message, cause);
     }
   }

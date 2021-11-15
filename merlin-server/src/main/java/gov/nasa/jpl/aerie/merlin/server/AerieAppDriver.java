@@ -47,14 +47,14 @@ public final class AerieAppDriver {
     final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
-    final var adaptationController = new LocalMissionModelService(configuration.merlinFileStore(), stores.adaptations());
+    final var missionModelController = new LocalMissionModelService(configuration.merlinFileStore(), stores.missionModels());
     final var planController = new LocalPlanService(stores.plans());
     final var simulationAgent = ThreadedSimulationAgent.spawn(
         "simulation-agent",
-        new SynchronousSimulationAgent(planController, adaptationController));
+        new SynchronousSimulationAgent(planController, missionModelController));
     final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
-    final var simulationAction = new GetSimulationResultsAction(planController, adaptationController, simulationController);
-    final var merlinBindings = new MerlinBindings(adaptationController, simulationAction);
+    final var simulationAction = new GetSimulationResultsAction(planController, missionModelController, simulationController);
+    final var merlinBindings = new MerlinBindings(missionModelController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
@@ -72,7 +72,7 @@ public final class AerieAppDriver {
     javalin.start(configuration.httpPort());
   }
 
-  private record Stores (PlanRepository plans, MissionModelRepository adaptations, ResultsCellRepository results) {}
+  private record Stores (PlanRepository plans, MissionModelRepository missionModels, ResultsCellRepository results) {}
 
   private static Stores loadStores(final AppConfiguration config) {
     final var store = config.store();

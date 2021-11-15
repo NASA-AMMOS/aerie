@@ -29,7 +29,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       final long modelId,
       final Timestamp startTime,
       final Timestamp endTime
-  ) throws SQLException, MissionModelRepository.NoSuchAdaptationException, FailedInsertException {
+  ) throws SQLException, MissionModelRepository.NoSuchMissionModelException, FailedInsertException {
     this.statement.setString(1, name);
     this.statement.setLong(2, modelId);
     setTimestamp(this.statement, 3, endTime);
@@ -45,7 +45,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       if (Objects.equals(ex.getSQLState(), "23503")) {  /* foreign_key_violation */
         // The only foreign key on the `plan` table references `mission_model`,
         // so there must not be a mission model with the given ID.
-        throw new MissionModelRepository.NoSuchAdaptationException();
+        throw new MissionModelRepository.NoSuchMissionModelException();
       } else {
         throw ex;
       }

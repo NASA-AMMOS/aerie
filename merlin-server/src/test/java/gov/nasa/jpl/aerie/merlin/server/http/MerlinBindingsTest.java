@@ -36,16 +36,16 @@ public final class MerlinBindingsTest {
   @BeforeAll
   public static void setupServer() {
     final var planApp = new StubPlanService();
-    final var adaptationApp = new StubMissionModelService();
+    final var missionModelApp = new StubMissionModelService();
     final var simulationAction = new GetSimulationResultsAction(
         planApp,
-        adaptationApp,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, adaptationApp)));
+        missionModelApp,
+        new UncachedSimulationService(new SynchronousSimulationAgent(planApp, missionModelApp)));
 
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.enableCorsForAllOrigins();
-      config.registerPlugin(new MerlinBindings(adaptationApp, simulationAction));
+      config.registerPlugin(new MerlinBindings(missionModelApp, simulationAction));
     });
 
     SERVER.start();

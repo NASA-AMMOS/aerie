@@ -39,7 +39,7 @@ final class ThreadedReactionContext<$Timeline> implements Context {
 
   @Override
   public <CellType> CellType ask(final Query<?, ?, CellType> query) {
-    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    // SAFETY: All objects accessible within a single mission model instance have the same brand.
     @SuppressWarnings("unchecked")
     final var brandedQuery = (Query<? super $Timeline, ?, CellType>) query;
 
@@ -58,7 +58,7 @@ final class ThreadedReactionContext<$Timeline> implements Context {
 
   @Override
   public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
-    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    // SAFETY: All objects accessible within a single mission model instance have the same brand.
     @SuppressWarnings("unchecked")
     final var brandedQuery = (Query<? super $Timeline, Event, ?>) query;
 

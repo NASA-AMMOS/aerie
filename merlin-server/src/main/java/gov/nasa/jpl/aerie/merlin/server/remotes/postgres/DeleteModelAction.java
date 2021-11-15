@@ -19,12 +19,12 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(final long modelId) throws SQLException, MissionModelRepository.NoSuchAdaptationException {
+  public void apply(final long modelId) throws SQLException, MissionModelRepository.NoSuchMissionModelException {
     this.statement.setLong(1, modelId);
 
     final var count = this.statement.executeUpdate();
 
-    if (count == 0) throw new MissionModelRepository.NoSuchAdaptationException();
+    if (count == 0) throw new MissionModelRepository.NoSuchMissionModelException();
   }
 
   @Override

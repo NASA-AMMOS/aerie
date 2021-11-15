@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public final class PostgresMissionModelRepository implements MissionModelRepository {
-  private final Path adaptationsPath = Path.of("merlin_file_store").toAbsolutePath();
+  private final Path missionModelsPath = Path.of("merlin_file_store").toAbsolutePath();
   private final DataSource dataSource;
 
   public PostgresMissionModelRepository(final DataSource dataSource) {
@@ -24,7 +24,7 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public Map<String, MissionModelJar> getAllAdaptations() {
+  public Map<String, MissionModelJar> getAllMissionModels() {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getAllMissionModelsAction = new GetAllModelsAction(connection)) {
         return getAllMissionModelsAction.get();
@@ -35,31 +35,31 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public MissionModelJar getAdaptation(final String adaptationId) throws NoSuchAdaptationException {
+  public MissionModelJar getMissionModel(final String missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getMissionModelAction = new GetModelAction(connection)) {
-        return getMissionModelAction.get(toMissionModelId(adaptationId));
+        return getMissionModelAction.get(toMissionModelId(missionModelId));
       }
     } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to retrieve mission model with id `%s`".formatted(adaptationId), ex);
+      throw new DatabaseException("Failed to retrieve mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getModelConstraintsAction = new GetModelConstraintsAction(connection)) {
-        return getModelConstraintsAction.get(toMissionModelId(adaptationId));
+        return getModelConstraintsAction.get(toMissionModelId(missionModelId));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to retrieve constraints for mission model with id `%s`".formatted(adaptationId), ex);
+          "Failed to retrieve constraints for mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
   @Override
-  public String createAdaptation(final MissionModelJar adaptationJar) {
-    // TODO: Separate JAR upload from adaptation registration.
+  public String createMissionModel(final MissionModelJar missionModelJar) {
+    // TODO: Separate JAR upload from mission model registration.
     //   A client should be able to upload any file, then reference that file for any purpose,
     //   be it as a mission model source or as an input file argument for activities/configuration.
     try (
@@ -71,16 +71,16 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
       final Path jarPath;
       {
         jarPath = getUnusedFilename(
-            this.adaptationsPath,
+            this.missionModelsPath,
             Optional
-                .ofNullable(adaptationJar.path.getFileName())
+                .ofNullable(missionModelJar.path.getFileName())
                 .map(Path::toString)
-                .orElse("adaptation"));
+                .orElse("missionModel"));
 
         try {
-          Files.copy(adaptationJar.path, jarPath);
+          Files.copy(missionModelJar.path, jarPath);
         } catch (final IOException ex) {
-          throw new CreateUploadedFileException(adaptationJar.path, jarPath, ex);
+          throw new CreateUploadedFileException(missionModelJar.path, jarPath, ex);
         }
 
         // Delete the file from the filesystem if later steps fail.
@@ -94,14 +94,14 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
           final var createUploadedFileAction = new CreateUploadedFileAction(connection)
       ) {
         final long jarId = createUploadedFileAction.apply(
-            adaptationJar.path.getFileName().getFileName().toString(),
-            this.adaptationsPath.relativize(jarPath).normalize());
+            missionModelJar.path.getFileName().getFileName().toString(),
+            this.missionModelsPath.relativize(jarPath).normalize());
 
         modelId = createModelAction.apply(
-            adaptationJar.name,
-            adaptationJar.version,
-            adaptationJar.mission,
-            adaptationJar.owner,
+            missionModelJar.name,
+            missionModelJar.version,
+            missionModelJar.mission,
+            missionModelJar.owner,
             jarId);
       }
 
@@ -115,38 +115,38 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
   }
 
   @Override
-  public void updateModelParameters(final String adaptationId, final List<Parameter> modelParameters)
-  throws NoSuchAdaptationException {
+  public void updateModelParameters(final String missionModelId, final List<Parameter> modelParameters)
+  throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createModelParametersAction = new CreateModelParametersAction(connection)) {
-        final var id = toMissionModelId(adaptationId);
+        final var id = toMissionModelId(missionModelId);
         createModelParametersAction.apply(id, modelParameters);
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for mission model with id `%s`".formatted(adaptationId), ex);
+          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
   @Override
-  public void updateActivityTypes(final String adaptationId, final Map<String, ActivityType> activityTypes)
-  throws NoSuchAdaptationException {
+  public void updateActivityTypes( final String missionModelId, final Map<String, ActivityType> activityTypes)
+  throws NoSuchMissionModelException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var createActivityTypeAction = new CreateActivityTypeAction(connection)) {
-        final var id = toMissionModelId(adaptationId);
+        final var id = toMissionModelId(missionModelId);
         for (final var activityType : activityTypes.values()) {
           createActivityTypeAction.apply(id, activityType.name(), activityType.parameters(), activityType.requiredParameters());
         }
       }
     } catch (final SQLException ex) {
       throw new DatabaseException(
-          "Failed to update derived data for mission model with id `%s`".formatted(adaptationId), ex);
+          "Failed to update derived data for mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
   @Override
-  public void deleteAdaptation(final String adaptationId) throws NoSuchAdaptationException  {
-    // TODO: Separate JAR upload from adaptation registration.
+  public void deleteMissionModel(final String missionModelId) throws NoSuchMissionModelException  {
+    // TODO: Separate JAR upload from mission model registration.
     //   A client should be able to upload any file, then reference that file for any purpose,
     //   be it as a mission model source or as an input file argument for activities/configuration.
     try (final var connection = this.dataSource.getConnection()) {
@@ -154,8 +154,8 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
           final var getModelAction = new GetModelAction(connection);
           final var deleteModelAction = new DeleteModelAction(connection)
       ) {
-        final var jarPath = getModelAction.get(toMissionModelId(adaptationId)).path;
-        deleteModelAction.apply(toMissionModelId(adaptationId));
+        final var jarPath = getModelAction.get(toMissionModelId(missionModelId)).path;
+        deleteModelAction.apply(toMissionModelId(missionModelId));
 
         try {
           Files.delete(jarPath);
@@ -164,17 +164,17 @@ public final class PostgresMissionModelRepository implements MissionModelReposit
         }
       }
     } catch (final SQLException ex) {
-      throw new DatabaseException("Failed to delete mission model with id `%s`".formatted(adaptationId), ex);
+      throw new DatabaseException("Failed to delete mission model with id `%s`".formatted(missionModelId), ex);
     }
   }
 
   private static long toMissionModelId(final String modelId)
-  throws NoSuchAdaptationException
+  throws NoSuchMissionModelException
   {
     try {
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
-      throw new NoSuchAdaptationException();
+      throw new NoSuchMissionModelException();
     }
   }
 

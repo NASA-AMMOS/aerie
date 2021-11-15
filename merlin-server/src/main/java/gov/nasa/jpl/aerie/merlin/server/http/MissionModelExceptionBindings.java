@@ -7,9 +7,9 @@ import io.javalin.core.plugin.Plugin;
 public final class MissionModelExceptionBindings implements Plugin {
     @Override
     public void apply(final Javalin javalin) {
-        javalin.exception(MissionModelFacade.AdaptationContractException.class, (ex, ctx) -> ctx
+        javalin.exception(MissionModelFacade.MissionModelContractException.class, (ex, ctx) -> ctx
             .status(500)
-            .result(ResponseSerializers.serializeAdaptationContractException(ex).toString())
+            .result(ResponseSerializers.serializeMissionModelContractException(ex).toString())
             .contentType("application/json"));
     }
 }

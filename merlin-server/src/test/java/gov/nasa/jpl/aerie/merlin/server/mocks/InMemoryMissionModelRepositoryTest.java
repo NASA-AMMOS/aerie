@@ -7,6 +7,6 @@ import org.junit.jupiter.api.Disabled;
 public final class InMemoryMissionModelRepositoryTest extends MissionModelRepositoryContractTest {
     @Override
     protected void resetRepository() {
-        this.adaptationRepository = new InMemoryMissionModelRepository();
+        this.missionModelRepository = new InMemoryMissionModelRepository();
     }
 }

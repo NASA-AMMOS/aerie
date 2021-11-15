@@ -17,24 +17,24 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 
 public final class MissionModelLoader {
-    public static MissionModelFactory<?> loadAdaptationFactory(final Path path, final String name, final String version)
-        throws AdaptationLoadException
+    public static MissionModelFactory<?> loadMissionModelFactory(final Path path, final String name, final String version)
+        throws MissionModelLoadException
     {
-        final var service = loadAdaptationProvider(path, name, version);
+        final var service = loadMissionModelProvider(path, name, version);
         return service.getFactory();
     }
 
-    public static MissionModel<?, ?> loadAdaptation(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
-        throws AdaptationLoadException
+    public static MissionModel<?, ?> loadMissionModel(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
+        throws MissionModelLoadException
     {
-        final var service = loadAdaptationProvider(path, name, version);
+        final var service = loadMissionModelProvider(path, name, version);
         final var factory = service.getFactory();
         final var builder = new MissionModelBuilder<>();
-        return loadAdaptation(missionModelConfig, factory, builder);
+        return loadMissionModel(missionModelConfig, factory, builder);
     }
 
     private static <$Schema, Model>
-    MissionModel<$Schema, Model> loadAdaptation(
+    MissionModel<$Schema, Model> loadMissionModel(
         final SerializedValue missionModelConfig,
         final MissionModelFactory<Model> factory,
         final MissionModelBuilder<$Schema> builder
@@ -43,24 +43,24 @@ public final class MissionModelLoader {
         return builder.build(model, factory.getTaskSpecTypes());
     }
 
-    public static MerlinPlugin loadAdaptationProvider(final Path path, final String name, final String version)
-        throws AdaptationLoadException
+    public static MerlinPlugin loadMissionModelProvider(final Path path, final String name, final String version)
+        throws MissionModelLoadException
     {
-        // Look for a MerlinAdaptation implementor in the adaptation. For correctness, we're assuming there's
-        // only one matching MerlinAdaptation in any given adaptation.
+        // Look for a MerlinMissionModel implementor in the mission model. For correctness, we're assuming there's
+        // only one matching MerlinMissionModel in any given mission model.
         final var className = getImplementingClassName(path, name, version);
 
-        // Construct a ClassLoader with access to classes in the adaptation location.
+        // Construct a ClassLoader with access to classes in the mission model location.
         final var parentClassLoader = Thread.currentThread().getContextClassLoader();
-        final var classLoader = new URLClassLoader(new URL[] {adaptationPathToUrl(path)}, parentClassLoader);
+        final var classLoader = new URLClassLoader(new URL[] {missionModelPathToUrl(path)}, parentClassLoader);
 
         try {
             final var factoryClass$ = classLoader.loadClass(className);
             if (!MerlinPlugin.class.isAssignableFrom(factoryClass$)) {
-                throw new AdaptationLoadException(path, name, version);
+                throw new MissionModelLoadException(path, name, version);
             }
 
-            // SAFETY: We checked above that AdaptationFactory is assignable from this type.
+            // SAFETY: We checked above that MissionModelFactory is assignable from this type.
             @SuppressWarnings("unchecked")
             final var factoryClass = (Class<? extends MerlinPlugin>) factoryClass$;
 
@@ -68,12 +68,12 @@ public final class MissionModelLoader {
         } catch (final ClassNotFoundException | NoSuchMethodException | InstantiationException
             | IllegalAccessException | InvocationTargetException ex)
         {
-            throw new AdaptationLoadException(path, name, version, ex);
+            throw new MissionModelLoadException(path, name, version, ex);
         }
     }
 
     private static String getImplementingClassName(final Path jarPath, final String name, final String version)
-    throws AdaptationLoadException {
+    throws MissionModelLoadException {
         try {
             final var jarFile = new JarFile(jarPath.toFile());
             final var jarEntry = jarFile.getEntry("META-INF/services/" + MerlinPlugin.class.getCanonicalName());
@@ -84,16 +84,16 @@ public final class MissionModelLoader {
                 .collect(Collectors.toList());
 
             if (classPathList.size() != 1) {
-                throw new AdaptationLoadException(jarPath, name, version);
+                throw new MissionModelLoadException(jarPath, name, version);
             }
 
             return classPathList.get(0);
         } catch (final IOException ex) {
-            throw new AdaptationLoadException(jarPath, name, version, ex);
+            throw new MissionModelLoadException(jarPath, name, version, ex);
         }
     }
 
-    private static URL adaptationPathToUrl(final Path path) {
+    private static URL missionModelPathToUrl(final Path path) {
         try {
             return path.toUri().toURL();
         } catch (final MalformedURLException ex) {
@@ -103,12 +103,12 @@ public final class MissionModelLoader {
         }
     }
 
-    public static class AdaptationLoadException extends Exception {
-        private AdaptationLoadException(final Path path, final String name, final String version) {
+    public static class MissionModelLoadException extends Exception {
+        private MissionModelLoadException(final Path path, final String name, final String version) {
             this(path, name, version, null);
         }
 
-        private AdaptationLoadException(final Path path, final String name, final String version, final Throwable cause) {
+        private MissionModelLoadException(final Path path, final String name, final String version, final Throwable cause) {
             super(
                 String.format(
                     "No implementation found for `%s` at path `%s` wih name \"%s\" and version \"%s\"",

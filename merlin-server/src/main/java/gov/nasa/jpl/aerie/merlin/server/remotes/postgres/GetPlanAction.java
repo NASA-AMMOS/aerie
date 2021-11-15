@@ -59,12 +59,12 @@ import java.util.Map;
 
       final var name = results.getString(1);
       final var revision = results.getLong(2);
-      final var adaptationId = results.getLong(3);
+      final var missionModelId = results.getLong(3);
       final var startTimestamp = Timestamp.fromString(results.getString(4));
       final var endTimestamp = Timestamp.fromString(results.getString(5));
       final var activities = PostgresPlanRepository.parseActivitiesJson(results.getString(6), startTimestamp);
 
-      return new PlanRecord(planId, revision, name, adaptationId, startTimestamp, endTimestamp, activities);
+      return new PlanRecord(planId, revision, name, missionModelId, startTimestamp, endTimestamp, activities);
     }
   }
 

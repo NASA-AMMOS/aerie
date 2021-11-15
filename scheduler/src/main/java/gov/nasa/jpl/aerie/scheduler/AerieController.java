@@ -36,7 +36,7 @@ public class AerieController {
   private Map<Plan, Map<String, Class<?>>> stateTypes;
 
   private final Map<ActivityInstance, String> activityInstancesIds;
-  private final String AMMOS_ADAPTATION_ID;
+  private final String AMMOS_MISSION_MODEL_ID;
   private final String distantAerieURL;
   private final String plan_prefix;
 
@@ -48,18 +48,18 @@ public class AerieController {
   private boolean isSessionAlive = true;
 
 
-  public AerieController(String distantAerieURL, String adaptationId, boolean authenticationRequired) {
-    this(distantAerieURL, adaptationId);
+  public AerieController(String distantAerieURL, String missionModelId, boolean authenticationRequired) {
+    this(distantAerieURL, missionModelId);
     this.authenticationRequired = authenticationRequired;
   }
 
-  public AerieController(String distantAerieURL, String adaptationId) {
-    this(distantAerieURL, adaptationId, "");
+  public AerieController(String distantAerieURL, String missionModelId) {
+    this(distantAerieURL, missionModelId, "");
   }
 
-  public AerieController(String distantAerieURL, String adaptationId, String planPrefix) {
+  public AerieController(String distantAerieURL, String missionModelId, String planPrefix) {
     this.distantAerieURL = distantAerieURL;
-    this.AMMOS_ADAPTATION_ID = adaptationId;
+    this.AMMOS_MISSION_MODEL_ID = missionModelId;
     planIds = new HashMap<Plan, String>();
     stateCaches = new HashMap<Plan, Map<String, AerieStateCache>>();
     stateTypes = new HashMap<Plan, Map<String, Class<?>>>();
@@ -89,13 +89,13 @@ public class AerieController {
 
   }
 
-  public void deleteAllAdaptationsBut(String notThisOne) {
-    GetAllAdaptationsId getReq = new GetAllAdaptationsId();
+  public void deleteAllMissionModelsBut(String notThisOne) {
+    GetAllMissionModelsId getReq = new GetAllMissionModelsId();
     postRequest(getReq);
-    List<String> ids = getReq.getAdaptationIds();
+    List<String> ids = getReq.getMissionModelIds();
     for (var id : ids) {
       if (!id.equals(notThisOne)) {
-        DeleteAdaptation da = new DeleteAdaptation(id);
+        DeleteMissionModel da = new DeleteMissionModel(id);
         postRequest(da);
       }
     }
@@ -368,8 +368,8 @@ public class AerieController {
 
     public String getRequest() {
       StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("query ResourceTypes { stateTypes( adaptationId: \"");
-      sbPlanRequest.append(AMMOS_ADAPTATION_ID);
+      sbPlanRequest.append("query ResourceTypes { stateTypes( missionModelId: \"");
+      sbPlanRequest.append(AMMOS_MISSION_MODEL_ID);
       sbPlanRequest.append("\"){ name schema }}");
       return sbPlanRequest.toString();
     }
@@ -438,17 +438,17 @@ public class AerieController {
     }
   }
 
-  protected class DeleteAdaptation extends GraphRequest {
+  protected class DeleteMissionModel extends GraphRequest {
 
     String delete;
 
-    public DeleteAdaptation(String id) {
+    public DeleteMissionModel(String id) {
       delete = id;
     }
 
     public String getRequest() {
       StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { deleteAdaptation(  id :\"");
+      sbPlanRequest.append("mutation { deleteMissionModel(  id :\"");
       sbPlanRequest.append(delete);
       sbPlanRequest.append("\"){message success} }");
       return sbPlanRequest.toString();
@@ -456,13 +456,13 @@ public class AerieController {
 
     @Override
     public boolean handleResponse(JSONObject response) {
-      return ((JSONObject) (((JSONObject) response.get("data")).get("deleteAdaptation"))).getBoolean("success");
+      return ((JSONObject) (((JSONObject) response.get("data")).get("deleteMissionModel"))).getBoolean("success");
     }
 
 
   }
 
-  protected class GetAllAdaptationsId extends GraphRequest {
+  protected class GetAllMissionModelsId extends GraphRequest {
 
 
     public String getRequest() {
@@ -473,7 +473,7 @@ public class AerieController {
 
     ArrayList<String> idsL = new ArrayList<String>();
 
-    public ArrayList<String> getAdaptationIds() {
+    public ArrayList<String> getMissionModelIds() {
       return idsL;
     }
 
@@ -578,7 +578,7 @@ public class AerieController {
     public String getRequest() {
       StringBuilder sbPlanRequest = new StringBuilder();
       sbPlanRequest.append("mutation { createPlan(adaptationId: \"");
-      sbPlanRequest.append(AMMOS_ADAPTATION_ID);
+      sbPlanRequest.append(AMMOS_MISSION_MODEL_ID);
       sbPlanRequest.append("\", startTimestamp:\"");
       sbPlanRequest.append(horizonBegin);
       sbPlanRequest.append("\", endTimestamp:\"");
@@ -829,4 +829,3 @@ public class AerieController {
 
 
 }
-

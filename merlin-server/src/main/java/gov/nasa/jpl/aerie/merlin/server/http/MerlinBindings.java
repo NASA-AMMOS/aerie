@@ -16,7 +16,7 @@ import java.io.StringReader;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
-import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraAdaptationActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
@@ -37,14 +37,14 @@ import static io.javalin.apibuilder.ApiBuilder.post;
  * an object implementing the interface defines the action to take for each HTTP request in an HTTP-independent way.
  */
 public final class MerlinBindings implements Plugin {
-  private final MissionModelService adaptationService;
+  private final MissionModelService missionModelService;
   private final GetSimulationResultsAction simulationAction;
 
   public MerlinBindings(
-      final MissionModelService adaptationService,
+      final MissionModelService missionModelService,
       final GetSimulationResultsAction simulationAction)
   {
-    this.adaptationService = adaptationService;
+    this.missionModelService = missionModelService;
     this.simulationAction = simulationAction;
   }
 
@@ -82,44 +82,44 @@ public final class MerlinBindings implements Plugin {
 
   private void postRefreshModelParameters(final Context ctx) {
     try {
-      final var adaptationId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).adaptationId();
-      this.adaptationService.refreshModelParameters(adaptationId);
+      final var missionModelId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).missionModelId();
+      this.missionModelService.refreshModelParameters(missionModelId);
       ctx.status(200);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     }
   }
 
   private void postRefreshActivityTypes(final Context ctx) {
     try {
-      final var adaptationId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).adaptationId();
-      this.adaptationService.refreshActivityTypes(adaptationId);
+      final var missionModelId = parseJson(ctx.body(), hasuraMissionModelEventTriggerP).missionModelId();
+      this.missionModelService.refreshActivityTypes(missionModelId);
       ctx.status(200);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     }
   }
 
   private void getResourceTypes(final Context ctx) {
     try {
-      final var adaptationId = parseJson(ctx.body(), hasuraAdaptationActionP).input().adaptationId();
+      final var missionModelId = parseJson(ctx.body(), hasuraMissionModelActionP).input().missionModelId();
 
-      final var schemaMap = this.adaptationService.getStatesSchemas(adaptationId);
+      final var schemaMap = this.missionModelService.getStatesSchemas(missionModelId);
 
       ctx.result(ResponseSerializers.serializeValueSchemas(schemaMap).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     }
   }
@@ -151,10 +151,10 @@ public final class MerlinBindings implements Plugin {
 
       final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
 
-      final var failures = this.adaptationService.validateActivityParameters(missionModelId, serializedActivity);
+      final var failures = this.missionModelService.validateActivityParameters(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailures(failures).toString());
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
@@ -173,7 +173,7 @@ public final class MerlinBindings implements Plugin {
 
       final var serializedActivity = new SerializedActivity(activityTypeName, activityArguments);
 
-      final var arguments = this.adaptationService.getActivityEffectiveArguments(missionModelId, serializedActivity);
+      final var arguments = this.missionModelService.getActivityEffectiveArguments(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
     } catch (final MissingArgumentException ex) {
@@ -182,7 +182,7 @@ public final class MerlinBindings implements Plugin {
     } catch (final MissionModelService.NoSuchActivityTypeException | MissionModelService.UnconstructableActivityInstanceException ex) {
       ctx.status(400)
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());

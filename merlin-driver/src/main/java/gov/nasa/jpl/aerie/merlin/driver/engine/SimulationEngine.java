@@ -503,7 +503,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     @Override
     public <State> State getState(final Query<? super $Timeline, ?, State> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
@@ -546,7 +546,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     @Override
     public <State> State get(final Query<? super $Timeline, ?, State> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
 
@@ -558,7 +558,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
     @Override
     public <EventType> void emit(final EventType event, final Query<? super $Timeline, ? super EventType, ?> token) {
-      // SAFETY: The only queries the model should have are those provided by us (e.g. via AdaptationBuilder).
+      // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
       final var topic = ((EngineQuery<? super $Timeline, ? super EventType, ?>) token).topic();
 

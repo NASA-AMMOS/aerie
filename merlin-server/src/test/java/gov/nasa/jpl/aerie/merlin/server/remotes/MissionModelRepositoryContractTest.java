@@ -11,7 +11,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // Note:
-//   If the tests fail, please try to update the adaptation jar file.
+//   If the tests fail, please try to update the mission model jar file.
 //   See the `jarFixturePath` field below for the expected (CLASSPATH-relative) location.
 public abstract class MissionModelRepositoryContractTest {
     private final Path jarFixturePath;
@@ -19,14 +19,14 @@ public abstract class MissionModelRepositoryContractTest {
         try {
             jarFixturePath = Path.of(
                 this.getClass()
-                    .getResource("/gov/nasa/jpl/ammos/mpsa/aerie/foo-adaptation-0.6.0-SNAPSHOT.jar")
+                    .getResource("/gov/nasa/jpl/ammos/mpsa/aerie/foo-missionModel-0.6.0-SNAPSHOT.jar")
                     .toURI());
         } catch (final URISyntaxException ex) {
-          throw new Error("Unable to find adaptation fixture", ex);
+          throw new Error("Unable to find mission model fixture", ex);
         }
     }
 
-    protected MissionModelRepository adaptationRepository = null;
+    protected MissionModelRepository missionModelRepository = null;
 
     protected abstract void resetRepository();
 
@@ -36,59 +36,59 @@ public abstract class MissionModelRepositoryContractTest {
     }
 
     @Test
-    public void testGetAdaptation() throws MissionModelRepository.NoSuchAdaptationException {
+    public void testGetMissionModel() throws MissionModelRepository.NoSuchMissionModelException {
         // GIVEN
-        final MissionModelJar newAdaptation = createValidAdaptationJar("new-adaptation");
-        final String id = this.adaptationRepository.createAdaptation(newAdaptation);
+        final MissionModelJar newMissionModel = createValidMissionModelJar("new-missionModel");
+        final String id = this.missionModelRepository.createMissionModel(newMissionModel);
 
         // WHEN
-        final MissionModelJar adaptation = this.adaptationRepository.getAdaptation(id);
+        final MissionModelJar missionModel = this.missionModelRepository.getMissionModel(id);
 
         // THEN
-        assertThat(adaptation.mission).isEqualTo(newAdaptation.mission);
+        assertThat(missionModel.mission).isEqualTo(newMissionModel.mission);
     }
 
     @Test
-    public void testRetrieveAllAdaptations() {
+    public void testRetrieveAllMissionModels() {
         // GIVEN
-        final String id1 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test1"));
-        final String id2 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test2"));
-        final String id3 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test3"));
+        final String id1 = this.missionModelRepository.createMissionModel(createValidMissionModelJar("test1"));
+        final String id2 = this.missionModelRepository.createMissionModel(createValidMissionModelJar("test2"));
+        final String id3 = this.missionModelRepository.createMissionModel(createValidMissionModelJar("test3"));
 
         // WHEN
-        final Map<String, MissionModelJar> adaptations = this.adaptationRepository
-                .getAllAdaptations();
+        final Map<String, MissionModelJar> missionModels = this.missionModelRepository
+                .getAllMissionModels();
 
         // THEN
-        assertThat(adaptations.size()).isEqualTo(3);
-        assertThat(adaptations.get(id1)).isNotNull();
-        assertThat(adaptations.get(id2)).isNotNull();
-        assertThat(adaptations.get(id3)).isNotNull();
+        assertThat(missionModels.size()).isEqualTo(3);
+        assertThat(missionModels.get(id1)).isNotNull();
+        assertThat(missionModels.get(id2)).isNotNull();
+        assertThat(missionModels.get(id3)).isNotNull();
     }
 
     @Test
-    public void testCanDeleteAllAdaptations() throws MissionModelRepository.NoSuchAdaptationException {
+    public void testCanDeleteAllMissionModels() throws MissionModelRepository.NoSuchMissionModelException {
         // GIVEN
-        final String id1 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test1"));
-        final String id2 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test2"));
-        final String id3 = this.adaptationRepository.createAdaptation(createValidAdaptationJar("test3"));
+        final String id1 = this.missionModelRepository.createMissionModel(createValidMissionModelJar("test1"));
+        final String id2 = this.missionModelRepository.createMissionModel(createValidMissionModelJar("test2"));
+        final String id3 = this.missionModelRepository.createMissionModel(createValidMissionModelJar("test3"));
 
         // WHEN
-        this.adaptationRepository.deleteAdaptation(id1);
-        this.adaptationRepository.deleteAdaptation(id2);
-        this.adaptationRepository.deleteAdaptation(id3);
+        this.missionModelRepository.deleteMissionModel(id1);
+        this.missionModelRepository.deleteMissionModel(id2);
+        this.missionModelRepository.deleteMissionModel(id3);
 
         // THEN
-        assertThat(this.adaptationRepository.getAllAdaptations()).isEmpty();
+        assertThat(this.missionModelRepository.getAllMissionModels()).isEmpty();
     }
 
-    protected MissionModelJar createValidAdaptationJar(final String mission) {
-        final MissionModelJar adaptation = new MissionModelJar();
-        adaptation.name = "foo-adaptation-0.6.0-SNAPSHOT";
-        adaptation.version = "0.0.1";
-        adaptation.mission = mission;
-        adaptation.owner = "Arthur";
-        adaptation.path = this.jarFixturePath;
-        return adaptation;
+    protected MissionModelJar createValidMissionModelJar(final String mission) {
+        final MissionModelJar missionModel = new MissionModelJar();
+        missionModel.name = "foo-missionmodel-0.6.0-SNAPSHOT";
+        missionModel.version = "0.0.1";
+        missionModel.mission = mission;
+        missionModel.owner = "Arthur";
+        missionModel.path = this.jarFixturePath;
+        return missionModel;
     }
 }

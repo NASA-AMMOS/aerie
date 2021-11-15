@@ -60,12 +60,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepo
         final var id = Long.toString(results.getLong(1));
 
         final var name = results.getString(2);
-        final var adaptationId = Long.toString(results.getLong(3));
+        final var missionModelId = Long.toString(results.getLong(3));
         final var startTimestamp = Timestamp.fromString(results.getString(4));
         final var endTimestamp = Timestamp.fromString(results.getString(5));
         final var activities = parseActivitiesJson(results.getString(6), startTimestamp);
         // @TODO trace this Map.of() through from db to data models objects to determine what is needed here.
-        plans.put(id, new Plan(name, adaptationId, startTimestamp, endTimestamp, activities, Map.of()));
+        plans.put(id, new Plan(name, missionModelId, startTimestamp, endTimestamp, activities, Map.of()));
       }
 
       return plans;

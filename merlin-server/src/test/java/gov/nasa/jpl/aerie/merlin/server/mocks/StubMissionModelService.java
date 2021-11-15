@@ -19,9 +19,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class StubMissionModelService implements MissionModelService {
-  public static final String EXISTENT_ADAPTATION_ID = "abc";
-  public static final String NONEXISTENT_ADAPTATION_ID = "def";
-  public static final MissionModelJar EXISTENT_ADAPTATION;
+  public static final String EXISTENT_MISSION_MODEL_ID = "abc";
+  public static final String NONEXISTENT_MISSION_MODEL_ID = "def";
+  public static final MissionModelJar EXISTENT_MISSION_MODEL;
 
   public static final String EXISTENT_ACTIVITY_TYPE = "activity";
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
@@ -55,57 +55,57 @@ public final class StubMissionModelService implements MissionModelService {
       Instant.EPOCH);
 
   static {
-    EXISTENT_ADAPTATION = new MissionModelJar();
-    EXISTENT_ADAPTATION.name = "adaptation";
-    EXISTENT_ADAPTATION.version = "1.0a";
-    EXISTENT_ADAPTATION.mission = "mission";
-    EXISTENT_ADAPTATION.owner = "Tester";
-    EXISTENT_ADAPTATION.path = Path.of("existent-adaptation");
+    EXISTENT_MISSION_MODEL = new MissionModelJar();
+    EXISTENT_MISSION_MODEL.name = "missionModel";
+    EXISTENT_MISSION_MODEL.version = "1.0a";
+    EXISTENT_MISSION_MODEL.mission = "mission";
+    EXISTENT_MISSION_MODEL.owner = "Tester";
+    EXISTENT_MISSION_MODEL.path = Path.of("existent-missionModel");
   }
 
   @Override
-  public Map<String, MissionModelJar> getAdaptations() {
-    return Map.of(EXISTENT_ADAPTATION_ID, EXISTENT_ADAPTATION);
+  public Map<String, MissionModelJar> getMissionModels() {
+    return Map.of(EXISTENT_MISSION_MODEL_ID, EXISTENT_MISSION_MODEL);
   }
 
   @Override
-  public MissionModelJar getAdaptationById(final String adaptationId) throws NoSuchAdaptationException {
-    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationId);
+  public MissionModelJar getMissionModelById(final String missionModelId) throws NoSuchMissionModelException {
+    if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(missionModelId);
     }
 
-    return EXISTENT_ADAPTATION;
+    return EXISTENT_MISSION_MODEL;
   }
 
   @Override
-  public Map<String, Constraint> getConstraints(final String adaptationId) throws NoSuchAdaptationException {
+  public Map<String, Constraint> getConstraints(final String missionModelId) throws NoSuchMissionModelException {
     return Map.of();
   }
 
   @Override
-  public Map<String, ValueSchema> getStatesSchemas(final String adaptationId) throws NoSuchAdaptationException {
-    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationId);
+  public Map<String, ValueSchema> getStatesSchemas(final String missionModelId) throws NoSuchMissionModelException {
+    if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(missionModelId);
     }
 
     return Map.of();
   }
 
   @Override
-  public Map<String, ActivityType> getActivityTypes(final String adaptationId) throws NoSuchAdaptationException {
-    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationId);
+  public Map<String, ActivityType> getActivityTypes(final String missionModelId) throws NoSuchMissionModelException {
+    if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(missionModelId);
     }
 
     return Map.of(EXISTENT_ACTIVITY_TYPE, EXISTENT_ACTIVITY);
   }
 
   @Override
-  public List<String> validateActivityParameters(final String adaptationId, final SerializedActivity activityParameters)
-  throws NoSuchAdaptationException
+  public List<String> validateActivityParameters(final String missionModelId, final SerializedActivity activityParameters)
+  throws NoSuchMissionModelException
   {
-    if (!Objects.equals(adaptationId, EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(adaptationId);
+    if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(missionModelId);
     }
 
     if (Objects.equals(activityParameters.getTypeName(), NONEXISTENT_ACTIVITY_INSTANCE.getTypeName())) {
@@ -121,33 +121,33 @@ public final class StubMissionModelService implements MissionModelService {
 
   @Override
   public Map<String, SerializedValue> getActivityEffectiveArguments(
-      final String adaptationId,
+      final String missionModelId,
       final SerializedActivity activity)
   {
     return Map.of();
   }
 
   @Override
-  public List<Parameter> getModelParameters(final String adaptationId) {
+  public List<Parameter> getModelParameters(final String missionModelId) {
     return List.of();
   }
 
   @Override
-  public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchAdaptationException {
-    if (!Objects.equals(message.adaptationId(), EXISTENT_ADAPTATION_ID)) {
-      throw new NoSuchAdaptationException(message.adaptationId());
+  public SimulationResults runSimulation(final CreateSimulationMessage message) throws NoSuchMissionModelException {
+    if (!Objects.equals(message.missionModelId(), EXISTENT_MISSION_MODEL_ID)) {
+      throw new NoSuchMissionModelException(message.missionModelId());
     }
 
     return SUCCESSFUL_SIMULATION_RESULTS;
   }
 
   @Override
-  public void refreshModelParameters(final String adaptationId) throws NoSuchAdaptationException
+  public void refreshModelParameters(final String missionModelId) throws NoSuchMissionModelException
   {
   }
 
   @Override
-  public void refreshActivityTypes(final String adaptationId) throws NoSuchAdaptationException
+  public void refreshActivityTypes(final String missionModelId) throws NoSuchMissionModelException
   {
   }
 }

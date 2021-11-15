@@ -8,9 +8,9 @@ import java.util.Objects;
 import static java.util.Collections.unmodifiableMap;
 
 /**
- * A serializable representation of an adaptation-specific activity domain object.
+ * A serializable representation of a mission model-specific activity domain object.
  *
- * A SerializedActivity is an adaptation-agnostic representation of the data in an activity,
+ * A SerializedActivity is an mission model-agnostic representation of the data in an activity,
  * structured as serializable primitives composed using sequences and maps.
  *
  * For instance, if a FooActivity accepts two parameters, each of which is a 3D point in
@@ -19,7 +19,7 @@ import static java.util.Collections.unmodifiableMap;
  *     { "name": "Foo", "parameters": { "source": [1, 2, 3], "target": [4, 5, 6] } }
  *
  * This allows mission-agnostic treatment of activity data for persistence, editing, and
- * inspection, while allowing mission-specific adaptation to work with a domain-relevant
+ * inspection, while allowing mission-specific mission model to work with a domain-relevant
  * object via (de)serialization.
  */
 public final class SerializedActivity {

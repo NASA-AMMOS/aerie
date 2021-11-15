@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> {
-  private AdaptationBuilderState<$Schema> state = new UnbuiltState();
+  private MissionModelBuilderState<$Schema> state = new UnbuiltState();
 
   @Override
   public <CellType> CellType getInitialState(
@@ -57,8 +57,7 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
     return this.state.build(model, taskSpecTypes);
   }
 
-
-  private interface AdaptationBuilderState<$Schema> extends Initializer<$Schema> {
+  private interface MissionModelBuilderState<$Schema> extends Initializer<$Schema> {
     <Model>
     MissionModel<$Schema, Model>
     build(
@@ -66,7 +65,7 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
         Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
   }
 
-  private final class UnbuiltState implements AdaptationBuilderState<$Schema> {
+  private final class UnbuiltState implements MissionModelBuilderState<$Schema> {
     private final LiveCells initialCells = new LiveCells(new CausalEventSource());
 
     private final Map<String, Resource<? super $Schema, ?>> resources = new HashMap<>();
@@ -121,7 +120,7 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
     @Override
     public <Model> MissionModel<$Schema, Model>
     build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
-      final var adaptation = new MissionModel<>(
+      final var missionModel = new MissionModel<>(
           model,
           this.initialCells,
           this.resources,
@@ -130,11 +129,11 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
 
       MissionModelBuilder.this.state = new BuiltState();
 
-      return adaptation;
+      return missionModel;
     }
   }
 
-  private final class BuiltState implements AdaptationBuilderState<$Schema> {
+  private final class BuiltState implements MissionModelBuilderState<$Schema> {
     @Override
     public <CellType> CellType getInitialState(
         final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> query)

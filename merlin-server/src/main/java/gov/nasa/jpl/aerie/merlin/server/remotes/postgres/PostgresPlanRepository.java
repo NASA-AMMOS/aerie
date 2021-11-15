@@ -12,7 +12,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchAdaptationException;
+import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -69,7 +69,7 @@ public final class PostgresPlanRepository implements PlanRepository {
             .orElseGet(Map::of);
         return new Plan(
             planRecord.name(),
-            Long.toString(planRecord.adaptationId()),
+            Long.toString(planRecord.missionModelId()),
             planRecord.startTime(),
             planRecord.endTime(),
             planRecord.activities(),
@@ -104,7 +104,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public CreatedPlan createPlan(final NewPlan plan) throws NoSuchAdaptationException, IntegrationFailureException {
+  public CreatedPlan createPlan(final NewPlan plan) throws NoSuchMissionModelException, IntegrationFailureException {
     try (
         final var connection = this.dataSource.getConnection();
         // Rollback the transaction if we throw out of this method.
@@ -117,7 +117,7 @@ public final class PostgresPlanRepository implements PlanRepository {
       ) {
         final long planId = createPlanAction.apply(
             plan.name,
-            toMissionModelId(plan.adaptationId),
+            toMissionModelId(plan.missionModelId),
             plan.startTimestamp,
             plan.endTimestamp);
 
@@ -205,12 +205,12 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   private static long toMissionModelId(final String modelId)
-  throws NoSuchAdaptationException
+  throws NoSuchMissionModelException
   {
     try {
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
-      throw new NoSuchAdaptationException();
+      throw new NoSuchMissionModelException();
     }
   }
 

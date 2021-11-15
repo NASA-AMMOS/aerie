@@ -226,15 +226,15 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeAdaptationContractException(final MissionModelFacade.AdaptationContractException ex) {
+  public static JsonValue serializeMissionModelContractException(final MissionModelFacade.MissionModelContractException ex) {
     // TODO: Improve diagnostic information
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())
                .build();
   }
 
-  public static JsonValue serializeAdaptationLoadException(
-      final LocalMissionModelService.AdaptationLoadException ex)
+  public static JsonValue serializeMissionModelLoadException(
+      final LocalMissionModelService.MissionModelLoadException ex)
   {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
@@ -242,7 +242,7 @@ public final class ResponseSerializers {
                .build();
   }
 
-  public static JsonValue serializeAdaptationAccessException(final MissionModelAccessException ex) {
+  public static JsonValue serializeMissionModelAccessException(final MissionModelAccessException ex) {
     // TODO: Improve diagnostic information?
     return Json.createObjectBuilder()
                .add("message", ex.getMessage())

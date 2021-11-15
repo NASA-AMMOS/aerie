@@ -9,7 +9,7 @@ public final record PlanRecord(
     long id,
     long revision,
     String name,
-    long adaptationId,
+    long missionModelId,
     Timestamp startTime,
     Timestamp endTime,
     Map<String, ActivityInstance> activities

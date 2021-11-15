@@ -30,12 +30,12 @@ import java.util.Map;
   }
 
   public Map<String, Constraint> get(final long modelId)
-  throws SQLException, MissionModelRepository.NoSuchAdaptationException
+  throws SQLException, MissionModelRepository.NoSuchMissionModelException
   {
     this.statement.setLong(1, modelId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new MissionModelRepository.NoSuchAdaptationException();
+      if (!results.next()) throw new MissionModelRepository.NoSuchMissionModelException();
 
       final var constraints = new HashMap<String, Constraint>();
       do {

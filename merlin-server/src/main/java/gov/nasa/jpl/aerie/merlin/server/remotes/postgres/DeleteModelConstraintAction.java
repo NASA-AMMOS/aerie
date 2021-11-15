@@ -22,7 +22,7 @@ import java.sql.SQLException;
 
   /** Returns true if the constraint was successfully deleted. */
   public boolean apply(final long modelId, final String name)
-  throws SQLException, MissionModelRepository.NoSuchAdaptationException
+  throws SQLException, MissionModelRepository.NoSuchMissionModelException
   {
     this.statement.setLong(1, modelId);
     this.statement.setString(2, name);

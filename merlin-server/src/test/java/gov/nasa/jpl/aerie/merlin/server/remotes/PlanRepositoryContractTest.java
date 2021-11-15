@@ -25,7 +25,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanStorePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchAdaptationException {
+  public void testCanStorePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
     // GIVEN
 
     // WHEN
@@ -41,7 +41,7 @@ public abstract class PlanRepositoryContractTest {
 
   @Test
   public void testUnsavedPlanTransactionHasNoEffect()
-  throws NoSuchPlanException, MissionModelRepository.NoSuchAdaptationException
+  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
   {
     // GIVEN
     final NewPlan newPlan = new NewPlan();
@@ -60,7 +60,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCreatePlanWithActivity() throws NoSuchPlanException, MissionModelRepository.NoSuchAdaptationException {
+  public void testCreatePlanWithActivity() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
     // GIVEN
 
     // WHEN
@@ -83,7 +83,7 @@ public abstract class PlanRepositoryContractTest {
 
   @Test
   public void testCreatePlanWithNullActivitiesList()
-  throws NoSuchPlanException, MissionModelRepository.NoSuchAdaptationException
+  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
   {
     // GIVEN
 
@@ -95,7 +95,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanDeletePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchAdaptationException {
+  public void testCanDeletePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
     // GIVEN
     this.planRepository.createPlan(new NewPlan());
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());

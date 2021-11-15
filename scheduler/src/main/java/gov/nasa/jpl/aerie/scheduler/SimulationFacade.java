@@ -48,7 +48,7 @@ public class SimulationFacade {
   private final Map<String, SimResource<Boolean>> feedersBool;
   private final Map<String, SimResource<String>> feedersString;
 
-  private final MissionModel<?, ?> adaptation;
+  private final MissionModel<?, ?> missionModel;
 
   // planning horizon
   private final Range<Time> planningHorizon;
@@ -120,8 +120,8 @@ public class SimulationFacade {
     return feedersBool.get(resourceName);
   }
 
-  public SimulationFacade(Range<Time> planningHorizon, MissionModel<?, ?> adaptation) {
-    this.adaptation = adaptation;
+  public SimulationFacade(Range<Time> planningHorizon, MissionModel<?, ?> missionModel) {
+    this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
     feedersInt = new HashMap<>();
     feedersDouble = new HashMap<>();
@@ -179,7 +179,7 @@ public class SimulationFacade {
                                                 .toMicroseconds(), MICROSECONDS);
 
     final var results = SimulationDriver.simulate(
-        this.adaptation,
+        this.missionModel,
         schedule,
         Instant.now(),
         simulationDuration);
@@ -189,14 +189,14 @@ public class SimulationFacade {
   }
 
   /**
-   * Fetches the resource schemas from the adaptation
+   * Fetches the resource schemas from the mission model
    *
    * @return a map from resource name to valueschema
    */
   private Map<String, ValueSchema> getResourceSchemas() {
     final var schemas = new HashMap<String, ValueSchema>();
 
-    for (final var entry : this.adaptation.getResources().entrySet()) {
+    for (final var entry : this.missionModel.getResources().entrySet()) {
       final var name = entry.getKey();
       final var resource = entry.getValue();
       schemas.put(name, resource.getSchema());

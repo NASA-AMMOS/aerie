@@ -33,16 +33,16 @@ public final class GetSimulationResultsAction {
   }
 
   private final PlanService planService;
-  private final MissionModelService adaptationService;
+  private final MissionModelService missionModelService;
   private final SimulationService simulationService;
 
   public GetSimulationResultsAction(
       final PlanService planService,
-      final MissionModelService adaptationService,
+      final MissionModelService missionModelService,
       final SimulationService simulationService)
   {
     this.planService = Objects.requireNonNull(planService);
-    this.adaptationService = Objects.requireNonNull(adaptationService);
+    this.missionModelService = Objects.requireNonNull(missionModelService);
     this.simulationService = Objects.requireNonNull(simulationService);
   }
 
@@ -73,14 +73,14 @@ public final class GetSimulationResultsAction {
     final var constraintJsons = new HashMap<String, Constraint>();
 
     try {
-      this.adaptationService.getConstraints(plan.adaptationId).forEach(
+      this.missionModelService.getConstraints(plan.missionModelId).forEach(
           (name, constraint) -> constraintJsons.put("model/" + name, constraint)
       );
       this.planService.getConstraintsForPlan(planId).forEach(
           (name, constraint) -> constraintJsons.put("plan/" + name, constraint)
       );
-    } catch (final MissionModelService.NoSuchAdaptationException ex) {
-      throw new RuntimeException("Assumption falsified -- adaptation for existing plan does not exist");
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      throw new RuntimeException("Assumption falsified -- mission model for existing plan does not exist");
     }
 
 

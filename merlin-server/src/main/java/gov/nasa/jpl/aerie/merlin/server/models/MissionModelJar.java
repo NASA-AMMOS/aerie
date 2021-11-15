@@ -10,7 +10,7 @@ public final class MissionModelJar {
     public String owner;
 
     /**
-     * The path to the Adaptation JAR
+     * The path to the Mission Model JAR
      *
      * File at this location should not
      * be deleted except by its owner

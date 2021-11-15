@@ -37,7 +37,7 @@ public final class InitializationContext<$Schema> implements Context {
 
   @Override
   public <CellType> CellType ask(final Query<?, ?, CellType> query) {
-    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
+    // SAFETY: All objects accessible within a single mission model instance have the same brand.
     @SuppressWarnings("unchecked")
     final var brandedQuery = (Query<$Schema, ?, CellType>) query;
 

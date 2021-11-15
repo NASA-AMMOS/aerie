@@ -27,7 +27,7 @@ import java.util.Objects;
   }
 
   public void add(final long modelId, final Constraint constraint)
-  throws SQLException, MissionModelRepository.NoSuchAdaptationException
+  throws SQLException, MissionModelRepository.NoSuchMissionModelException
   {
     this.statement.setLong(1, modelId);
     this.statement.setString(2, constraint.name());
@@ -38,7 +38,7 @@ import java.util.Objects;
     this.statement.addBatch();
   }
 
-  public void apply() throws SQLException, MissionModelRepository.NoSuchAdaptationException {
+  public void apply() throws SQLException, MissionModelRepository.NoSuchMissionModelException {
     try {
       final var results = this.statement.executeBatch();
       for (final var result : results) {
@@ -49,7 +49,7 @@ import java.util.Objects;
       if (Objects.equals(ex.getSQLState(), "23503")) {  /* foreign_key_violation */
         // The only foreign key on the `mission_model_condition` table references `mission_model`,
         // so there must not be a mission model with the given ID.
-        throw new MissionModelRepository.NoSuchAdaptationException();
+        throw new MissionModelRepository.NoSuchMissionModelException();
       } else {
         throw ex;
       }

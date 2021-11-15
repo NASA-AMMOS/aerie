@@ -10,15 +10,15 @@ import java.util.Map;
 
 public interface MissionModelRepository {
     // Queries
-    Map<String, MissionModelJar> getAllAdaptations();
-    MissionModelJar getAdaptation(String id) throws NoSuchAdaptationException;
-    Map<String, Constraint> getConstraints(String adaptationId) throws NoSuchAdaptationException;
+    Map<String, MissionModelJar> getAllMissionModels();
+    MissionModelJar getMissionModel(String id) throws NoSuchMissionModelException;
+    Map<String, Constraint> getConstraints(String missionModelId) throws NoSuchMissionModelException;
 
     // Mutations
-    String createAdaptation(MissionModelJar adaptationJar);
-    void updateModelParameters(String adaptationId, final List<Parameter> modelParameters) throws NoSuchAdaptationException;
-    void updateActivityTypes(String adaptationId, final Map<String, ActivityType> activityTypes) throws NoSuchAdaptationException;
-    void deleteAdaptation(String adaptationId) throws NoSuchAdaptationException;
+    String createMissionModel(MissionModelJar missionModelJar);
+    void updateModelParameters(String missionModelId, final List<Parameter> modelParameters) throws NoSuchMissionModelException;
+    void updateActivityTypes(String missionModelId, final Map<String, ActivityType> activityTypes) throws NoSuchMissionModelException;
+    void deleteMissionModel(String missionModelId) throws NoSuchMissionModelException;
 
-    class NoSuchAdaptationException extends Exception {}
+    class NoSuchMissionModelException extends Exception {}
 }

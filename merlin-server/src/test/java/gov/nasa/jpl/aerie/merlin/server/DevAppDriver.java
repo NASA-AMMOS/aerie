@@ -21,18 +21,18 @@ public final class DevAppDriver {
   public static void main(final String[] args) {
     // Assemble the core non-web object graph.
     final var fixtures = new Fixtures();
-    final var adaptationController = new LocalMissionModelService(Path.of("/dev/null"), new InMemoryMissionModelRepository());
+    final var missionModelController = new LocalMissionModelService(Path.of("/dev/null"), new InMemoryMissionModelRepository());
     final var planController = new LocalPlanService(fixtures.planRepository);
     final var simulationAction = new GetSimulationResultsAction(
         planController,
-        adaptationController,
-        new UncachedSimulationService(new SynchronousSimulationAgent(planController, adaptationController)));
+        missionModelController,
+        new UncachedSimulationService(new SynchronousSimulationAgent(planController, missionModelController)));
 
     // Configure an HTTP server.
     final Javalin javalin = Javalin.create(config -> config
         .enableDevLogging()
         .enableCorsForAllOrigins()
-        .registerPlugin(new MerlinBindings(adaptationController, simulationAction))
+        .registerPlugin(new MerlinBindings(missionModelController, simulationAction))
         .registerPlugin(new LocalAppExceptionBindings())
         .registerPlugin(new MissionModelRepositoryExceptionBindings())
         .registerPlugin(new MissionModelExceptionBindings()));
