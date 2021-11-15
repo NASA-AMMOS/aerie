@@ -752,7 +752,7 @@ A plan file must be created with respect to an mission model file, since activit
 <h2 id="package-info-java"><code>package-info.java</code></h2>
 <p>A mission model must contain, at the very least, a <code>package-info.java</code> containing annotations that describe the highest-level features of the mission model. For example:</p>
 <pre class="hljs"><span class="hljs-comment">// banananation/package-info.java</span>
-<span class="hljs-meta">@Adaptation(model = Mission.class)</span>
+<span class="hljs-meta">@MissionModel(model = Mission.class)</span>
 <span class="hljs-meta">@WithActivityType(BiteBananaActivity.class)</span>
 <span class="hljs-meta">@WithActivityType(PeelBananaActivity.class)</span>
 <span class="hljs-meta">@WithActivityType(ParameterTestActivity.class)</span>
@@ -763,9 +763,9 @@ A plan file must be created with respect to an mission model file, since activit
 <span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.banananation.activities.ParameterTestActivity;
 <span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.banananation.activities.PeelBananaActivity;
 <span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
-<span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
-<span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithActivityType;
-<span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithMappers;</pre><p>This <code>package-info.java</code> identifies the top-level class representing the mission model, and registers activity types that may interact with the mission model. Merlin processes these annotations at compile-time, generating a set of boilerplate classes which take care of interacting with the Aerie platform.</p>
+<span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
+<span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;
+<span class="hljs-keyword">import</span> gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithMappers;</pre><p>This <code>package-info.java</code> identifies the top-level class representing the mission model, and registers activity types that may interact with the mission model. Merlin processes these annotations at compile-time, generating a set of boilerplate classes which take care of interacting with the Aerie platform.</p>
 <p>The <code>@WithMappers</code> annotation informs the annotation processor of a set of serialization rules for activity parameters of various types; the <a href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/contrib/src/main/java/gov/nasa/jpl/aerie/contrib/serialization/rulesets/BasicValueMappers.java"><code>BasicValueMappers</code></a> ruleset covers most primitive Java types. Mission modelers may also create their own rulesets, specifying rules for mapping custom value types. If multiple <code>@WithMappers</code> annotations are specified, and multiple mappers apply to the same type, mappers found in earlier instances of the annotation will take precedence. For more information on allowing custom values, see <a href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/Activity-Mappers#value-mappers">value mappers</a>.</p>
 <h2 id="mission-java"><code>Mission.java</code></h2>
 <p>The top-level mission model is responsible for defining all of the mission resources and their behavior when affected by activities. Of course, the top-level model may delegate to smaller, more focused models based on the needs of the mission. The top-level model is received by activities, however, so it must make accessible any resources or methods to be used therein.</p>
@@ -780,8 +780,8 @@ A plan file must be created with respect to an mission model file, since activit
     registrar.real(<span class="hljs-string">&quot;/peel&quot;</span>, <span class="hljs-keyword">this</span>.peel);
     registrar.real(<span class="hljs-string">&quot;/fruit&quot;</span>, <span class="hljs-keyword">this</span>.fruit);
   }
-}</pre><p>Mission resources are declared using <a href="https://github.jpl.nasa.gov/pages/Aerie/aerie/0.9.0/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/Registrar.html#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper"><code>Registrar#discrete</code></a>) or <a href="https://github.jpl.nasa.gov/pages/Aerie/aerie/0.9.0/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/Registrar.html#real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource"><code>Registrar#real</code></a>).</p>
-<p>A model may also express autonomous behaviors, where a discrete change occurs in the system outside of an activity&#39;s effects. A <strong>daemon task</strong> can be used to model these behaviors. Daemons are spawned at the beginning of any simulation, and may perform the same effects as an activity. Daemons are prepared using the <a href="https://github.jpl.nasa.gov/pages/Aerie/aerie/0.9.0/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#spawn(java.lang.Runnable"><code>spawn</code></a>) method.</p>
+}</pre><p>Mission resources are declared using <a href="https://github.jpl.nasa.gov/pages/Aerie/aerie/0.9.1/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/Registrar.html#discrete(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource,gov.nasa.jpl.aerie.merlin.protocol.ValueMapper"><code>Registrar#discrete</code></a>) or <a href="https://github.jpl.nasa.gov/pages/Aerie/aerie/0.9.1/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/Registrar.html#real(java.lang.String,gov.nasa.jpl.aerie.merlin.framework.Resource"><code>Registrar#real</code></a>).</p>
+<p>A model may also express autonomous behaviors, where a discrete change occurs in the system outside of an activity&#39;s effects. A <strong>daemon task</strong> can be used to model these behaviors. Daemons are spawned at the beginning of any simulation, and may perform the same effects as an activity. Daemons are prepared using the <a href="https://github.jpl.nasa.gov/pages/Aerie/aerie/0.9.1/javadoc/framework/gov/nasa/jpl/aerie/merlin/framework/ModelActions.html#spawn(java.lang.Runnable"><code>spawn</code></a>) method.</p>
 <h2 id="activity-types">Activity types</h2>
 <p>An <strong>activity type</strong> defines a simulated behavior that may be invoked by a planner, separate from the autonomous behavior of the mission model itself. Activity types may define <strong>parameters</strong>, which are filled with <strong>arguments</strong> by a planner and provided to the activity upon execution. Activity types may also define <strong>validations</strong> for the purpose of informing a planner when the parameters they have provided may be problematic.</p>
 <pre class="hljs"><span class="hljs-comment">// banananation/activities/PeelBananaActivity.java</span>
@@ -806,7 +806,7 @@ A plan file must be created with respect to an mission model file, since activit
   }
 }</pre><p>Merlin automatically generates parameter serialization boilerplate for every activity type defined in the mission model&#39;s <code>package-info.java</code>. Moreover, the generated <code>Model</code> base class provides helper methods for spawning each type of activity as children from other activities.</p>
 <h2 id="uploading-a-mission-model">Uploading a Mission Model</h2>
-<p>In order to use a mission model to simulate a plan on the Aerie platform, it must be packaged as a JAR file with all of its non-Merlin dependencies bundled in. The <a href="https://github.jpl.nasa.gov/Aerie/adaptation-template">template mission model</a> provides this capability out of the box, so long as your dependencies are specified with Gradle&#39;s <code>implementation</code> dependency class. The built mission model JAR can be uploaded to Aerie through the Aerie web UI.</p>
+<p>In order to use a mission model to simulate a plan on the Aerie platform, it must be packaged as a JAR file with all of its non-Merlin dependencies bundled in. The <a href="https://github.jpl.nasa.gov/Aerie/mission-model-template">template mission model</a> provides this capability out of the box, so long as your dependencies are specified with Gradle&#39;s <code>implementation</code> dependency class. The built mission model JAR can be uploaded to Aerie through the Aerie web UI.</p>
 <p class="page" id="Configuring-a-Mission-Model"></p><h1>Configuring A Mission Model</h1>
 <p>A <strong>mission model configuration</strong> enables mission modelers to set initial mission model values when running a simulation.
 Configurations are tied to a plan, therefore each plan is able to define its own set of configuration parameters.
@@ -814,7 +814,7 @@ The example <code>banananation</code> contains a <code>Configuration</code> data
 <h2 id="setup">Setup</h2>
 <h3 id="mission-model">Mission Model</h3>
 <p>The <code>banananation</code> example makes use of the <code>@WithConfiguration</code> annotation within <code>package-info.java</code>:</p>
-<pre class="hljs"><span class="hljs-meta">@Adaptation(model = Mission.class)</span>
+<pre class="hljs"><span class="hljs-meta">@MissionModel(model = Mission.class)</span>
 
 <span class="hljs-meta">@WithConfiguration(Configuration.class)</span></pre><p>Where <code>Configuration</code> is a simple data class:</p>
 <pre class="hljs"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">final</span> record <span class="hljs-title">Configuration</span> <span class="hljs-params">(<span class="hljs-keyword">int</span> initialPlantCount, String initialProducer, Path initialDataPath)</span> </span>{
@@ -860,7 +860,7 @@ A relevant excerpt from <code>banananation/src/main/java/gov/nasa/jpl/aerie/bana
         plantCount,
         producer,
         dataPath));
-  }</pre><p>When the <code>@WithConfiguration</code> annotation is used, the model – defined within the <code>@Adaptation</code> annotation – must accept the configuration as a constructor argument.
+  }</pre><p>When the <code>@WithConfiguration</code> annotation is used, the model – defined within the <code>@MissionModel</code> annotation – must accept the configuration as a constructor argument.
 See <code>Mission.java</code>:</p>
 <pre class="hljs"><span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">Mission</span><span class="hljs-params">(<span class="hljs-keyword">final</span> Registrar registrar, <span class="hljs-keyword">final</span> Configuration config)</span> </span>{
   <span class="hljs-comment">// ...</span>
@@ -926,7 +926,7 @@ See <code>Mission.java</code>:</p>
 <p><strong>Exceptions:</strong>
 If an uncaught exception is thrown from an activity&#39;s effect model, the simulation will halt. No later activities will be performed, and simulation time will not proceed beyond the instant at which the exception occurred. As such, uncaught exceptions are essentially treated as fatal errors. We advise mission models to employ uncaught exceptions sparingly, as it deprives planners of information about the behavior of the spacecraft after the fault. (At least as of 2021-06-11, an uncaught exception will cause the simulation to abort without producing <em>any</em> results -- not even up to the point of failure.) On the other hand, uncaught exceptions may be useful to identify bugs in the mission model or situations that the mission model is not intended to simulate.</p>
 <p><strong>Actions:</strong>
-An activity&#39;s effect model may wait for time to pass, spawn other activities, and affect spacecraft state. Spacecraft state is affected via the <code>Mission</code> model parameter, which depends on the details of the modeled mission systems. (See <a href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/Developing-an-Adaptation">Developing an Adaptation</a> for more on mission modeling.)</p>
+An activity&#39;s effect model may wait for time to pass, spawn other activities, and affect spacecraft state. Spacecraft state is affected via the <code>Mission</code> model parameter, which depends on the details of the modeled mission systems. (See <a href="#Developing-a-Mission-Model">Developing a Mission Model</a> for more on mission modeling.)</p>
 <p>Actions related to the passage of simulation time are provided as static methods on the <code>merlin.framework.ModelActions</code> class:</p>
 <ul>
 <li><code>delay(duration)</code>: Delay the currently-running activity for the given duration. On resumption, it will observe effects caused by other activities over the intervening timespan.</li>
@@ -973,7 +973,7 @@ If desirable, users can choose to follow APGEN / Blackbird paradigm by simply sp
 <h2 id="what-is-an-activity-mapper">What is an Activity Mapper</h2>
 <p>An Activity Mapper is a Java class that implements the <code>ActivityMapper</code>
 interface for the <code>ActivityType</code> being mapped. It is required that
-each Activity Type in an adaptation have an associated Activity Mapper, to provide
+each Activity Type in an mission model have an associated Activity Mapper, to provide
 provide several capabilities surrounding serialization/deserialization of activity instances.</p>
 <p>The Merlin annotation processor can automatically <a href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/Activity-Mappers#generated-activity-mappers">generate activity mappers</a> for every activity type, even for those with custom-typed parameters (see <a href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/Activity-Mappers#value-mappers">below</a>), but if it is desirable to create a custom activity mapper the interface is described below. </p>
 <h2 id="activitymapper-interface"><code>ActivityMapper</code> Interface</h2>
@@ -1034,7 +1034,7 @@ Note that validation failures are different from instantiation errors. Validatio
     <span class="hljs-string">&quot;biz&quot;</span>: ValueSchema<span class="hljs-selector-class">.ofSeries</span>(ValueSchema.STRING)
   )
 )</pre><h2 id="generated-activity-mappers">Generated Activity Mappers</h2>
-<p>In most cases, you will likely want to let Merlin generate activity mappers for you. Thankfully, this is the done automatically when running the Merlin Annotation Processor. When compiling your code with the Merlin annotation processor, the processor will produce an activity mapper for each activity type. This is made possible by the use of the <code>@WithMappers()</code> annotations in your <a href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/Developing-an-Adaptation#package-infojava">package-info.java</a>. Each java-file specified by these annotations is parsed to determine what types of values can be mapped. As long as there is a mapper for each activity parameter type used in the model, the annotation processor should have no issues creating activity mappers.</p>
+<p>In most cases, you will likely want to let Merlin generate activity mappers for you. Thankfully, this is the done automatically when running the Merlin Annotation Processor. When compiling your code with the Merlin annotation processor, the processor will produce an activity mapper for each activity type. This is made possible by the use of the <code>@WithMappers()</code> annotations in your <a href="https://github.jpl.nasa.gov/Aerie/aerie/wiki/Developing-a-Mission-Model#package-infojava">package-info.java</a>. Each java-file specified by these annotations is parsed to determine what types of values can be mapped. As long as there is a mapper for each activity parameter type used in the model, the annotation processor should have no issues creating activity mappers.</p>
 <h2 id="value-mappers">Value Mappers</h2>
 <p>Regardless of whether you create custom activity mappers or let Merlin
 generate them for you, you will likely find the need to work with a
@@ -2437,16 +2437,17 @@ result = response.json()
 <p>Installation instructions are found in the Aerie repository <a href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment.md">deployment documentation</a>. If you have any questions or issues, don&#39;t hesitate to ask on <a href="https://app.slack.com/client/T024LMMEZ/C0163E42UBF">#mpsa-aerie-users</a>.</p>
 <h2 id="docker-containers">Docker Containers</h2>
 <p>Goto the <a href="https://artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-release-local/gov/nasa/jpl/aerie">Artifactory Aerie Docker repository</a> and log in with your JPL credentials. The latest released containers are:</p>
-<pre class="hljs">docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie<span class="hljs-regexp">/merlin/</span>release-<span class="hljs-number">0.9</span>.<span class="hljs-number">0</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-apollo/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">0</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-ui/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">0</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-editor/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">0</span></pre><h2 id="example-docker-compose">Example Docker-Compose</h2>
+<pre class="hljs">docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie<span class="hljs-regexp">/merlin/</span>release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-gateway/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-ui/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-code-server/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-editor/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span></pre><h2 id="example-docker-compose">Example Docker-Compose</h2>
 <p>An example Docker Compose file is available for deployment. You can use <a href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment.md#customer-deployment">these instructions</a> to help you deploy.</p>
 <p><code>general-develop/gov/nasa/jpl/aerie/aerie-docker-compose.tar.gz</code></p>
 <h2 id="tars">TARs</h2>
 <p>If you just want the Aerie JAR files you can find them at:</p>
-<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-release-<span class="hljs-number">0.9</span>.<span class="hljs-number">0</span>.tar.gz</pre><p>The Aerie Editor (Falcon) can be found at:</p>
-<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-editor-release-<span class="hljs-number">0.9</span>.<span class="hljs-number">0</span>.tar.gz</pre><h2 id="known-issues">Known Issues</h2>
+<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>.tar.gz</pre><p>The Aerie Editor (Falcon) can be found at:</p>
+<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-editor-release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>.tar.gz</pre><h2 id="known-issues">Known Issues</h2>
 <ol>
 <li>When using the IntelliJ IDE, upon a source file change, only the affected source files will be recompiled. This causes conflicts with the annotations processing being used for Activity Mapping. For now manually rebuilding every time is the solution.</li>
 </ol>
@@ -2536,8 +2537,16 @@ docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-
 <td>80</td>
 </tr>
 <tr>
-<td>Aerie Apollo</td>
-<td>27184</td>
+<td>Aerie Gateway</td>
+<td>9000</td>
+</tr>
+<tr>
+<td>Postgres</td>
+<td>5432</td>
+</tr>
+<tr>
+<td>Hasura</td>
+<td>8080</td>
 </tr>
 </tbody>
 </table>
@@ -2546,20 +2555,7 @@ docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-
 <h2 id="configuration">Configuration</h2>
 <p>The <code>merlin</code> Docker image can be configured by mounting a JSON configuration file and providing the path to that file as a command-line argument to the container.
 For instance, if using Docker Compose and assuming the file is mounted at <code>/srv/config.json</code>, the line <code>command: /srv/config.json</code> can be added to the <code>merlin</code> container definition.</p>
-<p>The default configuration (as of 2021-08-04) is given below as an example.</p>
-<pre class="hljs">{ <span class="hljs-attr">&quot;server&quot;</span>:
-    { <span class="hljs-attr">&quot;port&quot;</span>: <span class="hljs-number">27183</span>,
-      <span class="hljs-attr">&quot;logging&quot;</span>: <span class="hljs-literal">true</span>,
-      <span class="hljs-attr">&quot;file-store&quot;</span>: <span class="hljs-string">&quot;/usr/src/app/merlin_file_store&quot;</span> },
-  <span class="hljs-attr">&quot;store&quot;</span>:
-    { <span class="hljs-attr">&quot;type&quot;</span>: <span class="hljs-string">&quot;mongo&quot;</span>,
-      <span class="hljs-attr">&quot;uri&quot;</span>: <span class="hljs-string">&quot;mongodb://merlin_mongo:27020&quot;</span>,
-      <span class="hljs-attr">&quot;database&quot;</span>: <span class="hljs-string">&quot;merlin&quot;</span>,
-      <span class="hljs-attr">&quot;collections&quot;</span>:
-        { <span class="hljs-attr">&quot;mission-models&quot;</span>: <span class="hljs-string">&quot;adaptations&quot;</span>,
-          <span class="hljs-attr">&quot;plans&quot;</span>: <span class="hljs-string">&quot;plans&quot;</span>,
-          <span class="hljs-attr">&quot;activities&quot;</span>: <span class="hljs-string">&quot;activities&quot;</span>,
-          <span class="hljs-attr">&quot;results&quot;</span>: <span class="hljs-string">&quot;simulationResults&quot;</span> } } }</pre><h2 id="environment-variables">Environment Variables</h2>
+<h2 id="environment-variables">Environment Variables</h2>
 <p>The <code>merlin</code> Docker image can be provided additional JVM arguments, such as to configure the JVM allocated heap size. Add any desired JVM flags to the <code>JAVA_OPTS</code> environment variable for this container.</p>
 <h2 id="network-communications">Network Communications</h2>
 <p>The Aerie deployment configures the port numbers for each container via docker-compose. The port numbers must match those declared within the services&#39; config.json. In a large majority of Aerie deployments no change to these port numbers will be needed, nor should one be made. The only port number that might be desired to change is the Aerie-UI port (80). In this case the number to change is the first port number of the pair [XXXX:XXXX]. The second number represents the port number within the container itself.</p>
@@ -2567,11 +2563,12 @@ For instance, if using Docker Compose and assuming the file is mounted at <code>
 <p>Aerie is orchestrated as a set of Docker containers. Each of the software components are packaged and run in an isolated docker container independently from one another. There exists seven docker containers:</p>
 <ul>
 <li>Aerie UI: Hosts the web application and communicates with Aerie via the GraphQL Apollo Server.</li>
-<li>Aerie Apollo: The GraphQL Apollo Server which functions as the Aerie API Gateway against which clients can submit GraphQL queries and mutations.</li>
+<li>Aerie Gateway: Main API gateway for Aerie</li>
 <li>Merlin Server: Handles all the logic and functionality for activity planning.</li>
-<li>Merlin MongoDB: Holds the data for the Merlin server container.</li>
+<li>Postgres: Holds the data for the Merlin server container.</li>
+<li>Hasura: Serves the Aerie GraphQL API.</li>
 </ul>
-<p>The Merlin and Apollo servers communicate to each other via a REST API (internal to Aerie) with the ports specified in the docker-compose file. Any database containers (currently Merlin-mongo) are isolated to connect only with service containers internal to the application (Merlin server and UI server). Aerie databases are not accessible directly from outside the Aerie application. </p>
+<p>Aerie database containers are isolated to connect only with service containers internal to the application (Merlin server, UI server, Aerie gateway server). Aerie databases are not accessible directly from outside the Aerie application. </p>
 <h2 id="nfs-deployment">NFS Deployment</h2>
 <p>The provided <code>docker-compose.yml</code> configuration deploys all Aerie components on the same physical machine.
 This is sufficient for small Aerie deployments, such as for mission model development, but any running simulations will compete for system resources, potentially degrading the entire system significantly.</p>
@@ -2582,8 +2579,7 @@ These files will need to be shared between physical machines.</p>
 <h3 id="nfs-clients">NFS Clients</h3>
 <p>Clients may mount the shared directory by making use of a Docker volume:</p>
 <pre class="hljs"><span class="hljs-attr">volumes:</span>
-  <span class="hljs-attr">merlin_mongo_data:</span>
-  <span class="hljs-attr">adaptation_files:</span>
+  <span class="hljs-attr">mission_model_files:</span>
   <span class="hljs-attr">postgres_data:</span>
   <span class="hljs-attr">model_data:</span>
     <span class="hljs-attr">driver:</span> <span class="hljs-string">local</span>
@@ -2596,12 +2592,13 @@ These files will need to be shared between physical machines.</p>
   <span class="hljs-bullet">-</span> <span class="hljs-string">model_data:/usr/src/app/data</span></pre><h1 id="mission-model-development">Mission Model Development</h1>
 <p>Aerie provides four libraries that can be imported by a project from JPL Artifactory. They are,</p>
 <ul>
-<li><strong>contrib</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/contrib/0.9.0/</li>
-<li><strong>merlin-framework</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework/0.9.0/</li>
-<li><strong>merlin-framework-processor</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-processor/0.9.0/</li>
-<li><strong>merlin-framework-junit</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-junit/0.9.0/</li>
-<li><strong>merlin-sdk</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-sdk/0.9.0/</li>
-<li><strong>merlin-driver</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-driver/0.9.0/</li>
+<li><strong>contrib</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/contrib/0.9.1/</li>
+<li><strong>merlin-framework</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework/0.9.1/</li>
+<li><strong>merlin-framework-processor</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-processor/0.9.1/</li>
+<li><strong>merlin-framework-junit</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-junit/0.9.1/</li>
+<li><strong>merlin-sdk</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-sdk/0.9.1/</li>
+<li><strong>merlin-driver</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-driver/0.9.1/</li>
+<li><strong>parsing-tulities</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/parsin-utilities/0.9.1/</li>
 </ul>
 <h2 id="software-requirements">Software Requirements</h2>
 <table>
@@ -2622,7 +2619,7 @@ These files will need to be shared between physical machines.</p>
 </tr>
 <tr>
 <td>*Open JDK</td>
-<td>16.X</td>
+<td>17.X</td>
 </tr>
 </tbody>
 </table>
