@@ -48,7 +48,7 @@ public class SimulationFacade {
   private final Map<String, SimResource<Boolean>> feedersBool;
   private final Map<String, SimResource<String>> feedersString;
 
-  private final MissionModel<?, ?> missionModel;
+  private final MissionModel<?> missionModel;
 
   // planning horizon
   private final Range<Time> planningHorizon;
@@ -120,7 +120,7 @@ public class SimulationFacade {
     return feedersBool.get(resourceName);
   }
 
-  public SimulationFacade(Range<Time> planningHorizon, MissionModel<?, ?> missionModel) {
+  public SimulationFacade(Range<Time> planningHorizon, MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
     feedersInt = new HashMap<>();

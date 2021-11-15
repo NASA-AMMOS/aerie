@@ -20,8 +20,8 @@ import java.util.function.Supplier;
 final class ReplayingReactionContext<$Timeline> implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
-  private final TaskHandle<$Timeline> handle;
-  private Scheduler<$Timeline> scheduler;
+  private final TaskHandle handle;
+  private Scheduler scheduler;
 
   private final MemoryCursor memory;
 
@@ -29,8 +29,8 @@ final class ReplayingReactionContext<$Timeline> implements Context {
       final ExecutorService executor,
       final Scoped<Context> rootContext,
       final Memory memory,
-      final Scheduler<$Timeline> scheduler,
-      final TaskHandle<$Timeline> handle)
+      final Scheduler scheduler,
+      final TaskHandle handle)
   {
     this.executor = Objects.requireNonNull(executor);
     this.rootContext = Objects.requireNonNull(rootContext);
@@ -45,18 +45,14 @@ final class ReplayingReactionContext<$Timeline> implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
+  public <CellType> CellType ask(final Query<?, CellType> query) {
     return this.memory.doOnce(() -> {
-      // SAFETY: All objects accessible within a single mission model instance have the same brand.
-      @SuppressWarnings("unchecked")
-      final var brandedQuery = (Query<? super $Timeline, ?, CellType>) query;
-
-      return this.scheduler.get(brandedQuery);
+      return this.scheduler.get(query);
     });
   }
 
   @Override
-  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
+  public <Event, Effect, CellType> Query<Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
@@ -66,13 +62,9 @@ final class ReplayingReactionContext<$Timeline> implements Context {
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<Event, ?> query) {
     this.memory.doOnce(() -> {
-      // SAFETY: All objects accessible within a single mission model instance have the same brand.
-      @SuppressWarnings("unchecked")
-      final var brandedQuery = (Query<? super $Timeline, Event, ?>) query;
-
-      this.scheduler.emit(event, brandedQuery);
+      this.scheduler.emit(event, query);
     });
   }
 
@@ -125,7 +117,7 @@ final class ReplayingReactionContext<$Timeline> implements Context {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.awaiting((now, atLatest) -> {
-        try (final var restore = this.rootContext.set(new QueryContext<>(now))) {
+        try (final var restore = this.rootContext.set(new QueryContext(now))) {
           return condition.nextSatisfied(true, Duration.ZERO, atLatest);
         }
       }));

@@ -18,11 +18,11 @@ public interface Context {
   ContextType getContextType();
 
   // Usable during both initialization & simulation
-  <CellType> CellType ask(Query<?, ?, CellType> query);
+  <CellType> CellType ask(Query<?, CellType> query);
 
   // Usable during initialization
   <Event, Effect, CellType>
-  Query<?, Event, CellType>
+  Query<Event, CellType>
   allocate(
       CellType initialState,
       Applicator<Effect, CellType> applicator,
@@ -30,9 +30,9 @@ public interface Context {
       Function<Event, Effect> projection);
 
   // Usable during simulation
-  <Event> void emit(Event event, Query<?, Event, ?> query);
+  <Event> void emit(Event event, Query<Event, ?> query);
 
-  interface TaskFactory { <$Timeline> Task<$Timeline> create(ExecutorService executor); }
+  interface TaskFactory { Task create(ExecutorService executor); }
 
   String spawn(TaskFactory task);
   String spawn(String type, Map<String, SerializedValue> arguments);

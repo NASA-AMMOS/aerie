@@ -22,15 +22,15 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 
 public final class MerlinExtension<Model> implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
-  private State<?, Model> getState(final ExtensionContext context) {
+  private State<Model> getState(final ExtensionContext context) {
     // SAFETY: This method is the only one where we store or retrieve a State,
     //   and it's always instantiated with <Model>.
     @SuppressWarnings("unchecked")
-    final var stateClass = (Class<State<?, Model>>) (Object) State.class;
+    final var stateClass = (Class<State<Model>>) (Object) State.class;
 
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
-        .getOrComputeIfAbsent("state", $ -> new State<>(new MissionModelBuilder<>()), stateClass);
+        .getOrComputeIfAbsent("state", $ -> new State<>(new MissionModelBuilder()), stateClass);
   }
 
 
@@ -104,17 +104,17 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
   public void preDestroyTestInstance(final ExtensionContext extensionContext) {
     final var state = this.getState(extensionContext);
 
-    RootModel.fromPhantom(state.missionModel.getModel()).close();
+    state.missionModel.getModel().close();
     state.missionModel = null;
   }
 
-  private static final class State<$Schema, Model> {
-    public MissionModelBuilder<$Schema> builder;
+  private static final class State<Model> {
+    public MissionModelBuilder builder;
     public MerlinTestContext<Model> context;
 
-    public MissionModel<$Schema, RootModel<?, Model>> missionModel = null;
+    public MissionModel<RootModel<Model>> missionModel = null;
 
-    public State(final MissionModelBuilder<$Schema> builder) {
+    public State(final MissionModelBuilder builder) {
       this.builder = Objects.requireNonNull(builder);
       this.context = new MerlinTestContext<>(new Registrar(this.builder));
     }
@@ -137,7 +137,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
         throw ex.wrapped;
       }
 
-      this.missionModel = this.builder.build(new RootModel<$Schema, Model>(this.context.model(), executor).toPhantom(), this.context.activityTypes());
+      this.missionModel = this.builder.build(new RootModel<>(this.context.model(), executor), this.context.activityTypes());
 
       // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
       this.builder = null;
@@ -146,7 +146,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
       return value;
     }
 
-    private <$Timeline extends $Schema> void simulate(final Invocation<Void> invocation) throws Throwable {
+    private void simulate(final Invocation<Void> invocation) throws Throwable {
       final var completed = new Object() { boolean value = false; };
 
       final var task = ModelActions
@@ -159,7 +159,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
               completed.value = true;
             }
           })
-          .<$Timeline>create(RootModel.fromPhantom(this.missionModel.getModel()).executor());
+          .create(this.missionModel.getModel().executor());
 
       try {
         SimulationDriver.simulateTask(this.missionModel, task);

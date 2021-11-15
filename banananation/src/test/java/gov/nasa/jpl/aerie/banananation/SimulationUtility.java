@@ -17,8 +17,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class SimulationUtility {
-
-  private static <$Schema> MissionModel<$Schema, ?> makeMissionModel(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
+  private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
     final var factory = new GeneratedMissionModelFactory();
     // TODO: [AERIE-1516] Teardown the model to release any system resources (e.g. threads).
     final var model = factory.instantiate(config, builder);
@@ -30,7 +29,7 @@ public final class SimulationUtility {
     final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);
-    final var missionModel = makeMissionModel(new MissionModelBuilder<>(), serializedConfig);
+    final var missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
     final var startTime = Instant.now();
 
     return SimulationDriver.simulate(

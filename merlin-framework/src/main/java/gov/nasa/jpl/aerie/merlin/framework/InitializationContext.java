@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
-import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -14,18 +13,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public final class InitializationContext<$Schema> implements Context {
+public final class InitializationContext implements Context {
   private final ExecutorService executor;
-  private final Initializer<$Schema> builder;
+  private final Initializer builder;
 
-  public InitializationContext(final ExecutorService executor, final Initializer<$Schema> builder) {
+  public InitializationContext(final ExecutorService executor, final Initializer builder) {
     this.executor = Objects.requireNonNull(executor);
     this.builder = Objects.requireNonNull(builder);
   }
 
-  public static <$Schema, T>
-  T initializing(final ExecutorService executor, final Initializer<$Schema> builder, final Supplier<T> initializer) {
-    try (final var restore = ModelActions.context.set(new InitializationContext<>(executor, builder))) {
+  public static <T>
+  T initializing(final ExecutorService executor, final Initializer builder, final Supplier<T> initializer) {
+    try (final var restore = ModelActions.context.set(new InitializationContext(executor, builder))) {
       return initializer.get();
     }
   }
@@ -36,17 +35,13 @@ public final class InitializationContext<$Schema> implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
-    // SAFETY: All objects accessible within a single mission model instance have the same brand.
-    @SuppressWarnings("unchecked")
-    final var brandedQuery = (Query<$Schema, ?, CellType>) query;
-
-    return this.builder.getInitialState(brandedQuery);
+  public <CellType> CellType ask(final Query<?, CellType> query) {
+    return this.builder.getInitialState(query);
   }
 
   @Override
   public <Event, Effect, CellType>
-  Query<?, Event, CellType> allocate(
+  Query<Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
@@ -56,18 +51,13 @@ public final class InitializationContext<$Schema> implements Context {
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<Event, ?> query) {
     throw new IllegalStateException("Cannot update simulation state during initialization");
   }
 
   @Override
   public String spawn(final TaskFactory task) {
-    return this.builder.daemon(new Initializer.TaskFactory<>() {
-      @Override
-      public <$Timeline extends $Schema> Task<$Timeline> create() {
-        return task.create(InitializationContext.this.executor);
-      }
-    });
+    return this.builder.daemon(() -> task.create(InitializationContext.this.executor));
   }
 
   @Override

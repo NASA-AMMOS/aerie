@@ -20,21 +20,21 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 public final class MissionModelTest {
 
-    private MissionModelFacade<?> missionModel;
+    private MissionModelFacade missionModel;
     private MissionModelFacade.Unconfigured<?> unconfiguredMissionModel;
 
     @BeforeEach
     public void initialize() throws MissionModelFacade.MissionModelContractException {
         final var configuration = new Configuration();
         final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
-        this.missionModel = makeMissionModel(new MissionModelBuilder<>(), serializedConfig);
+        this.missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
         this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
     }
 
-    private static <$Schema> MissionModelFacade<$Schema> makeMissionModel(final MissionModelBuilder<$Schema> builder, final SerializedValue config) {
+    private static MissionModelFacade makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
         final var factory = new GeneratedMissionModelFactory();
         final var model = factory.instantiate(config, builder);
-        return new MissionModelFacade<>(builder.build(model, factory.getTaskSpecTypes()));
+        return new MissionModelFacade(builder.build(model, factory.getTaskSpecTypes()));
     }
 
     @AfterEach

@@ -13,7 +13,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,19 +20,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> {
-  private MissionModelBuilderState<$Schema> state = new UnbuiltState();
+public final class MissionModelBuilder implements Initializer {
+  private MissionModelBuilderState state = new UnbuiltState();
 
   @Override
   public <CellType> CellType getInitialState(
-      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> query)
+      final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<?, ? extends CellType> query)
   {
     return this.state.getInitialState(query);
   }
 
   @Override
   public <EventType, Effect, CellType>
-  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType> allocate(
+  gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
@@ -43,41 +42,38 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
   }
 
   @Override
-  public void resource(final String name, final Resource<? super $Schema, ?> resource) {
+  public void resource(final String name, final Resource<?> resource) {
     this.state.resource(name, resource);
   }
 
   @Override
-  public String daemon(final TaskFactory<$Schema> task) {
+  public String daemon(final TaskFactory task) {
     return this.state.daemon(task);
   }
 
-  public <Model> MissionModel<$Schema, Model>
-  build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+  public <Model>
+  MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
     return this.state.build(model, taskSpecTypes);
   }
 
-  private interface MissionModelBuilderState<$Schema> extends Initializer<$Schema> {
+  private interface MissionModelBuilderState extends Initializer {
     <Model>
-    MissionModel<$Schema, Model>
-    build(
-        Phantom<$Schema, Model> model,
-        Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
+    MissionModel<Model> build(Model model, Map<String, TaskSpecType<Model, ?>> taskSpecTypes);
   }
 
-  private final class UnbuiltState implements MissionModelBuilderState<$Schema> {
+  private final class UnbuiltState implements MissionModelBuilderState {
     private final LiveCells initialCells = new LiveCells(new CausalEventSource());
 
-    private final Map<String, Resource<? super $Schema, ?>> resources = new HashMap<>();
-    private final List<TaskFactory<$Schema>> daemons = new ArrayList<>();
+    private final Map<String, Resource<?>> resources = new HashMap<>();
+    private final List<TaskFactory> daemons = new ArrayList<>();
 
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> token)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<?, ? extends CellType> token)
     {
       // SAFETY: The only `Query` objects the model should have were returned by `UnbuiltState#allocate`.
       @SuppressWarnings("unchecked")
-      final var query = (EngineQuery<$Schema, ?, CellType>) token;
+      final var query = (EngineQuery<?, CellType>) token;
 
       final var state$ = this.initialCells.getState(query.query());
 
@@ -86,7 +82,7 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
 
     @Override
     public <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType> allocate(
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
         final EffectTrait<Effect> trait,
@@ -107,19 +103,19 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
     }
 
     @Override
-    public void resource(final String name, final Resource<? super $Schema, ?> resource) {
+    public void resource(final String name, final Resource<?> resource) {
       this.resources.put(name, resource);
     }
 
     @Override
-    public String daemon(final TaskFactory<$Schema> task) {
+    public String daemon(final TaskFactory task) {
       this.daemons.add(task);
       return null;  // TODO: get some way to refer to the daemon task
     }
 
     @Override
-    public <Model> MissionModel<$Schema, Model>
-    build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+    public <Model>
+    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
       final var missionModel = new MissionModel<>(
           model,
           this.initialCells,
@@ -133,17 +129,17 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
     }
   }
 
-  private final class BuiltState implements MissionModelBuilderState<$Schema> {
+  private static final class BuiltState implements MissionModelBuilderState {
     @Override
     public <CellType> CellType getInitialState(
-        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<? super $Schema, ?, ? extends CellType> query)
+        final gov.nasa.jpl.aerie.merlin.protocol.driver.Query<?, ? extends CellType> query)
     {
       throw new IllegalStateException("Cannot interact with the builder after it is built");
     }
 
     @Override
     public <EventType, Effect, CellType>
-    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<$Schema, EventType, CellType> allocate(
+    gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
         final EffectTrait<Effect> trait,
@@ -153,18 +149,18 @@ public final class MissionModelBuilder<$Schema> implements Initializer<$Schema> 
     }
 
     @Override
-    public void resource(final String name, final Resource<? super $Schema, ?> resource) {
+    public void resource(final String name, final Resource<?> resource) {
       throw new IllegalStateException("Resources cannot be added after the schema is built");
     }
 
     @Override
-    public String daemon(final TaskFactory<$Schema> task) {
+    public String daemon(final TaskFactory task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 
     @Override
-    public <Model> MissionModel<$Schema, Model>
-    build(final Phantom<$Schema, Model> model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
+    public <Model>
+    MissionModel<Model> build(final Model model, final Map<String, TaskSpecType<Model, ?>> taskSpecTypes) {
       throw new IllegalStateException("Cannot build a builder multiple times");
     }
   }

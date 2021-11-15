@@ -209,7 +209,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade<?> loadConfiguredMissionModel(final String missionModelId)
+  private MissionModelFacade loadConfiguredMissionModel(final String missionModelId)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     return loadConfiguredMissionModel(missionModelId, SerializedValue.of(Map.of()));
@@ -225,14 +225,14 @@ public final class LocalMissionModelService implements MissionModelService {
    * it contains may not abide by the expected contract at load time.
    * @throws NoSuchMissionModelException If no mission model is known by the given ID.
    */
-  private MissionModelFacade<?> loadConfiguredMissionModel(final String missionModelId, final SerializedValue configuration)
+  private MissionModelFacade loadConfiguredMissionModel(final String missionModelId, final SerializedValue configuration)
   throws NoSuchMissionModelException, MissionModelLoadException
   {
     try {
       final var missionModelJar = this.missionModelRepository.getMissionModel(missionModelId);
       final var missionModel =
           MissionModelLoader.loadMissionModel(configuration, missionModelDataPath.resolve(missionModelJar.path), missionModelJar.name, missionModelJar.version);
-      return new MissionModelFacade<>(missionModel);
+      return new MissionModelFacade(missionModel);
     } catch (final MissionModelRepository.NoSuchMissionModelException ex) {
       throw new NoSuchMissionModelException(missionModelId, ex);
     } catch (final MissionModelLoader.MissionModelLoadException ex) {

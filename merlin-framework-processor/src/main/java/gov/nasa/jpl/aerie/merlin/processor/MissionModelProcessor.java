@@ -469,7 +469,7 @@ public final class MissionModelProcessor implements Processor {
     }
 
     // TODO: Check that the given model conforms to the expected protocol.
-    //   * Has a (1,1) constructor that takes a type $Schema and a Registrar<$Schema>.
+    //   * Has a (1,1) constructor that takes a Registrar.
     //   It doesn't actually need to subclass Model.
     // TODO: Consider enrolling the given model in a dependency injection framework,
     //   such that the Cursor can be injected like any other constructor argument,
@@ -566,7 +566,6 @@ public final class MissionModelProcessor implements Processor {
                     ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                        WildcardTypeName.subtypeOf(Object.class),
                         ClassName.get(missionModel.topLevelModel)),
                     ClassName.get(activityType.declaration)))
             .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -657,31 +656,17 @@ public final class MissionModelProcessor implements Processor {
                     .methodBuilder("createTask")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .addTypeVariables(List.of(
-                        TypeVariableName.get("$Schema"),
-                        TypeVariableName.get("$Timeline", TypeVariableName.get("$Schema"))))
-                    .returns(ParameterizedTypeName.get(
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class),
-                        TypeVariableName.get("$Timeline")))
+                    .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class))
                     .addParameter(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class),
-                            TypeVariableName.get("$Schema"),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                WildcardTypeName.subtypeOf(Object.class),
-                                ClassName.get(missionModel.topLevelModel))),
-                        "wrapper",
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                            ClassName.get(missionModel.topLevelModel)),
+                        "model",
                         Modifier.FINAL)
                     .addParameter(
                         TypeName.get(activityType.declaration.asType()),
                         "activity",
                         Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = $T.fromPhantom($L)",
-                        "model",
-                        gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                        "wrapper")
                     .addCode(
                         activityType.effectModel
                             .map(effectModel -> switch (effectModel.getRight()) {
@@ -710,7 +695,7 @@ public final class MissionModelProcessor implements Processor {
                             .orElseGet(() -> CodeBlock
                                 .builder()
                                 .addStatement(
-                                    "return new $T<>($$ -> {})",
+                                    "return new $T($$ -> {})",
                                     gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
                                 .build()))
                     .build())
@@ -858,7 +843,6 @@ public final class MissionModelProcessor implements Processor {
                     ClassName.get(MissionModelFactory.class),
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                        WildcardTypeName.subtypeOf(Object.class),
                         ClassName.get(missionModel.topLevelModel))))
             .addMethod(
                 MethodSpec
@@ -872,7 +856,6 @@ public final class MissionModelProcessor implements Processor {
                             ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
                             ParameterizedTypeName.get(
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                WildcardTypeName.subtypeOf(Object.class),
                                 ClassName.get(missionModel.topLevelModel)),
                             WildcardTypeName.subtypeOf(Object.class))))
                     .addStatement("return $T.activityTypes", missionModel.getTypesName())
@@ -882,25 +865,18 @@ public final class MissionModelProcessor implements Processor {
                     .methodBuilder("instantiate")
                     .addModifiers(Modifier.PUBLIC)
                     .addAnnotation(Override.class)
-                    .addTypeVariable(TypeVariableName.get("$Schema"))
                     .addParameter(
                         TypeName.get(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
                         "configuration",
                         Modifier.FINAL)
                     .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer.class),
-                            TypeVariableName.get("$Schema")),
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer.class),
                         "builder",
                         Modifier.FINAL)
                     .returns(
                         ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom.class),
-                            TypeVariableName.get("$Schema"),
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                WildcardTypeName.subtypeOf(Object.class),
-                                ClassName.get(missionModel.topLevelModel))))
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                            ClassName.get(missionModel.topLevelModel)))
                     .addStatement(
                         "final var $L = new $T($L)",
                         "registrar",
@@ -947,9 +923,8 @@ public final class MissionModelProcessor implements Processor {
                                                         .build()))
                     .addCode("\n")
                     .addStatement(
-                        "return new $T<$T, $T>($L, $L).toPhantom()",
+                        "return new $T<$T>($L, $L)",
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class,
-                        TypeVariableName.get("$Schema"),
                         ClassName.get(missionModel.topLevelModel),
                         "model",
                         "executor")
@@ -1005,7 +980,6 @@ public final class MissionModelProcessor implements Processor {
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                    WildcardTypeName.subtypeOf(Object.class),
                                     ClassName.get(missionModel.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypeList",
@@ -1030,7 +1004,6 @@ public final class MissionModelProcessor implements Processor {
                                 ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
                                 ParameterizedTypeName.get(
                                     ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                                    WildcardTypeName.subtypeOf(Object.class),
                                     ClassName.get(missionModel.topLevelModel)),
                                 WildcardTypeName.subtypeOf(Object.class))),
                         "activityTypes",

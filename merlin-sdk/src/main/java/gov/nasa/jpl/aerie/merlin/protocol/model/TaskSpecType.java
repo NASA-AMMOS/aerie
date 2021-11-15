@@ -1,7 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.model;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public interface TaskSpecType<Model, Specification> {
   Map<String, SerializedValue> getArguments(Specification taskSpec);
   List<String> getValidationFailures(Specification taskSpec);
 
-  <$Schema, $Timeline extends $Schema> Task<$Timeline> createTask(Phantom<$Schema, Model> model, Specification taskSpec);
+  Task createTask(Model model, Specification taskSpec);
 
   class UnconstructableTaskSpecException extends Exception {}
 }

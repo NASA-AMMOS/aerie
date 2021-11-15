@@ -7,22 +7,21 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 
 import java.util.function.Function;
 
-public interface Initializer<$Schema> {
-  <CellType> CellType getInitialState(Query<? super $Schema, ?, ? extends CellType> query);
+public interface Initializer {
+  <CellType> CellType getInitialState(Query<?, ? extends CellType> query);
 
   <Event, Effect, CellType>
-  Query<$Schema, Event, CellType> allocate(
+  Query<Event, CellType> allocate(
       CellType initialState,
       Applicator<Effect, CellType> applicator,
       EffectTrait<Effect> trait,
       Function<Event, Effect> projection);
 
-  String daemon(TaskFactory<$Schema> factory);
+  String daemon(TaskFactory factory);
 
-  void resource(String name, Resource<? super $Schema, ?> resource);
+  void resource(String name, Resource<?> resource);
 
-  interface TaskFactory<$Schema> {
-    <$Timeline extends $Schema> Task<$Timeline> create();
+  interface TaskFactory {
+    Task create();
   }
-
 }

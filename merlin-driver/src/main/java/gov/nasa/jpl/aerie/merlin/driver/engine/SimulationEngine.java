@@ -38,10 +38,8 @@ import java.util.Set;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
- *
- * @param <$Timeline> The brand associated with the simulation timeline to which state-altering events are recorded.
  */
-public final class SimulationEngine<$Timeline> implements AutoCloseable {
+public final class SimulationEngine implements AutoCloseable {
   /** The set of all jobs waiting for time to pass. */
   private final JobSchedule<JobId, SchedulingInstant> scheduledJobs = new JobSchedule<>();
   /** The set of all jobs waiting on a given signal. */
@@ -52,11 +50,11 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   private final Subscriptions<Topic<?>, ResourceId> waitingResources = new Subscriptions<>();
 
   /** The execution state for every task. */
-  private final Map<TaskId, ExecutionState<$Timeline>> tasks = new HashMap<>();
+  private final Map<TaskId, ExecutionState> tasks = new HashMap<>();
   /** The getter for each tracked condition. */
-  private final Map<ConditionId, Condition<? super $Timeline>> conditions = new HashMap<>();
+  private final Map<ConditionId, Condition> conditions = new HashMap<>();
   /** The profiling state for each tracked resource. */
-  private final Map<ResourceId, ProfilingState<? super $Timeline, ?>> resources = new HashMap<>();
+  private final Map<ResourceId, ProfilingState<?>> resources = new HashMap<>();
 
   /** The task that spawned a given task (if any)). */
   private final Map<TaskId, TaskId> taskParent = new HashMap<>();
@@ -68,7 +66,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
-  TaskId initiateTaskFromInput(final MissionModel<? super $Timeline, Model> model, final SerializedActivity input) {
+  TaskId initiateTaskFromInput(final MissionModel<Model> model, final SerializedActivity input) {
     final var task = TaskId.generate();
 
     final Directive<Model, ?> directive;
@@ -76,38 +74,34 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       directive = model.instantiateDirective(input);
     } catch (final TaskSpecType.UnconstructableTaskSpecException ex) {
       // TODO: Provide more information about the failure.
-      this.tasks.put(task, new ExecutionState.IllegalSource<>());
+      this.tasks.put(task, new ExecutionState.IllegalSource());
 
       return task;
     }
 
-    this.tasks.put(task, new ExecutionState.NotStarted<>(() -> directive.createTask(model.getModel())));
+    this.tasks.put(task, new ExecutionState.NotStarted(() -> directive.createTask(model.getModel())));
     this.taskDirective.put(task, directive);
 
     return task;
   }
 
   /** Define a task given a factory method from which that task can be constructed. */
-  public TaskId initiateTaskFromSource(final TaskSource<$Timeline> source) {
+  public TaskId initiateTaskFromSource(final TaskSource source) {
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.NotStarted<>(source));
+    this.tasks.put(task, new ExecutionState.NotStarted(source));
     return task;
   }
 
   /** Define a task given a black-box task state. */
-  public TaskId initiateTask(final Duration startTime, final Task<$Timeline> state) {
+  public TaskId initiateTask(final Duration startTime, final Task state) {
     final var task = TaskId.generate();
-    this.tasks.put(task, new ExecutionState.InProgress<>(startTime, state));
+    this.tasks.put(task, new ExecutionState.InProgress(startTime, state));
     return task;
   }
 
   /** Register a resource whose profile should be accumulated over time. */
   public <Dynamics>
-  void trackResource(
-      final String name,
-      final Resource<? super $Timeline, Dynamics> resource,
-      final Duration nextQueryTime
-  ) {
+  void trackResource(final String name, final Resource<Dynamics> resource, final Duration nextQueryTime) {
     final var id = new ResourceId(name);
 
     this.resources.put(id, ProfilingState.create(resource));
@@ -160,7 +154,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final LiveCells context,
       final Duration currentTime,
       final Duration maximumTime,
-      final MissionModel<? super $Timeline, ?> model
+      final MissionModel<?> model
   ) {
     return TaskFrame.runToCompletion(jobs, context, (job, builder) -> {
       this.performJob(job, builder, currentTime, maximumTime, model);
@@ -173,7 +167,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
       final Duration maximumTime,
-      final MissionModel<? super $Timeline, ?> model
+      final MissionModel<?> model
   ) {
     if (job instanceof JobId.TaskJobId j) {
       this.stepTask(j.id(), builder, currentTime, model);
@@ -193,7 +187,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       final TaskId task,
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
-      final MissionModel<? super $Timeline, ?> model
+      final MissionModel<?> model
   ) {
     // The handler for each individual task stage is responsible
     //   for putting an updated lifecycle back into the task set.
@@ -202,11 +196,11 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     // Extract the current modeling state.
     if (lifecycle instanceof ExecutionState.IllegalSource) {
       // pass -- uninstantiable tasks never progress or complete
-    } else if (lifecycle instanceof ExecutionState.NotStarted<$Timeline> e) {
+    } else if (lifecycle instanceof ExecutionState.NotStarted e) {
       stepEffectModel(task, e.startedAt(currentTime), builder, currentTime, model);
-    } else if (lifecycle instanceof ExecutionState.InProgress<$Timeline> e) {
+    } else if (lifecycle instanceof ExecutionState.InProgress e) {
       stepEffectModel(task, e, builder, currentTime, model);
-    } else if (lifecycle instanceof ExecutionState.AwaitingChildren<$Timeline> e) {
+    } else if (lifecycle instanceof ExecutionState.AwaitingChildren e) {
       stepWaitingTask(task, e, builder, currentTime);
     } else {
       // TODO: Log this issue to somewhere more general than stderr.
@@ -217,10 +211,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   /** Make progress in a task by stepping its associated effect model forward. */
   private void stepEffectModel(
       final TaskId task,
-      final ExecutionState.InProgress<$Timeline> progress,
+      final ExecutionState.InProgress progress,
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime,
-      final MissionModel<? super $Timeline, ?> model
+      final MissionModel<?> model
   ) {
     // Step the modeling state forward.
     final var scheduler = new EngineScheduler(model, currentTime, task, builder);
@@ -236,10 +230,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
 
       final var awaiting = progress.completedAt(currentTime, children);
       this.stepWaitingTask(task, awaiting, builder, currentTime);
-    } else if (status instanceof TaskStatus.Delayed<?> s) {
+    } else if (status instanceof TaskStatus.Delayed s) {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
-    } else if (status instanceof TaskStatus.AwaitingTask<?> s) {
+    } else if (status instanceof TaskStatus.AwaitingTask s) {
       this.tasks.put(task, progress.continueWith(state));
 
       final var target = new TaskId(s.target());
@@ -252,7 +246,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
       } else {
         this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(new TaskId(s.target()))));
       }
-    } else if (status instanceof TaskStatus.AwaitingCondition<$Timeline> s) {
+    } else if (status instanceof TaskStatus.AwaitingCondition s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
       this.scheduledJobs.schedule(JobId.forCondition(condition), SubInstant.Conditions.at(currentTime));
@@ -267,7 +261,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   /** Make progress in a task by checking if all of the tasks it's waiting on have completed. */
   private void stepWaitingTask(
       final TaskId task,
-      final ExecutionState.AwaitingChildren<$Timeline> awaiting,
+      final ExecutionState.AwaitingChildren awaiting,
       final TaskFrame.FrameBuilder<JobId> builder,
       final Duration currentTime
   ) {
@@ -344,7 +338,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   @Override
   public void close() {
     for (final var task : this.tasks.values()) {
-      if (task instanceof ExecutionState.InProgress<?> r) {
+      if (task instanceof ExecutionState.InProgress r) {
         r.state.reset();
       }
     }
@@ -363,7 +357,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   // TODO: Produce results for all tasks, not just those that have completed.
   //   Planners need to be aware of failed or unfinished tasks.
   public SimulationResults computeResults(
-      final SimulationEngine<?> engine,
+      final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
       final Map<String, String> taskToPlannedDirective
@@ -451,13 +445,13 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   private interface Translator<Target> {
-    <Dynamics> Target apply(Resource<?, Dynamics> resource, Dynamics dynamics);
+    <Dynamics> Target apply(Resource<Dynamics> resource, Dynamics dynamics);
   }
 
   private static <Target, Dynamics>
   List<Pair<Duration, Target>> serializeProfile(
       final Duration elapsedTime,
-      final ProfilingState<?, Dynamics> state,
+      final ProfilingState<Dynamics> state,
       final Translator<Target> translator
   ) {
     final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
@@ -483,7 +477,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   private static <Dynamics>
-  RealDynamics extractRealDynamics(final Resource<?, Dynamics> resource, final Dynamics dynamics) {
+  RealDynamics extractRealDynamics(final Resource<Dynamics> resource, final Dynamics dynamics) {
     final var serializedSegment = resource.serialize(dynamics).asMap().orElseThrow();
     final var initial = serializedSegment.get("initial").asReal().orElseThrow();
     final var rate = serializedSegment.get("rate").asReal().orElseThrow();
@@ -492,7 +486,7 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** A handle for processing requests from a modeled resource or condition. */
-  private final class EngineQuerier implements Querier<$Timeline> {
+  private static final class EngineQuerier implements Querier {
     private final TaskFrame.FrameBuilder<JobId> builder;
     private final Set<Topic<?>> referencedTopics = new HashSet<>();
     private Optional<Duration> expiry = Optional.empty();
@@ -502,10 +496,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     }
 
     @Override
-    public <State> State getState(final Query<? super $Timeline, ?, State> token) {
+    public <State> State getState(final Query<?, State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
-      final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
+      final var query = ((EngineQuery<?, State>) token);
 
       this.expiry = min(this.expiry, this.builder.getExpiry(query.query()));
       this.referencedTopics.add(query.topic());
@@ -525,15 +519,15 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** A handle for processing requests and effects from a modeled task. */
-  private final class EngineScheduler implements Scheduler<$Timeline> {
-    private final MissionModel<? super $Timeline, ?> model;
+  private final class EngineScheduler implements Scheduler {
+    private final MissionModel<?> model;
 
     private final Duration currentTime;
     private final TaskId activeTask;
     private final TaskFrame.FrameBuilder<JobId> builder;
 
     public EngineScheduler(
-        final MissionModel<? super $Timeline, ?> model,
+        final MissionModel<?> model,
         final Duration currentTime,
         final TaskId activeTask,
         final TaskFrame.FrameBuilder<JobId> builder
@@ -545,10 +539,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     }
 
     @Override
-    public <State> State get(final Query<? super $Timeline, ?, State> token) {
+    public <State> State get(final Query<?, State> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
-      final var query = ((EngineQuery<? super $Timeline, ?, State>) token);
+      final var query = ((EngineQuery<?, State>) token);
 
       // TODO: Cache the return value (until the next emit or until the task yields) to avoid unnecessary copies
       //  if the same state is requested multiple times in a row.
@@ -557,10 +551,10 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     }
 
     @Override
-    public <EventType> void emit(final EventType event, final Query<? super $Timeline, ? super EventType, ?> token) {
+    public <EventType> void emit(final EventType event, final Query<? super EventType, ?> token) {
       // SAFETY: The only queries the model should have are those provided by us (e.g. via MissionModelBuilder).
       @SuppressWarnings("unchecked")
-      final var topic = ((EngineQuery<? super $Timeline, ? super EventType, ?>) token).topic();
+      final var topic = ((EngineQuery<? super EventType, ?>) token).topic();
 
       // Append this event to the timeline.
       this.builder.emit(Event.create(topic, event));
@@ -569,9 +563,9 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     }
 
     @Override
-    public String spawn(final Task<$Timeline> state) {
+    public String spawn(final Task state) {
       final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.builder.signal(JobId.forTask(task));
@@ -590,11 +584,11 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
     }
 
     @Override
-    public String defer(final Duration delay, final Task<$Timeline> state) {
+    public String defer(final Duration delay, final Task state) {
       if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
       final var task = TaskId.generate();
-      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress<>(this.currentTime, state));
+      SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
@@ -647,45 +641,45 @@ public final class SimulationEngine<$Timeline> implements AutoCloseable {
   }
 
   /** The lifecycle stages every task passes through. */
-  private sealed interface ExecutionState<$Timeline> {
+  private sealed interface ExecutionState {
     /** The task has an invalid source for its behavior. */
     // TODO: Provide more details about the instantiation failure.
-    record IllegalSource<$Timeline>()
-        implements ExecutionState<$Timeline> {}
+    record IllegalSource()
+        implements ExecutionState {}
 
     /** The task has not yet started. */
-    record NotStarted<$Timeline>(TaskSource<$Timeline> source)
-        implements ExecutionState<$Timeline>
+    record NotStarted(TaskSource source)
+        implements ExecutionState
     {
-      public InProgress<$Timeline> startedAt(final Duration startOffset) {
-        return new InProgress<>(startOffset, this.source.createTask());
+      public InProgress startedAt(final Duration startOffset) {
+        return new InProgress(startOffset, this.source.createTask());
       }
     }
 
     /** The task is in its primary operational phase. */
-    record InProgress<$Timeline>(Duration startOffset, Task<$Timeline> state)
-        implements ExecutionState<$Timeline>
+    record InProgress(Duration startOffset, Task state)
+        implements ExecutionState
     {
-      public AwaitingChildren<$Timeline> completedAt(final Duration endOffset, final LinkedList<TaskId> remainingChildren) {
-        return new AwaitingChildren<>(this.startOffset, endOffset, remainingChildren);
+      public AwaitingChildren completedAt(final Duration endOffset, final LinkedList<TaskId> remainingChildren) {
+        return new AwaitingChildren(this.startOffset, endOffset, remainingChildren);
       }
 
-      public InProgress<$Timeline> continueWith(final Task<$Timeline> newState) {
-        return new InProgress<>(this.startOffset, newState);
+      public InProgress continueWith(final Task newState) {
+        return new InProgress(this.startOffset, newState);
       }
     }
 
     /** The task has completed its primary operation, but has unfinished children. */
-    record AwaitingChildren<$Timeline>(Duration startOffset, Duration endOffset, LinkedList<TaskId> remainingChildren)
-        implements ExecutionState<$Timeline>
+    record AwaitingChildren(Duration startOffset, Duration endOffset, LinkedList<TaskId> remainingChildren)
+        implements ExecutionState
     {
-      public Terminated<$Timeline> joinedAt(final Duration joinOffset) {
-        return new Terminated<>(this.startOffset, this.endOffset, joinOffset);
+      public Terminated joinedAt(final Duration joinOffset) {
+        return new Terminated(this.startOffset, this.endOffset, joinOffset);
       }
     }
 
     /** The task and all its delegated children have completed. */
-    record Terminated<$Timeline>(Duration startOffset, Duration endOffset, Duration joinOffset)
-        implements ExecutionState<$Timeline> {}
+    record Terminated(Duration startOffset, Duration endOffset, Duration joinOffset)
+        implements ExecutionState {}
   }
 }

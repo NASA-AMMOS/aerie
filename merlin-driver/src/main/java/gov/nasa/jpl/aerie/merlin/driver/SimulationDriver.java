@@ -20,14 +20,14 @@ import java.util.PriorityQueue;
 import java.util.Set;
 
 public final class SimulationDriver {
-  public static <$Timeline, Model>
+  public static <Model>
   SimulationResults simulate(
-      final MissionModel<? super $Timeline, Model> missionModel,
+      final MissionModel<Model> missionModel,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration
   ) {
-    try (final var engine = new SimulationEngine<$Timeline>()) {
+    try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
       var cells = new LiveCells(timeline, missionModel.getInitialCells());
@@ -43,7 +43,7 @@ public final class SimulationDriver {
       }
 
       // Schedule the control task.
-      final var controlTask = new ControlTask<$Timeline>(schedule);
+      final var controlTask = new ControlTask(schedule);
       {
         final var control = engine.initiateTask(elapsedTime, controlTask);
         engine.scheduleTask(control, elapsedTime);
@@ -81,9 +81,9 @@ public final class SimulationDriver {
     }
   }
 
-  public static <$Schema, $Timeline extends $Schema, Model>
-  void simulateTask(final MissionModel<? super $Timeline, Model> missionModel, final Task<$Timeline> task) {
-    try (final var engine = new SimulationEngine<$Timeline>()) {
+  public static <Model>
+  void simulateTask(final MissionModel<Model> missionModel, final Task task) {
+    try (final var engine = new SimulationEngine()) {
       /* The top-level simulation timeline. */
       var timeline = new TemporalEventSource();
       var cells = new LiveCells(timeline, missionModel.getInitialCells());
@@ -128,7 +128,7 @@ public final class SimulationDriver {
     }
   }
 
-  private static final class ControlTask<$Timeline> implements Task<$Timeline> {
+  private static final class ControlTask implements Task {
     private final Map<String, Pair<Duration, SerializedActivity>> schedule;
 
     /* The directive that caused a task (if any). */
@@ -152,7 +152,7 @@ public final class SimulationDriver {
     }
 
     @Override
-    public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
+    public TaskStatus step(final Scheduler scheduler) {
       while (true) {
         var nextTask = this.scheduledTasks.peek();
         if (nextTask == null) break;

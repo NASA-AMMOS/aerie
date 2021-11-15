@@ -6,14 +6,14 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 
-public interface Scheduler<$Timeline> {
-  <State> State get(Query<? super $Timeline, ?, State> query);
+public interface Scheduler {
+  <State> State get(Query<?, State> query);
 
-  <Event> void emit(Event event, Query<? super $Timeline, ? super Event, ?> query);
+  <Event> void emit(Event event, Query<? super Event, ?> query);
 
-  String spawn(Task<$Timeline> task);
+  String spawn(Task task);
   String spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration delay, Task<$Timeline> task);
+  String defer(Duration delay, Task task);
   String defer(Duration delay, String type, Map<String, SerializedValue> arguments);
 }
