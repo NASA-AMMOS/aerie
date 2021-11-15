@@ -1,21 +1,20 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECOND;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECOND;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public final class SimulatedActivityTest {
   @Test
-  public void testUnspecifiedArgInSimulatedActivity() throws SimulationDriver.TaskSpecInstantiationException {
+  public void testUnspecifiedArgInSimulatedActivity() {
     final var schedule = SimulationUtility.buildSchedule(
         Pair.of(
             duration(0, SECONDS),

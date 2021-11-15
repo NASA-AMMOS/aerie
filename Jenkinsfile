@@ -130,7 +130,7 @@ pipeline {
           reuseNode true
           registryUrl 'https://artifactory.jpl.nasa.gov:16001'
           registryCredentialsId 'Artifactory-credential'
-          image 'gov/nasa/jpl/ammos/mpsa/aerie/jenkins/aerie:latest'
+          image 'gov/nasa/jpl/aerie/jenkins/aerie:latest'
           alwaysPull true
           args '-u root --mount type=bind,source=${WORKSPACE},target=/home --workdir=/home -v /var/run/docker.sock:/var/run/docker.sock'
         }
@@ -164,27 +164,18 @@ pipeline {
 
             ./gradlew assemble
 
-            # For adaptations
-            mkdir -p ${ASSEMBLE_PREP_DIR}/adaptations
+            # For mission models
+            mkdir -p ${ASSEMBLE_PREP_DIR}/missionmodels
             cp banananation/build/libs/*.jar \
-               ${ASSEMBLE_PREP_DIR}/adaptations/
+               ${ASSEMBLE_PREP_DIR}/missionmodels/
 
             # For services
             mkdir -p ${ASSEMBLE_PREP_DIR}/services
             cp merlin-server/build/distributions/*.tar \
                ${ASSEMBLE_PREP_DIR}/services/
 
-            # For docker-compose
-            cp -r ./scripts/docker-compose-aerie ${STAGING_DIR}
-
-            if [[ $GIT_BRANCH =~ staging ]] || [[ $GIT_BRANCH =~ release-.* ]]; then
-                cd ${STAGING_DIR}/docker-compose-aerie
-                echo "# This file contains environment variables used in docker-compose files." > .env
-                echo "AERIE_DOCKER_URL=$ARTIFACT_PATH" >> .env
-                echo "DOCKER_TAG=$DOCKER_TAG" >> .env
-                cd -
-            fi
-
+            # For deployment
+            cp -r ./deployment ${STAGING_DIR}
             tar -czf aerie-${ARTIFACT_TAG}.tar.gz -C ${ASSEMBLE_PREP_DIR}/ .
             tar -czf aerie-docker-compose.tar.gz -C ${STAGING_DIR}/ .
             rm -rfv ${ASSEMBLE_PREP_DIR}

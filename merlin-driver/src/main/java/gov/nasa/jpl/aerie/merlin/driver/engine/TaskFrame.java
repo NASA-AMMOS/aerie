@@ -1,112 +1,84 @@
 package gov.nasa.jpl.aerie.merlin.driver.engine;
 
-import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.Query;
-import org.apache.commons.lang3.tuple.Pair;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.CausalEventSource;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
-public final class TaskFrame<$Timeline, Signal> {
-  private History<$Timeline> tip;
-  private final Deque<Pair<History<$Timeline>, Signal>> branches;
-  private final Optional<TaskFrame<$Timeline, Signal>> continuation;
+/**
+ * A TaskFrame describes a task-in-progress, including its current series of events and any jobs that have branched off.
+ *
+ * <pre>
+ *   branches[0].base |-> branches[1].base  ... |-> branches[n].base   |-> tip
+ *                    +-> branches[0].job       +-> branches[n-1].job  +-> branches[n].job
+ * </pre>
+*/
+public final class TaskFrame<Job> {
+  private record Branch<Job>(CausalEventSource base, LiveCells context, Job job) {}
 
-  private TaskFrame(FrameBuilder<$Timeline, Signal> builder) {
-    this.tip = builder.tip;
-    this.branches = builder.branches;
-    this.continuation = builder.continuation;
+  private final List<Branch<Job>> branches = new ArrayList<>();
+  private CausalEventSource tip = new CausalEventSource();
+
+  private LiveCells previousCells;
+  private LiveCells cells;
+
+  private TaskFrame(final LiveCells context) {
+    this.previousCells = context;
+    this.cells = new LiveCells(this.tip, this.previousCells);
   }
 
-  public static <$Timeline, Signal>
-  TaskFrame<$Timeline, Signal>
-  of(final History<$Timeline> tip, final Consumer<FrameBuilder<$Timeline, Signal>> body) {
-    final var builder = new FrameBuilder<$Timeline, Signal>(tip, Optional.empty());
-    body.accept(builder);
-    return builder.yield();
+  // Perform a job, then recursively perform any jobs it spawned.
+  // Spawned jobs can see any events their parent emitted prior to the job,
+  //   so when we accumulate the branches' events back up, we need to make sure to interleave
+  //   the shared segments of the parent's history correctly. The diagram at the top of this class
+  //   illustrates the idea.
+  public static <Job>
+  EventGraph<Event> run(final Job job, final LiveCells context, final BiConsumer<Job, TaskFrame<Job>> executor) {
+    final var frame = new TaskFrame<Job>(context);
+    executor.accept(job, frame);
+
+    var tip = frame.tip.commit(EventGraph.empty());
+    for (var i = frame.branches.size(); i > 0; i -= 1) {
+      final var branch = frame.branches.get(i - 1);
+
+      final var branchEvents = run(branch.job, branch.context, executor);
+      tip = branch.base.commit(EventGraph.concurrently(tip, branchEvents));
+    }
+
+    return tip;
   }
 
-  public static <$Timeline, Signal>
-  History<$Timeline> runToCompletion(
-      TaskFrame<$Timeline, Signal> frame,
-      final BiConsumer<Signal, FrameBuilder<$Timeline, Signal>> executor)
-  {
-    while (!frame.isDone()) frame = frame.step(executor);
 
-    return frame.getTip();
+  public <State> Optional<State> getState(final Query<State> query) {
+    return this.cells.getState(query);
   }
 
-
-  public History<$Timeline> getTip() {
-    return this.tip;
+  public Optional<Duration> getExpiry(final Query<?> query) {
+    return this.cells.getExpiry(query);
   }
 
-  public boolean isDone() {
-    return this.branches.isEmpty() && this.continuation.isEmpty();
+  public void emit(final Event event) {
+    this.tip.add(event);
   }
 
-  public TaskFrame<$Timeline, Signal> step(final BiConsumer<Signal, FrameBuilder<$Timeline, Signal>> executor) {
-    if (!this.branches.isEmpty()) {
-      // We have uncommitted child branches.
-      // Start wandering down the next one.
-      final var branch = this.branches.pop();
-      final var branchTip = branch.getLeft();
-      final var signal = branch.getRight();
-
-      final var builder = new FrameBuilder<>(branchTip, Optional.of(this));
-      executor.accept(signal, builder);
-
-      return builder.yield();
-    } else if (this.continuation.isPresent()) {
-      // We're done here, but a parent frame is waiting for us to finish.
-      // Commit our tip back up to the parent.
-      final var parent = this.continuation.orElseThrow();
-      parent.tip = parent.tip.join(this.tip);
-      return parent;
+  public void signal(final Job target) {
+    if (this.tip.isEmpty()) {
+      // If we haven't emitted any events, subscribe the target to the previous branch point instead.
+      // This avoids making long chains of LiveCells over segments where no events have actually been accumulated.
+      this.branches.add(new Branch<>(new CausalEventSource(), this.previousCells, target));
     } else {
-      // There's nothing at all left to do.
-      return this;
-    }
-  }
+      this.branches.add(new Branch<>(this.tip, this.cells, target));
 
-
-  public static final class FrameBuilder<$Timeline, Signal> {
-    private boolean yielded = false;
-    private History<$Timeline> tip;
-    private final Deque<Pair<History<$Timeline>, Signal>> branches = new ArrayDeque<>();
-    private final Optional<TaskFrame<$Timeline, Signal>> continuation;
-
-    private FrameBuilder(final History<$Timeline> tip, final Optional<TaskFrame<$Timeline, Signal>> continuation) {
-      this.tip = tip;
-      this.continuation = continuation;
-    }
-
-    private TaskFrame<$Timeline, Signal> yield() {
-      this.yielded = true;
-      return new TaskFrame<>(this);
-    }
-
-
-    public History<$Timeline> now() {
-      if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
-
-      return this.tip;
-    }
-
-    public <Event> void emit(final Event event, final Query<? super $Timeline, Event, ?> query) {
-      if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
-
-      this.tip = this.tip.emit(event, query);
-    }
-
-    public void signal(final Signal target) {
-      if (this.yielded) throw new RuntimeException("Unexpected action from task after yield");
-
-      this.tip = this.tip.fork();
-      this.branches.push(Pair.of(this.tip, target));
+      this.tip = new CausalEventSource();
+      this.previousCells = this.cells;
+      this.cells = new LiveCells(this.tip, this.previousCells);
     }
   }
 }

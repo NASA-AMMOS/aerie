@@ -1,41 +1,36 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.concurrent.Executors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public final class ThreadedTaskTest {
   @Test
   @DisplayName("Thrown exceptions can be caught transparently")
-  public <$Timeline> void testTransparentExceptions() {
-    final var mockScheduler = new Scheduler<$Timeline>() {
+  public void testTransparentExceptions() {
+    final var mockScheduler = new Scheduler() {
       @Override
-      public Checkpoint<$Timeline> now() {
-        return new Checkpoint<>() {};
-      }
-
-      @Override
-      public <State>
-      State getStateAt(final Checkpoint<$Timeline> time, final Query<? super $Timeline, ?, State> query) {
+      public <State> State get(final Query<?, State> query) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public <Event, State> void emit(final Event event, final Query<? super $Timeline, ? super Event, State> query) {
+      public <Event> void emit(final Event event, final Query<? super Event, ?> query) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public String spawn(final Task<$Timeline> task) {
+      public String spawn(final Task task) {
         throw new UnsupportedOperationException();
       }
 
@@ -45,7 +40,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public String defer(final Duration delay, final Task<$Timeline> task) {
+      public String defer(final Duration delay, final Task task) {
         throw new UnsupportedOperationException();
       }
 
@@ -55,14 +50,20 @@ public final class ThreadedTaskTest {
       }
     };
 
-    class TestException extends RuntimeException {}
+    final var pool = Executors.newCachedThreadPool();
+    try {
+      class TestException extends RuntimeException {}
 
-    final var task = new ThreadedTask<$Timeline>(ModelActions.context, () -> {
-      throw new TestException();
-    });
+      final var task = new ThreadedTask(
+        pool,
+        Scoped.create(),
+        () -> { throw new TestException(); });
 
-    final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler));
-    assertSuppressed(ThreadedTask.TaskFailureException.class, ex);
+      final var ex = assertThrows(TestException.class, () -> task.step(mockScheduler));
+      assertSuppressed(ThreadedTask.TaskFailureException.class, ex);
+    } finally {
+      pool.shutdown();
+    }
   }
 
   private static void assertSuppressed(final Class<? extends Throwable> expected, final Throwable ex) {

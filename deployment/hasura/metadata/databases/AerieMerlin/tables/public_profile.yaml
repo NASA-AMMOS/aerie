@@ -1,0 +1,11 @@
+table:
+  name: profile
+  schema: public
+array_relationships:
+- name: profile_segments
+  using:
+    foreign_key_constraint_on:
+      column: profile_id
+      table:
+        name: profile_segment
+        schema: public

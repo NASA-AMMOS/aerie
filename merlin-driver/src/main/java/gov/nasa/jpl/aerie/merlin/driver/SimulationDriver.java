@@ -1,680 +1,190 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFactory;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskFrame;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskInfo;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskQueue;
-import gov.nasa.jpl.aerie.merlin.protocol.Checkpoint;
-import gov.nasa.jpl.aerie.merlin.protocol.Condition;
-import gov.nasa.jpl.aerie.merlin.protocol.DiscreteApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.RealApproximator;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver;
-import gov.nasa.jpl.aerie.merlin.protocol.Scheduler;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.TaskStatus;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
-import gov.nasa.jpl.aerie.merlin.timeline.History;
-import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
+import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine.JobId;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.UUID;
-import java.util.function.BiConsumer;
 
 public final class SimulationDriver {
-  public static <$Schema> SimulationResults simulate(
-      final Adaptation<$Schema> adaptation,
+  public static <Model>
+  SimulationResults simulate(
+      final MissionModel<Model> missionModel,
       final Map<String, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
-      final Duration simulationDuration)
-  throws TaskSpecInstantiationException
-  {
-    return simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), schedule, startTime, simulationDuration);
-  }
+      final Duration simulationDuration
+  ) {
+    try (final var engine = new SimulationEngine()) {
+      /* The top-level simulation timeline. */
+      var timeline = new TemporalEventSource();
+      var cells = new LiveCells(timeline, missionModel.getInitialCells());
+      /* The current real time. */
+      var elapsedTime = Duration.ZERO;
 
-  // The need for this helper is documented in the standard Java tutorials.
-  // https://docs.oracle.com/javase/tutorial/java/generics/capture.html
-  private static <$Schema, $Timeline extends $Schema> SimulationResults simulate(
-      final Adaptation<$Schema> adaptation,
-      final SimulationTimeline<$Timeline> database,
-      final Map<String, Pair<Duration, SerializedActivity>> schedule,
-      final Instant startTime,
-      final Duration simulationDuration)
-  throws TaskSpecInstantiationException
-  {
-    final var taskIdToActivityId = new HashMap<String, String>();
-    final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
+      // Begin tracking all resources.
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
 
-    // A time-ordered queue of all scheduled future tasks.
-    final var queue = new TaskQueue<String>();
-    // The set of all tasks that have completed.
-    final var completedTasks = new HashSet<String>();
-    // For each task, a set of tasks awaiting its completion (if any).
-    final var waitingTasks = new HashMap<String, Set<String>>();
-    // For each task, the condition blocking its progress (if any).
-    final var conditionedTasks = new HashMap<String, Condition<? super $Timeline>>();
-
-    {
-      final var daemon = adaptation.<$Timeline>getDaemon();
-      final var activityId = UUID.randomUUID().toString();
-
-      final var info = taskFactory.createAnonymousTask(daemon, Optional.empty());
-      info.isDaemon = true;
-
-      taskIdToActivityId.put(info.id, activityId);
-      queue.deferTo(Duration.ZERO, info.id);
-    }
-
-    for (final var entry : schedule.entrySet()) {
-      final var activityId = entry.getKey();
-      final var startDelta = entry.getValue().getLeft();
-      final var activity = entry.getValue().getRight();
-
-      final TaskInfo<$Timeline> info;
-      try {
-        info = taskFactory.createTask(activity.getTypeName(), activity.getParameters(), Optional.empty());
-      } catch (final InstantiationException ex) {
-        throw new TaskSpecInstantiationException(activityId, ex);
+        engine.trackResource(name, resource, elapsedTime);
       }
 
-      taskIdToActivityId.put(info.id, activityId);
-      queue.deferTo(startDelta, info.id);
-    }
-
-    // Collect profiles for all resources.
-    final var profiles = new HashMap<String, ProfileBuilder<$Schema, ?, ?>>();
-    for (final var family : adaptation.getResourceFamilies()) createProfilesForFamily(family, profiles::put);
-
-    var now = database.origin();
-    for (final var profile : profiles.values()) profile.updateAt(adaptation, now);
-
-    // Step the stimulus program forward until we reach the end of the simulation.
-    final var checkpoints = new HashMap<Checkpoint<$Timeline>, History<$Timeline>>();
-    final var changedTables = new boolean[database.getTableCount()];
-    now = queue.consumeUpTo(simulationDuration, now, (delta, frame) -> {
-      Arrays.fill(changedTables, false);
-
-      final var yieldTime = TaskFrame.runToCompletion(frame, (taskId, builder) -> {
-        final var info = taskFactory.get(taskId);
-
-        final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
-          @Override
-          public Checkpoint<$Timeline> now() {
-            final var checkpoint = new Checkpoint<$Timeline>() {};
-            checkpoints.put(checkpoint, builder.now());
-
-            return checkpoint;
-          }
-
-          @Override
-          public <State> State getStateAt(
-              final Checkpoint<$Timeline> checkpoint,
-              final Query<? super $Timeline, ?, State> token)
-          {
-            final var query = adaptation
-                .getQuery(token.specialize())
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            final var time = Optional
-                .ofNullable(checkpoints.get(checkpoint))
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            return time.ask(query);
-          }
-
-          @Override
-          public <Event, State> void emit(
-              final Event event,
-              final Query<? super $Timeline, ? super Event, State> token)
-          {
-            final var query = adaptation
-                .getQuery(token.specialize())
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            changedTables[query.getTableIndex()] = true;
-            builder.emit(event, query);
-          }
-
-          @Override
-          public String spawn(final Task<$Timeline> task) {
-            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
-            if (info.isDaemon) childInfo.isDaemon = true;
-            info.children.add(childInfo.id);
-
-            builder.signal(childInfo.id);
-            return childInfo.id;
-          }
-
-          @Override
-          public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
-            info.children.add(childInfo.id);
-
-            builder.signal(childInfo.id);
-            return childInfo.id;
-          }
-
-          @Override
-          public String defer(final Duration delay, final Task<$Timeline> task) {
-            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
-            if (info.isDaemon) childInfo.isDaemon = true;
-            info.children.add(childInfo.id);
-
-            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
-            return childInfo.id;
-          }
-
-          @Override
-          public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
-            info.children.add(childInfo.id);
-
-            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
-            return childInfo.id;
-          }
-        });
-
-        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-          @Override
-          public Void completed() {
-            var ancestorId$ = Optional.of(info.id);
-
-            completeAncestors: while (ancestorId$.isPresent()) {
-              final var ancestorInfo = taskFactory.get(ancestorId$.get());
-
-              // If this task is still ongoing, it's definitely not complete.
-              if (!ancestorInfo.isDone()) break;
-
-              // Check if this task's children are all complete.
-              for (final var childId : ancestorInfo.children) {
-                if (!completedTasks.contains(taskFactory.get(childId).id)) {
-                  // It's not yet "truly" complete.
-                  break completeAncestors;
-                }
-              }
-
-              // Mark this task as complete, and signal anybody waiting on it.
-              completedTasks.add(ancestorInfo.id);
-
-              final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
-              if (conditionedActivities != null) {
-                for (final var conditionedTask : conditionedActivities) {
-                  queue.deferTo(queue.getElapsedTime(), conditionedTask);
-                }
-              }
-
-              ancestorId$ = ancestorInfo.parent;
-            }
-
-            return null;
-          }
-
-          @Override
-          public Void delayed(final Duration delay) {
-            queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final String target) {
-            if (completedTasks.contains(target)) {
-              queue.deferTo(queue.getElapsedTime(), taskId);
-            } else {
-              waitingTasks.computeIfAbsent(target, k -> new HashSet<>()).add(taskId);
-            }
-
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final Condition<? super $Timeline> condition) {
-            conditionedTasks.put(info.id, condition);
-            return null;
-          }
-        });
-      });
-
-      for (final var profile : profiles.values()) {
-        profile.extendBy(delta);
-
-        // Only fetch a new dynamics if it could possibly have been changed by the tasks we just ran.
-        for (final var dependency : profile.lastDependencies) {
-          if (changedTables[dependency.getTableIndex()]) {
-            profile.updateAt(adaptation, yieldTime);
-            break;
-          }
-        }
-      }
-
-      // Signal any tasks whose condition occurs soon.
-      // TODO: Only check conditions which could have possibly been affected by the latest batch of tasks.
-      //   This will require some rejigging, since we'll need to store alongside each condition
-      //   its dependencies *and* its last nextSatisfied() result.
+      // Schedule the control task.
+      final var controlTask = new ControlTask(schedule);
       {
-        var maxBound = queue.getNextJobTime().orElse(simulationDuration);
-        final var activatedTasks = new ArrayList<String>();
-
-        for (final var entry : conditionedTasks.entrySet()) {
-          final var taskId = entry.getKey();
-          final var condition = entry.getValue();
-
-          final var querier = new Querier<$Timeline>() {
-            @Override
-            public <State> State getState(final Query<? super $Timeline, ?, State> token) {
-              final var query = adaptation
-                  .getQuery(token.specialize())
-                  .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-              return yieldTime.ask(query);
-            }
-          };
-
-          final var triggerTime$ = condition
-              .nextSatisfied(querier, maxBound.minus(queue.getElapsedTime()))
-              .map(queue.getElapsedTime()::plus);
-
-          if (triggerTime$.isEmpty()) continue;
-          final var triggerTime = triggerTime$.get();
-
-          if (triggerTime.shorterThan(maxBound)) activatedTasks.clear();
-          if (triggerTime.noLongerThan(maxBound)) activatedTasks.add(taskId);
-          maxBound = triggerTime;
-        }
-
-        for (final var taskId : activatedTasks) {
-          queue.deferTo(maxBound, taskId);
-          conditionedTasks.remove(taskId);
-        }
+        final var control = engine.initiateTask(elapsedTime, controlTask);
+        engine.scheduleTask(control, elapsedTime);
       }
 
-      return yieldTime;
-    });
-
-    // Flush the job queue, terminating any tasks that are incomplete.
-    waitingTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
-    conditionedTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
-    now = queue.consumeUpTo(Duration.MAX_VALUE, now, (delta, frame) -> {
-      return TaskFrame.runToCompletion(frame, (taskId, builder) -> {
-        taskFactory.get(taskId).abort();
-      });
-    });
-
-    final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
-    profiles.forEach(new BiConsumer<String, ProfileBuilder<?, ?, ?>>() {
-      @Override
-      public void accept(final String name, final ProfileBuilder<?, ?, ?> profileBuilder) {
-        acceptHelper(name, profileBuilder);
-      }
-
-      <Dynamics> void acceptHelper(final String name, final ProfileBuilder<?, ?, Dynamics> profile) {
-        final var solver = profile.solver;
-        solver.approximate(new ResourceSolver.ApproximatorVisitor<Dynamics, Void>() {
-          @Override
-          public Void real(final RealApproximator<Dynamics> approximator) {
-            final var realProfile = new ArrayList<Pair<Duration, RealDynamics>>();
-
-            var dynamicsStart = Duration.ZERO;
-            final var dynamicsIter = profile.build().iterator();
-            while (dynamicsIter.hasNext()) {
-              final var entry = dynamicsIter.next();
-
-              final var dynamicsDuration = entry.getLeft();
-              final var dynamics = entry.getRight();
-              final var dynamicsOwnsEndpoint = !dynamicsIter.hasNext();
-
-              final var approximation = approximator.approximate(dynamics).iterator();
-
-              var partStart = Duration.ZERO;
-              do {
-                final var part = approximation.next();
-                final var partExtent = Duration.min(part.extent, dynamicsDuration);
-
-                realProfile.add(Pair.of(partExtent, part.dynamics));
-                partStart = partStart.plus(partExtent);
-              } while (approximation.hasNext() && (partStart.shorterThan(dynamicsDuration) || dynamicsOwnsEndpoint));
-
-              dynamicsStart = dynamicsStart.plus(dynamicsDuration);
-            }
-
-            realProfiles.put(name, realProfile);
-
-            return null;
-          }
-
-          @Override
-          public Void discrete(final DiscreteApproximator<Dynamics> approximator) {
-            final var discreteProfile = new ArrayList<Pair<Duration, SerializedValue>>();
-
-            var dynamicsStart = Duration.ZERO;
-            final var dynamicsIter = profile.build().iterator();
-            while (dynamicsIter.hasNext()) {
-              final var entry = dynamicsIter.next();
-
-              final var dynamicsDuration = entry.getLeft();
-              final var dynamics = entry.getRight();
-              final var dynamicsOwnsEndpoint = !dynamicsIter.hasNext();
-
-              final var approximation = approximator.approximate(dynamics).iterator();
-
-              var partStart = Duration.ZERO;
-              do {
-                final var part = approximation.next();
-                final var partExtent = Duration.min(part.extent, dynamicsDuration);
-
-                discreteProfile.add(Pair.of(partExtent, part.dynamics));
-                partStart = partStart.plus(partExtent);
-              } while (approximation.hasNext() && (partStart.shorterThan(dynamicsDuration) || dynamicsOwnsEndpoint));
-
-              dynamicsStart = dynamicsStart.plus(dynamicsDuration);
-            }
-
-            discreteProfiles.put(name, Pair.of(approximator.getSchema(), discreteProfile));
-
-            return null;
-          }
-        });
-      }
-    });
-
-    // Use the map of task id to activity id to replace task ids with the corresponding
-    // activity id for use by the front end.
-    final var taskInfo = new HashMap<String, TaskInfo<?>>();
-    taskFactory.forEach(entry -> {
-      final var taskId = entry.getKey();
-      final var info = entry.getValue();
-
-      taskIdToActivityId.computeIfAbsent(taskId, $ -> UUID.randomUUID().toString());
-      taskInfo.put(taskId, info);
-    });
-
-    return SimulationResults.create(
-        realProfiles,
-        discreteProfiles,
-        taskIdToActivityId,
-        taskInfo,
-        startTime);
-  }
-
-  public static <$Schema, $Timeline extends $Schema> void simulateTask(
-      final Adaptation<$Schema> adaptation,
-      final SimulationTimeline<$Timeline> database,
-      final Task<$Timeline> task)
-  throws TaskSpecInstantiationException
-  {
-    final var taskFactory = new TaskFactory<$Schema, $Timeline>(adaptation.getTaskSpecificationTypes());
-
-    // A time-ordered queue of all scheduled future tasks.
-    final var queue = new TaskQueue<String>();
-    // The set of all tasks that have completed.
-    final var completedTasks = new HashSet<String>();
-    // For each task, a set of tasks awaiting its completion (if any).
-    final var waitingTasks = new HashMap<String, Set<String>>();
-    // For each task, the condition blocking its progress (if any).
-    final var conditionedTasks = new HashMap<String, Condition<? super $Timeline>>();
-
-    {
-      final var daemon = adaptation.<$Timeline>getDaemon();
-      final var info = taskFactory.createAnonymousTask(daemon, Optional.empty());
-      queue.deferTo(Duration.ZERO, info.id);
-    }
-
-    final var topTaskInfo = taskFactory.createAnonymousTask(task, Optional.empty());
-    queue.deferTo(Duration.ZERO, topTaskInfo.id);
-
-    var now = database.origin();
-
-    // Step the stimulus program forward until the task ends.
-    final var checkpoints = new HashMap<Checkpoint<$Timeline>, History<$Timeline>>();
-    final var changedTables = new boolean[database.getTableCount()];
-    while (!completedTasks.contains(topTaskInfo.id)) {
-      final var frame$ = queue.popNextFrame(now, Duration.MAX_VALUE);
-      if (frame$.isEmpty()) break;
-
-      final var frame = frame$.get();
-
-      final var yieldTime = TaskFrame.runToCompletion(frame, (taskId, builder) -> {
-        final var info = taskFactory.get(taskId);
-
-        final var status = info.step(queue.getElapsedTime(), new Scheduler<>() {
-          @Override
-          public Checkpoint<$Timeline> now() {
-            final var checkpoint = new Checkpoint<$Timeline>() {};
-            checkpoints.put(checkpoint, builder.now());
-
-            return checkpoint;
-          }
-
-          @Override
-          public <State> State getStateAt(
-              final Checkpoint<$Timeline> checkpoint,
-              final Query<? super $Timeline, ?, State> token)
-          {
-            final var query = adaptation
-                .getQuery(token.specialize())
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            final var time = Optional
-                .ofNullable(checkpoints.get(checkpoint))
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            return time.ask(query);
-          }
-
-          @Override
-          public <Event, State> void emit(
-              final Event event,
-              final Query<? super $Timeline, ? super Event, State> token)
-          {
-            final var query = adaptation
-                .getQuery(token.specialize())
-                .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-            changedTables[query.getTableIndex()] = true;
-            builder.emit(event, query);
-          }
-
-          @Override
-          public String spawn(final Task<$Timeline> task) {
-            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
-            if (info.isDaemon) childInfo.isDaemon = true;
-            info.children.add(childInfo.id);
-
-            builder.signal(childInfo.id);
-            return childInfo.id;
-          }
-
-          @Override
-          public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
-            info.children.add(childInfo.id);
-
-            builder.signal(childInfo.id);
-            return childInfo.id;
-          }
-
-          @Override
-          public String defer(final Duration delay, final Task<$Timeline> task) {
-            final var childInfo = taskFactory.createAnonymousTask(task, Optional.of(info.id));
-            if (info.isDaemon) childInfo.isDaemon = true;
-            info.children.add(childInfo.id);
-
-            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
-            return childInfo.id;
-          }
-
-          @Override
-          public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
-            final var childInfo = taskFactory.createTask(type, arguments, Optional.of(info.id));
-            info.children.add(childInfo.id);
-
-            queue.deferTo(queue.getElapsedTime().plus(delay), childInfo.id);
-            return childInfo.id;
-          }
-        });
-
-        status.match(new TaskStatus.Visitor<$Timeline, Void>() {
-          @Override
-          public Void completed() {
-            var ancestorId$ = Optional.of(info.id);
-
-            completeAncestors: while (ancestorId$.isPresent()) {
-              final var ancestorInfo = taskFactory.get(ancestorId$.get());
-
-              // If this task is still ongoing, it's definitely not complete.
-              if (!ancestorInfo.isDone()) break;
-
-              // Check if this task's children are all complete.
-              for (final var childId : ancestorInfo.children) {
-                if (!completedTasks.contains(taskFactory.get(childId).id)) {
-                  // It's not yet "truly" complete.
-                  break completeAncestors;
-                }
-              }
-
-              // Mark this task as complete, and signal anybody waiting on it.
-              completedTasks.add(ancestorInfo.id);
-
-              final var conditionedActivities = waitingTasks.remove(ancestorInfo.id);
-              if (conditionedActivities != null) {
-                for (final var conditionedTask : conditionedActivities) {
-                  queue.deferTo(queue.getElapsedTime(), conditionedTask);
-                }
-              }
-
-              ancestorId$ = ancestorInfo.parent;
-            }
-
-            return null;
-          }
-
-          @Override
-          public Void delayed(final Duration delay) {
-            queue.deferTo(queue.getElapsedTime().plus(delay), info.id);
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final String target) {
-            if (completedTasks.contains(target)) {
-              queue.deferTo(queue.getElapsedTime(), taskId);
-            } else {
-              waitingTasks.computeIfAbsent(target, k -> new HashSet<>()).add(taskId);
-            }
-
-            return null;
-          }
-
-          @Override
-          public Void awaiting(final Condition<? super $Timeline> condition) {
-            conditionedTasks.put(info.id, condition);
-            return null;
-          }
-        });
-      });
-
-      // Signal any tasks whose condition occurs soon.
-      // TODO: Only check conditions which could have possibly been affected by the latest batch of tasks.
-      //   This will require some rejigging, since we'll need to store alongside each condition
-      //   its dependencies *and* its last nextSatisfied() result.
+      // Start daemon task(s) immediately, before anything else happens.
       {
-        var maxBound = queue.getNextJobTime().orElse(Duration.MAX_VALUE);
-        final var activatedTasks = new ArrayList<String>();
-
-        for (final var entry : conditionedTasks.entrySet()) {
-          final var taskId = entry.getKey();
-          final var condition = entry.getValue();
-
-          final var querier = new Querier<$Timeline>() {
-            @Override
-            public <State> State getState(final Query<? super $Timeline, ?, State> token) {
-              final var query = adaptation
-                  .getQuery(token.specialize())
-                  .orElseThrow(() -> new IllegalArgumentException("forged token"));
-
-              return yieldTime.ask(query);
-            }
-          };
-
-          final var triggerTime$ = condition
-              .nextSatisfied(querier, maxBound.minus(queue.getElapsedTime()))
-              .map(queue.getElapsedTime()::plus);
-
-          if (triggerTime$.isEmpty()) continue;
-          final var triggerTime = triggerTime$.get();
-
-          if (triggerTime.shorterThan(maxBound)) activatedTasks.clear();
-          if (triggerTime.noLongerThan(maxBound)) activatedTasks.add(taskId);
-          maxBound = triggerTime;
-        }
-
-        for (final var taskId : activatedTasks) {
-          queue.deferTo(maxBound, taskId);
-          conditionedTasks.remove(taskId);
-        }
+        final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
+        final var commit = engine.performJobs(Set.of(JobId.forTask(daemon)), cells, elapsedTime, simulationDuration, missionModel);
+        timeline.add(commit);
       }
 
-      now = yieldTime;
-    }
+      // Drive the engine until we're out of time.
+      // TERMINATION: Actually, we might never break if real time never progresses forward.
+      while (true) {
+        final var batch = engine.extractNextJobs(simulationDuration);
 
-    // Flush the job queue, terminating any tasks that are incomplete.
-    waitingTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
-    conditionedTasks.keySet().forEach((taskId) -> taskFactory.get(taskId).abort());
-    now = queue.consumeUpTo(Duration.MAX_VALUE, now, (delta, frame) -> {
-      return TaskFrame.runToCompletion(frame, (taskId, builder) -> {
-        taskFactory.get(taskId).abort();
-      });
-    });
-  }
+        // Increment real time, if necessary.
+        final var delta = batch.offsetFromStart().minus(elapsedTime);
+        elapsedTime = batch.offsetFromStart();
+        timeline.add(delta);
+        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
+        //   even if they occur at the same real time.
 
-  private static <$Schema, Resource>
-  void
-  createProfilesForFamily(
-      final ResourceFamily<$Schema, Resource> family,
-      final BiConsumer<String, ProfileBuilder<$Schema, ?, ?>> handler)
-  {
-    final var solver = family.getSolver();
+        if (batch.jobs().isEmpty() && batch.offsetFromStart().isEqualTo(simulationDuration)) {
+          break;
+        }
 
-    for (final var entry : family.getResources().entrySet()) {
-      handler.accept(entry.getKey(), new ProfileBuilder<>(solver, entry.getValue()));
-    }
-  }
+        // Run the jobs in this batch.
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, simulationDuration, missionModel);
+        timeline.add(commit);
+      }
 
-  public static class TaskSpecInstantiationException extends Exception {
-    public final String id;
-
-    public TaskSpecInstantiationException(final String id, final Throwable cause) {
-      super(cause);
-      this.id = id;
+      return engine.computeResults(engine, startTime, elapsedTime, controlTask.extractTaskToPlannedDirective());
     }
   }
 
-  public static class InstantiationException extends RuntimeException {
-    public final String typeName;
-    public final Map<String, SerializedValue> arguments;
+  public static <Model>
+  void simulateTask(final MissionModel<Model> missionModel, final Task task) {
+    try (final var engine = new SimulationEngine()) {
+      /* The top-level simulation timeline. */
+      var timeline = new TemporalEventSource();
+      var cells = new LiveCells(timeline, missionModel.getInitialCells());
+      /* The current real time. */
+      var elapsedTime = Duration.ZERO;
 
-    public InstantiationException(final String typeName, final Map<String, SerializedValue> arguments, final Throwable cause) {
-      super(
-          String.format("Could not instantiate task of type %s with arguments %s", typeName, arguments),
-          cause);
+      // Begin tracking all resources.
+      for (final var entry : missionModel.getResources().entrySet()) {
+        final var name = entry.getKey();
+        final var resource = entry.getValue();
 
-      this.typeName = Objects.requireNonNull(typeName);
-      this.arguments = Objects.requireNonNull(arguments);
+        engine.trackResource(name, resource, elapsedTime);
+      }
+
+      // Schedule the control task.
+      final var control = engine.initiateTask(elapsedTime, task);
+      engine.scheduleTask(control, elapsedTime);
+
+      // Start daemon task(s) immediately, before anything else happens.
+      {
+        final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
+        final var commit = engine.performJobs(Set.of(JobId.forTask(daemon)), cells, elapsedTime, Duration.MAX_VALUE, missionModel);
+        timeline.add(commit);
+      }
+
+      // Drive the engine until we're out of time.
+      // TERMINATION: Actually, we might never break if real time never progresses forward.
+      while (!engine.isTaskComplete(control)) {
+        final var batch = engine.extractNextJobs(Duration.MAX_VALUE);
+
+        // Increment real time, if necessary.
+        final var delta = batch.offsetFromStart().minus(elapsedTime);
+        elapsedTime = batch.offsetFromStart();
+        timeline.add(delta);
+        // TODO: Advance a dense time counter so that future tasks are strictly ordered relative to these,
+        //   even if they occur at the same real time.
+
+        // Run the jobs in this batch.
+        final var commit = engine.performJobs(batch.jobs(), cells, elapsedTime, Duration.MAX_VALUE, missionModel);
+        timeline.add(commit);
+      }
+    }
+  }
+
+  private static final class ControlTask implements Task {
+    private final Map<String, Pair<Duration, SerializedActivity>> schedule;
+
+    /* The directive that caused a task (if any). */
+    // Non-final because we replace it with an empty map when extracted by a client.
+    private Map<String, String> taskToPlannedDirective = new HashMap<>();
+
+    private final PriorityQueue<Triple<Duration, String, SerializedActivity>> scheduledTasks
+        = new PriorityQueue<>(Comparator.comparing(Triple::getLeft));
+
+    private Duration currentTime = Duration.ZERO;
+
+    public ControlTask(final Map<String, Pair<Duration, SerializedActivity>> schedule) {
+      this.schedule = Objects.requireNonNull(schedule);
+      this.reset();
+    }
+
+    public Map<String, String> extractTaskToPlannedDirective() {
+      final var taskToPlannedDirective = this.taskToPlannedDirective;
+      this.taskToPlannedDirective = new HashMap<>();
+      return taskToPlannedDirective;
+    }
+
+    @Override
+    public TaskStatus step(final Scheduler scheduler) {
+      while (true) {
+        var nextTask = this.scheduledTasks.peek();
+        if (nextTask == null) break;
+
+        final var startTime = nextTask.getLeft();
+        if (startTime.longerThan(this.currentTime)) {
+          final var delta = nextTask.getLeft().minus(this.currentTime);
+          this.currentTime = nextTask.getLeft();
+          return TaskStatus.delayed(delta);
+        }
+
+        this.scheduledTasks.remove();
+
+        final var directiveId = nextTask.getMiddle();
+        final var specification = nextTask.getRight();
+
+        final var id = scheduler.spawn(specification.getTypeName(), specification.getParameters());
+        this.taskToPlannedDirective.put(id, directiveId);
+      }
+
+      return TaskStatus.completed();
+    }
+
+    @Override
+    public void reset() {
+      this.scheduledTasks.clear();
+      for (final var entry : this.schedule.entrySet()) {
+        this.scheduledTasks.add(Triple.of(
+            entry.getValue().getLeft(),
+            entry.getKey(),
+            entry.getValue().getRight()));
+      }
     }
   }
 }

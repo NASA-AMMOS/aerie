@@ -1,96 +1,94 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
-import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResourceFamily;
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResourceFamily;
-import gov.nasa.jpl.aerie.merlin.protocol.AdaptationFactory;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 
 public final class Registrar {
-  private final AdaptationFactory.Builder<?> builder;
+  private final Initializer builder;
 
-  public Registrar(final AdaptationFactory.Builder<?> builder) {
+  public Registrar(final Initializer builder) {
     this.builder = Objects.requireNonNull(builder);
   }
 
   public boolean isInitializationComplete() {
-    return this.builder.isBuilt();
+    return (ModelActions.context.get().getContextType() != Context.ContextType.Initializing);
   }
 
-  public <Value>
-  DiscreteResource<Value>
-  discrete(final String name, final Resource<Value> resource, final ValueMapper<Value> mapper) {
-    this.builder.resourceFamily(new DiscreteResourceFamily<>(
-        ModelActions.context,
-        mapper,
-        Map.of(name, resource)));
-
-    return resource::getDynamics;
+  public <Value> void discrete(final String name, final Resource<Value> resource, final ValueMapper<Value> mapper) {
+    addDiscreteResource(this.builder, name, resource, mapper);
   }
 
-  public
-  RealResource
-  real(final String name, final Resource<RealDynamics> resource) {
-    this.builder.resourceFamily(new RealResourceFamily<>(
-        ModelActions.context,
-        Map.of(name, resource)));
-
-    return resource::getDynamics;
+  public void real(final String name, final Resource<RealDynamics> resource) {
+    addRealResource(this.builder, name, resource);
   }
 
-  public <Activity> void threadedTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
-    this.threadedTaskHelper(this.builder, mapper, task);
-  }
-
-  public <Activity> void replayingTask(final ActivityMapper<Activity> mapper, final Consumer<Activity> task) {
-    this.replayingTaskHelper(this.builder, mapper, task);
-  }
-
-  public <Activity> void noopTask(final ActivityMapper<Activity> mapper) {
-    this.noopTaskHelper(this.builder, mapper);
-  }
-
-  private <$Schema, Activity>
-  void threadedTaskHelper(
-      final AdaptationFactory.Builder<$Schema> builder,
-      final ActivityMapper<Activity> mapper,
-      final Consumer<Activity> task
+  private static <Value> void addDiscreteResource(
+      final Initializer initializer,
+      final String name,
+      final Resource<Value> resource,
+      final ValueMapper<Value> mapper
   ) {
-    builder.taskSpecType(mapper.getName(), new ActivityType<>(mapper) {
+    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<Value>() {
       @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ThreadedTask<>(ModelActions.context, () -> task.accept(activity));
+      public String getType() {
+        return "discrete";
+      }
+
+      @Override
+      public ValueSchema getSchema() {
+        return mapper.getValueSchema();
+      }
+
+      @Override
+      public Value getDynamics(final Querier querier) {
+        try (final var _token = ModelActions.context.set(new QueryContext(querier))) {
+          return resource.getDynamics();
+        }
+      }
+
+      @Override
+      public SerializedValue serialize(final Value value) {
+        return mapper.serializeValue(value);
       }
     });
   }
 
-  private <$Schema, Activity>
-  void replayingTaskHelper(
-      final AdaptationFactory.Builder<$Schema> builder,
-      final ActivityMapper<Activity> mapper,
-      final Consumer<Activity> task
+  private static void addRealResource(
+      final Initializer initializer,
+      final String name,
+      final Resource<RealDynamics> resource
   ) {
-    builder.taskSpecType(mapper.getName(), new ActivityType<>(mapper) {
+    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<RealDynamics>() {
       @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new ReplayingTask<>(ModelActions.context, () -> task.accept(activity));
+      public String getType() {
+        return "real";
       }
-    });
-  }
 
-  private <$Schema, Activity>
-  void noopTaskHelper(final AdaptationFactory.Builder<$Schema> builder, final ActivityMapper<Activity> mapper) {
-    builder.taskSpecType(mapper.getName(), new ActivityType<>(mapper) {
       @Override
-      public <$Timeline extends $Schema> Task<$Timeline> createTask(final Activity activity) {
-        return new OneShotTask<>($ -> {});
+      public ValueSchema getSchema() {
+        return ValueSchema.ofStruct(Map.of(
+            "initial", ValueSchema.REAL,
+            "rate", ValueSchema.REAL));
+      }
+
+      @Override
+      public RealDynamics getDynamics(final Querier querier) {
+        try (final var _token = ModelActions.context.set(new QueryContext(querier))) {
+          return resource.getDynamics();
+        }
+      }
+
+      @Override
+      public SerializedValue serialize(final RealDynamics dynamics) {
+        return SerializedValue.of(Map.of(
+            "initial", SerializedValue.of(dynamics.initial),
+            "rate", SerializedValue.of(dynamics.rate)));
       }
     });
   }

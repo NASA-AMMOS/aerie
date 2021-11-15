@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.json;
 
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import javax.json.Json;
 import javax.json.JsonArray;

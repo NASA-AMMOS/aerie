@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
@@ -25,7 +25,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanStorePlan() throws NoSuchPlanException {
+  public void testCanStorePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
     // GIVEN
 
     // WHEN
@@ -40,7 +40,9 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testUnsavedPlanTransactionHasNoEffect() throws NoSuchPlanException {
+  public void testUnsavedPlanTransactionHasNoEffect()
+  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
+  {
     // GIVEN
     final NewPlan newPlan = new NewPlan();
     newPlan.name = "before";
@@ -58,7 +60,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCreatePlanWithActivity() throws NoSuchPlanException {
+  public void testCreatePlanWithActivity() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
     // GIVEN
 
     // WHEN
@@ -80,7 +82,9 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCreatePlanWithNullActivitiesList() throws NoSuchPlanException {
+  public void testCreatePlanWithNullActivitiesList()
+  throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException
+  {
     // GIVEN
 
     // WHEN
@@ -91,7 +95,7 @@ public abstract class PlanRepositoryContractTest {
   }
 
   @Test
-  public void testCanDeletePlan() throws NoSuchPlanException {
+  public void testCanDeletePlan() throws NoSuchPlanException, MissionModelRepository.NoSuchMissionModelException {
     // GIVEN
     this.planRepository.createPlan(new NewPlan());
     final CreatedPlan ids = this.planRepository.createPlan(new NewPlan());

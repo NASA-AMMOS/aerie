@@ -49,12 +49,8 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple2;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple3;
-import static gov.nasa.jpl.aerie.json.Uncurry.tuple4;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry2;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry3;
-import static gov.nasa.jpl.aerie.json.Uncurry.uncurry4;
+import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
+import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 
 public final class ConstraintParsers {
   private ConstraintParsers() {}
@@ -64,24 +60,24 @@ public final class ConstraintParsers {
           .field("type", literalP("DiscreteResource"))
           .field("name", stringP)
           .map(Iso.of(
-              uncurry2(type -> name -> new DiscreteResource(name)),
-              $ -> tuple2(Unit.UNIT, $.name)));
+              untuple((type, name) -> new DiscreteResource(name)),
+              $ -> tuple(Unit.UNIT, $.name)));
 
   private static final JsonParser<RealResource> realResourceP =
       productP
           .field("type", literalP("RealResource"))
           .field("name", stringP)
           .map(Iso.of(
-              uncurry2(type -> name -> new RealResource(name)),
-              $ -> tuple2(Unit.UNIT, $.name)));
+              untuple((type, name) -> new RealResource(name)),
+              $ -> tuple(Unit.UNIT, $.name)));
 
   private static final JsonParser<DiscreteValue> discreteValueP =
       productP
           .field("type", literalP("DiscreteValue"))
           .field("value", serializedValueP)
           .map(Iso.of(
-              uncurry2(type -> value -> new DiscreteValue(value)),
-              $ -> tuple2(Unit.UNIT, $.value)));
+              untuple((type, value) -> new DiscreteValue(value)),
+              $ -> tuple(Unit.UNIT, $.value)));
 
   private static final JsonParser<DiscreteParameter> discreteParameterP =
       productP
@@ -89,8 +85,8 @@ public final class ConstraintParsers {
           .field("alias", stringP)
           .field("name", stringP)
           .map(Iso.of(
-              uncurry3(type -> alias -> name -> new DiscreteParameter(alias, name)),
-              $ -> tuple3(Unit.UNIT, $.activityAlias, $.parameterName)));
+              untuple((type, alias, name) -> new DiscreteParameter(alias, name)),
+              $ -> tuple(Unit.UNIT, $.activityAlias, $.parameterName)));
 
   private static final JsonParser<Expression<DiscreteProfile>> discreteProfileExprP =
       recursiveP(selfP -> chooseP(
@@ -103,8 +99,8 @@ public final class ConstraintParsers {
           .field("type", literalP("RealValue"))
           .field("value", doubleP)
           .map(Iso.of(
-              uncurry2(type -> value -> new RealValue(value)),
-              $ -> tuple2(Unit.UNIT, $.value)));
+              untuple((type, value) -> new RealValue(value)),
+              $ -> tuple(Unit.UNIT, $.value)));
 
   private static JsonParser<Plus> plusF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
       return productP
@@ -112,8 +108,8 @@ public final class ConstraintParsers {
           .field("left", linearProfileExpressionP)
           .field("right", linearProfileExpressionP)
           .map(Iso.of(
-              uncurry3(type -> left -> right -> new Plus(left, right)),
-              $ -> tuple3(Unit.UNIT, $.left, $.right)));
+              untuple((type, left, right) -> new Plus(left, right)),
+              $ -> tuple(Unit.UNIT, $.left, $.right)));
   }
 
   private static JsonParser<Times> timesF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
@@ -122,8 +118,8 @@ public final class ConstraintParsers {
         .field("profile", linearProfileExpressionP)
         .field("multiplier", doubleP)
         .map(Iso.of(
-            uncurry3(type -> profile -> multiplier -> new Times(profile, multiplier)),
-            $ -> tuple3(Unit.UNIT, $.profile, $.multiplier)));
+            untuple((type, profile, multiplier) -> new Times(profile, multiplier)),
+            $ -> tuple(Unit.UNIT, $.profile, $.multiplier)));
   }
 
   private static JsonParser<Rate> rateF(final JsonParser<Expression<LinearProfile>> linearProfileExpressionP) {
@@ -131,18 +127,18 @@ public final class ConstraintParsers {
         .field("type", literalP("Rate"))
         .field("profile", linearProfileExpressionP)
         .map(Iso.of(
-            uncurry2(type -> profile -> new Rate(profile)),
-            $ -> tuple2(Unit.UNIT, $.profile)));
+            untuple((type, profile) -> new Rate(profile)),
+            $ -> tuple(Unit.UNIT, $.profile)));
   }
 
-  private final static JsonParser<RealParameter> realParameterP =
+  private static final JsonParser<RealParameter> realParameterP =
       productP
           .field("type", literalP("RealParameter"))
           .field("alias", stringP)
           .field("name", stringP)
           .map(Iso.of(
-              uncurry3(type -> alias -> name -> new RealParameter(alias, name)),
-              $ -> tuple3(Unit.UNIT, $.activityAlias, $.parameterName)));
+              untuple((type, alias, name) -> new RealParameter(alias, name)),
+              $ -> tuple(Unit.UNIT, $.activityAlias, $.parameterName)));
 
   private static final JsonParser<Expression<LinearProfile>> linearProfileExprP =
       recursiveP(selfP -> chooseP(
@@ -165,32 +161,32 @@ public final class ConstraintParsers {
           .field("from", serializedValueP)
           .field("to", serializedValueP)
           .map(Iso.of(
-              uncurry4(type -> profile -> from -> to -> new Transition(profile, from, to)),
-              $ -> tuple4(Unit.UNIT, $.profile, $.oldState, $.newState)));
+              untuple((type, profile, from, to) -> new Transition(profile, from, to)),
+              $ -> tuple(Unit.UNIT, $.profile, $.oldState, $.newState)));
 
   private static final JsonParser<During> duringP =
       productP
           .field("type", literalP("During"))
           .field("alias", stringP)
           .map(Iso.of(
-              uncurry2(type -> alias -> new During(alias)),
-              $ -> tuple2(Unit.UNIT, $.activityAlias)));
+              untuple((type, alias) -> new During(alias)),
+              $ -> tuple(Unit.UNIT, $.activityAlias)));
 
   private static final JsonParser<StartOf> startOfP =
       productP
           .field("type", literalP("StartOf"))
           .field("alias", stringP)
           .map(Iso.of(
-              uncurry2(type -> alias -> new StartOf(alias)),
-              $ -> tuple2(Unit.UNIT, $.activityAlias)));
+              untuple((type, alias) -> new StartOf(alias)),
+              $ -> tuple(Unit.UNIT, $.activityAlias)));
 
   private static final JsonParser<EndOf> endOfP =
       productP
           .field("type", literalP("EndOf"))
           .field("alias", stringP)
           .map(Iso.of(
-              uncurry2(type -> alias -> new EndOf(alias)),
-              $ -> tuple2(Unit.UNIT, $.activityAlias)));
+              untuple((type, alias) -> new EndOf(alias)),
+              $ -> tuple(Unit.UNIT, $.activityAlias)));
 
   private static <P extends Profile<P>> JsonParser<Equal<P>> equalF(final JsonParser<Expression<P>> expressionParser) {
     return productP
@@ -198,8 +194,8 @@ public final class ConstraintParsers {
         .field("left", expressionParser)
         .field("right", expressionParser)
         .map(Iso.of(
-            uncurry3(type -> left -> right -> new Equal<>(left, right)),
-            $ -> tuple3(Unit.UNIT, $.left, $.right)));
+            untuple((type, left, right) -> new Equal<>(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right)));
   }
 
   private static <P extends Profile<P>> JsonParser<NotEqual<P>> notEqualF(final JsonParser<Expression<P>> expressionParser) {
@@ -208,8 +204,8 @@ public final class ConstraintParsers {
         .field("left", expressionParser)
         .field("right", expressionParser)
         .map(Iso.of(
-            uncurry3(type -> left -> right -> new NotEqual<>(left, right)),
-            $ -> tuple3(Unit.UNIT, $.left, $.right)));
+            untuple((type, left, right) -> new NotEqual<>(left, right)),
+            $ -> tuple(Unit.UNIT, $.left, $.right)));
   }
 
   private static final JsonParser<LessThan> lessThanP =
@@ -218,8 +214,8 @@ public final class ConstraintParsers {
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              uncurry3(type -> left -> right -> new LessThan(left, right)),
-              $ -> tuple3(Unit.UNIT, $.left, $.right)));
+              untuple((type, left, right) -> new LessThan(left, right)),
+              $ -> tuple(Unit.UNIT, $.left, $.right)));
 
   private static final JsonParser<LessThanOrEqual> lessThanOrEqualP =
       productP
@@ -227,8 +223,8 @@ public final class ConstraintParsers {
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              uncurry3(type -> left -> right -> new LessThanOrEqual(left, right)),
-              $ -> tuple3(Unit.UNIT, $.left, $.right)));
+              untuple((type, left, right) -> new LessThanOrEqual(left, right)),
+              $ -> tuple(Unit.UNIT, $.left, $.right)));
 
   private static final JsonParser<GreaterThan> greaterThanP =
       productP
@@ -236,8 +232,8 @@ public final class ConstraintParsers {
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              uncurry3(type -> left -> right -> new GreaterThan(left, right)),
-              $ -> tuple3(Unit.UNIT, $.left, $.right)));
+              untuple((type, left, right) -> new GreaterThan(left, right)),
+              $ -> tuple(Unit.UNIT, $.left, $.right)));
 
   private static final JsonParser<GreaterThanOrEqual> greaterThanOrEqualP =
       productP
@@ -245,16 +241,16 @@ public final class ConstraintParsers {
           .field("left", linearProfileExprP)
           .field("right", linearProfileExprP)
           .map(Iso.of(
-              uncurry3(type -> left -> right -> new GreaterThanOrEqual(left, right)),
-              $ -> tuple3(Unit.UNIT, $.left, $.right)));
+              untuple((type, left, right) -> new GreaterThanOrEqual(left, right)),
+              $ -> tuple(Unit.UNIT, $.left, $.right)));
 
   private static JsonParser<And> andF(final JsonParser<Expression<Windows>> windowsExpressionP) {
     return productP
         .field("type", literalP("And"))
         .field("expressions", listP(windowsExpressionP))
         .map(Iso.of(
-            uncurry2(type -> expressions -> new And(expressions)),
-            $ -> tuple2(Unit.UNIT, $.expressions)));
+            untuple((type, expressions) -> new And(expressions)),
+            $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
   private static JsonParser<Or> orF(final JsonParser<Expression<Windows>> windowsExpressionP) {
@@ -262,8 +258,8 @@ public final class ConstraintParsers {
         .field("type", literalP("Or"))
         .field("expressions", listP(windowsExpressionP))
         .map(Iso.of(
-            uncurry2(type -> expressions -> new Or(expressions)),
-            $ -> tuple2(Unit.UNIT, $.expressions)));
+            untuple((type, expressions) -> new Or(expressions)),
+            $ -> tuple(Unit.UNIT, $.expressions)));
   }
 
   private static JsonParser<Not> notF(final JsonParser<Expression<Windows>> windowsExpressionP) {
@@ -271,8 +267,8 @@ public final class ConstraintParsers {
         .field("type", literalP("Not"))
         .field("expression", windowsExpressionP)
         .map(Iso.of(
-            uncurry2(type -> expr -> new Not(expr)),
-            $ -> tuple2(Unit.UNIT, $.expression)));
+            untuple((type, expr) -> new Not(expr)),
+            $ -> tuple(Unit.UNIT, $.expression)));
   }
 
   private static JsonParser<IfThen> ifThenF(final JsonParser<Expression<Windows>> windowsExpressionP) {
@@ -281,8 +277,8 @@ public final class ConstraintParsers {
         .field("condition", windowsExpressionP)
         .field("expression", windowsExpressionP)
         .map(Iso.of(
-            uncurry3(type -> cond -> expr -> new IfThen(cond, expr)),
-            $ -> tuple3(Unit.UNIT, $.condition, $.expression)));
+            untuple((type, cond, expr) -> new IfThen(cond, expr)),
+            $ -> tuple(Unit.UNIT, $.condition, $.expression)));
   }
 
   private static JsonParser<ForEachActivity> forEachActivityF(final JsonParser<Expression<List<Violation>>> violationListExpressionP) {
@@ -292,8 +288,8 @@ public final class ConstraintParsers {
         .field("alias", stringP)
         .field("expression", violationListExpressionP)
         .map(Iso.of(
-            uncurry4(type -> actType -> alias -> expression -> new ForEachActivity(actType, alias, expression)),
-            $ -> tuple4(Unit.UNIT, $.activityType, $.alias, $.expression)));
+            untuple((type, actType, alias, expression) -> new ForEachActivity(actType, alias, expression)),
+            $ -> tuple(Unit.UNIT, $.activityType, $.alias, $.expression)));
   }
 
   private static final JsonParser<Changed<?>> changedP =
@@ -301,8 +297,8 @@ public final class ConstraintParsers {
           .field("type", literalP("Changed"))
           .field("expression", profileExpressionP)
           .map(Iso.of(
-              uncurry2(type -> expression -> new Changed<>(expression)),
-              $ -> tuple2(Unit.UNIT, $.expression)));
+              untuple((type, expression) -> new Changed<>(expression)),
+              $ -> tuple(Unit.UNIT, $.expression)));
 
   static final JsonParser<Expression<LinearProfile>> linearProfileExpressionP = linearProfileExprP;
   static final JsonParser<Expression<DiscreteProfile>> discreteProfileExpressionP = discreteProfileExprP;
@@ -333,8 +329,8 @@ public final class ConstraintParsers {
           .field("activityType1", stringP)
           .field("activityType2", stringP)
           .map(Iso.of(
-              uncurry3(type -> act1 -> act2 -> new ForbiddenActivityOverlap(act1, act2)),
-              $ -> tuple3(Unit.UNIT, $.activityType1, $.activityType2)));
+              untuple((type, act1, act2) -> new ForbiddenActivityOverlap(act1, act2)),
+              $ -> tuple(Unit.UNIT, $.activityType1, $.activityType2)));
 
   static final JsonParser<Expression<List<Violation>>> violationListExpressionP =
       recursiveP(selfP -> chooseP(

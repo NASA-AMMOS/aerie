@@ -7,12 +7,6 @@
  * </p>
  *
  * <p>
- *   At any given time, a resource is in a given <b>state</b>, and its time-varying behavior -- its <b>dynamics</b> --
- *   depends only upon that state. The {@link gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver} interface
- *   defines this relationship between state and dynamics.
- * </p>
- *
- * <p>
  *   Multiple resources may be determined by the same shared state.
  *   Such resources are defined by a <b>model</b> which determines the dynamics of each of the coupled resources.
  *   Thus, a <i>resource</i> is defined by a <i>model</i>.
@@ -20,9 +14,10 @@
  * </p>
  *
  * <p>
- *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time. A resource, then,
- *   also gives the current extent of validity for its current dynamics.
- *   The {@link gov.nasa.jpl.aerie.merlin.protocol.DelimitedDynamics} class describes this mechanism.
+ *   Pragmatically, a dynamics at one time may not be a reasonable approximation at a later time.
+ *   As a resource is derived from zero or more backing states, we may take the minimum over calls
+ *   to {@link gov.nasa.jpl.aerie.merlin.protocol.model.Applicator#getExpiry(java.lang.Object)} as the amount of time
+ *   for which a resource's current dynamics is legal.
  * </p>
  *
  * <p>
@@ -34,9 +29,5 @@
  *   <li>
  *     Determining the next time at which some condition is held true.
  * </ul>
- * <p>
- *   The {@link gov.nasa.jpl.aerie.merlin.protocol.ResourceSolver} interface captures these capabilities
- *   for a given choice of types for resource values, dynamics, and conditions.
- * </p>
  */
 package gov.nasa.jpl.aerie.merlin.framework.resources;

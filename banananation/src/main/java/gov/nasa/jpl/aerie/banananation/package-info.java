@@ -1,4 +1,4 @@
-@Adaptation(model = Mission.class)
+@MissionModel(model = Mission.class)
 
 @WithMappers(BasicValueMappers.class)
 @WithMappers(BananaValueMappers.class)
@@ -15,9 +15,11 @@
 @WithActivityType(LineCountBananaActivity.class)
 @WithActivityType(DecomposingActivity.ParentActivity.class)
 @WithActivityType(DecomposingActivity.ChildActivity.class)
+@WithActivityType(BakeBananaBreadActivity.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.banananation.activities.BakeBananaBreadActivity;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
@@ -28,7 +30,7 @@ import gov.nasa.jpl.aerie.banananation.activities.PickBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ChangeProducerActivity;
 import gov.nasa.jpl.aerie.banananation.activities.ThrowBananaActivity;
 import gov.nasa.jpl.aerie.contrib.serialization.rulesets.BasicValueMappers;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithActivityType;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithMappers;
-import gov.nasa.jpl.aerie.merlin.framework.annotations.Adaptation.WithConfiguration;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithActivityType;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithMappers;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel.WithConfiguration;

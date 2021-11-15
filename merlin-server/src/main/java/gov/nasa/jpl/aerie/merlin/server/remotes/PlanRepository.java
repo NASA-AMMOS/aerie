@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
@@ -26,23 +26,16 @@ public interface PlanRepository {
   Plan getPlan(String id) throws NoSuchPlanException;
   long getPlanRevision(String id) throws NoSuchPlanException;
   Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
-  ActivityInstance getActivityInPlanById(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
 
   // Mutations
-  CreatedPlan createPlan(NewPlan plan);
+  CreatedPlan createPlan(NewPlan plan) throws MissionModelRepository.NoSuchMissionModelException;
   PlanTransaction updatePlan(String id) throws NoSuchPlanException;
-  List<String> replacePlan(String id, NewPlan plan) throws NoSuchPlanException;
   void deletePlan(String id) throws NoSuchPlanException;
 
   String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
-  ActivityTransaction updateActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
-  void replaceActivity(String planId, String activityId, ActivityInstance activity) throws NoSuchPlanException, NoSuchActivityInstanceException;
-  void deleteActivity(String planId, String activityId) throws NoSuchPlanException, NoSuchActivityInstanceException;
   void deleteAllActivities(String planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getAllConstraintsInPlan(String planId) throws NoSuchPlanException;
-  void replacePlanConstraints(String planId, Map<String, Constraint> constraints) throws NoSuchPlanException;
-  void deleteConstraintInPlanById(String planId, String constraintId) throws NoSuchPlanException;
 
   record CreatedPlan(String planId, List<String> activityIds) {}
 
@@ -53,7 +46,6 @@ public interface PlanRepository {
     PlanTransaction setStartTimestamp(Timestamp timestamp);
     PlanTransaction setEndTimestamp(Timestamp timestamp);
     PlanTransaction setConfiguration(Map<String, SerializedValue> configuration);
-    PlanTransaction setAdaptationId(String adaptationId);
   }
 
   interface ActivityTransaction {

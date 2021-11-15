@@ -4,7 +4,9 @@ import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
-import gov.nasa.jpl.aerie.merlin.protocol.RealDynamics;
+import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
+
+import java.util.function.Function;
 
 public final class Accumulator implements RealResource {
   private final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref;
@@ -16,12 +18,18 @@ public final class Accumulator implements RealResource {
   }
 
   public Accumulator(final double initialVolume, final double initialRate) {
-    this.ref = new CellRef<>(new LinearIntegrationCell(initialVolume, initialRate));
+    this.ref = LinearIntegrationCell.allocate(initialVolume, initialRate, Function.identity());
   }
 
   @Override
   public RealDynamics getDynamics() {
     return this.ref.get().getVolume();
+  }
+
+  @Deprecated
+  @Override
+  public boolean equals(final Object obj) {
+    return super.equals(obj);
   }
 
 
@@ -33,6 +41,12 @@ public final class Accumulator implements RealResource {
 
     public void add(final double delta) {
       Accumulator.this.ref.emit(LinearAccumulationEffect.addRate(delta));
+    }
+
+    @Deprecated
+    @Override
+    public boolean equals(final Object obj) {
+      return super.equals(obj);
     }
   }
 }

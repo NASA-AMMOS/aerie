@@ -1,0 +1,68 @@
+version: "3.7"
+services:
+  aerie_gateway:
+    depends_on: ["postgres"]
+    environment:
+      AUTH_TYPE: cam
+      AUTH_URL: https://atb-ocio-12b.jpl.nasa.gov:8443/cam-api
+      GQL_API_URL: http://localhost:8080/v1/graphql
+      PORT: 9000
+      POSTGRES_AERIE_MERLIN_DB: aerie_merlin
+      POSTGRES_AERIE_UI_DB: aerie_ui
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: aerie
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: aerie
+    image: "${AERIE_DOCKER_URL}/aerie-gateway:${DOCKER_TAG}"
+    ports: ["9000:9000"]
+    restart: always
+    volumes:
+      - file_store:/app/files
+  aerie_ui:
+    depends_on: ["postgres"]
+    environment:
+      GATEWAY_CLIENT_URL: http://localhost:9000
+      GATEWAY_SERVER_URL: http://aerie_gateway:9000
+      HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
+      HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+    image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
+    ports: ["80:80"]
+    restart: always
+  hasura:
+    depends_on: ["postgres"]
+    environment:
+      AERIE_CONFIG_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_config
+      AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
+      AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_hasura
+      HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
+    image: "hasura/graphql-engine:v2.0.10.cli-migrations-v3"
+    ports: ["8080:8080"]
+    restart: always
+    volumes:
+      - ./hasura/metadata:/hasura-metadata
+  merlin:
+    depends_on: ["postgres"]
+    image: "${AERIE_DOCKER_URL}/merlin:${DOCKER_TAG}"
+    ports: ["27183:27183"]
+    restart: always
+    volumes:
+      - file_store:/usr/src/app/merlin_file_store
+  postgres:
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    image: postgres
+    ports: ["5432:5432"]
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init-db:/docker-entrypoint-initdb.d
+
+volumes:
+  file_store:
+  postgres_data:

@@ -1,29 +1,38 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
 
 public interface Context {
+  enum ContextType { Initializing, Reacting, Querying }
+
+  // Usable in all contexts
+  ContextType getContextType();
+
   // Usable during both initialization & simulation
-  <CellType> CellType ask(Query<?, ?, CellType> query);
+  <CellType> CellType ask(Query<?, CellType> query);
 
   // Usable during initialization
   <Event, Effect, CellType>
-  Query<?, Event, CellType>
+  Query<Event, CellType>
   allocate(
-      final Projection<Event, Effect> projection,
-      final Applicator<Effect, CellType> applicator);
+      CellType initialState,
+      Applicator<Effect, CellType> applicator,
+      EffectTrait<Effect> trait,
+      Function<Event, Effect> projection);
 
   // Usable during simulation
-  <Event> void emit(Event event, Query<?, Event, ?> query);
+  <Event> void emit(Event event, Query<Event, ?> query);
 
-  interface TaskFactory { <$Timeline> Task<$Timeline> create(); }
+  interface TaskFactory { Task create(ExecutorService executor); }
 
   String spawn(TaskFactory task);
   String spawn(String type, Map<String, SerializedValue> arguments);

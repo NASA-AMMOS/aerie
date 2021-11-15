@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Iterator;
 import java.util.List;

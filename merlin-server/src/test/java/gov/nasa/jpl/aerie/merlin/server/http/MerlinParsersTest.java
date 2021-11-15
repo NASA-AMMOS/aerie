@@ -4,8 +4,10 @@ import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
+import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,8 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.listP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.longP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.recursiveP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.createSimulationMessageP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsersTest.NestedLists.nestedList;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,7 +86,7 @@ public final class MerlinParsersTest {
   public void testCreateSimulationMessageParser() {
     final var json = Json
         . createObjectBuilder()
-        . add("adaptationId", "hello")
+        . add("missionModelId", "hello")
         . add("startTime", "1992-224T01:30:00")
         . add("samplingDuration", 5_000_000 /* microseconds */)
         . add("activities", Json
@@ -141,5 +145,83 @@ public final class MerlinParsersTest {
   @Test
   public void testRealIsNotALong() {
     assertThat(longP.parse(Json.createValue(3.14))).matches(JsonParseResult::isFailure);
+  }
+
+  @Test
+  public void testHasuraActionParsers() {
+    {
+      final var json = Json
+          .createObjectBuilder()
+          .add("action", Json
+              .createObjectBuilder()
+              .add("name", "testAction")
+              .build())
+          .add("input", Json
+              .createObjectBuilder()
+              .add("missionModelId", "1")
+              .build())
+          .add("session_variables", Json
+              .createObjectBuilder()
+              .add("x-hasura-role", "admin")
+              .build())
+          .build();
+
+      final var expected = new HasuraAction<>(
+          "testAction",
+          new HasuraAction.MissionModelInput("1"),
+          new HasuraAction.Session("admin", ""));
+
+      assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+    }
+
+    {
+      final var json = Json
+          .createObjectBuilder()
+          .add("action", Json
+              .createObjectBuilder()
+              .add("name", "testAction")
+              .build())
+          .add("input", Json
+              .createObjectBuilder()
+              .add("missionModelId", "1")
+              .build())
+          .add("session_variables", Json
+              .createObjectBuilder()
+              .add("x-hasura-role", "admin")
+              .add("x-hasura-user-id", "userId")
+              .build())
+          .build();
+
+      final var expected = new HasuraAction<>(
+          "testAction",
+          new HasuraAction.MissionModelInput("1"),
+          new HasuraAction.Session("admin", "userId"));
+
+      assertThat(hasuraMissionModelActionP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
+    }
+  }
+
+  @Test
+  public void testHasuraMissionModelEventParser() {
+    final var json = Json
+        .createObjectBuilder()
+        .add("event", Json
+            .createObjectBuilder()
+            .add("data", Json
+            .createObjectBuilder()
+                .add("new", Json
+                    .createObjectBuilder()
+                    .add("id", 1)
+                    .build())
+                .add("old", JsonValue.NULL)
+                .build())
+            .add("op", "INSERT")
+            .build())
+        .add("id", "8907a407-28a5-440a-8de6-240b80c58a8b")
+        .build();
+
+    final var expected = new HasuraMissionModelEvent("1");
+
+    assertThat(hasuraMissionModelEventTriggerP.parse(json).getSuccessOrThrow()).isEqualTo(expected);
   }
 }

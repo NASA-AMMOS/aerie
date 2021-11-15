@@ -1,10 +1,11 @@
 package gov.nasa.jpl.aerie.constraints.time;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Objects;
 
-import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.*;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
+import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
 public final class Window {
   // If end.shorterThan(start), this is the empty window.

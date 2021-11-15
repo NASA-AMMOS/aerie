@@ -1,0 +1,40 @@
+actions:
+- name: resourceTypes
+  definition:
+    kind: ""
+    handler: http://merlin:27183/resourceTypes
+- name: simulate
+  definition:
+    kind: ""
+    handler: http://merlin:27183/getSimulationResults
+- name: validateActivityArguments
+  definition:
+    kind: ""
+    handler: http://merlin:27183/validateActivityArguments
+- name: getActivityEffectiveArguments
+  definition:
+    kind: ""
+    handler: http://merlin:27183/getActivityEffectiveArguments
+custom_types:
+  enums:
+  - name: MerlinSimulationStatus
+    values:
+    - description: null
+      is_deprecated: null
+      value: complete
+    - description: null
+      is_deprecated: null
+      value: failed
+    - description: null
+      is_deprecated: null
+      value: incomplete
+  input_objects: []
+  objects:
+  - name: ResourceType
+  - name: MerlinSimulationResponse
+  - name: ValidationResponse
+  scalars:
+  - name: ResourceSchema
+  - name: MerlinSimulationResults
+  - name: MerlinSimulationFailureReason
+  - name: ActivityArguments

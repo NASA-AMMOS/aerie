@@ -1,40 +1,44 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.Projection;
-import gov.nasa.jpl.aerie.merlin.protocol.Querier;
-import gov.nasa.jpl.aerie.merlin.protocol.Query;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
+import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.function.Function;
 
-public final class QueryContext<$Schema> implements Context {
-  private final Querier<? extends $Schema> querier;
+public final class QueryContext implements Context {
+  private final Querier querier;
 
-  public QueryContext(final Querier<? extends $Schema> querier) {
+  public QueryContext(final Querier querier) {
     this.querier = querier;
   }
 
   @Override
-  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
-    // SAFETY: All objects accessible within a single adaptation instance have the same brand.
-    @SuppressWarnings("unchecked")
-    final var brandedQuery = (Query<$Schema, ?, CellType>) query;
-
-    return this.querier.getState(brandedQuery);
+  public ContextType getContextType() {
+    return ContextType.Querying;
   }
 
   @Override
-  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
-      final Projection<Event, Effect> projection,
-      final Applicator<Effect, CellType> applicator)
+  public <CellType> CellType ask(final Query<?, CellType> query) {
+    return this.querier.getState(query);
+  }
+
+  @Override
+  public <Event, Effect, CellType> Query<Event, CellType> allocate(
+      final CellType initialState,
+      final Applicator<Effect, CellType> applicator,
+      final EffectTrait<Effect> trait,
+      final Function<Event, Effect> projection)
   {
     throw new IllegalStateException("Cannot allocate in a query-only context");
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<Event, ?> query) {
     throw new IllegalStateException("Cannot update simulation state in a query-only context");
   }
 

@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 public final class Plan {
   public String name;
-  public String adaptationId;
+  public String missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
   public Map<String, ActivityInstance> activityInstances;
@@ -18,7 +18,7 @@ public final class Plan {
 
   public Plan(final Plan other) {
     this.name = other.name;
-    this.adaptationId = other.adaptationId;
+    this.missionModelId = other.missionModelId;
     this.startTimestamp = other.startTimestamp;
     this.endTimestamp = other.endTimestamp;
 
@@ -34,14 +34,14 @@ public final class Plan {
 
   public Plan(
       final String name,
-      final String adaptationId,
+      final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
       final Map<String, ActivityInstance> activityInstances,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;
-    this.adaptationId = adaptationId;
+    this.missionModelId = missionModelId;
     this.startTimestamp = startTimestamp;
     this.endTimestamp = endTimestamp;
     this.activityInstances = (activityInstances != null) ? Map.copyOf(activityInstances) : null;
@@ -57,7 +57,7 @@ public final class Plan {
     final var other = (Plan)object;
     return
         (  Objects.equals(this.name, other.name)
-        && Objects.equals(this.adaptationId, other.adaptationId)
+        && Objects.equals(this.missionModelId, other.missionModelId)
         && Objects.equals(this.startTimestamp, other.startTimestamp)
         && Objects.equals(this.endTimestamp, other.endTimestamp)
         && Objects.equals(this.activityInstances, other.activityInstances)

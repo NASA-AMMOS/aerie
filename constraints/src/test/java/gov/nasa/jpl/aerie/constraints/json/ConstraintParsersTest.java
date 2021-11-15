@@ -1,15 +1,15 @@
 package gov.nasa.jpl.aerie.constraints.json;
 
 import gov.nasa.jpl.aerie.constraints.tree.And;
-import gov.nasa.jpl.aerie.constraints.tree.ForbiddenActivityOverlap;
-import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Changed;
+import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteResource;
 import gov.nasa.jpl.aerie.constraints.tree.DiscreteValue;
 import gov.nasa.jpl.aerie.constraints.tree.During;
 import gov.nasa.jpl.aerie.constraints.tree.EndOf;
 import gov.nasa.jpl.aerie.constraints.tree.Equal;
 import gov.nasa.jpl.aerie.constraints.tree.ForEachActivity;
+import gov.nasa.jpl.aerie.constraints.tree.ForbiddenActivityOverlap;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThan;
 import gov.nasa.jpl.aerie.constraints.tree.GreaterThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.LessThan;
@@ -17,17 +17,17 @@ import gov.nasa.jpl.aerie.constraints.tree.LessThanOrEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Not;
 import gov.nasa.jpl.aerie.constraints.tree.NotEqual;
 import gov.nasa.jpl.aerie.constraints.tree.Or;
-import gov.nasa.jpl.aerie.constraints.tree.DiscreteParameter;
 import gov.nasa.jpl.aerie.constraints.tree.Plus;
 import gov.nasa.jpl.aerie.constraints.tree.ProfileExpression;
 import gov.nasa.jpl.aerie.constraints.tree.Rate;
+import gov.nasa.jpl.aerie.constraints.tree.RealParameter;
 import gov.nasa.jpl.aerie.constraints.tree.RealResource;
 import gov.nasa.jpl.aerie.constraints.tree.RealValue;
 import gov.nasa.jpl.aerie.constraints.tree.StartOf;
 import gov.nasa.jpl.aerie.constraints.tree.Times;
 import gov.nasa.jpl.aerie.constraints.tree.Transition;
 import gov.nasa.jpl.aerie.constraints.tree.ViolationsOf;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.junit.jupiter.api.Test;
 
 import javax.json.Json;

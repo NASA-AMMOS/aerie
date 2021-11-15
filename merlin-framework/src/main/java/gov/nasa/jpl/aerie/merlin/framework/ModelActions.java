@@ -1,33 +1,22 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.Task;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
 
-public final class ModelActions {
-  private ModelActions() {}
+public /*non-final*/ class ModelActions {
+  protected ModelActions() {}
 
   /* package-local */
   static final Scoped<Context> context = Scoped.create();
 
 
   public static Context.TaskFactory threaded(final Runnable task) {
-    return new Context.TaskFactory() {
-      @Override
-      public <$Timeline> Task<$Timeline> create() {
-        return new ThreadedTask<>(ModelActions.context, task);
-      }
-    };
+    return executor -> new ThreadedTask(executor, ModelActions.context, task);
   }
   public static Context.TaskFactory replaying(final Runnable task) {
-    return new Context.TaskFactory() {
-      @Override
-      public <$Timeline> Task<$Timeline> create() {
-        return new ReplayingTask<>(ModelActions.context, task);
-      }
-    };
+    return executor -> new ReplayingTask(executor, ModelActions.context, task);
   }
 
 

@@ -1,18 +1,17 @@
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
-import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Map;
 
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.MILLISECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.SECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.duration;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MILLISECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 
 public final class Main {
-  public static void main(final String[] args) throws SimulationDriver.TaskSpecInstantiationException {
+  public static void main(final String[] args) {
     final var schedule = SimulationUtility.buildSchedule(
         Pair.of(
             duration(0, MILLISECONDS),
@@ -28,6 +27,11 @@ public final class Main {
             new SerializedActivity("BiteBanana", Map.of("biteSize", SerializedValue.of(2.0)))),
         Pair.of(
             duration(1500, MILLISECONDS),
+            new SerializedActivity("BakeBananaBread", Map.of(
+                "tbSugar", SerializedValue.of(42),
+                "glutenFree", SerializedValue.of(true)))),
+        Pair.of(
+            duration(1900, MILLISECONDS),
             new SerializedActivity("BiteBanana", Map.of())));
 
     final var simulationDuration = duration(5, SECONDS);

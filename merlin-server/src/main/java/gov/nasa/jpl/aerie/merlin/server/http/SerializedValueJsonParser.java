@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParseResult;
 import gov.nasa.jpl.aerie.json.JsonParser;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -36,7 +36,9 @@ public final class SerializedValueJsonParser implements JsonParser<SerializedVal
       case STRING -> SerializedValue.of(((JsonString) value).getString());
       case NUMBER -> {
         final var num = (JsonNumber) value;
-        yield SerializedValue.of((num.isIntegral()) ? num.longValue() : num.doubleValue());
+        yield (num.isIntegral())
+            ? SerializedValue.of(num.longValue())
+            : SerializedValue.of(num.doubleValue());
       }
       case ARRAY -> {
         final var arr = (JsonArray) value;

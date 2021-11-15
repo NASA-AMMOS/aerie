@@ -1,13 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.framework.junit;
 
-import gov.nasa.jpl.aerie.merlin.driver.Adaptation;
-import gov.nasa.jpl.aerie.merlin.driver.AdaptationBuilder;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.framework.InitializationContext;
 import gov.nasa.jpl.aerie.merlin.framework.ModelActions;
 import gov.nasa.jpl.aerie.merlin.framework.Registrar;
-import gov.nasa.jpl.aerie.merlin.timeline.Schema;
-import gov.nasa.jpl.aerie.merlin.timeline.SimulationTimeline;
+import gov.nasa.jpl.aerie.merlin.framework.RootModel;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -18,43 +19,50 @@ import org.junit.jupiter.api.extension.TestInstancePreDestroyCallback;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
-public final class MerlinExtension implements ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
-  private static final class State {
-    public AdaptationBuilder<?> builder = null;
-    public Adaptation<?> adaptation = null;
-  }
+public final class MerlinExtension<Model> implements BeforeAllCallback, ParameterResolver, InvocationInterceptor, TestInstancePreDestroyCallback {
+  private State<Model> getState(final ExtensionContext context) {
+    // SAFETY: This method is the only one where we store or retrieve a State,
+    //   and it's always instantiated with <Model>.
+    @SuppressWarnings("unchecked")
+    final var stateClass = (Class<State<Model>>) (Object) State.class;
 
-  private State getState(final ExtensionContext context) {
-    // This may not work right if tests are run in parallel with Lifecycle.PER_METHOD set.
-    // Each test method will cause construction of an independent instance of its containing class,
-    // and when the extension operates on each instance, it will reference the *same* store,
-    // since the defined namespace is given by the class, not the instance.
-    //
-    // This is hard to avoid, since an instance doesn't exist before construction,
-    // and we need access to the store to be able to inject a unique Registrar into the constructor.
     return context
         .getStore(ExtensionContext.Namespace.create(context.getRequiredTestClass()))
-        .getOrComputeIfAbsent("state", $ -> new State(), State.class);
+        .getOrComputeIfAbsent("state", $ -> new State<>(new MissionModelBuilder()), stateClass);
   }
 
+
+  @Override
+  public void beforeAll(final ExtensionContext context) {
+    final var lifecycle = context.getTestInstanceLifecycle().orElse(TestInstance.Lifecycle.PER_METHOD);
+    if (lifecycle != TestInstance.Lifecycle.PER_CLASS) {
+      throw new IllegalTestLifetimeException(context.getRequiredTestClass());
+    }
+  }
 
   @Override
   public boolean supportsParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
   throws ParameterResolutionException
   {
-    return parameterContext.getParameter().getType().equals(Registrar.class);
+    return parameterContext.getParameter().getType().equals(MerlinTestContext.class);
   }
 
   @Override
-  public Registrar resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
+  public MerlinTestContext<Model> resolveParameter(final ParameterContext parameterContext, final ExtensionContext extensionContext)
   throws ParameterResolutionException
   {
     final var state = this.getState(extensionContext);
+    final var paramType = parameterContext.getParameter().getType();
 
-    if (state.builder == null) state.builder = new AdaptationBuilder<>(Schema.builder());
+    if (!paramType.equals(MerlinTestContext.class)) {
+      throw new Error("Unsupported Merlin extension parameter type: " + paramType.getSimpleName());
+    }
 
-    return new Registrar(state.builder);
+    state.context = new MerlinTestContext<>(new Registrar(state.builder));
+
+    return state.context;
   }
 
   @Override
@@ -63,29 +71,7 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
       final ReflectiveInvocationContext<Constructor<T>> invocationContext,
       final ExtensionContext extensionContext) throws Throwable
   {
-    final var state = this.getState(extensionContext);
-
-    if (state.builder == null) state.builder = new AdaptationBuilder<>(Schema.builder());
-
-    final T value;
-    try {
-      value = InitializationContext.initializing(state.builder, () -> {
-        try {
-          return invocation.proceed();
-        } catch (final RuntimeException ex) {
-          throw ex;
-        } catch (final Throwable ex) {
-          throw new WrappedException(ex);
-        }
-      });
-    } catch (final WrappedException ex) {
-      throw ex.wrapped;
-    }
-
-    state.adaptation = state.builder.build();
-    state.builder = null;
-
-    return value;
+    return this.getState(extensionContext).constructModel(invocation);
   }
 
   @Override
@@ -111,53 +97,79 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
   public void interceptDynamicTest(final Invocation<Void> invocation, final ExtensionContext extensionContext)
   throws Throwable
   {
-    final var state = this.getState(extensionContext);
-
-    simulate(state.adaptation, invocation);
+    this.getState(extensionContext).simulate(invocation);
   }
 
   @Override
   public void preDestroyTestInstance(final ExtensionContext extensionContext) {
     final var state = this.getState(extensionContext);
 
-    state.adaptation = null;
+    state.missionModel.getModel().close();
+    state.missionModel = null;
   }
 
+  private static final class State<Model> {
+    public MissionModelBuilder builder;
+    public MerlinTestContext<Model> context;
 
-  private static <$Schema>
-  void simulate(final Adaptation<$Schema> adaptation, final Invocation<Void> invocation) throws Throwable {
-    simulate(adaptation, SimulationTimeline.create(adaptation.getSchema()), invocation);
-  }
+    public MissionModel<RootModel<Model>> missionModel = null;
 
-  private static <$Schema, $Timeline extends $Schema>
-  void simulate(
-      final Adaptation<$Schema> adaptation,
-      final SimulationTimeline<$Timeline> timeline,
-      final Invocation<Void> invocation)
-  throws Throwable
-  {
-    final var completed = new Object() { boolean value = false; };
-
-    final var task = ModelActions
-        .threaded(() -> {
-          try {
-            invocation.proceed();
-          } catch (final Throwable ex) {
-            throw new WrappedException(ex);
-          } finally {
-            completed.value = true;
-          }
-        })
-        .<$Timeline>create();
-
-    try {
-      SimulationDriver.simulateTask(adaptation, timeline, task);
-    } catch (final WrappedException ex) {
-      throw ex.wrapped;
+    public State(final MissionModelBuilder builder) {
+      this.builder = Objects.requireNonNull(builder);
+      this.context = new MerlinTestContext<>(new Registrar(this.builder));
     }
 
-    if (!completed.value) {
-      throw new AssertionError("test did not complete");
+    public <T> T constructModel(final Invocation<T> invocation) throws Throwable {
+      final var executor = RootModel.makeExecutorService();
+
+      final T value;
+      try {
+        value = InitializationContext.initializing(executor, this.builder, () -> {
+          try {
+            return invocation.proceed();
+          } catch (final RuntimeException ex) {
+            throw ex;
+          } catch (final Throwable ex) {
+            throw new WrappedException(ex);
+          }
+        });
+      } catch (final WrappedException ex) {
+        throw ex.wrapped;
+      }
+
+      this.missionModel = this.builder.build(new RootModel<>(this.context.model(), executor), this.context.activityTypes());
+
+      // Clear the builder; it shouldn't be used from here on, and if it is, an error should be raised.
+      this.builder = null;
+      this.context = null;
+
+      return value;
+    }
+
+    private void simulate(final Invocation<Void> invocation) throws Throwable {
+      final var completed = new Object() { boolean value = false; };
+
+      final var task = ModelActions
+          .threaded(() -> {
+            try {
+              invocation.proceed();
+            } catch (final Throwable ex) {
+              throw new WrappedException(ex);
+            } finally {
+              completed.value = true;
+            }
+          })
+          .create(this.missionModel.getModel().executor());
+
+      try {
+        SimulationDriver.simulateTask(this.missionModel, task);
+      } catch (final WrappedException ex) {
+        throw ex.wrapped;
+      }
+
+      if (!completed.value) {
+        throw new AssertionError("test did not complete");
+      }
     }
   }
 
@@ -168,6 +180,13 @@ public final class MerlinExtension implements ParameterResolver, InvocationInter
     public WrappedException(final Throwable ex) {
       super(null, ex, /* capture suppressed exceptions? */ false, /* capture stack trace? */ false);
       this.wrapped = ex;
+    }
+  }
+
+  private static final class IllegalTestLifetimeException extends RuntimeException {
+    public IllegalTestLifetimeException(final Class<?> offendingClass) {
+      super("%s expects %s to be annotated with @TestInstance(Lifecycle.PER_METHOD)"
+                .formatted(MerlinExtension.class.getSimpleName(), offendingClass));
     }
   }
 }

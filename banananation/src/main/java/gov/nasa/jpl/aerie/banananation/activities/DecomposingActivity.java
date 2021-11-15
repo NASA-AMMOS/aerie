@@ -7,7 +7,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 
 import static gov.nasa.jpl.aerie.banananation.generated.ActivityActions.call;
 import static gov.nasa.jpl.aerie.merlin.framework.ModelActions.*;
-import static gov.nasa.jpl.aerie.merlin.protocol.Duration.HOURS;
+import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOURS;
 
 public final class DecomposingActivity {
   @ActivityType("parent")

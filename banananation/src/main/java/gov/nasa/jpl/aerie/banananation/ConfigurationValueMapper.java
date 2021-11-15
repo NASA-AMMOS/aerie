@@ -1,14 +1,14 @@
 package gov.nasa.jpl.aerie.banananation;
 
-import java.util.Map;
-
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.PathValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
-import gov.nasa.jpl.aerie.merlin.protocol.Result;
-import gov.nasa.jpl.aerie.merlin.protocol.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueMapper;
-import gov.nasa.jpl.aerie.merlin.protocol.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.framework.Result;
+import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+
+import java.util.Map;
 
 public final class ConfigurationValueMapper implements ValueMapper<Configuration> {
   @Override

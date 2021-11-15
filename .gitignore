@@ -1,5 +1,5 @@
 ## Aerie ##
-/adaptation_files/
+/mission_model_files/
 
 ## Cache ##
 .DS_Store
@@ -40,3 +40,6 @@
 
 # Ignore Gradle build output directory
 build
+
+# jqwik property-based testing database
+.jqwik-database

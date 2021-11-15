@@ -1,15 +1,44 @@
 plugins {
   id 'java-library'
+  id 'maven-publish'
 }
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(16)
-    vendor = JvmVendorSpec.ADOPTOPENJDK
+    languageVersion = JavaLanguageVersion.of(17)
   }
+}
+
+test {
+  useJUnitPlatform()
 }
 
 dependencies {
   api 'org.eclipse:yasson:1.0.5'
   api 'org.apache.commons:commons-lang3:3.9'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      if (project.hasProperty('jplArtifactoryUsername')) {
+        maven {
+          name = 'jplSnapshots'
+          url = "https://artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local"
+          credentials {
+            username jplArtifactoryUsername
+            password jplArtifactoryPassword
+          }
+        }
+      }
+    }
+  }
 }
