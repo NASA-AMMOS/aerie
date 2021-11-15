@@ -1839,7 +1839,7 @@ Resources Types</p>
 <li><a href="#aerie-graphql-schema">Aerie graphql schema</a></li>
 </ul>
 <h2 id="purpose">Purpose</h2>
-<p>This document describes the Aerie GraphQL API, software interface provided by the Aerie 0.7.2 release.</p>
+<p>This document describes the Aerie GraphQL API, software interface provided by the Aerie 0.9.1 release.</p>
 <h2 id="terminology-and-notation">Terminology and Notation</h2>
 <p>No special notation is used in this document. See Appendix A for complete GraphQL Scheme definition.</p>
 <h1 id="aerie-graphql-api-environment">Aerie GraphQL API Environment</h1>
@@ -1852,21 +1852,15 @@ Resources Types</p>
 <li><strong>Mutation</strong>: An explicit operation to effect server side data mutation.</li>
 </ul>
 <p>A REST API architecture defines a particular URL endpoint for each &quot;resources&quot;. In contrast, GraphQL&#39;s conceptual model is an entity graph. As a result, entities in GraphQL are not identified by URL endpoints and GraphQL is not a REST architecture API. Instead, a GraphQL server operates on a single endpoint, and all GraphQL requests for a given service are directed at this endpoint. Queries are constructed using the query language and then submitted as part of a HTTP request (either GET or POST).</p>
-<p>The schema (graph) defines nodes and how they connect/relate to one another. A client composes a query specifying the fields to retrieve (or mutation for fields to create/update). A client develops their query/mutation with reference to the exposed GraphQL schema. As a result, a client develops custom queries/mutations targeted to its own use cases to fetch only the needed data from the API. In many cases this may reduce latency and increase performance by limiting client side data manipulation/filtering. For example, with a REST API there may be significant client side overhead and request latency when querying for an entire plan and then filtering the plan for the specific information of concern (and the work of adding filter fields as parameters to the end point). In contrast the GraphQL API allows the client to request only the fields of the plan data structure needed to satisfy the clients use case.</p>
-<p>The Aerie GraphQL API is versioned with Aerie releases. However, a GraphQL based API gives greater flexibility to clients and Aerie when evolving the API. Adding fields and data to the schema does not affect existing queries. A client must specify the fields that make up their query. The addition of fields to the graph simply play no part in the client’s composed query. As a result, additions to the API do not require updates on the client side. However, clients do need to deal with schema changes when fields are removed or type definitions are evolved. Furthermore, GraphQL makes possible per field visibility for auditing the frequency and combinations with which certain fields are referenced by a client’s queries and mutations. This provides Aerie development verifiable evidence for the frequency of use and thus more informed decision process when deprecating or updating fields in the schema.</p>
+<p>The schema (graph) defines nodes and how they connect/relate to one another. A client composes a query specifying the fields to retrieve (or mutation for fields to create/update). A client develops their query/mutation with reference to the exposed GraphQL schema. As a result, a client develops custom queries/mutations targeted to its own use cases to fetch only the needed data from the API. In many cases this may reduce latency and increase performance by limiting client side data manipulation/filtering. For example, with a REST API there may be significant client side overhead and request latency when querying for an entire plan and then filtering the plan for the specific information of concern (and the work of adding filter fields as parameters to the end point). In contrast the GraphQL API allows the client to request only the fields of the plan data structure needed to satisfy the client&#39;s use case.</p>
+<p>The Aerie GraphQL API is versioned with Aerie releases. However, a GraphQL based API gives greater flexibility to clients and Aerie when evolving the API. Adding fields and data to the schema does not affect existing queries. A client must specify the fields that make up their query. The additional fields in the graph simply play no part in the client’s composed query. As a result, additions to the API do not require updates on the client side. However, clients do need to deal with schema changes when fields are removed or type definitions are evolved. Furthermore, GraphQL makes possible per-field  auditing of the frequency and combinations with which certain fields are referenced by a client’s queries and mutations. This provides Aerie developers with evidence of usage frequency which informs decision processes regarding deprecating or updating fields in the schema.</p>
 <h2 id="graphql-query-components">GraphQL Query Components</h2>
 <p>A round trip usage of the API consists of the following three steps:</p>
 <ol>
 <li>Composing a request (query or mutation)</li>
-<li>Submitting the request via GET or POST</li>
+<li>Submitting the request via POST</li>
 <li>Receiving the result as JSON</li>
 </ol>
-<h3 id="get-request">GET request</h3>
-<p>When making an HTTP GET request, the GraphQL query should be specified in the &quot;query&quot; query string. For example, if an application executes the following GraphQL query to retrieve all the id for all activity plans:</p>
-<pre class="hljs">{
-  plans { id }
-}</pre><p>This request could be sent via an HTTP GET like so:</p>
-<pre class="hljs">https://<span class="xml"><span class="hljs-tag">&lt;<span class="hljs-name">your_domain</span>&gt;</span>:27184?query=</span><span class="xquery">{plans<span class="hljs-built_in">{id</span>}</span><span class="xml">}</span></pre><p>Query variables can be sent as a JSON-encoded string in an additional query parameter called <code>variables</code>. If the query contains several named operations, an <code>operationName</code> query parameter can be used to control which one should be executed.</p>
 <h3 id="post-request">POST request</h3>
 <p>A standard GraphQL HTTP POST request should use the <code>application/json</code> content type, and include a JSON-encoded body of the following form:</p>
 <pre class="hljs">{
@@ -1879,50 +1873,30 @@ Resources Types</p>
 <pre class="hljs">{
   <span class="hljs-attr">&quot;data&quot;</span>: { ... },
   <span class="hljs-attr">&quot;errors&quot;</span>: [ ... ]
-}</pre><p>If there were no errors returned, the <code>&quot;errors&quot;</code> field is not be present on the response. If no data is returned, the <code>&quot;data&quot;</code> field is only be included if the error occurred during execution.</p>
-<h2 id="methods-of-querying-aerie-api">Methods of Querying Aerie API</h2>
+}</pre><p>If there were no errors returned, the <code>&quot;errors&quot;</code> field is not present in the response. If no data is returned, the <code>&quot;data&quot;</code> field is only  included if the error occurred during execution.</p>
+<h2 id="methods-of-querying-the-aerie-api">Methods of Querying The Aerie API</h2>
 <p>Since a GraphQL API has more underlying structure than a REST API, there are a range of methods by which a client application may choose to interact with the API. A simple usage could use the <code>curl</code> command line tool, whereas a full featured web application may integrate a more powerful client library like <a href="https://www.apollographql.com/docs/react/">Apollo Client</a> or <a href="https://relay.dev/">Relay</a> which automatically handle query building, batching and caching.</p>
 <h3 id="command-line">Command Line</h3>
-<p>One may build and send a query or mutation via any means that enable an HTTP POST or GET request to be made against the API. For example, this can be done from the command line with <code>curl</code> like so:</p>
-<pre class="hljs">curl -g <span class="hljs-string">&#x27;https://aerie-develop.jpl.nasa.gov:27184?query={plans{id}}&#x27;</span>
--H <span class="hljs-string">&#x27;Accept-Encoding: gzip, deflate, br&#x27;</span>
--H <span class="hljs-string">&#x27;Authorization: SSO_COOKIE_VALUE_HERE&#x27;</span>
--H <span class="hljs-string">&#x27;Content-Type: application/json&#x27;</span>
--H <span class="hljs-string">&#x27;Accept: application/json&#x27;</span>
--H <span class="hljs-string">&#x27;Connection: keep-alive&#x27;</span>
--H <span class="hljs-string">&#x27;DNT: 1&#x27;</span>
--H <span class="hljs-string">&#x27;Origin: https://aerie-develop.jpl.nasa.gov:27184&#x27;</span>
---data-binary <span class="hljs-string">&#x27;{&quot;query&quot;:&quot;{plans{id}}&quot;}&#x27;</span>
---compressed</pre><p>With a JSON formatted result returned as such:</p>
-<pre class="hljs">{ <span class="hljs-attr">&quot;data&quot;</span>: 
-  { <span class="hljs-attr">&quot;plans&quot;</span>: [
-    { <span class="hljs-attr">&quot;id&quot;</span>:  <span class="hljs-string">&quot;5f763f2b513fec1988930f03&quot;</span> }, 
-    { <span class="hljs-attr">&quot;id&quot;</span>:  <span class="hljs-string">&quot;5f7f5d0218c85a5533f1dc4b&quot;</span> }
-    ] 
-  } 
-}</pre><h3 id="graphql-playground">GraphQL Playground</h3>
-<p>The GraphQL API is described by a schema which describes the data graph. One can view the schema of the installed version of Aerie at https://&lt;your_domain&gt;:27184. The GraphQL playground allows one to compose and test queries. The playground also provides the functionality to export the composed query as a fully formed <code>curl</code>  command string.</p>
+<p>One may build and send a query or mutation via any means that enable an HTTP POST request to be made against the API. For example, this can be easily done using the command line tool <a href="https://github.com/hasura/graphqurl">Graphqurl</a>.</p>
+<h3 id="graphql-playground">GraphQL Playground</h3>
+<p>The GraphQL API is described by a schema of the data graph. One can view the schema of the installed version of Aerie at https://&lt;your_domain&gt;:27184. The GraphQL playground allows one to compose and test queries. The playground also provides the functionality to export the composed query as a fully formed <code>curl</code>  command string.</p>
 <h4 id="playground-authentication">Playground Authentication</h4>
 <p>In order to use queries in the playground, first you need to authenticate against CAM to get an authorization token. In the <code>QUERY VARIABLES</code> section of the playground, first define your JPL username and password:</p>
 <pre class="hljs">{
   <span class="hljs-attr">&quot;username&quot;</span>: <span class="hljs-string">&quot;YOUR_JPL_USERNAME&quot;</span>,
   <span class="hljs-attr">&quot;password&quot;</span>: <span class="hljs-string">&quot;YOUR_JPL_PASSOWRD&quot;</span>
-}</pre><p>Then you can use the following query to obtain your <code>ssoCookieValue</code>:</p>
-<pre class="hljs">mutation Login($username: <span class="hljs-built_in">String</span>!, $password: <span class="hljs-built_in">String</span>!) {
-  login(username: $username, password: $password) {
-    ssoCookieValue
-  }
-}</pre><p>Next, take the <code>ssoCookieValue</code> to the <code>HTTP HEADERS</code> section and add it in the <code>authorization</code> header:</p>
+}</pre><p>Then you can use the Aerie utility HTTP API to obtain your <code>ssoCookieValue</code> from https://&lt;your_domain&gt;:9000.</p>
+<p>Next, add the <code>authorization</code> header to the <code>HTTP HEADERS</code> section :</p>
 <pre class="hljs">{
   <span class="hljs-attr">&quot;authorization&quot;</span>: <span class="hljs-string">&quot;SSO_COOKIE_VALUE_HERE&quot;</span>
-}</pre><p>You should now be able to make queries using the playground. For example try querying for all the adaptation names:</p>
-<pre class="hljs"><span class="hljs-attribute">query</span> Adaptations {
-  <span class="hljs-section">adaptations</span> {
-    <span class="hljs-attribute">name</span>
+}</pre><p>You should now be able to make queries using the playground. For example try querying for all the plan ids:</p>
+<pre class="hljs"><span class="hljs-attribute">query</span> Plans {
+  <span class="hljs-section">plan</span> {
+    <span class="hljs-attribute">id</span>
   }
-}</pre><p>Note your CAM server configuration determines how long your token is valid. If your session expires you will have to re-authenticate and put your new token in the <code>authorization</code> header.</p>
+}</pre><p>Note your CAM server configuration determines how long your authentication token is valid. If your session expires you will have to re-authenticate and place the new token in the <code>authorization</code> header.</p>
 <h3 id="browser-developer-console">Browser Developer Console</h3>
-<p>Requests can also be tested from the browser. Navigating to https://&lt;your_domain&gt;:27184, open a developer console, and paste in:</p>
+<p>Requests can also be tested from the browser. Navigating to https://&lt;you_domain&gt;:9000/playground, open a developer console, and paste in:</p>
 <pre class="hljs">fetch(<span class="hljs-string">&#x27;&#x27;</span>, {
   <span class="hljs-attr">method</span>:  <span class="hljs-string">&#x27;POST&#x27;</span>,
   <span class="hljs-attr">headers</span>: {
@@ -1930,7 +1904,7 @@ Resources Types</p>
     <span class="hljs-string">&#x27;Content-Type&#x27;</span>:  <span class="hljs-string">&#x27;application/json&#x27;</span>,
     <span class="hljs-string">&#x27;Accept&#x27;</span>:  <span class="hljs-string">&#x27;application/json&#x27;</span>,
   },
-  <span class="hljs-attr">body</span>: <span class="hljs-built_in">JSON</span>.stringify({<span class="hljs-attr">query</span>:  <span class="hljs-string">&quot;{plans{id}}&quot;</span>})
+  <span class="hljs-attr">body</span>: <span class="hljs-built_in">JSON</span>.stringify({<span class="hljs-attr">query</span>:  <span class="hljs-string">&quot;{plan{id}}&quot;</span>})
 })
 .then(<span class="hljs-function"><span class="hljs-params">r</span> =&gt;</span> r.json())
 .then(<span class="hljs-function"><span class="hljs-params">data</span> =&gt;</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">&#x27;data returned:&#x27;</span>, data));</pre><p>The data returned is logged in the console as:</p>
@@ -1943,7 +1917,7 @@ Resources Types</p>
 }</pre><p>This JavaScript can then be used as a hard-coded query within a client tool/script. For more complex and dynamic interactions with the Aerie API it is recommended to use a GraphQL client library.</p>
 <h3 id="graphql-client-libraries">GraphQL Client Libraries</h3>
 <p>When developing a full featured application that requires integration with the Aerie API it is advisable that the tool make use of one of the many powerful GraphQL client libraries like Apollo Client or Relay. These libraries provide an application functionality to manage both local and remote data, automatically handle batching, and caching.</p>
-<p>In general, it will take more time to set up a GraphQL client. However, when building an Aerie integrated application, a client library offers significant time savings as the features of the application grow. One might choose to begin using HTTP requests as the underlying transport layer and later switch to a client library as the application becomes more complex.</p>
+<p>In general, it will take more time to set up a GraphQL client. However, when building an Aerie integrated application, a client library offers significant time savings as the features of the application grow. One might choose to begin using HTTP requests as the client&#39;s API integration mechanism and later switch to a client library as the application becomes more complex.</p>
 <p>GraphQL clients exist for the following programming languages;</p>
 <ul>
 <li>C# / .NET</li>
@@ -1960,166 +1934,52 @@ Resources Types</p>
 <li>R</li>
 </ul>
 <p>A full description of these clients is found at <a href="https://graphql.org/code/#graphql-clients">https://graphql.org/code/#graphql-clients</a></p>
-<h1 id="aerie-queries">Aerie Queries</h1>
-<p>It is important to understand the significance and power of a data graph based API. The following queries are examples of what Aerie refer to as ‘canonical queries’ because they map to commonly discussed use cases and data structures for subsystems within a mission.</p>
-<p>The GraphQL syntax is simple and a small primer sufficient to work with the following section’s is found at <a href="https://graphql.org/learn/schema/">https://graphql.org/learn/schema/</a></p>
-<h2 id="query-schema-for-plan">Query Schema for Plan</h2>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Query</span> {
-  plan(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Plan</span>
-  plans: [<span class="hljs-type">Plan</span>]!
-}</pre><p><strong>Plan Schema</strong></p>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Plan</span> {
-  activityInstances: [<span class="hljs-type">ActivityInstance</span>!]!
-  adaptation: <span class="hljs-type">Adaptation</span>
-  adaptationId: <span class="hljs-type">String</span>!
-  constraints: [<span class="hljs-type">ConstraintDefinition</span>!]!
-  endTimestamp: <span class="hljs-type">String</span>!
-  id: <span class="hljs-type">ID</span>!
-  name: <span class="hljs-type">String</span>!
-  startTimestamp: <span class="hljs-type">String</span>!
-}</pre><p><strong>Activity Instance&#39;s Schema</strong></p>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">ActivityInstance</span> {
-  id: <span class="hljs-type">ID</span>!
-  type: <span class="hljs-type">String</span>!
-  parameters: [<span class="hljs-type">ActivityInstanceParameter</span>]!
-
-  startTimestamp: <span class="hljs-type">String</span>!
-  duration: <span class="hljs-type">Float</span>
-
-  parent: <span class="hljs-type">String</span>
-  children: [<span class="hljs-type">String</span>!]
-}
-<span class="hljs-keyword">type</span> <span class="hljs-type">ActivityInstanceParameter</span> {
-  name: <span class="hljs-type">String</span>!
-  value: <span class="hljs-type">ActivityInstanceParameterValue</span>!
-}</pre><p><strong>Adaptation&#39;s Schema</strong></p>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Adaptation</span> {
-  activityType(name: <span class="hljs-type">String</span>!): <span class="hljs-type">ActivityType</span>
-  activityTypes: [<span class="hljs-type">ActivityType</span>!]!
-  constraints: [<span class="hljs-type">ConstraintDefinition</span>!]!
-  id: <span class="hljs-type">ID</span>!
-  mission: <span class="hljs-type">String</span>!
-  name: <span class="hljs-type">String</span>!
-  owner: <span class="hljs-type">String</span>!
-  version: <span class="hljs-type">String</span>!
-}</pre><p><strong>Activity type&#39;s Schema</strong></p>
-<pre class="hljs"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">ActivityType</span> {
-  <span class="hljs-title">name</span>: <span class="hljs-type">String</span>!
-  <span class="hljs-title">parameter</span>(<span class="hljs-title">name</span>: <span class="hljs-type">String</span>!): <span class="hljs-type">ActivityTypeParameter</span>
-  <span class="hljs-title">parameters</span>: [<span class="hljs-type">ActivityTypeParameter</span>]!
-}</span>
-<span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">ActivityTypeParameter</span> {
-  <span class="hljs-title">default</span>: <span class="hljs-type">ActivityTypeParameterDefault</span>
-  <span class="hljs-title">name</span>: <span class="hljs-type">String</span>!
-  <span class="hljs-title">schema</span>: <span class="hljs-type">ActivityTypeParameterSchema</span>
-}</span></pre><h2 id="query-schema-for-simulation">Query Schema for Simulation</h2>
-<pre class="hljs"><span class="hljs-keyword">type</span>  <span class="hljs-type">Query</span> {
-  simulate(planId: <span class="hljs-type">String</span>!, samplingPeriod: <span class="hljs-type">Float</span>!): <span class="hljs-type">SimulationResponse</span>
-}</pre><p><strong>Simulation Response &amp; Result&#39;s Schema</strong></p>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">SimulationResponse</span> {
-  message: <span class="hljs-type">String</span>
-  results: [<span class="hljs-type">SimulationResult</span>!]
-  success: <span class="hljs-type">Boolean</span>!
-  violations: [<span class="hljs-type">Violation</span>!]
-}
-<span class="hljs-keyword">type</span> <span class="hljs-type">SimulationResult</span> {
-  name: <span class="hljs-type">String</span>!
-  start: <span class="hljs-type">String</span>!
-  values: [<span class="hljs-type">SimulationResultValue</span>!]!
-}
-<span class="hljs-keyword">type</span> <span class="hljs-type">SimulationResultValue</span> {
-  x: <span class="hljs-type">Float</span>!
-  y: <span class="hljs-type">SimulationResultValueY</span>!
-}</pre><h2 id="mutation-schema">Mutation Schema</h2>
-<h3 id="mutation-schema-for-creating-an-activity-instances">Mutation schema for creating an activity instances</h3>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span>{
-  createActivityInstances(
-    activityInstances: [<span class="hljs-type">CreateActivityInstance</span>]!
-    planId: <span class="hljs-type">ID</span>!
-  ): <span class="hljs-type">CreateActivityInstancesResponse</span>
-}</pre><h3 id="mutation-schema-for-creating-an-adaptation">Mutation schema for creating an adaptation</h3>
-<pre class="hljs"><span class="hljs-class"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span>{
-  <span class="hljs-title">createAdaptation</span>(
-    <span class="hljs-title">file</span>: <span class="hljs-type">Upload</span>!
-    <span class="hljs-title">mission</span>: <span class="hljs-type">String</span>!
-    <span class="hljs-title">name</span>: <span class="hljs-type">String</span>!
-    <span class="hljs-title">owner</span>: <span class="hljs-type">String</span>!
-    <span class="hljs-title">version</span>: <span class="hljs-type">String</span>!
-  ): <span class="hljs-type">CreateAdaptationResponse</span>
-}</span></pre><h3 id="mutation-schema-for-creating-a-plan">Mutation schema for creating a plan</h3>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span>{
-  createPlan(
-    adaptationId: <span class="hljs-type">String</span>!
-    endTimestamp: <span class="hljs-type">String</span>!
-    name: <span class="hljs-type">String</span>!
-    startTimestamp: <span class="hljs-type">String</span>!
-    configuration: <span class="hljs-type">ConfigurationValue</span>
-  ): <span class="hljs-type">CreatePlanResponse</span>
-}</pre><h3 id="mutation-schema-for-update-an-activity-instance">Mutation schema for update an activity instance</h3>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span>{
-  updateActivityInstance(
-    activityInstance: <span class="hljs-type">UpdateActivityInstance</span>!
-    planId: <span class="hljs-type">ID</span>!
-  ): <span class="hljs-type">Response</span>
-}</pre><h3 id="mutation-schema-for-deleting-an-activity-instance-adaptation-and-plan">Mutation schema for deleting an activity instance, adaptation and plan</h3>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span> {
-  deleteActivityInstance(planId: <span class="hljs-type">ID</span>!, activityInstanceId: <span class="hljs-type">ID</span>!): <span class="hljs-type">Response</span>
-  deleteAdaptation(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Response</span>
-  deletePlan(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Response</span>
-}</pre><h3 id="mutation-schema-for-creating-a-mission-model-associated-constraint-s-">Mutation schema for creating a mission model associated constraint(s)</h3>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span> {
-  updateAdaptationConstraints(
-    adaptationId: <span class="hljs-type">ID</span>!
-    constraints: [<span class="hljs-type">ConstraintDefinitionInput</span>!]!
-  ): <span class="hljs-type">Response</span>
-}</pre><h3 id="mutation-schema-for-creating-a-plan-associated-constraint-s-">Mutation schema for creating a plan associated constraint(s)</h3>
-<pre class="hljs"><span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span> {
-  updatePlanConstraints(
-    planId: <span class="hljs-type">ID</span>!
-    constraints: [<span class="hljs-type">ConstraintDefinitionInput</span>!]!
-  ): <span class="hljs-type">Response</span>
-}</pre><h2 id="typical-usages">Typical Usages</h2>
-<p>When writing a GraphQL query, refer to the schema for all valid fields that one can specify in a particular query.</p>
+<h1 id="api-usage">API Usage</h1>
+<p>Aerie employs the Hasura GraphQL (<a href="https://hasura.io/">https://hasura.io/</a>) engine to generate the Aerie GraphQL API.</p>
+<p>It is important to understand the significance and power of a data graph based API. A small primer of the GraphQL syntax can be found at <a href="https://graphql.org/learn/schema/">https://graphql.org/learn/schema/</a>  </p>
+<h2 id="query-subscription">Query / Subscription</h2>
+<p><strong>Controlling Queries</strong>: <a href="https://hasura.io/docs/latest/graphql/core/databases/postgres/queries/index.html">https://hasura.io/docs/latest/graphql/core/databases/postgres/queries/index.html</a></p>
+<p><strong>Controlling Subscriptions</strong>: <a href="https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/index.html">https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/index.html</a></p>
+<p><strong>Query/Subscription Syntax</strong>: <a href="https://hasura.io/docs/latest/graphql/core/api-reference/graphql-api/query.html">https://hasura.io/docs/latest/graphql/core/api-reference/graphql-api/query.html</a></p>
+<h2 id="mutations">Mutations</h2>
+<p><strong>Controlling Mutations</strong>: <a href="https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/index.html">https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/index.html</a></p>
+<p><strong>Mutation Syntax</strong>: <a href="https://hasura.io/docs/latest/graphql/core/api-reference/graphql-api/mutation.html">https://hasura.io/docs/latest/graphql/core/api-reference/graphql-api/mutation.html</a></p>
+<h2 id="basic-usage-examples">Basic Usage Examples</h2>
+<p>The following queries are examples of what Aerie refers to as &#39;canonical queries&#39; because they map to commonly understood use cases and data structures within mission subsystems. When writing a GraphQL query, refer to the schema for all valid fields that one can specify in a particular query.</p>
 <h3 id="query-all-plans">Query all plans</h3>
-<p>Returns metadata for all Plans</p>
 <pre class="hljs">query {
-  plans{
+  plan{
    <span class="hljs-built_in"> id</span>
    <span class="hljs-built_in"> name</span>
-    startTimestamp
-    endTimestamp
-    adaptationId
+    start_time
+    duration
+      model_id
   }
 }</pre><h3 id="query-a-single-plan">Query a single plan</h3>
-<p>Using the id you got from &quot;Query all plans&quot; to obtain information for a single plan. </p>
-<p>Returns metadata of a single Plan</p>
 <pre class="hljs">query {
-  plan<span class="hljs-built_in">(id</span>: <span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span>) {    
+  plan_by_pk<span class="hljs-built_in">(id</span>: <span class="hljs-number">1</span>) {    
    <span class="hljs-built_in"> id</span>
    <span class="hljs-built_in"> name</span>
-    startTimestamp
-    endTimestamp
-    adaptationId
+    start_time
+    duration
+    model_id
   }
 }</pre><h3 id="query-all-activity-instances-from-a-plan">Query all activity instances from a plan</h3>
-<p>You can either use &quot;query plan&quot; for all activity instances from a single plan or use &quot;query plans&quot; for all activity instances from all the plans</p>
-<p>Returns activity instances metadata and parameter list</p>
+<p>You can either query &quot;plan_by_pk&quot; for all activity instances from a single plan or query &quot;plan&quot; for all activity instances from all the plans</p>
+<p>Returns activity instances</p>
 <pre class="hljs">query {
-  plan<span class="hljs-built_in">(id</span>: <span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span>) {    
-    activityInstances{
-     <span class="hljs-built_in"> id</span>
-      startTimestamp
-      parameters {
-       <span class="hljs-built_in"> name</span>
-        <span class="hljs-keyword">value</span>
-      }
-    }
+  <span class="hljs-function"><span class="hljs-title">plan_by_pk</span>(<span class="hljs-params">id: <span class="hljs-number">1</span></span>)</span> {    
+        activities {
+      id
+      <span class="hljs-keyword">type</span>
+      <span class="hljs-built_in">arguments</span>
+    } 
   }
-}</pre><h3 id="query-adaptation-from-a-plan">Query adaptation from a plan</h3>
-<p>Returns metadata of an adaptation from a particular plan</p>
+}</pre><h3 id="query-mission-model-from-a-plan">Query mission model from a plan</h3>
+<p>Returns mission model for a particular plan</p>
 <pre class="hljs">query {
-  plan(<span class="hljs-built_in">id</span>: <span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span>) {    
-    adaptation {
+  plan_by_pk(<span class="hljs-built_in">id</span>: <span class="hljs-number">1</span>) {    
+    mission_model {
       <span class="hljs-built_in">id</span>
       mission
       <span class="hljs-built_in">name</span>
@@ -2127,373 +1987,44 @@ Resources Types</p>
       <span class="hljs-built_in">version</span>
     }
   }
-}</pre><h3 id="query-activity-types-within-an-adaptation-from-a-plan">Query activity types within an adaptation from a plan</h3>
-<p>Returns a list of activity types. For each activity type, name and parameter list are given</p>
-<pre class="hljs">query {
-  plan<span class="hljs-built_in">(id</span>: <span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span>) {    
-    adaptation {
-      activityTypes{
-       <span class="hljs-built_in"> name</span>
-        parameters{
-         <span class="hljs-built_in"> name</span>
-          <span class="hljs-keyword">schema</span>
-        }
+}</pre><h3 id="query-activity-types-within-a-mission-model-from-a-plan">Query activity types within a mission model from a plan</h3>
+<p>Returns a list of activity types. For each activity type, the name, parameter schema, which parameters are required (must be defined).</p>
+<pre class="hljs"><span class="hljs-selector-tag">query</span> {
+  <span class="hljs-selector-tag">plan_by_pk</span>(<span class="hljs-attribute">id</span>: <span class="hljs-number">1</span>) {    
+    <span class="hljs-selector-tag">mission_model</span> {
+      <span class="hljs-selector-tag">activity_types</span>{
+        <span class="hljs-selector-tag">name</span>
+        <span class="hljs-selector-tag">parameters</span>
+        <span class="hljs-selector-tag">required_parameters</span>
       }
     }
   }
 }</pre><h3 id="run-simulation-and-query-the-result">Run simulation and query the result</h3>
-<p>You have to provide the planId and the simpling rate in order to run the simulation.</p>
-<p>Returns a list of states with different sampling time.</p>
+<p>Returns a list of resource profiles, constraint failures, and the simulated activities.</p>
 <pre class="hljs"><span class="hljs-section">query</span> { 
-  <span class="hljs-attribute">simulate</span> (planId: <span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span>, samplingPeriod: <span class="hljs-number">10000000000</span> ) {
-    <span class="hljs-attribute">message</span>
-    success
-    results {
-      <span class="hljs-attribute">name</span>
-      start
-      values{
-        <span class="hljs-attribute">x</span>
-        y
-      }
+  <span class="hljs-attribute">simulate</span> (planId: <span class="hljs-number">1</span>) {
+    <span class="hljs-attribute">reason</span>
+    results 
+  }
+}</pre><h3 id="query-for-all-resource-types-in-a-mission-model">Query for all resource types in a mission model</h3>
+<pre class="hljs"><span class="hljs-selector-tag">query</span> {
+  <span class="hljs-selector-tag">resourceTypes</span>(<span class="hljs-attribute">missionModelId</span>: <span class="hljs-number">1</span>) {
+    <span class="hljs-selector-tag">name</span>
+    <span class="hljs-selector-tag">schema</span>
+  }
+}</pre><h3 id="creating-activity-instances">Creating activity instances</h3>
+<pre class="hljs">mutation {
+  <span class="hljs-function"><span class="hljs-title">insert_activity</span>(<span class="hljs-params">objects: [
+    {<span class="hljs-built_in">arguments</span>: { name: <span class="hljs-string">&quot;peelDirection&quot;</span>, value: <span class="hljs-string">&quot;fromTip&quot;</span> }, plan_id: <span class="hljs-number">4</span>, start_offset: <span class="hljs-string">&quot;1749:01:35.575&quot;</span>, <span class="hljs-keyword">type</span>: <span class="hljs-string">&quot;PeelBanana&quot;</span>}, 
+    {<span class="hljs-built_in">arguments</span>: { name: <span class="hljs-string">&quot;peelDirection&quot;</span>, value: <span class="hljs-string">&quot;fromTip&quot;</span> }, plan_id: <span class="hljs-number">4</span>, start_offset: <span class="hljs-string">&quot;1750:01:35.575&quot;</span>, <span class="hljs-keyword">type</span>: <span class="hljs-string">&quot;PeelBanana&quot;</span>}]</span>)</span> {
+    returning {
+      id
+      start_offset
     }
   }
-}</pre><h3 id="query-for-all-resource-types-in-an-adaptation">Query for all Resource Types in an Adaptation</h3>
-<pre class="hljs">query ResourceTypes {
-  resourceTypes(adaptationId: <span class="hljs-string">&quot;ADAPTATION_ID_HERE&quot;</span>) {
-   <span class="hljs-built_in"> name</span>
-    <span class="hljs-keyword">schema</span>
-  }
-}</pre><h3 id="getting-all-file-paths-from-the-merlin-file-store">Getting all file paths from the merlin file store</h3>
-<pre class="hljs"><span class="hljs-section">query</span> {
-  <span class="hljs-attribute">files</span>
-}</pre><h3 id="creating-a-activity-instances">Creating a activity instances</h3>
-<pre class="hljs">mutation <span class="hljs-class">CreateActivityInstances </span>{
-  createActivityInstances(
-<span class="hljs-symbol">    planId:</span> <span class="hljs-string">&quot;5ff350fc63ee884f69adea27&quot;</span>
-<span class="hljs-symbol">    activityInstances:</span> [
-      {
-<span class="hljs-symbol">        parameters:</span> []
-<span class="hljs-symbol">        startTimestamp:</span> <span class="hljs-string">&quot;2020-001T00:00:01&quot;</span>
-<span class="hljs-symbol">        type:</span> <span class="hljs-string">&quot;PeelBanana&quot;</span>
-      }
-      {
-<span class="hljs-symbol">        parameters:</span> [{ name: <span class="hljs-string">&quot;peelDirection&quot;</span>, value: <span class="hljs-string">&quot;fromTip&quot;</span> }]
-<span class="hljs-symbol">        startTimestamp:</span> <span class="hljs-string">&quot;2020-001T00:00:03&quot;</span>
-<span class="hljs-symbol">        type:</span> <span class="hljs-string">&quot;PeelBanana&quot;</span>
-      }
-    ]
-  ) {
-    ids
-    message
-    success
-  }
-}</pre><h3 id="creating-a-adaptation">Creating a adaptation</h3>
-<p>Note: The type &quot;Upload&quot; is a scalar in the schema. It is up to the server data source to interpret the file properly and forward the request to the services. References: <a href="https://developer.mozilla.org/en-US/docs/Web/API/File">MDN Web Docs</a> and <a href="https://www.apollographql.com/docs/apollo-server/data/file-uploads/">Apollo GraphQL Docs</a>.</p>
-<pre class="hljs">mutation {
-  create<span class="hljs-constructor">Adaptation(<span class="hljs-params">file</span>: &lt;Upload&gt;, <span class="hljs-params">mission</span>: <span class="hljs-string">&quot;EUROPA&quot;</span>, <span class="hljs-params">name</span>: <span class="hljs-string">&quot;Test&quot;</span>, <span class="hljs-params">owner</span>: <span class="hljs-string">&quot;Test&quot;</span>, <span class="hljs-params">version</span>: <span class="hljs-string">&quot;0.1&quot;</span>)</span> {
-    message
-    success
-  }
-}</pre><h3 id="creating-a-plan">Creating a plan</h3>
-<pre class="hljs"><span class="hljs-class">mutation </span>{
-  createPlan(adaptationId: <span class="hljs-string">&quot;5f492c3b8d1d733cf46f498e&quot;</span>, 
-<span class="hljs-symbol">    startTimestamp:</span><span class="hljs-string">&quot;2020-001T00:11:11.123&quot;</span>,                    
-<span class="hljs-symbol">    endTimestamp:</span> <span class="hljs-string">&quot;2020-001T11:11:11.123&quot;</span>, 
-<span class="hljs-symbol">    name:</span> <span class="hljs-string">&quot;graphql&quot;</span>,
-<span class="hljs-symbol">    configuration:</span> { initialValue: <span class="hljs-number">42</span> })
-  {
-    message
-    success
-  }
-}</pre><h3 id="deleting-an-activity-instance">Deleting an activity instance</h3>
-<pre class="hljs"><span class="hljs-selector-tag">mutation</span> {
-  <span class="hljs-selector-tag">deleteActivityInstance</span>(<span class="hljs-attribute">planId</span>:<span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span>, <span class="hljs-attribute">activityInstanceId</span>:<span class="hljs-string">&quot;5f5d0601a88a0b4299b501c9&quot;</span>)
-  {
-    <span class="hljs-selector-tag">message</span>
-    <span class="hljs-selector-tag">success</span>
-  }
-}</pre><h3 id="deleting-an-adaptation">Deleting an adaptation</h3>
-<pre class="hljs">mutation {
-  <span class="hljs-function"><span class="hljs-title">deleteAdaptation</span>(<span class="hljs-params">id:<span class="hljs-string">&quot;5f492c3b8d1d733cf46f498e&quot;</span></span>)</span> {
-    message
-    success
-  }
-}</pre><h3 id="deleting-a-plan">Deleting a plan</h3>
-<pre class="hljs">mutation {
-  <span class="hljs-function"><span class="hljs-title">deletePlan</span>(<span class="hljs-params">id:<span class="hljs-string">&quot;5f5cef46a88a0b4299b501c7&quot;</span></span>)</span> {
-    message
-    success
-  }
-}</pre><h3 id="updating-an-activity-instance">Updating an activity instance</h3>
-<pre class="hljs"><span class="hljs-class">mutation </span>{
-  updateActivityInstance(activityInstance: {
-<span class="hljs-symbol">    id:</span><span class="hljs-string">&quot;5f4e7c596d2c237b61fca4c6&quot;</span>,
-<span class="hljs-symbol">    parameters:</span>{name:<span class="hljs-string">&quot;&quot;</span>}, 
-<span class="hljs-symbol">    startTimestamp:</span><span class="hljs-string">&quot;2020-116T00:00:00&quot;</span>, 
-<span class="hljs-symbol">    type:</span> <span class="hljs-string">&quot;TurnInstrumentOff&quot;</span>}, 
-<span class="hljs-symbol">    planId:</span><span class="hljs-string">&quot;5f492c60ae0dec17320e5bed&quot;</span> )
-  {
-    success
-    message
-  }
-}</pre><h3 id="creating-a-constraint-s-for-a-mission-model">Creating a constraint(s) for a mission model</h3>
-<pre class="hljs">mutation {
-    <span class="hljs-function"><span class="hljs-title">updateAdaptationConstraints</span>(<span class="hljs-params">
-    adaptationId: <span class="hljs-string">&quot;606e43055f75f06b0e257d30&quot;</span>
-    constraints: [
-      { <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;GreaterThan&quot;</span>,
-        <span class="hljs-string">&quot;left&quot;</span>:
-          { <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;AsReal&quot;</span>,
-            <span class="hljs-string">&quot;expression&quot;</span>:
-              { <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;DiscreteResource&quot;</span>,
-                <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;/fruit&quot;</span> } },
-        <span class="hljs-string">&quot;right&quot;</span>:
-      { <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;RealValue&quot;</span>,
-        <span class="hljs-string">&quot;value&quot;</span>: <span class="hljs-number">1</span> } }
-    ]
-    </span>)</span>
-  {
-    message
-    success
-  }
-}</pre><h3 id="deleting-a-file-from-the-merlin-file-store">Deleting a file from the merlin file store</h3>
-<pre class="hljs"><span class="hljs-keyword">mutation</span> {
-  deleteFile(<span class="hljs-built_in">path</span>: <span class="hljs-string">&quot;test_file&quot;</span>) {
-    <span class="hljs-literal">message</span>
-    success
-  }
-}</pre><h1 id="aerie-graphql-schema">Aerie GraphQL Schema</h1>
-<pre class="hljs"><span class="hljs-title">scalar</span> <span class="hljs-type">ActivityInstanceParameterValue</span>
-<span class="hljs-title">scalar</span> <span class="hljs-type">ActivityTypeParameterDefault</span>
-<span class="hljs-title">scalar</span> <span class="hljs-type">ActivityTypeParameterSchema</span>
-<span class="hljs-title">scalar</span> <span class="hljs-type">ResourceSchema</span>
-<span class="hljs-title">scalar</span> <span class="hljs-type">SimulationResultValueY</span>
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ActivityInstance</span> {
-  children: [<span class="hljs-type">String</span>!]
-  duration: <span class="hljs-type">Float</span>
-  id: <span class="hljs-type">ID</span>!
-  parameters: [<span class="hljs-type">ActivityInstanceParameter</span>]!
-  parent: <span class="hljs-type">String</span>
-  startTimestamp: <span class="hljs-type">String</span>!
-  type: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ActivityInstanceParameter</span> {
-  name: <span class="hljs-type">String</span>!
-  value: <span class="hljs-type">ActivityInstanceParameterValue</span>
-}
-
-<span class="hljs-title">input</span> <span class="hljs-type">ActivityInstanceParameterInput</span> {
-  name: <span class="hljs-type">String</span>!
-  value: <span class="hljs-type">ActivityInstanceParameterValue</span>
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ActivityType</span> {
-  name: <span class="hljs-type">String</span>!
-  parameter(name: <span class="hljs-type">String</span>!): <span class="hljs-type">ActivityTypeParameter</span>
-  parameters: [<span class="hljs-type">ActivityTypeParameter</span>]!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ActivityTypeParameter</span> {
-  default: <span class="hljs-type">ActivityTypeParameterDefault</span>
-  name: <span class="hljs-type">String</span>!
-  schema: <span class="hljs-type">ActivityTypeParameterSchema</span>
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">Adaptation</span> {
-  activityType(name: <span class="hljs-type">String</span>!): <span class="hljs-type">ActivityType</span>
-  activityTypes: [<span class="hljs-type">ActivityType</span>!]!
-  constraints: [<span class="hljs-type">ConstraintDefinition</span>!]!
-  id: <span class="hljs-type">ID</span>!
-  mission: <span class="hljs-type">String</span>!
-  name: <span class="hljs-type">String</span>!
-  owner: <span class="hljs-type">String</span>!
-  version: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">Constraint</span> {
-  name: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ConstraintDefinition</span> {
-  definition: <span class="hljs-type">String</span>!
-  description: <span class="hljs-type">String</span>!
-  name: <span class="hljs-type">String</span>!
-  summary: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-title">input</span> <span class="hljs-type">ConstraintDefinitionInput</span> {
-  definition: <span class="hljs-type">String</span>!
-  description: <span class="hljs-type">String</span>!
-  name: <span class="hljs-type">String</span>!
-  summary: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ConstraintViolation</span> {
-  associations: <span class="hljs-type">ConstraintViolationAssociations</span>!
-  constraint: <span class="hljs-type">Constraint</span>!
-  windows: [<span class="hljs-type">TimeRange</span>!]!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ConstraintViolationAssociations</span> {
-  activityInstanceIds: [<span class="hljs-type">String</span>!]!
-  resourceIds: [<span class="hljs-type">String</span>!]!
-}
-
-<span class="hljs-title">input</span> <span class="hljs-type">CreateActivityInstance</span> {
-  parameters: [<span class="hljs-type">ActivityInstanceParameterInput</span>!]!
-  startTimestamp: <span class="hljs-type">String</span>!
-  <span class="hljs-keyword">type</span>: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">CreateActivityInstancesResponse</span> {
-  ids: [<span class="hljs-type">ID</span>]!
-  message: <span class="hljs-type">String</span>
-  success: <span class="hljs-type">Boolean</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">CreateAdaptationResponse</span> {
-  id: <span class="hljs-type">ID</span>
-  message: <span class="hljs-type">String</span>
-  success: <span class="hljs-type">Boolean</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">CreatePlanResponse</span> {
-  id: <span class="hljs-type">ID</span>
-  message: <span class="hljs-type">String</span>
-  success: <span class="hljs-type">Boolean</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">LoginResponse</span> {
-  message: <span class="hljs-type">String</span>!
-  ssoCookieName: <span class="hljs-type">String</span>
-  ssoCookieValue: <span class="hljs-type">String</span>
-  success: <span class="hljs-type">Boolean</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">Mutation</span> {
-  createActivityInstances(
-    activityInstances: [<span class="hljs-type">CreateActivityInstance</span>]!
-    planId: <span class="hljs-type">ID</span>!
-  ): <span class="hljs-type">CreateActivityInstancesResponse</span>
-  createAdaptation(
-    file: <span class="hljs-type">Upload</span>!
-    mission: <span class="hljs-type">String</span>!
-    name: <span class="hljs-type">String</span>!
-    owner: <span class="hljs-type">String</span>!
-    version: <span class="hljs-type">String</span>!
-  ): <span class="hljs-type">CreateAdaptationResponse</span>
-  createPlan(
-    adaptationId: <span class="hljs-type">String</span>!
-    endTimestamp: <span class="hljs-type">String</span>!
-    name: <span class="hljs-type">String</span>!
-    startTimestamp: <span class="hljs-type">String</span>!
-    configuration: <span class="hljs-type">ConfigurationValue</span>
-  ): <span class="hljs-type">CreatePlanResponse</span>
-  deleteActivityInstance(planId: <span class="hljs-type">ID</span>!, activityInstanceId: <span class="hljs-type">ID</span>!): <span class="hljs-type">Response</span>
-  deleteAdaptation(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Response</span>
-  deleteAdaptationConstraints(id: <span class="hljs-type">ID</span>!, names: [<span class="hljs-type">String</span>!]!): <span class="hljs-type">Response</span>
-  deleteFile(path: <span class="hljs-type">String</span>!): <span class="hljs-type">Response</span>
-  deletePlan(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Response</span>
-  deletePlanConstraints(id: <span class="hljs-type">ID</span>!, names: [<span class="hljs-type">String</span>!]!): <span class="hljs-type">Response</span>
-  login(username: <span class="hljs-type">String</span>!, password: <span class="hljs-type">String</span>!): <span class="hljs-type">LoginResponse</span>
-  updateActivityInstance(
-    activityInstance: <span class="hljs-type">UpdateActivityInstance</span>!
-    planId: <span class="hljs-type">ID</span>!
-  ): <span class="hljs-type">Response</span>
-  updateAdaptationConstraints(
-    adaptationId: <span class="hljs-type">ID</span>!
-    constraints: [<span class="hljs-type">ConstraintDefinitionInput</span>!]!
-  ): <span class="hljs-type">Response</span>
-  updatePlanConstraints(
-    planId: <span class="hljs-type">ID</span>!
-    constraints: [<span class="hljs-type">ConstraintDefinitionInput</span>!]!
-  ): <span class="hljs-type">Response</span>
-  uploadFile(file: <span class="hljs-type">Upload</span>!): <span class="hljs-type">Response</span>
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">Plan</span> {
-  activityInstances: [<span class="hljs-type">ActivityInstance</span>!]!
-  adaptation: <span class="hljs-type">Adaptation</span>
-  adaptationId: <span class="hljs-type">String</span>!
-  constraints: [<span class="hljs-type">ConstraintDefinition</span>!]!
-  endTimestamp: <span class="hljs-type">String</span>!
-  id: <span class="hljs-type">ID</span>!
-  name: <span class="hljs-type">String</span>!
-  startTimestamp: <span class="hljs-type">String</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">Query</span> {
-  activityType(adaptationId: <span class="hljs-type">ID</span>!, name: <span class="hljs-type">String</span>!): <span class="hljs-type">ActivityType</span>
-  activityTypes(adaptationId: <span class="hljs-type">ID</span>!): [<span class="hljs-type">ActivityType</span>]!
-  adaptation(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Adaptation</span>
-  adaptations: [<span class="hljs-type">Adaptation</span>]!
-  files: [<span class="hljs-type">String</span>!]!
-  plan(id: <span class="hljs-type">ID</span>!): <span class="hljs-type">Plan</span>
-  plans: [<span class="hljs-type">Plan</span>]!
-  resourceTypes(adaptationId: <span class="hljs-type">ID</span>!): [<span class="hljs-type">ResourceType</span>!]!
-  simulate(adaptationId: <span class="hljs-type">String</span>!, planId: <span class="hljs-type">String</span>!, nonblocking: <span class="hljs-type">Boolean</span> = false): <span class="hljs-type">SimulationResponse</span>
-  validateParameters(
-    activityTypeName: <span class="hljs-type">String</span>!
-    adaptationId: <span class="hljs-type">ID</span>!
-    parameters: [<span class="hljs-type">ActivityInstanceParameterInput</span>!]!
-  ): <span class="hljs-type">ValidationResponse</span>
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ResourceType</span> {
-  name: <span class="hljs-type">String</span>!
-  schema: <span class="hljs-type">ResourceSchema</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">Response</span> {
-  message: <span class="hljs-type">String</span>
-  success: <span class="hljs-type">Boolean</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">SimulationResponse</span> {
-  activities: [<span class="hljs-type">ActivityInstance</span>!]
-  message: <span class="hljs-type">String</span>
-  results: [<span class="hljs-type">SimulationResult</span>!]
-  status: <span class="hljs-type">SimulationStatus</span>
-  success: <span class="hljs-type">Boolean</span>!
-  violations: [<span class="hljs-type">ConstraintViolation</span>!]
-}
-
-<span class="hljs-title">enum</span> <span class="hljs-type">SimulationStatus</span> {
-  complete
-  failed
-  incomplete
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">SimulationResult</span> {
-  name: <span class="hljs-type">String</span>!
-  schema: <span class="hljs-type">ResourceSchema</span>!
-  start: <span class="hljs-type">String</span>!
-  values: [<span class="hljs-type">SimulationResultValue</span>!]!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">SimulationResultValue</span> {
-  x: <span class="hljs-type">Float</span>!
-  y: <span class="hljs-type">SimulationResultValueY</span>!
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">TimeRange</span> {
-  end: <span class="hljs-type">Float</span>!
-  start: <span class="hljs-type">Float</span>!
-}
-
-<span class="hljs-title">input</span> <span class="hljs-type">UpdateActivityInstance</span> {
-  id: <span class="hljs-type">ID</span>!
-  parameters: [<span class="hljs-type">ActivityInstanceParameterInput</span>!]
-  startTimestamp: <span class="hljs-type">String</span>
-  <span class="hljs-keyword">type</span>: <span class="hljs-type">String</span>
-}
-
-<span class="hljs-keyword">type</span> <span class="hljs-type">ValidationResponse</span> {
-  errors: [<span class="hljs-type">String</span>!]
-  success: <span class="hljs-type">Boolean</span>!
-}</pre><p class="page" id="Aerie-Planning-UI"></p><h1>Aerie Planning UI</h1>
+}</pre><h2 id="the-aerie-api-graphql-schema">The Aerie API GraphQL Schema</h2>
+<p>The schema is too large to include here and in Aerie&#39;s automatic documentation generation (it creates a 300 pg doc). The schema for your Aerie installation can be viewed at https://<your-domain>:9000/playground or the current Aerie release can be seen at <a href="https://aerie-staging.jpl.nasa.gov:9000/playground">https://aerie-staging.jpl.nasa.gov:9000/playground</a></p>
+<p class="page" id="Aerie-Planning-UI"></p><h1>Aerie Planning UI</h1>
 <p>The Aerie planning web application provides a graphical user interface to create, view, update and delete mission model and plans. This section will refer to the demo instance of the UI available at:
 <a href="https://aerie-staging.jpl.nasa.gov">https://aerie-staging.jpl.nasa.gov</a></p>
 <h2 id="uploading-mission-models">Uploading Mission Models</h2>
