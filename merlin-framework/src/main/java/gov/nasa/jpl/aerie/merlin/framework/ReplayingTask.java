@@ -25,7 +25,7 @@ public final class ReplayingTask implements Task {
   @Override
   public TaskStatus step(final Scheduler scheduler) {
     final var handle = new ReplayingTaskHandle();
-    final var context = new ReplayingReactionContext<>(this.executor, this.rootContext, this.memory, scheduler, handle);
+    final var context = new ReplayingReactionContext(this.executor, this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
       this.task.run();

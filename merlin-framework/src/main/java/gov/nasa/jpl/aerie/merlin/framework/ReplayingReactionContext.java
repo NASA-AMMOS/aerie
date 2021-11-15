@@ -17,7 +17,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /* package-local */
-final class ReplayingReactionContext<$Timeline> implements Context {
+final class ReplayingReactionContext implements Context {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final TaskHandle handle;
