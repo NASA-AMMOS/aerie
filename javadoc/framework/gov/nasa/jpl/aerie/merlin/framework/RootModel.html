@@ -68,11 +68,11 @@ loadScripts(document, 'script');</script>
 <!-- ======== START OF CLASS DATA ======== -->
 <div class="header">
 <div class="sub-title"><span class="package-label-in-type">Package</span>&nbsp;<a href="package-summary.html">gov.nasa.jpl.aerie.merlin.framework</a></div>
-<h1 title="Record Class RootModel" class="title">Record Class RootModel&lt;$Schema,<wbr>Model&gt;</h1>
+<h1 title="Record Class RootModel" class="title">Record Class RootModel&lt;Model&gt;</h1>
 </div>
 <div class="inheritance" title="Inheritance Tree"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Object.html" title="class or interface in java.lang" class="external-link">java.lang.Object</a>
 <div class="inheritance"><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Record.html" title="class or interface in java.lang" class="external-link">java.lang.Record</a>
-<div class="inheritance">gov.nasa.jpl.aerie.merlin.framework.RootModel&lt;$Schema,<wbr>Model&gt;</div>
+<div class="inheritance">gov.nasa.jpl.aerie.merlin.framework.RootModel&lt;Model&gt;</div>
 </div>
 </div>
 <section class="class-description" id="class-description">
@@ -81,7 +81,7 @@ loadScripts(document, 'script');</script>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
 </dl>
 <hr>
-<div class="type-signature"><span class="modifiers">public record </span><span class="element-name type-name-label">RootModel&lt;$Schema,<wbr>Model&gt;</span>(<a href="RootModel.html" title="type parameter in RootModel">Model</a>&nbsp;model, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html" title="class or interface in java.util.concurrent" class="external-link">ExecutorService</a>&nbsp;executor)
+<div class="type-signature"><span class="modifiers">public record </span><span class="element-name type-name-label">RootModel&lt;Model&gt;</span>(<a href="RootModel.html" title="type parameter in RootModel">Model</a>&nbsp;model, <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html" title="class or interface in java.util.concurrent" class="external-link">ExecutorService</a>&nbsp;executor)
 <span class="extends-implements">extends <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/Record.html" title="class or interface in java.lang" class="external-link">Record</a>
 implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></span></div>
 <div class="block">The top-level mission model managed by the Merlin framework.</div>
@@ -128,26 +128,19 @@ implements <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns the value of the <code>executor</code> record component.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static &lt;$Schema,<wbr>
-Model&gt;<br><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;$Schema,<wbr>Model&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#fromPhantom(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom)" class="member-name-link">fromPhantom</a><wbr>(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom&lt;$Schema,<wbr><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;?,<wbr>Model&gt;&gt;&nbsp;wrapper)</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final int</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hashCode()" class="member-name-link">hashCode</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final int</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#hashCode()" class="member-name-link">hashCode</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns a hash code value for this object.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html" title="class or interface in java.util.concurrent" class="external-link">ExecutorService</a></code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#makeExecutorService()" class="member-name-link">makeExecutorService</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
-<div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="RootModel.html" title="type parameter in RootModel">Model</a></code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#model()" class="member-name-link">model</a>()</code></div>
-<div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/util/concurrent/ExecutorService.html" title="class or interface in java.util.concurrent" class="external-link">ExecutorService</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#makeExecutorService()" class="member-name-link">makeExecutorService</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="RootModel.html" title="type parameter in RootModel">Model</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#model()" class="member-name-link">model</a>()</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Returns the value of the <code>model</code> record component.</div>
 </div>
-<div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>gov.nasa.jpl.aerie.merlin.protocol.types.Phantom&lt;<a href="RootModel.html" title="type parameter in RootModel">$Schema</a>,<wbr><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;?,<wbr><a href="RootModel.html" title="type parameter in RootModel">Model</a>&gt;&gt;</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toPhantom()" class="member-name-link">toPhantom</a>()</code></div>
-<div class="col-last odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>final <a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#toString()" class="member-name-link">toString</a>()</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
@@ -205,20 +198,6 @@ Model&gt;<br><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.
 <dt>Specified by:</dt>
 <dd><code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/AutoCloseable.html#close()" title="class or interface in java.lang" class="external-link">close</a></code>&nbsp;in interface&nbsp;<code><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/AutoCloseable.html" title="class or interface in java.lang" class="external-link">AutoCloseable</a></code></dd>
 </dl>
-</section>
-</li>
-<li>
-<section class="detail" id="fromPhantom(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom)">
-<h3>fromPhantom</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="type-parameters">&lt;$Schema,<wbr>
-Model&gt;</span>
-<span class="return-type"><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;$Schema,<wbr>Model&gt;</span>&nbsp;<span class="element-name">fromPhantom</span><wbr><span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.Phantom&lt;$Schema,<wbr><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;?,<wbr>Model&gt;&gt;&nbsp;wrapper)</span></div>
-</section>
-</li>
-<li>
-<section class="detail" id="toPhantom()">
-<h3>toPhantom</h3>
-<div class="member-signature"><span class="modifiers">public</span>&nbsp;<span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.types.Phantom&lt;<a href="RootModel.html" title="type parameter in RootModel">$Schema</a>,<wbr><a href="RootModel.html" title="class in gov.nasa.jpl.aerie.merlin.framework">RootModel</a>&lt;?,<wbr><a href="RootModel.html" title="type parameter in RootModel">Model</a>&gt;&gt;</span>&nbsp;<span class="element-name">toPhantom</span>()</div>
 </section>
 </li>
 <li>
