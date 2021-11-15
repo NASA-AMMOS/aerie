@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class Registrar {
-  private final Initializer<?> builder;
+  private final Initializer builder;
 
-  public Registrar(final Initializer<?> builder) {
+  public Registrar(final Initializer builder) {
     this.builder = Objects.requireNonNull(builder);
   }
 
@@ -28,13 +28,13 @@ public final class Registrar {
     addRealResource(this.builder, name, resource);
   }
 
-  private static <$Schema, Value> void addDiscreteResource(
-      final Initializer<$Schema> initializer,
+  private static <Value> void addDiscreteResource(
+      final Initializer initializer,
       final String name,
       final Resource<Value> resource,
       final ValueMapper<Value> mapper
   ) {
-    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<$Schema, Value>() {
+    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<Value>() {
       @Override
       public String getType() {
         return "discrete";
@@ -46,8 +46,8 @@ public final class Registrar {
       }
 
       @Override
-      public Value getDynamics(final Querier<? extends $Schema> querier) {
-        try (final var _token = ModelActions.context.set(new QueryContext<>(querier))) {
+      public Value getDynamics(final Querier querier) {
+        try (final var _token = ModelActions.context.set(new QueryContext(querier))) {
           return resource.getDynamics();
         }
       }
@@ -59,12 +59,12 @@ public final class Registrar {
     });
   }
 
-  private static <$Schema> void addRealResource(
-      final Initializer<$Schema> initializer,
+  private static void addRealResource(
+      final Initializer initializer,
       final String name,
       final Resource<RealDynamics> resource
   ) {
-    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<$Schema, RealDynamics>() {
+    initializer.resource(name, new gov.nasa.jpl.aerie.merlin.protocol.model.Resource<RealDynamics>() {
       @Override
       public String getType() {
         return "real";
@@ -78,8 +78,8 @@ public final class Registrar {
       }
 
       @Override
-      public RealDynamics getDynamics(final Querier<? extends $Schema> querier) {
-        try (final var _token = ModelActions.context.set(new QueryContext<>(querier))) {
+      public RealDynamics getDynamics(final Querier querier) {
+        try (final var _token = ModelActions.context.set(new QueryContext(querier))) {
           return resource.getDynamics();
         }
       }

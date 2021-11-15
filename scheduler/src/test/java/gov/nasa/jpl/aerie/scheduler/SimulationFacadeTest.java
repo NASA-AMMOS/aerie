@@ -13,7 +13,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 public class SimulationFacadeTest {
 
-  MissionModel<?, ?> missionModel;
+  MissionModel<?> missionModel;
   MissionModelWrapper wrappedMissionModel;
   SimulationFacade facade;
 

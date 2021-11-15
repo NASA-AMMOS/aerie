@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
-public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
+public final class ReplayingTask implements Task {
   private final ExecutorService executor;
   private final Scoped<Context> rootContext;
   private final Runnable task;
@@ -23,8 +23,8 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
   }
 
   @Override
-  public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
-    final var handle = new ReplayingTaskHandle<$Timeline>();
+  public TaskStatus step(final Scheduler scheduler) {
+    final var handle = new ReplayingTaskHandle();
     final var context = new ReplayingReactionContext<>(this.executor, this.rootContext, this.memory, scheduler, handle);
 
     try (final var restore = this.rootContext.set(context)){
@@ -43,11 +43,11 @@ public final class ReplayingTask<$Timeline> implements Task<$Timeline> {
     this.memory.clear();
   }
 
-  private static final class ReplayingTaskHandle<$Timeline> implements TaskHandle<$Timeline> {
-    public TaskStatus<$Timeline> status = TaskStatus.completed();
+  private static final class ReplayingTaskHandle implements TaskHandle {
+    public TaskStatus status = TaskStatus.completed();
 
     @Override
-    public Scheduler<$Timeline> yield(final TaskStatus<$Timeline> status) {
+    public Scheduler yield(final TaskStatus status) {
       this.status = status;
       throw Yield;
     }

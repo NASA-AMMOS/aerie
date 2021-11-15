@@ -2,29 +2,29 @@ package gov.nasa.jpl.aerie.merlin.protocol.types;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 
-public sealed interface TaskStatus<$Timeline> {
-  record Completed<$Timeline>() implements TaskStatus<$Timeline> {}
+public sealed interface TaskStatus {
+  record Completed() implements TaskStatus {}
 
-  record Delayed<$Timeline>(Duration delay) implements TaskStatus<$Timeline> {}
+  record Delayed(Duration delay) implements TaskStatus {}
 
-  record AwaitingTask<$Timeline>(String target) implements TaskStatus<$Timeline> {}
+  record AwaitingTask(String target) implements TaskStatus {}
 
-  record AwaitingCondition<$Timeline>(Condition<? super $Timeline> condition) implements TaskStatus<$Timeline> {}
+  record AwaitingCondition(Condition condition) implements TaskStatus {}
 
 
-  static <$Timeline> Completed<$Timeline> completed() {
-    return new Completed<>();
+  static Completed completed() {
+    return new Completed();
   }
 
-  static <$Timeline> Delayed<$Timeline> delayed(final Duration delay) {
-    return new Delayed<>(delay);
+  static Delayed delayed(final Duration delay) {
+    return new Delayed(delay);
   }
 
-  static <$Timeline> AwaitingTask<$Timeline> awaiting(final String id) {
-    return new AwaitingTask<>(id);
+  static AwaitingTask awaiting(final String id) {
+    return new AwaitingTask(id);
   }
 
-  static <$Timeline> AwaitingCondition<$Timeline> awaiting(final Condition<? super $Timeline> condition) {
-    return new AwaitingCondition<>(condition);
+  static AwaitingCondition awaiting(final Condition condition) {
+    return new AwaitingCondition(condition);
   }
 }

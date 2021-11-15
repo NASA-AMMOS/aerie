@@ -10,10 +10,10 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import java.util.Map;
 import java.util.function.Function;
 
-public final class QueryContext<$Schema> implements Context {
-  private final Querier<? extends $Schema> querier;
+public final class QueryContext implements Context {
+  private final Querier querier;
 
-  public QueryContext(final Querier<? extends $Schema> querier) {
+  public QueryContext(final Querier querier) {
     this.querier = querier;
   }
 
@@ -23,16 +23,12 @@ public final class QueryContext<$Schema> implements Context {
   }
 
   @Override
-  public <CellType> CellType ask(final Query<?, ?, CellType> query) {
-    // SAFETY: All objects accessible within a single mission model instance have the same brand.
-    @SuppressWarnings("unchecked")
-    final var brandedQuery = (Query<$Schema, ?, CellType>) query;
-
-    return this.querier.getState(brandedQuery);
+  public <CellType> CellType ask(final Query<?, CellType> query) {
+    return this.querier.getState(query);
   }
 
   @Override
-  public <Event, Effect, CellType> Query<?, Event, CellType> allocate(
+  public <Event, Effect, CellType> Query<Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final EffectTrait<Effect> trait,
@@ -42,7 +38,7 @@ public final class QueryContext<$Schema> implements Context {
   }
 
   @Override
-  public <Event> void emit(final Event event, final Query<?, Event, ?> query) {
+  public <Event> void emit(final Event event, final Query<Event, ?> query) {
     throw new IllegalStateException("Cannot update simulation state in a query-only context");
   }
 

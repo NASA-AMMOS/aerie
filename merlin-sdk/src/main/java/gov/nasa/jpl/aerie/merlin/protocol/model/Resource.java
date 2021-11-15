@@ -4,9 +4,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
-public interface Resource<$Schema, Dynamics> {
+public interface Resource<Dynamics> {
   String getType();
   ValueSchema getSchema();
-  Dynamics getDynamics(Querier<? extends $Schema> querier);
+  Dynamics getDynamics(Querier querier);
   SerializedValue serialize(Dynamics dynamics);
 }

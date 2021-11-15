@@ -1,15 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * The top-level mission model managed by the Merlin framework.
  */
-public record RootModel<$Schema, Model>(Model model, ExecutorService executor) implements AutoCloseable {
+public record RootModel<Model>(Model model, ExecutorService executor) implements AutoCloseable {
   public RootModel {}
+
   public static ExecutorService makeExecutorService() {
     return Executors.newCachedThreadPool($ -> {
       final var t = new Thread($);
@@ -26,17 +25,5 @@ public record RootModel<$Schema, Model>(Model model, ExecutorService executor) i
   @Override
   public void close() {
     this.executor.shutdownNow();
-  }
-
-  public static <$Schema, Model>
-  RootModel<$Schema, Model> fromPhantom(final Phantom<$Schema, RootModel<?, Model>> wrapper) {
-    // SAFETY: By convention, a Phantom<$, F<?>> represents an F<$> for any F.
-    @SuppressWarnings("unchecked")
-    final var model = (RootModel<$Schema, Model>) wrapper.value();
-    return model;
-  }
-
-  public Phantom<$Schema, RootModel<?, Model>> toPhantom() {
-    return new Phantom<>(this);
   }
 }

@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public final class MissionModelFacade<$Schema> {
-  private final MissionModel<$Schema, ?> missionModel;
+public final class MissionModelFacade {
+  private final MissionModel<?> missionModel;
 
-  public MissionModelFacade(final MissionModel<$Schema, ?> missionModel) throws MissionModelContractException {
+  public MissionModelFacade(final MissionModel<?> missionModel) throws MissionModelContractException {
     this.missionModel = missionModel;
   }
 

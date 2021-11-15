@@ -7,7 +7,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Collections;
@@ -15,18 +14,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class MissionModel<$Schema, Model> {
-  private final Phantom<$Schema, Model> model;
+public final class MissionModel<Model> {
+  private final Model model;
   private final LiveCells initialCells;
-  private final Map<String, Resource<? super $Schema, ?>> resources;
+  private final Map<String, Resource<?>> resources;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
-  private final List<Initializer.TaskFactory<$Schema>> daemons;
+  private final List<Initializer.TaskFactory> daemons;
 
   public MissionModel(
-      final Phantom<$Schema, Model> model,
+      final Model model,
       final LiveCells initialCells,
-      final Map<String, Resource<? super $Schema, ?>> resources,
-      final List<Initializer.TaskFactory<$Schema>> daemons,
+      final Map<String, Resource<?>> resources,
+      final List<Initializer.TaskFactory> daemons,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
@@ -36,7 +35,7 @@ public final class MissionModel<$Schema, Model> {
     this.daemons = Collections.unmodifiableList(daemons);
   }
 
-  public Phantom<$Schema, Model> getModel() {
+  public Model getModel() {
     return this.model;
   }
 
@@ -50,10 +49,10 @@ public final class MissionModel<$Schema, Model> {
     return Directive.instantiate(this.taskSpecTypes.get(specification.getTypeName()), specification.getParameters());
   }
 
-  public <$Timeline extends $Schema> Task<$Timeline> getDaemon() {
-    return new Task<>() {
+  public Task getDaemon() {
+    return new Task() {
       @Override
-      public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
+      public TaskStatus step(final Scheduler scheduler) {
         MissionModel.this.daemons.forEach(daemon -> scheduler.spawn(daemon.create()));
         return TaskStatus.completed();
       }
@@ -64,7 +63,7 @@ public final class MissionModel<$Schema, Model> {
     };
   }
 
-  public Map<String, Resource<? super $Schema, ?>> getResources() {
+  public Map<String, Resource<?>> getResources() {
     return this.resources;
   }
 

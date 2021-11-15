@@ -24,7 +24,7 @@ public class MissionModelWrapper {
    * the mission model will start with only the bare-bones built-in
    * epoch/state/activity/etc definitions
    */
-  public MissionModelWrapper(MissionModel<?,?> missionModel, Range<Time> planningHorizon) {
+  public MissionModelWrapper(MissionModel<?> missionModel, Range<Time> planningHorizon) {
 
     //TODO: change parametrization
     simFacade = new SimulationFacade(planningHorizon, missionModel);

@@ -5,9 +5,9 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Optional;
 
-public interface Condition<$Schema> {
+public interface Condition {
   /**
    * POSTCONDITION: The return value `x` satisfies `x.noLaterThan(atLatest)`.
    */
-  Optional<Duration> nextSatisfied(Querier<? extends $Schema> now, Duration atLatest);
+  Optional<Duration> nextSatisfied(Querier now, Duration atLatest);
 }

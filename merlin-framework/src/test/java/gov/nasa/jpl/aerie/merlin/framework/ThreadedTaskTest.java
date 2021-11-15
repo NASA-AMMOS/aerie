@@ -17,20 +17,20 @@ import static org.junit.jupiter.api.Assertions.fail;
 public final class ThreadedTaskTest {
   @Test
   @DisplayName("Thrown exceptions can be caught transparently")
-  public <$Timeline> void testTransparentExceptions() {
-    final var mockScheduler = new Scheduler<$Timeline>() {
+  public void testTransparentExceptions() {
+    final var mockScheduler = new Scheduler() {
       @Override
-      public <State> State get(final Query<? super $Timeline, ?, State> query) {
+      public <State> State get(final Query<?, State> query) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public <Event> void emit(final Event event, final Query<? super $Timeline, ? super Event, ?> query) {
+      public <Event> void emit(final Event event, final Query<? super Event, ?> query) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public String spawn(final Task<$Timeline> task) {
+      public String spawn(final Task task) {
         throw new UnsupportedOperationException();
       }
 
@@ -40,7 +40,7 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public String defer(final Duration delay, final Task<$Timeline> task) {
+      public String defer(final Duration delay, final Task task) {
         throw new UnsupportedOperationException();
       }
 
@@ -54,7 +54,7 @@ public final class ThreadedTaskTest {
     try {
       class TestException extends RuntimeException {}
 
-      final var task = new ThreadedTask<$Timeline>(
+      final var task = new ThreadedTask(
         pool,
         Scoped.create(),
         () -> { throw new TestException(); });

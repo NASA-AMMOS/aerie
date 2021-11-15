@@ -53,12 +53,12 @@ public final class CellExpiryTest {
     assertEquals(expected, actual);
   }
 
-  private <$Schema> MissionModel<$Schema, ?> makeModel(
+  private MissionModel<?> makeModel(
       final String resourceName,
       final String resourceValue,
       final Duration expiry
   ) {
-    final var initializer = new MissionModelBuilder<$Schema>();
+    final var initializer = new MissionModelBuilder();
 
     final var ref = initializer.allocate(
         new Object(),
@@ -103,7 +103,7 @@ public final class CellExpiryTest {
         Function.identity()
     );
 
-    final var resource = new Resource<$Schema, String>() {
+    final var resource = new Resource<String>() {
       @Override
       public String getType() {
         return "discrete";
@@ -115,7 +115,7 @@ public final class CellExpiryTest {
       }
 
       @Override
-      public String getDynamics(final Querier<? extends $Schema> querier) {
+      public String getDynamics(final Querier querier) {
         // Color this resource with the expiry of the cell.
         querier.getState(ref);
         return resourceValue;

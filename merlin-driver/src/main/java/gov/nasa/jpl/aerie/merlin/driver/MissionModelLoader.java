@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
+import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.io.BufferedReader;
@@ -24,20 +24,20 @@ public final class MissionModelLoader {
         return service.getFactory();
     }
 
-    public static MissionModel<?, ?> loadMissionModel(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
+    public static MissionModel<?> loadMissionModel(final SerializedValue missionModelConfig, final Path path, final String name, final String version)
         throws MissionModelLoadException
     {
         final var service = loadMissionModelProvider(path, name, version);
         final var factory = service.getFactory();
-        final var builder = new MissionModelBuilder<>();
+        final var builder = new MissionModelBuilder();
         return loadMissionModel(missionModelConfig, factory, builder);
     }
 
-    private static <$Schema, Model>
-    MissionModel<$Schema, Model> loadMissionModel(
+    private static <Model>
+    MissionModel<Model> loadMissionModel(
         final SerializedValue missionModelConfig,
         final MissionModelFactory<Model> factory,
-        final MissionModelBuilder<$Schema> builder
+        final MissionModelBuilder builder
     ) {
         final var model = factory.instantiate(missionModelConfig, builder);
         return builder.build(model, factory.getTaskSpecTypes());

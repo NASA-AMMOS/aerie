@@ -8,13 +8,13 @@ import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 
-public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
+public final class ThreadedTask implements Task {
   private final Scoped<Context> rootContext;
   private final Runnable task;
   private final ExecutorService executor;
 
-  private final ArrayBlockingQueue<TaskRequest<$Timeline>> hostToTask = new ArrayBlockingQueue<>(1);
-  private final ArrayBlockingQueue<TaskResponse<$Timeline>> taskToHost = new ArrayBlockingQueue<>(1);
+  private final ArrayBlockingQueue<TaskRequest> hostToTask = new ArrayBlockingQueue<>(1);
+  private final ArrayBlockingQueue<TaskResponse> taskToHost = new ArrayBlockingQueue<>(1);
 
   private Lifecycle lifecycle = Lifecycle.Inactive;
 
@@ -25,7 +25,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
   }
 
   @Override
-  public TaskStatus<$Timeline> step(final Scheduler<$Timeline> scheduler) {
+  public TaskStatus step(final Scheduler scheduler) {
     try {
       if (this.lifecycle == Lifecycle.Terminated) {
         return TaskStatus.completed();
@@ -40,11 +40,11 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
       //   for a new request as soon as it puts a response to the last request.
       // TODO: Track metrics for how long a task runs before responding.
       //   This will help to tune the timeout.
-      this.hostToTask.put(new TaskRequest.Resume<>(scheduler));
+      this.hostToTask.put(new TaskRequest.Resume(scheduler));
       final var response = this.taskToHost.take();
 
       if (response instanceof TaskResponse.Success) {
-        final var status = ((TaskResponse.Success<$Timeline>) response).status;
+        final var status = ((TaskResponse.Success) response).status;
 
         if (status instanceof TaskStatus.Completed) {
           this.lifecycle = Lifecycle.Terminated;
@@ -57,7 +57,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
         // We re-throw the received exception to avoid interfering with `catch` blocks
         //   that might be looking for this specific exception, but we add a new exception
         //   to its suppression list to provide a stack trace in this thread, too.
-        final var ex = ((TaskResponse.Failure<$Timeline>) response).failure;
+        final var ex = ((TaskResponse.Failure) response).failure;
         ex.addSuppressed(new TaskFailureException());
 
         // This exception shouldn't be a checked exception, but we have to prove it to Java.
@@ -83,18 +83,18 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
     final var handle = new ThreadedTaskHandle();
 
     this.executor.execute(() -> {
-      final TaskRequest<$Timeline> request;
+      final TaskRequest request;
       try {
         request = ThreadedTask.this.hostToTask.take();
       } catch (final InterruptedException ex) {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }
 
-      TaskResponse<$Timeline> response;
+      TaskResponse response;
       try {
         response = handle.run(request);
       } catch (final Throwable ex) {
-        response = new TaskResponse.Failure<>(ex);
+        response = new TaskResponse.Failure(ex);
       }
 
       try {
@@ -113,7 +113,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
         //   This timeout can be (much) shorter than the one in `ThreadedTask.step()`.
         //   The `put()` call is fine -- we know the thread will immediately wait
         //   for a new request as soon as it puts a response to the last request.
-        this.hostToTask.put(new TaskRequest.Abort<>());
+        this.hostToTask.put(new TaskRequest.Abort());
         final var ignored = this.taskToHost.take();
       } catch (final InterruptedException ex) {
         throw new Error("Merlin host unexpectedly interrupted", ex);
@@ -123,14 +123,14 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
     this.lifecycle = Lifecycle.Inactive;
   }
 
-  private final class ThreadedTaskHandle implements TaskHandle<$Timeline> {
+  private final class ThreadedTaskHandle implements TaskHandle {
     private boolean isAborting = false;
 
-    public TaskResponse<$Timeline> run(final TaskRequest<$Timeline> request) {
+    public TaskResponse run(final TaskRequest request) {
       if (request instanceof TaskRequest.Resume) {
-        final var scheduler = ((TaskRequest.Resume<$Timeline>) request).scheduler;
+        final var scheduler = ((TaskRequest.Resume) request).scheduler;
 
-        final var context = new ThreadedReactionContext<>(
+        final var context = new ThreadedReactionContext(
             ThreadedTask.this.executor,
             ThreadedTask.this.rootContext,
             scheduler,
@@ -138,14 +138,14 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
           ThreadedTask.this.task.run();
-          return new TaskResponse.Success<>(TaskStatus.completed());
+          return new TaskResponse.Success(TaskStatus.completed());
         } catch (final TaskAbort ex) {
-          return new TaskResponse.Success<>(TaskStatus.completed());
+          return new TaskResponse.Success(TaskStatus.completed());
         } catch (final Throwable ex) {
-          return new TaskResponse.Failure<>(ex);
+          return new TaskResponse.Failure(ex);
         }
       } else if (request instanceof TaskRequest.Abort) {
-        return new TaskResponse.Success<>(TaskStatus.completed());
+        return new TaskResponse.Success(TaskStatus.completed());
       } else {
         throw new Error(String.format(
             "Unexpected variant of %s: %s",
@@ -155,14 +155,14 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
     }
 
     @Override
-    public Scheduler<$Timeline> yield(final TaskStatus<$Timeline> status) {
+    public Scheduler yield(final TaskStatus status) {
       // If we're in the middle of aborting, just keep trying to bail out.
       if (this.isAborting) throw TaskAbort;
 
       // Get the next request from the driver.
-      final TaskRequest<$Timeline> request;
+      final TaskRequest request;
       try {
-        ThreadedTask.this.taskToHost.put(new TaskResponse.Success<>(status));
+        ThreadedTask.this.taskToHost.put(new TaskResponse.Success(status));
         request = ThreadedTask.this.hostToTask.take();
       } catch (final InterruptedException ex) {
         throw new Error("Merlin task unexpectedly interrupted", ex);
@@ -170,7 +170,7 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
 
       if (request instanceof TaskRequest.Resume) {
         // We've been told to continue executing.
-        return ((TaskRequest.Resume<$Timeline>) request).scheduler;
+        return ((TaskRequest.Resume) request).scheduler;
       } else if (request instanceof TaskRequest.Abort) {
         // We've been told to bail out and release this thread ASAP.
         //
@@ -201,28 +201,28 @@ public final class ThreadedTask<$Timeline> implements Task<$Timeline> {
 
   private enum Lifecycle { Inactive, Running, Terminated }
 
-  /*sealed*/ interface TaskRequest<$Timeline> {
-    final class Resume<$Timeline> implements TaskRequest<$Timeline> {
-      public final Scheduler<$Timeline> scheduler;
+  /*sealed*/ interface TaskRequest {
+    final class Resume implements TaskRequest {
+      public final Scheduler scheduler;
 
-      public Resume(final Scheduler<$Timeline> scheduler) {
+      public Resume(final Scheduler scheduler) {
         this.scheduler = Objects.requireNonNull(scheduler);
       }
     }
 
-    final class Abort<$Timeline> implements TaskRequest<$Timeline> {}
+    final class Abort implements TaskRequest {}
   }
 
-  /*sealed*/ interface TaskResponse<$Timeline> {
-    final class Success<$Timeline> implements TaskResponse<$Timeline> {
-      public final TaskStatus<$Timeline> status;
+  /*sealed*/ interface TaskResponse {
+    final class Success implements TaskResponse {
+      public final TaskStatus status;
 
-      public Success(final TaskStatus<$Timeline> status) {
+      public Success(final TaskStatus status) {
         this.status = Objects.requireNonNull(status);
       }
     }
 
-    final class Failure<$Timeline> implements TaskResponse<$Timeline> {
+    final class Failure implements TaskResponse {
       public final Throwable failure;
 
       public Failure(final Throwable failure) {
