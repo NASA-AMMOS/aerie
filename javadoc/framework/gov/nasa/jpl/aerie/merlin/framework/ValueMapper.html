@@ -73,7 +73,7 @@ loadScripts(document, 'script');</script>
 <section class="class-description" id="class-description">
 <hr>
 <div class="type-signature"><span class="modifiers">public interface </span><span class="element-name type-name-label">ValueMapper&lt;T&gt;</span></div>
-<div class="block">A mapping between (a) the mission-specific representation of a data type defined by an adaptation (b) to a
+<div class="block">A mapping between (a) the mission-specific representation of a data type defined by a mission model (b) to a
  mission-agnostic representation of that data type.</div>
 </section>
 <section class="summary">
@@ -92,7 +92,7 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a>&lt;<a href="ValueMapper.html" title="type parameter in ValueMapper">T</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#deserializeValue(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue)" class="member-name-link">deserializeValue</a><wbr>(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&nbsp;serializedValue)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">
-<div class="block">Produces an adaptation-specific domain value from a mission-agnostic representation.</div>
+<div class="block">Produces an mission model-specific domain value from a mission-agnostic representation.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#getValueSchema()" class="member-name-link">getValueSchema</a>()</code></div>
@@ -102,7 +102,7 @@ loadScripts(document, 'script');</script>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code>gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3"><code><a href="#serializeValue(T)" class="member-name-link">serializeValue</a><wbr>(<a href="ValueMapper.html" title="type parameter in ValueMapper">T</a>&nbsp;value)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab3">
-<div class="block">Produces a mission-agnostic representation of an adaptation-specific domain value.</div>
+<div class="block">Produces a mission-agnostic representation of an mission model-specific domain value.</div>
 </div>
 </div>
 </div>
@@ -133,12 +133,12 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="deserializeValue(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue)">
 <h3>deserializeValue</h3>
 <div class="member-signature"><span class="return-type"><a href="Result.html" title="class in gov.nasa.jpl.aerie.merlin.framework">Result</a>&lt;<a href="ValueMapper.html" title="type parameter in ValueMapper">T</a>,<wbr><a href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&gt;</span>&nbsp;<span class="element-name">deserializeValue</span><wbr><span class="parameters">(gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue&nbsp;serializedValue)</span></div>
-<div class="block">Produces an adaptation-specific domain value from a mission-agnostic representation.</div>
+<div class="block">Produces an mission model-specific domain value from a mission-agnostic representation.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
 <dd><code>serializedValue</code> - A mission-agnostic representation of a domain value.</dd>
 <dt>Returns:</dt>
-<dd>Either an adaptation-specific domain object, or a deserialization failure.</dd>
+<dd>Either an mission model-specific domain object, or a deserialization failure.</dd>
 </dl>
 </section>
 </li>
@@ -146,10 +146,10 @@ loadScripts(document, 'script');</script>
 <section class="detail" id="serializeValue(T)">
 <h3 id="serializeValue(java.lang.Object)">serializeValue</h3>
 <div class="member-signature"><span class="return-type">gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue</span>&nbsp;<span class="element-name">serializeValue</span><wbr><span class="parameters">(<a href="ValueMapper.html" title="type parameter in ValueMapper">T</a>&nbsp;value)</span></div>
-<div class="block">Produces a mission-agnostic representation of an adaptation-specific domain value.</div>
+<div class="block">Produces a mission-agnostic representation of an mission model-specific domain value.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
-<dd><code>value</code> - An adaptation-specific domain object.</dd>
+<dd><code>value</code> - An mission model-specific domain object.</dd>
 <dt>Returns:</dt>
 <dd>A mission-agnostic representation of <code>value</code>.</dd>
 </dl>
