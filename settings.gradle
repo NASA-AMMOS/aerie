@@ -20,6 +20,5 @@ include 'parsing-utilities'
 include 'merlin-server'
 
 // Command-line interface direct to services
-include 'apgen-parser'
 include 'constraints'
 include 'scheduler'
