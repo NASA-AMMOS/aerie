@@ -5,6 +5,7 @@ create table simulation_dataset (
   -- Determinant entities
   plan_revision integer not null,
   model_revision integer not null,
+  simulation_template_revision integer null,
   simulation_revision integer not null,
 
   -- Dependent entities

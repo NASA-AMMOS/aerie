@@ -2,11 +2,17 @@ create table simulation (
   id integer generated always as identity,
   revision integer not null default 0,
 
+  simulation_template_id integer null,
   plan_id integer not null,
   arguments merlin_argument_set not null,
 
   constraint simulation_synthetic_key
     primary key (id),
+  constraint simulation_has_simulation_template
+    foreign key (simulation_template_id)
+    references simulation_template
+    on update cascade
+    on delete set null,
   constraint simulation_owned_by_plan
     foreign key (plan_id)
     references plan
@@ -22,6 +28,8 @@ comment on column simulation.id is e''
   'The synthetic identifier for this simulation.';
 comment on column simulation.revision is e''
   'A monotonic clock that ticks for every change to this simulation.';
+comment on column simulation.simulation_template_id is e''
+  'A simulation template specification to inherit.';
 comment on column simulation.plan_id is e''
   'The plan whose contents drive this simulation.';
 comment on column simulation.arguments is e''

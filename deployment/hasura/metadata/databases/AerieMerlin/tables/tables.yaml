@@ -10,5 +10,6 @@
 - "!include public_profile_segment.yaml"
 - "!include public_simulation.yaml"
 - "!include public_simulation_dataset.yaml"
+- "!include public_simulation_template.yaml"
 - "!include public_span.yaml"
 - "!include public_uploaded_file.yaml"
