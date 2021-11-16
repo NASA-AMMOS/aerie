@@ -92,4 +92,8 @@ public final class Registrar {
       }
     });
   }
+
+  public <Event> void topic(final String name, final CellRef<Event,?> ref, final ValueMapper<Event> mapper) {
+    this.builder.topic(name, ref.query, mapper.getValueSchema(), mapper::serializeValue);
+  }
 }

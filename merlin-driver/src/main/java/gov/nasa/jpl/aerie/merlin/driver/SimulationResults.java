@@ -1,10 +1,12 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,13 +21,15 @@ public final class SimulationResults {
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
   public final Map<String, SimulatedActivity> simulatedActivities;
   public final Map<String, SerializedActivity> unfinishedActivities;
+  public final List<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>> events;
 
   public SimulationResults(
       final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
       final Map<String, SimulatedActivity> simulatedActivities,
       final Map<String, SerializedActivity> unfinishedActivities,
-      final Instant startTime)
+      final Instant startTime,
+      final List<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>> events)
   {
     this.startTime = startTime;
     this.realProfiles = realProfiles;
@@ -33,6 +37,7 @@ public final class SimulationResults {
     this.resourceSamples = takeSamples(realProfiles, discreteProfiles);
     this.simulatedActivities = simulatedActivities;
     this.unfinishedActivities = unfinishedActivities;
+    this.events = events;
   }
 
   private static Map<String, List<Pair<Duration, SerializedValue>>>

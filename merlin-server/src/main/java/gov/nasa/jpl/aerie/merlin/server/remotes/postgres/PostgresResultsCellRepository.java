@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -14,11 +16,13 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -337,12 +341,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
 
+    // TODO: Events are not currently persisted in the database. When they are, this stub will need to be updated.
+    final var events = new ArrayList<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>>();
+
     return new SimulationResults(
         realProfiles,
         discreteProfiles,
         activities,
         unfinishedActivities,
-        simulationStart
+        simulationStart,
+        events
     );
   }
 
