@@ -1,4 +1,4 @@
-create table if not exists activity_type (
+create table activity_type (
   model_id integer not null,
   name text not null,
   parameters merlin_parameter_set not null,

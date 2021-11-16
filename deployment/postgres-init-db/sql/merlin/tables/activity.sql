@@ -1,4 +1,4 @@
-create table if not exists activity (
+create table activity (
   id integer generated always as identity,
   plan_id integer not null,
 
@@ -17,7 +17,7 @@ create table if not exists activity (
     check (start_offset >= '0')
 );
 
-create index if not exists activity_plan_id_index on activity (plan_id);
+create index activity_plan_id_index on activity (plan_id);
 
 
 comment on table activity is e''
@@ -35,7 +35,7 @@ comment on column activity.arguments is e''
   'The set of arguments to this activity, corresponding to the parameters of the associated activity type.';
 
 
-create or replace function increment_revision_on_insert_activity()
+create function increment_revision_on_insert_activity()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -46,16 +46,12 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-do $$ begin
-  create trigger increment_revision_on_insert_activity_trigger
-  after insert on activity
-  for each row
-  execute function increment_revision_on_insert_activity();
-exception
-  when duplicate_object then null;
-end $$;
+create trigger increment_revision_on_insert_activity_trigger
+after insert on activity
+for each row
+execute function increment_revision_on_insert_activity();
 
-create or replace function increment_revision_on_update_activity()
+create function increment_revision_on_update_activity()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -67,16 +63,12 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-do $$ begin
-  create trigger increment_revision_on_update_activity_trigger
-  after update on activity
-  for each row
-  execute function increment_revision_on_update_activity();
-exception
-  when duplicate_object then null;
-end $$;
+create trigger increment_revision_on_update_activity_trigger
+after update on activity
+for each row
+execute function increment_revision_on_update_activity();
 
-create or replace function increment_revision_on_delete_activity()
+create function increment_revision_on_delete_activity()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -87,11 +79,7 @@ language plpgsql as $$begin
   return old;
 end$$;
 
-do $$ begin
-  create trigger increment_revision_on_delete_activity_trigger
-  after delete on activity
-  for each row
-  execute function increment_revision_on_delete_activity();
-exception
-  when duplicate_object then null;
-end $$;
+create trigger increment_revision_on_delete_activity_trigger
+after delete on activity
+for each row
+execute function increment_revision_on_delete_activity();

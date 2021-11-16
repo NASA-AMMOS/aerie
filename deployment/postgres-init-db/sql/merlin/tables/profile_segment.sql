@@ -1,4 +1,4 @@
-create table if not exists profile_segment (
+create table profile_segment (
   dataset_id integer not null,
   profile_id integer not null,
 

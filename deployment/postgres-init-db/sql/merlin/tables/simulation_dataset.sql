@@ -1,4 +1,4 @@
-create table if not exists simulation_dataset (
+create table simulation_dataset (
   simulation_id integer not null,
   dataset_id integer null,
 

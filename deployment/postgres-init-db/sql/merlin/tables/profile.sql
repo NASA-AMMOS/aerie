@@ -1,4 +1,4 @@
-create table if not exists profile (
+create table profile (
   id integer generated always as identity,
   dataset_id integer not null,
 
