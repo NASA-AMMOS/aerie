@@ -1,4 +1,4 @@
-create table if not exists span (
+create table span (
   id integer generated always as identity,
 
   dataset_id integer not null,

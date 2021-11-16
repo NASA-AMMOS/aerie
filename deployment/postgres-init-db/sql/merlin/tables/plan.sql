@@ -1,4 +1,4 @@
-create table if not exists plan (
+create table plan (
   id integer generated always as identity,
   revision integer not null default 0,
 
@@ -22,7 +22,7 @@ create table if not exists plan (
     check (duration >= '0')
 );
 
-create index if not exists plan_model_id_index on plan (model_id);
+create index plan_model_id_index on plan (model_id);
 
 
 comment on table plan is e''
@@ -44,7 +44,7 @@ comment on column plan.start_time is e''
   'DEPRECATED. The time at which the plan''s effective span begins.';
 
 
-create or replace function increment_revision_on_update_plan()
+create function increment_revision_on_update_plan()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -56,12 +56,8 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-do $$ begin
-  create trigger increment_revision_on_update_plan_trigger
-  after update on plan
-  for each row
-  when (pg_trigger_depth() < 1)
-  execute function increment_revision_on_update_plan();
-exception
-  when duplicate_object then null;
-end $$;
+create trigger increment_revision_on_update_plan_trigger
+after update on plan
+for each row
+when (pg_trigger_depth() < 1)
+execute function increment_revision_on_update_plan();

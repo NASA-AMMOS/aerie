@@ -1,4 +1,4 @@
-create table if not exists dataset (
+create table dataset (
   id integer generated always as identity,
   revision integer not null default 0,
   state text not null,

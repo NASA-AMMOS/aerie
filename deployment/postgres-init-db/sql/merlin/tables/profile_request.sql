@@ -1,4 +1,4 @@
-create table if not exists profile_request (
+create table profile_request (
   dataset_id integer not null,
   profile_name text not null,
   duration interval not null,
