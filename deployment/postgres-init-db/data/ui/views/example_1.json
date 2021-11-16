@@ -1,0 +1,136 @@
+{
+  "id": 1,
+  "meta": {
+    "owner": "system",
+    "timeCreated": 1615235194748,
+    "timeUpdated": 1615235194748,
+    "version": "0.9.1"
+  },
+  "name": "InSight",
+  "plan": {
+    "sections": [
+      {
+        "id": 0,
+        "size": 40,
+        "timeline": {
+          "id": 0,
+          "marginLeft": 110,
+          "marginRight": 30,
+          "rows": [
+            {
+              "autoAdjustHeight": false,
+              "height": 194,
+              "horizontalGuides": [],
+              "id": 0,
+              "layers": [
+                {
+                  "activityColor": "#283593",
+                  "activityHeight": 20,
+                  "chartType": "activity",
+                  "filter": { "activity": { "type": ".*" } },
+                  "id": 0,
+                  "yAxisId": null
+                }
+              ],
+              "yAxes": []
+            }
+          ],
+          "verticalGuides": []
+        },
+        "type": "timeline"
+      },
+      {
+        "id": 1,
+        "size": 60,
+        "timeline": {
+          "id": 1,
+          "marginLeft": 110,
+          "marginRight": 30,
+          "rows": [
+            {
+              "autoAdjustHeight": false,
+              "height": 100,
+              "horizontalGuides": [],
+              "id": 1,
+              "layers": [
+                {
+                  "chartType": "x-range",
+                  "colorScheme": "schemePastel2",
+                  "filter": { "resource": { "name": "/seis/power_on" } },
+                  "id": 1,
+                  "opacity": 0.8,
+                  "yAxisId": 1
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 1,
+                  "label": { "text": "/seis/power_on" },
+                  "scaleDomain": [],
+                  "tickCount": 0
+                }
+              ]
+            },
+            {
+              "autoAdjustHeight": false,
+              "height": 130,
+              "horizontalGuides": [],
+              "id": 2,
+              "layers": [
+                {
+                  "chartType": "line",
+                  "filter": { "resource": { "name": "/data/VC05/volume" } },
+                  "id": 2,
+                  "lineColor": "#283593",
+                  "lineWidth": 1,
+                  "pointRadius": 2,
+                  "yAxisId": 2
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 2,
+                  "label": { "text": "/data/VC05/volume" },
+                  "scaleDomain": [0, 200],
+                  "tickCount": 5
+                }
+              ]
+            },
+            {
+              "autoAdjustHeight": false,
+              "height": 130,
+              "horizontalGuides": [],
+              "id": 3,
+              "layers": [
+                {
+                  "chartType": "line",
+                  "filter": {
+                    "resource": { "name": "/power/genericPowerUsed" }
+                  },
+                  "id": 3,
+                  "lineColor": "#283593",
+                  "lineWidth": 1,
+                  "pointRadius": 2,
+                  "yAxisId": 3
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 3,
+                  "label": { "text": "genericPowerUsed" },
+                  "scaleDomain": [0, 1],
+                  "tickCount": 5
+                }
+              ]
+            }
+          ],
+          "verticalGuides": []
+        },
+        "type": "timeline"
+      }
+    ]
+  }
+}

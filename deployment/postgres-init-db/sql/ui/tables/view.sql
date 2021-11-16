@@ -1,4 +1,3 @@
-create table if not exists view (
-  id text not null primary key,
+create table view (
   view jsonb not null
 );
