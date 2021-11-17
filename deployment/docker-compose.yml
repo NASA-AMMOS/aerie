@@ -32,7 +32,6 @@ services:
   hasura:
     depends_on: ["postgres"]
     environment:
-      AERIE_CONFIG_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_config
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
