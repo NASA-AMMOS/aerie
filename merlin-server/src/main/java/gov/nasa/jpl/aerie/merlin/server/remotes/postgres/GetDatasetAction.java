@@ -16,9 +16,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       d.revision,
       d.plan_id,
       to_char(p.start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time,
-      d.offset_from_plan_start,
-      d.profile_segment_partition_table,
-      d.span_partition_table
+      d.offset_from_plan_start
   from dataset as d
   left join plan as p
     on p.id = d.plan_id
@@ -41,16 +39,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     final var planId = results.getLong(2);
     final var planStart = Timestamp.fromString(results.getString(3));
     final var offsetFromPlanStart = parseOffset(results, 4, planStart);
-    final var profileSegmentPartitionTable = results.getString(5);
-    final var spanPartitionTable = results.getString(6);
 
     return Optional.of(new DatasetRecord(
         datasetId,
         revision,
         planId,
-        offsetFromPlanStart,
-        profileSegmentPartitionTable,
-        spanPartitionTable));
+        offsetFromPlanStart));
   }
 
   @Override

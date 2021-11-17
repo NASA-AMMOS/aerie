@@ -7,6 +7,4 @@ public final record DatasetRecord(
     long id,
     long revision,
     long planId,
-    Duration offsetFromPlanStart,
-    String profileSegmentPartitionTable,
-    String spanPartitionTable) {}
+    Duration offsetFromPlanStart) {}

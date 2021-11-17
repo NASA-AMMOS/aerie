@@ -8,9 +8,6 @@ create table dataset (
   plan_id integer null,
   offset_from_plan_start interval not null,
 
-  profile_segment_partition_table text not null,
-  span_partition_table text not null,
-
   constraint dataset_synthetic_key
     primary key (id),
   constraint dataset_owned_by_plan
@@ -31,8 +28,43 @@ comment on column dataset.offset_from_plan_start is e''
 '\n'
   'If the dataset as a whole begins one day before the planning period begins, '
   'then this column should contain the interval ''1 day ago''.';
-comment on column dataset.profile_segment_partition_table is e''
-  'The name of the table partition containing profile segments for this dataset';
 
--- TODO: Add an ON DELETE trigger to drop the associated 'profile_segment' and 'span' partitions.
---   If that doesn't work, find some other way to clean up the dead partitions.
+create or replace function create_partitions()
+returns trigger
+security definer
+language plpgsql as $$begin
+  execute
+    'create table profile_segment_' || new.id
+    || ' partition of profile_segment for values in (' || new.id || ')';
+  execute
+    'create table span_' || new.id
+    || ' partition of span for values in (' || new.id || ')';
+return new;
+end$$;
+
+create or replace function delete_partitions()
+returns trigger
+security definer
+language plpgsql as $$begin
+  execute 'drop table profile_segment_' || old.id || ' cascade';
+  execute 'drop table span_' || old.id || ' cascade';
+return old;
+end$$;
+
+do $$ begin
+create trigger create_partitions_trigger
+  after insert on dataset
+  for each row
+  execute function create_partitions();
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$ begin
+create trigger delete_partitions_trigger
+  before delete on dataset
+  for each row
+  execute function delete_partitions();
+exception
+  when duplicate_object then null;
+end $$;
