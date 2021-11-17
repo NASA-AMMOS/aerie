@@ -7,11 +7,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
   CREATE USER aerie WITH PASSWORD 'aerie';
   \echo 'Done!'
 
-  \echo 'Initializing aerie_config database...'
-  CREATE DATABASE aerie_config;
-  GRANT ALL PRIVILEGES ON DATABASE aerie_config TO aerie;
-  \echo 'Done!'
-
   \echo 'Initializing aerie_hasura database...'
   CREATE DATABASE aerie_hasura;
   GRANT ALL PRIVILEGES ON DATABASE aerie_hasura TO aerie;
