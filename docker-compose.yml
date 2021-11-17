@@ -21,6 +21,7 @@ services:
   aerie_ui:
     depends_on: ["postgres"]
     environment:
+      AUTH_TYPE: cam
       GATEWAY_CLIENT_URL: http://localhost:9000
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
