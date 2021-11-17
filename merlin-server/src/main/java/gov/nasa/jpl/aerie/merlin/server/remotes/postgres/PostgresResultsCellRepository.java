@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
@@ -129,16 +128,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       if (simulation$.isEmpty()) return;
       final var simulation = simulation$.get();
 
-      final var datasetId$ = getSimulationDatasetRecord(
+      final var record$ = getSimulationDatasetRecord(
           connection,
           simulation.id(),
           planRevision,
           MODEL_REVISION,
           simulation.revision()
-      ).map(SimulationDatasetRecord::datasetID);
-      if (datasetId$.isEmpty()) return;
-      final var datasetId = datasetId$.get();
-      deleteDataset(connection, datasetId);
+      );
+      if (record$.isEmpty()) return;
+
+      deleteDataset(connection, record$.get().datasetID());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete simulation", ex);
     }
@@ -199,18 +198,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Timestamp simulationStart
   ) throws SQLException
   {
-    final var partitionId = UUID.randomUUID().toString().replaceAll("-", "");
-    final var profileSegmentPartitionTable = String.format("profile_segment_%s", partitionId);
-    final var spanPartitionTable = String.format("span_%s", partitionId);
-
     final var dataset = createDataset(
         connection,
         simulation.planId(),
         planStart,
-        simulationStart,
-        profileSegmentPartitionTable,
-        spanPartitionTable);
-    createPartitionTables(connection, dataset.id(), profileSegmentPartitionTable, spanPartitionTable);
+        simulationStart);
     createSimulationDataset(
         connection,
         simulation.id(),
@@ -226,34 +218,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long planId,
       final Timestamp planStart,
-      final Timestamp simulationStart,
-      final String profileSegmentPartitionTable,
-      final String spanPartitionTable
+      final Timestamp simulationStart
   ) throws SQLException {
     try (final var createDatasetAction = new CreateDatasetAction(connection)) {
       return createDatasetAction.apply(
           planId,
           planStart,
-          simulationStart,
-          profileSegmentPartitionTable,
-          spanPartitionTable);
-    }
-  }
-
-  private static void createPartitionTables(
-      final Connection connection,
-      final long datasetId,
-      final String profileSegmentPartitionName,
-      final String spanPartitionName
-  ) throws SQLException {
-    try (
-          final var createProfileSegmentPartitionTableAction =
-              new CreateProfileSegmentPartitionTableAction(connection, datasetId, profileSegmentPartitionName);
-          final var createSpanPartitionTableAction =
-              new CreateSpanPartitionTableAction(connection, datasetId, spanPartitionName)
-        ) {
-      createProfileSegmentPartitionTableAction.apply();
-      createSpanPartitionTableAction.apply();
+          simulationStart);
     }
   }
 
