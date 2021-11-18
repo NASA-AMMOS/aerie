@@ -52,13 +52,6 @@ public interface Plan {
 
   public void removeAllWindows();
 
-  /**
-   * adds the given state value history to the scheduled plan solution
-   *
-   * @param stateTimeline IN the state value history to add to the plan
-   * @param <T> the value type of the state
-   */
-  public <T extends Comparable<T>> void add(State<T> stateTimeline);
 
   /**
    * fetches activities in the plan ordered by start time

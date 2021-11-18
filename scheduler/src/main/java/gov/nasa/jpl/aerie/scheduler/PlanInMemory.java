@@ -111,12 +111,6 @@ public class PlanInMemory implements Plan {
 
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T extends Comparable<T>> void add(State<T> stateTimeline) {
-  }
 
   /**
    * {@inheritDoc}
