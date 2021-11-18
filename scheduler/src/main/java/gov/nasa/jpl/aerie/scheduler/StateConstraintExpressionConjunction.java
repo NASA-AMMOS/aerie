@@ -22,7 +22,7 @@ public class StateConstraintExpressionConjunction extends StateConstraintExpress
 
   private ValidityCache cache;
 
-  public static boolean ACTIVATE_CACHE = true;
+  public static boolean ACTIVATE_CACHE = false;
 
   private List<StateConstraintExpression> conjonction;
 

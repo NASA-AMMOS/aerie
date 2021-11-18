@@ -25,7 +25,7 @@ public abstract class StateConstraint<T extends Comparable<T>> {
   /**
    * Static boolean allowing to enable caching or not
    */
-  public static boolean ACTIVATE_CACHE = true;
+  public static boolean ACTIVATE_CACHE = false;
 
   protected TimeWindows timeDomain;
 

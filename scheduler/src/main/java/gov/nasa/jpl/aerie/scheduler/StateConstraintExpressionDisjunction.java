@@ -25,7 +25,7 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
   }
 
 
-  public static boolean ACTIVATE_CACHE = true;
+  public static boolean ACTIVATE_CACHE = false;
 
   private List<StateConstraintExpression> disjunction;
 
