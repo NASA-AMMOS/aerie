@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.constraints.time.Windows;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 
-import java.util.Collection;
 import java.util.List;
 
 public class TestCardinalityGoal {
@@ -48,7 +47,8 @@ public class TestCardinalityGoal {
 
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
-    goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
+    var conflicts = goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
+    assert(conflicts.size()==6);
   }
 
 
@@ -93,11 +93,11 @@ public class TestCardinalityGoal {
 
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
-    Collection<Conflict> conflicts = goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
-    for (var conflict : conflicts) {
-      System.out.println(conflict);
-    }
-
+    var conflicts = goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
+    assert(conflicts.size()==5);
+    var conflictsArr = conflicts.toArray(new MissingActivityInstanceConflict[conflicts.size()]);
+    assert(conflictsArr[2].instance.getDuration().isEqualTo(Duration.of(4, Duration.SECONDS)));
+    assert(conflictsArr[4].instance.getDuration().isEqualTo(Duration.of(4, Duration.SECONDS)));
   }
 
 }

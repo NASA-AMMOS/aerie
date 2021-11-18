@@ -291,6 +291,39 @@ public class TestStateConstraints {
     ENCOUNTER;
   }
 
+  @Test
+  public void testOfEachValue(){
+    final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR);
+    final var activityTypeImage = new ActivityType("EISImage");
+
+    final var eisImageAct = new ActivityCreationTemplate.Builder()
+        .ofType(activityTypeImage)
+        .duration(dur)
+        .build();
+    TimeRangeExpression tre = new TimeRangeExpression.Builder()
+        .ofEachValue(encounterEnumState)
+        .from(new StateConstraintExpression.Builder().lessThan(altitudeDerivativeState,1.).build())
+        .build();
+
+    CoexistenceGoal cg = new CoexistenceGoal.Builder()
+        .named("OrbitStateGoal")
+        .forAllTimeIn(horizon.getHor())
+        .thereExistsOne(eisImageAct)
+        .forEach(tre)
+        .owned(ChildCustody.Jointly)
+        .startsAt(TimeAnchor.START)
+        .withPriority(7.0)
+        .build();
+
+    Problem problem = new Problem(missionModel);
+    problem.add(cg);
+    HuginnConfiguration huginn = new HuginnConfiguration();
+    final var solver = new PrioritySolver(huginn, problem);
+    final var plan = solver.getNextSolution().orElseThrow();
+    assert(TestUtility.activityStartingAtTime(plan, horizon.getHor().start, activityTypeImage));
+    assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-180T00:00:00.000",horizon), activityTypeImage));
+    assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-185T00:00:00.000",horizon), activityTypeImage));
+  }
 
   /**
    * Hardcoded state describing some two-value orbit phases

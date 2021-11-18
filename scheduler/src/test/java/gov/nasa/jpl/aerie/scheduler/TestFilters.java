@@ -15,7 +15,7 @@ public class TestFilters {
   @Test
   public void testLatchFilters() {
     Window horizon = Window.between(Duration.of(0, Duration.SECONDS), Duration.of(50, Duration.SECONDS));
-
+    Windows horizonW = new Windows(horizon);
     MockState<Boolean> smallState1 = new SmallState1(horizon);
     MockState<Boolean> smallState2 = new SmallState2(horizon);
     drawHorizon(horizon);
@@ -36,6 +36,7 @@ public class TestFilters {
         .from(ste)
         .build();
 
+    var b = ste2.findWindows(null, horizonW);
 
     TimeWindowsFilter filter = new Filters.LatchingBuilder()
         .withinEach(tre)
@@ -48,9 +49,9 @@ public class TestFilters {
         .thenFilter(filter)
         .build();
 
-    Windows res = tre2.computeRange(null, new Windows(horizon));
+    Windows res = tre2.computeRange(null,horizonW);
 
-    assert (res != null);
+    assert (res.equals(new Windows(Window.betweenClosedOpen(Duration.of(7, Duration.SECONDS), Duration.of(10, Duration.SECONDS)), Window.betweenClosedOpen(Duration.of(25, Duration.SECONDS), Duration.of(50, Duration.SECONDS)))));
 
 
   }

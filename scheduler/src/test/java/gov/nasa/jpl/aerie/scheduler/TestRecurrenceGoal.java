@@ -7,12 +7,13 @@ public class TestRecurrenceGoal {
 
   @Test
   public void testRecurrence() {
+    var actType = new ActivityType("RecGoalActType");
     RecurrenceGoal goal = new RecurrenceGoal.Builder()
         .named("Test recurrence goal")
         .forAllTimeIn(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(20, Duration.SECONDS)))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .duration(Duration.of(2, Duration.SECONDS))
-                            .ofType(new ActivityType("RecGoalActType"))
+                            .ofType(actType)
                             .build())
         .repeatingEvery(Duration.of(5, Duration.SECONDS))
         .build();
@@ -24,10 +25,11 @@ public class TestRecurrenceGoal {
 
     HuginnConfiguration huginn = new HuginnConfiguration();
     final var solver = new PrioritySolver(huginn, problem);
-    //var plan = new PlanInMemory( problem.getMissionModel() );
 
     var plan = solver.getNextSolution().orElseThrow();
-    TestUtility.printPlan(plan);
+    assert(TestUtility.activityStartingAtTime(plan,Duration.of(6, Duration.SECONDS), actType));
+    assert(TestUtility.activityStartingAtTime(plan,Duration.of(11, Duration.SECONDS), actType));
+    assert(TestUtility.activityStartingAtTime(plan,Duration.of(16, Duration.SECONDS), actType));
 
   }
 

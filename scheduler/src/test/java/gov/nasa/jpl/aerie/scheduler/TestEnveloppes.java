@@ -39,8 +39,9 @@ public class TestEnveloppes {
         .thenTransform(enveloppe)
         .name("encounter_envelopper_TRE")
         .build();
-
-    System.out.println(tre.computeRange(null, horizon));
+    var ranges = tre.computeRange(null, horizon);
+    assert(ranges.size()==1);
+    assert(ranges.includes(Window.betweenClosedOpen(Duration.of(1,Duration.SECONDS), Duration.of(10,Duration.SECONDS))));
 
   }
 
