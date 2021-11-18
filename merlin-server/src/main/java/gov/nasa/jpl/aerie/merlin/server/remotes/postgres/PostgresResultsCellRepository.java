@@ -19,7 +19,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -281,9 +280,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
 
-    // TODO: Events are not currently persisted in the database. When they are, these stubs will need to be updated.
-    final var topics = new ArrayList<Triple<Integer, String, ValueSchema>>();
-    final var events = new HashMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
+    final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
     return new SimulationResults(
         profiles.realProfiles(),
