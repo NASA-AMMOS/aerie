@@ -48,8 +48,17 @@ services:
     build:
       context: .
       dockerfile: scripts/dockerfiles/merlin.Dockerfile
-    depends_on: ["postgres"]
-    ports: ["27183:27183"]
+    depends_on: [ "postgres" ]
+    environment:
+      MERLIN_PORT: 27183
+      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
+      MERLIN_LOGGING: "true"
+      MERLIN_DB_SERVER: "postgres"
+      MERLIN_DB_PORT: 5432
+      MERLIN_DB_USER: "aerie"
+      MERLIN_DB_PASSWORD: "aerie"
+      MERLIN_DB: "aerie_merlin"
+    ports: [ "27183:27183"]
     restart: always
     volumes:
       - file_store:/usr/src/app/merlin_file_store
