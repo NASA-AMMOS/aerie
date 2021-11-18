@@ -10,8 +10,8 @@ create table simulation_dataset (
   -- Dependent entities
   dataset_revision integer null,
 
-  constraint simulation_dataset_primary_key
-    primary key (dataset_id),
+  constraint simulation_dataset_dataset_has_a_simulation
+    unique (dataset_id),
   constraint simulation_dataset_references_simulation
     foreign key (simulation_id)
     references simulation
@@ -24,13 +24,16 @@ create table simulation_dataset (
     on delete cascade
 );
 
+create index simulation_dataset_simulation_has_many_datasets
+  on simulation_dataset (simulation_id);
+
 comment on table simulation_dataset is e''
   'A description of the upstream simulation inputs that determined a given dataset.';
 
 comment on column simulation_dataset.simulation_id is e''
   'The simulation determining the contents of the associated dataset.';
 comment on column simulation_dataset.dataset_id is e''
-  'The dataset containing simulated results for the simulation.';
+  'The dataset containing simulated results for the simulation. NULL if the dataset has not been constructed yet.';
 comment on column simulation_dataset.plan_revision is e''
   'The revision of the plan corresponding to the given revision of the dataset.';
 comment on column simulation_dataset.model_revision is e''
