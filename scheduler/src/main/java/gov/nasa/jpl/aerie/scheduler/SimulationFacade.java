@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
-import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.duration;
 
 /**
  * A facade for simulating plans and processing simulation results.
@@ -51,7 +50,7 @@ public class SimulationFacade {
   private final MissionModel<?> missionModel;
 
   // planning horizon
-  private final Range<Time> planningHorizon;
+  private final PlanningHorizon planningHorizon;
 
   // local types for resources
   final private static String STRING = "String";
@@ -120,7 +119,7 @@ public class SimulationFacade {
     return feedersBool.get(resourceName);
   }
 
-  public SimulationFacade(Range<Time> planningHorizon, MissionModel<?> missionModel) {
+  public SimulationFacade(PlanningHorizon planningHorizon, MissionModel<?> missionModel) {
     this.missionModel = missionModel;
     this.planningHorizon = planningHorizon;
     feedersInt = new HashMap<>();
@@ -136,14 +135,13 @@ public class SimulationFacade {
    * @param activityInstance the activity instance we want the duration for
    * @return the duration if found in the last simulation, null otherwise
    */
-  public gov.nasa.jpl.aerie.scheduler.Duration getActivityDuration(ActivityInstance activityInstance) {
+  public Duration getActivityDuration(ActivityInstance activityInstance) {
     if (lastSimDriverResults == null) {
       System.out.println("You need to simulate before requesting activity duration");
     }
     final var simAct = lastSimDriverResults.simulatedActivities.get(activityInstance.getName());
     if (simAct != null) {
-      long durMilli = simAct.duration.in(Duration.MILLISECOND);
-      return gov.nasa.jpl.aerie.scheduler.Duration.fromMillis(durMilli);
+      return simAct.duration;
     } else {
       System.out.println("Simulation has been launched but activity with name= "
                          + activityInstance.getName()
@@ -169,14 +167,11 @@ public class SimulationFacade {
       Map<String, SerializedValue> params = new HashMap<>();
       act.getParameters().forEach((name, value) -> params.put(name, this.serialize(value)));
       schedule.put(act.getName(), Pair.of(
-          duration(act.getStartTime().minus(this.planningHorizon.getMinimum()).toMicroseconds(), MICROSECONDS),
+          act.getStartTime(),
           new SerializedActivity(act.getType().getName(), params)));
     }
 
-    final var simulationDuration = duration(planningHorizon
-                                                .getMaximum()
-                                                .minus(planningHorizon.getMinimum())
-                                                .toMicroseconds(), MICROSECONDS);
+    final var simulationDuration = planningHorizon.getAerieHorizonDuration();
 
     final var results = SimulationDriver.simulate(
         this.missionModel,
@@ -312,7 +307,7 @@ public class SimulationFacade {
               new IntegerValueMapper(),
               lastConstraintModelResults,
               deserialize(entry.getValue(), new IntegerValueMapper()),
-              this.planningHorizon.getMinimum());
+              this.planningHorizon.getStartAerie());
           case BOOLEAN -> getBooleanResource(name).initFromSimRes(
               name,
               new BooleanValueMapper(),
@@ -320,19 +315,19 @@ public class SimulationFacade {
               deserialize(
                   entry.getValue(),
                   new BooleanValueMapper()),
-              this.planningHorizon.getMinimum());
+              this.planningHorizon.getStartAerie());
           case DOUBLE -> getDoubleResource(name).initFromSimRes(
               name,
               new DoubleValueMapper(),
               lastConstraintModelResults,
               deserialize(entry.getValue(), new DoubleValueMapper()),
-              this.planningHorizon.getMinimum());
+              this.planningHorizon.getStartAerie());
           case STRING -> getStringResource(name).initFromSimRes(
               name,
               new StringValueMapper(),
               lastConstraintModelResults,
               deserialize(entry.getValue(), new StringValueMapper()),
-              this.planningHorizon.getMinimum());
+              this.planningHorizon.getStartAerie());
           default -> throw new IllegalArgumentException("Not supported");
         }
       }
@@ -348,8 +343,7 @@ public class SimulationFacade {
   gov.nasa.jpl.aerie.constraints.model.SimulationResults convertToConstraintModelResults(
       SimulationResults driverResults)
   {
-    final var planDuration = Duration.of(
-        planningHorizon.getMaximum().minus(planningHorizon.getMinimum()).toMicroseconds(), Duration.MICROSECONDS);
+    final var planDuration = planningHorizon.getAerieHorizonDuration();
 
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         Window.between(Duration.ZERO, planDuration),
@@ -371,12 +365,12 @@ public class SimulationFacade {
   private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
       String id, SimulatedActivity driverActivity)
   {
-    final var planStartT = this.planningHorizon.getMinimum().toInstant();
+    final var planStartT = this.planningHorizon.getStartHuginn().toInstant();
     final var startT = Duration.of(planStartT.until(driverActivity.start, ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
         id, driverActivity.type, driverActivity.parameters,
-        Window.between(startT, endT));
+        Window.betweenClosedOpen(startT, endT));
   }
 
   /**

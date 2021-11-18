@@ -1,12 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Transformers {
 
   public static TimeWindowsTransformer beforeEach() {
-    return new TransformerBeforeEach(Duration.ofZero());
+    return new TransformerBeforeEach(Duration.ZERO);
   }
 
 

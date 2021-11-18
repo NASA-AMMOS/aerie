@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,7 +22,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
   }
 
 
-  public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
     if (conflict instanceof MissingActivityInstanceConflict) {
       return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
     } else if (conflict instanceof MissingActivityTemplateConflict) {
@@ -30,21 +33,21 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
   }
 
 
-  private TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
-    TimeWindows validWindows = new TimeWindows(windows);
+  private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled) {
+    Windows validWindows = new Windows(windows);
     for (var type : actTypes) {
       if (!type.equals(actToBeScheduled)) {
         //final var actSearch = ;
 
         final var acts = new java.util.LinkedList<>(plan.find(type));
 
-        List<Range<Time>> rangesActs = acts
+        List<Window> rangesActs = acts
             .stream()
-            .map(a -> new Range<Time>(a.getStartTime(), a.getEndTime()))
+            .map(a -> Window.between(a.getStartTime(), a.getEndTime()))
             .collect(Collectors.toList());
-        TimeWindows twActs = TimeWindows.of(rangesActs);
+        Windows twActs = new Windows(rangesActs);
 
-        validWindows.substraction(twActs);
+        validWindows.subtractAll(twActs);
       }
     }
     return validWindows;
@@ -53,7 +56,7 @@ public class NAryMutexConstraint extends GlobalConstraintWithIntrospection {
 
   //Non-incremental checking
   //TODO : uncomment and verify
-  public ConstraintState isEnforced(Plan plan, TimeWindows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows) {
 
         /*TimeWindows violationWindows = new TimeWindows();
 

@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * describes the desired coexistence of an activity with another
  */
@@ -119,9 +122,9 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
   public java.util.Collection<Conflict> getConflicts(Plan plan) {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
-    TimeWindows anchors = expr.computeRange(plan, TimeWindows.spanMax());
+    Windows anchors = expr.computeRange(plan, Windows.forever());
 
-    for (var window : anchors.getRangeSet()) {
+    for (var window : anchors) {
 
       //System.out.println("Anchor for coexist act : " + window.toString());
 
@@ -138,14 +141,14 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       //ActivityCreationTemplate.Builder actTB = new ActivityCreationTemplate.Builder();
       actTB.basedOn(this.desiredActTemplate);
 
-      Range<Time> startTimeRange = null;
+      Window startTimeRange = null;
 
 
       if (this.startExpr != null && this.endExpr != null) {
 
         startTimeRange = this.startExpr.computeTime(plan, window);
         actTB.startsIn(startTimeRange);
-        Range<Time> endTimeRange = this.endExpr.computeTime(plan, window);
+        Window endTimeRange = this.endExpr.computeTime(plan, window);
         actTB.endsIn(endTimeRange);
 
       }
@@ -153,31 +156,31 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       else if (this.startExpr != null && this.endExpr == null) {
         startTimeRange = this.startExpr.computeTime(plan, window);
         actTB.startsIn(startTimeRange);
-        Range<Duration> rangeDur = desiredActTemplate.getDurationRange();
+        Window rangeDur = desiredActTemplate.getDurationRange();
         if (rangeDur != null) {
-          Range<Time> endTime = new Range<Time>(
-              startTimeRange.getMinimum().plus(rangeDur.getMinimum()),
-              startTimeRange.getMaximum().plus(rangeDur.getMaximum()));
+          var endTime = Window.between(
+              startTimeRange.start.plus(rangeDur.start),
+              startTimeRange.end.plus(rangeDur.end));
           actTB.endsIn(endTime);
         }
 
       } else if (this.startExpr == null && this.endExpr != null) {
-        Range<Time> endTimeRange = this.endExpr.computeTime(plan, window);
+        Window endTimeRange = this.endExpr.computeTime(plan, window);
         actTB.endsIn(endTimeRange);
-        Range<Duration> rangeDur = desiredActTemplate.getDurationRange();
+        Window rangeDur = desiredActTemplate.getDurationRange();
         if (rangeDur != null) {
-          startTimeRange = new Range<Time>(
-              endTimeRange.getMinimum().minus(rangeDur.getMaximum()),
-              endTimeRange.getMaximum().minus(rangeDur.getMinimum()));
+          startTimeRange = Window.between(
+              endTimeRange.start.minus(rangeDur.end),
+              endTimeRange.end.minus(rangeDur.start));
           actTB.startsIn(startTimeRange);
         }
 
       } else {
         //all is null. default behavior is starts or ends in the interval
-        startTimeRange = new Range<Time>(
-            window.getMinimum().minus(desiredActTemplate.getDurationRange().getMaximum()),
-            window.getMaximum());
-        actTB.startsOrEndsIn(new Range<Time>(startTimeRange.getMinimum(), startTimeRange.getMaximum()));
+        startTimeRange = Window.between(
+            window.start.minus(desiredActTemplate.getDurationRange().end),
+            window.end);
+        actTB.startsOrEndsIn(Window.between(startTimeRange.start, startTimeRange.end));
       }
 
       ActivityCreationTemplate temp;
@@ -197,10 +200,10 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         ActivityInstance act;
         var stateConstraints = getStateConstraints();
         if (getStateConstraints() != null) {
-          var valid = stateConstraints.findWindows(plan, TimeWindows.spanMax());
+          var valid = stateConstraints.findWindows(plan,Windows.forever());
           act = temp.createActivity(actName, valid);
         } else {
-          act = temp.createActivity(actName, TimeWindows.spanMax());
+          act = temp.createActivity(actName, Windows.forever());
 
         }
         if (act == null) {

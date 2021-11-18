@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +23,7 @@ public class BinaryMutexConstraint extends GlobalConstraint {
   }
 
 
-  public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
     if (conflict instanceof MissingActivityInstanceConflict) {
       return findWindows(plan, windows, ((MissingActivityInstanceConflict) conflict).getInstance().getType());
     } else if (conflict instanceof MissingActivityTemplateConflict) {
@@ -31,23 +34,22 @@ public class BinaryMutexConstraint extends GlobalConstraint {
   }
 
 
-  private TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
+  private Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled) {
 
     if (!(actToBeScheduled.equals(actType) || actToBeScheduled.equals(otherActType))) {
       throw new IllegalArgumentException("Activity type must be one of the mutexed types");
     }
-    TimeWindows validWindows = new TimeWindows(windows);
+    Windows validWindows = new Windows(windows);
     ActivityType actToBeSearched = actToBeScheduled.equals(actType) ? otherActType : actType;
     final var actSearch = new ActivityExpression.Builder()
         .ofType(actToBeSearched).build();
 
     final var acts = new java.util.LinkedList<>(plan.find(actSearch));
-
-    List<Range<Time>> rangesActs = acts.stream().map(a -> new Range<Time>(a.getStartTime(), a.getEndTime())).collect(
+    List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
         Collectors.toList());
-    TimeWindows twActs = TimeWindows.of(rangesActs);
+    var twActs = new Windows(rangesActs);
 
-    validWindows.substraction(twActs);
+    validWindows.subtractAll(twActs);
 
     return validWindows;
   }
@@ -55,11 +57,11 @@ public class BinaryMutexConstraint extends GlobalConstraint {
 
   //Non-incremental checking
   //TODO: does not help finding where to put acts
-  public ConstraintState isEnforced(Plan plan, TimeWindows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows) {
 
-    TimeWindows violationWindows = new TimeWindows();
+    Windows violationWindows = new Windows();
 
-    for (var window : windows.getRangeSet()) {
+    for (var window : windows) {
       final var actSearch = new ActivityExpression.Builder()
           .ofType(actType).startsOrEndsIn(window).build();
       final var otherActSearch = new ActivityExpression.Builder()
@@ -67,20 +69,20 @@ public class BinaryMutexConstraint extends GlobalConstraint {
       final var acts = new java.util.LinkedList<>(plan.find(actSearch));
       final var otherActs = new java.util.LinkedList<>(plan.find(otherActSearch));
 
-      List<Range<Time>> rangesActs = acts.stream().map(a -> new Range<Time>(a.getStartTime(), a.getEndTime())).collect(
+      List<Window> rangesActs = acts.stream().map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime())).collect(
           Collectors.toList());
-      TimeWindows twActs = TimeWindows.of(rangesActs);
-      List<Range<Time>> rangesOtherActs = otherActs
+      Windows twActs = new Windows(rangesActs);
+      List<Window> rangesOtherActs = otherActs
           .stream()
-          .map(a -> new Range<Time>(a.getStartTime(), a.getEndTime()))
+          .map(a -> Window.betweenClosedOpen(a.getStartTime(), a.getEndTime()))
           .collect(Collectors.toList());
-      TimeWindows twOtherActs = TimeWindows.of(rangesOtherActs);
+      Windows twOtherActs = new Windows(rangesOtherActs);
 
-      TimeWindows result = new TimeWindows(twActs);
-      result.intersection(twOtherActs);
+      Windows result = new Windows(twActs);
+      result.intersectWith(twOtherActs);
       //intersection with current window to be sure we are not analyzing intersections happenning outside
-      result.intersection(window);
-      violationWindows.union(result);
+      result.intersectWith(window);
+      violationWindows = Windows.union(violationWindows,result);
     }
     ConstraintState cState;
     if (!violationWindows.isEmpty()) {

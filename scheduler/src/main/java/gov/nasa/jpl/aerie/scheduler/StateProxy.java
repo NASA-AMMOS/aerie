@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import com.google.common.collect.RangeMap;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 /**
  * A state proxy is a state allowing to map values from another state (T) to a user-defined domain (X)
@@ -17,7 +18,7 @@ public class StateProxy<T extends Comparable<T>, X> implements QueriableState<X>
     this.proxyValues = proxyValues;
   }
 
-  public X lookup(Time time) {
+  public X lookup(Duration time) {
     T val = state.getValueAtTime(time);
     X proxy = proxyValues.get(val);
     if (proxy == null) {
@@ -28,7 +29,7 @@ public class StateProxy<T extends Comparable<T>, X> implements QueriableState<X>
 
 
   @Override
-  public X getValueAtTime(Time t) {
+  public X getValueAtTime(Duration t) {
     return lookup(t);
   }
 }

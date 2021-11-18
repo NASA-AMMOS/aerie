@@ -1,15 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler.aerie;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.ExternalState;
-import gov.nasa.jpl.aerie.scheduler.Range;
-import gov.nasa.jpl.aerie.scheduler.Time;
-import gov.nasa.jpl.aerie.scheduler.TimeWindows;
 import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function2;
 import kotlin.jvm.functions.Function3;
 
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -25,10 +24,10 @@ public class AerieState<T extends Comparable<T>> implements ExternalState<T> {
   /**
    * A map from times to state values. An entry `(t=v)` means that the state value changed to value `v` at time `t`.
    */
-  private NavigableMap<Time, T> values;
+  private NavigableMap<Duration, T> values;
 
   @SuppressWarnings("unchecked")
-  public void updateFromSimulation(Map<Time, Object> simValues) {
+  public void updateFromSimulation(Map<Duration, Object> simValues) {
     values = new TreeMap<>(simValues.entrySet().stream().collect(Collectors.toMap(
         Map.Entry::getKey,
         e -> (T) e.getValue()
@@ -40,8 +39,8 @@ public class AerieState<T extends Comparable<T>> implements ExternalState<T> {
     throw new IllegalStateException("Directly instantiated AerieState does not know its type");
   }
 
-  public T getValueAtTime(Time t) {
-    Map.Entry<Time, T> entry = values.floorEntry(t);
+  public T getValueAtTime(Duration t) {
+    Map.Entry<Duration, T> entry = values.floorEntry(t);
     if (entry == null) {
       return null;
     }
@@ -51,22 +50,21 @@ public class AerieState<T extends Comparable<T>> implements ExternalState<T> {
   /**
    * Helper to calculate the time windows in which a value matches some arbitrary predicate.
    */
-  private TimeWindows whenValueIs(TimeWindows windows, Predicate<T> pred) {
-    final TimeWindows returnWindows = new TimeWindows();
+  private Windows whenValueIs(Windows windows, Predicate<T> pred) {
+    final Windows returnWindows = new Windows();
 
-    final Collection<Range<Time>> windowsR = windows.getRangeSet();
-    for (final Map.Entry<Time, T> entry : values.entrySet()) {
+    for (final Map.Entry<Duration, T> entry : values.entrySet()) {
       if (pred.test(entry.getValue())) {
-        final Time start = entry.getKey();
-        Time end = values.higherKey(start);
+        final Duration start = entry.getKey();
+        Duration end = values.higherKey(start);
         if (end == null) {
-          end = windows.getMaximum();
+          end = windows.maxTimePoint().get();
         }
-        final Range<Time> stateRange = new Range<>(start, end);
-        for (final Range<Time> range : windowsR) {
-          final Range<Time> inter = range.intersect(stateRange);
+        final Window stateRange = Window.between(start, Window.Inclusivity.Inclusive, end, Window.Inclusivity.Exclusive);
+        for (var range : windows) {
+          final Window inter = Window.intersect(range,stateRange);
           if (inter != null) {
-            returnWindows.union(inter);
+            returnWindows.add(inter);
           }
         }
       }
@@ -74,34 +72,34 @@ public class AerieState<T extends Comparable<T>> implements ExternalState<T> {
     return returnWindows;
   }
 
-  public TimeWindows whenValueBetween(T inf, T sup, TimeWindows windows) {
+  public Windows whenValueBetween(T inf, T sup, Windows windows) {
     return whenValueIs(windows, v -> v.compareTo(inf) >= 0 && v.compareTo(sup) <= 0);
   }
 
-  public TimeWindows whenValueBelow(T val, TimeWindows windows) {
+  public Windows whenValueBelow(T val, Windows windows) {
     return whenValueIs(windows, v -> v.compareTo(val) < 0);
   }
 
-  public TimeWindows whenValueAbove(T val, TimeWindows windows) {
+  public Windows whenValueAbove(T val, Windows windows) {
     return whenValueIs(windows, v -> v.compareTo(val) > 0);
   }
 
-  public TimeWindows whenValueEqual(T val, TimeWindows windows) {
+  public Windows whenValueEqual(T val, Windows windows) {
     return whenValueIs(windows, v -> v.compareTo(val) == 0);
   }
 
-  public TimeWindows whenValueNotEqual(T val, TimeWindows windows) {
+  public Windows whenValueNotEqual(T val, Windows windows) {
     return whenValueIs(windows, v -> v.compareTo(val) != 0);
   }
 
 
-  public Map<Range<Time>, T> getTimeline(TimeWindows timeDomain) {
-    final Map<Range<Time>, T> returnMap = new TreeMap<>();
-    Time start = null;
+  public Map<Window, T> getTimeline(Windows timeDomain) {
+    final Map<Window, T> returnMap = new TreeMap<>();
+    Duration start = null;
     T value = null;
-    for (Map.Entry<Time, T> entry : values.entrySet()) {
+    for (Map.Entry<Duration, T> entry : values.entrySet()) {
       if (start != null && value != null) {
-        returnMap.put(new Range<>(start, entry.getKey()), value);
+        returnMap.put(Window.betweenClosedOpen(start, entry.getKey()), value);
       }
       start = entry.getKey();
       value = entry.getValue();
@@ -113,13 +111,13 @@ public class AerieState<T extends Comparable<T>> implements ExternalState<T> {
       List<AerieState<?>> inputStates,
       Function<List<? extends Comparable<?>>, T> mapFunc)
   {
-    final NavigableSet<Time> keys = new TreeSet<>();
+    final NavigableSet<Duration> keys = new TreeSet<>();
     for (final AerieState<?> aerieState : inputStates) {
       keys.addAll(aerieState.values.keySet());
     }
 
-    final NavigableMap<Time, T> returnValues = new TreeMap<>();
-    for (final Time t : keys) {
+    final NavigableMap<Duration, T> returnValues = new TreeMap<>();
+    for (final Duration t : keys) {
       final List<? extends Comparable<?>> inputs = inputStates.stream()
                                                               .map(s -> s.values.floorEntry(t))
                                                               .filter(Objects::nonNull)

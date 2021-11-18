@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 /**
  * serializes output for use in an aspen mdl/ini file set
  */
@@ -54,10 +56,10 @@ public class AspenINIWriter {
     }
 
     for (final var act : plan.getActivitiesByTime()) {
-      final var dur = act.getDuration() == null ? Duration.ofSeconds(1) : act.getDuration();
+      final var dur = act.getDuration() == null ? Duration.of(1, Duration.SECONDS) : act.getDuration();
       ini.println(act.getType().getName() + " " + act.getName().replace('-', '_') + " {");
       ini.println("  start_time = " + act.getStartTime().toString() + ";");
-      ini.println("  duration = " + dur.toMilliseconds() / 1000 + ";");
+      ini.println("  duration = " + dur.in(Duration.MILLISECOND) / 1000 + ";");
       ini.println("};");
     }
 

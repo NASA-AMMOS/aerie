@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.scheduler.aerie;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import gov.nasa.jpl.aerie.scheduler.Duration;
-import gov.nasa.jpl.aerie.scheduler.aerie.SimulateQuery;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.Time;
 
 import java.lang.reflect.Field;
@@ -18,10 +18,10 @@ public class MissionModelStateHierarchy {
             .registerTypeAdapter(Duration.class, new DurationTypeAdapter())
             .create();
 
-    public void updateFromSimulation(List<SimulateQuery.Result> simResults) throws RuntimeException {
+    public void updateFromSimulation(List<SimulateQuery.Result> simResults, PlanningHorizon ph) throws RuntimeException {
         final Class<?> rootClass = this.getClass();
         for (final SimulateQuery.Result result : simResults) {
-            final Time startTime = Time.fromString(result.start());
+            final Duration startTime = Time.fromString(result.start(), ph);
             final String[] path = result.name().substring(1).split("/");
             Class<?> currClass = rootClass;
             Object currObj = this;
@@ -42,9 +42,9 @@ public class MissionModelStateHierarchy {
             if (currObj instanceof AerieState) {
                 final AerieState<?> aerieState = (AerieState<?>) currObj;
                 final Type type = aerieState.getType();
-                final Map<Time, Object> map = new TreeMap<>();
+                final Map<Duration, Object> map = new TreeMap<>();
                 for (final SimulateQuery.Value value : result.values()) {
-                    final Time time = startTime.plus(Duration.ofMicroseconds((long) value.x()));
+                    final Duration time = startTime.plus(Duration.duration((long) value.x(), Duration.MICROSECOND));
                     Object val = gson.fromJson(gson.toJson(value.y()), type);
                     map.put(time, val);
                 }

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +28,7 @@ public class StateConstraintExpressionEqualSet extends StateConstraintExpression
 
 
   @Override
-  public TimeWindows findWindows(Plan plan, TimeWindows windows) {
+  public Windows findWindows(Plan plan, Windows windows) {
     return sced.findWindows(plan, windows);
   }
 }

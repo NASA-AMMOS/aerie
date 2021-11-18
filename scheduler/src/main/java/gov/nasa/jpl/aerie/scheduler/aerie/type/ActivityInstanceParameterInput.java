@@ -48,7 +48,7 @@ public final class ActivityInstanceParameterInput implements InputType {
       public void marshal(InputFieldWriter writer) throws IOException {
         writer.writeString("name", name);
         if (value.defined) {
-          writer.writeCustom("value", gov.nasa.jpl.aerie.scheduler.aerie.type.CustomType.ACTIVITYINSTANCEPARAMETERVALUE, value.value != null ? value.value : null);
+          writer.writeCustom("value", CustomType.ACTIVITYINSTANCEPARAMETERVALUE, value.value != null ? value.value : null);
         }
       }
     };

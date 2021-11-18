@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -7,7 +10,7 @@ import java.util.Set;
 public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
   private int max;
-  private Range<Time> interval;
+  private Window interval;
   private ActivityType type;
   private ActivityInstance instance;
 
@@ -20,7 +23,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
     private int max = -1;
     private ActivityType type;
-    private Range<Time> interval;
+    private Window interval;
     private ActivityInstance instance;
 
     public Builder type(ActivityType type) {
@@ -34,7 +37,7 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
     }
 
 
-    public Builder inInterval(Range<Time> interval) {
+    public Builder inInterval(Window interval) {
       this.interval = interval;
       return getThis();
     }
@@ -103,18 +106,18 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
 
 
   //Non-incremental checking
-  public ConstraintState isEnforced(Plan plan, TimeWindows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows) {
 
     int nbAct = 0;
-    TimeWindows evalSet = new TimeWindows(windows);
-    evalSet.intersection(this.interval);
+    Windows evalSet = new Windows(windows);
+    evalSet.intersectWith(this.interval);
 
     //to avoid recounting twice the same activities in case they span over multiples windows
     Set<ActivityInstance> allActs = new HashSet<ActivityInstance>();
 
-    TimeWindows violationWindows = new TimeWindows();
+    Windows violationWindows = new Windows();
 
-    for (var window : evalSet.getRangeSet()) {
+    for (var window : evalSet) {
 
       var actSearch = new ActivityExpression.Builder()
           .ofType(this.type).startsOrEndsIn(window).build();
@@ -138,18 +141,18 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   }
 
 
-  public Collection<ActivityInstance> getAllActs(Plan plan, TimeWindows windows) {
+  public Collection<ActivityInstance> getAllActs(Plan plan, Windows windows) {
 
     int nbAct = 0;
-    TimeWindows evalSet = new TimeWindows(windows);
-    evalSet.intersection(this.interval);
+    Windows evalSet = new Windows(windows);
+    evalSet.intersectWith(this.interval);
 
     //to avoid recounting twice the same activities in case they span over multiples windows
     Set<ActivityInstance> allActs = new HashSet<ActivityInstance>();
 
-    TimeWindows violationWindows = new TimeWindows();
+    Windows violationWindows = new Windows();
 
-    for (var window : evalSet.getRangeSet()) {
+    for (var window : evalSet) {
 
       var actSearch = new ActivityExpression.Builder()
           .ofType(this.type).startsOrEndsIn(window).build();
@@ -166,15 +169,15 @@ public class CardinalityConstraint extends GlobalConstraintWithIntrospection {
   }
 
   @Override
-  public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
-    TimeWindows intersect = new TimeWindows(windows);
-    intersect.intersection(this.interval);
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
+    Windows intersect = new Windows(windows);
+    intersect.intersectWith(this.interval);
     if (!intersect.isEmpty()) {
       final var allActs = getAllActs(plan, intersect);
       if (allActs.size() < max) {
         return windows;
       } else {
-        windows.substraction(intersect);
+        windows.subtractAll(intersect);
         return windows;
       }
     } else {

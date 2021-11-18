@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -442,7 +445,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     //start from the time window where the missing activity causes a problem
     //NB: these are start windows
-    var possibleWindows = new TimeWindows(missing.getTemporalContext());
+    var possibleWindows = new Windows(missing.getTemporalContext());
 
     //prune based on constraints on goal and activity type (mutex, state,
     //event, etc)
@@ -469,9 +472,9 @@ private void satisfyOptionGoal(OptionGoal goal) {
       //TODO: placeholder for now to avoid mutex fall through
       throw new IllegalArgumentException("request to create activities for conflict of unrecognized type");
     }
-    narrowByStateConstraints(possibleWindows, stateConstraints);
+    possibleWindows = narrowByStateConstraints(possibleWindows, stateConstraints);
 
-    narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getMissionModel().getGlobalConstraints());
+    possibleWindows = narrowGlobalConstraints(plan, missing, possibleWindows, this.problem.getMissionModel().getGlobalConstraints());
 
     //narrow to windows where activity duration will fit
     final var startWindows = possibleWindows;
@@ -497,13 +500,13 @@ private void satisfyOptionGoal(OptionGoal goal) {
         final var missingTemplate = (MissingActivityTemplateConflict) missing;
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
-        final var startT = startWindows.getMaximum();
+        final var startT = startWindows.maxTimePoint();
 
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
         final var template = missingTemplate.getGoal().getActTemplate();
         final var completeTemplate = new ActivityCreationTemplate.Builder()
-            .basedOn(template).startsIn(new Range<>(startT, startT)).build();
+            .basedOn(template).startsIn(Window.between(startT.get(), startT.get())).build();
         final var act = completeTemplate.createActivity(
             goal.getName() + "_" + java.util.UUID.randomUUID());
         if (act != null) {
@@ -523,7 +526,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
     return newActs;
   }
 
-  private List<ActivityInstance> processConflict(MissingActivityInstanceConflict c, TimeWindows startWindows) {
+  private List<ActivityInstance> processConflict(MissingActivityInstanceConflict c, Windows startWindows) {
     List<ActivityInstance> instances = new ArrayList<ActivityInstance>();
     //FINISH: clean this up code dupl re windows etc
     final var act = c.getInstance();
@@ -534,29 +537,30 @@ private void satisfyOptionGoal(OptionGoal goal) {
   }
 
 
-  private List<ActivityInstance> processConflict(MissingActivityTemplateConflict c, TimeWindows startWindows) {
+  private List<ActivityInstance> processConflict(MissingActivityTemplateConflict c, Windows startWindows) {
     List<ActivityInstance> instances = new ArrayList<ActivityInstance>();
 
     //select the "best" time among the possibilities, and latest among ties
     //REVIEW: currently not handling preferences / ranked windows
-    final var startT = startWindows.getMaximum();
+    final var startT = startWindows.maxTimePoint();
+    if(startT.isPresent()) {
 
-    //create the new activity instance (but don't place in schedule)
-    //REVIEW: not yet handling multiple activities at a time
-    final var act = c.getGoal().createActivity();
-    if (act != null) {
-      act.setStartTime(startT);
-      instances.add(act);
+      //create the new activity instance (but don't place in schedule)
+      //REVIEW: not yet handling multiple activities at a time
+      final var act = c.getGoal().createActivity();
+      if (act != null) {
+        act.setStartTime(startT.get());
+        instances.add(act);
 
-      //create a matching "window" for the activity
-      //REVIEW: won't need windows for all activities; how to tell?
-      //REVIEW: what if windows for multiple conflict instances overlap?
-      //REVIEW: should this be full windows or just start windows?
-      final var windows = createWindows(act, startWindows);
-      instances.addAll(windows);
-    }//if(act)
+        //create a matching "window" for the activity
+        //REVIEW: won't need windows for all activities; how to tell?
+        //REVIEW: what if windows for multiple conflict instances overlap?
+        //REVIEW: should this be full windows or just start windows?
+        final var windows = createWindows(act, startWindows);
+        instances.addAll(windows);
+      }//if(act)
+    }
     return instances;
-
   }
 
 
@@ -574,7 +578,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
    */
   private Collection<ActivityInstance> createWindows(
       ActivityInstance notionalAct,
-      TimeWindows startWindows
+      Windows startWindows
   )
   {
     assert notionalAct != null;
@@ -588,7 +592,7 @@ private void satisfyOptionGoal(OptionGoal goal) {
 
     //create an indexed window act for each of the possible time ranges
     int windowIdx = 0;
-    for (final var startRange : startWindows.getRangeSet()) {
+    for (final var startRange : startWindows) {
 
       //base window act name on notional act name and index
       //REVIEW: windows should be able to exist absent a notional act
@@ -596,8 +600,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
       final var windowAct = new ActivityInstance(windowName, windowActType);
 
       //align window with span of valid start times
-      windowAct.setStartTime(startRange.getMinimum());
-      windowAct.setDuration(startRange.getMaximum().minus(startRange.getMinimum()));
+      windowAct.setStartTime(startRange.start);
+      windowAct.setDuration(startRange.duration());
 
       newActs.add(windowAct);
       windowIdx += 1;
@@ -621,45 +625,43 @@ private void satisfyOptionGoal(OptionGoal goal) {
    * @param constraints IN the constraints to use to narrow the windows,
    *     may be empty (but not null)
    */
-  private void narrowByStateConstraints(
-      TimeWindows windows, Collection<StateConstraintExpression> constraints)
+  private Windows narrowByStateConstraints(
+      Windows windows, Collection<StateConstraintExpression> constraints)
   {
     assert windows != null;
     assert constraints != null;
-
+    Windows ret = new Windows(windows);
     //short circuit on already empty windows or no constraints: no work to do!
     if (windows.isEmpty() || constraints.isEmpty()) {
-      return;
+      return ret;
     }
 
     //REVIEW: could be some optimization in constraint ordering
 
     //iteratively narrow the windows from each constraint
     for (final var constraint : constraints) {
-      final var narrowedWindows = constraint.findWindows(plan, windows);
-      assert narrowedWindows != null;
-      windows.swap(narrowedWindows);
-
+      ret = constraint.findWindows(plan, ret);
+      assert ret != null;
       //short-circuit if no possible windows left
       if (windows.isEmpty()) {
         break;
       }
     }
-
+  return ret;
   }
 
-  private void narrowGlobalConstraints(
+  private Windows narrowGlobalConstraints(
       Plan plan,
       MissingActivityConflict mac,
-      TimeWindows windows,
-      Collection<GlobalConstraint> constraints)
-  {
+      Windows windows,
+      Collection<GlobalConstraint> constraints) {
+    Windows tmp = new Windows(windows);
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof BinaryMutexConstraint) {
-        ((BinaryMutexConstraint) gc).findWindows(plan, windows, mac);
+        tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac);
       }
     }
-
+  return tmp;
   }
 
   public void printEvaluation() {

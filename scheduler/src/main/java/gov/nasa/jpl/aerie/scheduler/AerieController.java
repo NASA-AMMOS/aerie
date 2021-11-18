@@ -1,11 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import java.awt.GridLayout;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -30,7 +35,7 @@ public class AerieController {
   //TODO: populate these with answers from AERIE
   private final Map<Plan, String> planIds;
   private final Map<Plan, Map<String, AerieStateCache>> stateCaches;
-  private final Map<Plan, Time> planStartTimes;
+  private final Map<Plan, Duration> planStartTimes;
 
 
   private Map<Plan, Map<String, Class<?>>> stateTypes;
@@ -39,6 +44,7 @@ public class AerieController {
   private final String AMMOS_MISSION_MODEL_ID;
   private final String distantAerieURL;
   private final String plan_prefix;
+  private final PlanningHorizon planningHorizon;
 
   //AUTHENTICATION
   private boolean authenticationRequired = false;
@@ -48,29 +54,30 @@ public class AerieController {
   private boolean isSessionAlive = true;
 
 
-  public AerieController(String distantAerieURL, String missionModelId, boolean authenticationRequired) {
-    this(distantAerieURL, missionModelId);
+  public AerieController(String distantAerieURL, String missionModelId, boolean authenticationRequired, PlanningHorizon planningHorizon) {
+    this(distantAerieURL, missionModelId,planningHorizon);
     this.authenticationRequired = authenticationRequired;
   }
 
-  public AerieController(String distantAerieURL, String missionModelId) {
-    this(distantAerieURL, missionModelId, "");
+  public AerieController(String distantAerieURL, String missionModelId, PlanningHorizon planningHorizon) {
+    this(distantAerieURL, missionModelId, "", planningHorizon);
   }
 
-  public AerieController(String distantAerieURL, String missionModelId, String planPrefix) {
+  public AerieController(String distantAerieURL, String missionModelId, String planPrefix, PlanningHorizon planningHorizon) {
     this.distantAerieURL = distantAerieURL;
     this.AMMOS_MISSION_MODEL_ID = missionModelId;
     planIds = new HashMap<Plan, String>();
     stateCaches = new HashMap<Plan, Map<String, AerieStateCache>>();
     stateTypes = new HashMap<Plan, Map<String, Class<?>>>();
     activityInstancesIds = new HashMap<ActivityInstance, String>();
-    planStartTimes = new HashMap<Plan, Time>();
+    planStartTimes = new HashMap<Plan, Duration>();
     plan_prefix = planPrefix;
+    this.planningHorizon = planningHorizon;
   }
 
 
-  public Time fromAerieTime(String aerieTime) {
-    return Time.fromString(aerieTime.substring(0, aerieTime.length() - 3));
+  public Duration fromAerieTime(String aerieTime) {
+    return Time.fromString(aerieTime.substring(0, aerieTime.length() - 3), planningHorizon);
   }
 
   private String getActivityInstanceId(ActivityInstance act) {
@@ -230,7 +237,7 @@ public class AerieController {
     return ret;
   }
 
-  public boolean initEmptyPlan(Plan plan, Time horizonBegin, Time horizonEnd, Map<String, AerieStateCache> cache) {
+  public boolean initEmptyPlan(Plan plan, Duration horizonBegin, Duration horizonEnd, Map<String, AerieStateCache> cache) {
     boolean ret = true;
 
     CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
@@ -246,7 +253,7 @@ public class AerieController {
   }
 
 
-  public boolean sendPlan(Plan plan, Time horizonBegin, Time horizonEnd, Map<String, AerieStateCache> cache) {
+  public boolean sendPlan(Plan plan, Duration horizonBegin, Duration horizonEnd, Map<String, AerieStateCache> cache) {
     boolean ret = true;
     CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
     boolean result = postRequest(planRequest);
@@ -275,13 +282,13 @@ public class AerieController {
 
   }
 
-  public Object getDoubleValue(Plan plan, String nameState, Time t) {
+  public Object getDoubleValue(Plan plan, String nameState, Duration t) {
     if (this.planIds.get(plan) != null) {
       var statesCache = this.stateCaches.get(plan);
       var statesTypes = this.stateTypes.get(plan);
       var stateCache = statesCache.get(nameState);
 
-      Time startPlan = planStartTimes.get(plan);
+      Duration startPlan = planStartTimes.get(plan);
 
       if (stateCache == null) {
         simulatePlan(plan, t.minus(startPlan));
@@ -310,11 +317,11 @@ public class AerieController {
     return null;
   }
 
-  public Object getStringValue(Plan plan, String nameState, Time t) {
+  public Object getStringValue(Plan plan, String nameState, Duration t) {
     return "";
   }
 
-  public Object getIntegerValue(Plan plan, String nameState, Time t) {
+  public Object getIntegerValue(Plan plan, String nameState, Duration t) {
     return 0;
   }
 
@@ -563,12 +570,12 @@ public class AerieController {
   }
 
   protected class CreatePlanRequest extends GraphRequest {
-    Time horizonBegin;
-    Time horizonEnd;
+    Duration horizonBegin;
+    Duration horizonEnd;
     Plan plan;
     Map<String, AerieStateCache> cache;
 
-    public CreatePlanRequest(Plan plan, Time horizonBegin, Time horizonEnd, Map<String, AerieStateCache> cache) {
+    public CreatePlanRequest(Plan plan, Duration horizonBegin, Duration horizonEnd, Map<String, AerieStateCache> cache) {
       this.horizonBegin = horizonBegin;
       this.horizonEnd = horizonEnd;
       this.plan = plan;
@@ -623,13 +630,13 @@ public class AerieController {
         return "\"" + ((Time) param).toString() + "\"";
       } else if (param instanceof StateQueryParam) {
         StateQueryParam sqParam = (StateQueryParam) param;
-        Range<Time> time = sqParam.timeExpr.computeTime(
+        gov.nasa.jpl.aerie.constraints.time.Window time = sqParam.timeExpr.computeTime(
             plan,
-            new Range<Time>(
+            gov.nasa.jpl.aerie.constraints.time.Window.between(
                 instance.getStartTime(),
                 instance.getEndTime()));
         assert (time.isSingleton());
-        return getGraphlqlVersionOfParameter(sqParam.state.getValueAtTime(time.getMinimum()));
+        return getGraphlqlVersionOfParameter(sqParam.state.getValueAtTime(time.start));
       } else {
         throw new RuntimeException("Unsupported parameter type");
       }
@@ -653,7 +660,7 @@ public class AerieController {
 
 
       if (instance.getDuration() != null && !(instance.getType().getName().equals("SimulateAllFakedStates"))) {
-        sbParams.append("{ name : \"duration_sec\", value :" + ((int) instance.getDuration().toSeconds()) + "},");
+        sbParams.append("{ name : \"duration_sec\", value :" + ((int) instance.getDuration().in(Duration.SECONDS)) + "},");
         atLeastOne = true;
       }
       for (Map.Entry<String, Object> entry : instance.getParameters().entrySet()) {
@@ -721,7 +728,7 @@ public class AerieController {
       sbPlanRequest.append("query { simulate(planId :\"");
       sbPlanRequest.append(getPlanId(plan));
       sbPlanRequest.append("\", samplingPeriod :");
-      sbPlanRequest.append(samplingPeriod.toMilliseconds() * 1000);
+      sbPlanRequest.append(samplingPeriod.in(Duration.SECONDS));
       sbPlanRequest.append("){ message success results { name start values {x y}}}}");
       return sbPlanRequest.toString();
     }
@@ -750,11 +757,11 @@ public class AerieController {
           map = valueCache.get(name);
         }
 
-        Time startSim = fromAerieTime(stateNameValues.getString("start"));
+        Duration startSim = fromAerieTime(stateNameValues.getString("start"));
         JSONArray values = stateNameValues.getJSONArray("values");
         for (int j = 0; j < values.length(); j++) {
           JSONObject xy = values.getJSONObject(j);
-          Duration elapsed = Duration.ofSeconds((xy.getLong("x") / 1000000));
+          Duration elapsed = Duration.of((xy.getLong("x") / 1000000), Duration.SECONDS );
           Object value = xy.get("y");
           if (Double.class.equals(stateTypes.get(plan).get(name))) {
             value = xy.getDouble("y");

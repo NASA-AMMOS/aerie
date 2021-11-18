@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * Above state constraint
  *
@@ -10,7 +12,7 @@ public class StateConstraintBelow<T extends Comparable<T>> extends StateConstrai
   protected StateConstraintBelow() {
     cache = new ValidityCache() {
       @Override
-      public TimeWindows fetchValue(Plan plan, TimeWindows intervals) {
+      public Windows fetchValue(Plan plan, Windows intervals) {
         return findWindowsPart(plan, intervals);
       }
     };
@@ -23,8 +25,8 @@ public class StateConstraintBelow<T extends Comparable<T>> extends StateConstrai
    * @param windows IN set of time ranges in which search is performed
    * @return a set of time ranges in which the constraint is satisfied
    */
-  public TimeWindows findWindowsPart(Plan plan, TimeWindows windows) {
-    TimeWindows wins = this.state.whenValueBelow(this.valueDefinition.get(0), windows);
+  public Windows findWindowsPart(Plan plan, Windows windows) {
+    Windows wins = this.state.whenValueBelow(this.valueDefinition.get(0), windows);
     return wins;
   }
 

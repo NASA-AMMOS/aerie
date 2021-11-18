@@ -1,17 +1,19 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+
 import java.util.function.Function;
 
 public class FilterUserFunctional extends FilterFunctional {
 
-  Function<Range<Time>, Boolean> function;
+  Function<Window, Boolean> function;
 
-  public FilterUserFunctional(Function<Range<Time>, Boolean> function) {
+  public FilterUserFunctional(Function<Window, Boolean> function) {
     this.function = function;
   }
 
   @Override
-  public boolean shouldKeep(Plan plan, Range<Time> range) {
+  public boolean shouldKeep(Plan plan, Window range) {
     return function.apply(range);
   }
 }

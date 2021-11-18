@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.function.Function;
 
 //directory class from which the user can create filters
@@ -90,7 +93,7 @@ public class Filters {
 
   }
 
-  public static TimeWindowsFilter functionalFilter(Function<Range<Time>, Boolean> function) {
+  public static TimeWindowsFilter functionalFilter(Function<Window, Boolean> function) {
     return new FilterUserFunctional(function);
   }
 

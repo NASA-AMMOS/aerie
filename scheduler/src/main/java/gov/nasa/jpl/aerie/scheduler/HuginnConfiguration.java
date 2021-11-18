@@ -25,13 +25,11 @@ public class HuginnConfiguration {
   /**
    * span of time over which the scheduler should run
    */
-  private Range<Time> horizon = new Range<>(
-      Time.fromString("2025-001T00:00:00.000"),
-      Time.fromString("2034-001T00:00:00.000"));
+  private PlanningHorizon horizon = new PlanningHorizon(Time.fromString("2025-001T00:00:00.000"),
+                                                        Time.fromString("2034-001T00:00:00.000"));
+  public PlanningHorizon getHorizon() { return horizon; }
 
-  public Range<Time> getHorizon() { return horizon; }
-
-  public void setHorizon(Range<Time> h) { horizon = h; }
+  public void setHorizon(PlanningHorizon h) { horizon = h; }
 
   /**
    * leading filename stem used to create and distinguish various output files
