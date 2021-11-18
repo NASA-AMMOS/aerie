@@ -1,7 +1,14 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
-import java.util.*;
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 public abstract class ValidityCache {
 
@@ -11,15 +18,15 @@ public abstract class ValidityCache {
     UNKNOWN
   }
 
-  private TreeMap<Range<Time>, Validity> cache;
+  private TreeMap<Window, Validity> cache;
 
 
   public ValidityCache() {
-    cache = new TreeMap<Range<Time>, Validity>();
-    cache.put(new Range<Time>(Time.ofZero(), Time.ofMax()), Validity.UNKNOWN);
+    cache = new TreeMap<Window, Validity>();
+    cache.put(Window.between(Duration.ZERO, Duration.MAX_VALUE), Validity.UNKNOWN);
   }
 
-  public void put(Range<Time> range, Validity val) {
+  public void put(Window range, Validity val) {
     if (range.isSingleton()) {
       throw new RuntimeException();
     }
@@ -27,53 +34,53 @@ public abstract class ValidityCache {
   }
 
 
-  public TimeWindows findWindowsCache(Plan plan, TimeWindows windows) {
+  public Windows findWindowsCache(Plan plan, Windows windows) {
 
 
-    TimeWindows returnWin = new TimeWindows();
+    Windows returnWin = new Windows();
     boolean reset = false;
-    Range<Time> window = null;
+    Window window = null;
     //for each input window
-    var it = windows.getRangeSet().iterator();
+    var it = windows.iterator();
     while (it.hasNext()) {
       window = it.next();
       //for each entry in the cache
-      Iterator<Map.Entry<Range<Time>, Validity>> itCache = cache.entrySet().iterator();
-      var toAdd = new HashMap<Range<Time>, Validity>();
+      Iterator<Map.Entry<Window, Validity>> itCache = cache.entrySet().iterator();
+      var toAdd = new HashMap<Window, Validity>();
       while (itCache.hasNext()) {
         var entry = itCache.next();
-        Range<Time> cacheInter = entry.getKey();
+        Window cacheInter = entry.getKey();
 
         //if entry in cache is after the window, we can break
-        if (cacheInter.isAfter(window)) {
+        if (cacheInter.isStrictlyAfter(window)) {
           break;
         }
 
         //if entry is strictly before we can continue
-        if (cacheInter.isBefore(window)) {
+        if (cacheInter.isStrictlyBefore(window)) {
           continue;
         }
 
         Validity val = entry.getValue();
-        var intersection = window.intersect(cacheInter);
-        if (intersection != null) {
+        var intersection = Window.intersect(window,cacheInter);
+        if (!intersection.isEmpty()) {
           if (val == Validity.TRUE) {
-            returnWin.union(intersection);
+            returnWin.add(intersection);
 
           } else if (val == Validity.UNKNOWN) {
             itCache.remove();
-            TimeWindows fetched = fetchValue(plan, TimeWindows.of(intersection));
-            List<Range<Time>> subtractions = cacheInter.subtract(intersection);
+            Windows fetched = fetchValue(plan, new Windows(intersection));
+            Windows subtractions = Windows.subtract(intersection, cacheInter);
             for (var sub : subtractions) {
               toAdd.put(sub, Validity.UNKNOWN);
             }
-            for (var fetchedWin : fetched.getRangeSet()) {
+            for (var fetchedWin : fetched) {
               toAdd.put(fetchedWin, Validity.TRUE);
-              returnWin.union(fetchedWin);
+              returnWin.add(fetchedWin);
             }
-            fetched.complement();
-            fetched.removeFirstLast();
-            for (var fetchedWin : fetched.getRangeSet()) {
+            fetched = fetched.complement();
+            fetched = fetched.removeFirstAndLast();
+            for (var fetchedWin : fetched) {
               toAdd.put(fetchedWin, Validity.FALSE);
             }
           }
@@ -86,7 +93,7 @@ public abstract class ValidityCache {
   }
 
   //how to get the value
-  public abstract TimeWindows fetchValue(Plan plan, TimeWindows intervals);
+  public abstract Windows fetchValue(Plan plan, Windows intervals);
 
 
 }

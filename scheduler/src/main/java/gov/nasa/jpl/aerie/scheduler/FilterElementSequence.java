@@ -1,7 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Filters elements in a sequence of windows
@@ -32,12 +37,14 @@ public class FilterElementSequence implements TimeWindowsFilter {
   }
 
   @Override
-  public TimeWindows filter(Plan plan, TimeWindows windows) {
-    List<Range<Time>> ret = new ArrayList<Range<Time>>();
+  public Windows filter(Plan plan, Windows windows) {
+    List<Window> ret = new ArrayList<>();
 
     if (!windows.isEmpty()) {
 
-      List<Range<Time>> ranges = windows.getRangeSet();
+      List<Window> ranges = StreamSupport
+          .stream(windows.spliterator(), false)
+          .collect(Collectors.toList());
       if (this.elementIndex >= 0 && this.elementIndex < ranges.size()) {
         ret.add(ranges.get(this.elementIndex));
       } else if (elementIndex < 0 && Math.abs(this.elementIndex) <= ranges.size()) {
@@ -45,6 +52,6 @@ public class FilterElementSequence implements TimeWindowsFilter {
       }
     }
 
-    return TimeWindows.of(ret, true);
+    return new Windows(ret);
   }
 }

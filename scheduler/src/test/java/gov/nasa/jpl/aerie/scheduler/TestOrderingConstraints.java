@@ -1,9 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 
 public class TestOrderingConstraints {
 
@@ -16,11 +18,27 @@ public class TestOrderingConstraints {
 
   private MissionModelWrapper missionModel;
   private Plan plan;
+  private HuginnConfiguration huginnConfiguration;
+  private static final PlanningHorizon h = new PlanningHorizon(new Time(0), new Time(15));
+
+  private final static Duration t0 = h.toDur(new Time(0));
+  private final static Duration t1 = h.toDur(new Time(1));
+  private final static Duration t2 = h.toDur(new Time(2));
+  private final static Duration t3 = h.toDur(new Time(3));
+  private final static Duration t4 = h.toDur(new Time(4));
+  private final static Duration t5 = h.toDur(new Time(5));
+  private final static Duration t6 = h.toDur(new Time(6));
+  private final static Duration t7 = h.toDur(new Time(7));
+  private final static Duration t8 = h.toDur(new Time(8));
+  private final static Duration t9 = h.toDur(new Time(9));
+  private final static Duration t10 = h.toDur(new Time(10));
 
   @BeforeEach
   public void setUp() {
     missionModel = new MissionModelWrapper();
     plan = new PlanInMemory(missionModel);
+    huginnConfiguration = new HuginnConfiguration();
+    huginnConfiguration.setHorizon(h);
   }
 
   @AfterEach
@@ -31,28 +49,29 @@ public class TestOrderingConstraints {
 
   @Test
   public void testCardinalityConstraint() {
+    PlanningHorizon h = huginnConfiguration.getHorizon();
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, new Time(1), new Duration(4));
-    ActivityInstance act2 = new ActivityInstance("act1type2", type2, new Time(3), new Duration(5));
+    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4, Duration.SECONDS));
+    ActivityInstance act2 = new ActivityInstance("act1type2", type2, t3, Duration.of(5, Duration.SECONDS));
 
     plan.add(act1);
     CardinalityConstraint cc =
-        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(new Range<Time>(
-            new Time(0),
-            new Time(10.))).build();
+        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
+            t0,
+            t10)).build();
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = cc.isEnforced(plan, TimeWindows.of(new Range<Time>(new Time(0), new Time(10.))));
+    ConstraintState cs = cc.isEnforced(plan, new Windows(Window.between(t0, h.toDur(new Time(10.)))));
     assert (cs.isViolation);
     CardinalityConstraint cc2 =
-        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(new Range<Time>(
-            new Time(0),
-            new Time(10.))).build();
+        new CardinalityConstraint.Builder().atMost(0).type(type1).inInterval(Window.between(
+            t0,
+                    t10)).build();
 
     //constraint is valid in interval (8,10)
-    ConstraintState cs2 = cc2.isEnforced(plan, TimeWindows.of(new Range<Time>(new Time(8), new Time(10.))));
+    ConstraintState cs2 = cc2.isEnforced(plan, new Windows(Window.between(t8, t10)));
     assert (!cs2.isViolation);
   }
 
@@ -62,49 +81,51 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, new Time(1), new Duration(4));
-    ActivityInstance act2 = new ActivityInstance("act1type2", type2, new Time(3), new Duration(5));
+    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4, Duration.SECONDS));
+    ActivityInstance act2 = new ActivityInstance("act1type2", type2, t3, Duration.of(5, Duration.SECONDS));
 
     plan.add(act1);
     plan.add(act2);
     BinaryMutexConstraint mc = OrderingConstraint.buildMutexConstraint(type1, type2);
 
     //constraint is invalid in interval (0,10)
-    ConstraintState cs = mc.isEnforced(plan, TimeWindows.of(new Range<Time>(new Time(0), new Time(10.))));
+    ConstraintState cs = mc.isEnforced(plan, new Windows(Window.between(t0, t10)));
     assert (cs.isViolation);
-    assert (cs.violationWindows.equals(TimeWindows.of(new Range<>(new Time(3), new Time(5)))));
+    assert (cs.violationWindows.equals(new Windows(Window.betweenClosedOpen(t3, t5))));
 
     //constraint is valid in interval (8,10)
-    cs = mc.isEnforced(plan, TimeWindows.of(new Range<Time>(new Time(8), new Time(10.))));
+    cs = mc.isEnforced(plan, new Windows(Window.between(t8, t10)));
     assert (!cs.isViolation);
     assert (cs.violationWindows == null);
 
 
   }
 
-
+  /**
+   * Note: self mutex is not defined in effect
+   */
   @Test
   public void testMutexFindWindows() {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, new Time(1), new Duration(4));
-    ActivityInstance act2 = new ActivityInstance("act1type2", type2, new Time(3), new Duration(5));
+    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4,Duration.SECONDS));
+    ActivityInstance act2 = new ActivityInstance("act1type2", type2, t3, Duration.of(5, Duration.SECONDS));
 
     plan.add(act1);
     plan.add(act2);
     BinaryMutexConstraint mc = OrderingConstraint.buildMutexConstraint(type1, type2);
 
 
-    TimeWindows tw1 = TimeWindows.of(new Range<Time>(new Time(0), new Time(10.)));
+    Windows tw1 = new Windows(Window.between(t0, t10));
 
-    TimeWindows foundWindows = mc.findWindows(
+    var foundWindows = mc.findWindows(
         plan,
         tw1,
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act2));
 
-    TimeWindows expectedWindows = new TimeWindows(tw1);
-    expectedWindows.substraction(new Range<Time>(new Time(1), new Time(5)));
+    Windows expectedWindows = new Windows(tw1);
+    expectedWindows.subtract(Window.between(t1, Window.Inclusivity.Inclusive, t5, Window.Inclusivity.Exclusive));
     assert (foundWindows.equals(expectedWindows));
 
 
@@ -116,22 +137,22 @@ public class TestOrderingConstraints {
     ActivityType type1 = new ActivityType("Type1");
     ActivityType type2 = new ActivityType("Type2");
 
-    ActivityInstance act1 = new ActivityInstance("act1type1", type1, new Time(1), new Duration(4));
+    ActivityInstance act1 = new ActivityInstance("act1type1", type1, t1, Duration.of(4,Duration.SECONDS));
 
     plan.add(act1);
     CardinalityConstraint cc =
-        new CardinalityConstraint.Builder().atMost(1).type(type1).inInterval(new Range<Time>(
-            new Time(0),
-            new Time(10.))).build();
+        new CardinalityConstraint.Builder().atMost(1).type(type1).inInterval(Window.between(
+            t0,
+            t10)).build();
 
-    TimeWindows tw1 = TimeWindows.of(new Range<Time>(new Time(0), new Time(10.)));
+    Windows tw1 = new Windows(Window.between(t0, t10));
 
-    TimeWindows foundWindows = cc.findWindows(
+    Windows foundWindows = cc.findWindows(
         plan,
         tw1,
         new MissingActivityInstanceConflict(new ActivityExistentialGoal(), act1));
 
-    TimeWindows expectedWindows = new TimeWindows();
+    Windows expectedWindows = new Windows();
     assert (foundWindows.equals(expectedWindows));
 
 

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * Class similar to Conflict but for GlobalConstraints
  */
@@ -18,12 +20,12 @@ public class ConstraintState {
   /**
    * intervals during which the constraint is violated
    */
-  public TimeWindows violationWindows;
+  public Windows violationWindows;
 
   //readable explanation when possible
   public String cause;
 
-  public ConstraintState(GlobalConstraint constraint, boolean isViolation, TimeWindows violationWindows) {
+  public ConstraintState(GlobalConstraint constraint, boolean isViolation, Windows violationWindows) {
     this.isViolation = isViolation;
     this.violationWindows = violationWindows;
     this.constraint = constraint;

@@ -72,18 +72,6 @@ public class ActivityType {
     return activityConstraints;
   }
 
-  /**
-   * fetches the allowable durations for instances of this activity type
-   *
-   * returns null if the allowable durations are unbounded
-   *
-   * @return a range of allowable durations for instances adhering to this
-   *     activity type, or null if the duration is unbounded
-   */
-  public Range<Duration> getDurationRange() {
-    return null;
-  }
-
   public Map<String, Object> getParameters() {
     return parameters;
   }

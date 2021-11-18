@@ -1,6 +1,15 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.*;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 /**
  * a set of temporal intervals expressing a specific temporal domain
@@ -143,17 +152,6 @@ public class TimeWindows {
     return windows;
   }
 
-  public List<ActivityInstance> toWindowActInst(String prefix) {
-    List<ActivityInstance> list = new ArrayList<ActivityInstance>();
-    int i = 0;
-    var at = new ActivityType("Window");
-    for (var win : startToEnd.entrySet()) {
-      list.add(new ActivityInstance(prefix + i, at, win.getKey(), win.getValue().minus(win.getKey())));
-      i += 1;
-    }
-    return list;
-  }
-
   /**
    * creates a new set of just the single instant
    *
@@ -201,8 +199,8 @@ public class TimeWindows {
 
     //TODO: for now can only contract (not extend) since haven't implemented
     //window merging functionality yet
-    assert front.compareTo(Duration.ofZero()) >= 0;
-    assert back.compareTo(Duration.ofZero()) >= 0;
+    assert front.compareTo(Duration.ZERO) >= 0;
+    assert back.compareTo(Duration.ZERO) >= 0;
 
     final var oldStartToEnd = startToEnd;
     startToEnd = new TreeMap<>();
@@ -422,7 +420,7 @@ public class TimeWindows {
         //if intersection exists and is not single timepoint
         if (intersection != null) {
           if (!noInstant || (noInstant
-                             && intersection.getMaximum().minus(intersection.getMinimum()).compareTo(Duration.ofZero())
+                             && intersection.getMaximum().minus(intersection.getMinimum()).compareTo(Duration.ZERO)
                                 > 0)) {
             toInsert.add(intersection);
           }

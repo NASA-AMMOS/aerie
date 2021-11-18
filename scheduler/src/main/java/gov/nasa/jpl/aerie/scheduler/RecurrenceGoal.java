@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 /**
  * describes the desired recurrence of an activity every time period
  */
@@ -23,7 +27,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
      * @return this builder, ready for additional specification
      */
     public Builder repeatingEvery(Duration interval) {
-      this.every = new Range<>(interval, interval);
+      this.every = Window.at(interval);
       return getThis();
     }
 
@@ -41,12 +45,12 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
      *     activity instance must exist in order to satisfy the goal
      * @return this builder, ready for additional specification
      */
-    public Builder repeatingEvery(Range<Duration> intervalRange) {
+    public Builder repeatingEvery(Window intervalRange) {
       this.every = intervalRange;
       return getThis();
     }
 
-    protected Range<Duration> every;
+    protected Window every;
 
     /**
      * {@inheritDoc}
@@ -59,7 +63,6 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
      */
     @Override
     protected Builder getThis() { return this; }
-
     /**
      * populates the provided goal with specifiers from this builder and above
      *
@@ -108,8 +111,8 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
     //starting from the goal's own start time
     //REVIEW: some clever implementation with stream reduce / combine?
     final var actI = acts.iterator();
-    final var lastStartT = getTemporalContext().getMaximum();
-    var prevStartT = getTemporalContext().getMinimum();
+    final var lastStartT = getTemporalContext().end;
+    var prevStartT = getTemporalContext().start;
     while (actI.hasNext() && prevStartT.compareTo(lastStartT) < 0) {
       final var act = actI.next();
       final var actStartT = act.getStartTime();
@@ -117,7 +120,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       //check if the inter-activity gap is too large
       //REVIEW: should do any check based on min gap duration?
       final var strideDur = actStartT.minus(prevStartT);
-      if (strideDur.compareTo(recurrenceInterval.getMaximum()) > 0) {
+      if (strideDur.compareTo(recurrenceInterval.end) > 0) {
         //fill conflicts for all the missing activities in that long span
         conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
 
@@ -150,7 +153,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    *
    * REVIEW: need to work out semantics of min on recurrenceInterval
    */
-  protected Range<Duration> recurrenceInterval;
+  protected Window recurrenceInterval;
 
   /**
    * creates conflicts for missing activities in the provided span
@@ -163,18 +166,18 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * @param end IN the end time of the span to fill with conflicts
    */
   private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(
-      Time start, Time end)
+      Duration start, Duration end)
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
 
     //determine how much flexibility there is in creating activities
-    final var recurrenceFlexibility = recurrenceInterval.getMaximum().minus(
-        recurrenceInterval.getMinimum());
+    final var recurrenceFlexibility = recurrenceInterval.end.minus(
+        recurrenceInterval.start);
 
     //walk forward in time by full allowed stride lengths
-    for (var intervalT = start.plus(recurrenceInterval.getMaximum());
+    for (var intervalT = start.plus(recurrenceInterval.end);
          intervalT.compareTo(end) < 0;
-         intervalT = intervalT.plus(recurrenceInterval.getMaximum())
+         intervalT = intervalT.plus(recurrenceInterval.end)
     ) {
       //REVIEW: technically, could create activity at extremely short
       //        intervals (ie minT=0) and still satisfy the goal as currently
@@ -184,8 +187,8 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       final var minT = intervalT.minus(recurrenceFlexibility);
 
       conflicts.add(new MissingActivityTemplateConflict(
-          this, TimeWindows.of(
-          new Range<Time>(minT, intervalT))));
+          this, new Windows(
+          Window.between(minT, intervalT))));
     }
 
     return conflicts;

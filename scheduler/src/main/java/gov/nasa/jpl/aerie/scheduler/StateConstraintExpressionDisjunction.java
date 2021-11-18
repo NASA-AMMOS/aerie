@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,7 +20,7 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
     disjunction = new LinkedList<StateConstraintExpression>(constraints);
     cache = new ValidityCache() {
       @Override
-      public TimeWindows fetchValue(Plan plan, TimeWindows intervals) {
+      public Windows fetchValue(Plan plan, Windows intervals) {
         return findWindowsStates(plan, intervals);
       }
     };
@@ -31,11 +33,11 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
 
   private ValidityCache cache;
 
-  public TimeWindows findWindowsStates(Plan plan, TimeWindows windows) {
-    TimeWindows disjunctionTimeWindows = new TimeWindows();
+  public Windows findWindowsStates(Plan plan, Windows windows) {
+    Windows disjunctionTimeWindows = new Windows();
     for (StateConstraintExpression c : disjunction) {
-      TimeWindows tw = c.findWindows(plan, windows);
-      disjunctionTimeWindows.union(tw);
+      Windows tw = c.findWindows(plan, windows);
+      disjunctionTimeWindows.addAll(tw);
     }
 
     return disjunctionTimeWindows;
@@ -50,7 +52,7 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
    * @return the time ranges in which the disjunction of constraints is satisfied
    */
   @Override
-  public TimeWindows findWindows(Plan plan, TimeWindows windows) {
+  public Windows findWindows(Plan plan, Windows windows) {
     if (ACTIVATE_CACHE) {
       return cache.findWindowsCache(plan, windows);
     }

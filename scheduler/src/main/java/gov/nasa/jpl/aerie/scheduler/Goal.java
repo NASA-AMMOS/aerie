@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -80,12 +83,12 @@ public class Goal {
      * @param start IN the beginning of the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T startingAt(Time start) {
+    public T startingAt(Duration start) {
       this.starting = start;
       return getThis();
     }
 
-    protected Time starting;
+    protected Duration starting;
 
     /**
      * sets the end of the time interval over which the goal is relevant
@@ -98,12 +101,12 @@ public class Goal {
      * @param end IN the end of the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T endingAt(Time end) {
+    public T endingAt(Duration end) {
       this.ending = end;
       return getThis();
     }
 
-    protected Time ending;
+    protected Duration ending;
 
     /**
      * sets the contiguous time interval over which the goal is relevant
@@ -115,12 +118,12 @@ public class Goal {
      * @param range IN the time range that the goal is relevant
      * @return this builder, ready for additional specification
      */
-    public T forAllTimeIn(Range<Time> range) {
+    public T forAllTimeIn(Window range) {
       this.range = range;
       return getThis();
     }
 
-    protected Range<Time> range;
+    protected Window range;
 
 
     /**
@@ -207,7 +210,7 @@ public class Goal {
       if (range != null) {
         goal.temporalContext = range;
       } else {
-        goal.temporalContext = new Range<Time>(starting, ending);
+        goal.temporalContext = Window.between(starting, ending);
       }
 
       return goal;
@@ -252,7 +255,7 @@ public class Goal {
    *
    * @return the contiguous range of time over which the goal applies
    */
-  public Range<Time> getTemporalContext() { return temporalContext; }
+  public Window getTemporalContext() { return temporalContext; }
 
   /**
    * identifies issues in a plan that diminishes this goal's satisfaction
@@ -311,7 +314,7 @@ public class Goal {
   /**
    * the contiguous range of time over which the goal applies
    */
-  protected Range<Time> temporalContext;
+  protected Window temporalContext;
 
   /**
    * state constraints applying to the goal

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 /**
  * Interface to a generic state managed by another entity
  *
@@ -12,6 +14,6 @@ public interface QueriableState<T> {
    * @param t time
    * @return value
    */
-  T getValueAtTime(Time t);
+  T getValueAtTime(Duration t);
 
 }

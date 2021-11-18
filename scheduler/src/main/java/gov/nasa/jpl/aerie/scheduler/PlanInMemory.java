@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Collection;
 
 /**
@@ -153,7 +155,7 @@ public class PlanInMemory implements Plan {
   /**
    * container of all activity instances in plan, indexed by start time
    */
-  private java.util.TreeMap<Time, java.util.List<ActivityInstance>> actsByTime
+  private java.util.TreeMap<Duration, java.util.List<ActivityInstance>> actsByTime
       = new java.util.TreeMap<>();
 
   /**

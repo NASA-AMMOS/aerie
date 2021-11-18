@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Map;
 
 public class TimeExpressionFromExpr extends TimeExpression {
@@ -14,23 +17,19 @@ public class TimeExpressionFromExpr extends TimeExpression {
   }
 
   @Override
-  public Range<Time> computeTime(Plan plan, Range<Time> interval) {
-
-    Range<Time> rangeExpr = expression.computeTime(plan, interval);
-    Range<Time> retRange = null;
+  public Window computeTime(Plan plan, Window interval) {
+    Window rangeExpr = expression.computeTime(plan, interval);
+    Window retRange = null;
 
     if (rangeExpr != null) {
-
-
-      Time resMin = rangeExpr.getMinimum();
-      Time resMax = rangeExpr.getMaximum();
+      Duration resMin = rangeExpr.start;
+      Duration resMax = rangeExpr.end;
       for (Map.Entry<Time.Operator, Duration> entry : this.operations.entrySet()) {
         resMin = Time.performOperation(entry.getKey(), resMin, entry.getValue());
         resMax = Time.performOperation(entry.getKey(), resMax, entry.getValue());
-
       }
 
-      retRange = new Range<Time>(resMin, resMax);
+      retRange = Window.between(resMin, resMax);
 
     }
     return retRange;

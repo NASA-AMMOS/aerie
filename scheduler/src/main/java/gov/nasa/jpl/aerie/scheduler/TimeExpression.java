@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.LinkedHashMap;
 
 /**
@@ -14,7 +17,7 @@ public abstract class TimeExpression {
    * @param interval the range on which the relative time expression must be computed
    * @return a range of valid times satisfying the expression
    */
-  public abstract Range<Time> computeTime(Plan plan, Range<Time> interval);
+  public abstract Window computeTime(Plan plan, Window interval);
 
 
   protected LinkedHashMap<Time.Operator, Duration> operations = new LinkedHashMap<Time.Operator, Duration>();
@@ -89,31 +92,31 @@ public abstract class TimeExpression {
 
   public static final TimeExpression beforeEnd() {
     TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false, DEF_NAME);
-    te.operations.put(Time.Operator.MINUS, Duration.ofMaxDur());
+    te.operations.put(Time.Operator.MINUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static final TimeExpression beforeStart() {
     TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(Time.Operator.MINUS, Duration.ofMaxDur());
+    te.operations.put(Time.Operator.MINUS,Duration.MAX_VALUE);
     return te;
   }
 
   public static final TimeExpression afterEnd() {
     TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, Duration.ofMaxDur());
+    te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static TimeExpression afterStart() {
     TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, Duration.ofMaxDur());
+    te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static final TimeExpression withinAfterStart(Duration dur) {
     TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, dur);
+    te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 

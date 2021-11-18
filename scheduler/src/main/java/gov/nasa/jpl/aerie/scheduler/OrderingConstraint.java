@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * Work in progress for specialization of globalconstraint for ordering constraints
  */
@@ -14,7 +16,7 @@ public class OrderingConstraint extends GlobalConstraintWithIntrospection {
     return mc;
   }
 
-  public TimeWindows findWindows(Plan plan, TimeWindows windows, ActivityType actToBeScheduled) {
+  public Windows findWindows(Plan plan, Windows windows, ActivityType actToBeScheduled) {
     return null;
   }
 
@@ -28,12 +30,12 @@ public class OrderingConstraint extends GlobalConstraintWithIntrospection {
 
 
   @Override
-  public ConstraintState isEnforced(Plan plan, TimeWindows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows) {
     return null;
   }
 
   @Override
-  public TimeWindows findWindows(Plan plan, TimeWindows windows, Conflict conflict) {
+  public Windows findWindows(Plan plan, Windows windows, Conflict conflict) {
     return null;
   }
 }

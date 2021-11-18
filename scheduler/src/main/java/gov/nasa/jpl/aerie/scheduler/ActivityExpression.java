@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +25,7 @@ import java.util.Map;
  */
 public class ActivityExpression {
 
-  private TimeWindows startOrEndRangeW;
+  private Windows startOrEndRangeW;
 
   @SuppressWarnings("unchecked")
   public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
@@ -110,12 +113,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsIn(@Nullable Range<Time> range) {
+    B startsIn(@Nullable Window range) {
       this.startsIn = range;
       return getThis();
     }
 
-    protected @Nullable Range<Time> startsIn;
+    protected @Nullable Window startsIn;
 
     /**
      * requires activities have a scheduled start or end time in a specified range
@@ -129,12 +132,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsOrEndsIn(@Nullable Range<Time> range) {
+    B startsOrEndsIn(@Nullable Window range) {
       this.startsOrEndsIn = range;
       return getThis();
     }
 
-    protected @Nullable Range<Time> startsOrEndsIn;
+    protected @Nullable Window startsOrEndsIn;
 
     /**
      * requires activities have a scheduled start or end time in a specified range
@@ -148,13 +151,13 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B startsOrEndsIn(@Nullable TimeWindows windows) {
+    B startsOrEndsIn(@Nullable Windows windows) {
       this.startsOrEndsInW = windows;
       return getThis();
     }
 
     protected @Nullable
-    TimeWindows startsOrEndsInW;
+    Windows startsOrEndsInW;
 
     /**
      * requires activities have a scheduled end time in a specified range
@@ -168,20 +171,20 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B endsIn(@Nullable Range<Time> range) {
+    B endsIn(@Nullable Window range) {
       this.endsIn = range;
       return getThis();
     }
 
-    protected @Nullable Range<Time> endsIn;
+    protected @Nullable Window endsIn;
 
     public @NotNull
-    B startsIn(TimeWindows ranges) {
+    B startsIn(Windows ranges) {
       this.startsInR = ranges;
       return getThis();
     }
 
-    protected TimeWindows startsInR;
+    protected Windows startsInR;
 
     /**
      * requires activities have a simulated duration in a specified range
@@ -195,12 +198,12 @@ public class ActivityExpression {
      * @return the same builder object updated with new criteria
      */
     public @NotNull
-    B durationIn(@Nullable Range<Duration> range) {
+    B durationIn(@Nullable Window range) {
       this.durationIn = range;
       return getThis();
     }
 
-    protected @Nullable Range<Duration> durationIn;
+    protected @Nullable Window durationIn;
 
     /**
      * requires activities have instance name matching given regular expression
@@ -249,11 +252,11 @@ public class ActivityExpression {
       type = existingAct.getType();
 
       if (existingAct.getStartTime() != null) {
-        startsIn = new Range<Time>(existingAct.getStartTime());
+        startsIn = Window.at(existingAct.getStartTime());
       }
 
       if (existingAct.getDuration() != null) {
-        durationIn = new Range<Duration>(existingAct.getDuration());
+        durationIn = Window.at(existingAct.getDuration());
       }
 
       if (existingAct.getName() != null) {
@@ -359,7 +362,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Range<Time> startRange;
+  protected @Nullable Window startRange;
 
   /**
    * range of allowed values for matching activity scheduled end times
@@ -370,7 +373,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Range<Time> endRange;
+  protected @Nullable Window endRange;
   /**
    * range of allowed values for matching activity scheduled end times
    *
@@ -380,7 +383,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Range<Time> startOrEndRange;
+  protected @Nullable Window startOrEndRange;
 
 
   /**
@@ -392,7 +395,7 @@ public class ActivityExpression {
    *
    * the range itself determines if endpoints are inclusive or exclusive
    */
-  protected @Nullable Range<Duration> durationRange;
+  protected @Nullable Window durationRange;
 
   /**
    * the bounding super-type for matching activities
@@ -420,7 +423,7 @@ public class ActivityExpression {
    *     if no limit on start time
    */
   public @Nullable
-  Range<Time> getStartRange() { return startRange; }
+  Window getStartRange() { return startRange; }
 
   /**
    * fetch the range of allowed simulation durations matched by this template
@@ -429,7 +432,7 @@ public class ActivityExpression {
    *     if no limit on duration
    */
   public @Nullable
-  Range<Duration> getDurationRange() { return durationRange; }
+  Window getDurationRange() { return durationRange; }
 
   /**
    * fetch the bounding super type of activities matched by this template
@@ -492,8 +495,8 @@ public class ActivityExpression {
     if (match && startOrEndRangeW != null) {
       final var startT = act.getStartTime();
       final var endT = act.getEndTime();
-      match = ((startT != null) && startOrEndRangeW.intersects(new Range<Time>(startT)))
-              || (endT != null) && startOrEndRangeW.intersects(new Range<Time>(endT));
+      match = ((startT != null) && startOrEndRangeW.includes(Window.at(startT))
+              || (endT != null) && startOrEndRangeW.includes(Window.at(endT)));
     }
 
     if (match && endRange != null) {

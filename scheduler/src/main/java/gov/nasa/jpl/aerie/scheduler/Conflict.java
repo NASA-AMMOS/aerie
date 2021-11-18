@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * describes an issue in a plan that can be improved
  *
@@ -44,7 +46,7 @@ public abstract class Conflict {
    *
    * @return the time windows when the goal was dissatisfied
    */
-  public abstract TimeWindows getTemporalContext();
+  public abstract Windows getTemporalContext();
 
   /**
    * reference to the goal that initially issued the conflict

@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -22,39 +26,39 @@ public class ImpliesFromState<T extends Comparable<T>, E extends Comparable<E>> 
   }
 
   @Override
-  public E getValueAtTime(Time t) {
+  public E getValueAtTime(Duration t) {
     return valueMapping.get(state.getValueAtTime(t));
   }
 
   @Override
-  public TimeWindows whenValueBetween(E inf, E sup, TimeWindows timeDomain) {
+  public Windows whenValueBetween(E inf, E sup, Windows timeDomain) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public TimeWindows whenValueBelow(E val, TimeWindows timeDomain) {
+  public Windows whenValueBelow(E val, Windows timeDomain) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public TimeWindows whenValueAbove(E val, TimeWindows timeDomain) {
+  public Windows whenValueAbove(E val, Windows timeDomain) {
     throw new RuntimeException("Not implemented");
   }
 
   @Override
-  public TimeWindows whenValueEqual(E val, TimeWindows timeDomain) {
+  public Windows whenValueEqual(E val, Windows timeDomain) {
     return state.whenValueEqual(getKey(valueMapping, val), timeDomain);
   }
 
   @Override
-  public Map<Range<Time>, E> getTimeline(TimeWindows timeDomain) {
-    Map<Range<Time>, E> toReturn = new TreeMap<Range<Time>, E>();
+  public Map<Window, E> getTimeline(Windows timeDomain) {
+    Map<Window, E> toReturn = new TreeMap<>();
     state.getTimeline(timeDomain).forEach((key, value) -> toReturn.put(key, valueMapping.get(value)));
     return toReturn;
   }
 
   @Override
-  public TimeWindows whenValueNotEqual(E val, TimeWindows timeDomain) {
+  public Windows whenValueNotEqual(E val, Windows timeDomain) {
     return state.whenValueNotEqual(getKey(valueMapping, val), timeDomain);
   }
 

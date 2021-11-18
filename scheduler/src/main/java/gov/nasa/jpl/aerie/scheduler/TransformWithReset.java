@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.List;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
 
 
 /**
@@ -18,22 +18,22 @@ public class TransformWithReset implements TimeWindowsTransformer {
   TimeRangeExpression resetExpr;
 
   @Override
-  public TimeWindows transformWindows(Plan plan, TimeWindows windowsToTransform) {
+  public Windows transformWindows(Plan plan, Windows windowsToTransform) {
 
-    TimeWindows ret = new TimeWindows();
+    Windows ret = new Windows();
     int totalFiltered = 0;
 
     if (!windowsToTransform.isEmpty()) {
 
-      List<Range<Time>> resetPeriods = resetExpr.computeRange(plan, TimeWindows.spanMax()).getRangeSet();
+      var resetPeriods = resetExpr.computeRange(plan, Windows.forever());
 
       for (var window : resetPeriods) {
         //System.out.println("RESET " + window);
         // get windows to filter that are completely contained in reset period
-        TimeWindows cur = windowsToTransform.subsetFullyContained(window);
+        Windows cur = windowsToTransform.subsetContained(window);
         if (!cur.isEmpty()) {
           //apply filter and union result
-          ret.union(transform.transformWindows(plan, cur));
+          ret.addAll(transform.transformWindows(plan, cur));
           totalFiltered += cur.size();
         }
         //short circuit

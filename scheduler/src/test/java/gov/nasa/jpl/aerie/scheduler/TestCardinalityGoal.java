@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
@@ -11,23 +13,21 @@ public class TestCardinalityGoal {
 
   @Test
   public void testone() {
-    Range<Time> period = new Range<Time>(new Time(0), new Time(20));
-    final var horizon = new Range<>(new Time(0),new Time(25));
-    TimeWindows.setHorizon(horizon.getMinimum(),horizon.getMaximum());
+    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
 
     var periodTre = new TimeRangeExpression.Builder()
-        .from(TimeWindows.of(period))
+        .from(new Windows(period))
         .build();
     ActivityType actType = new ActivityType("CardGoalActType");
 
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .inPeriod(periodTre)
-        .duration(new Range<Duration>(Duration.ofSeconds(12), Duration.ofSeconds(15)))
+        .duration(Window.between(Duration.of(12, Duration.SECONDS), Duration.of(15, Duration.SECONDS)))
         .occurences(new Range<Integer>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actType)
-                            .duration(Duration.ofSeconds(2))
+                            .duration(Duration.of(2, Duration.SECONDS))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(period)
@@ -48,32 +48,31 @@ public class TestCardinalityGoal {
 
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
-    goal.getConflictsDurAndOccur(plan, Duration.ofSeconds(12), 3);
+    goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
   }
 
 
   @Test
   public void testwindows() {
 
-    Range<Time> period = new Range<Time>(new Time(0), new Time(10));
-    Range<Time> period2 = new Range<Time>(new Time(13), new Time(20));
-    final var horizon = new Range<>(new Time(0),new Time(25));
-    TimeWindows.setHorizon(horizon.getMinimum(),horizon.getMaximum());
+    Window period = Window.betweenClosedOpen(Duration.of(0, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
+    Window period2 = Window.betweenClosedOpen(Duration.of(13, Duration.SECONDS), Duration.of(20, Duration.SECONDS));
+    final var horizon = new Range<>(Duration.of(0, Duration.SECONDS),Duration.of(25, Duration.SECONDS));
 
 
     var periodTre = new TimeRangeExpression.Builder()
-        .from(TimeWindows.of(List.of(period, period2)))
+        .from(new Windows(List.of(period, period2)))
         .build();
     ActivityType actType = new ActivityType("CardGoalActType");
 
 
     CardinalityGoal goal = new CardinalityGoal.Builder()
         .inPeriod(periodTre)
-        .duration(new Range<Duration>(Duration.ofSeconds(12), Duration.ofSeconds(15)))
+        .duration(Window.between(Duration.of(12, Duration.SECONDS), Duration.of(15, Duration.SECONDS)))
         .occurences(new Range<Integer>(3, 10))
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(actType)
-                            .duration(new Range<Duration>(Duration.ofSeconds(2), Duration.ofSeconds(4)))
+                            .duration(Window.between(Duration.of(2, Duration.SECONDS), Duration.of(4, Duration.SECONDS)))
                             .build())
         .named("TestCardGoal")
         .forAllTimeIn(period)
@@ -94,7 +93,7 @@ public class TestCardinalityGoal {
 
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
-    Collection<Conflict> conflicts = goal.getConflictsDurAndOccur(plan, Duration.ofSeconds(12), 3);
+    Collection<Conflict> conflicts = goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
     for (var conflict : conflicts) {
       System.out.println(conflict);
     }

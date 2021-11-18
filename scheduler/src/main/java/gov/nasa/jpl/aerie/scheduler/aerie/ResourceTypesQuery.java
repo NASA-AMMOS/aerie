@@ -5,8 +5,23 @@
 //
 package gov.nasa.jpl.aerie.scheduler.aerie;
 
-import com.apollographql.apollo.api.*;
-import com.apollographql.apollo.api.internal.*;
+import com.apollographql.apollo.api.Operation;
+import com.apollographql.apollo.api.OperationName;
+import com.apollographql.apollo.api.Query;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.api.ResponseField;
+import com.apollographql.apollo.api.ScalarTypeAdapters;
+import com.apollographql.apollo.api.internal.InputFieldMarshaller;
+import com.apollographql.apollo.api.internal.InputFieldWriter;
+import com.apollographql.apollo.api.internal.OperationRequestBodyComposer;
+import com.apollographql.apollo.api.internal.QueryDocumentMinifier;
+import com.apollographql.apollo.api.internal.ResponseFieldMapper;
+import com.apollographql.apollo.api.internal.ResponseFieldMarshaller;
+import com.apollographql.apollo.api.internal.ResponseReader;
+import com.apollographql.apollo.api.internal.ResponseWriter;
+import com.apollographql.apollo.api.internal.SimpleOperationResponseParser;
+import com.apollographql.apollo.api.internal.UnmodifiableMapBuilder;
+import com.apollographql.apollo.api.internal.Utils;
 import gov.nasa.jpl.aerie.scheduler.aerie.type.CustomType;
 import okio.Buffer;
 import okio.BufferedSource;
@@ -168,7 +183,7 @@ public final class ResourceTypesQuery implements Query<ResourceTypesQuery.Data, 
       return new InputFieldMarshaller() {
         @Override
         public void marshal(InputFieldWriter writer) throws IOException {
-          writer.writeCustom("adaptationId", gov.nasa.jpl.aerie.scheduler.aerie.type.CustomType.ID, adaptationId);
+          writer.writeCustom("adaptationId", CustomType.ID, adaptationId);
         }
       };
     }

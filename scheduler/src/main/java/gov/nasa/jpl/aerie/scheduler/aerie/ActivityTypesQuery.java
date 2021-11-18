@@ -200,7 +200,7 @@ public final class ActivityTypesQuery
       return new InputFieldMarshaller() {
         @Override
         public void marshal(InputFieldWriter writer) throws IOException {
-          writer.writeCustom("adaptationId", gov.nasa.jpl.aerie.scheduler.aerie.type.CustomType.ID, adaptationId);
+          writer.writeCustom("adaptationId", CustomType.ID, adaptationId);
         }
       };
     }

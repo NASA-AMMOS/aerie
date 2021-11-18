@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 public class AlwaysGlobalConstraint extends GlobalConstraint {
 
   private final StateConstraint<?> sc;
@@ -11,7 +13,7 @@ public class AlwaysGlobalConstraint extends GlobalConstraint {
   }
 
   @Override
-  public ConstraintState isEnforced(Plan plan, TimeWindows windows) {
+  public ConstraintState isEnforced(Plan plan, Windows windows) {
     throw new IllegalArgumentException("Not implemented");
   }
 

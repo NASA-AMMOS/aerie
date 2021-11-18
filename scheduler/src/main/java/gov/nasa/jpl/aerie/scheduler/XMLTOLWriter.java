@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 /**
  * serializes output for use in an xml tol file, eg for raven input
  */
@@ -191,7 +193,7 @@ public class XMLTOLWriter {
      * @param act the activity that is described by the record
      */
     public ActivityStartRecord(ActivityInstance act) {
-      super(act.getStartTime(), act);
+      super(config.getHorizon().toTime(act.getStartTime()), act);
     }
 
     /**
@@ -210,7 +212,7 @@ public class XMLTOLWriter {
     public void write() {
       writeHeader();
       final var act = getAct();
-      final var dur = act.getDuration() == null ? Duration.ofSeconds(1) : act.getDuration();
+      final var dur = act.getDuration() == null ? Duration.of(1, Duration.SECONDS) : act.getDuration();
       xml.println("    <Instance>");
       xml.println("      <ID>" + act.getName() + "</ID>");
       xml.println("        <Name>" + act.getType().getName() + "</Name>");
@@ -220,14 +222,14 @@ public class XMLTOLWriter {
       xml.println("        <Attributes>");
       xml.println("            <Attribute>");
       xml.println("                <Name>start</Name>");
-      xml.println("                <TimeValue milliseconds=\"" + act.getStartTime().toEpochMilliseconds() + "\">" + act
+      xml.println("                <TimeValue milliseconds=\"" + config.getHorizon().toTime(act.getStartTime()).toEpochMilliseconds() + "\">" + act
           .getStartTime()
           .toString() + "</TimeValue>");
       xml.println("            </Attribute>");
       xml.println("            <Attribute>");
       xml.println("                <Name>span</Name>");
       xml.println("                <DurationValue milliseconds=\""
-                  + dur.toMilliseconds()
+                  + dur.in(Duration.MILLISECOND)
                   + "\">"
                   + dur.toString()
                   + "</DurationValue>");
@@ -268,7 +270,7 @@ public class XMLTOLWriter {
      * @param act IN the activity to record the end of
      */
     public ActivityEndRecord(ActivityInstance act) {
-      super(act.getStartTime().plus(act.getDuration() == null ? Duration.ofSeconds(1) : act.getDuration()), act);
+      super(config.getHorizon().toTime(act.getStartTime().plus(act.getDuration() == null ? Duration.of(1, Duration.SECONDS) : act.getDuration())), act);
     }
 
     /**

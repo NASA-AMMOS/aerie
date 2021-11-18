@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+
 /**
  * describes the desired existence of an activity matching a given template/preset
  */
@@ -80,7 +82,7 @@ public class ActivityTemplateGoal extends ActivityExistentialGoal {
    * @return the range of possible durations for the activity instances
    *     that may be created by this goal
    */
-  public Range<Duration> getActivityDurationRange() {
+  public Window getActivityDurationRange() {
     return desiredActTemplate.getDurationRange();
   }
 

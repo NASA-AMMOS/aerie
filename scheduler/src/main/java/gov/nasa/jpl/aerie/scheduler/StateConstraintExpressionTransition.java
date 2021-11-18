@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 public class StateConstraintExpressionTransition extends StateConstraintExpression {
 
   private StateConstraintExpressionEqualSet from;
@@ -17,15 +20,15 @@ public class StateConstraintExpressionTransition extends StateConstraintExpressi
   }
 
   @Override
-  public TimeWindows findWindows(Plan plan, TimeWindows windows) {
-    TimeWindows res = new TimeWindows();
+  public Windows findWindows(Plan plan, Windows windows) {
+    Windows res = new Windows();
     var fromtw = from.findWindows(plan, windows);
     var totw = to.findWindows(plan, windows);
 
-    for (var rangeFrom : fromtw.getRangeSet()) {
-      for (var rangeTo : totw.getRangeSet()) {
-        if (rangeFrom.isBefore(rangeTo) && rangeFrom.isAdjacent(rangeTo)) {
-          res.union(new Range<Time>(rangeFrom.getMaximum()));
+    for (var rangeFrom : fromtw) {
+      for (var rangeTo : totw) {
+        if (rangeFrom.isStrictlyBefore(rangeTo) && rangeFrom.adjacent(rangeTo)) {
+          res.add(Window.at(rangeFrom.end));
         }
       }
     }

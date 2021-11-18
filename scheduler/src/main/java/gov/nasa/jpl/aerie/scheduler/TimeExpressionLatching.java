@@ -1,6 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * A latching time expression is computed with one expression if on the first element of a larger sequence and with
@@ -21,13 +26,14 @@ public class TimeExpressionLatching extends TimeExpression {
 
 
   @Override
-  public Range<Time> computeTime(Plan plan, Range<Time> interval) {
+  public Window computeTime(Plan plan, Window interval) {
 
-    List<Range<Time>> resetPeriods = resetWindowsExpression.computeRange(plan, TimeWindows.spanMax()).getRangeSet();
-
+    List<Window> resetPeriods = StreamSupport
+        .stream(resetWindowsExpression.computeRange(plan, Windows.forever()).spliterator(), false)
+        .collect(Collectors.toList());
     boolean first = true;
     for (var window : resetPeriods) {
-      Range<Time> inter = window.intersect(interval);
+      Window inter = Window.intersect(window,interval);
       if (inter != null) {
         if (first) {
           return expr1.computeTime(plan, interval);

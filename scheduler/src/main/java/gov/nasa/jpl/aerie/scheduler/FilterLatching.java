@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,14 +23,14 @@ public class FilterLatching implements TimeWindowsFilter {
 
 
   @Override
-  public TimeWindows filter(Plan plan, TimeWindows windows) {
-    List<Range<Time>> ret = new ArrayList<Range<Time>>();
+  public Windows filter(Plan plan, Windows windows) {
+    List<Window> ret = new ArrayList<>();
 
     if (!windows.isEmpty()) {
 
       boolean first = true;
 
-      for (var subint : windows.getRangeSet()) {
+      for (var subint : windows) {
         if (first) {
           if (firstFilter.shouldKeep(plan, subint)) {
             ret.add(subint);
@@ -42,6 +45,6 @@ public class FilterLatching implements TimeWindowsFilter {
 
     }
 
-    return TimeWindows.of(ret, true);
+    return new Windows(ret);
   }
 }

@@ -3,14 +3,17 @@ package gov.nasa.jpl.aerie.scheduler.aerie;
 import com.apollographql.apollo.api.Operation;
 import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.api.ScalarTypeAdapters;
-import gov.nasa.jpl.aerie.scheduler.aerie.LoginMutation;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import java.awt.GridLayout;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
