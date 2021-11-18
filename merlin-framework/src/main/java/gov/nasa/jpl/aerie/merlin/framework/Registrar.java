@@ -93,7 +93,7 @@ public final class Registrar {
     });
   }
 
-  public <Event> void topic(final String name, final CellRef<Event,?> ref, final ValueMapper<Event> mapper) {
-    this.builder.topic(name, ref.query, mapper.getValueSchema(), mapper::serializeValue);
+  public <Event> void topic(final String name, final Cell<Event,?> cell, final ValueMapper<Event> mapper) {
+    this.builder.topic(name, cell.query, mapper.getValueSchema(), mapper::serializeValue);
   }
 }

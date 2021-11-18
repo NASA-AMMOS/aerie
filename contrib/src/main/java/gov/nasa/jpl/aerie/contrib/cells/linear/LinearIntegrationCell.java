@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
-import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
@@ -25,9 +25,9 @@ public final class LinearIntegrationCell {
     this(initialVolume, rate, 0.0);
   }
 
-  public static <Event> CellRef<Event, LinearIntegrationCell>
+  public static <Event> Cell<Event, LinearIntegrationCell>
   allocate(final double initialVolume, final double rate, final Function<Event, LinearAccumulationEffect> interpreter) {
-    return CellRef.allocate(
+    return Cell.allocate(
         new LinearIntegrationCell(initialVolume, rate),
         new LinearIntegrationApplicator(),
         LinearAccumulationEffect.AGGREGATOR,

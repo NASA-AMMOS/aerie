@@ -6,15 +6,15 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.function.Function;
 
-public final class CellRef<Event, CellType> {
+public final class Cell<Event, CellType> {
   public final Query<Event, CellType> query;
 
-  private CellRef(Query<Event, CellType> query) {
+  private Cell(Query<Event, CellType> query) {
     this.query = query;
   }
 
   public static <Event, Effect, CellType>
-  CellRef<Event, CellType> allocate(
+  Cell<Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
       final Aggregator<Effect> aggregator,
@@ -25,11 +25,11 @@ public final class CellRef<Event, CellType> {
         applicator,
         aggregator,
         eventToEffect);
-    return new CellRef<>(query);
+    return new Cell<>(query);
   }
 
   public static <Effect, CellType>
-  CellRef<Effect, CellType> allocate(final CellType initialState, final Applicator<Effect, CellType> applicator, final Aggregator<Effect> aggregator) {
+  Cell<Effect, CellType> allocate(final CellType initialState, final Applicator<Effect, CellType> applicator, final Aggregator<Effect> aggregator) {
     return allocate(initialState, applicator, aggregator, $ -> $);
   }
 

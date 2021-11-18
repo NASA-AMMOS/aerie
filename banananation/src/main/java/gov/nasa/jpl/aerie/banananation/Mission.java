@@ -34,7 +34,7 @@ public final class Mission {
     registrar.discrete("/plant", this.plant, new IntegerValueMapper());
     registrar.discrete("/producer", this.producer, new StringValueMapper());
     registrar.discrete("/data/line_count", this.dataLineCount, new IntegerValueMapper());
-    registrar.topic("/producer", this.producer.ref, new StringValueMapper());
+    registrar.topic("/producer", this.producer.cell, new StringValueMapper());
   }
 
   private static int countLines(final Path path) {

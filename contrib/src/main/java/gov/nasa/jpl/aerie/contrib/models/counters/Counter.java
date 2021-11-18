@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.models.counters;
 
 import gov.nasa.jpl.aerie.contrib.cells.counters.CounterCell;
-import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 import java.util.function.BinaryOperator;
@@ -9,10 +9,10 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class Counter<T> implements DiscreteResource<T> {
-  private final CellRef<T, CounterCell<T>> ref;
+  private final Cell<T, CounterCell<T>> cell;
 
   public Counter(final T initialValue, final T zero, final BinaryOperator<T> adder, final UnaryOperator<T> duplicator) {
-    this.ref = CounterCell.allocate(initialValue, zero, adder, duplicator, Function.identity());
+    this.cell = CounterCell.allocate(initialValue, zero, adder, duplicator, Function.identity());
   }
 
   public static Counter<Integer> ofInteger(final Integer initialValue) {
@@ -34,11 +34,11 @@ public final class Counter<T> implements DiscreteResource<T> {
 
   @Override
   public T getDynamics() {
-    return this.ref.get().getValue();
+    return this.cell.get().getValue();
   }
 
   public void add(final T change) {
-    this.ref.emit(change);
+    this.cell.emit(change);
   }
 
 

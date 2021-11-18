@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.cells.counters;
 
 import gov.nasa.jpl.aerie.contrib.aggregators.CommutativeMonoid;
-import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 
 import java.util.Objects;
@@ -20,14 +20,14 @@ public final class CounterCell<T> {
     this.value = Objects.requireNonNull(initialValue);
   }
 
-  public static <Event, T> CellRef<Event, CounterCell<T>>
+  public static <Event, T> Cell<Event, CounterCell<T>>
   allocate(
       final T initialValue,
       final T zero,
       final BinaryOperator<T> adder,
       final UnaryOperator<T> duplicator,
       final Function<Event, T> interpreter) {
-    return CellRef.allocate(
+    return Cell.allocate(
         new CounterCell<>(initialValue, adder, duplicator),
         new CounterApplicator<>(),
         new CommutativeMonoid<>(zero, adder),

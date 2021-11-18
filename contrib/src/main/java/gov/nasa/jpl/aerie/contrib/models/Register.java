@@ -2,16 +2,16 @@ package gov.nasa.jpl.aerie.contrib.models;
 
 import gov.nasa.jpl.aerie.contrib.cells.register.RegisterCell;
 import gov.nasa.jpl.aerie.contrib.cells.register.RegisterEffect;
-import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.framework.resources.discrete.DiscreteResource;
 
 import java.util.function.UnaryOperator;
 
 public final class Register<Value> implements DiscreteResource<Value> {
-  public final CellRef<Value, RegisterCell<Value>> ref;
+  public final Cell<Value, RegisterCell<Value>> cell;
 
   private Register(final UnaryOperator<Value> duplicator, final Value initialValue) {
-    this.ref = RegisterCell.allocate(duplicator, initialValue, RegisterEffect::set);
+    this.cell = RegisterCell.allocate(duplicator, initialValue, RegisterEffect::set);
   }
 
 
@@ -30,15 +30,15 @@ public final class Register<Value> implements DiscreteResource<Value> {
 
   @Override
   public Value getDynamics() {
-    return this.ref.get().getValue();
+    return this.cell.get().getValue();
   }
 
   public boolean isConflicted() {
-    return this.ref.get().isConflicted();
+    return this.cell.get().isConflicted();
   }
 
   public void set(final Value value) {
-    this.ref.emit(value);
+    this.cell.emit(value);
   }
 
   @Deprecated

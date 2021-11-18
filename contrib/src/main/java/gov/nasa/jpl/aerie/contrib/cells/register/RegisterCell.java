@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
-import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 
 import java.util.Objects;
@@ -19,9 +19,9 @@ public final class RegisterCell<T> {
     this.conflicted = conflicted;
   }
 
-  public static <Event, T> CellRef<Event, RegisterCell<T>>
+  public static <Event, T> Cell<Event, RegisterCell<T>>
   allocate(final UnaryOperator<T> duplicator, final T initialValue, final Function<Event, RegisterEffect<T>> interpreter) {
-    return CellRef.allocate(
+    return Cell.allocate(
         new RegisterCell<>(duplicator, initialValue, false),
         new RegisterApplicator<>(),
         new RegisterEffect.RegisterAggregator<>(),

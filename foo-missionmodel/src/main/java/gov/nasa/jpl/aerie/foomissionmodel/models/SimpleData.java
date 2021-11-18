@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.foomissionmodel.models;
 
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearAccumulationEffect;
 import gov.nasa.jpl.aerie.contrib.cells.linear.LinearIntegrationCell;
-import gov.nasa.jpl.aerie.merlin.framework.CellRef;
+import gov.nasa.jpl.aerie.merlin.framework.Cell;
 import gov.nasa.jpl.aerie.merlin.framework.resources.real.RealResource;
 
 import java.util.List;
@@ -25,25 +25,25 @@ public final class SimpleData {
   }
 
   public static final class InstrumentData {
-    private final CellRef<LinearAccumulationEffect, LinearIntegrationCell> ref;
+    private final Cell<LinearAccumulationEffect, LinearIntegrationCell> cell;
     private final double activeRate;
 
     public final RealResource volume, rate;
 
     private InstrumentData(final double activeRate) {
-      this.ref = LinearIntegrationCell.allocate(0, 0, Function.identity());
+      this.cell = LinearIntegrationCell.allocate(0, 0, Function.identity());
       this.activeRate = activeRate;
-      this.volume = () -> this.ref.get().getVolume();
-      this.rate = () -> this.ref.get().getRate();
+      this.volume = () -> this.cell.get().getVolume();
+      this.rate = () -> this.cell.get().getRate();
     }
 
     private void setRate(final double newRate) {
-      final var currRate = this.ref.get().getRate().rate;
-      this.ref.emit(LinearAccumulationEffect.addRate(newRate - currRate));
+      final var currRate = this.cell.get().getRate().rate;
+      this.cell.emit(LinearAccumulationEffect.addRate(newRate - currRate));
     }
 
     public void clearVolume() {
-      this.ref.emit(LinearAccumulationEffect.clearVolume());
+      this.cell.emit(LinearAccumulationEffect.clearVolume());
     }
 
     public void activate() {
