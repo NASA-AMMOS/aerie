@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.counters;
 
-import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
+import gov.nasa.jpl.aerie.contrib.aggregators.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 

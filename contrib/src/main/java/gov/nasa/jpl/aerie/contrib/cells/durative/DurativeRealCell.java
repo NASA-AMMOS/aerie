@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.durative;
 
-import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
+import gov.nasa.jpl.aerie.contrib.aggregators.CommutativeMonoid;
 import gov.nasa.jpl.aerie.merlin.framework.CellRef;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;

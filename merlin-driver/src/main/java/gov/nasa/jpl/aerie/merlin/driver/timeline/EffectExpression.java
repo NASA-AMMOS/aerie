@@ -1,44 +1,44 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Declares the ability of an object to be evaluated under an {@link EffectTrait}.
+ * Declares the ability of an object to be evaluated under an {@link Aggregator}.
  *
  * <p>
  * Effect expressions describe a series-parallel graph of abstract effects called "events". The {@link EventGraph} class
  * is a concrete realization of this idea. However, if the expression is immediately consumed after construction,
  * the <code>EventGraph</code> imposes construction of needless intermediate data. Producers of effects will
  * typically want to return a custom implementor of this class that will directly produce the desired expression
- * for a given {@link EffectTrait}.
+ * for a given {@link Aggregator}.
  * </p>
  *
  * @param <Event> The type of abstract effect in this expression.
  * @see EventGraph
- * @see EffectTrait
+ * @see Aggregator
  */
 public interface EffectExpression<Event> {
   /**
-   * Produce an effect in the domain of effects described by the provided trait and event substitution.
+   * Produce an effect in the domain of effects described by the provided aggregator and event substitution.
    *
-   * @param trait A visitor to be used to compose effects in sequence or concurrently.
+   * @param aggregator A visitor to be used to compose effects in sequence or concurrently.
    * @param substitution A visitor to be applied at any atomic events.
    * @param <Effect> The type of effect produced by the visitor.
    * @return The effect described by this object, within the provided domain of effects.
    */
-  <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution);
+  <Effect> Effect evaluate(final Aggregator<Effect> aggregator, final Function<Event, Effect> substitution);
 
   /**
-   * Produce an effect in the domain of effects described by the provided {@link EffectTrait}.
+   * Produce an effect in the domain of effects described by the provided {@link Aggregator}.
    *
-   * @param trait A visitor to be used to compose effects in sequence or concurrently.
+   * @param aggregator A visitor to be used to compose effects in sequence or concurrently.
    * @return The effect described by this object, within the provided domain of effects.
    */
-  default Event evaluate(final EffectTrait<Event> trait) {
-    return this.evaluate(trait, x -> x);
+  default Event evaluate(final Aggregator<Event> aggregator) {
+    return this.evaluate(aggregator, x -> x);
   }
 
   /**
@@ -70,8 +70,8 @@ public interface EffectExpression<Event> {
     final var that = this;
     return new EffectExpression<>() {
       @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<TargetType, Effect> substitution) {
-        return that.evaluate(trait, transformation.andThen(substitution));
+      public <Effect> Effect evaluate(final Aggregator<Effect> aggregator, final Function<TargetType, Effect> substitution) {
+        return that.evaluate(aggregator, transformation.andThen(substitution));
       }
 
       @Override
@@ -115,8 +115,8 @@ public interface EffectExpression<Event> {
     final var that = this;
     return new EffectExpression<>() {
       @Override
-      public <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<TargetType, Effect> substitution) {
-        return that.evaluate(trait, v -> transformation.apply(v).evaluate(trait, substitution));
+      public <Effect> Effect evaluate(final Aggregator<Effect> aggregator, final Function<TargetType, Effect> substitution) {
+        return that.evaluate(aggregator, v -> transformation.apply(v).evaluate(aggregator, substitution));
       }
 
       @Override

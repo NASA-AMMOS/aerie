@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,11 +18,12 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * As with many recursive tree-like structures, an event graph is utilized by accepting an {@link EffectTrait} visitor
- * and traversing the series-parallel structure recursively. This trait provides methods for each type of node in the
- * tree representation (empty, sequential composition, and parallel composition). For each node, the trait combines
- * the results from its children into a result that will be provided to the same trait at the node's parent. The result
- * of the traversal is the value computed by the trait at the root node.
+ * As with many recursive tree-like structures, an event graph is utilized by accepting a visitor
+ * (an {@link Aggregator}) and traversing the series-parallel structure recursively. This aggregator provides methods
+ * for each type of node in the tree representation (empty, sequential composition, and parallel composition). For each
+ * node, the aggregator combines the results from its children into a result that will be provided to the same
+ * aggregator at the node's parent. The result of the traversal is the value computed by the aggregator at the
+ * root node.
  * </p>
  *
  * <p>
@@ -32,7 +33,7 @@ import java.util.function.Function;
  * </p>
  *
  * @param <Event> The type of event to be stored in the graph structure.
- * @see EffectTrait
+ * @see Aggregator
  */
 public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   /** Use {@link EventGraph#empty()} instead of instantiating this class directly. */
@@ -71,19 +72,19 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
     }
   }
 
-  default <Effect> Effect evaluate(final EffectTrait<Effect> trait, final Function<Event, Effect> substitution) {
+  default <Effect> Effect evaluate(final Aggregator<Effect> aggregator, final Function<Event, Effect> substitution) {
     if (this instanceof EventGraph.Empty) {
-      return trait.empty();
+      return aggregator.empty();
     } else if (this instanceof EventGraph.Atom<Event> g) {
       return substitution.apply(g.atom());
     } else if (this instanceof EventGraph.Sequentially<Event> g) {
-      return trait.sequentially(
-          g.prefix().evaluate(trait, substitution),
-          g.suffix().evaluate(trait, substitution));
+      return aggregator.sequentially(
+          g.prefix().evaluate(aggregator, substitution),
+          g.suffix().evaluate(aggregator, substitution));
     } else if (this instanceof EventGraph.Concurrently<Event> g) {
-      return trait.concurrently(
-          g.left().evaluate(trait, substitution),
-          g.right().evaluate(trait, substitution));
+      return aggregator.concurrently(
+          g.left().evaluate(aggregator, substitution),
+          g.right().evaluate(aggregator, substitution));
     } else {
       throw new IllegalArgumentException();
     }
@@ -192,7 +193,7 @@ public sealed interface EventGraph<Event> extends EffectExpression<Event> {
   }
 
   /** A "no-op" algebra that reconstructs an event graph from its pieces. */
-  final class IdentityTrait<T> implements EffectTrait<EventGraph<T>> {
+  final class IdentityAggregator<T> implements Aggregator<EventGraph<T>> {
     @Override
     public EventGraph<T> empty() {
       return EventGraph.empty();

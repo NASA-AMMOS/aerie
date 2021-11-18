@@ -1,13 +1,13 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.Optional;
 
 public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
   @Override
   public <Effect> Optional<Effect>
-  evaluate(final EffectTrait<Effect> trait, final Selector<Effect> selector, EventGraph<Event> graph) {
+  evaluate(final Aggregator<Effect> aggregator, final Selector<Effect> selector, EventGraph<Event> graph) {
     Continuation<Event, Effect> andThen = new Continuation.Empty<>();
 
     while (true) {
@@ -21,7 +21,7 @@ public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
           graph = g.left();
           andThen = new Continuation.Right<>(Combiner.Concurrently, g.right(), andThen);
         } else if (graph instanceof EventGraph.Atom<Event> g) {
-          effect$ = selector.select(trait, g.atom());
+          effect$ = selector.select(aggregator, g.atom());
           break;
         } else if (graph instanceof EventGraph.Empty) {
           effect$ = Optional.empty();
@@ -44,7 +44,7 @@ public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
           graph = f.right();
           continue;
         } else if (andThen instanceof Continuation.Empty) {
-          return Optional.of(trait.empty());
+          return Optional.of(aggregator.empty());
         } else {
           throw new IllegalArgumentException();
         }
@@ -55,8 +55,8 @@ public final class IterativeEventGraphEvaluator implements EventGraphEvaluator {
         if (andThen instanceof Continuation.Combine<Event, Effect> f) {
           andThen = f.andThen();
           effect = switch (f.combiner()) {
-            case Sequentially -> trait.sequentially(f.left(), effect);
-            case Concurrently -> trait.concurrently(f.left(), effect);
+            case Sequentially -> aggregator.sequentially(f.left(), effect);
+            case Concurrently -> aggregator.concurrently(f.left(), effect);
           };
         } else if (andThen instanceof Continuation.Right<Event, Effect> f) {
           andThen = new Continuation.Combine<>(f.combiner(), effect, f.andThen());

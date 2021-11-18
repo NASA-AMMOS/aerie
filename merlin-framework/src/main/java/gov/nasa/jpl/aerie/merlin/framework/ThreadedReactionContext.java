@@ -3,7 +3,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
@@ -46,7 +46,7 @@ final class ThreadedReactionContext implements Context {
   public <Event, Effect, CellType> Query<Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
+      final Aggregator<Effect> aggregator,
       final Function<Event, Effect> projection)
   {
     throw new IllegalStateException("Cannot allocate during simulation");

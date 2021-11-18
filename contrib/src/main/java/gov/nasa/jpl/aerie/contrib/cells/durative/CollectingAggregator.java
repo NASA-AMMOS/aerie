@@ -1,12 +1,12 @@
 package gov.nasa.jpl.aerie.contrib.cells.durative;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-public class CollectingEffectTrait<T> implements EffectTrait<Collection<T>> {
+public class CollectingAggregator<T> implements Aggregator<Collection<T>> {
   @Override
   public Collection<T> empty() {
     return Collections.emptyList();

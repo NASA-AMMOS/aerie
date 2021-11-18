@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.contrib.cells.linear;
 
-import gov.nasa.jpl.aerie.contrib.traits.CommutativeMonoid;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.contrib.aggregators.CommutativeMonoid;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 /** Simple data class for storing an effect's rate delta and flag to clear volume. */
 public final class LinearAccumulationEffect {
@@ -40,6 +40,6 @@ public final class LinearAccumulationEffect {
     }
   }
 
-  public static final EffectTrait<LinearAccumulationEffect> TRAIT =
+  public static final Aggregator<LinearAccumulationEffect> AGGREGATOR =
       new CommutativeMonoid<>(LinearAccumulationEffect.empty(), LinearAccumulationEffect::plus);
 }

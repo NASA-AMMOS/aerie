@@ -30,7 +30,7 @@ public final class LinearIntegrationCell {
     return CellRef.allocate(
         new LinearIntegrationCell(initialVolume, rate),
         new LinearIntegrationApplicator(),
-        LinearAccumulationEffect.TRAIT,
+        LinearAccumulationEffect.AGGREGATOR,
         interpreter);
   }
 

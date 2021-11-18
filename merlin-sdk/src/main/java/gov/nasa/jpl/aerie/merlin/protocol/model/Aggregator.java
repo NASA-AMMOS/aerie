@@ -7,12 +7,12 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
  * We define an <b>effect type</b> to be a type whose values can be combined sequentially or concurrently, and which has
  * a known value representing the absence of an effect. An implementation of {@code EffectTrait<P>} provides
  * these operations for a type <code>P</code>, even if the definition of <code>P</code> itself cannot be changed.
- * We will often refer to an implementation of {@code EffectTrait<P>} as "an effect algebra on <code>P</code>".
+ * We will often refer to an implementation of {@link Aggregator<Effect>} as "an effect algebra on <code>Effect</code>".
  * </p>
  *
  * <p>
- * A useful graphical notation is to write <code>x | y</code> for <code>trait.concurrently(x, y)</code> (when
- * <code>trait</code> is fixed), and <code>x; y</code> for <code>trait.sequentially(x, y)</code>. Nested calls
+ * A useful graphical notation is to write <code>x | y</code> for <code>agg.concurrently(x, y)</code> (when
+ * <code>agg</code> is fixed), and <code>x; y</code> for <code>agg.sequentially(x, y)</code>. Nested calls
  * to these methods can then be understood as expressions over these algebraic operators.
  * </p>
  *
@@ -30,7 +30,7 @@ package gov.nasa.jpl.aerie.merlin.protocol.model;
  *
  * @param <Effect> The type on which this object gives an effect algebra.
  */
-public interface EffectTrait<Effect> {
+public interface Aggregator<Effect> {
   Effect empty();
   Effect sequentially(Effect prefix, Effect suffix);
   Effect concurrently(Effect left, Effect right);

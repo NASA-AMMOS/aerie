@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -16,7 +16,7 @@ import java.util.function.Function;
  * </ul>
  *
  * <p>
- * Because sequential and concurrent composition are associative (see {@link EffectTrait}), unnecessary parentheses
+ * Because sequential and concurrent composition are associative (see {@link Aggregator}), unnecessary parentheses
  * are elided.
  * </p>
  *
@@ -27,7 +27,7 @@ import java.util.function.Function;
  * </p>
  *
  * @see EffectExpression
- * @see EffectTrait
+ * @see Aggregator
  */
 public final class EffectExpressionDisplay {
   private EffectExpressionDisplay() {}
@@ -52,7 +52,7 @@ public final class EffectExpressionDisplay {
    */
   public static <Event> String displayGraph(final EffectExpression<Event> expression, final Function<Event, String> stringifier) {
     return expression
-        .evaluate(new DisplayEffectTrait(), event -> Optional.of($ -> stringifier.apply(event)))
+        .evaluate(new DisplayAggregator(), event -> Optional.of($ -> stringifier.apply(event)))
         .map(f -> f.apply(Parent.Unrestricted))
         .orElse("");
   }
@@ -60,7 +60,7 @@ public final class EffectExpressionDisplay {
   private enum Parent { Unrestricted, Par, Seq }
 
   // An effect algebra for computing string representations of transactions.
-  private static final class DisplayEffectTrait implements EffectTrait<Optional<Function<Parent, String>>> {
+  private static final class DisplayAggregator implements Aggregator<Optional<Function<Parent, String>>> {
     @Override
     public Optional<Function<Parent, String>> empty() {
       return Optional.empty();

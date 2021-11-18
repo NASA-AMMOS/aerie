@@ -1,6 +1,6 @@
 package gov.nasa.jpl.aerie.contrib.cells.register;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.Objects;
 
@@ -36,7 +36,7 @@ public final class RegisterEffect<T> {
   }
 
 
-  public static final class Trait<T> implements EffectTrait<RegisterEffect<T>> {
+  public static final class RegisterAggregator<T> implements Aggregator<RegisterEffect<T>> {
     @Override
     public RegisterEffect<T> empty() {
       return RegisterEffect.doNothing();

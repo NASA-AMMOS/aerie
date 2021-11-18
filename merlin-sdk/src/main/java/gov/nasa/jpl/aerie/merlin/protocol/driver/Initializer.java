@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.protocol.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -16,7 +16,7 @@ public interface Initializer {
   Query<Event, CellType> allocate(
       CellType initialState,
       Applicator<Effect, CellType> applicator,
-      EffectTrait<Effect> trait,
+      Aggregator<Effect> aggregator,
       Function<Event, Effect> projection);
 
   String daemon(TaskFactory factory);

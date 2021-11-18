@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.driver.timeline;
 
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Optional;
@@ -19,12 +19,12 @@ public final class Cell<State> {
 
   public <Effect> Cell(
       final Applicator<Effect, State> applicator,
-      final EffectTrait<Effect> algebra,
+      final Aggregator<Effect> aggregator,
       final Selector<Effect> selector,
       final EventGraphEvaluator evaluator,
       final State state
   ) {
-    this(new GenericCell<>(applicator, algebra, selector, evaluator), state);
+    this(new GenericCell<>(applicator, aggregator, selector, evaluator), state);
   }
 
   public Cell<State> duplicate() {
@@ -66,17 +66,17 @@ public final class Cell<State> {
 
   private record GenericCell<Effect, State> (
       Applicator<Effect, State> applicator,
-      EffectTrait<Effect> algebra,
+      Aggregator<Effect> aggregator,
       Selector<Effect> selector,
       EventGraphEvaluator evaluator
   ) {
     public void apply(final State state, final EventGraph<Event> events) {
-      final var effect$ = this.evaluator.evaluate(this.algebra, this.selector, events);
+      final var effect$ = this.evaluator.evaluate(this.aggregator, this.selector, events);
       if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
     }
 
     public void apply(final State state, final Event event) {
-      final var effect$ = this.selector.select(this.algebra, event);
+      final var effect$ = this.selector.select(this.aggregator, event);
       if (effect$.isPresent()) this.applicator.apply(state, effect$.get());
     }
 

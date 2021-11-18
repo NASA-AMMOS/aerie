@@ -10,8 +10,8 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Query;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import net.jqwik.api.Arbitraries;
 import net.jqwik.api.Arbitrary;
@@ -91,7 +91,7 @@ public final class TaskFrameTest {
     final var query = new Query<MutableObject<EventGraph<Integer>>>();
 
     final var applicator = new MutableGraphApplicator<Integer>();
-    final var algebra = new EventGraph.IdentityTrait<Integer>();
+    final var algebra = new EventGraph.IdentityAggregator<Integer>();
     final var selector = new Selector<>(topic, EventGraph::atom);
     final var evaluator = new RecursiveEventGraphEvaluator();
 
@@ -213,7 +213,7 @@ public final class TaskFrameTest {
     }
 
     // Decorated graphs compose just like regular graphs.
-    final class Trait<T> implements EffectTrait<HistoryDecoratedGraph<T>> {
+    final class HistoryAggregator<T> implements Aggregator<HistoryDecoratedGraph<T>> {
       @Override
       public HistoryDecoratedGraph<T> empty() {
         return new HistoryDecoratedGraph.Empty<>();
@@ -235,7 +235,7 @@ public final class TaskFrameTest {
     /** Decorate a given graph with the observed past at each event. */
     static <T> EventGraph<Pair<EventGraph<T>, T>> decorate(final EventGraph<T> graph) {
       return graph
-          .evaluate(new HistoryDecoratedGraph.Trait<>(), HistoryDecoratedGraph.Atom::new)
+          .evaluate(new HistoryAggregator<>(), HistoryDecoratedGraph.Atom::new)
           .get(EventGraph.empty());
     }
   }

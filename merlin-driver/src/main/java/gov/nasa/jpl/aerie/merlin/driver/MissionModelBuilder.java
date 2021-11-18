@@ -10,7 +10,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -39,10 +39,10 @@ public final class MissionModelBuilder implements Initializer {
   gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
+      final Aggregator<Effect> aggregator,
       final Function<EventType, Effect> projection
   ) {
-    return this.state.allocate(initialState, applicator, trait, projection);
+    return this.state.allocate(initialState, applicator, aggregator, projection);
   }
 
   @Override
@@ -100,7 +100,7 @@ public final class MissionModelBuilder implements Initializer {
     gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
-        final EffectTrait<Effect> trait,
+        final Aggregator<Effect> aggregator,
         final Function<EventType, Effect> projection
     ) {
       final var topic = new Topic<EventType>();
@@ -112,7 +112,7 @@ public final class MissionModelBuilder implements Initializer {
       final var evaluator = new RecursiveEventGraphEvaluator();
 
       final var query = new Query<CellType>();
-      this.initialCells.put(query, new Cell<>(applicator, trait, selector, evaluator, initialState));
+      this.initialCells.put(query, new Cell<>(applicator, aggregator, selector, evaluator, initialState));
 
       return new EngineQuery<>(topic, query);
     }
@@ -168,7 +168,7 @@ public final class MissionModelBuilder implements Initializer {
     gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, CellType> allocate(
         final CellType initialState,
         final Applicator<Effect, CellType> applicator,
-        final EffectTrait<Effect> trait,
+        final Aggregator<Effect> aggregator,
         final Function<EventType, Effect> projection
     ) {
       throw new IllegalStateException("Cells cannot be allocated after the schema is built");

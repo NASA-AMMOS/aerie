@@ -2,7 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -26,7 +26,7 @@ public interface Context {
   allocate(
       CellType initialState,
       Applicator<Effect, CellType> applicator,
-      EffectTrait<Effect> trait,
+      Aggregator<Effect> aggregator,
       Function<Event, Effect> projection);
 
   // Usable during simulation

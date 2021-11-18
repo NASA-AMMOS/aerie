@@ -1,8 +1,8 @@
 package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Phantom;
@@ -84,7 +84,7 @@ public final class CellExpiryTest {
             return Optional.of(expiry);
           }
         },
-        new EffectTrait<>() {
+        new Aggregator<>() {
           @Override
           public Object empty() {
             return new Object();

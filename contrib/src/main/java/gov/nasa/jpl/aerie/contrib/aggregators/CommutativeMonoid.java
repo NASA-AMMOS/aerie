@@ -1,6 +1,6 @@
-package gov.nasa.jpl.aerie.contrib.traits;
+package gov.nasa.jpl.aerie.contrib.aggregators;
 
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 
 import java.util.function.BinaryOperator;
 
@@ -19,14 +19,14 @@ import java.util.function.BinaryOperator;
  * </ul>
  *
  * <p>
- *   Any commutative monoid can be made into an {@link EffectTrait} by using the same operation for both sequential
+ *   Any commutative monoid can be made into an {@link Aggregator} by using the same operation for both sequential
  *   and concurrent composition.
  * </p>
  *
- * @see EffectTrait
+ * @see Aggregator
  */
 public record CommutativeMonoid<T> (T empty, BinaryOperator<T> combinator)
-    implements EffectTrait<T>
+    implements Aggregator<T>
 {
   @Override
   public T sequentially(final T prefix, final T suffix) {

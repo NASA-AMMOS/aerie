@@ -2,8 +2,8 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.model.Aggregator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
-import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
@@ -44,10 +44,10 @@ public final class InitializationContext implements Context {
   Query<Event, CellType> allocate(
       final CellType initialState,
       final Applicator<Effect, CellType> applicator,
-      final EffectTrait<Effect> trait,
+      final Aggregator<Effect> aggregator,
       final Function<Event, Effect> projection
   ) {
-    return this.builder.allocate(initialState, applicator, trait, projection);
+    return this.builder.allocate(initialState, applicator, aggregator, projection);
   }
 
   @Override

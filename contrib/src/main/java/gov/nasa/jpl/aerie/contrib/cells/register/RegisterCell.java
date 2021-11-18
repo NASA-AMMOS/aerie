@@ -24,7 +24,7 @@ public final class RegisterCell<T> {
     return CellRef.allocate(
         new RegisterCell<>(duplicator, initialValue, false),
         new RegisterApplicator<>(),
-        new RegisterEffect.Trait<>(),
+        new RegisterEffect.RegisterAggregator<>(),
         interpreter);
   }
 
