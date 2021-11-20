@@ -21,6 +21,8 @@ begin;
   \ir tables/span.sql
   \ir tables/profile.sql
   \ir tables/profile_segment.sql
+  \ir tables/topic.sql
+  \ir tables/event.sql
 
   -- Analysis intents
   \ir tables/condition.sql
