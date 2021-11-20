@@ -390,9 +390,36 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
     ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart);
     postSimulatedActivities(connection, datasetId, results.simulatedActivities, simulationStart);
+    insertSimulationTopics(connection, datasetId, results.topics);
+    insertSimulationEvents(connection, datasetId, results.events, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
       setSimulationStateAction.apply(datasetId, new State.Success(results));
+    }
+  }
+
+  private static void insertSimulationTopics(
+      Connection connection,
+      long datasetId,
+      final List<Triple<Integer, String, ValueSchema>> topics) throws SQLException
+  {
+    try (
+        final var insertSimulationTopicsAction = new InsertSimulationTopicsAction(connection);
+    ) {
+      insertSimulationTopicsAction.apply(datasetId, topics);
+    }
+  }
+
+  private static void insertSimulationEvents(
+      Connection connection,
+      long datasetId,
+      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      Timestamp simulationStart) throws SQLException
+  {
+    try (
+        final var insertSimulationEventsAction = new InsertSimulationEventsAction(connection);
+    ) {
+        insertSimulationEventsAction.apply(datasetId, events, simulationStart);
     }
   }
 
