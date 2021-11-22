@@ -14,12 +14,12 @@
         "size": 40,
         "timeline": {
           "id": 0,
-          "marginLeft": 110,
-          "marginRight": 30,
+          "marginLeft": 70,
+          "marginRight": 10,
           "rows": [
             {
               "autoAdjustHeight": false,
-              "height": 194,
+              "height": 150,
               "horizontalGuides": [],
               "id": 0,
               "layers": [
@@ -33,20 +33,7 @@
                 }
               ],
               "yAxes": []
-            }
-          ],
-          "verticalGuides": []
-        },
-        "type": "timeline"
-      },
-      {
-        "id": 1,
-        "size": 60,
-        "timeline": {
-          "id": 1,
-          "marginLeft": 110,
-          "marginRight": 30,
-          "rows": [
+            },
             {
               "autoAdjustHeight": false,
               "height": 100,
@@ -74,13 +61,15 @@
             },
             {
               "autoAdjustHeight": false,
-              "height": 130,
+              "height": 160,
               "horizontalGuides": [],
               "id": 2,
               "layers": [
                 {
                   "chartType": "line",
-                  "filter": { "resource": { "name": "/data/VC05/volume" } },
+                  "filter": {
+                    "resource": { "name": "/power/genericPowerUsed" }
+                  },
                   "id": 2,
                   "lineColor": "#283593",
                   "lineWidth": 1,
@@ -92,27 +81,24 @@
                 {
                   "color": "#000000",
                   "id": 2,
-                  "label": { "text": "/data/VC05/volume" },
-                  "scaleDomain": [0, 200],
+                  "label": { "text": "/power/genericPowerUsed" },
+                  "scaleDomain": [0, 1],
                   "tickCount": 5
                 }
               ]
             },
             {
               "autoAdjustHeight": false,
-              "height": 130,
+              "height": 100,
               "horizontalGuides": [],
               "id": 3,
               "layers": [
                 {
-                  "chartType": "line",
-                  "filter": {
-                    "resource": { "name": "/power/genericPowerUsed" }
-                  },
+                  "chartType": "x-range",
+                  "colorScheme": "schemeTableau10",
+                  "filter": { "resource": { "name": "/ids/IDAMode" } },
                   "id": 3,
-                  "lineColor": "#283593",
-                  "lineWidth": 1,
-                  "pointRadius": 2,
+                  "opacity": 0.8,
                   "yAxisId": 3
                 }
               ],
@@ -120,7 +106,88 @@
                 {
                   "color": "#000000",
                   "id": 3,
-                  "label": { "text": "genericPowerUsed" },
+                  "label": { "text": "/ids/IDAMode" },
+                  "scaleDomain": [],
+                  "tickCount": 0
+                }
+              ]
+            },
+            {
+              "autoAdjustHeight": false,
+              "height": 200,
+              "horizontalGuides": [],
+              "id": 4,
+              "layers": [
+                {
+                  "chartType": "line",
+                  "filter": {
+                    "resource": { "name": "/data/hk/APSS/FullWakeRate" }
+                  },
+                  "id": 4,
+                  "lineColor": "#283593",
+                  "lineWidth": 1,
+                  "pointRadius": 2,
+                  "yAxisId": 4
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 4,
+                  "label": { "text": "/data/hk/APSS/FullWakeRate" },
+                  "scaleDomain": [0, 1],
+                  "tickCount": 5
+                }
+              ]
+            },
+            {
+              "autoAdjustHeight": false,
+              "height": 170,
+              "horizontalGuides": [],
+              "id": 5,
+              "layers": [
+                {
+                  "chartType": "x-range",
+                  "colorScheme": "schemeAccent",
+                  "filter": { "resource": { "name": "/power/pelStates/Harness" } },
+                  "id": 5,
+                  "opacity": 0.8,
+                  "yAxisId": 5
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 5,
+                  "label": { "text": "/power/pelStates/Harness" },
+                  "scaleDomain": [],
+                  "tickCount": 0
+                }
+              ]
+            },
+            {
+              "autoAdjustHeight": false,
+              "height": 200,
+              "horizontalGuides": [],
+              "id": 6,
+              "layers": [
+                {
+                  "chartType": "line",
+                  "filter": {
+                    "resource": { "name": "/data/apids/HP3_ENG/dataRate" }
+                  },
+                  "id": 6,
+                  "lineColor": "#283593",
+                  "lineWidth": 1,
+                  "pointRadius": 2,
+                  "yAxisId": 6
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 6,
+                  "label": { "text": "/data/apids/HP3_ENG/dataRate" },
                   "scaleDomain": [0, 1],
                   "tickCount": 5
                 }
