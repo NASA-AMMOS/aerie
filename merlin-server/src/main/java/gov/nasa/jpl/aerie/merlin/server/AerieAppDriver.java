@@ -4,8 +4,8 @@ import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import gov.nasa.jpl.aerie.merlin.server.config.AppConfiguration;
-import gov.nasa.jpl.aerie.merlin.server.config.AppConfigurationJsonMapper;
 import gov.nasa.jpl.aerie.merlin.server.config.InMemoryStore;
+import gov.nasa.jpl.aerie.merlin.server.config.JavalinLoggingState;
 import gov.nasa.jpl.aerie.merlin.server.config.PostgresStore;
 import gov.nasa.jpl.aerie.merlin.server.config.Store;
 import gov.nasa.jpl.aerie.merlin.server.http.LocalAppExceptionBindings;
@@ -29,11 +29,7 @@ import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
-
-import javax.json.Json;
-import javax.json.JsonObject;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
@@ -43,7 +39,7 @@ public final class AerieAppDriver {
 
   public static void main(final String[] args) {
     // Fetch application configuration properties.
-    final var configuration = loadConfiguration(args);
+    final var configuration = loadConfiguration();
     final var stores = loadStores(configuration);
 
     // Assemble the core non-web object graph.
@@ -121,23 +117,21 @@ public final class AerieAppDriver {
     }
   }
 
-  private static AppConfiguration loadConfiguration(final String[] args) {
-    // Determine where we're getting our configuration from.
-    final InputStream configStream;
-    if (args.length > 0) {
-      try {
-        configStream = Files.newInputStream(Path.of(args[0]));
-      } catch (final IOException ex) {
-        log.warning("Configuration file \"%s\" could not be loaded: %s".formatted(args[0], ex.getMessage()));
-        System.exit(1);
-        throw new Error(ex);
-      }
-    } else {
-      configStream = AerieAppDriver.class.getResourceAsStream("config.json");
-    }
+  private static final String getEnv(final String key, final String fallback){
+    final var env = System.getenv(key);
+    return env == null ? fallback : env;
+  }
 
-    // Read and process the configuration source.
-    final var config = (JsonObject)(Json.createReader(configStream).readValue());
-    return AppConfigurationJsonMapper.fromJson(config);
+  private static AppConfiguration loadConfiguration() {
+    return new AppConfiguration(
+        Integer.parseInt(getEnv("MERLIN_PORT","27183")),
+        Boolean.parseBoolean(getEnv("MERLIN_LOGGING","true")) ? JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
+        Path.of(getEnv("MERLIN_LOCAL_STORE","/usr/src/app/merlin_file_store")),
+        new PostgresStore(getEnv("MERLIN_DB_TYPE","postgres"),
+                          getEnv("MERLIN_DB_USER","aerie"),
+                          Integer.parseInt(getEnv("MERLIN_DB_PORT","5432")),
+                          getEnv("MERLIN_DB_PASSWORD","aerie"),
+                          getEnv("MERLIN_DB","aerie_merlin"))
+    );
   }
 }
