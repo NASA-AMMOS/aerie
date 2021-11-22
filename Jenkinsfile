@@ -155,6 +155,8 @@ pipeline {
             mkdir -p ${ASSEMBLE_PREP_DIR}/services
             cp merlin-server/build/distributions/*.tar \
                ${ASSEMBLE_PREP_DIR}/services/
+            cp scheduler-server/build/distributions/*.tar \
+               ${ASSEMBLE_PREP_DIR}/services/
 
             # For deployment
             cp -r ./deployment ${STAGING_DIR}

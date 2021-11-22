@@ -23,9 +23,8 @@ import java.util.logging.Logger;
  * Implements the missionModel service {@link MissionModelService} interface on a set of local domain objects.
  *
  * May throw unchecked exceptions:
- * * {@link MissionModelLoadException}: When an mission model cannot be loaded from the JAR provided by the
- * connected
- * mission model repository.
+ * * {@link MissionModelLoadException}: When a mission model cannot be loaded from the JAR provided by the
+ * connected mission model repository.
  */
 public final class LocalMissionModelService implements MissionModelService {
   private static final Logger log = Logger.getLogger(LocalMissionModelService.class.getName());
@@ -219,7 +218,7 @@ public final class LocalMissionModelService implements MissionModelService {
    * Load an {@link MissionModel} from the mission model repository, and wrap it in an {@link MissionModelFacade} domain object.
    *
    * @param missionModelId The ID of the mission model in the mission model repository to load.
-   * @param configuration The mission model configuration to to load the mission model with.
+   * @param configuration The mission model configuration to load the mission model with.
    * @return An {@link MissionModelFacade} domain object allowing use of the loaded mission model.
    * @throws MissionModelLoadException If the mission model cannot be loaded -- the JAR may be invalid, or the mission model
    * it contains may not abide by the expected contract at load time.

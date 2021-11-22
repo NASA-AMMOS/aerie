@@ -60,6 +60,13 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+  scheduler:
+    depends_on: ["postgres","merlin"]
+    image: "${AERIE_DOCKER_URL}/scheduler:${DOCKER_TAG}"
+    ports: ["27193:27193"]
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store
   postgres:
     environment:
       POSTGRES_DB: postgres

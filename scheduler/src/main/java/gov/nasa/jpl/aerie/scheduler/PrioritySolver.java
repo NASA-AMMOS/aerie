@@ -39,6 +39,7 @@ public class PrioritySolver implements Solver {
     this.problem = problem;
   }
 
+  //TODO: should probably be part of sched configuration; maybe even per rule
   public void checkSimBeforeInsertingActInPlan(){
     this.checkSimBeforeInsertingActivities = true;
   }
@@ -108,9 +109,6 @@ public class PrioritySolver implements Solver {
       }
     }
 
-  /**
-   * creates internal storage space to build up partial solutions in
-   **/
     if(!allGood) {
       plan.remove(acts);
     }
