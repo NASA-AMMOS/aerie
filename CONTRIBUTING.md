@@ -78,3 +78,7 @@ The project relies on the ability to effectively query the Git history
 ## Asking for Help
 
 If you have a question, a great place to reach out is the mpsa-aerie Slack channel.
+
+## Code Of Conduct
+
+Please read the [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for participation in our community.
