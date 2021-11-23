@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
@@ -22,13 +21,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realDynamicsP;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
   private final DataSource dataSource;
@@ -279,7 +274,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var startTimestamp = simulationWindow.start();
     final var simulationStart = startTimestamp.toInstant();
 
-    final var profiles = getProfiles(connection, dataset.id(), simulationWindow);
+    final var profiles = ProfileRepository.getProfiles(connection, dataset.id(), simulationWindow);
     final var realProfiles = profiles.getLeft();
     final var discreteProfiles = profiles.getRight();
 
@@ -383,64 +378,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       return getPlanAction.get(planId);
     }
   }
-
-  private static Pair<
-      Map<String, List<Pair<Duration, RealDynamics>>>,
-      Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>>
-  getProfiles(
-      final Connection connection,
-      final long datasetId,
-      final Window simulationWindow
-  ) throws SQLException {
-    final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
-    final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
-
-    final var profileRecords = getProfileRecords(connection, datasetId);
-    for (final var record : profileRecords) {
-      switch (record.type().getLeft()) {
-        case "real" -> realProfiles.put(record.name(), getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow));
-        case "discrete" -> discreteProfiles.put(record.name(),
-                                                Pair.of(
-                                                    record.type().getRight(),
-                                                    getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)));
-        default -> throw new Error("Unrecognized profile type");
-      }
-    }
-
-    return Pair.of(realProfiles, discreteProfiles);
-  }
-
-  private static List<ProfileRecord> getProfileRecords(
-      final Connection connection,
-      final long datasetId
-  ) throws SQLException {
-    try (final var getProfilesAction = new GetProfilesAction(connection)) {
-      return getProfilesAction.get(datasetId);
-    }
-  }
-
-  private static List<Pair<Duration, RealDynamics>> getRealProfileSegments(
-      final Connection connection,
-      final long datasetId,
-      final long profileId,
-      final Window simulationWindow
-  ) throws SQLException {
-    try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, realDynamicsP);
-    }
-  }
-
-  private static List<Pair<Duration, SerializedValue>> getDiscreteProfileSegments(
-      final Connection connection,
-      final long datasetId,
-      final long profileId,
-      final Window simulationWindow
-  ) throws SQLException {
-    try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, serializedValueP);
-    }
-  }
-
+  
   private static void postSimulationResults(
       final Connection connection,
       final long datasetId,
@@ -448,7 +386,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     final var simulationStart = new Timestamp(results.startTime);
-    postResourceProfiles(connection, datasetId, results.realProfiles, results.discreteProfiles, simulationStart);
+    ProfileRepository.postResourceProfiles(connection, datasetId, results.realProfiles, results.discreteProfiles, simulationStart);
     postSimulatedActivities(connection, datasetId, results.simulatedActivities, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
@@ -474,80 +412,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           datasetId,
           simulatedActivities,
           simIdToPgId);
-    }
-  }
-
-  private static void postResourceProfiles(
-      final Connection connection,
-      final long datasetId,
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
-      final Timestamp simulationStart
-  ) throws SQLException {
-    try (final var postProfilesAction = new PostProfilesAction(connection)) {
-      final var profileRecords = postProfilesAction.apply(
-          datasetId,
-          realProfiles,
-          discreteProfiles);
-      postProfileSegments(
-          connection,
-          datasetId,
-          profileRecords,
-          realProfiles,
-          discreteProfiles,
-          simulationStart);
-    }
-  }
-
-  private static void postProfileSegments(
-      final Connection connection,
-      final long datasetId,
-      final Map<String, ProfileRecord> records,
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
-      final Timestamp simulationStart
-  ) throws SQLException {
-    for (final var resource : records.keySet()) {
-      final ProfileRecord record = records.get(resource);
-      switch (record.type().getLeft()) {
-        case "real" -> postRealProfileSegments(
-            connection,
-            datasetId,
-            record,
-            realProfiles.get(resource),
-            simulationStart);
-        case "discrete" -> postDiscreteProfileSegments(
-            connection,
-            datasetId,
-            record,
-            discreteProfiles.get(resource).getRight(),
-            simulationStart);
-        default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
-      }
-    }
-  }
-
-  private static void postRealProfileSegments(
-      final Connection connection,
-      final long datasetId,
-      final ProfileRecord profileRecord,
-      final List<Pair<Duration, RealDynamics>> segments,
-      final Timestamp simulationStart
-  ) throws SQLException {
-    try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, realDynamicsP);
-    }
-  }
-
-  private static void postDiscreteProfileSegments(
-      final Connection connection,
-      final long datasetId,
-      final ProfileRecord profileRecord,
-      final List<Pair<Duration, SerializedValue>> segments,
-      final Timestamp simulationStart
-  ) throws SQLException {
-    try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, serializedValueP);
     }
   }
 
