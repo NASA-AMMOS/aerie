@@ -236,8 +236,8 @@ public final class SimulationEngine implements AutoCloseable {
     if (status instanceof TaskStatus.Completed) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
-      final var awaiting = progress.completedAt(currentTime, children);
-      this.stepWaitingTask(task, awaiting, frame, currentTime);
+      this.tasks.put(task, progress.completedAt(currentTime, children));
+      this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed s) {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));

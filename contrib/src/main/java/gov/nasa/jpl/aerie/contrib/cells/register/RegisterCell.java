@@ -52,7 +52,7 @@ public final class RegisterCell<T> {
     public void apply(final RegisterCell<T> cell, final RegisterEffect<T> effect) {
       if (effect.newValue != null) {
         cell.value = effect.newValue;
-        cell.conflicted = false;
+        cell.conflicted = effect.conflicted;
       } else if (effect.conflicted) {
         cell.conflicted = true;
       }
