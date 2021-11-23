@@ -44,4 +44,22 @@ public final class RegisterTest {
         () -> assertTrue(register.isConflicted()),
         () -> assertEquals(0, register.get())));
   }
+
+  @Test
+  @DisplayName("Conflicting writes after a successful write should mark the conflict flag and keep the successful write")
+  public void conflictsPreserveLastWrite() {
+    assertEquals(0, register.get());
+
+    // This block must be performed without any intervening `get`s,
+    // or else the first `set` might be applied without aggregating it first with the later `set`s.
+    call(() -> {
+      register.set(1);
+      spawn(() -> register.set(2));
+      spawn(() -> register.set(2));
+    });
+
+    assertAll(List.of(
+        () -> assertTrue(register.isConflicted(), "register should be conflicted"),
+        () -> assertEquals(1, register.get(), "register should be set to 1")));
+  }
 }
