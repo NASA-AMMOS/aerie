@@ -192,6 +192,38 @@
                   "tickCount": 5
                 }
               ]
+            },
+            {
+              "autoAdjustHeight": false,
+              "height": 130,
+              "horizontalGuides": [],
+              "id": 7,
+              "layers": [
+                {
+                  "chartType": "line",
+                  "filter": {
+                    "resource": {
+                      "name": "/data/VC05/volume"
+                    }
+                  },
+                  "id": 7,
+                  "lineColor": "#283593",
+                  "lineWidth": 1,
+                  "pointRadius": 2,
+                  "yAxisId": 7
+                }
+              ],
+              "yAxes": [
+                {
+                  "color": "#000000",
+                  "id": 7,
+                  "label": {
+                    "text": "/data/VC05/volume"
+                  },
+                  "scaleDomain": [0, 200],
+                  "tickCount": 5
+                }
+              ]
             }
           ],
           "verticalGuides": []
