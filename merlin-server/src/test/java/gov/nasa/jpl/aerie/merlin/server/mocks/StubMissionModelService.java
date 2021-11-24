@@ -3,6 +3,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -55,6 +56,7 @@ public final class StubMissionModelService implements MissionModelService {
       Map.of(),
       Map.of(),
       Instant.EPOCH,
+      Duration.ZERO,
       new ArrayList<>());
 
   static {

@@ -331,6 +331,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException {
     final var simulationWindow = getSimulationWindow(connection, dataset);
     final var startTimestamp = simulationWindow.start();
+    final var simulationDuration = simulationWindow.getDuration();
     final var simulationStart = startTimestamp.toInstant();
 
     final var profiles = getProfiles(connection, dataset.id(), startTimestamp);
@@ -351,6 +352,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activities,
         unfinishedActivities,
         simulationStart,
+        simulationDuration,
         events
     );
   }

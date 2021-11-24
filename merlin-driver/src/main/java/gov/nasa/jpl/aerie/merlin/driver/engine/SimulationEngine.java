@@ -384,13 +384,13 @@ public final class SimulationEngine implements AutoCloseable {
       switch (resource.getType()) {
         case "real" -> realProfiles.put(
             name,
-            serializeProfile(elapsedTime, state, SimulationEngine::extractRealDynamics));
+            serializeProfile(state, SimulationEngine::extractRealDynamics));
 
         case "discrete" -> discreteProfiles.put(
             name,
             Pair.of(
                 state.resource().getSchema(),
-                serializeProfile(elapsedTime, state, Resource::serialize)));
+                serializeProfile(state, Resource::serialize)));
 
         default ->
             throw new IllegalArgumentException(
@@ -479,6 +479,7 @@ public final class SimulationEngine implements AutoCloseable {
                                  simulatedActivities,
                                  unsimulatedActivities,
                                  startTime,
+                                 elapsedTime,
                                  serializedTimeline);
   }
 
@@ -494,27 +495,17 @@ public final class SimulationEngine implements AutoCloseable {
 
   private static <Target, Dynamics>
   List<Pair<Duration, Target>> serializeProfile(
-      final Duration elapsedTime,
       final ProfilingState<Dynamics> state,
       final Translator<Target> translator
   ) {
     final var profile = new ArrayList<Pair<Duration, Target>>(state.profile().segments().size());
 
-    final var iter = state.profile().segments().iterator();
-    if (iter.hasNext()) {
-      var segment = iter.next();
-      while (iter.hasNext()) {
-        final var nextSegment = iter.next();
-
-        profile.add(Pair.of(
-            nextSegment.startOffset().minus(segment.startOffset()),
-            translator.apply(state.resource(), segment.dynamics())));
-        segment = nextSegment;
-      }
-
+    var elapsedTime = Duration.ZERO;
+    for (final var segment : state.profile().segments()) {
       profile.add(Pair.of(
-          elapsedTime.minus(segment.startOffset()),
+          segment.startOffset().minus(elapsedTime),
           translator.apply(state.resource(), segment.dynamics())));
+      elapsedTime = segment.startOffset();
     }
 
     return profile;

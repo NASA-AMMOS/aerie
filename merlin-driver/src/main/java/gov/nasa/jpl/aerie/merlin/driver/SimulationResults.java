@@ -16,6 +16,7 @@ import java.util.Map;
 
 public final class SimulationResults {
   public final Instant startTime;
+  public final Duration totalTime;
   public final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles;
   public final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles;
   public final Map<String, List<Pair<Duration, SerializedValue>>> resourceSamples;
@@ -29,12 +30,14 @@ public final class SimulationResults {
       final Map<String, SimulatedActivity> simulatedActivities,
       final Map<String, SerializedActivity> unfinishedActivities,
       final Instant startTime,
+      final Duration totalTime,
       final List<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>> events)
   {
     this.startTime = startTime;
+    this.totalTime = totalTime;
     this.realProfiles = realProfiles;
     this.discreteProfiles = discreteProfiles;
-    this.resourceSamples = takeSamples(realProfiles, discreteProfiles);
+    this.resourceSamples = takeSamples(realProfiles, discreteProfiles, totalTime);
     this.simulatedActivities = simulatedActivities;
     this.unfinishedActivities = unfinishedActivities;
     this.events = events;
@@ -43,7 +46,8 @@ public final class SimulationResults {
   private static Map<String, List<Pair<Duration, SerializedValue>>>
   takeSamples(
       final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles)
+      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
+      final Duration totalTime)
   {
     final var samples = new HashMap<String, List<Pair<Duration, SerializedValue>>>();
 
@@ -51,17 +55,29 @@ public final class SimulationResults {
       var elapsed = Duration.ZERO;
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
-      for (final var piece : profile) {
-        final var extent = piece.getLeft();
-        final var dynamics = piece.getRight();
-
+      final var iterator = profile.iterator();
+      if (iterator.hasNext()) {
+        var piece = iterator.next();
         timeline.add(Pair.of(elapsed, SerializedValue.of(
-            dynamics.initial)));
+            piece.getRight().initial)));
+
+        while (iterator.hasNext()) {
+          final var nextPiece = iterator.next();
+          final var extent = nextPiece.getLeft();
+          elapsed = elapsed.plus(extent);
+          timeline.add(Pair.of(elapsed, SerializedValue.of(
+              piece.getRight().initial + piece.getRight().rate * extent.ratioOver(Duration.SECONDS))));
+
+          piece = nextPiece;
+          timeline.add(Pair.of(elapsed, SerializedValue.of(
+              piece.getRight().initial)));
+        }
+
+        final var extent = totalTime.minus(elapsed);
         elapsed = elapsed.plus(extent);
         timeline.add(Pair.of(elapsed, SerializedValue.of(
-            dynamics.initial + dynamics.rate * extent.ratioOver(Duration.SECONDS))));
+            piece.getRight().initial + piece.getRight().rate * extent.ratioOver(Duration.SECONDS))));
       }
-
       samples.put(name, timeline);
     });
     discreteProfiles.forEach((name, p) -> {
@@ -69,13 +85,25 @@ public final class SimulationResults {
       var profile = p.getRight();
 
       final var timeline = new ArrayList<Pair<Duration, SerializedValue>>();
-      for (final var piece : profile) {
-        final var extent = piece.getLeft();
-        final var value = piece.getRight();
 
-        timeline.add(Pair.of(elapsed, value));
+      final var iterator = profile.iterator();
+      if (iterator.hasNext()) {
+        var piece = iterator.next();
+        timeline.add(Pair.of(elapsed, piece.getRight()));
+
+        while (iterator.hasNext()) {
+          final var nextPiece = iterator.next();
+          final var extent = nextPiece.getLeft();
+          elapsed = elapsed.plus(extent);
+          timeline.add(Pair.of(elapsed, piece.getRight()));
+
+          piece = nextPiece;
+          timeline.add(Pair.of(elapsed, piece.getRight()));
+        }
+
+        final var extent = totalTime.minus(elapsed);
         elapsed = elapsed.plus(extent);
-        timeline.add(Pair.of(elapsed, value));
+        timeline.add(Pair.of(elapsed, piece.getRight()));
       }
 
       samples.put(name, timeline);
