@@ -49,7 +49,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
     final var planId = Long.parseLong(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlanStart(connection, planId);
+      final var planStart = getPlan(connection, planId).startTime();
       // TODO: At the time of writing, simulation starts at the plan start every time
       //       When that changes, we will need to update the simulation start here as well
       final var simulationStart = planStart;
@@ -329,8 +329,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final DatasetRecord dataset
   ) throws SQLException {
-    final var simulationStart = getSimulationStart(connection, dataset);
-    final var startTimestamp = new Timestamp(simulationStart);
+    final var simulationWindow = getSimulationWindow(connection, dataset);
+    final var startTimestamp = simulationWindow.start();
+    final var simulationStart = startTimestamp.toInstant();
 
     final var profiles = getProfiles(connection, dataset.id(), startTimestamp);
     final var realProfiles = profiles.getLeft();
@@ -413,26 +414,27 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     return pgIdToSimId;
   }
 
-  private static Instant getSimulationStart(
+  private static Window getSimulationWindow(
       final Connection connection,
       final DatasetRecord dataset
   ) throws SQLException {
     try {
-      return getPlanStart(connection, dataset.planId())
-          .plusMicros(dataset.offsetFromPlanStart().dividedBy(Duration.MICROSECONDS))
-          .time
-          .toInstant();
+      final var plan = getPlan(connection, dataset.planId());
+      final var simulationStart = plan.startTime()
+          .plusMicros(dataset.offsetFromPlanStart().dividedBy(Duration.MICROSECONDS));
+      final var simulationEnd = plan.endTime();
+      return new Window(simulationStart, simulationEnd);
     } catch (final NoSuchPlanException ex) {
       throw new Error("Plan for simulation dataset with ID " + dataset.id() + " no longer exists.");
     }
   }
 
-  private static Timestamp getPlanStart(
+  private static PlanRecord getPlan(
       final Connection connection,
       final long planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction.get(planId).startTime();
+      return getPlanAction.get(planId);
     }
   }
 
