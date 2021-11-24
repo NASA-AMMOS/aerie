@@ -498,10 +498,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postSimulationResults(
       final Connection connection,
       final long datasetId,
-      final SimulationResults results
+      final SimulationResults results,
+      final Duration simulationDuration
   ) throws SQLException, NoSuchDatasetException {
     final var simulationStart = new Timestamp(results.startTime);
-    postResourceProfiles(connection, datasetId, results.realProfiles, results.discreteProfiles, simulationStart);
+    postResourceProfiles(connection, datasetId, results.realProfiles, results.discreteProfiles, simulationStart, simulationDuration);
     postSimulatedActivities(connection, datasetId, results.simulatedActivities, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
@@ -535,7 +536,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final long datasetId,
       final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
-      final Timestamp simulationStart
+      final Timestamp simulationStart,
+      final Duration simulationDuration
   ) throws SQLException {
     try (final var postProfilesAction = new PostProfilesAction(connection)) {
       final var profileRecords = postProfilesAction.apply(
@@ -548,7 +550,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           profileRecords,
           realProfiles,
           discreteProfiles,
-          simulationStart);
+          simulationStart,
+          simulationDuration);
     }
   }
 
@@ -558,7 +561,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Map<String, ProfileRecord> records,
       final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
       final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
-      final Timestamp simulationStart
+      final Timestamp simulationStart,
+      final Duration simulationDuration
   ) throws SQLException {
     for (final var resource : records.keySet()) {
       final ProfileRecord record = records.get(resource);
@@ -568,13 +572,15 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             datasetId,
             record,
             realProfiles.get(resource),
-            simulationStart);
+            simulationStart,
+            simulationDuration);
         case "discrete" -> postDiscreteProfileSegments(
             connection,
             datasetId,
             record,
             discreteProfiles.get(resource).getRight(),
-            simulationStart);
+            simulationStart,
+            simulationDuration);
         default -> throw new Error("Unrecognized profile type " + record.type().getLeft());
       }
     }
@@ -585,10 +591,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final long datasetId,
       final ProfileRecord profileRecord,
       final List<Pair<Duration, RealDynamics>> segments,
-      final Timestamp simulationStart
+      final Timestamp simulationStart,
+      final Duration simulationDuration
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, realDynamicsP);
+      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, simulationDuration, realDynamicsP);
     }
   }
 
@@ -597,10 +604,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final long datasetId,
       final ProfileRecord profileRecord,
       final List<Pair<Duration, SerializedValue>> segments,
-      final Timestamp simulationStart
+      final Timestamp simulationStart,
+      final Duration simulationDuration
   ) throws SQLException {
     try (final var postProfileSegmentsAction = new PostProfileSegmentsAction(connection)) {
-      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, serializedValueP);
+      postProfileSegmentsAction.apply(datasetId, profileRecord, segments, simulationStart, simulationDuration, serializedValueP);
     }
   }
 
@@ -655,7 +663,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public void succeedWith(final SimulationResults results) {
       try (final var connection = dataSource.getConnection()) {
-        postSimulationResults(connection, datasetId, results);
+        final var dataset = getDataset(connection, datasetId);
+        if (dataset.isEmpty()) throw new NoSuchDatasetException(datasetId);
+        final var simulationDuration = getSimulationWindow(connection, dataset.get()).getDuration();
+        postSimulationResults(connection, datasetId, results, simulationDuration);
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);
       } catch (final NoSuchDatasetException ex) {

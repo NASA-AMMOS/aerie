@@ -30,18 +30,23 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
       final ProfileRecord profileRecord,
       final List<Pair<Duration, Dynamics>> segments,
       final Timestamp simulationStart,
+      final Duration simulationDuration,
       final JsonParser<Dynamics> dynamicsP
       ) throws SQLException {
 
-    // Each profile segment's duration part is the offset from the previous segment's end
-    // To preserve ordering in the database, we convert to absolute offset from simulation start
+    // Each profile segment's duration part is the extent of the current segment.
+    // To preserve ordering in the database, we convert to absolute offset from simulation start.
     // Then when pulling from the database, order by the start_offset column
-    var accumulatedOffset = Duration.ZERO;
-    for (final var pair : segments) {
-      final var offset = pair.getLeft();
-      accumulatedOffset = Duration.add(accumulatedOffset, offset);
+
+    // We iterate backwards because the end of the last segment is guaranteed to coincide with
+    // the end of the simulation.
+    var accumulatedOffset = simulationDuration;
+    for (int i = segments.size() - 1; i >= 0; i--) {
+      final Pair<Duration, Dynamics> segment = segments.get(i);
+      final var offset = segment.getLeft();
+      accumulatedOffset = Duration.subtract(accumulatedOffset, offset);
       final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
-      final var dynamics = pair.getRight();
+      final var dynamics = segment.getRight();
 
       this.statement.setLong(1, datasetId);
       this.statement.setLong(2, profileRecord.id());
