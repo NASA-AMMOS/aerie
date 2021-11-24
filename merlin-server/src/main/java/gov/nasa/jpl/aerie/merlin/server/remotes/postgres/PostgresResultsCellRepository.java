@@ -296,6 +296,26 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     );
   }
 
+  private static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
+  throws SQLException
+  {
+    try (final var getSimulationTopicsAction = new GetSimulationTopicsAction(connection)) {
+      return getSimulationTopicsAction.get(datasetId);
+    }
+  }
+
+  private static Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  getSimulationEvents(
+      final Connection connection,
+      final long datasetId,
+      final Timestamp startTime
+  ) throws SQLException
+  {
+    try (final var getSimulationEventsAction = new GetSimulationEventsAction(connection)) {
+      return getSimulationEventsAction.get(datasetId, startTime);
+    }
+  }
+
   private static Map<String, SimulatedActivity> getSimulatedActivities(
       final Connection connection,
       final long datasetId,
