@@ -280,8 +280,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
 
-    // TODO: Events are not currently persisted in the database. When they are, this stub will need to be updated.
-    final var events = new ArrayList<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>>();
+    // TODO: Events are not currently persisted in the database. When they are, these stubs will need to be updated.
+    final var topics = new ArrayList<Triple<Integer, String, ValueSchema>>();
+    final var events = new ArrayList<Pair<Duration, EventGraph<Pair<Integer, SerializedValue>>>>();
 
     return new SimulationResults(
         profiles.realProfiles(),
@@ -289,6 +290,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activities,
         unfinishedActivities,
         simulationStart,
+        topics,
         events
     );
   }
