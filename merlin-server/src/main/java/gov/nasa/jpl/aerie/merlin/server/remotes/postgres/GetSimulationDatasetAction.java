@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -13,7 +14,8 @@ import java.util.Optional;
           d.dataset_id,
           d.state,
           d.reason,
-          d.canceled
+          d.canceled,
+          d.offset_from_plan_start
       from simulation_dataset as d
       where
         d.simulation_id = ? and
@@ -32,7 +34,8 @@ import java.util.Optional;
       final long simulationId,
       final long modelRevision,
       final long planRevision,
-      final long simulationRevision
+      final long simulationRevision,
+      final Timestamp planStart
   ) throws SQLException {
     this.statement.setLong(1, simulationId);
     this.statement.setLong(2, simulationRevision);
@@ -43,20 +46,22 @@ import java.util.Optional;
     if (!results.next()) return Optional.empty();
 
     final var datasetId = results.getLong(1);
-    final var state = results.getString(2);
-    final var reason = results.getString(3);
+    final var state = new SimulationStateRecord(
+        results.getString(2),
+        results.getString(3));
     final var canceled = results.getBoolean(4);
+    final var offsetFromPlanStart = PostgresParsers.parseOffset(results, 5, planStart);
 
-    return Optional.of(new SimulationDatasetRecord(
-        simulationId,
-        datasetId,
-        simulationRevision,
-        planRevision,
-        modelRevision,
-        state,
-        reason,
-        canceled
-    ));
+    return Optional.of(
+        new SimulationDatasetRecord(
+            simulationId,
+            datasetId,
+            simulationRevision,
+            planRevision,
+            modelRevision,
+            state,
+            canceled,
+            offsetFromPlanStart));
   }
 
   @Override

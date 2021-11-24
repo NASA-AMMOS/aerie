@@ -25,7 +25,9 @@ import java.sql.SQLException;
   public void apply(final long datasetId, final State simulationState)
   throws SQLException, NoSuchSimulationDatasetException
   {
-    PreparedStatements.setSimulationState(this.statement, 1, 2, simulationState);
+    final var state = SimulationStateRecord.fromSimulationState(simulationState);
+    this.statement.setString(1, state.state());
+    this.statement.setString(2, state.reason());
     this.statement.setLong(3, datasetId);
 
     final var count = this.statement.executeUpdate();
