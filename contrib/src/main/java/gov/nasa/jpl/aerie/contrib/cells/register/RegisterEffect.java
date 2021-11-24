@@ -61,12 +61,36 @@ public final class RegisterEffect<T> {
 
     @Override
     public RegisterEffect<T> concurrently(final RegisterEffect<T> left, final RegisterEffect<T> right) {
-      // If neither is null, there's a conflict. Otherwise, pick the one that isn't null.
-      if (left.newValue == null) {
+      /*
+       left.hasValue | left.isConflicted | right.hasValue | right.isConflicted || ( left | right )
+      ---------------+-------------------+----------------+--------------------++--------------------
+      # The "one of them is a no-op" cluster
+               false |             false |          true  |              true  || right
+               false |             false |          true  |              false || right
+               false |             false |          false |              true  || conflict (right)
+               false |             false |          false |              false || noop (left/right)
+               false |             true  |          false |              false || conflict (left)
+               true  |             false |          false |              false || left
+               true  |             true  |          false |              false || left
+      # The "neither of them is a no-op" cluster
+               false |             true  |          true  |              true  || conflict (left)
+               false |             true  |          true  |              false || conflict (left)
+               false |             true  |          false |              true  || conflict (left/right)
+               true  |             false |          false |              true  || conflict (right)
+               true  |             true  |          false |              true  || conflict (right)
+               true  |             false |          true  |              true  || conflict
+               true  |             false |          true  |              false || conflict
+               true  |             true  |          true  |              true  || conflict
+               true  |             true  |          true  |              false || conflict
+       */
+      if (left.newValue == null && !left.conflicted) {
+        // Left is a no-op; take the right.
         return right;
-      } else if (right.newValue == null) {
+      } else if (right.newValue == null && !right.conflicted) {
+        // Right is a no-op; take the left.
         return left;
       } else {
+        // Left and right are both doing *something*, causing a pure conflict.
         return conflict();
       }
     }
