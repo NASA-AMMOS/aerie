@@ -66,7 +66,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       return new PostgresResultsCell(
           this.dataSource,
           simulation,
-          dataset.datasetID(),
+          dataset.datasetId(),
           MODEL_REVISION,
           planRevision,
           planStart);
@@ -95,7 +95,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           planRevision,
           simulation.revision(),
           planStart
-      ).map(SimulationDatasetRecord::datasetID);
+      ).map(SimulationDatasetRecord::datasetId);
 
       if (datasetId$.isEmpty()) return Optional.empty();
       final var datasetId = datasetId$.get();
@@ -133,7 +133,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       );
       if (record$.isEmpty()) return;
 
-      deleteSimulationDataset(connection, record$.get().datasetID());
+      deleteSimulationDataset(connection, record$.get().datasetId());
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete simulation", ex);
     } catch (final NoSuchPlanException ex) {
@@ -273,11 +273,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var startTimestamp = simulationWindow.start();
     final var simulationStart = startTimestamp.toInstant();
 
-    final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetID(), simulationWindow);
+    final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId(), simulationWindow);
     final var realProfiles = profiles.getLeft();
     final var discreteProfiles = profiles.getRight();
 
-    final var activities = getSimulatedActivities(connection, simulationDatasetRecord.datasetID(), startTimestamp);
+    final var activities = getSimulatedActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
@@ -366,7 +366,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var simulationEnd = plan.endTime();
       return new Window(simulationStart, simulationEnd);
     } catch (final NoSuchPlanException ex) {
-      throw new Error("Plan for simulation dataset with ID " + simulationDatasetRecord.datasetID() + " no longer exists.");
+      throw new Error("Plan for simulation dataset with ID " + simulationDatasetRecord.datasetId() + " no longer exists.");
     }
   }
 

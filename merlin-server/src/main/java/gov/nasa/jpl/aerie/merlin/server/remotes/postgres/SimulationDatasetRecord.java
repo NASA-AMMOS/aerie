@@ -4,7 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 public final record SimulationDatasetRecord(
     long simulationId,
-    long datasetID,
+    long datasetId,
     long simulationRevision,
     long planRevision,
     long modelRevision,
