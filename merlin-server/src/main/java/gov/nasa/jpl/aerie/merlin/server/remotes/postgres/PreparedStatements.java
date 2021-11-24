@@ -36,24 +36,4 @@ public final class PreparedStatements {
   throws SQLException {
     statement.setString(parameter, ResponseSerializers.serializeStringList(requiredParameters).toString());
   }
-
-  public static void setSimulationState(
-      final PreparedStatement statement,
-      final int stateIndex,
-      final int reasonIndex,
-      final ResultsProtocol.State simulationState
-  ) throws SQLException {
-    if (simulationState instanceof ResultsProtocol.State.Success) {
-      statement.setString(stateIndex, "success");
-      statement.setString(reasonIndex, null);
-    } else if (simulationState instanceof ResultsProtocol.State.Failed s) {
-      statement.setString(stateIndex, "failed");
-      statement.setString(reasonIndex, s.reason());
-    } else if (simulationState instanceof ResultsProtocol.State.Incomplete) {
-      statement.setString(stateIndex, "incomplete");
-      statement.setString(reasonIndex, null);
-    } else {
-      throw new Error("Unrecognized simulation state");
-    }
-  }
 }
