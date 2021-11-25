@@ -25,7 +25,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       where
         seg.dataset_id = ? and
         seg.profile_id = ?
-      order by seg.start_offset asc
+      order by seg.start_offset desc
     """;
   private final PreparedStatement statement;
 
@@ -37,8 +37,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final long datasetId,
       final long profileId,
       final Timestamp simulationStart,
-      final JsonParser<Dynamics> dynamicsP
-      ) throws SQLException {
+      final JsonParser<Dynamics> dynamicsP,
+      final Duration simulationDuration
+  ) throws SQLException {
     final var segments = new ArrayList<Pair<Duration, Dynamics>>();
     this.statement.setLong(1, datasetId);
     this.statement.setLong(2, profileId);
@@ -46,13 +47,14 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
     // Profile segments are stored with their start offset relative to simulation start
     // We must convert these offsets to be relative to their previous segment's start
-    var previousOffset = Duration.ZERO;
+    // Note: we are iterating through them in `desc` order.
+    Duration previousOffsetFromPlanStart = simulationDuration;
     while (resultSet.next()) {
-      final var absoluteOffset = parseOffset(resultSet, 1, simulationStart);
-      final var offset = absoluteOffset.minus(previousOffset);
+      final var offsetFromPlanStart = parseOffset(resultSet, 1, simulationStart);
+      final var extent = previousOffsetFromPlanStart.minus(offsetFromPlanStart);
       final var dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
-      segments.add(Pair.of(offset, dynamics));
-      previousOffset = absoluteOffset;
+      segments.add(0, Pair.of(extent, dynamics)); // insert at the beginning of the list.
+      previousOffsetFromPlanStart = offsetFromPlanStart;
     }
 
     return segments;
