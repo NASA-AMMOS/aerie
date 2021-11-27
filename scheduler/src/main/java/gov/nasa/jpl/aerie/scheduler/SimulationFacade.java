@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -350,8 +351,8 @@ public class SimulationFacade {
         driverResults.simulatedActivities.entrySet().stream()
                                          .map(e -> convertToConstraintModelActivityInstance(e.getKey(), e.getValue()))
                                          .collect(Collectors.toList()),
-        Maps.transformValues(driverResults.realProfiles, this::convertToConstraintModelLinearProfile),
-        Maps.transformValues(driverResults.discreteProfiles, this::convertToConstraintModelDiscreteProfile)
+        Maps.transformValues(driverResults.realProfiles, driverProfile -> this.convertToConstraintModelLinearProfile(driverProfile, planDuration)),
+        Maps.transformValues(driverResults.discreteProfiles, driverProfile -> this.convertToConstraintModelDiscreteProfile(driverProfile, planDuration))
     );
   }
 
@@ -377,18 +378,34 @@ public class SimulationFacade {
    * convert a linear profile output from the simulation driver to one suitable for the constraint evaluation engine
    *
    * @param driverProfile the as-simulated real profile from a driver SimulationResult
+   * @param planDuration
    * @return a real profile suitable for a constraint model SimulationResult, starting from the zero duration
    */
   private LinearProfile convertToConstraintModelLinearProfile(
-      List<Pair<Duration, RealDynamics>> driverProfile)
+      List<Pair<Duration, RealDynamics>> driverProfile,
+      final Duration planDuration)
   {
     final var pieces = new ArrayList<LinearProfilePiece>(driverProfile.size());
-    var elapsed = Duration.ZERO;
-    for (final var piece : driverProfile) {
-      final var extent = piece.getLeft();
-      final var value = piece.getRight();
-      pieces.add(new LinearProfilePiece(Window.between(elapsed, elapsed.plus(extent)), value.initial, value.rate));
-      elapsed = elapsed.plus(extent);
+    final var iterator = driverProfile.iterator();
+    if (iterator.hasNext()) {
+      var piece = iterator.next();
+      var previousStart = piece.getLeft();
+      var previousValue = piece.getRight();
+
+      while (iterator.hasNext()) {
+        piece = iterator.next();
+        final var offsetFromPrevious = piece.getLeft();
+        pieces.add(new LinearProfilePiece(
+            Window.between(previousStart, previousStart.plus(offsetFromPrevious)),
+            previousValue.initial,
+            previousValue.rate));
+        previousStart = previousStart.plus(offsetFromPrevious);
+        previousValue = piece.getRight();
+      }
+      pieces.add(new LinearProfilePiece(
+          Window.between(previousStart, planDuration),
+          previousValue.initial,
+          previousValue.rate));
     }
     return new LinearProfile(pieces);
   }
@@ -397,18 +414,30 @@ public class SimulationFacade {
    * convert a discrete profile output from the simulation driver to one suitable for the constraint evaluation engine
    *
    * @param driverProfile the as-simulated discrete profile from a driver SimulationResult
+   * @param planDuration
    * @return a discrete profile suitable for a constraint model SimulationResult, starting from the zero duration
    */
   private DiscreteProfile convertToConstraintModelDiscreteProfile(
-      Pair<ValueSchema, List<Pair<Duration, SerializedValue>>> driverProfile)
+      Pair<ValueSchema, List<Pair<Duration, SerializedValue>>> driverProfile,
+      final Duration planDuration)
   {
     final var pieces = new ArrayList<DiscreteProfilePiece>(driverProfile.getRight().size());
-    var elapsed = Duration.ZERO;
-    for (final var piece : driverProfile.getRight()) {
-      final var extent = piece.getLeft();
-      final var value = piece.getRight();
-      pieces.add(new DiscreteProfilePiece(Window.between(elapsed, elapsed.plus(extent)), value));
-      elapsed = elapsed.plus(extent);
+    final var iterator = driverProfile.getRight().iterator();
+    if (iterator.hasNext()) {
+      var piece = iterator.next();
+      var previousStart = piece.getLeft();
+      var previousValue = piece.getRight();
+
+      while (iterator.hasNext()) {
+        piece = iterator.next();
+        final var offsetFromPrevious = piece.getLeft();
+        pieces.add(new DiscreteProfilePiece(
+            Window.between(previousStart, previousStart.plus(offsetFromPrevious)),
+            previousValue));
+        previousStart = previousStart.plus(offsetFromPrevious);
+        previousValue = piece.getRight();
+      }
+      pieces.add(new DiscreteProfilePiece(Window.between(previousStart, planDuration), previousValue));
     }
     return new DiscreteProfile(pieces);
   }
