@@ -33,10 +33,7 @@ public final class CellExpiryTest {
     final var actual = results.discreteProfiles.get("/key").getRight();
 
     final var expected = List.of(
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
-
-        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        Pair.of(duration(0, MILLISECONDS), SerializedValue.of("value")),
         Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
         Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
@@ -48,7 +45,9 @@ public final class CellExpiryTest {
         Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
         Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
 
-        Pair.of(Duration.ZERO, SerializedValue.of("value")));
+        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")),
+        Pair.of(duration(500, MILLISECONDS), SerializedValue.of("value")));
 
     assertEquals(expected, actual);
   }
