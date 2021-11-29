@@ -12,22 +12,13 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
 /*package-local*/ final class GetDatasetAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-  with
-    plan as
-      ( select
-          p.id,
-          p.start_time
-        from plan as p )
   select
       d.revision,
-      d.state,
-      d.reason,
-      d.canceled,
       d.plan_id,
+      to_char(p.start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time,
       d.offset_from_plan_start,
       d.profile_segment_partition_table,
-      d.span_partition_table,
-      to_char(p.start_time, 'YYYY-DDD"T"HH24:MI:SS.FF6') as start_time
+      d.span_partition_table
   from dataset as d
   left join plan as p
     on p.id = d.plan_id
@@ -47,21 +38,15 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     if (!results.next()) return Optional.empty();
 
     final var revision = results.getLong(1);
-    final var state = results.getString(2);
-    final var reason = results.getString(3);
-    final var canceled = results.getBoolean(4);
-    final var planId = results.getLong(5);
-    final var planStart = Timestamp.fromString(results.getString(9));
-    final var offsetFromPlanStart = parseOffset(results, 6, planStart);
-    final var profileSegmentPartitionTable = results.getString(7);
-    final var spanPartitionTable = results.getString(8);
+    final var planId = results.getLong(2);
+    final var planStart = Timestamp.fromString(results.getString(3));
+    final var offsetFromPlanStart = parseOffset(results, 4, planStart);
+    final var profileSegmentPartitionTable = results.getString(5);
+    final var spanPartitionTable = results.getString(6);
 
     return Optional.of(new DatasetRecord(
         datasetId,
         revision,
-        state,
-        reason,
-        canceled,
         planId,
         offsetFromPlanStart,
         profileSegmentPartitionTable,

@@ -10,6 +10,11 @@ create table simulation_dataset (
   -- Dependent entities
   dataset_revision integer null,
 
+  -- Simulation state
+  state text not null,
+  reason text null,
+  canceled boolean not null,
+
   constraint simulation_dataset_dataset_has_a_simulation
     unique (dataset_id),
   constraint simulation_dataset_references_simulation
@@ -42,3 +47,10 @@ comment on column simulation_dataset.simulation_revision is e''
   'The revision of the simulation corresponding to the given revision of the dataset.';
 comment on column simulation_dataset.dataset_revision is e''
   'The revision of the dataset corresponding to the given revisions of the input entities.';
+comment on column simulation_dataset.state is e''
+  'The state of the simulation for which the dataset is associated.';
+comment on column simulation_dataset.reason is e''
+  'The reason for failure in the event that simulation fails.';
+comment on column simulation_dataset.canceled is e''
+  'Whether the simulation has been marked as canceled.';
+

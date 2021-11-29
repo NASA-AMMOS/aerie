@@ -1,9 +1,6 @@
 create table dataset (
   id integer generated always as identity,
   revision integer not null default 0,
-  state text not null,
-  reason text null,
-  canceled boolean not null,
 
   -- In the future, we might want to share datasets across multiple plans.
   -- In that case, the scoping plan_id and anchoring offset_from_plan_start should be moved into a new junction table

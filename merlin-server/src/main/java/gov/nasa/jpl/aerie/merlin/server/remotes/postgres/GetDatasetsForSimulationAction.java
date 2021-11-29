@@ -14,7 +14,10 @@ import java.util.List;
           s.dataset_id,
           s.model_revision,
           s.plan_revision,
-          s.simulation_revision
+          s.simulation_revision,
+          s.state,
+          s.reason,
+          s.canceled
       from simulation_dataset as s
       where s.simulation_id = ?
     """;
@@ -25,8 +28,8 @@ import java.util.List;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public List<DatasetMetadataRecord> get(final SimulationRecord simulation) throws SQLException {
-    final var datasets = new ArrayList<DatasetMetadataRecord>();
+  public List<SimulationDatasetRecord> get(final SimulationRecord simulation) throws SQLException {
+    final var datasets = new ArrayList<SimulationDatasetRecord>();
 
     this.statement.setLong(1, simulation.id());
     final var resultSet = this.statement.executeQuery();
@@ -36,7 +39,18 @@ import java.util.List;
       final var modelRevision = resultSet.getLong(2);
       final var planRevision = resultSet.getLong(3);
       final var simulationRevision = resultSet.getLong(4);
-      datasets.add(new DatasetMetadataRecord(simulation.id(), datasetId, simulationRevision, planRevision, modelRevision));
+      final var state = resultSet.getString(5);
+      final var reason = resultSet.getString(6);
+      final var canceled = resultSet.getBoolean(7);
+      datasets.add(new SimulationDatasetRecord(
+          simulation.id(),
+          datasetId,
+          simulationRevision,
+          planRevision,
+          modelRevision,
+          state,
+          reason,
+          canceled));
     }
 
     return datasets;

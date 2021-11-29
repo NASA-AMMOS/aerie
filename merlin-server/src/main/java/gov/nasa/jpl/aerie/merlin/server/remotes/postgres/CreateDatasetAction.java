@@ -15,16 +15,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
 
 /*package-local*/ final class CreateDatasetAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-    insert into dataset
-      (
-        state,
-        canceled,
-        plan_id,
-        offset_from_plan_start,
-        profile_segment_partition_table,
-        span_partition_table
-      )
-    values(?, ?, ?, ?::timestamptz - ?::timestamptz, ?, ?)
+    insert into dataset (plan_id, offset_from_plan_start, profile_segment_partition_table, span_partition_table)
+    values(?, ?::timestamptz - ?::timestamptz, ?, ?)
     returning id, revision
   """;
 
@@ -41,18 +33,13 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       final String profileSegmentPartitionTable,
       final String spanPartitionTable
   ) throws SQLException {
-    final var state = "incomplete";
-    final String reason = null;
-    final var canceled = false;
     final var offsetFromPlanStart = Duration.of(planStart.microsUntil(simulationStart), MICROSECONDS);
 
-    this.statement.setString(1, state);
-    this.statement.setBoolean(2, canceled);
-    this.statement.setLong(3, planId);
-    setTimestamp(this.statement, 4, simulationStart);
-    setTimestamp(this.statement, 5, planStart);
-    this.statement.setString(6, profileSegmentPartitionTable);
-    this.statement.setString(7, spanPartitionTable);
+    this.statement.setLong(1, planId);
+    setTimestamp(this.statement, 2, simulationStart);
+    setTimestamp(this.statement, 3, planStart);
+    this.statement.setString(4, profileSegmentPartitionTable);
+    this.statement.setString(5, spanPartitionTable);
 
     final var results = statement.executeQuery();
     if (!results.next()) throw new FailedInsertException("dataset");
@@ -62,9 +49,6 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     return new DatasetRecord(
         datasetId,
         revision,
-        state,
-        reason,
-        canceled,
         planId,
         offsetFromPlanStart,
         profileSegmentPartitionTable,

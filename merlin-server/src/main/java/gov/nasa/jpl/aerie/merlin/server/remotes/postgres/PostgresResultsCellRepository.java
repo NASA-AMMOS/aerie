@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
-import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -12,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
-import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,7 +19,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -62,8 +59,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         simulation = createSimulation(connection, planId, Map.of());
       }
 
-      // Cancel datasets with lower revisions
-      cancelStaleDatasets(connection, simulation);
+      cancelStaleDatasets(connection, simulation.id());
 
       final var dataset = instantiateDataset(
           connection,
@@ -73,7 +69,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           planStart,
           simulationStart);
 
-      return new PostgresResultsCell(this.dataSource, dataset.id());
+      return new PostgresResultsCell(
+          this.dataSource,
+          simulation.id(),
+          dataset.id(),
+          MODEL_REVISION,
+          planRevision,
+          simulation.revision(),
+          planStart);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to allocation simulation cell", ex);
     } catch (final NoSuchPlanException ex) {
@@ -86,17 +89,34 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
     final var planId = Long.parseLong(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
+      final var planStart = getPlan(connection, planId).startTime();
+
       final var simulation$ = getSimulation(connection, planId);
       if (simulation$.isEmpty()) return Optional.empty();
       final var simulation = simulation$.get();
 
-      final var dataset$ = getDataset(connection, simulation.id(), MODEL_REVISION, planRevision, simulation.revision());
-      if (dataset$.isEmpty()) return Optional.empty();
-      final var dataset = dataset$.get();
+      final var datasetId$ = getSimulationDatasetRecord(
+          connection,
+          simulation.id(),
+          MODEL_REVISION,
+          planRevision,
+          simulation.revision()
+      ).map(SimulationDatasetRecord::datasetID);
 
-      return Optional.of(new PostgresResultsCell(this.dataSource, dataset.id()));
+      if (datasetId$.isEmpty()) return Optional.empty();
+      final var datasetId = datasetId$.get();
+
+      return Optional.of(new PostgresResultsCell(this.dataSource,
+                                                 simulation.id(),
+                                                 datasetId,
+                                                 MODEL_REVISION,
+                                                 planRevision,
+                                                 simulation.revision(),
+                                                 planStart));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get simulation", ex);
+    } catch (final NoSuchPlanException ex) {
+      return Optional.empty();
     }
   }
 
@@ -109,7 +129,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       if (simulation$.isEmpty()) return;
       final var simulation = simulation$.get();
 
-      deleteDataset(connection, simulation, MODEL_REVISION, planRevision);
+      final var datasetId$ = getSimulationDatasetRecord(
+          connection,
+          simulation.id(),
+          planRevision,
+          MODEL_REVISION,
+          simulation.revision()
+      ).map(SimulationDatasetRecord::datasetID);
+      if (datasetId$.isEmpty()) return;
+      final var datasetId = datasetId$.get();
+      deleteDataset(connection, datasetId);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete simulation", ex);
     }
@@ -136,7 +165,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Optional<DatasetRecord> getDataset(
+  private static Optional<SimulationDatasetRecord> getSimulationDatasetRecord(
       final Connection connection,
       final long simulationId,
       final long modelRevision,
@@ -144,12 +173,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final long simulationRevision
   ) throws SQLException
   {
-    try (final var getDatasetMetadataAction = new GetDatasetMetadataAction(connection)) {
-      final var datasetId$ = getDatasetMetadataAction
-          .get(simulationId, modelRevision, planRevision, simulationRevision)
-          .map(DatasetMetadataRecord::datasetID);
-      if (datasetId$.isEmpty()) return Optional.empty();
-      return getDataset(connection, datasetId$.get());
+    try (final var getSimulationDatasetAction = new GetSimulationDatasetAction(connection)) {
+      return getSimulationDatasetAction
+          .get(simulationId, modelRevision, planRevision, simulationRevision);
     }
   }
 
@@ -245,56 +271,38 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           datasetId,
           modelRevision,
           planRevision,
-          simulationRevision);
+          simulationRevision,
+          new State.Incomplete());
     }
   }
 
   private static void cancelStaleDatasets(
       final Connection connection,
-      final SimulationRecord simulation
+      final long simulationId
   ) throws SQLException
   {
-    try (final var getDatasetsForSimulationAction = new GetDatasetsForSimulationAction(connection)) {
-      final var simulationDatasets = getDatasetsForSimulationAction.get(simulation);
-      for (final var simulationDataset : simulationDatasets) {
-        if (simulationDataset.simulationRevision() < simulation.revision()) {
-          try {
-            cancelSimulation(connection, simulationDataset.datasetID());
-          } catch (final NoSuchDatasetException ex) {
-            // Another process must have deleted it, nothing to do
-          }
-        }
-      }
+    try (final var cancelSimulationsAction = new CancelOutdatedSimulationsAction(connection)) {
+      cancelSimulationsAction.apply(simulationId);
     }
   }
 
   private static void cancelSimulation(
       final Connection connection,
       final long datasetId
-  ) throws SQLException, NoSuchDatasetException
+  ) throws SQLException, NoSuchSimulationDatasetException
   {
     try (final var cancelSimulationAction = new CancelSimulationAction(connection)) {
       cancelSimulationAction.apply(datasetId);
     }
   }
 
-  private static boolean deleteDataset(
-      final Connection connection,
-      final SimulationRecord simulation,
-      final long modelRevision,
-      final long planRevision)
-  throws SQLException
-  {
-    final var dataset$ = getDataset(connection, simulation.id(), modelRevision, planRevision, simulation.revision());
-    if (dataset$.isEmpty()) return false;
-    final var dataset = dataset$.get();
-
+  private static boolean deleteDataset(final Connection connection, final long datasetId) throws SQLException {
     try (
         final var deleteSimulationDatasetAction = new DeleteSimulationDatasetAction(connection);
         final var deleteDatasetAction = new DeleteDatasetAction(connection)
     ) {
-      return deleteSimulationDatasetAction.apply(simulation.id(), modelRevision, planRevision, simulation.revision()) &&
-             deleteDatasetAction.apply(dataset.id());
+      return deleteSimulationDatasetAction.apply(datasetId) &&
+             deleteDatasetAction.apply(datasetId);
     }
   }
 
@@ -302,7 +310,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long datasetId,
       final String reason
-  ) throws SQLException, NoSuchDatasetException
+  ) throws SQLException, NoSuchSimulationDatasetException
   {
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
       setSimulationStateAction.apply(datasetId, new State.Failed(reason));
@@ -311,17 +319,31 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static Optional<State> getSimulationState(
       final Connection connection,
-      final long datasetId
+      final long simulationId,
+      final long modelRevision,
+      final long planRevision,
+      final long simulationRevision,
+      final Timestamp planStart
   ) throws SQLException {
-    final var dataset$ = getDataset(connection, datasetId);
-    if (dataset$.isEmpty()) return Optional.empty();
-    final var dataset = dataset$.get();
+    final var record$ = getSimulationDatasetRecord(
+        connection,
+        simulationId,
+        modelRevision,
+        planRevision,
+        simulationRevision);
+    if (record$.isEmpty()) return Optional.empty();
+    final var record = record$.get();
+
     return Optional.of(
-        switch (dataset.state()) {
+        switch (record.state()) {
           case "incomplete" -> new ResultsProtocol.State.Incomplete();
-          case "failed" -> new ResultsProtocol.State.Failed(dataset.reason());
-          case "success" -> new ResultsProtocol.State.Success(getSimulationResults(connection, dataset));
-          default -> throw new Error(String.format("Unexpected simulation state %s", dataset.state()));
+          case "failed" -> new ResultsProtocol.State.Failed(record.reason());
+          case "success" -> {
+            final var dataset = getDataset(connection, record.datasetID())
+                .orElseThrow(() -> new Error("Simulation has \"success\" stat, but no valid dataset found"));
+            yield new ResultsProtocol.State.Success(getSimulationResults(connection, dataset));
+          }
+          default -> throw new Error(String.format("Unexpected simulation state %s", record.state()));
         });
   }
 
@@ -499,7 +521,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long datasetId,
       final SimulationResults results
-  ) throws SQLException, NoSuchDatasetException {
+  ) throws SQLException, NoSuchSimulationDatasetException
+  {
     final var simulationStart = new Timestamp(results.startTime);
     postResourceProfiles(connection, datasetId, results.realProfiles, results.discreteProfiles, simulationStart);
     postSimulatedActivities(connection, datasetId, results.simulatedActivities, simulationStart);
@@ -606,20 +629,41 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   public static final class PostgresResultsCell implements ResultsProtocol.OwnerRole {
     private final DataSource dataSource;
+    private final long simulationId;
     private final long datasetId;
+    private final long modelRevision;
+    private final long planRevision;
+    private final long simulationRevision;
+    private final Timestamp planStart;
 
     public PostgresResultsCell(
         final DataSource dataSource,
-        final long datasetId
+        final long simulationId,
+        final long datasetId,
+        final long modelRevision,
+        final long planRevision,
+        final long simulationRevision,
+        final Timestamp planStart
     ) {
       this.dataSource = dataSource;
+      this.simulationId = simulationId;
       this.datasetId = datasetId;
+      this.modelRevision = modelRevision;
+      this.planRevision = planRevision;
+      this.simulationRevision = simulationRevision;
+      this.planStart = planStart;
     }
 
     @Override
     public State get() {
       try (final var connection = dataSource.getConnection()) {
-        return getSimulationState(connection, datasetId)
+        return getSimulationState(
+            connection,
+            simulationId,
+            modelRevision,
+            planRevision,
+            simulationRevision,
+            planStart)
             .orElseThrow(() -> new Error("Dataset corrupted"));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to get dataset", ex);
@@ -632,7 +676,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         cancelSimulation(connection, datasetId);
       } catch(final SQLException ex) {
         throw new DatabaseException("Failed to cancel simulation", ex);
-      } catch (final NoSuchDatasetException ex) {
+      } catch (final NoSuchSimulationDatasetException ex) {
         // A cell should only be created for a valid, existing dataset
         // A dataset should only be deleted by its cell
         throw new Error("Cell references nonexistent simulation dataset");
@@ -642,11 +686,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public boolean isCanceled() {
       try (final var connection = dataSource.getConnection()) {
-        return getDataset(
+        return getSimulationDatasetRecord(
             connection,
-            datasetId)
-            .map(DatasetRecord::canceled)
-            .orElseThrow(() -> new Error("Dataset corrupted"));
+            simulationId,
+            modelRevision,
+            planRevision,
+            simulationRevision
+        ).map(SimulationDatasetRecord::canceled)
+         .orElseThrow(() -> new Error("Dataset corrupted"));
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to check cancellation status", ex);
       }
@@ -658,7 +705,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         postSimulationResults(connection, datasetId, results);
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to store simulation results", ex);
-      } catch (final NoSuchDatasetException ex) {
+      } catch (final NoSuchSimulationDatasetException ex) {
         // A cell should only be created for a valid, existing dataset
         // A dataset should only be deleted by its cell
         throw new Error("Cell references nonexistent simulation dataset");
@@ -671,7 +718,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         failSimulation(connection, datasetId, reason);
       } catch (final SQLException ex) {
         throw new DatabaseException("Failed to update simulation state to failure", ex);
-      } catch (final NoSuchDatasetException ex) {
+      } catch (final NoSuchSimulationDatasetException ex) {
         // A cell should only be created for a valid, existing dataset
         // A dataset should only be deleted by its cell
         throw new Error("Cell references nonexistent simulation dataset");
