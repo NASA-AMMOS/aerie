@@ -2,7 +2,6 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
@@ -36,23 +35,32 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   public <Dynamics> List<Pair<Duration, Dynamics>> get(
       final long datasetId,
       final long profileId,
-      final Timestamp simulationStart,
+      final Window simulationWindow,
       final JsonParser<Dynamics> dynamicsP
-      ) throws SQLException {
+  ) throws SQLException {
     final var segments = new ArrayList<Pair<Duration, Dynamics>>();
     this.statement.setLong(1, datasetId);
     this.statement.setLong(2, profileId);
     final var resultSet = statement.executeQuery();
 
     // Profile segments are stored with their start offset relative to simulation start
-    // We must convert these offsets to be relative to their previous segment's start
-    var previousOffset = Duration.ZERO;
-    while (resultSet.next()) {
-      final var absoluteOffset = parseOffset(resultSet, 1, simulationStart);
-      final var offset = absoluteOffset.minus(previousOffset);
-      final var dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
-      segments.add(Pair.of(offset, dynamics));
-      previousOffset = absoluteOffset;
+    // We must convert these to durations describing how long each segment lasts
+    final var simulationStart = simulationWindow.start();
+    final var simulationDuration = simulationWindow.duration();
+    if (resultSet.next()) {
+      var offset = parseOffset(resultSet, 1, simulationStart);
+      var dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
+
+      while (resultSet.next()) {
+        final var nextOffset = parseOffset(resultSet, 1, simulationStart);
+        final var duration = nextOffset.minus(offset);
+        segments.add(Pair.of(duration, dynamics));
+        offset = nextOffset;
+        dynamics = parseDynamics(resultSet.getCharacterStream(2), dynamicsP);
+      }
+
+      final var duration = simulationDuration.minus(offset);
+      segments.add(Pair.of(duration, dynamics));
     }
 
     return segments;

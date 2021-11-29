@@ -33,15 +33,14 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
       final JsonParser<Dynamics> dynamicsP
       ) throws SQLException {
 
-    // Each profile segment's duration part is the offset from the previous segment's end
-    // To preserve ordering in the database, we convert to absolute offset from simulation start
-    // Then when pulling from the database, order by the start_offset column
+    // Each profile segment's duration part is the duration for which the dynamics hold
+    // before the next one begins. Since order in the database is not guaranteed
+    // we need to convert to offsets from the simulation start so order can be preserved
     var accumulatedOffset = Duration.ZERO;
     for (final var pair : segments) {
-      final var offset = pair.getLeft();
-      accumulatedOffset = Duration.add(accumulatedOffset, offset);
-      final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
+      final var duration = pair.getLeft();
       final var dynamics = pair.getRight();
+      final var timestamp = simulationStart.plusMicros(accumulatedOffset.dividedBy(Duration.MICROSECOND));
 
       this.statement.setLong(1, datasetId);
       this.statement.setLong(2, profileRecord.id());
@@ -50,6 +49,8 @@ public final class PostProfileSegmentsAction implements AutoCloseable {
       this.statement.setString(5, serializeDynamics(dynamics, dynamicsP));
 
       this.statement.addBatch();
+
+      accumulatedOffset = Duration.add(accumulatedOffset, duration);
     }
 
     final var results = this.statement.executeBatch();

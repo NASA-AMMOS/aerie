@@ -333,7 +333,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var startTimestamp = simulationWindow.start();
     final var simulationStart = startTimestamp.toInstant();
 
-    final var profiles = getProfiles(connection, dataset.id(), startTimestamp);
+    final var profiles = getProfiles(connection, dataset.id(), simulationWindow);
     final var realProfiles = profiles.getLeft();
     final var discreteProfiles = profiles.getRight();
 
@@ -444,19 +444,19 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   getProfiles(
       final Connection connection,
       final long datasetId,
-      final Timestamp simulationStart)
-  throws SQLException {
+      final Window simulationWindow
+  ) throws SQLException {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
     final var profileRecords = getProfileRecords(connection, datasetId);
     for (final var record : profileRecords) {
       switch (record.type().getLeft()) {
-        case "real" -> realProfiles.put(record.name(), getRealProfileSegments(connection, record.datasetId(), record.id(), simulationStart));
+        case "real" -> realProfiles.put(record.name(), getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow));
         case "discrete" -> discreteProfiles.put(record.name(),
                                                 Pair.of(
                                                     record.type().getRight(),
-                                                    getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationStart)));
+                                                    getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)));
         default -> throw new Error("Unrecognized profile type");
       }
     }
@@ -477,10 +477,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long datasetId,
       final long profileId,
-      final Timestamp simulationStart
+      final Window simulationWindow
   ) throws SQLException {
     try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationStart, realDynamicsP);
+      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, realDynamicsP);
     }
   }
 
@@ -488,10 +488,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long datasetId,
       final long profileId,
-      final Timestamp simulationStart
+      final Window simulationWindow
   ) throws SQLException {
     try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationStart, serializedValueP);
+      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, serializedValueP);
     }
   }
 
