@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -10,7 +11,7 @@ public class RadarBeamCalibrationTest {
   /**
    * span of time over which the scheduler should run
    */
-  private final Range<Time> horizon = new Range<>(
+  private final PlanningHorizon horizon = new PlanningHorizon(
       Time.fromString("2025-001T00:00:00.000"),
       Time.fromString("2027-001T00:00:00.000"));
 
@@ -85,25 +86,25 @@ public class RadarBeamCalibrationTest {
    */
   public class FlybyEnumState extends MockState<FlybysEnum> {
 
-    public FlybyEnumState(Range<Time> horizon) {
-      values = new HashMap<Range<Time>, FlybysEnum>() {{
-        put(new Range<Time>(horizon.getMinimum(), Time.fromString("2025-180T00:00:00.000")), FlybysEnum.NOFLYBY);
+    public FlybyEnumState(PlanningHorizon horizon) {
+      values = new HashMap<Window, FlybysEnum>() {{
+        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000",horizon)), FlybysEnum.NOFLYBY);
         put(
-            new Range<Time>(Time.fromString("2025-180T00:00:00.000"), Time.fromString("2025-185T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000",horizon), Time.fromString("2025-185T00:00:00.000",horizon)),
             FlybysEnum.FIRSTFLYBY);
         put(
-            new Range<Time>(Time.fromString("2025-185T00:00:00.000"), Time.fromString("2025-230T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000",horizon), Time.fromString("2025-230T00:00:00.000",horizon)),
             FlybysEnum.NOFLYBY);
         put(
-            new Range<Time>(Time.fromString("2025-230T00:00:00.000"), Time.fromString("2025-250T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-230T00:00:00.000",horizon), Time.fromString("2025-250T00:00:00.000",horizon)),
             FlybysEnum.SECONDFLYBY);
         put(
-            new Range<Time>(Time.fromString("2025-250T00:00:00.000"), Time.fromString("2025-300T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-250T00:00:00.000",horizon), Time.fromString("2025-300T00:00:00.000",horizon)),
             FlybysEnum.NOFLYBY);
         put(
-            new Range<Time>(Time.fromString("2025-300T00:00:00.000"), Time.fromString("2025-310T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-300T00:00:00.000",horizon), Time.fromString("2025-310T00:00:00.000",horizon)),
             FlybysEnum.THIRDFLYBY);
-        put(new Range<Time>(Time.fromString("2025-310T00:00:00.000"), horizon.getMaximum()), FlybysEnum.NOFLYBY);
+        put(Window.betweenClosedOpen(Time.fromString("2025-310T00:00:00.000",horizon), horizon.getHor().end), FlybysEnum.NOFLYBY);
       }};
     }
   }
@@ -113,14 +114,14 @@ public class RadarBeamCalibrationTest {
    */
   public class AltitudeAboveMoon extends MockState<Integer> {
 
-    public AltitudeAboveMoon(Range<Time> horizon) {
-      values = new HashMap<Range<Time>, Integer>() {{
-        put(new Range<Time>(horizon.getMinimum(), Time.fromString("2025-180T00:00:00.000")), 10);
-        put(new Range<Time>(Time.fromString("2025-180T00:00:00.000"), Time.fromString("2025-183T00:00:00.000")), 20);
-        put(new Range<Time>(Time.fromString("2025-183T00:00:00.000"), Time.fromString("2025-185T00:00:00.000")), 30);
-        put(new Range<Time>(Time.fromString("2025-185T00:00:00.000"), Time.fromString("2025-202T00:00:00.000")), 40);
-        put(new Range<Time>(Time.fromString("2025-202T00:00:00.000"), Time.fromString("2025-203T00:00:00.000")), 50);
-        put(new Range<Time>(Time.fromString("2025-203T00:00:00.000"), horizon.getMaximum()), 60);
+    public AltitudeAboveMoon(PlanningHorizon horizon) {
+      values = new HashMap<Window, Integer>() {{
+        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000",horizon)), 10);
+        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000",horizon), Time.fromString("2025-183T00:00:00.000",horizon)), 20);
+        put(Window.betweenClosedOpen(Time.fromString("2025-183T00:00:00.000",horizon), Time.fromString("2025-185T00:00:00.000",horizon)), 30);
+        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000",horizon), Time.fromString("2025-202T00:00:00.000",horizon)), 40);
+        put(Window.betweenClosedOpen(Time.fromString("2025-202T00:00:00.000",horizon), Time.fromString("2025-203T00:00:00.000",horizon)), 50);
+        put(Window.betweenClosedOpen(Time.fromString("2025-203T00:00:00.000",horizon), horizon.getHor().end), 60);
       }};
     }
 

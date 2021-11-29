@@ -33,7 +33,6 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
         .getOrComputeIfAbsent("state", $ -> new State<>(new MissionModelBuilder()), stateClass);
   }
 
-
   @Override
   public void beforeAll(final ExtensionContext context) {
     final var lifecycle = context.getTestInstanceLifecycle().orElse(TestInstance.Lifecycle.PER_METHOD);
@@ -185,7 +184,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
 
   private static final class IllegalTestLifetimeException extends RuntimeException {
     public IllegalTestLifetimeException(final Class<?> offendingClass) {
-      super("%s expects %s to be annotated with @TestInstance(Lifecycle.PER_METHOD)"
+      super("%s expects %s to be annotated with @TestInstance(Lifecycle.PER_CLASS)"
                 .formatted(MerlinExtension.class.getSimpleName(), offendingClass));
     }
   }

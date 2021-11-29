@@ -21,6 +21,7 @@ services:
   aerie_ui:
     depends_on: ["postgres"]
     environment:
+      AUTH_TYPE: cam
       GATEWAY_CLIENT_URL: http://localhost:9000
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
@@ -31,7 +32,6 @@ services:
   hasura:
     depends_on: ["postgres"]
     environment:
-      AERIE_CONFIG_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_config
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
@@ -48,8 +48,17 @@ services:
     build:
       context: .
       dockerfile: scripts/dockerfiles/merlin.Dockerfile
-    depends_on: ["postgres"]
-    ports: ["27183:27183"]
+    depends_on: [ "postgres" ]
+    environment:
+      MERLIN_PORT: 27183
+      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
+      MERLIN_LOGGING: "true"
+      MERLIN_DB_SERVER: "postgres"
+      MERLIN_DB_PORT: 5432
+      MERLIN_DB_USER: "aerie"
+      MERLIN_DB_PASSWORD: "aerie"
+      MERLIN_DB: "aerie_merlin"
+    ports: [ "27183:27183"]
     restart: always
     volumes:
       - file_store:/usr/src/app/merlin_file_store
@@ -58,7 +67,7 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-    image: postgres
+    image: postgres:14.1
     ports: ["5432:5432"]
     restart: always
     volumes:

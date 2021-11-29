@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -75,7 +77,7 @@ public class Time implements Comparable<Time> {
    *     provided duration object
    */
   public Time plus(Duration duration) {
-    return new Time(Math.min(this.jplET_s + duration.toSeconds(), Double.MAX_VALUE));
+    return new Time(Math.min(this.jplET_s + duration.in(Duration.SECONDS), Double.MAX_VALUE));
   }
 
 
@@ -90,7 +92,7 @@ public class Time implements Comparable<Time> {
    *     duration object
    */
   public Time minus(Duration duration) {
-    return new Time(Math.max(this.jplET_s - duration.toSeconds(), 0.0));
+    return new Time(Math.max(this.jplET_s - duration.in(Duration.SECONDS), 0.0));
   }
 
 
@@ -105,7 +107,7 @@ public class Time implements Comparable<Time> {
    *     this time up to the provided argument time, possibly negative
    */
   public Duration minus(Time o) {
-    return Duration.ofSeconds(this.jplET_s - o.jplET_s);
+    return Duration.of((long) (this.jplET_s - o.jplET_s), Duration.SECONDS);
   }
 
 
@@ -125,11 +127,11 @@ public class Time implements Comparable<Time> {
   }
 
   public boolean biggerThan(Time otherTime) {
-    return compareTo(otherTime) > 0;
+    return compareTo(otherTime) >= 0;
   }
 
   public boolean smallerThan(Time otherTime) {
-    return compareTo(otherTime) < 0;
+    return compareTo(otherTime) <= 0;
   }
 
   /**
@@ -187,6 +189,10 @@ public class Time implements Comparable<Time> {
   }
 
 
+  public static Duration fromString(String s, PlanningHorizon ph){
+    return ph.toDur(fromString(s));
+  }
+
   /**
    * parses the provided input time string as a day-of-month specification
    *
@@ -197,7 +203,7 @@ public class Time implements Comparable<Time> {
    * @param s IN the string to parse as a year, month, day timestamp
    * @return a new time object representing the time specified by the string
    */
-  public static Time fromDOM(String s) {
+  private static Time fromDOM(String s) {
     return new Time(java.time.Instant.from(formatDOM.parse(s))
                                      .toEpochMilli() / 1000.0);
   }
@@ -266,12 +272,21 @@ public class Time implements Comparable<Time> {
     MINUS,
   }
 
-  public static Time performOperation(Operator op, Time t1, Duration d) {
+  public static Duration
+  performOperation(Operator op, Duration t1, Duration d) {
     switch (op) {
       case PLUS:
-        return t1.plus(d);
+        try {
+          return t1.plus(d);
+        }catch(ArithmeticException e){
+          return Duration.MAX_VALUE;
+        }
       case MINUS:
-        return t1.minus(d);
+        try {
+          return t1.minus(d);
+        }catch(ArithmeticException e){
+          return Duration.MIN_VALUE;
+        }
       default:
         break;
     }
@@ -279,4 +294,3 @@ public class Time implements Comparable<Time> {
   }
 
 }
-

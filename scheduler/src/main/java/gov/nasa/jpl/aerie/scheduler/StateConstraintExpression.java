@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,10 +30,10 @@ public class StateConstraintExpression {
    * @return time windows in the plan over which the constraint is
    *     satisfied and overlap with the given windows
    */
-  public TimeWindows findWindows(Plan plan, TimeWindows windows) {
-    TimeWindows tw = sc.findWindows(plan, windows);
+  public Windows findWindows(Plan plan, Windows windows) {
+    Windows tw = sc.findWindows(plan, windows);
     System.out.println(name + ' ' + tw);
-    return new TimeWindows(tw);
+    return new Windows(tw);
   }
 
 
@@ -216,7 +218,7 @@ public class StateConstraintExpression {
   protected static <T extends Comparable<T>> StateConstraintBelow<T> lessThan(
       ExternalState<T> state,
       T value,
-      TimeWindows timeDomain)
+      Windows timeDomain)
   {
     StateConstraintBelow<T> sc = new StateConstraintBelow<T>();
     sc.setDomainUnary(value);
@@ -254,7 +256,7 @@ public class StateConstraintExpression {
   protected static <T extends Comparable<T>> StateConstraintAbove<T> buildAboveConstraint(
       ExternalState<T> state,
       T value,
-      TimeWindows timeDomain)
+      Windows timeDomain)
   {
     StateConstraintAbove<T> sc = new StateConstraintAbove<T>();
     sc.setDomainUnary(value);
@@ -295,7 +297,7 @@ public class StateConstraintExpression {
       ExternalState<T> state,
       T value1,
       T value2,
-      TimeWindows timeDomain)
+      Windows timeDomain)
   {
     StateConstraintBetween<T> sc = new StateConstraintBetween<T>();
     sc.setValueDefinition(Arrays.asList(value1, value2));
@@ -331,7 +333,7 @@ public class StateConstraintExpression {
   protected static <T extends Comparable<T>> StateConstraintEqual<T> buildEqualConstraint(
       ExternalState<T> state,
       T value,
-      TimeWindows timeDomain)
+      Windows timeDomain)
   {
     StateConstraintEqual<T> sc = new StateConstraintEqual<T>();
     sc.setDomainUnary(value);

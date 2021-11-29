@@ -1,18 +1,21 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 public class TestFilters {
 
   @Test
   public void testLatchFilters() {
-
-    Range<Time> horizon = new Range<>(new Time(0), new Time(50));
-
+    Window horizon = Window.between(Duration.of(0, Duration.SECONDS), Duration.of(50, Duration.SECONDS));
+    Windows horizonW = new Windows(horizon);
     MockState<Boolean> smallState1 = new SmallState1(horizon);
     MockState<Boolean> smallState2 = new SmallState2(horizon);
     drawHorizon(horizon);
@@ -33,11 +36,12 @@ public class TestFilters {
         .from(ste)
         .build();
 
+    var b = ste2.findWindows(null, horizonW);
 
     TimeWindowsFilter filter = new Filters.LatchingBuilder()
         .withinEach(tre)
-        .filterFirstBy(Filters.minDuration(new Duration(3)))
-        .thenFilterBy(Filters.maxDuration(new Duration(1)))
+        .filterFirstBy(Filters.minDuration(Duration.of(3, Duration.SECONDS)))
+        .thenFilterBy(Filters.maxDuration(Duration.of(1, Duration.SECONDS)))
         .build();
 
     TimeRangeExpression tre2 = new TimeRangeExpression.Builder()
@@ -45,29 +49,29 @@ public class TestFilters {
         .thenFilter(filter)
         .build();
 
-    TimeWindows res = tre2.computeRange(null, TimeWindows.of(horizon));
+    Windows res = tre2.computeRange(null,horizonW);
 
-    assert (res != null);
+    assert (res.equals(new Windows(Window.betweenClosedOpen(Duration.of(7, Duration.SECONDS), Duration.of(10, Duration.SECONDS)), Window.betweenClosedOpen(Duration.of(25, Duration.SECONDS), Duration.of(50, Duration.SECONDS)))));
 
 
   }
 
   public class SmallState1 extends MockState<Boolean> {
 
-    public SmallState1(Range<Time> horizon) {
-      values = new LinkedHashMap<Range<Time>, Boolean>() {{
-        put(new Range<Time>(horizon.getMinimum(), new Time(20)), true);
-        put(new Range<Time>(new Time(20), new Time(25)), false);
-        put(new Range<Time>(new Time(25), horizon.getMaximum()), true);
+    public SmallState1(Window horizon) {
+      values = new LinkedHashMap<Window, Boolean>() {{
+        put(Window.betweenClosedOpen(horizon.start, Duration.of(20, Duration.SECONDS)), true);
+        put(Window.betweenClosedOpen(Duration.of(20, Duration.SECONDS), Duration.of(25, Duration.SECONDS)), false);
+        put(Window.betweenClosedOpen(Duration.of(25, Duration.SECONDS), horizon.end), true);
 
       }};
     }
 
   }
 
-  public void drawHorizon(Range<Time> horizon) {
-    int start = (int) horizon.getMinimum().toEpochMilliseconds() / 1000;
-    int end = (int) horizon.getMaximum().toEpochMilliseconds() / 1000;
+  public void drawHorizon(Window horizon) {
+    int start = (int) horizon.start.in(Duration.SECONDS);
+    int end = (int) horizon.end.in(Duration.SECONDS);
 
     for (int i = start; i < end; i++) {
       System.out.print(i + " ");
@@ -80,17 +84,17 @@ public class TestFilters {
 
   public class SmallState2 extends MockState<Boolean> {
 
-    public SmallState2(Range<Time> horizon) {
-      values = new LinkedHashMap<Range<Time>, Boolean>() {{
-        put(new Range<Time>(horizon.getMinimum(), new Time(2)), true);
-        put(new Range<Time>(new Time(1), new Time(3)), false);
-        put(new Range<Time>(new Time(4), new Time(6)), true);
-        put(new Range<Time>(new Time(6), new Time(7)), false);
-        put(new Range<Time>(new Time(7), new Time(10)), true);
-        put(new Range<Time>(new Time(10), new Time(11)), false);
-        put(new Range<Time>(new Time(11), new Time(15)), true);
-        put(new Range<Time>(new Time(15), new Time(22)), false);
-        put(new Range<Time>(new Time(22), horizon.getMaximum()), true);
+    public SmallState2(Window horizon) {
+      values = new LinkedHashMap<Window, Boolean>() {{
+        put(Window.betweenClosedOpen(horizon.start, Duration.of(2, Duration.SECONDS)), true);
+        put(Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS)), false);
+        put(Window.betweenClosedOpen(Duration.of(4, Duration.SECONDS), Duration.of(6, Duration.SECONDS)), true);
+        put(Window.betweenClosedOpen(Duration.of(6, Duration.SECONDS), Duration.of(7, Duration.SECONDS)), false);
+        put(Window.betweenClosedOpen(Duration.of(7, Duration.SECONDS), Duration.of(10, Duration.SECONDS)), true);
+        put(Window.betweenClosedOpen(Duration.of(10, Duration.SECONDS), Duration.of(11, Duration.SECONDS)), false);
+        put(Window.betweenClosedOpen(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS)), true);
+        put(Window.betweenClosedOpen(Duration.of(15, Duration.SECONDS), Duration.of(22, Duration.SECONDS)), false);
+        put(Window.betweenClosedOpen(Duration.of(22, Duration.SECONDS), horizon.end), true);
       }};
     }
 
@@ -98,56 +102,45 @@ public class TestFilters {
 
   @Test
   public void testMaxGapAfter() {
-    FilterSequenceMaxGapAfter fsm = new FilterSequenceMaxGapAfter(new Duration(1));
+    FilterSequenceMaxGapAfter fsm = new FilterSequenceMaxGapAfter(Duration.of(1, Duration.SECONDS));
 
-    Range<Time> r1 = new Range<Time>(new Time(1), new Time(3));
-    Range<Time> r2 = new Range<Time>(new Time(5), new Time(6));
-    Range<Time> r3 = new Range<Time>(new Time(6), new Time(7));
-    Range<Time> r4 = new Range<Time>(new Time(7), new Time(10));
-    Range<Time> r5 = new Range<Time>(new Time(10), new Time(11));
-    Range<Time> r6 = new Range<Time>(new Time(11), new Time(15));
-    Range<Time> r7 = new Range<Time>(new Time(15), new Time(22));
 
-    Collection<Range<Time>> ranges = new ArrayList<Range<Time>>();
-    ranges.add(r1);
-    ranges.add(r2);
-    ranges.add(r3);
-    ranges.add(r4);
-    ranges.add(r5);
-    ranges.add(r6);
-    ranges.add(r7);
+    Window r1 = Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS));
+    Window r2 = Window.betweenClosedOpen(Duration.of(5, Duration.SECONDS), Duration.of(6, Duration.SECONDS));
+    Window r3 = Window.betweenClosedOpen(Duration.of(7, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
+    Window r5 = Window.betweenClosedOpen(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS));
+    Window r7 = Window.betweenClosedOpen(Duration.of(18, Duration.SECONDS), Duration.of(22, Duration.SECONDS));
 
-    TimeWindows tw = TimeWindows.of(ranges, true);
+    Windows tw = new Windows(Arrays.asList(r1,r2,r3,r5,r7));
 
-    TimeWindows res = fsm.filter(null, tw);
-    System.out.println(res);
+    Windows res = fsm.filter(null, tw);
+
+    var expected = new Windows(Arrays.asList(r2,r3));
+    assert(res.equals(expected));
   }
 
   @Test
   public void testMinGapAfter() {
-    FilterSequenceMinGapAfter fsm = new FilterSequenceMinGapAfter(new Duration(1));
+    FilterSequenceMinGapAfter fsm = new FilterSequenceMinGapAfter(Duration.of(2, Duration.SECONDS));
 
-    Range<Time> r1 = new Range<Time>(new Time(1), new Time(3));
-    Range<Time> r2 = new Range<Time>(new Time(5), new Time(6));
-    Range<Time> r3 = new Range<Time>(new Time(6), new Time(7));
-    Range<Time> r4 = new Range<Time>(new Time(7), new Time(10));
-    Range<Time> r5 = new Range<Time>(new Time(10), new Time(11));
-    Range<Time> r6 = new Range<Time>(new Time(11), new Time(15));
-    Range<Time> r7 = new Range<Time>(new Time(15), new Time(22));
+    Window r1 = Window.betweenClosedOpen(Duration.of(1, Duration.SECONDS), Duration.of(3, Duration.SECONDS));
+    Window r2 = Window.betweenClosedOpen(Duration.of(5, Duration.SECONDS), Duration.of(6, Duration.SECONDS));
+    Window r3 = Window.betweenClosedOpen(Duration.of(7, Duration.SECONDS), Duration.of(10, Duration.SECONDS));
+    Window r5 = Window.betweenClosedOpen(Duration.of(11, Duration.SECONDS), Duration.of(15, Duration.SECONDS));
+    Window r7 = Window.betweenClosedOpen(Duration.of(18, Duration.SECONDS), Duration.of(22, Duration.SECONDS));
 
-    Collection<Range<Time>> ranges = new ArrayList<Range<Time>>();
+    List<Window> ranges = new ArrayList<Window>();
     ranges.add(r1);
     ranges.add(r2);
     ranges.add(r3);
-    ranges.add(r4);
     ranges.add(r5);
-    ranges.add(r6);
     ranges.add(r7);
 
-    TimeWindows tw = TimeWindows.of(ranges, true);
+    Windows tw = new Windows(ranges);
 
-    TimeWindows res = fsm.filter(null, tw);
-    System.out.println(res);
+    Windows expected = new Windows(Arrays.asList(r1,r5,r7));
+    Windows res = fsm.filter(null, tw);
+    assert(res.equals(expected));
 
   }
 

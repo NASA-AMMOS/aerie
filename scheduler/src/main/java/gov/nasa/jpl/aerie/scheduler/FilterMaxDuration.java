@@ -1,6 +1,10 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 /**
  * Filter keeping windows with a duration inferior or equal to a defined minimum duration
  */
@@ -12,16 +16,15 @@ public class FilterMaxDuration extends FilterFunctional {
   }
 
   @Override
-  public TimeWindows filter(Plan plan, TimeWindows windows) {
-    TimeWindows result = new TimeWindows(windows);
-    result.doNotMergeAdjacent();
-    result.filterByDuration(null, this.maxDuration);
+  public Windows filter(Plan plan, Windows windows) {
+    Windows result = new Windows(windows);
+    result = result.filterByDuration(Duration.ZERO, this.maxDuration);
     return result;
   }
 
 
   @Override
-  public boolean shouldKeep(Plan plan, Range<Time> range) {
-    return range.getMaximum().minus(range.getMinimum()).compareTo(maxDuration) <= 0;
+  public boolean shouldKeep(Plan plan, Window range) {
+    return range.duration().noLongerThan(maxDuration);
   }
 }

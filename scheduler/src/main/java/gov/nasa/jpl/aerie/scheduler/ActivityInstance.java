@@ -1,6 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -14,7 +16,6 @@ import java.util.Objects;
  * (similar to aerie/services/.../plan/models/ActivityInstances.java)
  */
 public class ActivityInstance {
-
   /**
    * creates a new unscheduled activity instance of specified type
    *
@@ -37,7 +38,7 @@ public class ActivityInstance {
    *     by this activity instance
    * @param start IN the time at which the activity is scheduled
    */
-  public ActivityInstance(String name, ActivityType type, Time start) {
+  public ActivityInstance(String name, ActivityType type, Duration start) {
     this(name, type);
     this.startTime = start;
     //TODO: should guess duration from activity type bounds
@@ -52,9 +53,9 @@ public class ActivityInstance {
    * @param start IN the time at which the activity is scheduled
    * @param duration IN the duration that the activity lasts for
    */
-  public ActivityInstance(String name, ActivityType type, Time start, Duration duration) {
+  public ActivityInstance(String name, ActivityType type, Duration start, Duration duration) {
     this(name, type, start);
-    if (duration.toMilliseconds() < 0) {
+    if (duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
     this.duration = duration;
@@ -72,7 +73,7 @@ public class ActivityInstance {
     this.duration = o.duration;
     this.parameters = o.parameters;
 
-    if (duration.toMilliseconds() < 0) {
+    if (duration.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
   }
@@ -160,7 +161,7 @@ public class ActivityInstance {
    *
    * @return the time at which this activity starts, if specified
    */
-  public Time getStartTime() {
+  public Duration getStartTime() {
     return this.startTime;
   }
 
@@ -169,7 +170,7 @@ public class ActivityInstance {
    *
    * @param newStartT the time at which this activity starts
    */
-  public void setStartTime(Time newStartT) {
+  public void setStartTime(Duration newStartT) {
     this.startTime = newStartT;
   }
 
@@ -182,7 +183,7 @@ public class ActivityInstance {
     return this.duration;
   }
 
-  public Time getEndTime() {
+  public Duration getEndTime() {
     return this.startTime.plus(this.duration);
   }
 
@@ -192,7 +193,7 @@ public class ActivityInstance {
    * @param newDur the new duration to use
    */
   public void setDuration(Duration newDur) {
-    if (newDur.toMilliseconds() < 0) {
+    if (newDur.isNegative()) {
       throw new RuntimeException("Negative duration");
     }
     this.duration = newDur;
@@ -227,8 +228,8 @@ public class ActivityInstance {
     ActivityInstance that = (ActivityInstance) o;
     return name.equals(that.name)
            && type.equals(that.type)
-           && duration.equals(that.duration)
-           && startTime.equals(that.startTime);
+           && duration.isEqualTo(that.duration)
+           && startTime.isEqualTo(that.startTime);
 /* TODO: should handle parameters too!
     return Objects.equals(this.name, that.name)
            && Objects.equals(this.type,that.type)
@@ -263,7 +264,7 @@ public class ActivityInstance {
   /**
    * the time at which this activity instance is scheduled to start
    */
-  private Time startTime;
+  private Duration startTime;
 
   /**
    * adds a parameter to the activity instance

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * describes an issue in a plan whereby a desired activity instance is absent
  *
@@ -32,9 +34,10 @@ public abstract class MissingActivityConflict extends Conflict {
    *
    * REVIEW: maybe better to just have start windows? gets confusing and easy
    * to mix up
+   * @return
    */
   @Override
-  public abstract TimeWindows getTemporalContext();
+  public abstract Windows getTemporalContext();
 
 
 }

@@ -1,9 +1,12 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 
 /**
  * Class mocking the behavior of an externally defined state and implementing ExternalState interface
@@ -14,24 +17,25 @@ public class MockState<T extends Comparable<T>> implements
     ExternalState<T>
 {
 
-  Map<Range<Time>, T> values;
+  Map<Window, T> values;
 
-  public void initFromStateFile(Map<Time, T> fileValues) {
-    values = new TreeMap<Range<Time>, T>();
-    Time start = null;
+  public void initFromStateFile(Map<Duration, T> fileValues) {
+    values = new TreeMap<Window, T>();
+    Duration start = null;
     T val = null;
-    for (Map.Entry<Time, T> entry : fileValues.entrySet()) {
+    for (Map.Entry<Duration, T> entry : fileValues.entrySet()) {
       if (start != null && val != null) {
-        values.put(new Range<Time>(start, entry.getKey()), val);
+        values.put(Window.betweenClosedOpen(start, entry.getKey()), val);
       }
       start = entry.getKey();
       val = entry.getValue();
     }
+
   }
 
 
-  public T getValueAtTime(Time t) {
-    for (Map.Entry<Range<Time>, T> intv : values.entrySet()) {
+  public T getValueAtTime(Duration t) {
+    for (Map.Entry<Window, T> intv : values.entrySet()) {
       if (intv.getKey().contains(t)) {
         return intv.getValue();
       }
@@ -39,21 +43,18 @@ public class MockState<T extends Comparable<T>> implements
     return null;
   }
 
-  public Map<Time, T> valuesInterval(Time t1, Time t2) {
-    return null;
-  }
 
-  public TimeWindows whenValueBetween(T inf, T sup, TimeWindows windows) {
-    TimeWindows returnWindows = new TimeWindows();
 
-    Collection<Range<Time>> windowsR = windows.getRangeSet();
-    for (Map.Entry<Range<Time>, T> intv : values.entrySet()) {
-      if (intv.getValue().compareTo(inf) >= 0 && intv.getValue().compareTo(sup) <= 0) {
-        Range<Time> stateRange = intv.getKey();
-        for (Range<Time> range : windowsR) {
-          Range<Time> inter = range.intersect(stateRange);
-          if (inter != null) {
-            returnWindows.union(inter);
+  public Windows whenValue(Windows windows, Predicate<T> pred) {
+    Windows returnWindows = new Windows();
+
+    for (Map.Entry<Window, T> intv : values.entrySet()) {
+      if (pred.test(intv.getValue())){
+        Window stateRange = intv.getKey();
+        for (Window range : windows) {
+          var inter = Window.intersect(range, stateRange);
+          if (!inter.isEmpty()) {
+            returnWindows.add(inter);
           }
         }
       }
@@ -61,90 +62,32 @@ public class MockState<T extends Comparable<T>> implements
     return returnWindows;
   }
 
-  public TimeWindows whenValueBelow(T val, TimeWindows windows) {
 
-    TimeWindows returnWindows = new TimeWindows();
-
-    Collection<Range<Time>> windowsR = windows.getRangeSet();
-    for (Map.Entry<Range<Time>, T> intv : values.entrySet()) {
-      if (intv.getValue().compareTo(val) < 0) {
-        Range<Time> stateRange = intv.getKey();
-        for (Range<Time> range : windowsR) {
-          Range<Time> inter = range.intersect(stateRange);
-          if (inter != null) {
-            returnWindows.union(inter);
-          }
-        }
-      }
-    }
-    return returnWindows;
+  public Windows whenValueBetween(T inf, T sup, Windows windows) {
+   return whenValue(windows,(x) -> x.compareTo(inf) >= 0 && x.compareTo(sup) <= 0);
+  }
+  public Windows whenValueBelow(T val, Windows windows) {
+    return whenValue(windows,(x) -> x.compareTo(val) < 0);
+  }
+  public Windows whenValueAbove(T val, Windows windows) {
+    return whenValue(windows,(x) -> x.compareTo(val) > 0);
   }
 
-  public TimeWindows whenValueAbove(T val, TimeWindows windows) {
-    TimeWindows returnWindows = new TimeWindows();
-
-    Collection<Range<Time>> windowsR = windows.getRangeSet();
-    for (Map.Entry<Range<Time>, T> intv : values.entrySet()) {
-      if (intv.getValue().compareTo(val) > 0) {
-        Range<Time> stateRange = intv.getKey();
-        for (Range<Time> range : windowsR) {
-          Range<Time> inter = range.intersect(stateRange);
-          if (inter != null) {
-            returnWindows.union(inter);
-          }
-        }
-      }
-    }
-    return returnWindows;
-
+  public Windows whenValueEqual(T val, Windows windows) {
+    return whenValue(windows,(x) -> x.compareTo(val) == 0);
   }
 
-  public TimeWindows whenValueEqual(T val, TimeWindows windows) {
-    TimeWindows returnWindows = new TimeWindows();
-
-    Collection<Range<Time>> windowsR = windows.getRangeSet();
-    for (Map.Entry<Range<Time>, T> intv : values.entrySet()) {
-      if (intv.getValue().compareTo(val) == 0) {
-        Range<Time> stateRange = intv.getKey();
-        for (Range<Time> range : windowsR) {
-          Range<Time> inter = range.intersect(stateRange);
-          if (inter != null) {
-            returnWindows.union(inter);
-          }
-        }
-      }
-    }
-    return returnWindows;
-
+  public Windows whenValueNotEqual(T val, Windows windows) {
+    return whenValue(windows,(x) -> x.compareTo(val) != 0);
   }
-
   @Override
-  public Map<Range<Time>, T> getTimeline(TimeWindows timeDomain) {
+  public Map<Window, T> getTimeline(Windows timeDomain) {
     return values;
   }
 
-  @Override
-  public TimeWindows whenValueNotEqual(T val, TimeWindows windows) {
-    TimeWindows returnWindows = new TimeWindows();
-    Collection<Range<Time>> result = new ArrayList<Range<Time>>();
-    Collection<Range<Time>> windowsR = windows.getRangeSet();
-    for (Map.Entry<Range<Time>, T> intv : values.entrySet()) {
-      if (intv.getValue().compareTo(val) != 0) {
-        Range<Time> stateRange = intv.getKey();
-        for (Range<Time> range : windowsR) {
-          Range<Time> inter = range.intersect(stateRange);
-          if (inter != null) {
-            result.add(inter);
-            //returnWindows.union(inter);
-          }
-        }
-      }
-    }
-    return TimeWindows.of(result);
-  }
 
   public void draw() {
-    for (Map.Entry<Range<Time>, T> v : values.entrySet()) {
+    for (Map.Entry<Window, T> v : values.entrySet()) {
       if (v.getValue() instanceof Boolean) {
         Boolean val = (Boolean) v.getValue();
         String toPrint = "";
@@ -153,8 +96,8 @@ public class MockState<T extends Comparable<T>> implements
         } else {
           toPrint = "-";
         }
-        int max = (int) v.getKey().getMaximum().toEpochMilliseconds() / 1000;
-        int min = (int) v.getKey().getMinimum().toEpochMilliseconds() / 1000;
+        int max = (int) v.getKey().end.in(Duration.SECONDS);
+        int min = (int) v.getKey().start.in(Duration.SECONDS);
 
         for (int i = min; i < max; i++) {
           System.out.print(toPrint + "  ");

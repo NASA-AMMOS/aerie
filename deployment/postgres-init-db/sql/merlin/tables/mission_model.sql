@@ -1,4 +1,4 @@
-create table if not exists mission_model (
+create table mission_model (
   id integer generated always as identity,
   revision integer not null default 0,
 
@@ -39,7 +39,7 @@ comment on column mission_model.jar_id is e''
   'An uploaded JAR file defining the mission model.';
 
 
-create or replace function increment_revision_on_update_mission_model()
+create function increment_revision_on_update_mission_model()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -50,16 +50,12 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-do $$ begin
-  create trigger increment_revision_on_update_mission_model_trigger
-  after insert on mission_model
-  for each row
-  execute function increment_revision_on_update_mission_model();
-exception
-  when duplicate_object then null;
-end $$;
+create trigger increment_revision_on_update_mission_model_trigger
+after insert on mission_model
+for each row
+execute function increment_revision_on_update_mission_model();
 
-create or replace function increment_revision_on_update_mission_model_jar()
+create function increment_revision_on_update_mission_model_jar()
 returns trigger
 security definer
 language plpgsql as $$begin

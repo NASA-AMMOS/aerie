@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Map;
 
 public class TimeExpressionRelative extends TimeExpression {
@@ -15,32 +18,32 @@ public class TimeExpressionRelative extends TimeExpression {
   }
 
   @Override
-  public Range<Time> computeTime(Plan plan, Range<Time> interval) {
-    Time from = null;
+  public Window computeTime(Plan plan, Window interval) {
+    Duration from = null;
     if (anchor == TimeAnchor.START) {
-      from = interval.getMinimum();
+      from = interval.start;
     } else if (anchor == TimeAnchor.END) {
-      from = interval.getMaximum();
+      from = interval.end;
     }
 
-    Time res = from;
+    Duration res = from;
     for (Map.Entry<Time.Operator, Duration> entry : this.operations.entrySet()) {
       res = Time.performOperation(entry.getKey(), res, entry.getValue());
     }
 
-    Range<Time> retRange;
+    Window retRange;
 
     //if we want an range of possibles
     if (!fixed) {
       if (res.compareTo(from) > 0) {
-        retRange = new Range<Time>(from, res);
+        retRange = Window.between(from, res);
 
       } else {
-        retRange = new Range<Time>(res, from);
+        retRange = Window.between(res, from);
       }
       // we just want to compute the absolute timepoint
     } else {
-      retRange = new Range<Time>(res, res);
+      retRange = Window.between(res, res);
     }
 
     return retRange;

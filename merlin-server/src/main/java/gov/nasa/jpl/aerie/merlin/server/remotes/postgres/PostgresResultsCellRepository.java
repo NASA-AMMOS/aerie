@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -14,11 +16,13 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,7 +49,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
     final var planId = Long.parseLong(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlanStart(connection, planId);
+      final var planStart = getPlan(connection, planId).startTime();
       // TODO: At the time of writing, simulation starts at the plan start every time
       //       When that changes, we will need to update the simulation start here as well
       final var simulationStart = planStart;
@@ -325,10 +329,11 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final DatasetRecord dataset
   ) throws SQLException {
-    final var simulationStart = getSimulationStart(connection, dataset);
-    final var startTimestamp = new Timestamp(simulationStart);
+    final var simulationWindow = getSimulationWindow(connection, dataset);
+    final var startTimestamp = simulationWindow.start();
+    final var simulationStart = startTimestamp.toInstant();
 
-    final var profiles = getProfiles(connection, dataset.id(), startTimestamp);
+    final var profiles = getProfiles(connection, dataset.id(), simulationWindow);
     final var realProfiles = profiles.getLeft();
     final var discreteProfiles = profiles.getRight();
 
@@ -337,12 +342,16 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
 
+    // TODO: Events are not currently persisted in the database. When they are, this stub will need to be updated.
+    final var events = new ArrayList<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>>();
+
     return new SimulationResults(
         realProfiles,
         discreteProfiles,
         activities,
         unfinishedActivities,
-        simulationStart
+        simulationStart,
+        events
     );
   }
 
@@ -405,26 +414,27 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     return pgIdToSimId;
   }
 
-  private static Instant getSimulationStart(
+  private static Window getSimulationWindow(
       final Connection connection,
       final DatasetRecord dataset
   ) throws SQLException {
     try {
-      return getPlanStart(connection, dataset.planId())
-          .plusMicros(dataset.offsetFromPlanStart().dividedBy(Duration.MICROSECONDS))
-          .time
-          .toInstant();
+      final var plan = getPlan(connection, dataset.planId());
+      final var simulationStart = plan.startTime()
+          .plusMicros(dataset.offsetFromPlanStart().dividedBy(Duration.MICROSECONDS));
+      final var simulationEnd = plan.endTime();
+      return new Window(simulationStart, simulationEnd);
     } catch (final NoSuchPlanException ex) {
       throw new Error("Plan for simulation dataset with ID " + dataset.id() + " no longer exists.");
     }
   }
 
-  private static Timestamp getPlanStart(
+  private static PlanRecord getPlan(
       final Connection connection,
       final long planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
-      return getPlanAction.get(planId).startTime();
+      return getPlanAction.get(planId);
     }
   }
 
@@ -434,19 +444,19 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   getProfiles(
       final Connection connection,
       final long datasetId,
-      final Timestamp simulationStart)
-  throws SQLException {
+      final Window simulationWindow
+  ) throws SQLException {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
     final var profileRecords = getProfileRecords(connection, datasetId);
     for (final var record : profileRecords) {
       switch (record.type().getLeft()) {
-        case "real" -> realProfiles.put(record.name(), getRealProfileSegments(connection, record.datasetId(), record.id(), simulationStart));
+        case "real" -> realProfiles.put(record.name(), getRealProfileSegments(connection, record.datasetId(), record.id(), simulationWindow));
         case "discrete" -> discreteProfiles.put(record.name(),
                                                 Pair.of(
                                                     record.type().getRight(),
-                                                    getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationStart)));
+                                                    getDiscreteProfileSegments(connection, record.datasetId(), record.id(), simulationWindow)));
         default -> throw new Error("Unrecognized profile type");
       }
     }
@@ -467,10 +477,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long datasetId,
       final long profileId,
-      final Timestamp simulationStart
+      final Window simulationWindow
   ) throws SQLException {
     try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationStart, realDynamicsP);
+      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, realDynamicsP);
     }
   }
 
@@ -478,10 +488,10 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final Connection connection,
       final long datasetId,
       final long profileId,
-      final Timestamp simulationStart
+      final Window simulationWindow
   ) throws SQLException {
     try (final var getProfileSegmentsAction = new GetProfileSegmentsAction(connection)) {
-      return getProfileSegmentsAction.get(datasetId, profileId, simulationStart, serializedValueP);
+      return getProfileSegmentsAction.get(datasetId, profileId, simulationWindow, serializedValueP);
     }
   }
 

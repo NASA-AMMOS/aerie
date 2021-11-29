@@ -7,7 +7,7 @@ import java.util.Objects;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Exclusive;
 import static gov.nasa.jpl.aerie.constraints.time.Window.Inclusivity.Inclusive;
 
-public final class Window {
+public final class Window implements Comparable<Window>{
   // If end.shorterThan(start), this is the empty window.
   // If end.equals(start), this is a single point.
   // If end.longerThan(start), this is a closed interval.
@@ -196,6 +196,39 @@ public final class Window {
     }
 
     return Window.between(start, startInclusivity, end, endInclusivity);
+  }
+
+  public boolean isStrictlyAfter(Window x){
+    return compareStartToEnd(this, x) > 0;
+  }
+
+  public boolean isStrictlyBefore(Window x){
+    return compareEndToStart(this,x) < 0;
+  }
+
+  public boolean contains(Duration d){
+    return !intersect(this, at(d)).isEmpty();
+  }
+
+  public boolean contains(Window x){
+    return intersect(this,x).equals(x);
+  }
+
+  public boolean isSingleton(){
+    return this.start.isEqualTo(this.end);
+  }
+
+  public static Window betweenClosedOpen(final Duration start, final Duration end) {
+    return between(start, Inclusive, end, Exclusive);
+  }
+
+  public boolean adjacent(Window x){
+    return meets(x,this) || meets(this,x);
+  }
+
+  @Override
+  public int compareTo(final Window o) {
+    return start.compareTo(o.start);
   }
 
   public static int compareStartToStart(final Window x, final Window y) {

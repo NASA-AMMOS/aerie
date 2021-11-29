@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.Map;
 
 /**
@@ -18,7 +21,7 @@ public interface ExternalState<T> extends QueriableState<T> {
    * @param timeDomain the domain over which the search is performed
    * @return a set of time intervals
    */
-  TimeWindows whenValueBetween(T inf, T sup, TimeWindows timeDomain);
+  Windows whenValueBetween(T inf, T sup, Windows timeDomain);
 
   /**
    * Returns periods during which state is below a value
@@ -27,7 +30,7 @@ public interface ExternalState<T> extends QueriableState<T> {
    * @param timeDomain the domain over which the search is performed
    * @return a set of time intervals
    */
-  TimeWindows whenValueBelow(T val, TimeWindows timeDomain);
+  Windows whenValueBelow(T val, Windows timeDomain);
 
   /**
    * Returns periods in timedomain during which state is above a value
@@ -36,7 +39,7 @@ public interface ExternalState<T> extends QueriableState<T> {
    * @param timeDomain the domain over which the search is performed
    * @return a set of time intervals
    */
-  TimeWindows whenValueAbove(T val, TimeWindows timeDomain);
+  Windows whenValueAbove(T val, Windows timeDomain);
 
   /**
    * Returns periods in timedomain during which state is equal to a value
@@ -45,7 +48,7 @@ public interface ExternalState<T> extends QueriableState<T> {
    * @param timeDomain the domain over which the search is performed
    * @return a set of time intervals
    */
-  TimeWindows whenValueEqual(T val, TimeWindows timeDomain);
+  Windows whenValueEqual(T val, Windows timeDomain);
 
   /**
    * Returns periods in timedomain during which state is constant
@@ -53,7 +56,7 @@ public interface ExternalState<T> extends QueriableState<T> {
    * @param timeDomain the domain over which the search is performed
    * @return a set of time ranges (not TimeWindows because they would be merged together)
    */
-  Map<Range<Time>, T> getTimeline(TimeWindows timeDomain);
+  Map<Window, T> getTimeline(Windows timeDomain);
 
   /**
    * Returns periods in timedomain during which state is not equal to a value
@@ -62,7 +65,7 @@ public interface ExternalState<T> extends QueriableState<T> {
    * @param timeDomain the domain over which the search is performed
    * @return a set of time ranges (not TimeWindows because they would be merged together)
    */
-  TimeWindows whenValueNotEqual(T val, TimeWindows timeDomain);
+  Windows whenValueNotEqual(T val, Windows timeDomain);
 
 
 }

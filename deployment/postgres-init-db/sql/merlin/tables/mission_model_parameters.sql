@@ -1,4 +1,4 @@
-create table if not exists mission_model_parameters (
+create table mission_model_parameters (
   model_id integer not null,
   revision integer not null default 0,
 

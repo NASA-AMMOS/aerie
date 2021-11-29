@@ -1,6 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import it.univr.di.cstnu.algorithms.STN;
 import it.univr.di.cstnu.algorithms.WellDefinitionException;
 import it.univr.di.cstnu.graph.LabeledNode;
@@ -15,26 +18,26 @@ public class TestSTN {
   @Test
   public void testbug() {
 
+    HuginnConfiguration conf = new HuginnConfiguration();
 
     Time startHorizon = Time.fromString("2030-001T00:00:00.000");
     Time endHorizon = Time.fromString("2030-350T00:00:00.000");
 
-    Range<Time> planningHorizon = new Range<Time>(startHorizon, endHorizon);
-    TimeWindows.setHorizon(planningHorizon.getMinimum(), planningHorizon.getMaximum());
-
+    PlanningHorizon h = new PlanningHorizon(startHorizon,endHorizon);
+    conf.setHorizon(h);
 
     Time swin = Time.fromString("2030-002T00:00:00.000");
     Time ewin = Time.fromString("2030-003T00:00:00.000");
-    var encounter = TimeWindows.of(new Range<Time>(swin, ewin));
+    var encounter = new Windows(Window.between(h.toDur(swin), h.toDur(ewin)));
     var treenc = new TimeRangeExpression.Builder().from(encounter).build();
 
     var rollGoal = new CoexistenceGoal.Builder()
         .named("RollGoal")
-        .forAllTimeIn(planningHorizon)
+        .forAllTimeIn(h.getHor())
         .forEach(treenc)
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(new ActivityType("ACT"))
-                            .duration(new Duration(1500))
+                            .duration(Duration.of(1500, Duration.SECONDS))
                             .build())
         .startsAfter(TimeAnchor.START)
         .endsBefore(TimeAnchor.END)

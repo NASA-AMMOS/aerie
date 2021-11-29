@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 public class UnsatisfiableMissingActivityConflict extends Conflict {
 
 
@@ -13,7 +15,7 @@ public class UnsatisfiableMissingActivityConflict extends Conflict {
   }
 
   @Override
-  public TimeWindows getTemporalContext() {
+  public Windows getTemporalContext() {
     return null;
   }
 }

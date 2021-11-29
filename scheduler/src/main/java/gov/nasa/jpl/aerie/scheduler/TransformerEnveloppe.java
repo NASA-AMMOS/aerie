@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.List;
 
 public class TransformerEnveloppe implements TimeWindowsTransformer {
@@ -12,27 +16,27 @@ public class TransformerEnveloppe implements TimeWindowsTransformer {
   }
 
   @Override
-  public TimeWindows transformWindows(Plan plan, TimeWindows windowsToTransform) {
+  public Windows transformWindows(Plan plan, Windows windowsToTransform) {
 
-    TimeWindows ret = new TimeWindows();
+    Windows ret = new Windows();
+    if(!windowsToTransform.isEmpty()) {
+      Duration min = windowsToTransform.maxTimePoint().get(), max = windowsToTransform.minTimePoint().get();
+      boolean atLeastOne = false;
+      for (var insideExpr : insideExprs) {
 
-    Time min = windowsToTransform.getMaximum(), max = windowsToTransform.getMinimum();
-    boolean atLeastOne = false;
-    for (var insideExpr : insideExprs) {
+        var rangeExpr = insideExpr.computeRange(plan, windowsToTransform);
+        if (!rangeExpr.isEmpty()) {
+          atLeastOne = true;
+          min = Duration.min(min, rangeExpr.minTimePoint().get());
+          max = Duration.max(max, rangeExpr.maxTimePoint().get());
+        }
+      }
 
-      var rangeExpr = insideExpr.computeRange(plan, windowsToTransform);
-      if (!rangeExpr.isEmpty()) {
-        atLeastOne = true;
-        min = Time.min(min, rangeExpr.getMinimum());
-        max = Time.max(max, rangeExpr.getMaximum());
+      if (atLeastOne) {
+        //register new transformed window
+        ret.add(Window.between(min, max));
       }
     }
-
-    if (atLeastOne) {
-      //register new transformed window
-      ret.union(new Range<Time>(min, max));
-    }
-
 
     return ret;
 

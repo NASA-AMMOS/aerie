@@ -193,6 +193,9 @@ public class IntervalSet<Alg, I> {
     return new IntervalSet<>(this.alg).includesAll(this);
   }
 
+  public int size(){
+    return intervals.size();
+  }
 
   public boolean includes(final I interval) {
     if (this.alg.isEmpty(interval)) return true;
@@ -233,7 +236,7 @@ public class IntervalSet<Alg, I> {
 
   public Iterable<I> descendingOrder() {
     return () -> new Iterator<>() {
-      private final ListIterator<I> iter = IntervalSet.this.intervals.listIterator();
+      private final ListIterator<I> iter = IntervalSet.this.intervals.listIterator(IntervalSet.this.intervals.size());
 
       @Override
       public boolean hasNext() {

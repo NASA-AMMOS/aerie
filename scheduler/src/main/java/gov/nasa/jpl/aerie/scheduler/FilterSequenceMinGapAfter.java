@@ -1,7 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Filter windows that have at least another window preceding ending within a delay
@@ -9,21 +15,22 @@ import java.util.List;
 public class FilterSequenceMinGapAfter implements TimeWindowsFilter {
 
   private Duration minDelay;
-
   public FilterSequenceMinGapAfter(Duration minDelay) {
     this.minDelay = minDelay;
   }
 
   @Override
-  public TimeWindows filter(Plan plan, TimeWindows windows) {
-    List<Range<Time>> filtered = new ArrayList<Range<Time>>();
-    List<Range<Time>> windowsTo = windows.getRangeSet();
+  public Windows filter(Plan plan, Windows windows) {
+    List<Window> filtered = new ArrayList<>();
+    List<Window> windowsTo = StreamSupport
+        .stream(windows.spliterator(), false)
+        .collect(Collectors.toList());
     if (windowsTo.size() > 1) {
       int nextInd = 1;
       while (nextInd < windowsTo.size()) {
-        Range<Time> after = windowsTo.get(nextInd);
-        Range<Time> cur = windowsTo.get(nextInd - 1);
-        if (after.getMinimum().minus(cur.getMaximum()).compareTo(minDelay) >= 0) {
+        Window after = windowsTo.get(nextInd);
+        Window cur = windowsTo.get(nextInd - 1);
+        if (after.start.minus(cur.end).compareTo(minDelay) >= 0) {
           filtered.add(cur);
         }
         nextInd++;
@@ -33,7 +40,7 @@ public class FilterSequenceMinGapAfter implements TimeWindowsFilter {
     } else if (windowsTo.size() == 1) {
       filtered = windowsTo;
     }
-    return TimeWindows.of(filtered, true);
+    return new Windows(filtered);
 
   }
 

@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * describes plan problem due to lack of a matching instance for a template
  *
@@ -18,7 +20,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    */
   public MissingActivityTemplateConflict(
       ActivityTemplateGoal goal,
-      TimeWindows temporalContext)
+      Windows temporalContext)
   {
     super(goal);
 
@@ -39,9 +41,10 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    * the activity's own duration limits
    *
    * the times encompass just the desired start times of the missing activity
+   * @return
    */
   @Override
-  public TimeWindows getTemporalContext() {
+  public Windows getTemporalContext() {
     return temporalContext;
   }
 
@@ -60,6 +63,6 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    *
    * see more details at accessor getTemporalContext()
    */
-  private TimeWindows temporalContext;
+  private Windows temporalContext;
 
 }

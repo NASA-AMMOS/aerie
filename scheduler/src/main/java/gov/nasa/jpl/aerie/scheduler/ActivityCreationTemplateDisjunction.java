@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,8 +17,8 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
 
   @Override
   @SuppressWarnings("unchecked")
-  public <B extends ActivityExpression.AbstractBuilder<B, AT>, AT extends ActivityExpression> ActivityExpression.AbstractBuilder<B, AT> getNewBuilder() {
-    return (ActivityExpression.AbstractBuilder<B, AT>) new OrBuilder();
+  public <B extends AbstractBuilder<B, AT>, AT extends ActivityExpression> AbstractBuilder<B, AT> getNewBuilder() {
+    return (AbstractBuilder<B, AT>) new OrBuilder();
   }
 
   /**
@@ -45,7 +47,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  ActivityInstance createActivity(String name, TimeWindows windows) {
+  ActivityInstance createActivity(String name, Windows windows) {
     //TODO: returns first ACT of disjunction, change it
     return acts.get(0).createActivity(name, windows);
 
@@ -71,7 +73,7 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    * Builder for creating disjunction of activity creation templates
    */
   public static class OrBuilder extends
-      ActivityExpression.AbstractBuilder<OrBuilder, ActivityCreationTemplateDisjunction>
+      AbstractBuilder<OrBuilder, ActivityCreationTemplateDisjunction>
   {
 
     /**

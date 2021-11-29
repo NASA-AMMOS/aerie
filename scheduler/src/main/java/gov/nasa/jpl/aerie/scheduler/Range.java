@@ -1,6 +1,11 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * represents an inclusive interval of partially ordered values

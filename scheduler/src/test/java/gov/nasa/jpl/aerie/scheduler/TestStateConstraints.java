@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +18,7 @@ public class TestStateConstraints {
   /**
    * span of time over which the scheduler should run
    */
-  private final Range<Time> horizon = new Range<>(
+  private final PlanningHorizon horizon = new PlanningHorizon(
       Time.fromString("2025-001T00:00:00.000"),
       Time.fromString("2027-001T00:00:00.000"));
 
@@ -58,11 +61,11 @@ public class TestStateConstraints {
         .build();
 
 
-    TimeWindows windows1 = TimeWindows.of(horizon);
-    TimeWindows re1 = constraintOnImpliesBool.findWindows(plan, windows1);
+    Windows windows1 = new Windows(horizon.getHor());
+    Windows re1 = constraintOnImpliesBool.findWindows(plan, windows1);
 
-    TimeWindows windows2 = TimeWindows.of(horizon);
-    TimeWindows re2 = constraintEncounter.findWindows(plan, windows2);
+    Windows windows2 = new Windows( horizon.getHor());
+    Windows re2 = constraintEncounter.findWindows(plan, windows2);
 
     assert (re1.equals(re2));
 
@@ -96,16 +99,16 @@ public class TestStateConstraints {
         .build();
 
 
-    TimeWindows windows1 = TimeWindows.of(horizon);
-    TimeWindows re1 = approachStateConstraint.findWindows(plan, windows1);
+    Windows windows1 = new Windows( horizon.getHor());
+    Windows re1 = approachStateConstraint1.findWindows(plan, windows1);
 
-    TimeWindows windows2 = TimeWindows.of(horizon);
-    TimeWindows re2 = approachStateConstraint.findWindows(plan, windows2);
+    Windows windows2 = new Windows( horizon.getHor());
+    Windows re2 = approachStateConstraint2.findWindows(plan, windows2);
 
-    TimeWindows windows3 = TimeWindows.of(horizon);
-    TimeWindows re3 = approachStateConstraint.findWindows(plan, windows3);
+    Windows windows3 = new Windows( horizon.getHor());
+    Windows re3 = approachStateConstraint.findWindows(plan, windows3);
 
-    re1.union(re2);
+    re1.addAll(re2);
 
     assert (re1.equals(re3));
 
@@ -117,7 +120,7 @@ public class TestStateConstraints {
   @Test
   public void testconstraintgoal() {
 
-    final var dur = Duration.ofHours(1.0);
+    final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR);
     final var activityTypeImage = new ActivityType("EISImage");
 
     final var eisImageAct = new ActivityCreationTemplate.Builder()
@@ -132,10 +135,9 @@ public class TestStateConstraints {
         .above(altitudeDerivativeState, 0.0)
         .build();
 
-    TimeWindows.setHorizon(Time.fromString("2020-001T00:00:00.000"),Time.fromString("2040-001T00:00:00.000"));
     CoexistenceGoal cg = new CoexistenceGoal.Builder()
         .named("OrbitStateGoal")
-        .forAllTimeIn(horizon)
+        .forAllTimeIn(horizon.getHor())
         .thereExistsOne(eisImageAct)
         .forEach(approachStateConstraint1)
         .owned(ChildCustody.Jointly)
@@ -149,8 +151,8 @@ public class TestStateConstraints {
     final var solver = new PrioritySolver(huginn, problem);
     final var plan = solver.getNextSolution().orElseThrow();
 
-    TimeWindows windows1 = TimeWindows.of(horizon);
-    TimeWindows re1 = approachStateConstraint1.findWindows(plan, windows1);
+    Windows windows1 = new Windows( horizon.getHor());
+    Windows re1 = approachStateConstraint1.findWindows(plan, windows1);
     assert (TestUtility.atLeastOneActivityOfTypeInTW(plan, re1, activityTypeImage));
   }
 
@@ -159,7 +161,7 @@ public class TestStateConstraints {
    */
   @Test
   public void testproceduralgoalwithconstraints() {
-    final var dur = Duration.ofHours(1.0);
+    final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, Duration.HOUR);
 
 
     StateConstraintExpression approachStateConstraint = new StateConstraintExpression.Builder()
@@ -172,10 +174,10 @@ public class TestStateConstraints {
     final var activityTypeImage = new ActivityType("EISImage");
 
     ActivityInstance act1 = new ActivityInstance("EISImage1_shouldbescheduled", activityTypeImage,
-                                                 Time.fromString("2025-202T00:00:00.000"), dur);
+                                                 Time.fromString("2025-202T00:00:00.000",horizon), dur);
 
     ActivityInstance act2 = new ActivityInstance("EISImage2_shouldnotbescheduled", activityTypeImage,
-                                                 Time.fromString("2025-179T00:00:00.000"), dur);
+                                                 Time.fromString("2025-179T00:00:00.000",horizon), dur);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -187,7 +189,7 @@ public class TestStateConstraints {
 
     final var proceduralGoalWithConstraints = new ProceduralCreationGoal.Builder()
         .named("OrbitStateGoalWithTemplateWithProcedural")
-        .forAllTimeIn(horizon)
+        .forAllTimeIn(horizon.getHor())
         .attachStateConstraint(approachStateConstraint)
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
@@ -225,9 +227,9 @@ public class TestStateConstraints {
         .satisfied(approachStateConstraint2)
         .build();
 
-    Time begin = Time.fromString("2025-160T00:00:00.000");
-    Time end = Time.fromString("2025-210T00:00:00.000");
-    var windows = approachStateConstraint.findWindows(null, TimeWindows.of(new Range<Time>(begin, end)));
+    Duration begin = Time.fromString("2025-160T00:00:00.000",horizon);
+    Duration end = Time.fromString("2025-210T00:00:00.000", horizon);
+    var windows = approachStateConstraint.findWindows(null, new Windows( Window.between(begin, end)));
     System.out.println(windows);
 
 
@@ -238,7 +240,7 @@ public class TestStateConstraints {
    */
   @Test
   public void testactivityconstraints() {
-    final var dur = Duration.ofHours(1.0);
+    final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR);
 
     StateConstraintExpression approachStateConstraint = new StateConstraintExpression.Builder()
         .andBuilder()
@@ -250,10 +252,10 @@ public class TestStateConstraints {
     final var activityTypeImageWithConstraint = new ActivityType("EISImageWithConstraints", approachStateConstraint);
 
     ActivityInstance act1 = new ActivityInstance("EISImage1_shouldbescheduled", activityTypeImageWithConstraint,
-                                                 Time.fromString("2025-202T00:00:00.000"), dur);
+                                                 Time.fromString("2025-202T00:00:00.000",horizon), dur);
 
     ActivityInstance act2 = new ActivityInstance("EISImage2_shouldnotbescheduled", activityTypeImageWithConstraint,
-                                                 Time.fromString("2025-179T00:00:00.000"), dur);
+                                                 Time.fromString("2025-179T00:00:00.000",horizon), dur);
 
     //create an "external tool" that insists on a few fixed activities
     final var externalActs = java.util.List.of(
@@ -266,7 +268,7 @@ public class TestStateConstraints {
 
     final var proceduralgoalwithoutconstraints = new ProceduralCreationGoal.Builder()
         .named("OrbitStateGoalWithTemplateWithProceduralWithoutConstraint")
-        .forAllTimeIn(horizon)
+        .forAllTimeIn(horizon.getHor())
         .generateWith(fixedGenerator)
         .owned(ChildCustody.Jointly)
         .withPriority(7.0)
@@ -289,28 +291,61 @@ public class TestStateConstraints {
     ENCOUNTER;
   }
 
+  @Test
+  public void testOfEachValue(){
+    final var dur = gov.nasa.jpl.aerie.merlin.protocol.types.Duration.of(1, gov.nasa.jpl.aerie.merlin.protocol.types.Duration.HOUR);
+    final var activityTypeImage = new ActivityType("EISImage");
+
+    final var eisImageAct = new ActivityCreationTemplate.Builder()
+        .ofType(activityTypeImage)
+        .duration(dur)
+        .build();
+    TimeRangeExpression tre = new TimeRangeExpression.Builder()
+        .ofEachValue(encounterEnumState)
+        .from(new StateConstraintExpression.Builder().lessThan(altitudeDerivativeState,1.).build())
+        .build();
+
+    CoexistenceGoal cg = new CoexistenceGoal.Builder()
+        .named("OrbitStateGoal")
+        .forAllTimeIn(horizon.getHor())
+        .thereExistsOne(eisImageAct)
+        .forEach(tre)
+        .owned(ChildCustody.Jointly)
+        .startsAt(TimeAnchor.START)
+        .withPriority(7.0)
+        .build();
+
+    Problem problem = new Problem(missionModel);
+    problem.add(cg);
+    HuginnConfiguration huginn = new HuginnConfiguration();
+    final var solver = new PrioritySolver(huginn, problem);
+    final var plan = solver.getNextSolution().orElseThrow();
+    assert(TestUtility.activityStartingAtTime(plan, horizon.getHor().start, activityTypeImage));
+    assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-180T00:00:00.000",horizon), activityTypeImage));
+    assert(TestUtility.activityStartingAtTime(plan, Time.fromString("2025-185T00:00:00.000",horizon), activityTypeImage));
+  }
 
   /**
    * Hardcoded state describing some two-value orbit phases
    */
   public class EncounterEnumState extends MockState<OrbitPhasesEnum> {
 
-    public EncounterEnumState(Range<Time> horizon) {
-      values = new HashMap<Range<Time>, OrbitPhasesEnum>() {{
+    public EncounterEnumState(PlanningHorizon horizon) {
+      values = new HashMap<Window, OrbitPhasesEnum>() {{
         put(
-            new Range<Time>(horizon.getMinimum(), Time.fromString("2025-180T00:00:00.000")),
+            Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)),
             OrbitPhasesEnum.NOTENCOUNTER);
         put(
-            new Range<Time>(Time.fromString("2025-180T00:00:00.000"), Time.fromString("2025-185T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)),
             OrbitPhasesEnum.ENCOUNTER);
         put(
-            new Range<Time>(Time.fromString("2025-185T00:00:00.000"), Time.fromString("2025-200T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-200T00:00:00.000", horizon)),
             OrbitPhasesEnum.NOTENCOUNTER);
         put(
-            new Range<Time>(Time.fromString("2025-200T00:00:00.000"), Time.fromString("2025-205T00:00:00.000")),
+            Window.betweenClosedOpen(Time.fromString("2025-200T00:00:00.000", horizon), Time.fromString("2025-205T00:00:00.000", horizon)),
             OrbitPhasesEnum.ENCOUNTER);
         put(
-            new Range<Time>(Time.fromString("2025-205T00:00:00.000"), horizon.getMaximum()),
+            Window.betweenClosedOpen(Time.fromString("2025-205T00:00:00.000", horizon), horizon.getHor().end),
             OrbitPhasesEnum.NOTENCOUNTER);
       }};
     }
@@ -321,14 +356,14 @@ public class TestStateConstraints {
    */
   public class AltitudeIntegerState extends MockState<Integer> {
 
-    public AltitudeIntegerState(Range<Time> horizon) {
-      values = new HashMap<Range<Time>, Integer>() {{
-        put(new Range<Time>(horizon.getMinimum(), Time.fromString("2025-180T00:00:00.000")), 10);
-        put(new Range<Time>(Time.fromString("2025-180T00:00:00.000"), Time.fromString("2025-183T00:00:00.000")), 20);
-        put(new Range<Time>(Time.fromString("2025-183T00:00:00.000"), Time.fromString("2025-185T00:00:00.000")), 30);
-        put(new Range<Time>(Time.fromString("2025-185T00:00:00.000"), Time.fromString("2025-202T00:00:00.000")), 40);
-        put(new Range<Time>(Time.fromString("2025-202T00:00:00.000"), Time.fromString("2025-203T00:00:00.000")), 50);
-        put(new Range<Time>(Time.fromString("2025-203T00:00:00.000"), horizon.getMaximum()), 60);
+    public AltitudeIntegerState(PlanningHorizon horizon) {
+      values = new HashMap<Window, Integer>() {{
+        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 10);
+        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-183T00:00:00.000", horizon)), 20);
+        put(Window.betweenClosedOpen(Time.fromString("2025-183T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 30);
+        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-202T00:00:00.000", horizon)), 40);
+        put(Window.betweenClosedOpen(Time.fromString("2025-202T00:00:00.000", horizon), Time.fromString("2025-203T00:00:00.000", horizon)), 50);
+        put(Window.betweenClosedOpen(Time.fromString("2025-203T00:00:00.000", horizon), horizon.getHor().end), 60);
       }};
     }
 
@@ -339,12 +374,12 @@ public class TestStateConstraints {
    */
   public class AltitudeDerivativeState extends MockState<Double> {
 
-    public AltitudeDerivativeState(Range<Time> horizon) {
-      values = new HashMap<Range<Time>, Double>() {{
-        put(new Range<Time>(horizon.getMinimum(), Time.fromString("2025-180T00:00:00.000")), 0.0);
-        put(new Range<Time>(Time.fromString("2025-180T00:00:00.000"), Time.fromString("2025-185T00:00:00.000")), 0.0);
-        put(new Range<Time>(Time.fromString("2025-185T00:00:00.000"), Time.fromString("2025-200T00:00:00.000")), 0.0);
-        put(new Range<Time>(Time.fromString("2025-200T00:00:00.000"), horizon.getMaximum()), 1.0);
+    public AltitudeDerivativeState(PlanningHorizon horizon) {
+      values = new HashMap<Window, Double>() {{
+        put(Window.betweenClosedOpen(horizon.getHor().start, Time.fromString("2025-180T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(Time.fromString("2025-180T00:00:00.000", horizon), Time.fromString("2025-185T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(Time.fromString("2025-185T00:00:00.000", horizon), Time.fromString("2025-200T00:00:00.000", horizon)), 0.0);
+        put(Window.betweenClosedOpen(Time.fromString("2025-200T00:00:00.000", horizon), horizon.getHor().end), 1.0);
       }};
     }
 

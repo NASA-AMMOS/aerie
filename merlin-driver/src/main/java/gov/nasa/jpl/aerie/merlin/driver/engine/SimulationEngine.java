@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
@@ -21,6 +22,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -35,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -233,8 +236,8 @@ public final class SimulationEngine implements AutoCloseable {
     if (status instanceof TaskStatus.Completed) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
-      final var awaiting = progress.completedAt(currentTime, children);
-      this.stepWaitingTask(task, awaiting, frame, currentTime);
+      this.tasks.put(task, progress.completedAt(currentTime, children));
+      this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
     } else if (status instanceof TaskStatus.Delayed s) {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
@@ -365,8 +368,9 @@ public final class SimulationEngine implements AutoCloseable {
       final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
-      final Map<String, String> taskToPlannedDirective
-  ) {
+      final Map<String, String> taskToPlannedDirective,
+      final TemporalEventSource timeline,
+      final MissionModel<?> missionModel) {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
     final var discreteProfiles = new HashMap<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>();
 
@@ -446,7 +450,42 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    return new SimulationResults(realProfiles, discreteProfiles, simulatedActivities, unsimulatedActivities, startTime);
+    final List<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>> serializedTimeline = new ArrayList<>();
+    var time = Duration.ZERO;
+    for (var point : timeline.points()) {
+      if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
+        time = time.plus(delta.delta());
+      } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
+        final var serializedEventGraph = commit.events().substitute(
+            event -> {
+              EventGraph<Triple<String, ValueSchema, SerializedValue>> output = EventGraph.empty();
+              for (final var serializableTopic : missionModel.getTopics()) {
+                Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
+                if (serializedEvent.isPresent()) {
+                  output = EventGraph.concurrently(output, EventGraph.atom(Triple.of(serializableTopic.name(), serializableTopic.valueSchema(), serializedEvent.get())));
+                }
+              }
+              return output;
+            }
+        ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
+        if (!(serializedEventGraph instanceof EventGraph.Empty)) {
+          serializedTimeline.add(Pair.of(time, serializedEventGraph));
+        }
+      }
+    }
+
+    return new SimulationResults(realProfiles,
+                                 discreteProfiles,
+                                 simulatedActivities,
+                                 unsimulatedActivities,
+                                 startTime,
+                                 serializedTimeline);
+  }
+
+  private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
+    // SAFETY: All queries available to the model are given to it by the MissionModelBuilder, which always constructs EngineQuery instances.
+    Topic<EventType> topic = ((EngineQuery<EventType, ?>) serializableTopic.query()).topic();
+    return event.extract(topic, serializableTopic.serializer());
   }
 
   private interface Translator<Target> {

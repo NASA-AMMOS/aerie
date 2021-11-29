@@ -44,12 +44,12 @@ public class SimResource<T extends Comparable<T>> implements
   private SimulationResults simResults;
 
   /** the scheduler time stamp at the beginning of the horizon, used to contextualize offset-duration results */
-  private Time horizonStart;
+  private Duration horizonStart;
 
   /** handles conversions between SerializedValue storage type and the desired in-core data type */
   ValueMapper<T> valueMapper;
 
-  TreeMap<Range<Time>, T> values;
+  TreeMap<Window, T> values;
 
   public boolean isEmpty() {
     return simResults == null
@@ -67,7 +67,7 @@ public class SimResource<T extends Comparable<T>> implements
       ValueMapper<T> valueMapper,
       SimulationResults simResults,
       List<Pair<Duration, T>> fileValues,
-      Time planningHorizonStart)
+      Duration planningHorizonStart)
   {
     this.name = name;
     this.valueMapper = valueMapper;
@@ -75,7 +75,7 @@ public class SimResource<T extends Comparable<T>> implements
     this.horizonStart = planningHorizonStart;
 
     values = new TreeMap<>();
-    Time start = null;
+    Duration start = null;
     T val;
     T lastVal = null;
     int i = 0;
@@ -83,51 +83,34 @@ public class SimResource<T extends Comparable<T>> implements
       i++;
       val = entry.getValue();
 
-      var time = planningHorizonStart.plus(gov.nasa.jpl.aerie.scheduler.Duration.fromMillis(entry
-                                                                                                .getKey()
-                                                                                                .in(Duration.MILLISECOND)));
+      var time = planningHorizonStart.plus(entry.getKey());
       if (start == null) {
         start = time;
         lastVal = val;
       }
       if (!val.equals(lastVal) || i == fileValues.size()) {
-        values.put(new Range<>(start, time), lastVal);
+        values.put(Window.betweenClosedOpen(start, time), lastVal);
         start = time;
       }
       lastVal = val;
     }
   }
 
-  /** convert constraint engine offset from plan start into a scheduler time point */
-  private Time convertToSchedulerTime(Duration offsetDur) {
-    return this.horizonStart.plus(convertToSchedulerDuration(offsetDur));
-  }
-
-  /** convert a scheduler time point to a constraint engine offset from plan start */
-  private Duration convertToConstraintOffsetDuration(Time schedT) {
-    return Duration.of(schedT.minus(this.horizonStart).toMicroseconds(), Duration.MICROSECOND);
-  }
-
-  /** convert constraint engine duration to scheduler duration */
-  private gov.nasa.jpl.aerie.scheduler.Duration convertToSchedulerDuration(Duration inDuration) {
-    return gov.nasa.jpl.aerie.scheduler.Duration.ofMicroseconds(inDuration.in(Duration.MICROSECOND));
-  }
-
   /** convert constraint engine windows into scheduler windows, within specified bounding windows */
-  private TimeWindows convertToSchedulerWindows(Windows inWindows, TimeWindows queryBounds) {
-    final var outWindows = new TimeWindows();
+  private Windows convertToSchedulerWindows(Windows inWindows, Windows queryBounds) {
+    final var outWindows = new Windows();
     for (final var inWin : inWindows) {
-      final var startT = convertToSchedulerTime(inWin.start);
-      final var endT = convertToSchedulerTime(inWin.end);
-      outWindows.union(TimeWindows.of(startT, endT));
+      final var startT = inWin.start;
+      final var endT = inWin.end;
+      outWindows.add(Window.betweenClosedOpen(startT, endT));
     }
-    outWindows.intersection(queryBounds);
+    outWindows.intersectWith(queryBounds);
     return outWindows;
   }
 
-  public T getValueAtTime(Time t) {
+  public T getValueAtTime(Duration t) {
     failIfEmpty();
-    final var queryT = convertToConstraintOffsetDuration(t);
+    final var queryT = t;
 
     //TODO: unify necessary generic profile operations in Profile interface to avoid special casing
     if (this.simResults.realProfiles.containsKey(this.name)) {
@@ -160,7 +143,7 @@ public class SimResource<T extends Comparable<T>> implements
     }
   }
 
-  public TimeWindows whenValueBetween(T inf, T sup, TimeWindows windows) {
+  public Windows whenValueBetween(T inf, T sup, Windows windows) {
     failIfEmpty();
 
     //special case doubles are the only aerie types that can be compared with inequality constraints
@@ -175,7 +158,7 @@ public class SimResource<T extends Comparable<T>> implements
     }
   }
 
-  public TimeWindows whenValueBelow(T val, TimeWindows windows) {
+  public Windows whenValueBelow(T val, Windows windows) {
     failIfEmpty();
 
     //special case doubles are the only aerie types that can be compared with inequality constraints
@@ -188,7 +171,7 @@ public class SimResource<T extends Comparable<T>> implements
     }
   }
 
-  public TimeWindows whenValueAbove(T val, TimeWindows windows) {
+  public Windows whenValueAbove(T val, Windows windows) {
     failIfEmpty();
 
     //special case doubles are the only aerie types that can be compared with inequality constraints
@@ -201,7 +184,7 @@ public class SimResource<T extends Comparable<T>> implements
     }
   }
 
-  public TimeWindows whenValueEqual(T val, TimeWindows windows) {
+  public Windows whenValueEqual(T val, Windows windows) {
     failIfEmpty();
 
     Expression<Windows> constraint;
@@ -230,12 +213,12 @@ public class SimResource<T extends Comparable<T>> implements
   }
 
   @Override
-  public Map<Range<Time>, T> getTimeline(TimeWindows timeDomain) {
+  public Map<Window, T> getTimeline(Windows timeDomain) {
     return values;
   }
 
   @Override
-  public TimeWindows whenValueNotEqual(T val, TimeWindows windows) {
+  public Windows whenValueNotEqual(T val, Windows windows) {
 
     Expression<Windows> constraint;
     if (val instanceof Double || val instanceof Float) {

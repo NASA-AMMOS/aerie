@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,27 +27,27 @@ public abstract class StateConstraint<T extends Comparable<T>> {
   /**
    * Static boolean allowing to enable caching or not
    */
-  public static boolean ACTIVATE_CACHE = true;
+  public static boolean ACTIVATE_CACHE = false;
 
-  protected TimeWindows timeDomain;
+  protected Windows timeDomain;
 
-  public TimeWindows findWindows(Plan plan, TimeWindows windows) {
+  public Windows findWindows(Plan plan, Windows windows) {
     restrictToTimeDomain(windows);
     if (ACTIVATE_CACHE) {
-      return new TimeWindows(cache.findWindowsCache(plan, windows));
+      return new Windows(cache.findWindowsCache(plan, windows));
     }
     return findWindowsPart(plan, windows);
   }
 
-  public abstract TimeWindows findWindowsPart(Plan plan, TimeWindows windows);
+  public abstract Windows findWindowsPart(Plan plan, Windows windows);
 
-  public void setTimeDomain(TimeWindows timeDomain) {
+  public void setTimeDomain(Windows timeDomain) {
     this.timeDomain = timeDomain;
   }
 
-  public void restrictToTimeDomain(TimeWindows windows) {
+  public void restrictToTimeDomain(Windows windows) {
     if (hasTimeDomain()) {
-      windows.intersection(timeDomain);
+      windows.intersectWith(timeDomain);
     }
   }
 
@@ -53,7 +55,7 @@ public abstract class StateConstraint<T extends Comparable<T>> {
     return this.timeDomain != null;
   }
 
-  public TimeWindows getTimeDomain() {
+  public Windows getTimeDomain() {
     return this.timeDomain;
   }
 

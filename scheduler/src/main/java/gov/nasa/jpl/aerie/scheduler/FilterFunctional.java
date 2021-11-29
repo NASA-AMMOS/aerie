@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,16 +10,16 @@ public abstract class FilterFunctional implements TimeWindowsFilter {
 
 
   @Override
-  public TimeWindows filter(Plan plan, TimeWindows windows) {
-    List<Range<Time>> ret = new ArrayList<Range<Time>>();
-    for (var window : windows.getRangeSet()) {
+  public Windows filter(Plan plan, Windows windows) {
+    List<Window> ret = new ArrayList<Window>();
+    for (var window : windows) {
       if (shouldKeep(plan, window)) {
         ret.add(window);
       }
     }
-    return TimeWindows.of(ret, true);
+    return new Windows(ret);
   }
 
 
-  public abstract boolean shouldKeep(Plan plan, Range<Time> range);
+  public abstract boolean shouldKeep(Plan plan, Window range);
 }

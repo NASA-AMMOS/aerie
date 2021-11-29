@@ -1,4 +1,4 @@
-create table if not exists uploaded_file (
+create table uploaded_file (
   id integer generated always as identity,
   path bytea not null,
 

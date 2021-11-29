@@ -7,10 +7,10 @@
 - [ ] Download the test report as a PDF from Testrail and upload to Release Report Wiki page.
 
 ## Github
-- [ ] Increment the Aerie product version number
 - [ ] Merge develop into staging by creating a PR for the merge
-- [ ] Remove the "SNAPSHOT" string from the staging branch product version number
-- [ ] Bump version in `scripts/docker-compose-aerie/.env`
+- [ ] On staging branch,
+  - Increment the Aerie version number and remove "SNAPSHOT" string in `build.gradle`
+  - Bump version in `deployment/.env`
 - [ ] Create a branch named "release-X.X.X" from staging for each of the following projects
   - aerie
   - [aerie-ui](https://github.jpl.nasa.gov/Aerie/aerie-ui/blob/develop/docs/RELEASE.md)

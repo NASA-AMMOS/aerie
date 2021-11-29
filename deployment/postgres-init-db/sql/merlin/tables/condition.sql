@@ -1,4 +1,4 @@
-create table if not exists condition (
+create table condition (
   id integer generated always as identity,
 
   name text not null,

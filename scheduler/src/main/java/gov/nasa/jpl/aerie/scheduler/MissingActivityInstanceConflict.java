@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+
 /**
  * describes an issue in a plan caused by a specific activity instance missing
  *
@@ -48,10 +51,11 @@ public class MissingActivityInstanceConflict extends MissingActivityConflict {
    * the activity's own duration limits
    *
    * the times encompass just the desired start times of the missing activity
+   * @return
    */
   @Override
-  public TimeWindows getTemporalContext() {
-    return TimeWindows.of(instance.getStartTime());
+  public Windows getTemporalContext() {
+    return new Windows(Window.between(instance.getStartTime(),instance.getStartTime()));
   }
 
   /**

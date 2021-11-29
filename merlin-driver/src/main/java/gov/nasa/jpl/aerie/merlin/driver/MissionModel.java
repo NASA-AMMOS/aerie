@@ -3,21 +3,28 @@ package gov.nasa.jpl.aerie.merlin.driver;
 import gov.nasa.jpl.aerie.merlin.driver.engine.Directive;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
 public final class MissionModel<Model> {
   private final Model model;
   private final LiveCells initialCells;
   private final Map<String, Resource<?>> resources;
+  private final List<SerializableTopic<?>> topics;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
   private final List<Initializer.TaskFactory> daemons;
 
@@ -25,12 +32,14 @@ public final class MissionModel<Model> {
       final Model model,
       final LiveCells initialCells,
       final Map<String, Resource<?>> resources,
+      final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory> daemons,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resources = Collections.unmodifiableMap(resources);
+    this.topics = Collections.unmodifiableList(topics);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
@@ -70,4 +79,15 @@ public final class MissionModel<Model> {
   public LiveCells getInitialCells() {
     return this.initialCells;
   }
+
+  public Iterable<SerializableTopic<?>> getTopics() {
+    return this.topics;
+  }
+
+  public record SerializableTopic<EventType> (
+      String name,
+      gov.nasa.jpl.aerie.merlin.protocol.driver.Query<EventType, ?> query,
+      ValueSchema valueSchema,
+      Function<EventType, SerializedValue> serializer
+  ) {}
 }

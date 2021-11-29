@@ -44,11 +44,18 @@ public final class RegisterEffect<T> {
 
     @Override
     public RegisterEffect<T> sequentially(final RegisterEffect<T> prefix, final RegisterEffect<T> suffix) {
-      // If `suffix` isn't a no-op, it overrules `prefix`.
-      if (suffix.conflicted || suffix.newValue != null) {
+      if (suffix.newValue != null) {
+        // The suffix is a set (with or without a subsequent conflict); it strictly dominates the prefix.
         return suffix;
-      } else {
+      } else if (!suffix.conflicted) {
+        // The suffix is a no-op; take the prefix.
         return prefix;
+      } else if (prefix.newValue != null) {
+        // The suffix is a pure conflict, and the prefix performed a valid write.
+        return new RegisterEffect<>(prefix.newValue, suffix.conflicted);
+      } else {
+        // Both suffix and prefix are pure conflicts, so the suffix dominates the prefix.
+        return suffix;
       }
     }
 

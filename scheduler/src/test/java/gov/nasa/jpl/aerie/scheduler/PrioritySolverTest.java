@@ -3,14 +3,13 @@ package gov.nasa.jpl.aerie.scheduler;
 import com.google.common.testing.NullPointerTester;
 import com.google.common.truth.Correspondence;
 import org.junit.jupiter.api.Test;
-
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import java.util.Objects;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth8.assertThat;
 
 public class PrioritySolverTest {
-
   private static PrioritySolver makeEmptyProblemSolver() {
     return new PrioritySolver(new HuginnConfiguration(), new Problem(new MissionModelWrapper()));
   }
@@ -62,14 +61,14 @@ public class PrioritySolverTest {
     return mission;
   }
 
-  private static final HuginnConfiguration defaultConfig = new HuginnConfiguration();
-  private static final Range<Time> horizon = defaultConfig.getHorizon();
-  private static final Time t0 = horizon.getMinimum();
-  private static final Duration d1min = Duration.ofMinutes(1.0);
-  private static final Duration d1hr = Duration.ofHours(1.0);
-  private static final Time t1hr = t0.plus(d1hr);
-  private static final Time t2hr = t0.plus(d1hr.times(2.0));
-  private static final Time t3hr = t0.plus(d1hr.times(2.0));
+  private final static HuginnConfiguration defaultConfig = new HuginnConfiguration();
+  private final static PlanningHorizon h = defaultConfig.getHorizon();
+  private final static Duration t0 = h.getStartAerie();
+  private final static Duration d1min = Duration.of(1, Duration.MINUTE);
+  private final static Duration d1hr = Duration.of(1, Duration.HOUR);
+  private final static Duration t1hr = t0.plus(d1hr);
+  private final static Duration t2hr = t0.plus(d1hr.times(2));
+  private final static Duration t3hr = t0.plus(d1hr.times(2));
 
   private static PlanInMemory makePlanA012(Problem problem) {
     final var plan = new PlanInMemory(problem.getMissionModel());
@@ -133,7 +132,7 @@ public class PrioritySolverTest {
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
-        .forAllTimeIn(horizon)
+        .forAllTimeIn(h.getHor())
         .build();
     problem.add(goal);
     final var solver = makeProblemSolver(problem);
@@ -152,7 +151,7 @@ public class PrioritySolverTest {
     final var goal = new ProceduralCreationGoal.Builder()
         .named("g0")
         .generateWith((plan) -> expectedPlan.getActivitiesByTime())
-        .forAllTimeIn(horizon)
+        .forAllTimeIn(h.getHor())
         .build();
     problem.add(goal);
     final var solver = makeProblemSolver(problem);
@@ -169,13 +168,10 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_recurrenceGoalWorks() {
-    //hack to reset horizon pending AMaillard fix to remove setHorizon static semantics
-    TimeWindows.setHorizon(horizon.getMinimum(), horizon.getMaximum());
-
     final var problem = new Problem(makeTestMissionAB());
     final var goal = new RecurrenceGoal.Builder()
         .named("g0")
-        .startingAt(t0).endingAt(t2hr.plus(Duration.ofMinutes(10)))
+        .startingAt(t0).endingAt(t2hr.plus(Duration.of(10, Duration.MINUTE)))
         .repeatingEvery(d1hr)
         .thereExistsOne(new ActivityCreationTemplate.Builder()
                             .ofType(problem.getMissionModel().getActivityType("A"))
@@ -200,16 +196,13 @@ public class PrioritySolverTest {
 
   @Test
   public void getNextSolution_coexistenceGoalOnActivityWorks() {
-    //hack to reset horizon pending AMaillard fix to remove setHorizon static semantics
-    TimeWindows.setHorizon(horizon.getMinimum(), horizon.getMaximum());
-
     final var problem = new Problem(makeTestMissionAB());
     problem.setInitialPlan(makePlanA012(problem));
     final var actTypeA = problem.getMissionModel().getActivityType("A");
     final var actTypeB = problem.getMissionModel().getActivityType("B");
     final var goal = new CoexistenceGoal.Builder()
         .named("g0")
-        .forAllTimeIn(horizon)
+        .forAllTimeIn(h.getHor())
         .forEach(new ActivityExpression.Builder()
                      .ofType(actTypeA)
                      .build())

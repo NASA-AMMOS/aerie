@@ -204,7 +204,7 @@ public final class CreateActivityInstancesMutation implements Mutation<CreateAct
       return new InputFieldMarshaller() {
         @Override
         public void marshal(InputFieldWriter writer) throws IOException {
-          writer.writeCustom("planId", gov.nasa.jpl.aerie.scheduler.aerie.type.CustomType.ID, planId);
+          writer.writeCustom("planId", CustomType.ID, planId);
           writer.writeList("activityInstances", new InputFieldWriter.ListWriter() {
             @Override
             public void write(InputFieldWriter.ListItemWriter listItemWriter) throws IOException {

@@ -1,5 +1,8 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityInstance;
 import gov.nasa.jpl.aerie.scheduler.aerie.AerieActivityType;
 import org.jgrapht.alg.shortestpath.BellmanFordShortestPath;
@@ -80,18 +83,15 @@ public class ActivityCreationTemplate extends ActivityExpression {
      */
     public @NotNull
     Builder duration(@NotNull Duration duration) {
-      this.durationIn = new Range<Duration>(duration, duration);
+      this.durationIn = Window.between(duration, duration);
       return getThis();
     }
 
     public @NotNull
-    Builder duration(@NotNull Range<Duration> duration) {
+    Builder duration(@NotNull Window duration) {
       this.durationIn = duration;
       return getThis();
     }
-
-    @Nullable
-    Range<Duration> duration; //only null until set!
 
     @Override
     public Builder basedOn(ActivityCreationTemplate template) {
@@ -170,10 +170,10 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * @return
    */
   public @NotNull
-  ActivityInstance createActivity(String name, TimeWindows windows) {
+  ActivityInstance createActivity(String name, Windows windows) {
     //REVIEW: how to properly export any flexibility to instance?
     boolean success = false;
-    for (var window : windows.getRangeSet()) {
+    for (var window : windows) {
       success = STNProcess(window);
       if (success) {
         break;
@@ -198,13 +198,13 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
 
     if (startRange != null && durationRange != null) {
-      act.setStartTime(tmpSr.getMinimum());
-      act.setDuration(tmpDr.getMinimum());
+      act.setStartTime(tmpSr.start);
+      act.setDuration(tmpDr.start);
     } else if (endRange != null && durationRange != null) {
-      act.setStartTime(tmpEr.getMinimum().minus(tmpDr.getMinimum()));
+      act.setStartTime(tmpEr.start.minus(tmpDr.start));
     } else if (startRange != null && endRange != null) {
-      act.setStartTime(tmpSr.getMinimum());
-      act.setDuration(tmpEr.getMinimum().minus(tmpSr.getMinimum()));
+      act.setStartTime(tmpSr.start);
+      act.setDuration(tmpEr.start.minus(tmpSr.start));
     } else {
       throw new RuntimeException("ActivityCreationTemplate : Not enough parametrization");
     }
@@ -247,9 +247,9 @@ public class ActivityCreationTemplate extends ActivityExpression {
     return act;
   }
 
-  Range<Time> tmpSr;
-  Range<Time> tmpEr;
-  Range<Duration> tmpDr;
+  Window tmpSr;
+  Window tmpEr;
+  Window tmpDr;
 
 
   /**
@@ -257,11 +257,11 @@ public class ActivityCreationTemplate extends ActivityExpression {
    * This becomes useful and easier to read when many types of constraints can be posted for activities
    * TODO: Make this global, rename, clean
    */
-  private boolean STNProcess(Range<Time> interval) {
+  private boolean STNProcess(Window interval) {
 
 
-    var sh = TimeWindows.startHorizon.toEpochMilliseconds();
-    var eh = TimeWindows.endHorizon.toEpochMilliseconds();
+    var sh = Duration.ZERO.in(Duration.MILLISECOND);
+    var eh = Duration.MAX_VALUE.minus(Duration.EPSILON).in(Duration.MILLISECOND);
 
 
     //need to do something to convert to int...
@@ -273,18 +273,18 @@ public class ActivityCreationTemplate extends ActivityExpression {
     g.addVertex("S");
     g.addVertex("E");
 
-    Range<Time> localSR = startRange;
-    Range<Time> localER = endRange;
+    Window localSR = startRange;
+    Window localER = endRange;
     if (interval != null) {
 
       g.addVertex("SI");
       g.addVertex("EI");
 
-      var srMin = interval.getMinimum().toEpochMilliseconds();
+      var srMin = interval.start.in(Duration.MILLISECOND);
       if (srMin < sh) {
         srMin = sh;
       }
-      var srMax = interval.getMaximum().toEpochMilliseconds();
+      var srMax = interval.end.in(Duration.MILLISECOND);
       if (srMax > eh) {
         srMax = eh;
       }
@@ -320,11 +320,11 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
     if (localSR != null) {
 
-      var srMin = localSR.getMinimum().toEpochMilliseconds();
+      var srMin = localSR.start.in(Duration.MILLISECOND);
       if (srMin < sh) {
         srMin = sh;
       }
-      var srMax = localSR.getMaximum().toEpochMilliseconds();
+      var srMax = localSR.end.in(Duration.MILLISECOND);
       if (srMax > eh) {
         srMax = eh;
       }
@@ -342,11 +342,11 @@ public class ActivityCreationTemplate extends ActivityExpression {
     }
     if (localER != null) {
 
-      var erMin = localER.getMinimum().toEpochMilliseconds();
+      var erMin = localER.start.in(Duration.MILLISECOND);
       if (erMin < sh) {
         erMin = sh;
       }
-      var erMax = localER.getMaximum().toEpochMilliseconds();
+      var erMax = localER.end.in(Duration.MILLISECOND);
       if (erMax > eh) {
         erMax = eh;
       }
@@ -366,10 +366,10 @@ public class ActivityCreationTemplate extends ActivityExpression {
     if (durationRange != null) {
 
       var edge1 = g.addEdge("S", "E");
-      g.setEdgeWeight(edge1, (durationRange.getMaximum().toMilliseconds()));
+      g.setEdgeWeight(edge1, (durationRange.end.in(Duration.MILLISECOND)));
 
       var edge2 = g.addEdge("E", "S");
-      g.setEdgeWeight(edge2, -(durationRange.getMinimum().toMilliseconds()));
+      g.setEdgeWeight(edge2, -(durationRange.start.in(Duration.MILLISECOND)));
 
     }
     boolean ret = false;
@@ -392,7 +392,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
       long val1 = (long) algo.getPathWeight("E", "TS");
       long val2 = (long) algo.getPathWeight("TS", "E");
 
-      var endRange = new Range<Time>(Time.fromMilli((-val1 + sh)), Time.fromMilli((val2 + sh)));
+      var endRange = Window.between(-val1 + sh, val2 + sh, Duration.MILLISECOND);
       this.tmpEr = endRange;
       //System.out.println("End range " + endRange);
     }
@@ -401,7 +401,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
       long val1 = (long) algo.getPathWeight("S", "TS");
       long val2 = (long) algo.getPathWeight("TS", "S");
 
-      var startRange = new Range<Time>(Time.fromMilli((-val1 + sh)), Time.fromMilli((val2 + sh)));
+      var startRange = Window.between(-val1 + sh, val2 + sh, Duration.MILLISECOND);
       this.tmpSr = startRange;
       //System.out.println("Start range " + startRange);
 
@@ -411,7 +411,7 @@ public class ActivityCreationTemplate extends ActivityExpression {
       long val1 = (long) algo.getPathWeight("E", "S");
       long val2 = (long) algo.getPathWeight("S", "E");
 
-      var durationRange = new Range<Duration>(Duration.fromMillis(-val1), Duration.fromMillis(val2));
+      var durationRange = Window.between(-val1 , val2 , Duration.MILLISECOND);
       this.tmpDr = durationRange;
       //System.out.println("Duration range " + durationRange);
 

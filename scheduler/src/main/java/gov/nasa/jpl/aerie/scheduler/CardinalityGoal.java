@@ -1,6 +1,19 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import java.util.*;
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * describes the desired coexistence of an activity with another
@@ -9,7 +22,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   /**
    * minimum/maximum total duration of activities
    */
-  private Range<Duration> durationRange;
+  private Window durationRange;
 
   /*
    *minimum/maximum number of occurrence of activities
@@ -43,10 +56,10 @@ public class CardinalityGoal extends ActivityTemplateGoal {
 
     protected TimeRangeExpression inPeriod;
 
-    Range<Duration> durationRange;
+    Window durationRange;
     Range<Integer> occurrenceRange;
 
-    public Builder duration(Range<Duration> durationRange) {
+    public Builder duration(Window durationRange) {
       this.durationRange = durationRange;
       return getThis();
     }
@@ -121,7 +134,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   public Collection<Conflict> getConflicts(Plan plan) {
     final var conflicts = new LinkedList<Conflict>();
 
-    TimeWindows range = this.expr.computeRange(plan, TimeWindows.spanMax());
+    Windows range = this.expr.computeRange(plan, Windows.forever());
 
 
     ActivityCreationTemplate actTB =
@@ -131,7 +144,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     acts.sort(Comparator.comparing(ActivityInstance::getStartTime));
 
     int nbActs = acts.size();
-    Duration total = Duration.ofZero();
+    Duration total = Duration.ZERO;
     for (var act : acts) {
       total = total.plus(act.getDuration());
     }
@@ -139,16 +152,16 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     StateConstraintExpression actConstraints = this.getActivityStateConstraints();
     StateConstraintExpression goalConstraints = this.getStateConstraints();
 
-    Duration durToSchedule = Duration.ofSeconds(0);
+    Duration durToSchedule = Duration.ZERO;
     int nbToSchedule = 0;
     if (this.durationRange != null && !this.durationRange.contains(total)) {
-      if (total.compareTo(this.durationRange.getMinimum()) < 0) {
+      if (total.compareTo(this.durationRange.start) < 0) {
 
-        durToSchedule = this.durationRange.getMinimum().minus(total);
+        durToSchedule = this.durationRange.start.minus(total);
         //TODO:below, tranform into other type of conflict
         //not enough duration
         //conflicts.add(new DurationTooSmallConflict(this, getTemporalContext(), this.durationRange, total));
-      } else if (total.compareTo(this.durationRange.getMaximum()) > 0) {
+      } else if (total.compareTo(this.durationRange.end) > 0) {
         throw new IllegalArgumentException("Need to decrease duration of activities from the plan, impossible");
         //too much duration
         //conflicts.add(new DurationTooBigConflict(this, getTemporalContext(), this.durationRange, total));
@@ -194,49 +207,50 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   // acts of damax  until durmin is attained
 
   public Collection<Conflict> getConflictsDurAndOccur(Plan plan, Duration durToSchedule, int nbToSchedule) {
-    TimeWindows range = this.expr.computeRange(plan, TimeWindows.spanMax());
+    Windows range = this.expr.computeRange(plan, Windows.forever());
     final var conflicts = new LinkedList<Conflict>();
 
 
     StateConstraintExpression actConstraints = this.getActivityStateConstraints();
     StateConstraintExpression goalConstraints = this.getStateConstraints();
-    Range<Duration> actPossibleDurations = this.desiredActTemplate.getDurationRange();
+    Window actPossibleDurations = this.desiredActTemplate.getDurationRange();
 
     //TODO: what if there is no duration range ?
-    TimeWindows rangeAfterConstraints = range;
+    Windows rangeAfterConstraints = range;
     if (actConstraints != null) {
       var actCstWins = actConstraints.findWindows(plan, range);
-      rangeAfterConstraints.intersection(actCstWins);
+      rangeAfterConstraints.intersectWith(actCstWins);
     }
     if (goalConstraints != null) {
       var goalCstWins = goalConstraints.findWindows(plan, rangeAfterConstraints);
-      rangeAfterConstraints.intersection(goalCstWins);
+      rangeAfterConstraints.intersectWith(goalCstWins);
     }
+    List<Window> rangesForSchedulings = StreamSupport
+        .stream(rangeAfterConstraints.spliterator(), false)
+        .collect(Collectors.toList());
+    Iterator<Window> itRanges = rangeAfterConstraints.iterator();
 
-    var rangesForSchedulings = rangeAfterConstraints.getRangeSet();
-    Iterator<Range<Time>> itRanges = rangesForSchedulings.iterator();
+    Map<Window, List<ActivityInstance>> instancesCreated = new TreeMap<>();
 
-    Map<Range<Time>, List<ActivityInstance>> instancesCreated = new TreeMap<Range<Time>, List<ActivityInstance>>();
-
-    for (var r : rangesForSchedulings) {
+    for (var r : rangeAfterConstraints) {
       instancesCreated.put(r, new ArrayList<ActivityInstance>());
     }
 
-    Duration scheduledDur = Duration.ofZero();
+    Duration scheduledDur = Duration.ZERO;
     int scheduled = 0;
-    Range<Time> curRange = itRanges.next();
-    var start = curRange.getMinimum();
+    Window curRange = itRanges.next();
+    var start = curRange.start;
     //while there is still missing some duration
     while (scheduled < nbToSchedule) {
       //if the current window can welcome an activity
-      var durWindow = curRange.getMaximum().minus(curRange.getMinimum());
+      var durWindow = curRange.end.minus(curRange.start);
 
-      if (durWindow.compareTo(actPossibleDurations.getMinimum()) >= 0) {
+      if (durWindow.compareTo(actPossibleDurations.start) >= 0) {
         //schedule the smallest activity possible
-        var dur = actPossibleDurations.getMinimum();
+        var dur = actPossibleDurations.start;
         ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
         builderAct.basedOn(this.desiredActTemplate);
-        builderAct.startsIn(new Range<Time>(start));
+        builderAct.startsIn(Window.between(start,start));
         var inst = builderAct.duration(dur).build().createActivity("act_" + scheduled);
         instancesCreated.get(curRange).add(inst);
         scheduled += 1;
@@ -245,29 +259,29 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         start = start.plus(dur);
       } else {
         curRange = itRanges.next();
-        start = curRange.getMinimum();
+        start = curRange.start;
       }
 
     }
-    Duration maxDurActs = actPossibleDurations.getMaximum();
+    Duration maxDurActs = actPossibleDurations.end;
 
     //if we extend all activities to their maximum dur, can we attain the objective ? else, we have to insert new activities
-    var possibleByJustExtending = (maxDurActs.minus(actPossibleDurations.getMinimum()).times(nbToSchedule)).compareTo(
+    var possibleByJustExtending = (maxDurActs.minus(actPossibleDurations.start).times(nbToSchedule)).compareTo(
         durToSchedule.minus(scheduledDur)) >= 0;
 
     if (scheduledDur.compareTo(durToSchedule) < 0) {
 
-      for (int i = 0; i < rangesForSchedulings.size(); i++) {
+      for (int i = 0; i < rangeAfterConstraints.size(); i++) {
         var win = rangesForSchedulings.get(i);
         List<ActivityInstance> acts = instancesCreated.get(win);
         if (acts.size() > 0) {
           //extend last by maximum
           var lastAct = acts.get(acts.size() - 1);
-          if (lastAct.getEndTime().compareTo(win.getMaximum()) < 0 && lastAct.getDuration().compareTo(maxDurActs) < 0) {
+          if (lastAct.getEndTime().compareTo(win.end) < 0 && lastAct.getDuration().compareTo(maxDurActs) < 0) {
             //there is room for extension
             //and the act is not extended at the max
             //we extend it at the max
-            var maxIncrease1 = win.getMaximum().minus(lastAct.getEndTime());
+            var maxIncrease1 = win.end.minus(lastAct.getEndTime());
             var maxIncrease2 = maxDurActs.minus(lastAct.getDuration());
             //we have to take the minimum
             var increase = maxIncrease1.compareTo(maxIncrease2) < 0 ? maxIncrease1 : maxIncrease2;
@@ -291,14 +305,14 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         var lastAct = listActsScheduled.get(listActsScheduled.size() - 1);
         start = lastAct.getEndTime();
       }
-      var durWindow = curRange.getMaximum().minus(start);
+      var durWindow = curRange.end.minus(start);
 
-      if (durWindow.compareTo(actPossibleDurations.getMinimum()) >= 0) {
+      if (durWindow.compareTo(actPossibleDurations.start) >= 0) {
         //schedule the biggest activity possible to avoiding hitting maximum occurrence
-        var dur = actPossibleDurations.getMaximum().compareTo(durWindow) < 0 ? maxDurActs : durWindow;
+        var dur = actPossibleDurations.end.compareTo(durWindow) < 0 ? maxDurActs : durWindow;
         ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
         builderAct.basedOn(this.desiredActTemplate);
-        builderAct.startsIn(new Range<Time>(start));
+        builderAct.startsIn(Window.at(start));
         var inst = builderAct.duration(dur).build().createActivity("act_" + scheduled);
         instancesCreated.get(curRange).add(inst);
         scheduled += 1;
@@ -308,7 +322,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       } else {
         if (itRanges.hasNext()) {
           curRange = itRanges.next();
-          start = curRange.getMinimum();
+          start = curRange.start;
         } else {
           break;
         }

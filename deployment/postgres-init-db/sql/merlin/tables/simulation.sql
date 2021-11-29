@@ -1,4 +1,4 @@
-create table if not exists simulation (
+create table simulation (
   id integer generated always as identity,
   revision integer not null default 0,
 
@@ -28,7 +28,7 @@ comment on column simulation.arguments is e''
   'The set of arguments to this simulation, corresponding to the parameters of the associated mission model.';
 
 
-create or replace function increment_revision_for_update_simulation()
+create function increment_revision_for_update_simulation()
 returns trigger
 security definer
 language plpgsql as $$begin
@@ -40,12 +40,8 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-do $$ begin
-  create trigger increment_revision_for_update_simulation_trigger
-  after update on simulation
-  for each row
-  when (pg_trigger_depth() < 1)
-  execute function increment_revision_for_update_simulation();
-exception
-  when duplicate_object then null;
-end $$;
+create trigger increment_revision_for_update_simulation_trigger
+after update on simulation
+for each row
+when (pg_trigger_depth() < 1)
+execute function increment_revision_for_update_simulation();

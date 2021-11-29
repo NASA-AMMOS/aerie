@@ -1,12 +1,16 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.Map;
 import java.util.TreeMap;
 
 public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
 
   String name;
-  static Duration STEP = Duration.ofSeconds(1);
+  static Duration STEP = Duration.duration(1, Duration.SECONDS);
   AerieController aerieLink;
   Plan plan;
   Class<?> classOf;
@@ -20,12 +24,12 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
   }
 
   @Override
-  public TimeWindows whenValueBetween(T inf, T sup, TimeWindows timeDomain) {
-    TimeWindows win = new TimeWindows();
-    Time curMin = null;
-    Time curMax = null;
-    for (Range<Time> g : timeDomain.getRangeSet()) {
-      for (Time t = g.getMinimum(); t.smallerThan(g.getMaximum()); t = t.plus(STEP)) {
+  public Windows whenValueBetween(T inf, T sup, Windows timeDomain) {
+    Windows win = new Windows();
+    Duration curMin = null;
+    Duration curMax = null;
+    for (var g : timeDomain) {
+      for (Duration t = g.start; t.shorterThan(g.end); t = t.plus(STEP)) {
         T val = this.getValueAtTime(t);
         if (val.compareTo(inf) > 0 && val.compareTo(sup) < 0) {
           //reached interval
@@ -39,7 +43,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
         }
         //not good but we are just leaving a good interval
         else if (curMin != null && curMax != null) {
-          win.union(new Range<Time>(curMin, curMax));
+          win.add(Window.betweenClosedOpen(curMin, curMax));
           curMax = null;
           curMin = null;
         }
@@ -50,12 +54,12 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
 
 
   @Override
-  public TimeWindows whenValueBelow(T val, TimeWindows timeDomain) {
-    TimeWindows win = new TimeWindows();
-    Time curMin = null;
-    Time curMax = null;
-    for (Range<Time> g : timeDomain.getRangeSet()) {
-      for (Time t = g.getMinimum(); t.smallerThan(g.getMaximum()); t = t.plus(STEP)) {
+  public Windows whenValueBelow(T val, Windows timeDomain) {
+    Windows win = new Windows();
+    Duration curMin = null;
+    Duration curMax = null;
+    for (var g : timeDomain) {
+      for (Duration t = g.start; t.shorterThan(g.end); t = t.plus(STEP)) {
         T value = this.getValueAtTime(t);
         if (value.compareTo(val) < 0) {
           //reached interval
@@ -69,7 +73,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
         }
         //not good but we are just leaving a good interval
         else if (curMin != null && curMax != null) {
-          win.union(new Range<Time>(curMin, curMax));
+          win.add(Window.betweenClosedOpen(curMin, curMax));
           curMax = null;
           curMin = null;
         }
@@ -79,12 +83,12 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
   }
 
   @Override
-  public TimeWindows whenValueAbove(T val, TimeWindows timeDomain) {
-    TimeWindows win = new TimeWindows();
-    Time curMin = null;
-    Time curMax = null;
-    for (Range<Time> g : timeDomain.getRangeSet()) {
-      for (Time t = g.getMinimum(); t.smallerThan(g.getMaximum()); t = t.plus(STEP)) {
+  public Windows whenValueAbove(T val, Windows timeDomain) {
+    Windows win = new Windows();
+    Duration curMin = null;
+    Duration curMax = null;
+    for (var g : timeDomain) {
+      for (Duration t = g.start; t.shorterThan(g.end); t = t.plus(STEP)) {
         T value = this.getValueAtTime(t);
         if (value.compareTo(val) > 0) {
           //reached interval
@@ -98,7 +102,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
         }
         //not good but we are just leaving a good interval
         else if (curMin != null && curMax != null) {
-          win.union(new Range<Time>(curMin, curMax));
+          win.add(Window.betweenClosedOpen(curMin, curMax));
           curMax = null;
           curMin = null;
         }
@@ -108,12 +112,12 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
   }
 
   @Override
-  public TimeWindows whenValueEqual(T val, TimeWindows timeDomain) {
-    TimeWindows win = new TimeWindows();
-    Time curMin = null;
-    Time curMax = null;
-    for (Range<Time> g : timeDomain.getRangeSet()) {
-      for (Time t = g.getMinimum(); t.smallerThan(g.getMaximum()); t = t.plus(STEP)) {
+  public Windows whenValueEqual(T val, Windows timeDomain) {
+    Windows win = new Windows();
+    Duration curMin = null;
+    Duration curMax = null;
+    for (var g : timeDomain) {
+      for (Duration t = g.start; t.shorterThan(g.end); t = t.plus(STEP)) {
         T value = this.getValueAtTime(t);
         if (value.compareTo(val) == 0) {
           //reached interval
@@ -127,7 +131,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
         }
         //not good but we are just leaving a good interval
         else if (curMin != null && curMax != null) {
-          win.union(new Range<Time>(curMin, curMax));
+          win.add(Window.betweenClosedOpen(curMin, curMax));
           curMax = null;
           curMin = null;
         }
@@ -137,13 +141,13 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
   }
 
   @Override
-  public Map<Range<Time>, T> getTimeline(TimeWindows timeDomain) {
-    Map<Range<Time>, T> timeline = new TreeMap<Range<Time>, T>();
-    Time curMin = null;
-    Time curMax = null;
+  public Map<Window, T> getTimeline(Windows timeDomain) {
+    Map<Window, T> timeline = new TreeMap<>();
+    Duration curMin = null;
+    Duration curMax = null;
     T curVal = null;
-    for (Range<Time> g : timeDomain.getRangeSet()) {
-      for (Time t = g.getMinimum(); t.smallerThan(g.getMaximum()); t = t.plus(STEP)) {
+    for (var g : timeDomain) {
+      for (Duration t = g.start; t.shorterThan(g.end); t = t.plus(STEP)) {
         T value = this.getValueAtTime(t);
         //corner case
         if (curVal == null) {
@@ -163,7 +167,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
         //not the same
         else if (curMin != null && curMax != null) {
           //post last interval
-          timeline.put(new Range<Time>(curMin, curMax), curVal);
+          timeline.put(Window.betweenClosedOpen(curMin, curMax), curVal);
           curMax = t;
           curVal = value;
           curMin = t;
@@ -174,12 +178,12 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
   }
 
   @Override
-  public TimeWindows whenValueNotEqual(T val, TimeWindows timeDomain) {
-    TimeWindows win = new TimeWindows();
-    Time curMin = null;
-    Time curMax = null;
-    for (Range<Time> g : timeDomain.getRangeSet()) {
-      for (Time t = g.getMinimum(); t.smallerThan(g.getMaximum()); t = t.plus(STEP)) {
+  public Windows whenValueNotEqual(T val, Windows timeDomain) {
+    Windows win = new Windows();
+    Duration curMin = null;
+    Duration curMax = null;
+    for (var g : timeDomain) {
+      for (Duration t = g.start; t.shorterThan(g.end); t = t.plus(STEP)) {
         T value = this.getValueAtTime(t);
         if (value.compareTo(val) != 0) {
           //reached interval
@@ -193,7 +197,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
         }
         //not good but we are just leaving a good interval
         else if (curMin != null && curMax != null) {
-          win.union(new Range<Time>(curMin, curMax));
+          win.add(Window.betweenClosedOpen(curMin, curMax));
           curMax = null;
           curMin = null;
         }
@@ -204,7 +208,7 @@ public class DistantState<T extends Comparable<T>> implements ExternalState<T> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public T getValueAtTime(Time t) {
+  public T getValueAtTime(Duration t) {
     T ret;
     if (Double.class.equals(classOf)) {
       ret = (T) aerieLink.getDoubleValue(plan, name, t);

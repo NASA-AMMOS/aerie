@@ -1,5 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
+import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.List;
 
 /**
@@ -13,15 +17,6 @@ public class TestUtility {
   public static final String LOCAL_AERIE = "http://localhost:27184";
   public static final String MISSION_MODEL_ID = latest;
 
-  public static void visPlan(Plan plan) {
-    PlanVisualizer.visualizePlan(plan);
-    try {
-      Thread.sleep(1000000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-
   public static void printPlan(Plan plan) {
 
     List<ActivityInstance> acts = plan.getActivitiesByTime();
@@ -33,7 +28,7 @@ public class TestUtility {
   }
 
 
-  public static boolean activityStartingAtTime(Plan plan, Time time, ActivityType activityType) {
+  public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {
 
     List<ActivityInstance> acts = plan.getActivitiesByTime();
     for (ActivityInstance act : acts) {
@@ -47,8 +42,8 @@ public class TestUtility {
   /**
    * Returns true if there is at least one activity of type activityType in timewindows tw in the plan
    */
-  public static boolean atLeastOneActivityOfTypeInTW(Plan plan, TimeWindows tw, ActivityType activityType) {
-    for (Range<Time> interval : tw.getRangeSet()) {
+  public static boolean atLeastOneActivityOfTypeInTW(Plan plan, Windows tw, ActivityType activityType) {
+    for (Window interval : tw) {
       if (!atLeastOneActivityOfTypeInRange(plan, interval, activityType)) {
         return false;
       }
@@ -59,13 +54,13 @@ public class TestUtility {
   /**
    * Returns true if there is at least one activity of type activityType in the time range tw in the plan
    */
-  public static boolean atLeastOneActivityOfTypeInRange(Plan plan, Range<Time> interval, ActivityType activityType) {
+  public static boolean atLeastOneActivityOfTypeInRange(Plan plan, Window interval, ActivityType activityType) {
 
     List<ActivityInstance> acts = plan.getActivitiesByTime();
     for (ActivityInstance act : acts) {
       if (act.getType().equals(activityType)
-          && act.getStartTime().compareTo(interval.getMinimum()) >= 0
-          && act.getEndTime().compareTo(interval.getMaximum()) <= 0) {
+          && act.getStartTime().compareTo(interval.start) >= 0
+          && act.getEndTime().compareTo(interval.end) <= 0) {
         return true;
       }
     }
