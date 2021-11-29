@@ -456,7 +456,7 @@ public final class SimulationEngine implements AutoCloseable {
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
     }
 
-    final List<Pair<Duration, EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new ArrayList<>();
+    final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new HashMap<>();
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -475,7 +475,9 @@ public final class SimulationEngine implements AutoCloseable {
             }
         ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
         if (!(serializedEventGraph instanceof EventGraph.Empty)) {
-          serializedTimeline.add(Pair.of(time, serializedEventGraph));
+          serializedTimeline
+              .computeIfAbsent(time, x -> new ArrayList<>())
+              .add(serializedEventGraph);
         }
       }
     }

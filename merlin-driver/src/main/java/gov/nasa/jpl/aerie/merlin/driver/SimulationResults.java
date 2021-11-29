@@ -22,7 +22,7 @@ public final class SimulationResults {
   public final Map<String, SimulatedActivity> simulatedActivities;
   public final Map<String, SerializedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
-  public final List<Pair<Duration, EventGraph<Pair<Integer, SerializedValue>>>> events;
+  public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
 
     public SimulationResults(
         final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
@@ -31,7 +31,7 @@ public final class SimulationResults {
         final Map<String, SerializedActivity> unfinishedActivities,
         final Instant startTime,
         final List<Triple<Integer, String, ValueSchema>> topics,
-        final List<Pair<Duration, EventGraph<Pair<Integer, SerializedValue>>>> events)
+        final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
   {
     this.startTime = startTime;
     this.realProfiles = realProfiles;

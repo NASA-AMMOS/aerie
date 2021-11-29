@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -282,7 +283,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
     // TODO: Events are not currently persisted in the database. When they are, these stubs will need to be updated.
     final var topics = new ArrayList<Triple<Integer, String, ValueSchema>>();
-    final var events = new ArrayList<Pair<Duration, EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var events = new HashMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
 
     return new SimulationResults(
         profiles.realProfiles(),

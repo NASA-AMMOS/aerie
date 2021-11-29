@@ -54,8 +54,8 @@ public final class StubMissionModelService implements MissionModelService {
       Map.of(),
       Map.of(),
       Instant.EPOCH,
-      new ArrayList<>(),
-      new ArrayList<>());
+      List.of(),
+      Map.of());
 
   static {
     EXISTENT_MISSION_MODEL = new MissionModelJar();
