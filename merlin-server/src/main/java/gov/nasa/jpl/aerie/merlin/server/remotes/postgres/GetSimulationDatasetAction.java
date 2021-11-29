@@ -7,10 +7,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
-/*package-local*/ final class GetDatasetMetadataAction implements AutoCloseable {
+/*package-local*/ final class GetSimulationDatasetAction implements AutoCloseable {
   private static final @Language("Sql") String sql = """
     select
-          d.dataset_id
+          d.dataset_id,
+          d.state,
+          d.reason,
+          d.canceled
       from simulation_dataset as d
       where
         d.simulation_id = ? and
@@ -21,11 +24,11 @@ import java.util.Optional;
 
   private final PreparedStatement statement;
 
-  public GetDatasetMetadataAction(final Connection connection) throws SQLException {
+  public GetSimulationDatasetAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<DatasetMetadataRecord> get(
+  public Optional<SimulationDatasetRecord> get(
       final long simulationId,
       final long modelRevision,
       final long planRevision,
@@ -40,13 +43,19 @@ import java.util.Optional;
     if (!results.next()) return Optional.empty();
 
     final var datasetId = results.getLong(1);
+    final var state = results.getString(2);
+    final var reason = results.getString(3);
+    final var canceled = results.getBoolean(4);
 
-    return Optional.of(new DatasetMetadataRecord(
+    return Optional.of(new SimulationDatasetRecord(
         simulationId,
         datasetId,
         simulationRevision,
         planRevision,
-        modelRevision
+        modelRevision,
+        state,
+        reason,
+        canceled
     ));
   }
 

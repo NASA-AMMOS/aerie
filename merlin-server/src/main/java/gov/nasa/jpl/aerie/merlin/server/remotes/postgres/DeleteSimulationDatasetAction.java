@@ -9,10 +9,7 @@ import java.sql.SQLException;
 /*package local*/ final class DeleteSimulationDatasetAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     delete from simulation_dataset
-    where simulation_id = ?
-    and model_revision = ?
-    and plan_revision = ?
-    and simulation_revision = ?
+    where dataset_id = ?
     """;
 
   private final PreparedStatement statement;
@@ -21,15 +18,8 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public boolean apply(
-      final long simulationId,
-      final long modelRevision,
-      final long planRevision,
-      final long simulationRevision) throws SQLException {
-    this.statement.setLong(1, simulationId);
-    this.statement.setLong(2, modelRevision);
-    this.statement.setLong(3, planRevision);
-    this.statement.setLong(4, simulationRevision);
+  public boolean apply(final long datasetId) throws SQLException {
+    this.statement.setLong(1, datasetId);
     return this.statement.execute();
   }
 
