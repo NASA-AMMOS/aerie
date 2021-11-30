@@ -13,11 +13,11 @@ import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 public final class StubMissionModelService implements MissionModelService {
   public static final String EXISTENT_MISSION_MODEL_ID = "abc";
@@ -55,7 +55,7 @@ public final class StubMissionModelService implements MissionModelService {
       Map.of(),
       Instant.EPOCH,
       List.of(),
-      Map.of());
+      new TreeMap<>());
 
   static {
     EXISTENT_MISSION_MODEL = new MissionModelJar();

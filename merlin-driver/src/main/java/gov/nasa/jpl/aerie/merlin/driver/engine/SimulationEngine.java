@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -456,7 +457,7 @@ public final class SimulationEngine implements AutoCloseable {
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
     }
 
-    final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> serializedTimeline = new HashMap<>();
+    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {

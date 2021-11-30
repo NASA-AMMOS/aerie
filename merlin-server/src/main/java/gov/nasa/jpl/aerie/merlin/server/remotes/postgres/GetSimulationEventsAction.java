@@ -14,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(this.sql);
   }
 
-  public Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(
+  public SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(
       final long datasetId,
       final Timestamp simulationStart) throws SQLException
   {
@@ -52,7 +51,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
     final var transactionsByTimePoint = readResultSet(resultSet, simulationStart);
 
-    final var eventPoints = new HashMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var eventPoints = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     transactionsByTimePoint.forEach((time, transactions) -> {
       transactions.forEach(($, value) -> {
         try {

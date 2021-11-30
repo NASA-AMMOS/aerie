@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 public final class SimulationResults {
   public final Instant startTime;
@@ -31,7 +32,7 @@ public final class SimulationResults {
         final Map<String, SerializedActivity> unfinishedActivities,
         final Instant startTime,
         final List<Triple<Integer, String, ValueSchema>> topics,
-        final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
+        final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
   {
     this.startTime = startTime;
     this.realProfiles = realProfiles;

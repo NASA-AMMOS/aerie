@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
 import java.util.stream.Collectors;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
@@ -302,7 +303,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
   getSimulationEvents(
       final Connection connection,
       final long datasetId,
