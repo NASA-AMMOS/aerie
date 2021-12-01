@@ -15,7 +15,8 @@ create table event
       references topic
       on update cascade
       on delete cascade
-);
+)
+partition by list (dataset_id);
 
 comment on table event is e''
   'A representation of all events that occurred at a single time point';

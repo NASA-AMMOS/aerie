@@ -24,6 +24,9 @@ language plpgsql as $$begin
   execute
     'create table span_' || new.id
     || ' partition of span for values in (' || new.id || ')';
+  execute
+      'create table event_' || new.id
+    || ' partition of event for values in (' || new.id || ')';
 return new;
 end$$;
 
@@ -33,6 +36,7 @@ security definer
 language plpgsql as $$begin
   execute 'drop table profile_segment_' || old.id || ' cascade';
   execute 'drop table span_' || old.id || ' cascade';
+  execute 'drop table event_' || old.id || ' cascade';
 return old;
 end$$;
 
