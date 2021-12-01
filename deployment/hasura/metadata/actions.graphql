@@ -1,4 +1,12 @@
 type Query {
+  getActivityEffectiveArguments(
+    missionModelId: ID!
+    activityTypeName: String!
+    activityArguments: ActivityArguments!
+  ): EffectiveArgumentsResponse
+}
+
+type Query {
   resourceTypes(
     missionModelId: ID!
   ): [ResourceType!]!
@@ -16,14 +24,6 @@ type Query {
     missionModelId: ID!
     activityArguments: ActivityArguments!
   ): ValidationResponse
-}
-
-type Query {
-  getActivityEffectiveArguments(
-    missionModelId: ID!
-    activityTypeName: String!
-    activityArguments: ActivityArguments!
-  ): EffectiveArgumentsResponse
 }
 
 enum MerlinSimulationStatus {
@@ -61,3 +61,4 @@ scalar MerlinSimulationResults
 scalar MerlinSimulationFailureReason
 
 scalar ActivityArguments
+
