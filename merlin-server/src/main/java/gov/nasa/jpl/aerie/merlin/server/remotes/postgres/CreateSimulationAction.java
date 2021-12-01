@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
@@ -32,7 +33,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
     final var simulationId = results.getLong(1);
     final var simulationRevision = results.getLong(2);
-    return new SimulationRecord(simulationId, simulationRevision, planId, arguments);
+    return new SimulationRecord(simulationId, simulationRevision, planId, Optional.empty(), arguments);
   }
 
   @Override

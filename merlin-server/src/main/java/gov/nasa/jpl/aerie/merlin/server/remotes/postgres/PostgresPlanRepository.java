@@ -61,12 +61,28 @@ public final class PostgresPlanRepository implements PlanRepository {
       try (
           final var getPlanAction = new GetPlanAction(connection);
           final var getSimulationAction = new GetSimulationAction(connection);
+          final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
           ) {
         final var planRecord = getPlanAction.get(planId);
-        final var arguments = getSimulationAction
-            .get(planId)
-            .map(SimulationRecord::arguments)
-            .orElseGet(Map::of);
+
+        final Map<String, SerializedValue> arguments = new HashMap<>();
+        final var simRecord$ = getSimulationAction.get(planId);
+
+        if (simRecord$.isPresent()) {
+          final var simRecord = simRecord$.get();
+          final var templateId$ = simRecord.simulationTemplateId();
+
+          // Apply template arguments followed by simulation arguments.
+          // Overwriting of template arguments with sim. arguments is intentional here,
+          // and the resulting set of arguments is assumed to be complete
+          if (templateId$.isPresent()) {
+            getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
+              arguments.putAll(simTemplateRecord.arguments());
+            });
+          }
+          arguments.putAll(simRecord.arguments());
+        }
+
         return new Plan(
             planRecord.name(),
             Long.toString(planRecord.missionModelId()),

@@ -16,7 +16,7 @@ create table simulation_template (
 );
 
 comment on table simulation_template is e''
-  'A template specification for simulating an activity plan.';
+  'A template specification for simulating an activity plan with a base set of arguments.';
 
 comment on column simulation_template.id is e''
   'The synthetic identifier for this simulation template.';
@@ -27,7 +27,7 @@ comment on column simulation_template.model_id is e''
 comment on column simulation_template.description is e''
   'A brief description to offer the planner information about the name or intent of this simulation template.';
 comment on column simulation_template.arguments is e''
-  'The set of arguments to this simulation, corresponding to the parameters of the associated mission model.';
+  'A subset of simulation arguments corresponding to the parameters of the associated mission model.';
 
 
 create function increment_revision_for_update_simulation_template()

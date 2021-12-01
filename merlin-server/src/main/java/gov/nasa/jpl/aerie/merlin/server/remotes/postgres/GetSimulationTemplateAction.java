@@ -14,38 +14,35 @@ import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.simulationArgumentsP;
 
-/*package local*/ final class GetSimulationAction implements AutoCloseable {
+/*package local*/ final class GetSimulationTemplateAction implements AutoCloseable {
   private static final @Language("SQL") String sql = """
     select
-          s.id,
-          s.revision,
-          s.simulation_template_id,
-          s.arguments
-      from simulation as s
-      where s.plan_id = ?
+          t.model_id,
+          t.revision,
+          t.description,
+          t.arguments
+      from simulation_template as t
+      where t.id = ?
     """;
 
   private final PreparedStatement statement;
 
-  public GetSimulationAction(final Connection connection) throws SQLException {
+  public GetSimulationTemplateAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Optional<SimulationRecord> get(final long planId)
+  public Optional<SimulationTemplateRecord> get(final long simulationTemplateId)
   throws SQLException {
-      this.statement.setLong(1, planId);
+      this.statement.setLong(1, simulationTemplateId);
       final ResultSet results = this.statement.executeQuery();
 
       if (!results.next()) return Optional.empty();
 
-      final var id = results.getLong(1);
+      final var modelId = results.getLong(1);
       final var revision = results.getLong(2);
-      final var templateId$ =
-          results.getObject(3) == null ?
-              Optional.<Long>empty() :
-              Optional.of(results.getLong(3));
+      final var description = results.getString(3);
       final var arguments = parseSimulationArguments(results.getCharacterStream(4));
-      return Optional.of(new SimulationRecord(id, revision, planId, templateId$, arguments));
+      return Optional.of(new SimulationTemplateRecord(simulationTemplateId, revision, modelId, description, arguments));
   }
 
   private Map<String, SerializedValue> parseSimulationArguments(final Reader stream) {
@@ -53,7 +50,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return simulationArgumentsP
         .parse(json)
         .getSuccessOrThrow(
-            failureReason -> new Error("Corrupt simulation arguments cannot be parsed: " + failureReason.reason())
+            failureReason -> new Error("Corrupt simulation template arguments cannot be parsed: " + failureReason.reason())
         );
   }
 
@@ -62,3 +59,4 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement.close();
   }
 }
+
