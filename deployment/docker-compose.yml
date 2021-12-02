@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432
       POSTGRES_USER: aerie
-    image: "${AERIE_DOCKER_URL}/aerie-gateway:${DOCKER_TAG}"
+    image: "ghcr.io/nasa-ammos/aerie-gateway:${DOCKER_TAG}"
     ports: ["9000:9000"]
     restart: always
     volumes:
