@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -274,9 +275,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var simulationStart = startTimestamp.toInstant();
 
     final var profiles = ProfileRepository.getProfiles(connection, simulationDatasetRecord.datasetId(), simulationWindow);
-    final var realProfiles = profiles.getLeft();
-    final var discreteProfiles = profiles.getRight();
-
     final var activities = getSimulatedActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
@@ -286,8 +284,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var events = new ArrayList<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>>();
 
     return new SimulationResults(
-        realProfiles,
-        discreteProfiles,
+        profiles.realProfiles(),
+        profiles.discreteProfiles(),
         activities,
         unfinishedActivities,
         simulationStart,
@@ -386,7 +384,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   ) throws SQLException, NoSuchSimulationDatasetException
   {
     final var simulationStart = new Timestamp(results.startTime);
-    ProfileRepository.postResourceProfiles(connection, datasetId, results.realProfiles, results.discreteProfiles, simulationStart);
+    final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
+    ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart);
     postSimulatedActivities(connection, datasetId, results.simulatedActivities, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {

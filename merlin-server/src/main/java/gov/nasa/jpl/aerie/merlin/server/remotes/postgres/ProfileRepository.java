@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -17,10 +18,7 @@ import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.se
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realDynamicsP;
 
 /*package-local*/ final class ProfileRepository {
-  static Pair<
-      Map<String, List<Pair<Duration, RealDynamics>>>,
-      Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>>>
-  getProfiles(
+  static ProfileSet getProfiles(
       final Connection connection,
       final long datasetId,
       final Window simulationWindow
@@ -40,7 +38,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       }
     }
 
-    return Pair.of(realProfiles, discreteProfiles);
+    return new ProfileSet(realProfiles, discreteProfiles);
   }
 
   static List<ProfileRecord> getProfileRecords(
@@ -77,22 +75,20 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
   static void postResourceProfiles(
       final Connection connection,
       final long datasetId,
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
+      final ProfileSet profileSet,
       final Timestamp simulationStart
   ) throws SQLException
   {
     try (final var postProfilesAction = new PostProfilesAction(connection)) {
       final var profileRecords = postProfilesAction.apply(
           datasetId,
-          realProfiles,
-          discreteProfiles);
+          profileSet.realProfiles(),
+          profileSet.discreteProfiles());
       postProfileSegments(
           connection,
           datasetId,
           profileRecords,
-          realProfiles,
-          discreteProfiles,
+          profileSet,
           simulationStart);
     }
   }
@@ -101,10 +97,11 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final Connection connection,
       final long datasetId,
       final Map<String, ProfileRecord> records,
-      final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
-      final Map<String, Pair<ValueSchema, List<Pair<Duration, SerializedValue>>>> discreteProfiles,
+      final ProfileSet profileSet,
       final Timestamp simulationStart
   ) throws SQLException {
+    final var realProfiles = profileSet.realProfiles();
+    final var discreteProfiles = profileSet.discreteProfiles();
     for (final var resource : records.keySet()) {
       final ProfileRecord record = records.get(resource);
       switch (record.type().getLeft()) {
