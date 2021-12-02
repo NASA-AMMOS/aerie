@@ -13,6 +13,7 @@ begin;
   \ir tables/activity_type.sql
   \ir tables/plan.sql
   \ir tables/activity.sql
+  \ir tables/simulation_template.sql
   \ir tables/simulation.sql
 
   -- Uploaded datasets (or datasets generated from simulation).

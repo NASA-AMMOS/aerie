@@ -2,12 +2,13 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
-import java.util.Optional;
 import java.util.Map;
+import java.util.Optional;
 
-public final record SimulationRecord(
+public final record SimulationTemplateRecord(
     long id,
     long revision,
-    long planId,
-    Optional<Long> simulationTemplateId,
+    long modelId,
+    String description,
     Map<String, SerializedValue> arguments) {}
+
