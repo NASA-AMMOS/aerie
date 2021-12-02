@@ -16,7 +16,9 @@ import java.util.List;
 //TODO: replace mission model with Merlin provided manifest
 public class MissionModelWrapper {
 
-  SimulationFacade simFacade;
+  private final SimulationFacade simFacade;
+
+  private final MissionModel<?> missionModel;
 
   /**
    * create a fresh new mission model
@@ -26,8 +28,10 @@ public class MissionModelWrapper {
    */
   public MissionModelWrapper(MissionModel<?> missionModel, PlanningHorizon planningHorizon) {
 
+    this.missionModel = missionModel;
+
     //TODO: change parametrization
-    simFacade = new SimulationFacade(planningHorizon, missionModel);
+    this.simFacade = new SimulationFacade(planningHorizon, missionModel);
 
     //TODO: find cleaner way to handle built-in act types
 
@@ -51,6 +55,18 @@ public class MissionModelWrapper {
   }
   public ExternalState<Boolean> getBoolState(String name){
     return simFacade.getBooleanResource(name);
+  }
+
+  public ExternalState<String> getStringState(String name){
+    return simFacade.getStringResource(name);
+  }
+
+  public MissionModel<?> getMissionModel(){
+    return missionModel;
+  }
+
+  public SimulationFacade getSimFacade(){
+    return simFacade;
   }
 
   /**

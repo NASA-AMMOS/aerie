@@ -35,8 +35,8 @@ dependencies {
   testImplementation project(':constraints')
   testImplementation project(':contrib')
   testImplementation project(':banananation')
+  testImplementation project(':insight')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.7.2'
   testImplementation 'com.google.guava:guava-testlib:29.0-jre'
-  testImplementation 'com.google.truth:truth:1.0.1'
   testImplementation 'com.google.truth.extensions:truth-java8-extension:1.0.1'
 }

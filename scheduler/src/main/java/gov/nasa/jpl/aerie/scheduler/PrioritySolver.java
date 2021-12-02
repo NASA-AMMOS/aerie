@@ -70,7 +70,7 @@ public class PrioritySolver implements Solver {
   }
 
   private SimulationFacade getSimFacade(){
-    return problem.getMissionModel().simFacade;
+    return problem.getMissionModel().getSimFacade();
   }
 
   private boolean checkAndInsertAct(ActivityInstance act){
