@@ -50,7 +50,7 @@ public final class AerieAppDriver {
         new SynchronousSimulationAgent(planController, missionModelController));
     final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
     final var simulationAction = new GetSimulationResultsAction(planController, missionModelController, simulationController);
-    final var merlinBindings = new MerlinBindings(missionModelController, simulationAction);
+    final var merlinBindings = new MerlinBindings(missionModelController, planController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {

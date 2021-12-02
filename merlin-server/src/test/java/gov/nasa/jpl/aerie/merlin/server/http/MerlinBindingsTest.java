@@ -45,7 +45,7 @@ public final class MerlinBindingsTest {
     SERVER = Javalin.create(config -> {
       config.showJavalinBanner = false;
       config.enableCorsForAllOrigins();
-      config.registerPlugin(new MerlinBindings(missionModelApp, simulationAction));
+      config.registerPlugin(new MerlinBindings(missionModelApp, planApp, simulationAction));
     });
 
     SERVER.start();

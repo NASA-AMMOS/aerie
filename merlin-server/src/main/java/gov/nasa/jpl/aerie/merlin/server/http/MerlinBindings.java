@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
+import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 import io.javalin.Javalin;
 import io.javalin.core.plugin.Plugin;
 import io.javalin.http.Context;
@@ -38,13 +39,16 @@ import static io.javalin.apibuilder.ApiBuilder.post;
  */
 public final class MerlinBindings implements Plugin {
   private final MissionModelService missionModelService;
+  private final PlanService planService;
   private final GetSimulationResultsAction simulationAction;
 
   public MerlinBindings(
       final MissionModelService missionModelService,
+      final PlanService planService,
       final GetSimulationResultsAction simulationAction)
   {
     this.missionModelService = missionModelService;
+    this.planService = planService;
     this.simulationAction = simulationAction;
   }
 
