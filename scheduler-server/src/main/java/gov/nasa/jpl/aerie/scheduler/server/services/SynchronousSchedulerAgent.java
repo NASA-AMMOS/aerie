@@ -66,7 +66,7 @@ public record SynchronousSchedulerAgent(
       //store the solution plan back into merlin (and reconfirm no intervening mods!)
       //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
       ensureRevisionMatch(request, getMerlinPlanRev(request.planId()));
-      storeFinalPlan(planMetadata, solutionPlan);
+      storeFinalPlan(planMetadata, problem.getMissionModel(), solutionPlan);
 
       //collect results and notify subscribers of success
       final var results = collectResults(solutionPlan);
@@ -201,7 +201,11 @@ public record SynchronousSchedulerAgent(
    */
   private Plan loadInitialPlan(PlanMetadata planMetadata, MissionModelWrapper mission) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
-    return merlinService.getPlanActivities(planMetadata, mission);
+    try {
+      return merlinService.getPlanActivities(planMetadata, mission);
+    } catch (Exception e) {
+      throw new ResultsProtocolFailure(e);
+    }
   }
 
   /**
@@ -234,12 +238,18 @@ public record SynchronousSchedulerAgent(
    * this will obsolete the locally cached planMetadata since the plan revision will change!
    *
    * @param planMetadata metadata of plan container to store into; outdated after return
+   * @param mission the mission model that the plan adheres to
    * @param plan plan with all activity instances that should be stored to target merlin plan container
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private void storeFinalPlan(PlanMetadata planMetadata, Plan plan) {
-    //TODO: leverage forthcoming AERIE-1555 graphql mutation to store scheduler objects into plan
+  //TODO: remove mission model from signature: isn't really required (just passed to allow ctor of AerieController)
+  private void storeFinalPlan(PlanMetadata planMetadata, MissionModelWrapper mission, Plan plan) {
+    try {
+      merlinService.updatePlanActivities(planMetadata, mission, plan);
+    } catch (Exception e) {
+      throw new ResultsProtocolFailure(e);
+    }
   }
 
   /**

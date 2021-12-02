@@ -14,7 +14,7 @@ test {
 }
 
 application {
-  mainClass = 'gov.nasa.jpl.aerie.merlin.server.SchedulerAppDriver'
+  mainClass = 'gov.nasa.jpl.aerie.scheduler.server.SchedulerAppDriver'
   applicationDefaultJvmArgs = ['-Xmx2g']
 }
 

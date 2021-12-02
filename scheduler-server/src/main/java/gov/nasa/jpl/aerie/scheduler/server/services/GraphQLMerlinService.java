@@ -164,4 +164,21 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     return controller.fetchPlan(planMetadata.planId());
   }
 
+  /**
+   * synchronize changes to the in-memory plan back over to aerie data stores
+   *
+   * the plan revision will change!
+   *
+   * @param planMetadata identifying details of the plan to fetch content for; outdated on return
+   * @param mission the mission model that the plan adheres to
+   * @param plan plan with all activity instances that should be stored to target merlin plan container
+   */
+  public void updatePlanActivities(PlanMetadata planMetadata, MissionModelWrapper mission, Plan plan) {
+    final var controller = new AerieController(
+        this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
+    controller.updatePlan(planMetadata.planId(), plan);
+
+    //TODO: leverage forthcoming AERIE-1555 graphql mutation to store scheduler objects into plan
+  }
+
 }
