@@ -20,6 +20,7 @@ import javax.json.Json;
 import javax.json.stream.JsonParsingException;
 import javax.sql.DataSource;
 import java.io.StringReader;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,11 +60,10 @@ public final class PostgresPlanRepository implements PlanRepository {
     final var planId = toPlanId(id);
     try (final var connection = this.dataSource.getConnection()) {
       try (
-          final var getPlanAction = new GetPlanAction(connection);
           final var getSimulationAction = new GetSimulationAction(connection);
           final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
-          ) {
-        final var planRecord = getPlanAction.get(planId);
+      ) {
+        final var planRecord = getPlanRecord(connection, planId);
 
         final Map<String, SerializedValue> arguments = new HashMap<>();
         final var simRecord$ = getSimulationAction.get(planId);
@@ -201,6 +201,15 @@ public final class PostgresPlanRepository implements PlanRepository {
     } catch (final SQLException ex) {
       throw new DatabaseException(
           "Failed to retrieve constraints for plan with id `%s`".formatted(planId), ex);
+    }
+  }
+
+  private PlanRecord getPlanRecord(
+      final Connection connection,
+      final long planId
+  ) throws SQLException, NoSuchPlanException {
+    try (final var getPlanAction = new GetPlanAction(connection)) {
+      return getPlanAction.get(planId);
     }
   }
 
