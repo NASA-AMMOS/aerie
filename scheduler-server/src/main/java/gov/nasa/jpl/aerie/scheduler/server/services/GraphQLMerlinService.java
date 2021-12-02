@@ -7,10 +7,28 @@ import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class GraphQLMerlinService implements MerlinService {
+/**
+ * {@inheritDoc}
+ *
+ * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to access all plan data
+ */
+public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinService {
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public long getPlanRevision(final String planId) throws NoSuchPlanException {
+    //TODO: actually do this graphql query to merlin endpoint
+    //TODO: deserialize the json result body (using some aerie json parsers?)
+    final long planRev = 0;
+
+    return planRev;
+  }
 
   /**
    * {@inheritDoc}

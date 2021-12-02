@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.server.config;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Objects;
 
 /**
  * @param httpPort the network port on which the scheduler should listen for http requests
  * @param javalinLogging controls the level of http access logging from javalin endpoints
+ * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to fetch/store plan data
  * @param merlinFileStore mounted filesystem path to the merlin file store (used as a backdoor to access mission
  *     model jars). should be the entry path, not the jar-specific subdirectory. note this path is distinct from any
  *     scheduler specific file store.
@@ -14,11 +16,13 @@ import java.util.Objects;
 public record AppConfiguration(
     int httpPort,
     JavalinLoggingState javalinLogging,
+    URI merlinGraphqlURI,
     Path merlinFileStore
 )
 {
   public AppConfiguration {
     Objects.requireNonNull(javalinLogging);
+    Objects.requireNonNull(merlinGraphqlURI);
     Objects.requireNonNull(merlinFileStore);
     //NB: ok if the merlin file store not created yet at app init; just needs to exist by first use
   }

@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.scheduler.server.services.SynchronousSchedulerAgent;
 import gov.nasa.jpl.aerie.scheduler.server.services.UncachedSchedulerService;
 import io.javalin.Javalin;
 
+import java.net.URI;
 import java.nio.file.Path;
 
 /**
@@ -32,7 +33,7 @@ public final class SchedulerAppDriver {
     final var appConfig = loadConfiguration();
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
-    final var merlinService = new GraphQLMerlinService();
+    final var merlinService = new GraphQLMerlinService(appConfig.merlinGraphqlURI());
     final var scheduleAgent = new SynchronousSchedulerAgent(merlinService, appConfig.merlinJarsPath());
     final var schedulerService = new UncachedSchedulerService(scheduleAgent);
     final var scheduleAction = new ScheduleAction(merlinService, schedulerService);
@@ -68,6 +69,7 @@ public final class SchedulerAppDriver {
         Integer.parseInt(getEnvOrFallback("SCHED_PORT", "27193")),
         Boolean.parseBoolean(getEnvOrFallback("SCHED_LOGGING", "true")) ?
             JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
+        URI.create(getEnvOrFallback("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnvOrFallback("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")));
   }
 

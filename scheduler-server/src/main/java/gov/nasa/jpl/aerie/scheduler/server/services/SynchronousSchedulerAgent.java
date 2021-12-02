@@ -54,7 +54,7 @@ public record SynchronousSchedulerAgent(
       //confirm requested plan to schedule from/into still exists at targeted version (request could be stale)
       //TODO: maybe some kind of high level db transaction wrapping entire read/update of target plan revision
       final var planMetadata = getMerlinPlanMetadata(request.planId());
-      ensureRevisionMatch(request, planMetadata);
+      ensureRevisionMatch(request, planMetadata.planRev());
 
       //create scheduler problem seeded with initial plan
       final var problem = createProblem(planMetadata);
@@ -66,7 +66,7 @@ public record SynchronousSchedulerAgent(
 
       //store the solution plan back into merlin (and reconfirm no intervening mods!)
       //TODO: make revision confirmation atomic part of plan mutation (plan might have been modified during scheduling!)
-      ensureRevisionMatch(request, getMerlinPlanMetadata(request.planId()));
+      ensureRevisionMatch(request, getMerlinPlanRev(request.planId()));
       storeFinalPlan(planMetadata, solutionPlan);
 
       //collect results and notify subscribers of success
@@ -94,16 +94,31 @@ public record SynchronousSchedulerAgent(
   }
 
   /**
-   * confirms that plan revisions match
+   * fetch just the current revision number of the target plan from aerie services
+   *
+   * @param planId identifier of the target plan to load metadata for
+   * @return the current revision number of the target plan according to a fresh query
+   * @throws ResultsProtocolFailure when the requested plan cannot be found, or aerie could not be reached
+   */
+  private long getMerlinPlanRev(final String planId) {
+    try {
+      return merlinService.getPlanRevision(planId);
+    } catch (NoSuchPlanException e) {
+      throw new ResultsProtocolFailure(e);
+    }
+  }
+
+  /**
+   * confirms that plan revision still matches that expected by the scheduling request
    *
    * @param request the original request for scheduling, containing an intended starting plan revision
-   * @param planMetadata snapshot of plan metadata, containing the actual plan revision
+   * @param actualRev snapshot of the actual plan revision from plan metadata query
    * @throws ResultsProtocolFailure when the requested plan revision does not match the actual revision
    */
-  private void ensureRevisionMatch(final ScheduleRequest request, PlanMetadata planMetadata) {
-    if (planMetadata.planRev() != request.planRev()) {
-      throw new ResultsProtocolFailure("plan with id %s is no longer at revision %s".formatted(
-          request.planId(), request.planRev()));
+  private void ensureRevisionMatch(final ScheduleRequest request, final long actualRev) {
+    if (actualRev != request.planRev()) {
+      throw new ResultsProtocolFailure("plan with id %s at revision %d is no longer at revision %d".formatted(
+          request.planId(), actualRev, request.planRev()));
     }
   }
 
@@ -187,6 +202,9 @@ public record SynchronousSchedulerAgent(
    */
   private Plan loadInitialPlan(PlanMetadata planMetadata, MissionModelWrapper mission) {
     final var schedPlan = new PlanInMemory(mission);
+    //TODO: maybe paranoid check if plan rev has changed since original metadata?
+
+
     //TODO: leverage forthcoming AERIE-1555 graphql query to parse plan into scheduler objects
     return schedPlan;
   }
