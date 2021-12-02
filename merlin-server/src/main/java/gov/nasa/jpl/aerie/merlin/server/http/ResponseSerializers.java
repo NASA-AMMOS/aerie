@@ -113,6 +113,12 @@ public final class ResponseSerializers {
        .build();
   }
 
+  public static JsonValue serializeCreatedDatasetId(final long datasetId) {
+    return Json.createObjectBuilder()
+        .add("datasetId", datasetId)
+        .build();
+  }
+
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()

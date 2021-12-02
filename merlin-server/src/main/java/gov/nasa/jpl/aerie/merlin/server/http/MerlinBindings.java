@@ -17,6 +17,7 @@ import java.io.StringReader;
 import java.util.List;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
@@ -74,6 +75,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("getActivityEffectiveArguments", () -> {
         post(this::getActivityEffectiveArguments);
+      });
+      path("addExternalDataset", () -> {
+        post(this::addExternalDataset);
       });
     });
 
@@ -188,6 +192,26 @@ public final class MerlinBindings implements Plugin {
          .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void addExternalDataset(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraExternalDatasetActionP).input();
+
+      final var planId = input.planId();
+      final var datasetStart = input.datasetStart();
+      final var profileSet = input.profileSet();
+
+      final var datasetId = this.planService.addExternalDataset(planId, datasetStart, profileSet);
+
+      ctx.status(201).result(ResponseSerializers.serializeCreatedDatasetId(datasetId).toString());
+    } catch (final NoSuchPlanException ex) {
+      ctx.status(404).result(ResponseSerializers.serializeNoSuchPlanException(ex).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
     } catch (final InvalidEntityException ex) {
