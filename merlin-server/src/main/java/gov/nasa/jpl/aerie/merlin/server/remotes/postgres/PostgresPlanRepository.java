@@ -237,6 +237,20 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
+  // TODO: This functionality is not required for the use-case
+  //       we are addressing at the time of creation, but it
+  //       will be necessary for our future use-cases of associating
+  //       multiple plans with an external dataset. At that time,
+  //       this function should be lifted to the PlanRepository interface
+  //       and hooked up to the merlin bindings
+  private static void useExternalDataset(
+      final Connection connection,
+      final PlanRecord plan,
+      final long datasetId
+  ) throws SQLException {
+    associatePlanWithDataset(connection, plan.id(), datasetId, plan.startTime());
+  }
+
   private static long toPlanId(final String id) throws NoSuchPlanException {
     try {
       return Long.parseLong(id, 10);
@@ -271,6 +285,17 @@ public final class PostgresPlanRepository implements PlanRepository {
   ) throws SQLException {
     try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
       return createPlanDatasetAction.apply(planId, planStart, datasetStart);
+    }
+  }
+
+  private static PlanDatasetRecord associatePlanWithDataset(
+      final Connection connection,
+      final long planId,
+      final long datasetId,
+      final Timestamp planStart
+  ) throws SQLException {
+    try (final var associatePlanDatasetAction = new AssociatePlanDatasetAction(connection)) {
+      return associatePlanDatasetAction.apply(planId, datasetId, planStart);
     }
   }
 
