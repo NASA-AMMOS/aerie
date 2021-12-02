@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432
       POSTGRES_USER: aerie
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-gateway:develop"
+    image: "ghcr.io/nasa-ammos/aerie-gateway:develop"
     ports: ["9000:9000"]
     restart: always
     volumes:
@@ -48,7 +48,7 @@ services:
     build:
       context: .
       dockerfile: scripts/dockerfiles/merlin.Dockerfile
-    depends_on: [ "postgres" ]
+    depends_on: ["postgres"]
     environment:
       MERLIN_PORT: 27183
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
@@ -58,7 +58,7 @@ services:
       MERLIN_DB_USER: "aerie"
       MERLIN_DB_PASSWORD: "aerie"
       MERLIN_DB: "aerie_merlin"
-    ports: [ "27183:27183"]
+    ports: ["27183:27183"]
     restart: always
     volumes:
       - file_store:/usr/src/app/merlin_file_store
