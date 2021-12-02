@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
@@ -204,6 +205,29 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
+  public long addExternalDataset(
+      final String id,
+      final Timestamp datasetStart,
+      final ProfileSet profileSet
+  ) throws NoSuchPlanException {
+    final var planId = toPlanId(id);
+    try (final var connection = this.dataSource.getConnection()) {
+      final var plan = getPlanRecord(connection, planId);
+      final var planDataset = createPlanDataset(connection, plan.id(), plan.startTime(), datasetStart);
+      ProfileRepository.postResourceProfiles(
+          connection,
+          planDataset.datasetId(),
+          profileSet,
+          datasetStart
+      );
+
+      return planDataset.datasetId();
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
+    }
+  }
+
   private PlanRecord getPlanRecord(
       final Connection connection,
       final long planId
@@ -236,6 +260,17 @@ public final class PostgresPlanRepository implements PlanRepository {
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
       throw new NoSuchMissionModelException();
+    }
+  }
+
+  private static PlanDatasetRecord createPlanDataset(
+      final Connection connection,
+      final long planId,
+      final Timestamp planStart,
+      final Timestamp datasetStart
+  ) throws SQLException {
+    try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
+      return createPlanDatasetAction.apply(planId, planStart, datasetStart);
     }
   }
 
