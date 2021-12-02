@@ -19,10 +19,10 @@ import java.util.Map;
  * @param modelConfiguration plan-specific arguments to tune the behavior of the mission model
  */
 public record PlanMetadata(
-    String planId,
+    long planId,
     long planRev,
     PlanningHorizon horizon,
-    String modelId,
+    long modelId,
     Path modelPath,
     String modelName,
     String modelVersion,
