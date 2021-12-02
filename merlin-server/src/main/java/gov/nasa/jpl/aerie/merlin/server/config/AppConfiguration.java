@@ -15,7 +15,4 @@ public record AppConfiguration (
     Objects.requireNonNull(merlinFileStore);
     Objects.requireNonNull(store);
   }
-
-  public Path merlinJarsPath() { return merlinFileStore.resolve("jars"); }
-  public Path merlinFilesPath() { return merlinFileStore.resolve("files"); }
 }

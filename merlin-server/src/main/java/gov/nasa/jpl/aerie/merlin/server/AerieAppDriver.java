@@ -29,8 +29,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -97,22 +95,6 @@ public final class AerieAppDriver {
 
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
-    }
-  }
-
-  private static Path makeMissionModelDataPath(final AppConfiguration configuration) {
-    try {
-      return Files.createDirectories(configuration.merlinFilesPath());
-    } catch (final IOException ex) {
-      throw new Error("Error creating merlin file store files directory", ex);
-    }
-  }
-
-  private static Path makeJarsPath(final AppConfiguration configuration) {
-    try {
-      return Files.createDirectories(configuration.merlinJarsPath());
-    } catch (final IOException ex) {
-      throw new Error("Error creating merlin file store jars directory", ex);
     }
   }
 
