@@ -414,7 +414,7 @@ public class AerieController {
   protected class FetchPlanRequest extends GraphRequest {
 
     public String getRequest() {
-      var req = "query { plan_by_pk(id:%d) { activities { start_offset type arguments } duration start_time }} ";
+      var req = "query { plan_by_pk(id:%d) { activities { id start_offset type arguments } duration start_time }} ";
       return String.format(req, id);
     }
 
@@ -434,6 +434,7 @@ public class AerieController {
       var jsonplan = ((JSONObject) response.get("data")).getJSONObject("plan_by_pk");
       var activities = jsonplan.getJSONArray("activities");
       this.plan = new PlanInMemory(missionModelWrapper);
+      addPlanId(plan,this.id);
       for (int i = 0; i < activities.length(); i++){
         var actInst = jsonToInstance(activities.getJSONObject(i));
         this.plan.add(actInst);
@@ -464,6 +465,9 @@ public class AerieController {
     }
 
     ActivityInstance act = new ActivityInstance("fetched_" + java.util.UUID.randomUUID(), schedulerActType);
+    final var actPK = jsonActivity.getLong("id");
+    addActInstanceId(act,actPK);
+
     String start = jsonActivity.getString("start_offset");
     var params = jsonActivity.getJSONObject("arguments");
     for(var paramName : params.keySet()){
