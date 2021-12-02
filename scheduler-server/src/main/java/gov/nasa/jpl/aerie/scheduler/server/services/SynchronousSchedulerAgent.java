@@ -8,7 +8,6 @@ import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
 import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
 import gov.nasa.jpl.aerie.scheduler.Plan;
-import gov.nasa.jpl.aerie.scheduler.PlanInMemory;
 import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Solver;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
-    MerlinService merlinService,
+    GraphQLMerlinService merlinService,
     Path missionJarsPath
 )
     implements SchedulerAgent
@@ -201,12 +200,8 @@ public record SynchronousSchedulerAgent(
    *     changed, or aerie could not be reached
    */
   private Plan loadInitialPlan(PlanMetadata planMetadata, MissionModelWrapper mission) {
-    final var schedPlan = new PlanInMemory(mission);
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
-
-
-    //TODO: leverage forthcoming AERIE-1555 graphql query to parse plan into scheduler objects
-    return schedPlan;
+    return merlinService.getPlanActivities(planMetadata, mission);
   }
 
   /**

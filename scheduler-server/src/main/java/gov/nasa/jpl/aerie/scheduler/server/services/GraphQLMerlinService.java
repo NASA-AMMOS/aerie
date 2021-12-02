@@ -7,6 +7,9 @@ import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
 import gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.scheduler.AerieController;
+import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
+import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.Time;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
@@ -147,5 +150,18 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     }
   }
 
+  /**
+   * create an in-memory snapshot of the target plan's activity contents from aerie
+   *
+   * @param planMetadata identifying details of the plan to fetch content for
+   * @param mission the mission model that the plan adheres to
+   * @return a newly allocated snapshot of the plan contents
+   */
+  public Plan getPlanActivities(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
+    //thanks to AMaillard for already having these handy!
+    final var controller = new AerieController(
+        this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
+    return controller.fetchPlan(planMetadata.planId());
+  }
 
 }
