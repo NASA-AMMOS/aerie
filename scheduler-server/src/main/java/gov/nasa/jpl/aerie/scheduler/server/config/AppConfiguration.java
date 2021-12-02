@@ -28,7 +28,9 @@ public record AppConfiguration(
    */
   public Path merlinJarsPath() {
     //TODO: some cross-module synchronization of these magic path terms (if this backdoor persists)
-    return merlinFileStore.resolve("jars");
+    //NB: merlin seems to not actually use the .resolve("jars") subpath despite its mention in merlin...AppConfiguration
+    //    (ref PostgresMissionModelRepository where it prefix is hardcoded to just "merlin_file_store")
+    return merlinFileStore;
   }
 
 }

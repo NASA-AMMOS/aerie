@@ -16,8 +16,8 @@ import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
+import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -25,13 +25,18 @@ import java.util.stream.Collectors;
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
  * @param merlinService interface for querying plan details from merlin
+ * @param missionJarsPath path to parent directory for mission model jars (interim backdoor jar file access)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
-public record SynchronousSchedulerAgent(MerlinService merlinService)
+public record SynchronousSchedulerAgent(
+    MerlinService merlinService,
+    Path missionJarsPath
+)
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinService);
+    Objects.requireNonNull(missionJarsPath);
   }
 
   /**
@@ -112,7 +117,7 @@ public record SynchronousSchedulerAgent(MerlinService merlinService)
     final var mission = loadMissionModel(planMetadata);
     final var problem = new Problem(mission);
 
-    //seed the problem with the intial plan contents
+    //seed the problem with the initial plan contents
     problem.setInitialPlan(loadInitialPlan(planMetadata, mission));
 
     //apply constraints/goals to the problem
@@ -189,20 +194,21 @@ public record SynchronousSchedulerAgent(MerlinService merlinService)
   /**
    * creates an instance of the mission model referenced by the specified plan
    *
-   * @param plan metadata of the target plan indicating which mission model to load
+   * @param plan metadata of the target plan indicating which mission model to load and how to configure the mission
+   *     model for that plan context
    * @return instance of the mission model to extract any activity types, constraints, and simulations from
    * @throws ResultsProtocolFailure when the mission model could not be loaded: eg jar file not found, declared
    *     version/name in jar does not match, or aerie filesystem could not be mounted
    */
   private MissionModelWrapper loadMissionModel(PlanMetadata plan) {
     try {
-      //TODO: somehow allow for user configuration of model (probably part of request body?)
-      final var missionConfig = SerializedValue.of(Map.of());
+      final var missionConfig = SerializedValue.of(plan.modelConfiguration());
+      final var jarPath = missionJarsPath.resolve(plan.modelPath());
 
       final var aerieModel = MissionModelLoader.loadMissionModel(
-          missionConfig, plan.modelPath(), plan.modelName(), plan.modelVersion());
+          missionConfig, jarPath, plan.modelName(), plan.modelVersion());
 
-      //TODO: unify model containers to avoid wrappers
+      //TODO: unify model access patterns to avoid disparate wrappers/facades
       return new MissionModelWrapper(aerieModel, plan.horizon());
     } catch (MissionModelLoader.MissionModelLoadException e) {
       throw new ResultsProtocolFailure(e);

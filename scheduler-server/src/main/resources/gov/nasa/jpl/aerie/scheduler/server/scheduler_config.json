@@ -1,5 +1,0 @@
-{ "server":
-    { "port": 27193,
-      "logging": true,
-      "merlin-file-store": "/usr/src/app/merlin_file_store" }
-}
