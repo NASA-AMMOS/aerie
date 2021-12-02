@@ -28,4 +28,5 @@ begin;
 
   \ir tables/mission_model_parameters.sql
   \ir tables/simulation_dataset.sql
+  \ir tables/plan_dataset.sql
 end;
