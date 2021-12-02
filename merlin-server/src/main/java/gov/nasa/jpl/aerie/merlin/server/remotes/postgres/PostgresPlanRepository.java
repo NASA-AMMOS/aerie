@@ -205,6 +205,7 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
+  @Override
   public long addExternalDataset(
       final String id,
       final Timestamp datasetStart,
