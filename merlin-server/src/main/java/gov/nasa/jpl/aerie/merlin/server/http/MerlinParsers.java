@@ -34,6 +34,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.profileSetP;
 
 public abstract class MerlinParsers {
   private MerlinParsers() {}
@@ -221,6 +222,22 @@ public abstract class MerlinParsers {
 
   public static final JsonParser<HasuraAction<HasuraAction.ActivityInput>> hasuraActivityActionP
       = hasuraActionP(hasuraActivityInputP)
+      . map(Iso.of(
+          untuple(HasuraAction::new),
+          $ -> tuple($.name(), $.input(), $.session())));
+
+  public static final JsonParser<HasuraAction.UploadExternalDatasetInput> hasuraUploadExternalDatasetActionP
+      = productP
+      . field("planId", stringP)
+      . field("datasetStart", timestampP)
+      . field("profileSet", profileSetP)
+      . map(Iso.of(
+          untuple(HasuraAction.UploadExternalDatasetInput::new),
+          $ -> tuple($.planId(), $.datasetStart(), $.profileSet())
+      ));
+
+  public static final JsonParser<HasuraAction<HasuraAction.UploadExternalDatasetInput>> hasuraExternalDatasetActionP
+      = hasuraActionP(hasuraUploadExternalDatasetActionP)
       . map(Iso.of(
           untuple(HasuraAction::new),
           $ -> tuple($.name(), $.input(), $.session())));
