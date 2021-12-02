@@ -2,6 +2,11 @@ package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.insight.config.Configuration;
+import gov.nasa.jpl.aerie.insight.generated.GeneratedMissionModelFactory;
+import gov.nasa.jpl.aerie.insight.mappers.InSightValueMappers;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
@@ -10,12 +15,9 @@ import java.util.List;
  * Some utility functions used in tests
  */
 public class TestUtility {
-  public static final String latest = "604a565e85af0954f98b9ee0";
-  public static final String working = "5fd7ea8ed1b75c65c5fd10f4";
-
-
-  public static final String LOCAL_AERIE = "http://localhost:27184";
-  public static final String MISSION_MODEL_ID = latest;
+  public static final int latest = 1;
+  public static final String LOCAL_AERIE = "http://localhost:8080/v1/graphql";
+  public static final int MISSION_MODEL_ID = latest;
 
   public static void printPlan(Plan plan) {
 
@@ -27,6 +29,13 @@ public class TestUtility {
 
   }
 
+  public static MissionModel<?> getMerlinSightMissionModel(){
+    final var builder = new MissionModelBuilder();
+    final var configuration = InSightValueMappers.configuration().serializeValue(Configuration.defaultConfiguration());
+    final var factory = new GeneratedMissionModelFactory();
+    final var model = factory.instantiate(configuration, builder);
+    return builder.build(model, factory.getTaskSpecTypes());
+  }
 
   public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {
 

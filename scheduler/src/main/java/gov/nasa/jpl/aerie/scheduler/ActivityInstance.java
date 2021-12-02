@@ -218,7 +218,19 @@ public class ActivityInstance {
   }
 
   public String toString() {
-    return "[" + this.name + "," + this.getStartTime() + "," + this.getEndTime() + "]";
+    return "[" + this.type.getName() + ","+ this.name + "," + this.getStartTime() + "," + this.getEndTime() + "]";
+  }
+
+  /**
+   * Checks equality but in name
+   * @param that the other activity instance to compare to
+   * @return true if they are equal in properties, false otherwise
+   */
+  public boolean equalsInProperties(final ActivityInstance that){
+    return type.equals(that.type)
+           && duration.isEqualTo(that.duration)
+           && startTime.isEqualTo(that.startTime)
+           && parameters.equals(that.parameters);
   }
 
   @Override
@@ -229,7 +241,8 @@ public class ActivityInstance {
     return name.equals(that.name)
            && type.equals(that.type)
            && duration.isEqualTo(that.duration)
-           && startTime.isEqualTo(that.startTime);
+           && startTime.isEqualTo(that.startTime)
+           && parameters.equals(that.parameters);
 /* TODO: should handle parameters too!
     return Objects.equals(this.name, that.name)
            && Objects.equals(this.type,that.type)
