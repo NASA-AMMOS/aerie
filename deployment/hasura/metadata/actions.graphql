@@ -1,3 +1,11 @@
+type Mutation {
+  addExternalDataset(
+    planId: Int!
+    datasetStart: String!
+    profileSet: ProfileSet!
+  ): AddExternalDatasetResponse
+}
+
 type Query {
   getActivityEffectiveArguments(
     missionModelId: ID!
@@ -54,6 +62,10 @@ type EffectiveArgumentsResponse {
   errors: [String!]
 }
 
+type AddExternalDatasetResponse {
+  datasetId: Int!
+}
+
 scalar ResourceSchema
 
 scalar MerlinSimulationResults
@@ -62,3 +74,4 @@ scalar MerlinSimulationFailureReason
 
 scalar ActivityArguments
 
+scalar ProfileSet
