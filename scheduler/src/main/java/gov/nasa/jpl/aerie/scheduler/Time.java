@@ -272,25 +272,49 @@ public class Time implements Comparable<Time> {
     MINUS,
   }
 
-  public static Duration
-  performOperation(Operator op, Duration t1, Duration d) {
+public static boolean isPositiveOverflowAdd(Duration t1, Duration t2){
+    if(t1.isPositive() && t2.isPositive()){
+      return true;
+    } else if(t1.isNegative() && t2.isNegative()){
+      return false;
+  }
+  throw new RuntimeException("Should not be overflow");
+}
+
+public static boolean isPositiveOverflowMinus(Duration t1, Duration t2){
+  if(t1.isPositive() && t2.isNegative() || t1.isNegative() && t2.isPositive()){
+    return true;
+  } else {
+    return false;
+  }
+}
+
+  public static Duration performOperation(Operator op, Duration t1, Duration d) {
     switch (op) {
       case PLUS:
         try {
           return t1.plus(d);
         }catch(ArithmeticException e){
-          return Duration.MAX_VALUE;
+          if(isPositiveOverflowAdd(t1,d)) {
+            return Duration.MAX_VALUE;
+          } else{
+            return Duration.MIN_VALUE;
+          }
         }
       case MINUS:
         try {
           return t1.minus(d);
         }catch(ArithmeticException e){
-          return Duration.MIN_VALUE;
+          if(isPositiveOverflowMinus(t1,d)) {
+            return Duration.MAX_VALUE;
+          } else{
+            return Duration.MIN_VALUE;
+          }
         }
       default:
-        break;
+        throw new IllegalArgumentException("Unknown operation");
     }
-    return null;
   }
 
 }
+

@@ -70,7 +70,7 @@ public class PrioritySolver implements Solver {
   }
 
   private SimulationFacade getSimFacade(){
-    return problem.getMissionModel().getSimFacade();
+    return problem.getMissionModel().getSimulationFacade();
   }
 
   private boolean checkAndInsertAct(ActivityInstance act){
@@ -87,6 +87,8 @@ public class PrioritySolver implements Solver {
     boolean allGood = true;
 
     for(var act: acts){
+      //if some parameters are left uninstantiated, this is the last moment to do it
+      act.instantiateVariableParameters();
       plan.add(act);
       if(checkSimBeforeInsertingActivities) {
         getSimFacade().simulatePlan(plan);
@@ -500,11 +502,11 @@ private void satisfyOptionGoal(OptionGoal goal) {
         final var missingTemplate = (MissingActivityTemplateConflict) missing;
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
-        final var startT = startWindows.maxTimePoint();
+        final var startT = startWindows.minTimePoint();
 
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
-        final var template = missingTemplate.getGoal().getActTemplate();
+        final var template = missingTemplate.getActTemplate();
         final var completeTemplate = new ActivityCreationTemplate.Builder()
             .basedOn(template).startsIn(Window.between(startT.get(), startT.get())).build();
         final var act = completeTemplate.createActivity(
@@ -659,6 +661,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof BinaryMutexConstraint) {
         tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac);
+      } else if (gc instanceof NAryMutexConstraint){
+        tmp = ((NAryMutexConstraint) gc).findWindows(plan, tmp, mac);
       }
     }
   return tmp;

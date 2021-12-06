@@ -18,7 +18,10 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -29,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipException;
 
 /**
  *
@@ -153,6 +157,20 @@ public class AerieController {
     currentlyTryingToConnect = false;
   }
 
+  public boolean isLocalAerieUp() {
+    boolean available = false;
+    try {
+      final URLConnection connection = new URL(this.distantAerieURL).openConnection();
+      connection.connect();
+      available = true;
+    } catch (final MalformedURLException e) {
+      throw new IllegalStateException("URL is incorrect: " + this.distantAerieURL, e);
+    } catch (final IOException e) {
+      available = false;
+    }
+    return available;
+  }
+
   protected boolean postRequest(GraphRequest request) {
     if(!currentlyTryingToConnect) {
       authenticateIfNecessary();
@@ -204,6 +222,13 @@ public class AerieController {
           System.out.println(bodystr);
           JSONObject json = new JSONObject(bodystr);
           return request.handleResponse(json);
+      } catch (ZipException e) {
+        //probably not in GZIP format
+        e.printStackTrace();
+        if(response!=null) {
+          System.out.println(response.body());
+        }
+        return false;
       } catch (IOException e) {
         e.printStackTrace();
         return false;
@@ -215,7 +240,7 @@ public class AerieController {
   public void deleteAllPlans() {
     PlanIdRequest pir = new PlanIdRequest();
     boolean ret = postRequest(pir);
-    for (String id : pir.getIds()) {
+    for (var id : pir.getIds()) {
       DeletePlanRequest dpr = new DeletePlanRequest(id);
       ret = postRequest(dpr);
     }
@@ -298,8 +323,12 @@ public class AerieController {
 
   public boolean sendPlan(Plan plan, Duration horizonBegin, Duration horizonEnd, Map<String, AerieStateCache> cache) {
     boolean ret = true;
-    CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
-    boolean result = postRequest(planRequest);
+    var planId = planIds.get(plan);
+    boolean result = true;
+    if(planId == null) {
+      CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
+      result = postRequest(planRequest);
+    }
     if (!result) {
       ret = false;
     } else {
@@ -458,20 +487,20 @@ public class AerieController {
   protected class PlanIdRequest extends GraphRequest {
 
     public String getRequest() {
-      return "query { plans { id} } ";
+      return "query { plan { id} } ";
     }
 
-    ArrayList<String> idsL = new ArrayList<String>();
+    ArrayList<Long> idsL = new ArrayList<>();
 
-    public ArrayList<String> getIds() {
+    public ArrayList<Long> getIds() {
       return idsL;
     }
 
     @Override
     public boolean handleResponse(JSONObject response) {
-      JSONArray ids = ((JSONObject) response.get("data")).getJSONArray("plans");
+      JSONArray ids = ((JSONObject) response.get("data")).getJSONArray("plan");
       for (int i = 0; i < ids.length(); i++) {
-        idsL.add(((JSONObject) ids.get(i)).getString("id"));
+        idsL.add(((JSONObject) ids.get(i)).getLong("id"));
       }
       return true;
     }
@@ -664,32 +693,36 @@ public class AerieController {
   protected class DeletePlanRequest extends GraphRequest {
 
     Plan plan;
-    String id;
+    Long id;
 
     public DeletePlanRequest(Plan plan) {
       this.plan = plan;
     }
 
-    public DeletePlanRequest(String id) {
+    public DeletePlanRequest(Long id) {
       this.id = id;
     }
 
     @Override
     public String getRequest() {
       StringBuilder sbPlanRequest = new StringBuilder();
-      sbPlanRequest.append("mutation { deletePlan(id: \"");
+      sbPlanRequest.append("mutation { delete_plan_by_pk(id: \"");
       if (plan != null) {
         sbPlanRequest.append(getPlanId(plan));
       } else {
         sbPlanRequest.append(id);
       }
-      sbPlanRequest.append("\"){ message success }}");
+      sbPlanRequest.append("\"){ id }}");
       return sbPlanRequest.toString();
     }
 
 
     @Override
     public boolean handleResponse(JSONObject response) {
+      int id = ((JSONObject) (((JSONObject) response.get("data")).get("delete_plan_by_pk"))).getInt("id");
+      if(planIds.containsValue(id)){
+        planIds.values().remove(id);
+      }
       return true;
     }
   }

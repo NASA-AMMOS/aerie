@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 
+import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Collections;
@@ -250,6 +251,43 @@ public class ActivityInstance {
            && Objects.equals(this.duration, that.duration)
            && Objects.equals(this.parameters, that.parameters);
  */
+  }
+
+  public void instantiateVariableParameters(){
+    for (var param : parameters.entrySet()) {
+      if(isVariableParameter(param.getValue())){
+        instantiateVariableParameter(param.getKey());
+      }
+    }
+  }
+
+  /*Default policy is to query at activity start
+  * TODO: kind of defeats the purpose of an expression ?
+  * */
+  public void instantiateVariableParameter(String name) {
+    instantiateVariableParameter(name, getStartTime());
+  }
+
+  public boolean isVariableParameter(Object paramValue){
+    return (paramValue instanceof ExternalState) || (paramValue instanceof StateQueryParam);
+  }
+
+  public void instantiateVariableParameter(String name, Duration time){
+    var paramValue = parameters.get(name);
+    if(paramValue==null){
+      throw new IllegalArgumentException("Unknown parameter "+name);
+    }
+    if(!isVariableParameter(paramValue)){
+      throw new IllegalArgumentException("Parameter "+name + " is not variable");
+    }
+    if (paramValue instanceof ExternalState) {
+      @SuppressWarnings("unchecked")
+      var state = (ExternalState<?>) paramValue;
+      addParameter(name, state.getValueAtTime(time));
+    } else if(paramValue instanceof StateQueryParam) {
+      var state = (StateQueryParam) paramValue;
+      addParameter(name, state.getValue(null, Window.at(time)));
+    }
   }
 
   @Override

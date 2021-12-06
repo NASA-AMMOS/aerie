@@ -47,9 +47,9 @@ public class ActivityCreationTemplateDisjunction extends ActivityCreationTemplat
    */
   @Override
   public @NotNull
-  ActivityInstance createActivity(String name, Windows windows) {
+  ActivityInstance createActivity(String name, Windows windows, boolean instantiateVariableParameters) {
     //TODO: returns first ACT of disjunction, change it
-    return acts.get(0).createActivity(name, windows);
+    return acts.get(0).createActivity(name, windows, instantiateVariableParameters);
 
   }
 

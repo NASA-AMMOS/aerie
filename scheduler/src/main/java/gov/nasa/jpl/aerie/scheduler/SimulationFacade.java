@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.constraints.model.LinearProfilePiece;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.BooleanValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.DoubleValueMapper;
+import gov.nasa.jpl.aerie.contrib.serialization.mappers.DurationValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.IntegerValueMapper;
 import gov.nasa.jpl.aerie.contrib.serialization.mappers.StringValueMapper;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -46,6 +47,7 @@ public class SimulationFacade {
   private final Map<String, SimResource<Double>> feedersDouble;
   private final Map<String, SimResource<Boolean>> feedersBool;
   private final Map<String, SimResource<String>> feedersString;
+  private final Map<String, SimResource<Duration>> feedersDuration;
 
   private final MissionModel<?> missionModel;
 
@@ -57,6 +59,7 @@ public class SimulationFacade {
   final private static String INTEGER = "Integer";
   final private static String DOUBLE = "Double";
   final private static String BOOLEAN = "Boolean";
+  final private static String DURATION = "Duration";
 
   // maps resource names to their local type
   private Map<String, String> nameToType;
@@ -78,6 +81,13 @@ public class SimulationFacade {
       feedersInt.put(resourceName, new SimResource<>());
     }
     return feedersInt.get(resourceName);
+  }
+
+  public SimResource<Duration> getDurResource(String resourceName) {
+    if (!feedersDuration.containsKey(resourceName)) {
+      feedersDuration.put(resourceName, new SimResource<>());
+    }
+    return feedersDuration.get(resourceName);
   }
 
   /**
@@ -126,8 +136,12 @@ public class SimulationFacade {
     feedersDouble = new HashMap<>();
     feedersBool = new HashMap<>();
     feedersString = new HashMap<>();
+    feedersDuration = new HashMap<>();
   }
 
+  public PlanningHorizon getPlanningHorizon(){
+    return this.planningHorizon;
+  }
 
   /**
    * Fetches activity instance durations from last simulation
@@ -143,9 +157,15 @@ public class SimulationFacade {
     if (simAct != null) {
       return simAct.duration;
     } else {
-      System.out.println("Simulation has been launched but activity with name= "
-                         + activityInstance.getName()
-                         + " has not been found");
+      if(lastSimDriverResults.unfinishedActivities.get(activityInstance.getName()) != null){
+        System.out.println("Activity "
+                           + activityInstance.getName()
+                           + " has not finished, check planning horizon ?");
+      } else{
+        System.out.println("Simulation has been launched but activity with name= "
+                           + activityInstance.getName()
+                           + " has not been found");
+      }
     }
     return null;
   }
@@ -166,6 +186,11 @@ public class SimulationFacade {
 
       Map<String, SerializedValue> params = new HashMap<>();
       act.getParameters().forEach((name, value) -> params.put(name, this.serialize(value)));
+      if(act.getDuration()!= null) {
+        params.put("duration", this.serialize(act.getDuration()));
+      } else{
+        System.out.println("Warning : activity has no duration parameter");
+      }
       schedule.put(act.getName(), Pair.of(
           act.getStartTime(),
           new SerializedActivity(act.getType().getName(), params)));
@@ -224,7 +249,7 @@ public class SimulationFacade {
           if (!feedersDouble.containsKey(nameRes)) {
             feedersDouble.put(nameRes, new SimResource<>());
           }
-          return "Double";
+          return DOUBLE;
         }
 
         @Override
@@ -234,7 +259,7 @@ public class SimulationFacade {
           if (!feedersInt.containsKey(nameRes)) {
             feedersInt.put(nameRes, new SimResource<>());
           }
-          return "Integer";
+          return INTEGER;
         }
 
         @Override
@@ -244,23 +269,28 @@ public class SimulationFacade {
           if (!feedersBool.containsKey(nameRes)) {
             feedersBool.put(nameRes, new SimResource<>());
           }
-          return "Boolean";
+          return BOOLEAN;
         }
 
         @Override
         public String onString() {
           final var nameRes = schema.getKey();
+          //System.out.println("String = " + nameRes);
           nameToType.put(nameRes, STRING);
           if (feedersString.containsKey(nameRes)) {
             feedersString.put(nameRes, new SimResource<>());
           }
-          return "String";
+          return STRING;
         }
 
         @Override
         public String onDuration() {
-          unsupportedResources.add(schema.getKey());
-          return "Other";
+          final var nameRes = schema.getKey();
+          nameToType.put(nameRes, DURATION);
+          if (!feedersDuration.containsKey(nameRes)) {
+            feedersDuration.put(nameRes, new SimResource<>());
+          }
+          return DURATION;
         }
 
         @Override
@@ -270,17 +300,19 @@ public class SimulationFacade {
           if (!feedersString.containsKey(nameRes)) {
             feedersString.put(nameRes, new SimResource<>());
           }
-          return "String";
+          return STRING;
         }
 
         @Override
         public String onSeries(ValueSchema value) {
+          //System.out.println("Series = " + schema.getKey());
           unsupportedResources.add(schema.getKey());
           return "Other";
         }
 
         @Override
         public String onStruct(Map<String, ValueSchema> value) {
+          //System.out.println("Struct = " + schema.getKey());
           unsupportedResources.add(schema.getKey());
           return "Other";
         }
@@ -288,6 +320,7 @@ public class SimulationFacade {
         @Override
         public String onVariant(List<ValueSchema.Variant> variants) {
           final var nameRes = schema.getKey();
+          //System.out.println("Variant " + nameRes);
           nameToType.put(nameRes, STRING);
           if (!feedersString.containsKey(nameRes)) {
             feedersString.put(nameRes, new SimResource<>());
@@ -302,6 +335,12 @@ public class SimulationFacade {
       final var type = nameToType.get(entry.getKey());
       if (!unsupportedResources.contains(name)) {
         switch (type) {
+          case DURATION -> getDurResource(name).initFromSimRes(
+              name,
+              new DurationValueMapper(),
+              lastConstraintModelResults,
+              deserialize(entry.getValue(), new DurationValueMapper()),
+              this.planningHorizon.getStartAerie());
           case INTEGER -> getIntResource(name).initFromSimRes(
               name,
               new IntegerValueMapper(),
@@ -432,13 +471,19 @@ public class SimulationFacade {
     if (paramValue instanceof Long) {
       return SerializedValue.of((Long) paramValue);
     }
+    if (paramValue instanceof Integer) {
+      return SerializedValue.of((Integer) paramValue);
+    }
     if (paramValue instanceof Double) {
       return SerializedValue.of((Double) paramValue);
     }
     if (paramValue instanceof Boolean) {
       return SerializedValue.of((Boolean) paramValue);
     }
-    return null;
+    if (paramValue instanceof Duration) {
+      return SerializedValue.of( ((Duration) paramValue).in(MICROSECONDS));
+    }
+    throw new RuntimeException("Parameter type not supported");
   }
 
 }

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 
@@ -50,6 +51,11 @@ public class MissionModelWrapper {
   public ExternalState<Integer> getIntState(String name){
     return simFacade.getIntResource(name);
   }
+
+  public ExternalState<Duration> getDurState(String name){
+    return simFacade.getDurResource(name);
+  }
+
   public ExternalState<Double> getDoubleState(String name){
     return simFacade.getDoubleResource(name);
   }
@@ -80,6 +86,13 @@ public class MissionModelWrapper {
   public <T extends Comparable<T>> void add(StateDefinition<T> stateDef) {
   }
 
+  public PlanningHorizon getPlanningHorizon(){
+    return simFacade.getPlanningHorizon();
+  }
+
+  public SimulationFacade getSimulationFacade() {
+    return simFacade;
+  }
   /**
    * adds a new global constraint to the mission model
    *
