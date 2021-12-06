@@ -91,7 +91,7 @@ end $$;
 
 do $$ begin
 create trigger delete_dataset_on_delete_trigger
-  before delete on simulation_dataset
+  after delete on simulation_dataset
   for each row
   execute function delete_dataset_on_delete();
 exception
