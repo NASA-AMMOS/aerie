@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
-import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.realDynamicsP;
+import static gov.nasa.jpl.aerie.merlin.server.http.ProfileParsers.realDynamicsP;
 
 /*package-local*/ final class ProfileRepository {
   static ProfileSet getProfiles(
