@@ -200,7 +200,9 @@ public record SynchronousSchedulerAgent(
     //TODO: allow for separate control of windows for constraint analysis vs ability to schedule activities
     //      (eg constraint may need view into immutable past to know how to schedule things in the future)
     config.setHorizon(planMetadata.horizon());
-    return new PrioritySolver(config, problem);
+    final var solver = new PrioritySolver(config, problem);
+    solver.checkSimBeforeInsertingActInPlan();
+    return solver;
   }
 
   /**
