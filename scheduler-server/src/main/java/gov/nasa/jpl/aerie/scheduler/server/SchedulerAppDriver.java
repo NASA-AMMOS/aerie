@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.scheduler.server;
 
 import gov.nasa.jpl.aerie.scheduler.server.config.AppConfiguration;
 import gov.nasa.jpl.aerie.scheduler.server.config.JavalinLoggingState;
+import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.http.SchedulerBindings;
 import gov.nasa.jpl.aerie.scheduler.server.services.GraphQLMerlinService;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
@@ -30,12 +31,12 @@ public final class SchedulerAppDriver {
    */
   public static void main(final String[] args) {
     //load the service configuration options
-    final var appConfig = loadConfiguration();
+    final var config = loadConfiguration();
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
-    final var merlinService = new GraphQLMerlinService(appConfig.merlinGraphqlURI());
+    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(),config.outputMode());
     final var scheduleAgent = new SynchronousSchedulerAgent(
-        merlinService, appConfig.missionModelJarsDir(), appConfig.missionRuleJarPath());
+        merlinService, config.missionModelJarsDir(), config.missionRuleJarPath());
     final var schedulerService = new UncachedSchedulerService(scheduleAgent);
     final var scheduleAction = new ScheduleAction(merlinService, schedulerService);
 
@@ -45,7 +46,7 @@ public final class SchedulerAppDriver {
     //configure the http server (the consumer lambda overlays additional config on the input javalinConfig)
     final var javalin = Javalin.create(javalinConfig -> {
       javalinConfig.showJavalinBanner = false;
-      if (appConfig.javalinLogging() == JavalinLoggingState.Enabled) {
+      if (config.javalinLogging() == JavalinLoggingState.Enabled) {
         javalinConfig.enableDevLogging();
       }
       javalinConfig
@@ -55,7 +56,7 @@ public final class SchedulerAppDriver {
     });
 
     //start the http server and handle requests as configured above
-    javalin.start(appConfig.httpPort());
+    javalin.start(config.httpPort());
   }
 
   /**
@@ -72,7 +73,9 @@ public final class SchedulerAppDriver {
             JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
         URI.create(getEnvOrFallback("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
         Path.of(getEnvOrFallback("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
-        Path.of(getEnvOrFallback("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")));
+        Path.of(getEnvOrFallback("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")),
+        PlanOutputMode.valueOf((getEnvOrFallback("SCHED_OUTPUT_MODE", "CreateNewOutputPlan")))
+        );
   }
 
   /**
@@ -83,7 +86,7 @@ public final class SchedulerAppDriver {
    * @return the value of the requested environment variable if it exists in the environment (even if it is the empty
    *     string), otherwise the specified fallback value
    */
-  private static final String getEnvOrFallback(final String key, final String fallback) {
+  private static String getEnvOrFallback(final String key, final String fallback) {
     final var env = System.getenv(key);
     return env == null ? fallback : env;
   }

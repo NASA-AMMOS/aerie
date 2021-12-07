@@ -70,6 +70,8 @@ Additionally, Hasura provides documentation on it's own environment variables yo
 | `MERLIN_GRAPHQL_URL` | URI of the Merlin graphql interface to call                            | `string` | http://hasura:8080/v1/graphql    |
 | `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container (for backdoor jar access)    | `string` | /usr/src/app/merlin_file_store   |
 | `SCHED_RULES_JAR`    | Jar file to load scheduling rules from (until user input to database)  | `string` | /usr/src/app/merlin_file_store/sched_rules.jar |
+| `SCHED_OUTPUT_MODE`  | how scheduler output is sent back to aerie                             | `string` | UpdateInputPlanWithNewActivities |
+Jar file to load scheduling rules from (until user input to database)  | `string` | /usr/src/app/merlin_file_store/sched_rules.jar |
 
 
 

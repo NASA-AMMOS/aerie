@@ -278,7 +278,7 @@ public record SynchronousSchedulerAgent(
    * @return summary of the state of the plan after scheduling ran; eg goal success metrics, associated instances, etc
    */
   private ScheduleResults collectResults(Plan plan) {
-    final var activityCount = plan.getActivitiesByType().size();
+    final var activityCount = plan.getActivities().size();
 
     final var goalScores = plan
         .getEvaluations()

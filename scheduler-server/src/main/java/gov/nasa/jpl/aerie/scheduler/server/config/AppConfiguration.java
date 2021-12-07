@@ -20,7 +20,8 @@ public record AppConfiguration(
     JavalinLoggingState javalinLogging,
     URI merlinGraphqlURI,
     Path merlinFileStore,
-    Path missionRuleJarPath
+    Path missionRuleJarPath,
+    PlanOutputMode outputMode
 )
 {
   public AppConfiguration {
@@ -28,6 +29,7 @@ public record AppConfiguration(
     Objects.requireNonNull(merlinGraphqlURI);
     Objects.requireNonNull(merlinFileStore);
     Objects.requireNonNull(missionRuleJarPath);
+    Objects.requireNonNull(outputMode);
     //NB: ok if the merlin file store not created yet at app init; just needs to exist by first use
   }
 

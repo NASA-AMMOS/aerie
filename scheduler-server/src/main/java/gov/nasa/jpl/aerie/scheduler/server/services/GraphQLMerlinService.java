@@ -12,6 +12,7 @@ import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PlanningHorizon;
 import gov.nasa.jpl.aerie.scheduler.Time;
+import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
 import javax.json.Json;
@@ -36,8 +37,9 @@ import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGr
  * {@inheritDoc}
  *
  * @param merlinGraphqlURI endpoint of the merlin graphql service that should be used to access all plan data
+ * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
  */
-public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinService {
+public record GraphQLMerlinService(URI merlinGraphqlURI, PlanOutputMode outputMode) implements MerlinService {
 
   /**
    * timeout for http graphql requests issued to aerie
@@ -189,9 +191,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   public void updatePlanActivities(PlanMetadata planMetadata, MissionModelWrapper mission, Plan plan) {
     final var controller = new AerieController(
         this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
-    controller.updatePlan(planMetadata.planId(), plan);
+    switch (this.outputMode) {
+      case CreateNewOutputPlan -> {
+        controller.initEmptyPlan(plan, planMetadata.horizon().getStartAerie(), planMetadata.horizon().getEndAerie(),
+                                 null);
 
-    //TODO: leverage forthcoming AERIE-1555 graphql mutation to store scheduler objects into plan
+        //TODO: really aerie should be creating any necessary extra containers
+        controller.createSimulation(plan); //create sim storage space since doesn't happen automatically (else breaks)
+
+        controller.sendPlan(plan, planMetadata.horizon().getStartAerie(), planMetadata.horizon().getEndAerie(), null);
+      }
+      case UpdateInputPlanWithNewActivities -> controller.updatePlan(planMetadata.planId(), plan);
+      default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);
+    }
   }
 
 }

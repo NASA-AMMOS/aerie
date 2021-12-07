@@ -81,6 +81,7 @@ services:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
       SCHED_RULES_JAR: /usr/src/app/merlin_file_store/sched_rules.jar
+      SCHED_OUTPUT_MODE: UpdateInputPlanWithNewActivities
     ports: ["27193:27193"]
     restart: always
     volumes:
