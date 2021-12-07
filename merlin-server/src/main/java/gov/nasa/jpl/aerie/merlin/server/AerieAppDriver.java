@@ -56,12 +56,11 @@ public final class AerieAppDriver {
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
       if (configuration.javalinLogging().isEnabled()) config.enableDevLogging();
-      config
-          .enableCorsForAllOrigins()
-          .registerPlugin(merlinBindings)
-          .registerPlugin(new LocalAppExceptionBindings())
-          .registerPlugin(new MissionModelRepositoryExceptionBindings())
-          .registerPlugin(new MissionModelExceptionBindings());
+      config.enableCorsForAllOrigins();
+      config.registerPlugin(merlinBindings);
+      config.registerPlugin(new LocalAppExceptionBindings());
+      config.registerPlugin(new MissionModelRepositoryExceptionBindings());
+      config.registerPlugin(new MissionModelExceptionBindings());
     });
 
     // Start the HTTP server.
