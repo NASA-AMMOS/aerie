@@ -1,6 +1,5 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
-import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.BasicParsers;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
@@ -24,11 +23,12 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
+
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLInterval;
+import static gov.nasa.jpl.aerie.scheduler.server.graphql.GraphQLParsers.parseGraphQLTimestamp;
 
 /**
  * {@inheritDoc}
@@ -98,13 +98,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * the formatting expected in timestamptz scalars returned by graphql queries
-   */
-  //TODO: what about sub-seconds in plan start_time?
-  //TODO: inconsistent with DOY format in Timestamp.fromString, MerlinParsers.timestampP, etc used in merlin-server
-  private static final DateTimeFormatter timestampFormat = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-
-  /**
    * {@inheritDoc}
    *
    * retrieves the metadata via a single atomic graphql query
@@ -128,9 +121,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       final var plan = response.getJsonObject("data").getJsonObject("plan_by_pk");
       final long planPK = plan.getJsonNumber("id").longValue();
       final long planRev = plan.getJsonNumber("revision").longValue();
-      final var startTime_zoned = ZonedDateTime.parse(plan.getString("start_time"), timestampFormat);
-      final var startTime = new Timestamp(startTime_zoned.toInstant());
-      final var duration = Interval.parse(plan.getString("duration"));
+      final var startTime = parseGraphQLTimestamp(plan.getString("start_time"));
+      final var duration = parseGraphQLInterval(plan.getString("duration"));
 
       final var model = plan.getJsonObject("mission_model");
       final var modelId = model.getJsonNumber("id").longValue();
