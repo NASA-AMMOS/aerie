@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 
+import java.io.IOException;
 import java.util.Objects;
 
 /**
@@ -52,7 +53,7 @@ public record ScheduleAction(MerlinService merlinService, SchedulerService sched
    * @throws NoSuchPlanException if the target plan could not be found
    */
   //TODO: the scheduling run will mutate the input plan! perhaps output should be new/distinct?
-  public Response run(final String planId) throws NoSuchPlanException {
+  public Response run(final String planId) throws NoSuchPlanException, IOException {
     //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
     final long planRev = this.merlinService.getPlanMetadata(planId).planRev();
 

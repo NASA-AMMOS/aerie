@@ -49,7 +49,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * @param gqlStr the graphQL query or mutation to send to aerie
    * @return the json response returned by aerie, or an empty optional in case of io errors
    */
-  private Optional<JsonObject> postRequest(String gqlStr) {
+  private Optional<JsonObject> postRequest(String gqlStr) throws IOException {
     try {
       final var reqBody = Json.createObjectBuilder().add("query", gqlStr).build();
       final var httpReq = HttpRequest
@@ -68,9 +68,11 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       }
       final var respBody = Json.createReader(new GZIPInputStream(httpResp.body())).readObject();
       return Optional.of(respBody);
-    } catch (IOException | InterruptedException | JsonException e) { // or also JsonParsingException
+    } catch (final InterruptedException e) {
       //TODO: maybe retry if interrupted? but depends on semantics (eg don't duplicate mutation if not idempotent)
       return Optional.empty();
+    } catch (final JsonException e) { // or also JsonParsingException
+      throw new IOException("json parse error on graphql response:" + e.getMessage(), e);
     }
   }
 
@@ -81,7 +83,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * {@inheritDoc}
    */
   @Override
-  public long getPlanRevision(final String planId) throws NoSuchPlanException {
+  public long getPlanRevision(final String planId) throws IOException, NoSuchPlanException {
     final var request = "query getPlanRevision { plan_by_pk( id: %s ) { revision } }"
         .formatted(planId);
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
@@ -99,7 +101,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
    * retrieves the metadata via a single atomic graphql query
    */
   @Override
-  public PlanMetadata getPlanMetadata(final String planId) throws NoSuchPlanException {
+  public PlanMetadata getPlanMetadata(final String planId) throws IOException, NoSuchPlanException {
     final var request = (
         "query getPlanMetadata { "
         + "plan_by_pk( id: %s ) { "

@@ -94,7 +94,7 @@ public record SynchronousSchedulerAgent(
   private PlanMetadata getMerlinPlanMetadata(final String planId) {
     try {
       return merlinService.getPlanMetadata(planId);
-    } catch (NoSuchPlanException e) {
+    } catch (NoSuchPlanException | IOException e) {
       throw new ResultsProtocolFailure(e);
     }
   }
@@ -109,7 +109,7 @@ public record SynchronousSchedulerAgent(
   private long getMerlinPlanRev(final String planId) {
     try {
       return merlinService.getPlanRevision(planId);
-    } catch (NoSuchPlanException e) {
+    } catch (NoSuchPlanException | IOException e) {
       throw new ResultsProtocolFailure(e);
     }
   }

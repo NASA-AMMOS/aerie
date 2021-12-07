@@ -1,11 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleAction;
 import gov.nasa.jpl.aerie.scheduler.server.services.ScheduleResults;
 
 import javax.json.Json;
 import javax.json.JsonValue;
+import java.io.IOException;
 
 /**
  * json serialization methods for data entities used in the scheduler response bodies
@@ -56,4 +58,18 @@ public class ResponseSerializers {
             Json::createValue, results.goalScores()))
         .build();
   }
+
+  /**
+   * create report of given exception that can be passed as json payload
+   *
+   * @param e the exception to generate json report for
+   * @return a json serialization of the exception details
+   */
+  public static JsonValue serializeException(final Exception e) {
+    //TODO: stack trace or other details back to ui / client?
+    return Json.createObjectBuilder()
+               .add("message", e.toString())
+               .build();
+  }
+
 }

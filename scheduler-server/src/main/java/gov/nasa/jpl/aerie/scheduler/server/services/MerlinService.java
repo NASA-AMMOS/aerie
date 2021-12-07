@@ -3,6 +3,8 @@ package gov.nasa.jpl.aerie.scheduler.server.services;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
+import java.io.IOException;
+
 /**
  * interface for retrieving / storing details to merlin
  */
@@ -15,7 +17,7 @@ public interface MerlinService {
    * @return the current revision number of the plan as stored in aerie
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  long getPlanRevision(final String planId) throws NoSuchPlanException;
+  long getPlanRevision(final String planId) throws IOException, NoSuchPlanException;
 
   /**
    * fetch current metadata of the target plan (not the activity instance content)
@@ -24,6 +26,6 @@ public interface MerlinService {
    * @return metadata about the plan that is useful to the scheduler, including current plan revision
    * @throws NoSuchPlanException when the plan container does not exist in aerie
    */
-  PlanMetadata getPlanMetadata(String planId) throws NoSuchPlanException;
+  PlanMetadata getPlanMetadata(String planId) throws IOException, NoSuchPlanException;
 
 }

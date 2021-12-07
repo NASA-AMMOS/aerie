@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.http;
 
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.server.AerieAppDriver;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
@@ -12,13 +13,16 @@ import io.javalin.http.Context;
 
 import javax.json.Json;
 import javax.json.stream.JsonParsingException;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeInvalidEntityException;
 import static gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeInvalidJsonException;
-import static gov.nasa.jpl.aerie.merlin.server.http.ResponseSerializers.serializeNoSuchPlanException;
+import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeException;
 import static gov.nasa.jpl.aerie.scheduler.server.http.ResponseSerializers.serializeScheduleResultsResponse;
 import static gov.nasa.jpl.aerie.scheduler.server.http.SchedulerParsers.hasuraPlanActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
@@ -38,6 +42,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
     Objects.requireNonNull(schedulerService, "schedulerService must be non-null");
     Objects.requireNonNull(scheduleAction, "scheduleAction must be non-null");
   }
+  private static final Logger log = Logger.getLogger(AerieAppDriver.class.getName());
 
   /**
    * apply all scheduler http bindings to the provided javalin server
@@ -66,13 +71,15 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
 
       final var response = this.scheduleAction.run(planId);
       ctx.result(serializeScheduleResultsResponse(response).toString());
-
+    } catch (final IOException e) {
+      log.log(Level.SEVERE,"low level input/output problem during scheduling",e);
+      ctx.status(400).result(serializeException(e).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(serializeInvalidEntityException(ex).toString());
     } catch (final InvalidJsonException ex) {
       ctx.status(400).result(serializeInvalidJsonException(ex).toString());
     } catch (final NoSuchPlanException ex) {
-      ctx.status(404).result(serializeNoSuchPlanException(ex).toString());
+      ctx.status(404).result(serializeException(ex).toString());
     }
   }
 
