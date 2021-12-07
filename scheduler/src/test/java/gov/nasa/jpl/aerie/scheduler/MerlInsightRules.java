@@ -64,7 +64,7 @@ public class MerlInsightRules extends Problem {
     }
 
     ProceduralCreationGoal dsnGoal = new ProceduralCreationGoal.Builder()
-        .named("Schedule DSN contacts")
+        .named("Schedule DSN contacts for initial setup")
         .withPriority(50)
         .forAllTimeIn(planningHorizon.getHor())
         .generateWith((plan) -> actList)
@@ -540,7 +540,7 @@ public class MerlInsightRules extends Problem {
 
     var goals = new ArrayList<Goal>();
 
-    goals.add(generateDSNVisibilityAllocationGoal());
+    //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the following goals
 
     StateConstraintExpression sc1 = new StateConstraintExpression.Builder()
         .andBuilder()
