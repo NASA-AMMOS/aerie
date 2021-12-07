@@ -20,6 +20,7 @@ public class LoadRulesFromJarTest {
    * @throws IllegalAccessException
    */
   @Test
+  @Disabled("requires placing the pre-built rules jar file in resource dir")
   public void countMerlinSightGoals()
   throws ClassNotFoundException, IOException, InvocationTargetException, InstantiationException
   {
