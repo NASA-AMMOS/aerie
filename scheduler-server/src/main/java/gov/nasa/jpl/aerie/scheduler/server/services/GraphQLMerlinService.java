@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler.server.services;
 
 import gov.nasa.jpl.aerie.json.BasicParsers;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
@@ -24,6 +25,7 @@ import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
 
@@ -110,9 +112,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         + "  id revision start_time duration "
         + "  mission_model { "
         + "    id name version "
-        + "    uploaded_file { path } "
-        + "    parameters { parameters } "
+        + "    uploaded_file { name } "
         + "  } "
+        + "  simulations(limit:1, order_by:{revision:desc} ) { arguments }"
         + "} }"
     ).formatted(planId);
     final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(planId));
@@ -130,12 +132,19 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       final var modelVersion = model.getString("version");
 
       final var file = model.getJsonObject("uploaded_file");
-      final var modelPath = Path.of(file.getString("path"));
+      final var modelPath = Path.of(file.getString("name"));
+      //NB: not using the "path" field because it is just a hex-encoded duplicate of the name field anyway
+      //NB: the name includes the .jar extension
 
-      final var params = model.getJsonObject("parameters").getJsonObject("parameters");
-      final var modelConfiguration = BasicParsers
-          .mapP(new SerializedValueJsonParser()).parse(params)
-          .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
+      //TODO: how to know right model config for scheduling? for now choosing latest sim setup (see query above)
+      var modelConfiguration = Map.<String, SerializedValue>of();
+      final var sims = plan.getJsonArray("simulations");
+      if (!sims.isEmpty()) {
+        final var args = sims.getJsonObject(0).getJsonObject("arguments");
+        modelConfiguration = BasicParsers
+            .mapP(new SerializedValueJsonParser()).parse(args)
+            .getSuccessOrThrow((reason) -> new InvalidJsonException(new InvalidEntityException(List.of(reason))));
+      }
 
       //TODO: unify scheduler/aerie time types to avoid conversions
       final var endTime = new Timestamp((Instant) duration.addTo(startTime.toInstant()));
