@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.scheduler.GlobalConstraint;
 import gov.nasa.jpl.aerie.scheduler.Goal;
 import gov.nasa.jpl.aerie.scheduler.HuginnConfiguration;
+import gov.nasa.jpl.aerie.scheduler.JarClassLoader;
 import gov.nasa.jpl.aerie.scheduler.MissionModelWrapper;
 import gov.nasa.jpl.aerie.scheduler.Plan;
 import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
@@ -15,7 +16,10 @@ import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,18 +28,21 @@ import java.util.stream.Collectors;
  * agent that handles posed scheduling requests by blocking the requester thread until scheduling is complete
  *
  * @param merlinService interface for querying plan details from merlin
- * @param missionJarsPath path to parent directory for mission model jars (interim backdoor jar file access)
+ * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
+ * @param rulesJarPath path to jar file to load scheduling rules from (interim solution for user input rules)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
     GraphQLMerlinService merlinService,
-    Path missionJarsPath
+    Path modelJarsDir,
+    Path rulesJarPath
 )
     implements SchedulerAgent
 {
   public SynchronousSchedulerAgent {
     Objects.requireNonNull(merlinService);
-    Objects.requireNonNull(missionJarsPath);
+    Objects.requireNonNull(modelJarsDir);
+    Objects.requireNonNull(rulesJarPath);
   }
 
   /**
@@ -168,10 +175,16 @@ public record SynchronousSchedulerAgent(
    */
   private List<Goal> loadGoals(PlanMetadata planMetadata, MissionModelWrapper mission) {
     //TODO: is the plan and mission model enough to find the relevant goals? (eg what about sandbox goals?)
-    //TODO: (v0.10.0) load scheduling goals from hardcoded jar into problem
-    //TODO: (future) load scheduling goals from scheduler data store into problem
     //TODO: somehow apply user control over which scheduling rules to actually run vs just check
-    return List.of();
+    //TODO: load scheduling goals from scheduler data store into problem
+    try {
+      //for v0.10.0, load all hardcoded scheduling goals from a jar into the problem
+      final var problems = JarClassLoader.loadProblemsFromJar(this.rulesJarPath.toString(), mission);
+      return problems.stream().map(Problem::getGoals).flatMap(Collection::stream).collect(Collectors.toList());
+    } catch (IOException | ClassNotFoundException | InvocationTargetException | InstantiationException e) {
+      //TODO: class-loader related exceptions will not be relevant once interim jar-based rule loading is replaced
+      throw new ResultsProtocolFailure(e);
+    }
   }
 
   /**
@@ -220,10 +233,10 @@ public record SynchronousSchedulerAgent(
   private MissionModelWrapper loadMissionModel(PlanMetadata plan) {
     try {
       final var missionConfig = SerializedValue.of(plan.modelConfiguration());
-      final var jarPath = missionJarsPath.resolve(plan.modelPath());
+      final var modelJarPath = modelJarsDir.resolve(plan.modelPath());
 
       final var aerieModel = MissionModelLoader.loadMissionModel(
-          missionConfig, jarPath, plan.modelName(), plan.modelVersion());
+          missionConfig, modelJarPath, plan.modelName(), plan.modelVersion());
 
       //TODO: unify model access patterns to avoid disparate wrappers/facades
       return new MissionModelWrapper(aerieModel, plan.horizon());

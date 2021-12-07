@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class AerieControllerTest {
-  private final MissionModelWrapper missionModel = new MissionModelWrapper(TestUtility.getMerlinSightMissionModel(), new PlanningHorizon(new Time(0), new Time(100000)));
+  private final PlanningHorizon horizon = new PlanningHorizon(new Time(0), new Time(100000));
+  private final MissionModelWrapper missionModel = TestUtility.getMerlinSightMissionModel(horizon);
   private final String URL_AERIE = TestUtility.LOCAL_AERIE;
   private final int MISSION_MODEL_ID = TestUtility.latest;
 

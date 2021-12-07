@@ -34,7 +34,8 @@ public final class SchedulerAppDriver {
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
     final var merlinService = new GraphQLMerlinService(appConfig.merlinGraphqlURI());
-    final var scheduleAgent = new SynchronousSchedulerAgent(merlinService, appConfig.merlinJarsPath());
+    final var scheduleAgent = new SynchronousSchedulerAgent(
+        merlinService, appConfig.missionModelJarsDir(), appConfig.missionRuleJarPath());
     final var schedulerService = new UncachedSchedulerService(scheduleAgent);
     final var scheduleAction = new ScheduleAction(merlinService, schedulerService);
 
@@ -70,7 +71,8 @@ public final class SchedulerAppDriver {
         Boolean.parseBoolean(getEnvOrFallback("SCHED_LOGGING", "true")) ?
             JavalinLoggingState.Enabled : JavalinLoggingState.Disabled,
         URI.create(getEnvOrFallback("MERLIN_GRAPHQL_URL", "http://localhost:8080/v1/graphql")),
-        Path.of(getEnvOrFallback("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")));
+        Path.of(getEnvOrFallback("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
+        Path.of(getEnvOrFallback("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")));
   }
 
   /**
