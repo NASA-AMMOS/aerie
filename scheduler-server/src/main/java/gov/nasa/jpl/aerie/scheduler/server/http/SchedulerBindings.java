@@ -42,6 +42,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
     Objects.requireNonNull(schedulerService, "schedulerService must be non-null");
     Objects.requireNonNull(scheduleAction, "scheduleAction must be non-null");
   }
+
   private static final Logger log = Logger.getLogger(AerieAppDriver.class.getName());
 
   /**
@@ -72,7 +73,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
       final var response = this.scheduleAction.run(planId);
       ctx.result(serializeScheduleResultsResponse(response).toString());
     } catch (final IOException e) {
-      log.log(Level.SEVERE,"low level input/output problem during scheduling",e);
+      log.log(Level.SEVERE, "low level input/output problem during scheduling", e);
       ctx.status(400).result(serializeException(e).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(serializeInvalidEntityException(ex).toString());

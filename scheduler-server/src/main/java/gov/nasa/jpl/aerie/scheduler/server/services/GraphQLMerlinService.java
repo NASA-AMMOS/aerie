@@ -24,6 +24,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
@@ -96,6 +98,13 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
+   * the formatting expected in timestamptz scalars returned by graphql queries
+   */
+  //TODO: what about sub-seconds in plan start_time?
+  //TODO: inconsistent with DOY format in Timestamp.fromString, MerlinParsers.timestampP, etc used in merlin-server
+  private static final DateTimeFormatter timestampFormat = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+
+  /**
    * {@inheritDoc}
    *
    * retrieves the metadata via a single atomic graphql query
@@ -119,7 +128,8 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       final var plan = response.getJsonObject("data").getJsonObject("plan_by_pk");
       final long planPK = plan.getJsonNumber("id").longValue();
       final long planRev = plan.getJsonNumber("revision").longValue();
-      final var startTime = Timestamp.fromString(plan.getString("start_time"));
+      final var startTime_zoned = ZonedDateTime.parse(plan.getString("start_time"), timestampFormat);
+      final var startTime = new Timestamp(startTime_zoned.toInstant());
       final var duration = Interval.parse(plan.getString("duration"));
 
       final var model = plan.getJsonObject("mission_model");
