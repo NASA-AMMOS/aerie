@@ -41,7 +41,7 @@ dependencies {
   compileOnly project(':banananation')
 
   implementation 'com.google.guava:guava:31.0.1-jre'
-  implementation 'org.json:json:20171018'
+  implementation 'org.json:json:20211205'
   implementation 'org.jfree:jfreechart:1.5.3'
   implementation 'com.google.code.gson:gson:2.8.9'
   implementation 'it.univr.di:CSTNU:3.6'
