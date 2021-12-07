@@ -26,7 +26,7 @@ javadoc.options.addStringOption('Xdoclint:none', '-quiet')
 
 dependencies {
   api 'JNISpice:JNISpice:1.0-20190517.205223-2'
-  api 'org.apache.commons:commons-lang3:3.9'
+  api 'org.apache.commons:commons-lang3:3.12.0'
   api 'jakarta.json:jakarta.json-api:1.1.5'
 
   implementation 'org.apache.commons:commons-collections4:4.4'

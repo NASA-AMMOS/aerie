@@ -64,7 +64,7 @@ public final class PostgresParsers {
       .optionalField("directiveId", stringP)
       .field("arguments", activityArgumentsP)
         .map(Iso.of(
-            untuple(Pair::of),
+            untuple((directiveId, arguments) -> Pair.of(directiveId, arguments)),
             $ -> tuple($.getLeft(), $.getRight())
         ));
 }
