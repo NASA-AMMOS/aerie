@@ -33,7 +33,7 @@ test {
 }
 
 dependencies {
-  api 'com.apollographql.apollo:apollo-api:2.5.5'
+  api 'com.apollographql.apollo:apollo-api:2.5.11'
   compileOnly project(':merlin-framework')
   compileOnly project(':merlin-driver')
   compileOnly project(':constraints')
