@@ -131,6 +131,10 @@ public class PrioritySolver implements Solver {
     evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
 
+    //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
+    if (problem.getMissionModel() != null && problem.getMissionModel().getMissionModel() != null) {
+      problem.getMissionModel().getSimulationFacade().simulatePlan(plan);
+    }
   }
 
   /**

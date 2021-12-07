@@ -44,6 +44,10 @@ public class MissionModelWrapper {
     add(new ActivityType("HorizonMarker"));
   }
 
+  public MissionModelWrapper(PlanningHorizon horizon) {
+    this(null, horizon);
+  }
+
   public MissionModelWrapper() {
     this(null, null);
   }
