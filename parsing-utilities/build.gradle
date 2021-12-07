@@ -14,7 +14,7 @@ test {
 }
 
 dependencies {
-  api 'org.eclipse:yasson:1.0.5'
+  api 'org.glassfish:javax.json:1.1.4'
   api 'org.apache.commons:commons-lang3:3.12.0'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
