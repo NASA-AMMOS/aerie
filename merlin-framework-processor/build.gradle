@@ -15,7 +15,7 @@ dependencies {
   implementation project(':contrib')
 
   implementation 'org.apache.commons:commons-lang3:3.9'
-  implementation 'com.squareup:javapoet:1.11.1'
+  implementation 'com.squareup:javapoet:1.13.0'
 }
 
 publishing {
