@@ -5,13 +5,13 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.Map;
 
-public class TimeExpressionRelative extends TimeExpression {
+public class TimeExpressionRelativeFixed extends TimeExpression {
 
   protected TimeAnchor anchor;
   protected boolean fixed = true;
   protected String name;
 
-  public TimeExpressionRelative(TimeAnchor anchor, boolean fixed, String name) {
+  public TimeExpressionRelativeFixed(TimeAnchor anchor, boolean fixed, String name) {
     this.fixed = fixed;
     this.anchor = anchor;
     this.name = name;

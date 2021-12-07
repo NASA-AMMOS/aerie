@@ -317,14 +317,14 @@ public final class Duration implements Comparable<Duration> {
 
   /** @see Duration#min(Duration, Duration) */
   public static Duration min(final Duration... durations) {
-    var minimum = Duration.MIN_VALUE;
+    var minimum = Duration.MAX_VALUE;
     for (final var duration : durations) minimum = Duration.min(minimum, duration);
     return minimum;
   }
 
   /** @see Duration#max(Duration, Duration) */
   public static Duration max(final Duration... durations) {
-    var maximum = Duration.MAX_VALUE;
+    var maximum = Duration.MIN_VALUE;
     for (final var duration : durations) maximum = Duration.max(maximum, duration);
     return maximum;
   }

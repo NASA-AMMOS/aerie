@@ -47,7 +47,7 @@ public class TestCardinalityGoal {
 
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
-    var conflicts = goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
+    var conflicts = goal.controllableGetConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
     assert(conflicts.size()==6);
   }
 
@@ -93,11 +93,8 @@ public class TestCardinalityGoal {
 
     var evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
-    var conflicts = goal.getConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
+    var conflicts = goal.controllableGetConflictsDurAndOccur(plan, Duration.of(12, Duration.SECONDS), 3);
     assert(conflicts.size()==5);
-    var conflictsArr = conflicts.toArray(new MissingActivityInstanceConflict[conflicts.size()]);
-    assert(conflictsArr[2].instance.getDuration().isEqualTo(Duration.of(4, Duration.SECONDS)));
-    assert(conflictsArr[4].instance.getDuration().isEqualTo(Duration.of(4, Duration.SECONDS)));
   }
 
 }

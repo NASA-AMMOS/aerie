@@ -20,7 +20,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    */
   public MissingActivityTemplateConflict(
       ActivityTemplateGoal goal,
-      Windows temporalContext)
+      Windows temporalContext, ActivityCreationTemplate template)
   {
     super(goal);
 
@@ -29,6 +29,7 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
           "creating missing activity template conflict requires non-null temporal context");
     }
     this.temporalContext = temporalContext;
+    this.template = template;
   }
 
   /**
@@ -63,6 +64,13 @@ public class MissingActivityTemplateConflict extends MissingActivityConflict {
    *
    * see more details at accessor getTemporalContext()
    */
-  private Windows temporalContext;
+  private final Windows temporalContext;
+  /**
+   * The conflict can constraint the goal template to guide the search
+   */
+  private final ActivityCreationTemplate template;
 
+  public ActivityCreationTemplate getActTemplate() {
+    return template;
+  }
 }

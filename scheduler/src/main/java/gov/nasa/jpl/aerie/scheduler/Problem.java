@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.Collection;
+
 /**
  * description of a planning problem to be solved
  */
@@ -22,17 +24,17 @@ public class Problem {
   /**
    * the mission model that this problem is based on
    */
-  private MissionModelWrapper mission;
+  protected MissionModelWrapper mission;
 
   /**
    * the initial seed plan to start scheduling from
    */
-  private Plan initialPlan;
+  protected Plan initialPlan;
 
   /**
    * container of all goals in the problem, indexed by name
    */
-  private java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
+  protected java.util.HashMap<String, Goal> goalsByName = new java.util.HashMap<>();
 
   /**
    * fetches the mission model that this problem is based on
@@ -59,6 +61,12 @@ public class Problem {
    */
   public void setInitialPlan(Plan plan) {
     initialPlan = plan;
+  }
+
+  public void addAll(Collection<Goal> goals){
+    for(var goal:goals){
+      add(goal);
+    }
   }
 
   /**

@@ -10,6 +10,7 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
   private TimeExpression startExpr;
   private TimeExpression endExpr;
+  private DurationExpression durExpr;
 
   /**
    * the builder can construct goals piecemeal via a series of method calls
@@ -38,6 +39,12 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
+    protected DurationExpression durExpression;
+    public Builder durationIn(DurationExpression durExpr){
+      this.durExpression = durExpr;
+      return getThis();
+    }
+
     protected TimeExpression startExpr;
 
     public Builder endsAt(TimeExpression timeExpression) {
@@ -58,13 +65,28 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
       return getThis();
     }
 
-    public Builder startsAfter(TimeAnchor anchor) {
+    public Builder endsBefore(TimeExpression expr) {
+      endExpr = TimeExpression.endsBefore(expr);
+      return getThis();
+    }
+
+    public Builder startsAfterEnd() {
+      startExpr = TimeExpression.afterEnd();
+      return getThis();
+    }
+
+    public Builder startsAfterStart() {
       startExpr = TimeExpression.afterStart();
       return getThis();
     }
 
-    public Builder endsBefore(TimeAnchor anchor) {
+    public Builder endsBeforeEnd() {
       endExpr = TimeExpression.beforeEnd();
+      return getThis();
+    }
+
+    public Builder endsAfterEnd() {
+      endExpr = TimeExpression.afterEnd();
       return getThis();
     }
 
@@ -104,12 +126,12 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
 
       goal.endExpr = endExpr;
 
+      goal.durExpr = durExpression;
 
       return goal;
     }
 
   }//Builder
-
 
   /**
    * {@inheritDoc}
@@ -123,64 +145,32 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
     final var conflicts = new java.util.LinkedList<Conflict>();
 
     Windows anchors = expr.computeRange(plan, Windows.forever());
-
     for (var window : anchors) {
 
-      //System.out.println("Anchor for coexist act : " + window.toString());
-
-      //ActivityExpression.AbstractBuilder<?, ? extends ActivityCreationTemplate> actTB = this.desiredActTemplate.getNewBuilder();
       boolean disj = false;
       ActivityExpression.AbstractBuilder actTB = null;
       if (this.desiredActTemplate instanceof ActivityCreationTemplateDisjunction) {
         disj = true;
         actTB = new ActivityCreationTemplateDisjunction.OrBuilder();
-      } else if (this.desiredActTemplate instanceof ActivityCreationTemplate) {
+      } else if (this.desiredActTemplate != null) {
         actTB = new ActivityCreationTemplate.Builder();
       }
-
-      //ActivityCreationTemplate.Builder actTB = new ActivityCreationTemplate.Builder();
       actTB.basedOn(this.desiredActTemplate);
 
-      Window startTimeRange = null;
-
-
-      if (this.startExpr != null && this.endExpr != null) {
-
+      if(this.startExpr != null) {
+        Window startTimeRange = null;
         startTimeRange = this.startExpr.computeTime(plan, window);
         actTB.startsIn(startTimeRange);
-        Window endTimeRange = this.endExpr.computeTime(plan, window);
-        actTB.endsIn(endTimeRange);
-
       }
-      //second part is useless but makes it more readeable
-      else if (this.startExpr != null && this.endExpr == null) {
-        startTimeRange = this.startExpr.computeTime(plan, window);
-        actTB.startsIn(startTimeRange);
-        Window rangeDur = desiredActTemplate.getDurationRange();
-        if (rangeDur != null) {
-          var endTime = Window.between(
-              startTimeRange.start.plus(rangeDur.start),
-              startTimeRange.end.plus(rangeDur.end));
-          actTB.endsIn(endTime);
-        }
-
-      } else if (this.startExpr == null && this.endExpr != null) {
-        Window endTimeRange = this.endExpr.computeTime(plan, window);
+      if(this.endExpr != null) {
+        Window endTimeRange = null;
+        endTimeRange = this.endExpr.computeTime(plan, window);
         actTB.endsIn(endTimeRange);
-        Window rangeDur = desiredActTemplate.getDurationRange();
-        if (rangeDur != null) {
-          startTimeRange = Window.between(
-              endTimeRange.start.minus(rangeDur.end),
-              endTimeRange.end.minus(rangeDur.start));
-          actTB.startsIn(startTimeRange);
-        }
-
-      } else {
-        //all is null. default behavior is starts or ends in the interval
-        startTimeRange = Window.between(
-            window.start.minus(desiredActTemplate.getDurationRange().end),
-            window.end);
-        actTB.startsOrEndsIn(Window.between(startTimeRange.start, startTimeRange.end));
+      }
+      /* this will override whatever might be already present in the template */
+      if(durExpr!=null){
+        var durRange = this.durExpr.compute(window);
+        actTB.durationIn(Window.between(durRange, durRange));
       }
 
       ActivityCreationTemplate temp;
@@ -199,12 +189,12 @@ public class CoexistenceGoal extends ActivityTemplateGoal {
         final var actName = getName() + "_" + java.util.UUID.randomUUID();
         ActivityInstance act;
         var stateConstraints = getStateConstraints();
+        var temporalContext = new Windows(this.temporalContext);
         if (getStateConstraints() != null) {
-          var valid = stateConstraints.findWindows(plan,Windows.forever());
-          act = temp.createActivity(actName, valid);
+          var valid = stateConstraints.findWindows(plan,temporalContext);
+          act = temp.createActivity(actName, valid, false);
         } else {
-          act = temp.createActivity(actName, Windows.forever());
-
+          act = temp.createActivity(actName, temporalContext, false);
         }
         if (act == null) {
           conflicts.add(new UnsatisfiableMissingActivityConflict(this));

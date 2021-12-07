@@ -166,8 +166,6 @@ public class StateConstraintExpression {
       } else {
         constr = new StateConstraintExpressionDisjunction(constraints, name);
       }
-
-      this.name = name;
       return constr;
     }
 
@@ -183,7 +181,6 @@ public class StateConstraintExpression {
       return this;
     }
 
-    ;
 
     public Builder name(String name) {
       this.name = name;
