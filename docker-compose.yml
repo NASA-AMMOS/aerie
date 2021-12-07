@@ -17,7 +17,7 @@ services:
     ports: ["9000:9000"]
     restart: always
     volumes:
-      - file_store:/app/files
+      - aerie_file_store:/app/files
   aerie_ui:
     depends_on: ["postgres"]
     environment:
@@ -61,7 +61,7 @@ services:
     ports: ["27183:27183"]
     restart: always
     volumes:
-      - file_store:/usr/src/app/merlin_file_store
+      - aerie_file_store:/usr/src/app/merlin_file_store
   postgres:
     environment:
       POSTGRES_DB: postgres
@@ -75,5 +75,6 @@ services:
       - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
 
 volumes:
-  file_store:
+  aerie_file_store:
   postgres_data:
+  mission_file_store:
