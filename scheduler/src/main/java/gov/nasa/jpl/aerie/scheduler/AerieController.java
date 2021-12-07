@@ -862,7 +862,7 @@ public class AerieController {
       if (instance.getDuration() != null) {
         sbParams.append("duration :" + ((int) instance
             .getDuration()
-            .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS)) + ",");
+            .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND)) + ",");
         atLeastOne = true;
       }
       for (Map.Entry<String, Object> entry : instance.getParameters().entrySet()) {
