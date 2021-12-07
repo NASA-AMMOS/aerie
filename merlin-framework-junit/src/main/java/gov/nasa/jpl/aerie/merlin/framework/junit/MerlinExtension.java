@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.framework.Registrar;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.DynamicTestInvocationContext;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -79,7 +80,7 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
       final ReflectiveInvocationContext<Method> invocationContext,
       final ExtensionContext extensionContext) throws Throwable
   {
-    this.interceptDynamicTest(invocation, extensionContext);
+    this.getState(extensionContext).simulate(invocation);
   }
 
   @Override
@@ -89,11 +90,11 @@ public final class MerlinExtension<Model> implements BeforeAllCallback, Paramete
       final ExtensionContext extensionContext
   ) throws Throwable
   {
-    this.interceptDynamicTest(invocation, extensionContext);
+    this.getState(extensionContext).simulate(invocation);
   }
 
   @Override
-  public void interceptDynamicTest(final Invocation<Void> invocation, final ExtensionContext extensionContext)
+  public void interceptDynamicTest(final Invocation<Void> invocation, final DynamicTestInvocationContext invocationContext, final ExtensionContext extensionContext)
   throws Throwable
   {
     this.getState(extensionContext).simulate(invocation);

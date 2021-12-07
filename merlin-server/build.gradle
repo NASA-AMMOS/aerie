@@ -37,7 +37,7 @@ dependencies {
 
   testImplementation project(':foo-missionmodel')
   testImplementation project(':merlin-framework')
-  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
   testImplementation 'org.assertj:assertj-core:3.13.2'
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
   testImplementation 'org.glassfish:javax.json:1.1.4'
