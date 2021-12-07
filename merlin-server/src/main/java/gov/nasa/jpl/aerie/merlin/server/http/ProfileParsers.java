@@ -13,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
@@ -41,7 +42,7 @@ public final class ProfileParsers {
       . field("duration", durationP)
       . field("dynamics", realDynamicsP)
       . map(Iso.of(
-          untuple(Pair::of),
+          untuple((BiFunction<Duration, RealDynamics, Pair<Duration, RealDynamics>>) Pair::of),
           $ -> tuple($.getLeft(), $.getRight())
       ));
 
@@ -50,7 +51,7 @@ public final class ProfileParsers {
       . field("duration", durationP)
       . field("dynamics", serializedValueP)
       . map(Iso.of(
-          untuple(Pair::of),
+          untuple((BiFunction<Duration, SerializedValue, Pair<Duration, SerializedValue>>) Pair::of),
           $ -> tuple($.getLeft(), $.getRight())
       ));
 

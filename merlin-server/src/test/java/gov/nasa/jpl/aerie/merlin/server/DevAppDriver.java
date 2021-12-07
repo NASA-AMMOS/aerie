@@ -29,13 +29,14 @@ public final class DevAppDriver {
         new UncachedSimulationService(new SynchronousSimulationAgent(planController, missionModelController)));
 
     // Configure an HTTP server.
-    final Javalin javalin = Javalin.create(config -> config
-        .enableDevLogging()
-        .enableCorsForAllOrigins()
-        .registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction))
-        .registerPlugin(new LocalAppExceptionBindings())
-        .registerPlugin(new MissionModelRepositoryExceptionBindings())
-        .registerPlugin(new MissionModelExceptionBindings()));
+    final Javalin javalin = Javalin.create(config -> {
+        config.enableDevLogging();
+        config.enableCorsForAllOrigins();
+        config.registerPlugin(new MerlinBindings(missionModelController, planController, simulationAction));
+        config.registerPlugin(new LocalAppExceptionBindings());
+        config.registerPlugin(new MissionModelRepositoryExceptionBindings());
+        config.registerPlugin(new MissionModelExceptionBindings());
+    });
 
     // Start the HTTP server.
     javalin.start(HTTP_PORT);
