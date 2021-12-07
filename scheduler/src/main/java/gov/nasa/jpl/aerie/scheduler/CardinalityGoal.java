@@ -215,6 +215,7 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         .stream(rangeAfterConstraints.spliterator(), false)
         .collect(Collectors.toList());
     Iterator<Window> itRanges = rangeAfterConstraints.iterator();
+    if(!itRanges.hasNext()) { return List.of(); }
 
     Map<Window, List<ActivityInstance>> instancesCreated = new TreeMap<>();
     Map<Window, List<ActivityCreationTemplate>> templatesCreated = new TreeMap<>();
