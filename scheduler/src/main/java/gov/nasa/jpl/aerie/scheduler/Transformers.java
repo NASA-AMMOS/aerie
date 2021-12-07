@@ -25,28 +25,28 @@ public class Transformers {
     List<TimeRangeExpression> insideExprs = new ArrayList<TimeRangeExpression>();
     TimeRangeExpression resetExpr;
 
-    EnveloppeBuilder withinEach(TimeRangeExpression expr) {
+    public EnveloppeBuilder withinEach(TimeRangeExpression expr) {
       this.resetExpr = expr;
       return this;
     }
 
-    EnveloppeBuilder when(StateConstraintExpression expr) {
+    public EnveloppeBuilder when(StateConstraintExpression expr) {
       insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
       return this;
     }
 
 
-    EnveloppeBuilder when(ActivityExpression expr) {
+    public EnveloppeBuilder when(ActivityExpression expr) {
       insideExprs.add(new TimeRangeExpression.Builder().from(expr).build());
       return this;
     }
 
-    EnveloppeBuilder when(TimeRangeExpression expr) {
+    public EnveloppeBuilder when(TimeRangeExpression expr) {
       insideExprs.add(expr);
       return this;
     }
 
-    TimeWindowsTransformer build() {
+    public TimeWindowsTransformer build() {
       TimeWindowsTransformer filter = new TransformWithReset(resetExpr, new TransformerEnveloppe(insideExprs));
       return filter;
     }
