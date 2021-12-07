@@ -7,6 +7,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
 import org.apache.commons.lang3.tuple.Pair;
@@ -142,6 +143,13 @@ public final class InMemoryPlanRepository implements PlanRepository {
   @Override
   public Map<String, Constraint> getAllConstraintsInPlan(final String planId) throws NoSuchPlanException {
     return Map.of();
+  }
+
+  @Override
+  public long addExternalDataset(final String planId, final Timestamp datasetStart, final ProfileSet profileSet)
+  throws NoSuchPlanException
+  {
+    return 0;
   }
 
   private class MockPlanTransaction implements PlanTransaction {

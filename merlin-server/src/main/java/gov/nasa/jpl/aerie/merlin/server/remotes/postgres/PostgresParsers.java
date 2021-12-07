@@ -5,7 +5,6 @@ import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
-import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.doubleP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
@@ -48,15 +46,6 @@ public final class PostgresParsers {
       chooseP(
           discreteProfileTypeP,
           realProfileTypeP);
-
-  static final JsonParser<RealDynamics> realDynamicsP =
-      productP
-          .field("initial", doubleP)
-          .field("rate", doubleP)
-          .map(Iso.of(
-              untuple(RealDynamics::linear),
-              $ -> tuple($.initial, $.rate)
-          ));
 
   public static Duration parseOffset(final ResultSet resultSet, final int index, final Timestamp epoch) throws SQLException {
     final var interval = Interval.parse(resultSet.getString(index));
