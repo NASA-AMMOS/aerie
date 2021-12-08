@@ -30,9 +30,6 @@ import java.util.stream.Collectors;
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
   private final DataSource dataSource;
 
-  // TODO: Add actual model revisions and take as parameter
-  private static final long MODEL_REVISION = -1;
-
   public PostgresResultsCellRepository(final DataSource dataSource) {
     this.dataSource = dataSource;
   }
@@ -58,8 +55,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var dataset = createSimulationDataset(
           connection,
           simulation,
-          MODEL_REVISION,
-          planRevision,
           planStart,
           simulationStart);
 
@@ -67,8 +62,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           this.dataSource,
           simulation,
           dataset.datasetId(),
-          MODEL_REVISION,
-          planRevision,
           planStart);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to allocation simulation cell", ex);
@@ -88,12 +81,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       if (simulation$.isEmpty()) return Optional.empty();
       final var simulation = simulation$.get();
 
-      final var datasetId$ = getSimulationDatasetRecord(
+      final var datasetId$ = lookupSimulationDatasetRecord(
           connection,
           simulation.id(),
-          MODEL_REVISION,
-          planRevision,
-          simulation.revision(),
           planStart
       ).map(SimulationDatasetRecord::datasetId);
 
@@ -103,8 +93,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       return Optional.of(new PostgresResultsCell(this.dataSource,
                                                  simulation,
                                                  datasetId,
-                                                 MODEL_REVISION,
-                                                 planRevision,
                                                  planStart));
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get simulation", ex);
@@ -123,12 +111,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       if (simulation$.isEmpty()) return;
       final var simulation = simulation$.get();
 
-      final var record$ = getSimulationDatasetRecord(
+      final var record$ = lookupSimulationDatasetRecord(
           connection,
           simulation.id(),
-          MODEL_REVISION,
-          planRevision,
-          simulation.revision(),
           planStart
       );
       if (record$.isEmpty()) return;
@@ -152,18 +137,25 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Optional<SimulationDatasetRecord> getSimulationDatasetRecord(
+  private static Optional<SimulationDatasetRecord> lookupSimulationDatasetRecord(
       final Connection connection,
       final long simulationId,
-      final long modelRevision,
-      final long planRevision,
-      final long simulationRevision,
+      final Timestamp planStart
+  ) throws SQLException
+  {
+    try (final var lookupSimulationDatasetAction = new LookupSimulationDatasetAction(connection)) {
+      return lookupSimulationDatasetAction.get(simulationId, planStart);
+    }
+  }
+
+  private static Optional<SimulationDatasetRecord> getSimulationDatasetRecord(
+      final Connection connection,
+      final long datasetId,
       final Timestamp planStart
   ) throws SQLException
   {
     try (final var getSimulationDatasetAction = new GetSimulationDatasetAction(connection)) {
-      return getSimulationDatasetAction
-          .get(simulationId, modelRevision, planRevision, simulationRevision, planStart);
+      return getSimulationDatasetAction.get(datasetId, planStart);
     }
   }
 
@@ -181,8 +173,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static SimulationDatasetRecord createSimulationDataset(
       final Connection connection,
       final SimulationRecord simulation,
-      final long modelRevision,
-      final long planRevision,
       final Timestamp planStart,
       final Timestamp simulationStart
   ) throws SQLException
@@ -190,12 +180,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     try (final var createSimulationDatasetAction = new CreateSimulationDatasetAction(connection)) {
       return createSimulationDatasetAction.apply(
           simulation.id(),
-          modelRevision,
-          planRevision,
-          simulation.revision(),
           planStart,
-          simulationStart,
-          new ResultsProtocol.State.Incomplete());
+          simulationStart);
     }
   }
 
@@ -228,19 +214,13 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static Optional<State> getSimulationState(
       final Connection connection,
-      final long simulationId,
-      final long modelRevision,
-      final long planRevision,
-      final long simulationRevision,
+      final long datasetId,
       final long planId,
       final Timestamp planStart
   ) throws SQLException {
     final var record$ = getSimulationDatasetRecord(
         connection,
-        simulationId,
-        modelRevision,
-        planRevision,
-        simulationRevision,
+        datasetId,
         planStart);
     if (record$.isEmpty()) return Optional.empty();
     final var record = record$.get();
@@ -455,23 +435,17 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     private final DataSource dataSource;
     private final SimulationRecord simulation;
     private final long datasetId;
-    private final long modelRevision;
-    private final long planRevision;
     private final Timestamp planStart;
 
     public PostgresResultsCell(
         final DataSource dataSource,
         final SimulationRecord simulation,
         final long datasetId,
-        final long modelRevision,
-        final long planRevision,
         final Timestamp planStart
     ) {
       this.dataSource = dataSource;
       this.simulation = simulation;
       this.datasetId = datasetId;
-      this.modelRevision = modelRevision;
-      this.planRevision = planRevision;
       this.planStart = planStart;
     }
 
@@ -480,10 +454,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       try (final var connection = dataSource.getConnection()) {
         return getSimulationState(
             connection,
-            simulation.id(),
-            modelRevision,
-            planRevision,
-            simulation.revision(),
+            datasetId,
             simulation.planId(),
             planStart)
             .orElseThrow(() -> new Error("Dataset corrupted"));
@@ -508,12 +479,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     @Override
     public boolean isCanceled() {
       try (final var connection = dataSource.getConnection()) {
-        return getSimulationDatasetRecord(
+        return lookupSimulationDatasetRecord(
             connection,
             simulation.id(),
-            modelRevision,
-            planRevision,
-            simulation.revision(),
             planStart
         ).map(SimulationDatasetRecord::canceled)
          .orElseThrow(() -> new Error("Dataset corrupted"));
