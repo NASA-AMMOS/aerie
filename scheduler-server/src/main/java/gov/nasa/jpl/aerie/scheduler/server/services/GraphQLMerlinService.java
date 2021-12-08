@@ -185,9 +185,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   /**
    * generate a name for the next created plan container using current timestamp
    *
+   * does not actually verify that the name is unique within aerie database
+   *
    * @return a name for the next created plan container
    */
   public String getNextPlanName() {
+    //TODO: (defensive) should rely on database to generate a new unique name to avoid user collisions
     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
     return "scheduled_plan_" + dtf.format(LocalDateTime.now());
   }
