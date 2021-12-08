@@ -34,7 +34,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final String planIdString, final long planRevision) {
+  public ResultsProtocol.OwnerRole allocate(final String planIdString) {
     // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
     final var planId = Long.parseLong(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
@@ -72,7 +72,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public Optional<ResultsProtocol.ReaderRole> lookup(final String planIdString, final long planRevision) {
+  public Optional<ResultsProtocol.ReaderRole> lookup(final String planIdString) {
     // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
     final var planId = Long.parseLong(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
@@ -103,27 +103,14 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public void deallocate(final String planIdString, final long planRevision) {
-    // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
-    final var planId = Long.parseLong(planIdString);
+  public void deallocate(final ResultsProtocol.OwnerRole resultsCell) {
+    if (!(resultsCell instanceof PostgresResultsCell cell)) {
+      throw new Error("Unable to deallocate results cell of unknown type");
+    }
     try (final var connection = this.dataSource.getConnection()) {
-      final var planStart = getPlan(connection, planId).startTime();
-      final var simulation$ = getSimulation(connection, planId);
-      if (simulation$.isEmpty()) return;
-      final var simulation = simulation$.get();
-
-      final var record$ = lookupSimulationDatasetRecord(
-          connection,
-          simulation.id(),
-          planStart
-      );
-      if (record$.isEmpty()) return;
-
-      deleteSimulationDataset(connection, record$.get().datasetId());
+      deleteSimulationDataset(connection, cell.datasetId);
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to delete simulation", ex);
-    } catch (final NoSuchPlanException ex) {
-      throw new Error("Deallocation of results cell not possible, plan was removed");
     }
   }
 

@@ -6,7 +6,7 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository.In
 public record UncachedSimulationService (SimulationAgent action) implements SimulationService {
   @Override
   public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
-    final var cell = new InMemoryCell();
+    final var cell = new InMemoryCell(planId, planRevision);
 
     try {
       this.action.simulate(planId, planRevision, cell);
