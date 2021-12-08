@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.banananation.activities;
 
+import gov.nasa.jpl.aerie.banananation.BananaRange;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -97,6 +98,15 @@ public final class ParameterTestActivity {
 
   @Parameter
   public List<Map<String[][], Map<Integer, List<Float>[]>>> obnoxious;
+
+  @Parameter
+  public BananaRange<String> stringRange = new BananaRange<>("first", "second");
+
+  @Parameter
+  public BananaRange<Integer> intRange = new BananaRange<>(1, 2);
+
+  @Parameter
+  public BananaRange<Float> floatRange = new BananaRange<>(1f, 2f);
 
   public ParameterTestActivity() {
     this.boxedDouble = 6.282;
