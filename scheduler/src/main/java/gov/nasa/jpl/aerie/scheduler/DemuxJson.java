@@ -43,7 +43,7 @@ public class DemuxJson implements ValueSchema.Visitor<Object> {
 
   @Override
   public Object onDuration() {
-    return Duration.of(params.getLong(paramName), Duration.SECONDS);
+    return Duration.of(params.getLong(paramName), Duration.MICROSECOND);
 
   }
 
@@ -110,7 +110,7 @@ public class DemuxJson implements ValueSchema.Visitor<Object> {
                             .map(us -> java.time.Duration.of(us, ChronoUnit.MICROS))
                             .orElse(java.time.Duration.ZERO);
     final var total = hr.plus(min).plus(sec).multipliedBy(sign);
-    return Duration.of(total.getNano() / 1000, Duration.MICROSECOND);
+    return Duration.of(total.toNanos() / 1000, Duration.MICROSECOND);
   }
 
 
