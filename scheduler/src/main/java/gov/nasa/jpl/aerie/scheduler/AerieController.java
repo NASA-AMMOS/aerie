@@ -216,19 +216,19 @@ public class AerieController {
         GZIPInputStream body = new GZIPInputStream(response.body());
         Reader reader = new InputStreamReader(body, "UTF-8");
         Writer writer = new StringWriter();
-          char[] buffer = new char[10240];
-          int length = 0;
-          while ((length = reader.read(buffer)) > 0) {
-            writer.write(buffer, 0, length);
-          }
-          String bodystr = writer.toString();
-          System.out.println(bodystr);
-          JSONObject json = new JSONObject(bodystr);
-          return request.handleResponse(json);
+        char[] buffer = new char[10240];
+        int length = 0;
+        while ((length = reader.read(buffer)) > 0) {
+          writer.write(buffer, 0, length);
+        }
+        String bodystr = writer.toString();
+        System.out.println(bodystr);
+        JSONObject json = new JSONObject(bodystr);
+        return request.handleResponse(json);
       } catch (ZipException e) {
         //probably not in GZIP format
         e.printStackTrace();
-        if(response!=null) {
+        if (response != null) {
           System.out.println(response.body());
         }
         return false;
@@ -333,7 +333,7 @@ public class AerieController {
     boolean ret = true;
     var planId = planIds.get(plan);
     boolean result = true;
-    if(planId == null) {
+    if (planId == null) {
       CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
       result = postRequest(planRequest);
     }
@@ -761,7 +761,7 @@ public class AerieController {
     @Override
     public boolean handleResponse(JSONObject response) {
       int id = ((JSONObject) (((JSONObject) response.get("data")).get("delete_plan_by_pk"))).getInt("id");
-      if(planIds.containsValue(id)){
+      if (planIds.containsValue(id)) {
         planIds.values().remove(id);
       }
       return true;
@@ -860,7 +860,7 @@ public class AerieController {
 
 
       if (instance.getDuration() != null) {
-        sbParams.append("duration :" + ((int) instance
+        sbParams.append("duration :" + (instance
             .getDuration()
             .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND)) + ",");
         atLeastOne = true;
