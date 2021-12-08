@@ -50,9 +50,8 @@ public final class SchedulerAppDriver {
       if (config.javalinLogging() == JavalinLoggingState.Enabled) {
         javalinConfig.enableDevLogging();
       }
-      javalinConfig
-          .enableCorsForAllOrigins() //TODO: probably don't want literally any cross-origin request...
-          .registerPlugin(bindings);
+      javalinConfig.enableCorsForAllOrigins(); //TODO: probably don't want literally any cross-origin request...
+      javalinConfig.registerPlugin(bindings);
       //TODO: exception handling (should elevate/reuse from MerlinApp for consistency?)
     });
 
