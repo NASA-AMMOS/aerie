@@ -2,6 +2,8 @@ create table simulation_dataset (
   simulation_id integer not null,
   dataset_id integer null,
 
+  offset_from_plan_start interval not null,
+
   -- Determinant entities
   plan_revision integer not null,
   model_revision integer not null,
@@ -15,7 +17,6 @@ create table simulation_dataset (
   state text not null default 'incomplete',
   reason text null,
   canceled boolean not null default false,
-  offset_from_plan_start interval not null,
 
   constraint simulation_dataset_dataset_has_a_simulation
     unique (dataset_id),
