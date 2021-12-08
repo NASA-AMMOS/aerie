@@ -28,6 +28,11 @@ public final class BiteBananaActivity {
   @EffectModel
   public void run(final Mission mission) {
     mission.flag.set((biteSize > 1.0) ? Flag.B : Flag.A);
+    try {
+      Thread.sleep((int)(1000*biteSize));
+    } catch (InterruptedException ex) {
+      System.err.println("Hold on just a few seconds...");
+    }
     mission.fruit.subtract(biteSize);
   }
 }

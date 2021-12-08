@@ -5,11 +5,11 @@ import gov.nasa.jpl.aerie.merlin.server.remotes.InMemoryResultsCellRepository.In
 
 public record UncachedSimulationService (SimulationAgent action) implements SimulationService {
   @Override
-  public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
-    final var cell = new InMemoryCell(planId, planRevision);
+  public ResultsProtocol.State getSimulationResults(final String planId, final RevisionData revisionData) {
+    final var cell = new InMemoryCell(planId, revisionData);
 
     try {
-      this.action.simulate(planId, planRevision, cell);
+      this.action.simulate(planId, revisionData, cell);
     } catch (final InterruptedException ex) {
       // Do nothing. We'll get the current result (probably an Incomplete)
       // and throw away the cell anyway.

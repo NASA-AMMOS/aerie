@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 
 import java.util.Map;
 import java.util.Objects;
@@ -42,12 +43,11 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public long getPlanRevisionById(final String id) throws NoSuchPlanException {
+  public RevisionData getRevisionData(final String id) throws NoSuchPlanException {
     if (!Objects.equals(id, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(id);
     }
-
-    return 0;
+    return other -> new RevisionData.ValidationResult(true, "");
   }
 
   @Override

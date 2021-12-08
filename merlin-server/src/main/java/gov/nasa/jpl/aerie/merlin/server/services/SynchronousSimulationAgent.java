@@ -24,15 +24,16 @@ public record SynchronousSimulationAgent (
   }
 
   @Override
-  public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer) {
+  public void simulate(final String planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
       plan = this.planService.getPlanById(planId);
 
-      if (this.planService.getPlanRevisionById(planId) != planRevision) {
-        writer.failWith("plan with id %s is no longer at revision %s".formatted(
+      final var validationResult = this.planService.getRevisionData(planId).validate(revisionData);
+      if (!validationResult.result()) {
+        writer.failWith("plan with id %s is no longer valid: %s".formatted(
             planId,
-            planRevision));
+            validationResult.reason()));
         return;
       }
     } catch (final NoSuchPlanException ex) {

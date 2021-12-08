@@ -10,7 +10,7 @@ import java.util.Map;
 
 public interface PlanService {
   Plan getPlanById(String id) throws NoSuchPlanException;
-  long getPlanRevisionById(String id) throws NoSuchPlanException;
+  RevisionData getRevisionData(String id) throws NoSuchPlanException;
 
   Map<String, Constraint> getConstraintsForPlan(String planId) throws NoSuchPlanException;
 

@@ -24,8 +24,8 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
-  public long getPlanRevisionById(final String id) throws NoSuchPlanException {
-    return this.planRepository.getPlanRevision(id);
+  public RevisionData getRevisionData(final String id) throws NoSuchPlanException {
+    return this.planRepository.getRevisionData(id);
   }
 
   @Override

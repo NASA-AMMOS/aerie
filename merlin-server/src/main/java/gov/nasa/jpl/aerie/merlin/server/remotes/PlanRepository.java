@@ -9,6 +9,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
+import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ public interface PlanRepository {
   Map<String, Plan> getAllPlans();
   Plan getPlan(String id) throws NoSuchPlanException;
   long getPlanRevision(String id) throws NoSuchPlanException;
+  RevisionData getRevisionData(String id) throws NoSuchPlanException;
   Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
 
   // Mutations

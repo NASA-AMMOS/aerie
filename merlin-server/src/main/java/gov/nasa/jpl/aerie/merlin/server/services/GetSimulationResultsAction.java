@@ -47,9 +47,9 @@ public final class GetSimulationResultsAction {
   }
 
   public Response run(final String planId) throws NoSuchPlanException {
-    final var planRevision = this.planService.getPlanRevisionById(planId);
+    final var revisionData = this.planService.getRevisionData(planId);
 
-    final var response = this.simulationService.getSimulationResults(planId, planRevision);
+    final var response = this.simulationService.getSimulationResults(planId, revisionData);
 
     if (response instanceof ResultsProtocol.State.Incomplete) {
       return new Response.Incomplete();
