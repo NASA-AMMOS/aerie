@@ -25,6 +25,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -98,7 +100,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     try {
       return response.getJsonObject("data").getJsonObject("plan_by_pk").getJsonNumber("revision").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
-      //TODO: better error reporting upward to service response (NSPEx doesn't allow passing e as cause)
       throw new NoSuchPlanException(planId);
     }
   }
@@ -182,28 +183,85 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
+   * generate a name for the next created plan container using current timestamp
+   *
+   * @return a name for the next created plan container
+   */
+  public String getNextPlanName() {
+    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy_MM_dd_HH_mm_ss");
+    return "scheduled_plan_" + dtf.format(LocalDateTime.now());
+  }
+
+  /**
    * create an entirely new plan container in aerie and synchronize the in-memory plan to it
    *
-   * @param planMetadata identifying details of the plan to store content into; outdated on return
-   * @param mission the mission model that the plan adheres to
+   * does not mutate the original plan, so metadata remains valid for the original plan
+   *
+   * @param planMetadata identifying details of a plan to emulate in creating new container. id is ignored.
    * @param plan plan with all activity instances that should be stored to target merlin plan container
+   * @return the database id of the newly created aerie plan container
    */
-  public void createNewPlanWithActivities(
-      final PlanMetadata planMetadata,
-      final MissionModelWrapper mission,
-      final Plan plan)
+  public long createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
+  throws IOException, NoSuchPlanException
   {
-    final var controller = new AerieController(
-        this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
-    controller.initEmptyPlan(plan, planMetadata.horizon().getStartAerie(), planMetadata.horizon().getEndAerie(),
-                             null);
+    final var planName = getNextPlanName();
+    final var planId = createEmptyPlan(
+        planName, planMetadata.modelId(),
+        planMetadata.horizon().getStartHuginn(), planMetadata.horizon().getEndAerie());
+    //create sim storage space since doesn't happen automatically (else breaks further queries)
+    createSimulationForPlan(planId);
+    createAllPlanActivities(planId, plan);
+    return planId;
+  }
 
-    //create sim storage space since doesn't happen automatically (else breaks)
-    //TODO: might expect that aerie creates any necessary extra containers for plans (as happens in UI sim)
-    controller.createSimulation(plan);
+  /**
+   * create a new empty plan container based on specifications
+   *
+   * does not attach a simulation / configuration to the plan! (may require separate call to createSimulationForPlan)
+   *
+   * @param name the human legible label for the new plan container to create
+   * @param modelId the database identifier of the mission model to associate with the plan
+   * @param startTime the absolute start time of the new plan container
+   * @param duration the duration of the new plan container
+   * @return the database id of the newly created aerie plan container
+   */
+  public long createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
+  throws IOException, NoSuchPlanException
+  {
+    final var requestFormat = (
+        "mutation createEmptyPlan { insert_plan_one( object: { "
+        + "name: %s model_id: %d start_time: %s duration: %s "
+        + "} ) { id } }");
+    //TODO: resolve inconsistency in plan duration versus activity duration formats in merlin
+    //NB: the duration format for creating plans is different than that for activity instances (microseconds)
+    final var durStr = "\"" + duration.in(Duration.SECOND) + "\"";
+    final var request = requestFormat.formatted(
+        getGraphQLValueString(name), modelId, getGraphQLValueString(startTime), durStr);
 
-    //TODO: (cleanup) sendPlan itself contains a duplicate CreatePlanRequest vs the initEmptyPlan call above
-    controller.sendPlan(plan, planMetadata.horizon().getStartAerie(), planMetadata.horizon().getEndAerie(), null);
+    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(name));
+    try {
+      return response.getJsonObject("data").getJsonObject("insert_plan_one").getJsonNumber("id").longValueExact();
+    } catch (ClassCastException | ArithmeticException e) {
+      throw new NoSuchPlanException(name);
+    }
+  }
+
+  /**
+   * create a new empty simulation container with default configuration args attached to the target plan
+   *
+   * @param planId the database id of the aerie plan container to attach the simulation container to
+   */
+  public void createSimulationForPlan(final long planId) throws IOException, NoSuchPlanException {
+    final var request = (
+        "mutation createSimulationForPlan { insert_simulation_one( object: {"
+        + "plan_id: %d arguments: {} } ) { id } }")
+        .formatted(planId);
+    final var response = postRequest(request).orElseThrow(() -> new NoSuchPlanException(Long.toString(planId)));
+    try {
+      response.getJsonObject("data").getJsonObject("insert_simulation_one").getJsonNumber("id").longValueExact();
+    } catch (ClassCastException | ArithmeticException e) {
+      throw new NoSuchPlanException(Long.toString(planId));
+    }
   }
 
   /**
@@ -243,7 +301,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
       //TODO: better error reporting upward to service response (NSPEx doesn't allow passing e as cause)
       throw exceptionFactory.get();
     }
-
   }
 
   /**
@@ -267,7 +324,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
     try {
       response.getJsonObject("data").getJsonObject("delete_activity").getJsonNumber("affected_rows").longValueExact();
     } catch (ClassCastException | ArithmeticException e) {
-      //TODO: (error cleanup) better error reporting upward to service response (NSPEx doesn't allow passing cause)
       throw new NoSuchPlanException(Long.toString(planId));
     }
   }
@@ -317,7 +373,6 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
         throw new NoSuchPlanException(Long.toString(planId));
       }
     } catch (ClassCastException | ArithmeticException e) {
-      //TODO: (error cleanup) better error reporting upward to service response (NSPEx doesn't allow passing cause)
       throw new NoSuchPlanException(Long.toString(planId));
     }
   }

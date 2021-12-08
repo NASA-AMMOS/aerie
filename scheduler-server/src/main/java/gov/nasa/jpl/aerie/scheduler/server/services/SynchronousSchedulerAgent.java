@@ -265,7 +265,7 @@ public record SynchronousSchedulerAgent(
   private void storeFinalPlan(PlanMetadata planMetadata, MissionModelWrapper mission, Plan newPlan) {
     try {
       switch (this.outputMode) {
-        case CreateNewOutputPlan -> merlinService.createNewPlanWithActivities(planMetadata, mission, newPlan);
+        case CreateNewOutputPlan -> merlinService.createNewPlanWithActivities(planMetadata, newPlan);
         case UpdateInputPlanWithNewActivities -> merlinService.updatePlanActivities(planMetadata.planId(), newPlan);
         default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);
       }
