@@ -34,9 +34,10 @@ public final class SchedulerAppDriver {
     final var config = loadConfiguration();
 
     //create objects in each service abstraction layer (mirroring MerlinApp)
-    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI(),config.outputMode());
+    final var merlinService = new GraphQLMerlinService(config.merlinGraphqlURI());
     final var scheduleAgent = new SynchronousSchedulerAgent(
-        merlinService, config.missionModelJarsDir(), config.missionRuleJarPath());
+        merlinService, config.missionModelJarsDir(), config.missionRuleJarPath(),
+        config.outputMode());
     final var schedulerService = new UncachedSchedulerService(scheduleAgent);
     final var scheduleAction = new ScheduleAction(merlinService, schedulerService);
 
@@ -75,7 +76,7 @@ public final class SchedulerAppDriver {
         Path.of(getEnvOrFallback("MERLIN_LOCAL_STORE", "/usr/src/app/merlin_file_store")),
         Path.of(getEnvOrFallback("SCHED_RULES_JAR", "/usr/src/app/merlin_file_store/sched_rules.jar")),
         PlanOutputMode.valueOf((getEnvOrFallback("SCHED_OUTPUT_MODE", "CreateNewOutputPlan")))
-        );
+    );
   }
 
   /**

@@ -13,6 +13,7 @@ import gov.nasa.jpl.aerie.scheduler.PrioritySolver;
 import gov.nasa.jpl.aerie.scheduler.Problem;
 import gov.nasa.jpl.aerie.scheduler.Solver;
 import gov.nasa.jpl.aerie.scheduler.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.scheduler.server.config.PlanOutputMode;
 import gov.nasa.jpl.aerie.scheduler.server.exceptions.ResultsProtocolFailure;
 import gov.nasa.jpl.aerie.scheduler.server.models.PlanMetadata;
 
@@ -30,12 +31,14 @@ import java.util.stream.Collectors;
  * @param merlinService interface for querying plan details from merlin
  * @param modelJarsDir path to parent directory for mission model jars (interim backdoor jar file access)
  * @param rulesJarPath path to jar file to load scheduling rules from (interim solution for user input rules)
+ * @param outputMode how the scheduling output should be returned to aerie (eg overwrite or new container)
  */
 //TODO: will eventually need scheduling goal service arg to pull goals from scheduler's own data store
 public record SynchronousSchedulerAgent(
     GraphQLMerlinService merlinService,
     Path modelJarsDir,
-    Path rulesJarPath
+    Path rulesJarPath,
+    PlanOutputMode outputMode
 )
     implements SchedulerAgent
 {
@@ -254,14 +257,18 @@ public record SynchronousSchedulerAgent(
    *
    * @param planMetadata metadata of plan container to store into; outdated after return
    * @param mission the mission model that the plan adheres to
-   * @param plan plan with all activity instances that should be stored to target merlin plan container
+   * @param newPlan plan with all activity instances that should be stored to target merlin plan container
    * @throws ResultsProtocolFailure when the plan could not be stored to aerie, the target plan revision has
    *     changed, or aerie could not be reached
    */
   //TODO: remove mission model from signature: isn't really required (just passed to allow ctor of AerieController)
-  private void storeFinalPlan(PlanMetadata planMetadata, MissionModelWrapper mission, Plan plan) {
+  private void storeFinalPlan(PlanMetadata planMetadata, MissionModelWrapper mission, Plan newPlan) {
     try {
-      merlinService.updatePlanActivities(planMetadata, mission, plan);
+      switch (this.outputMode) {
+        case CreateNewOutputPlan -> merlinService.createNewPlanWithActivities(planMetadata, mission, newPlan);
+        case UpdateInputPlanWithNewActivities -> merlinService.updatePlanActivities(planMetadata.planId(), newPlan);
+        default -> throw new IllegalArgumentException("unsupported scheduler output mode " + this.outputMode);
+      }
     } catch (Exception e) {
       throw new ResultsProtocolFailure(e);
     }

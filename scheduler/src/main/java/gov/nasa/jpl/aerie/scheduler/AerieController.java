@@ -39,7 +39,7 @@ public class AerieController {
   private static final String IT_PLAN_BASENAME = "Plan_";
   private static final java.time.Duration TIMEOUT_HTTP = java.time.Duration.ofMinutes(10);
 
-  //TODO: populate these with answers from AERIE
+  //TODO: reconcile with aerie data model (eg different plans cannot hold the same activity instances, but scheduler plans can)
   private final Map<Plan, Long> planIds;
   private final Map<Plan, Map<String, AerieStateCache>> stateCaches;
   private final Map<Plan, Duration> planStartTimes;
@@ -372,6 +372,7 @@ public class AerieController {
    * @return true iff all necessary updates and insertions succeeded
    */
   public boolean updatePlan(final long planId, final Plan plan) {
+    //NB: it appears this code is out of date with the available hasura db mutations!
     //TODO: more efficient if we could do a batch-update/insert of all acts at once
     if (planIds.get(plan) == null) {
       System.out.println("Plan has never been sent to Aerie");
