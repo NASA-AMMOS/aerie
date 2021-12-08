@@ -266,11 +266,6 @@ public final class MissionModelProcessor implements Processor {
           // Nothing to do
         } else if (typeUtils.isSameType(erasure, enumType)) {
           enumBoundedTypeParameters.add(typeParameter.getSimpleName().toString());
-        } else {
-          throw new InvalidMissionModelException(
-              "Value Mapper method type parameter must be unbounded, or bounded by enum type only",
-              element
-          );
         }
       }
     }
