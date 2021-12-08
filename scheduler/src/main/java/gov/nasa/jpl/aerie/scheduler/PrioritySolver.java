@@ -121,12 +121,16 @@ public class PrioritySolver implements Solver {
   public void initializePlan() {
     plan = new PlanInMemory(problem.getMissionModel());
 
+    //turn off simulation checking for initial plan contents (must accept user input regardless)
+    final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
+    this.checkSimBeforeInsertingActivities = false;
     problem.getInitialPlan().getActivitiesByTime().stream()
       .filter( act -> (act.getStartTime()==null)
                || config.getHorizon().contains( act.getStartTime() ) )
       .forEach( act->{
         checkAndInsertAct(act);
       } );
+    this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
