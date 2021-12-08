@@ -22,13 +22,21 @@ class GraphQLParsersTest {
 
   public static Stream<Arguments> parseGraphQLInterval() {
     return Stream.of(
+        Arguments.of("-322:21:15.111", Interval.parse("PT-322H-21M-15.111S")),
+        Arguments.of("+322:21:15.111", Interval.parse("PT322H21M15.111S")),
         Arguments.of("322:21:15.111", Interval.parse("PT322H21M15.111S")),
         Arguments.of("322:21:15.", Interval.parse("PT322H21M15S")),
         Arguments.of("322:21:15", Interval.parse("PT322H21M15S")),
+        Arguments.of("+322:21:15", Interval.parse("PT322H21M15S")),
+        Arguments.of("-322:21:15", Interval.parse("PT-322H-21M-15S")),
         Arguments.of("21:15.111", Interval.parse("PT21M15.111S")),
+        Arguments.of("+21:15.111", Interval.parse("PT21M15.111S")),
+        Arguments.of("-21:15.111", Interval.parse("PT-21M-15.111S")),
         Arguments.of("15.111", Interval.parse("PT15.111S")),
         Arguments.of("15.", Interval.parse("PT15S")),
-        Arguments.of("15", Interval.parse("PT15S"))
+        Arguments.of("15", Interval.parse("PT15S")),
+        Arguments.of("-15", Interval.parse("PT-15S")),
+        Arguments.of("+15", Interval.parse("PT15S"))
     );
   }
 

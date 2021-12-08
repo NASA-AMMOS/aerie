@@ -8,12 +8,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
  * utility methods for parsing graphql scalars as returned by the merlin interface
  */
+//TODO: elevate to a merlin-level library to allow parsing in various modules (eg dupl in scheduler...DemuxJson)
 public class GraphQLParsers {
 
   /**
@@ -28,7 +30,8 @@ public class GraphQLParsers {
    */
   //TODO: inconsistent with bare microseconds used elsewhere
   public static final Pattern intervalPattern = Pattern.compile(
-      "^(((?<hr>\\d+):)?" //optional hours field, as in  322:21:15
+      "^(?<sign>[+-])?" //optional sign prefix, as in +322:21:15
+      + "(((?<hr>\\d+):)?" //optional hours field, as in  322:21:15
       + "(?<min>\\d+):)?" //optional minutes field, as in 22:15
       + "(?<sec>\\d+" //required seconds field, as in 15
       + "(\\.\\d*)?)$"); //optional decimal sub-seconds, as in 15. or 15.111
@@ -59,6 +62,8 @@ public class GraphQLParsers {
     if (!matcher.matches()) {
       throw new DateTimeParseException("unable to parse HH:MM:SS.sss duration from \"" + in + "\"", in, 0);
     }
+    final var signValues = Map.of("+", 1, "-", -1);
+    final var sign = Optional.ofNullable(matcher.group("sign")).map(signValues::get).orElse(1);
     final var hr = Optional.ofNullable(matcher.group("hr")).map(Integer::parseInt)
                            .map(Duration::ofHours).orElse(Duration.ZERO);
     final var min = Optional.ofNullable(matcher.group("min")).map(Integer::parseInt)
@@ -67,6 +72,7 @@ public class GraphQLParsers {
                             .map(s -> (long) (s * 1000 * 1000))//seconds->millis->micros
                             .map(us -> Duration.of(us, ChronoUnit.MICROS))
                             .orElse(Duration.ZERO);
-    return Interval.of(hr.plus(min).plus(sec));
+    final var total = hr.plus(min).plus(sec).multipliedBy(sign);
+    return Interval.of(total);
   }
 }

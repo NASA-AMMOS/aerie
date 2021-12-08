@@ -519,8 +519,7 @@ public class AerieController {
       act.setDuration((Duration) actDurationAsParam);
       act.getParameters().remove("duration");
     } else {
-      throw new IllegalArgumentException(
-          "Parameters with name \"duration\" has not been found, cannot set activity instance duration");
+      act.setDuration(Duration.ZERO);
     }
 
     return act;
