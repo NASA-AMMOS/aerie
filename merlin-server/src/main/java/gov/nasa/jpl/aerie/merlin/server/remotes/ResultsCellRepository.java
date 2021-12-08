@@ -5,9 +5,9 @@ import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import java.util.Optional;
 
 public interface ResultsCellRepository {
-  ResultsProtocol.OwnerRole allocate(String planId, long planRevision);
+  ResultsProtocol.OwnerRole allocate(String planId);
 
-  Optional<ResultsProtocol.ReaderRole> lookup(String planId, long planRevision);
+  Optional<ResultsProtocol.ReaderRole> lookup(String planId);
 
-  void deallocate(String planId, long planRevision);
+  void deallocate(ResultsProtocol.OwnerRole resultsCell);
 }
