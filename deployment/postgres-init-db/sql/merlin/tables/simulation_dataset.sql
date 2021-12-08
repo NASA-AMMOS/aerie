@@ -12,9 +12,9 @@ create table simulation_dataset (
   dataset_revision integer null,
 
   -- Simulation state
-  state text not null,
+  state text not null default 'incomplete',
   reason text null,
-  canceled boolean not null,
+  canceled boolean not null default false,
   offset_from_plan_start interval not null,
 
   constraint simulation_dataset_dataset_has_a_simulation
@@ -35,7 +35,10 @@ create index simulation_dataset_simulation_has_many_datasets
   on simulation_dataset (simulation_id);
 
 comment on table simulation_dataset is e''
-  'A description of the upstream simulation inputs that determined a given dataset.';
+  'A description of the upstream simulation inputs that determined a given dataset.'
+'\n'
+  'A new row should be created by providing a simulation_id and offset_from_plan_start only '
+  'as the remaining data will be filled in during the insertion';
 
 comment on column simulation_dataset.simulation_id is e''
   'The simulation determining the contents of the associated dataset.';
@@ -61,13 +64,33 @@ comment on column simulation_dataset.offset_from_plan_start is e''
   'If the dataset as a whole begins one day before the planning period begins, '
   'then this column should contain the interval ''1 day ago''.';
 
-create or replace function create_dataset_on_insert()
+create or replace function initialize_row_on_insert()
 returns trigger
 security definer
-language plpgsql as $$begin
+language plpgsql as $$
+declare
+  simulation_ref simulation;
+  plan_ref plan;
+  model_ref mission_model;
+  template_ref simulation_template;
+  dataset_ref dataset;
+begin
+  -- Set the revisions
+  select into simulation_ref * from simulation where id = new.simulation_id;
+  select into plan_ref * from plan where id = simulation_ref.plan_id;
+  select into template_ref * from simulation_template where id = simulation_ref.simulation_template_id;
+  select into model_ref * from mission_model where id = plan_ref.model_id;
+  new.model_revision = model_ref.revision;
+  new.plan_revision = plan_ref.revision;
+  new.simulation_template_revision = template_ref.revision;
+  new.simulation_revision = simulation_ref.revision;
+
+  -- Create the dataset
   insert into dataset
   default values
-  returning id into new.dataset_id;
+  returning * into dataset_ref;
+  new.dataset_id = dataset_ref.id;
+  new.dataset_revision = dataset_ref.revision;
 return new;
 end$$;
 
@@ -81,10 +104,10 @@ return old;
 end$$;
 
 do $$ begin
-create trigger create_dataset_on_insert_trigger
+create trigger initialize_row_on_insert_trigger
   before insert on simulation_dataset
   for each row
-  execute function create_dataset_on_insert();
+  execute function initialize_row_on_insert();
 exception
   when duplicate_object then null;
 end $$;

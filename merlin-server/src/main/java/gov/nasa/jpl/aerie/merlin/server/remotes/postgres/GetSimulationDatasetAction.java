@@ -11,17 +11,14 @@ import java.util.Optional;
 /*package-local*/ final class GetSimulationDatasetAction implements AutoCloseable {
   private static final @Language("Sql") String sql = """
     select
-          d.dataset_id,
+          d.simulation_id,
           d.state,
           d.reason,
           d.canceled,
           d.offset_from_plan_start
       from simulation_dataset as d
       where
-        d.simulation_id = ? and
-        d.simulation_revision = ? and
-        d.plan_revision = ? and
-        d.model_revision = ?
+        d.dataset_id = ?
     """;
 
   private final PreparedStatement statement;
@@ -31,21 +28,15 @@ import java.util.Optional;
   }
 
   public Optional<SimulationDatasetRecord> get(
-      final long simulationId,
-      final long modelRevision,
-      final long planRevision,
-      final long simulationRevision,
+      final long datasetId,
       final Timestamp planStart
   ) throws SQLException {
-    this.statement.setLong(1, simulationId);
-    this.statement.setLong(2, simulationRevision);
-    this.statement.setLong(3, planRevision);
-    this.statement.setLong(4, modelRevision);
+    this.statement.setLong(1, datasetId);
 
     final var results = this.statement.executeQuery();
     if (!results.next()) return Optional.empty();
 
-    final var datasetId = results.getLong(1);
+    final var simulationId = results.getLong(1);
     final var state = new SimulationStateRecord(
         results.getString(2),
         results.getString(3));
@@ -56,9 +47,6 @@ import java.util.Optional;
         new SimulationDatasetRecord(
             simulationId,
             datasetId,
-            simulationRevision,
-            planRevision,
-            modelRevision,
             state,
             canceled,
             offsetFromPlanStart));
