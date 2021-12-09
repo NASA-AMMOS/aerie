@@ -137,7 +137,7 @@ public record SynchronousSchedulerAgent(
    * @param planMetadata metadata of the plan container to load from
    * @return a problem specification ready for passing to the scheduler
    */
-  private Problem createProblem(PlanMetadata planMetadata) {
+  private Problem createProblem(final PlanMetadata planMetadata) {
     final var mission = loadMissionModel(planMetadata);
     final var problem = new Problem(mission);
 
@@ -160,7 +160,7 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the constraints could not be loaded, or the data stores could not be
    *     reached
    */
-  private List<GlobalConstraint> loadConstraints(PlanMetadata planMetadata, MissionModelWrapper mission) {
+  private List<GlobalConstraint> loadConstraints(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
     //TODO: is the plan and mission model enough to find the relevant constraints? (eg what about sandbox toggling?)
     //TODO: load global constraints from scheduler data store?
     //TODO: load activity type constraints from somewhere (scheduler store? mission model?)
@@ -176,7 +176,7 @@ public record SynchronousSchedulerAgent(
    * @return the list of goals relevant to the target plan
    * @throws ResultsProtocolFailure when the goals could not be loaded, or the goal data store could not be reached
    */
-  private List<Goal> loadGoals(PlanMetadata planMetadata, MissionModelWrapper mission) {
+  private List<Goal> loadGoals(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
     //TODO: is the plan and mission model enough to find the relevant goals? (eg what about sandbox goals?)
     //TODO: somehow apply user control over which scheduling rules to actually run vs just check
     //TODO: load scheduling goals from scheduler data store into problem
@@ -197,7 +197,7 @@ public record SynchronousSchedulerAgent(
    * @param problem specification of the scheduling problem that needs to be solved
    * @return a new scheduler that is set up to begin providing solutions to the problem
    */
-  private Solver createScheduler(PlanMetadata planMetadata, Problem problem) {
+  private Solver createScheduler(final PlanMetadata planMetadata, final Problem problem) {
     final var config = new HuginnConfiguration();
     //TODO: move temporal focus from sched config into Problem object
     //TODO: allow for separate control of windows for constraint analysis vs ability to schedule activities
@@ -217,7 +217,7 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the requested plan cannot be loaded, or the target plan revision has
    *     changed, or aerie could not be reached
    */
-  private Plan loadInitialPlan(PlanMetadata planMetadata, MissionModelWrapper mission) {
+  private Plan loadInitialPlan(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
     //TODO: maybe paranoid check if plan rev has changed since original metadata?
     try {
       return merlinService.getPlanActivities(planMetadata, mission);
@@ -235,7 +235,7 @@ public record SynchronousSchedulerAgent(
    * @throws ResultsProtocolFailure when the mission model could not be loaded: eg jar file not found, declared
    *     version/name in jar does not match, or aerie filesystem could not be mounted
    */
-  private MissionModelWrapper loadMissionModel(PlanMetadata plan) {
+  private MissionModelWrapper loadMissionModel(final PlanMetadata plan) {
     try {
       final var missionConfig = SerializedValue.of(plan.modelConfiguration());
       final var modelJarPath = modelJarsDir.resolve(plan.modelPath());
@@ -262,7 +262,7 @@ public record SynchronousSchedulerAgent(
    *     changed, or aerie could not be reached
    */
   //TODO: remove mission model from signature: isn't really required (just passed to allow ctor of AerieController)
-  private void storeFinalPlan(PlanMetadata planMetadata, MissionModelWrapper mission, Plan newPlan) {
+  private void storeFinalPlan(final PlanMetadata planMetadata, final MissionModelWrapper mission, final Plan newPlan) {
     try {
       switch (this.outputMode) {
         case CreateNewOutputPlan -> merlinService.createNewPlanWithActivities(planMetadata, newPlan);
@@ -284,7 +284,7 @@ public record SynchronousSchedulerAgent(
    * @param plan the target plan after the scheduling run has completed
    * @return summary of the state of the plan after scheduling ran; eg goal success metrics, associated instances, etc
    */
-  private ScheduleResults collectResults(Plan plan) {
+  private ScheduleResults collectResults(final Plan plan) {
     final var activityCount = plan.getActivities().size();
 
     final var goalScores = plan

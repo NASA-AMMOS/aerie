@@ -52,9 +52,9 @@ public record ScheduleAction(MerlinService merlinService, SchedulerService sched
    * @return a response object wrapping summary results of the run (either successful or not)
    * @throws NoSuchPlanException if the target plan could not be found
    */
-  //TODO: the scheduling run will mutate the input plan! perhaps output should be new/distinct?
   public Response run(final String planId) throws NoSuchPlanException, IOException {
     //record the plan revision as of the scheduling request time (in case work commences much later eg in worker thread)
+    //TODO may also need to verify the model revision / other volatile metadata matches one from request
     final long planRev = this.merlinService.getPlanMetadata(planId).planRev();
 
     //submit request to run scheduler (possibly asynchronously or even cached depending on service)

@@ -29,7 +29,7 @@ public class TestUtility {
 
   }
 
-  public static MissionModelWrapper getMerlinSightMissionModel(PlanningHorizon horizon){
+  public static MissionModelWrapper getMerlinSightMissionModel(final PlanningHorizon horizon){
     final var builder = new MissionModelBuilder();
     final var configuration = InSightValueMappers.configuration().serializeValue(Configuration.defaultConfiguration());
     final var factory = new GeneratedMissionModelFactory();
