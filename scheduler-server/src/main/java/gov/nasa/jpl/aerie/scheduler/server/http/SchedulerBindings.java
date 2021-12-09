@@ -74,7 +74,7 @@ public record SchedulerBindings(SchedulerService schedulerService, ScheduleActio
       ctx.result(serializeScheduleResultsResponse(response).toString());
     } catch (final IOException e) {
       log.log(Level.SEVERE, "low level input/output problem during scheduling", e);
-      ctx.status(400).result(serializeException(e).toString());
+      ctx.status(500).result(serializeException(e).toString());
     } catch (final InvalidEntityException ex) {
       ctx.status(400).result(serializeInvalidEntityException(ex).toString());
     } catch (final InvalidJsonException ex) {
