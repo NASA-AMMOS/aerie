@@ -55,8 +55,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         simulation = createSimulation(connection, planId, Map.of());
       }
 
-      cancelStaleSimulationDatasets(connection, simulation.id());
-
       final var dataset = createSimulationDataset(
           connection,
           simulation,
@@ -198,16 +196,6 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
           planStart,
           simulationStart,
           new ResultsProtocol.State.Incomplete());
-    }
-  }
-
-  private static void cancelStaleSimulationDatasets(
-      final Connection connection,
-      final long simulationId
-  ) throws SQLException
-  {
-    try (final var cancelSimulationsAction = new CancelOutdatedSimulationsAction(connection)) {
-      cancelSimulationsAction.apply(simulationId);
     }
   }
 
