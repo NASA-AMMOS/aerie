@@ -26,6 +26,8 @@ services:
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+      SCHEDULER_CLIENT_URL: http://localhost:27193
+      SCHEDULER_SERVER_URL: http://scheduler:27193
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     ports: ["80:80"]
     restart: always
@@ -60,13 +62,6 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
-  scheduler:
-    depends_on: ["postgres","merlin"]
-    image: "${AERIE_DOCKER_URL}/scheduler:${DOCKER_TAG}"
-    ports: ["27193:27193"]
-    restart: always
-    volumes:
-      - aerie_file_store:/usr/src/app/merlin_file_store
   postgres:
     environment:
       POSTGRES_DB: postgres
@@ -78,8 +73,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init-db:/docker-entrypoint-initdb.d
+  scheduler:
+    depends_on: ["postgres", "merlin"]
+    image: "${AERIE_DOCKER_URL}/scheduler:${DOCKER_TAG}"
+    ports: ["27193:27193"]
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store
 
 volumes:
   aerie_file_store:
-  postgres_data:
   mission_file_store:
+  postgres_data:
