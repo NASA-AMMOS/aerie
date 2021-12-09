@@ -169,13 +169,12 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * create an in-memory snapshot of the target plan's activity contents from aerie
-   *
-   * @param planMetadata identifying details of the plan to fetch content for
-   * @param mission the mission model that the plan adheres to
-   * @return a newly allocated snapshot of the plan contents
+   * {@inheritDoc}
    */
-  public Plan getPlanActivities(final PlanMetadata planMetadata, final MissionModelWrapper mission) {
+  @Override
+  public Plan getPlanActivities(final PlanMetadata planMetadata, final MissionModelWrapper mission)
+  throws IOException, NoSuchPlanException
+  {
     //thanks to AMaillard for already having these handy!
     final var controller = new AerieController(
         this.merlinGraphqlURI.toString(), (int) planMetadata.modelId(), planMetadata.horizon(), mission);
@@ -185,7 +184,7 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   /**
    * generate a name for the next created plan container using current timestamp
    *
-   * does not actually verify that the name is unique within aerie database
+   * currently, does not actually verify that the name is unique within aerie database
    *
    * @return a name for the next created plan container
    */
@@ -196,14 +195,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * create an entirely new plan container in aerie and synchronize the in-memory plan to it
-   *
-   * does not mutate the original plan, so metadata remains valid for the original plan
-   *
-   * @param planMetadata identifying details of a plan to emulate in creating new container. id is ignored.
-   * @param plan plan with all activity instances that should be stored to target merlin plan container
-   * @return the database id of the newly created aerie plan container
+   * {@inheritDoc}
    */
+  @Override
   public long createNewPlanWithActivities(final PlanMetadata planMetadata, final Plan plan)
   throws IOException, NoSuchPlanException
   {
@@ -218,16 +212,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * create a new empty plan container based on specifications
-   *
-   * does not attach a simulation / configuration to the plan! (may require separate call to createSimulationForPlan)
-   *
-   * @param name the human legible label for the new plan container to create
-   * @param modelId the database identifier of the mission model to associate with the plan
-   * @param startTime the absolute start time of the new plan container
-   * @param duration the duration of the new plan container
-   * @return the database id of the newly created aerie plan container
+   * {@inheritDoc}
    */
+  @Override
   public long createEmptyPlan(final String name, final long modelId, final Time startTime, final Duration duration)
   throws IOException, NoSuchPlanException
   {
@@ -250,10 +237,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * create a new empty simulation container with default configuration args attached to the target plan
-   *
-   * @param planId the database id of the aerie plan container to attach the simulation container to
+   * {@inheritDoc}
    */
+  @Override
   public void createSimulationForPlan(final long planId) throws IOException, NoSuchPlanException {
     final var request = (
         "mutation createSimulationForPlan { insert_simulation_one( object: {"
@@ -268,13 +254,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * synchronize the in-memory plan back over to aerie data stores via update operations
-   *
-   * the plan revision will change!
-   *
-   * @param planId aerie database identifier of the target plan to synchronize into
-   * @param plan plan with all activity instances that should be stored to target merlin plan container
+   * {@inheritDoc}
    */
+  @Override
   public void updatePlanActivities(final long planId, final Plan plan) throws IOException, NoSuchPlanException
   {
     //TODO: (api violation) currently clearing and repopulating plan; but loses existing activity instance ids!
@@ -285,11 +267,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * confirms that the specified plan exists in the aerie database, throwing exception if not
-   *
-   * @param planId the target plan database identifier
+   * {@inheritDoc}
    */
-  //TODO: (defensive) should combine such checks into the mutations they are guarding, but not possible?
+  @Override
   public void ensurePlanExists(final long planId) throws IOException, NoSuchPlanException {
     final Supplier<NoSuchPlanException> exceptionFactory = () -> new NoSuchPlanException(Long.toString(planId));
     final var request = "query ensurePlanExists { plan_by_pk( id: %s ) { id } }"
@@ -307,13 +287,10 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * delete all the activity instances stored in the target plan container
-   *
-   * the plan revision will change!
-   *
-   * @param planId the database id of the plan container to clear
+   * {@inheritDoc}
    */
   //TODO: (error cleanup) more diverse exceptions for failed operations
+  @Override
   public void clearPlanActivities(final long planId) throws IOException, NoSuchPlanException {
     ensurePlanExists(planId);
     final var request = (
@@ -332,15 +309,9 @@ public record GraphQLMerlinService(URI merlinGraphqlURI) implements MerlinServic
   }
 
   /**
-   * create activity instances in the target plan container for each activity in the input plan
-   *
-   * does not attempt to resolve id clashes or do activity instance updates
-   *
-   * the plan revision will change!
-   *
-   * @param planId the database id of the plan container to populate with new activity instances
-   * @param plan the plan from which to copy all activity instances into aerie
+   * {@inheritDoc}
    */
+  @Override
   public void createAllPlanActivities(final long planId, final Plan plan) throws IOException, NoSuchPlanException {
     ensurePlanExists(planId);
     final var requestPre = "mutation createAllPlanActivities { insert_activity( objects: [";
