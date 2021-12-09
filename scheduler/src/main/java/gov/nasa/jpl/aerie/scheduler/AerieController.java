@@ -6,8 +6,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
+import java.awt.GridLayout;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
