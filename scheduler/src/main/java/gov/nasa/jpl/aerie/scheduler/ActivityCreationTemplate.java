@@ -91,12 +91,12 @@ public class ActivityCreationTemplate extends ActivityExpression {
 
     protected DurationExpression parametricDur;
 
-    Builder  duration(@NotNull ExternalState<Duration> state, TimeExpression expr){
+    public Builder duration(@NotNull ExternalState<Duration> state, TimeExpression expr){
       this.parametricDur = new DurationExpressionState(new StateQueryParam<>(state, expr));
       return this;
     }
 
-    Builder duration(@NotNull DurationExpression durExpr){
+    public Builder duration(@NotNull DurationExpression durExpr){
       this.parametricDur = durExpr;
       return this;
     }

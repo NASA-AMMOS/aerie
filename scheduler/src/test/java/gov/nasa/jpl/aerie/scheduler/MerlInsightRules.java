@@ -17,6 +17,10 @@ public class MerlInsightRules extends Problem {
     this.planningHorizon  = mission.getPlanningHorizon();
   }
 
+  private ActivityType getActivityType(final String name) {
+    return this.getMissionModel().getActivityType(name);
+  }
+
   @Override
   public java.util.Collection<Goal> getGoals() {
     Collection<Goal> goals = new ArrayList<>();
@@ -28,8 +32,8 @@ public class MerlInsightRules extends Problem {
   }
 
   public Goal generateDSNVisibilityAllocationGoal(){
-    var actType1 = new ActivityType("AllocateDSNStation");
-    var actType2 = new ActivityType("SetDSNStationVisibility");
+    var actType1 = getActivityType("AllocateDSNStation");
+    var actType2 = getActivityType("SetDSNStationVisibility");
     final var period = Duration.of(8, Duration.HOURS);
     final var ratioAlloc = 5;
     final var actList = new ArrayList<ActivityInstance>();
@@ -64,7 +68,7 @@ public class MerlInsightRules extends Problem {
     }
 
     ProceduralCreationGoal dsnGoal = new ProceduralCreationGoal.Builder()
-        .named("Schedule DSN contacts")
+        .named("Schedule DSN contacts for initial setup")
         .withPriority(50)
         .forAllTimeIn(planningHorizon.getHor())
         .generateWith((plan) -> actList)
@@ -91,11 +95,11 @@ public class MerlInsightRules extends Problem {
    (may need acts in initial plan to turn on/off Monitoring resource)
    */
 
-    var HP3actType = new ActivityType("HP3TemP");
+    var HP3actType = getActivityType("HP3TemP");
     var mutex = GlobalConstraints.atMostOneOf(List.of(ActivityExpression.ofType(HP3actType)));
     mission.add(mutex);
 
-    var actT1 = new ActivityType("SSAMonitoring");
+    var actT1 = getActivityType("SSAMonitoring");
 
     List<ActivityInstance> turnONFFMonitoring = List.of(
         new ActivityInstance("TurnOnSSAMonitoring", actT1,planningHorizon.getStartAerie()
@@ -176,7 +180,7 @@ public class MerlInsightRules extends Problem {
    https://github.jpl.nasa.gov/insight-mst/apgen_surface/blob/b909cf5eb570ab5d4020795f181cf81190d3bfb4/model/IDS_tactical_activities.aaf
 */
 
-  var actTypeIDAMoveArm = new ActivityType("IDAMoveArm");
+  var actTypeIDAMoveArm = getActivityType("IDAMoveArm");
   //starts at middle of horizon
   var stMoveArm = planningHorizon.getAerieHorizonDuration().dividedBy(2);
   var duroveArm = Duration.of(20,Duration.MINUTE);
@@ -197,7 +201,7 @@ public class MerlInsightRules extends Problem {
    - starts at end of first IDSMoveArm
    ref: merlin act model https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAGrapple.java
 */
-  var atGrapple = new ActivityType("IDAGrapple");
+  var atGrapple = getActivityType("IDAGrapple");
 
   CoexistenceGoal goal2b= new CoexistenceGoal.Builder()
       .named("Grapple IDA")
@@ -272,7 +276,7 @@ public class MerlInsightRules extends Problem {
                          .build())
       .build();
 
-  var actTypeIDAHeatersOn = new ActivityType("IDAHeatersOn");
+  var actTypeIDAHeatersOn = getActivityType("IDAHeatersOn");
 
   CoexistenceGoal goal2e= new CoexistenceGoal.Builder()
       .named("Heaters ON")
@@ -297,7 +301,7 @@ public class MerlInsightRules extends Problem {
    https://github.jpl.nasa.gov/Aerie/aerie/blob/7598e014788595bf323e93185ffbd1dfa12fce68/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDAHeatersOff.java
 */
 
-  var actTypeIDAHeatersOff = new ActivityType("IDAHeatersOff");
+  var actTypeIDAHeatersOff = getActivityType("IDAHeatersOff");
 
   CoexistenceGoal goal2f= new CoexistenceGoal.Builder()
       .named("Heaters Off")
@@ -320,7 +324,7 @@ public class MerlInsightRules extends Problem {
    ref: merlin act model
    https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCImages.java#L28
 */
-  var actTypeIDCImage= new ActivityType("IDCImages");
+  var actTypeIDCImage= getActivityType("IDCImages");
 
   CoexistenceGoal goal2g= new CoexistenceGoal.Builder()
       .named("Image before grapple")
@@ -379,7 +383,7 @@ public class MerlInsightRules extends Problem {
                          .build())
       .build();
 
-  var actTypeIDCHeatersOn= new ActivityType("IDCHeatersOn");
+  var actTypeIDCHeatersOn= getActivityType("IDCHeatersOn");
 
 
   CoexistenceGoal goal2i= new CoexistenceGoal.Builder()
@@ -406,7 +410,7 @@ public class MerlInsightRules extends Problem {
    https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/ids/IDCHeatersOff.java
 */
 
-  var actTypeIDCHeatersOff= new ActivityType("IDCHeatersOff");
+  var actTypeIDCHeatersOff= getActivityType("IDCHeatersOff");
 
   CoexistenceGoal goal2j= new CoexistenceGoal.Builder()
       .named("Heaters after latest image")
@@ -434,7 +438,7 @@ public class MerlInsightRules extends Problem {
       .thenFilter(Filters.first())
       .build();
 
-  var actTypeICCImages =  new ActivityType("ICCImages");
+  var actTypeICCImages =  getActivityType("ICCImages");
 
   CoexistenceGoal goal2k= new CoexistenceGoal.Builder()
       .named("image stowed device in context before pickup")
@@ -489,7 +493,7 @@ public class MerlInsightRules extends Problem {
       .from(ActivityExpression.ofType(actTypeICCImages))
       .thenFilter(Filters.first())
       .build();
-  var actTypeIccHeatersOn = new ActivityType("ICCHeatersOn");
+  var actTypeIccHeatersOn = getActivityType("ICCHeatersOn");
 
   CoexistenceGoal goal2m= new CoexistenceGoal.Builder()
       .named("preheat for ICC image")
@@ -519,7 +523,7 @@ public class MerlInsightRules extends Problem {
       .thenFilter(Filters.last())
       .build();
 
-  var actTypeIccHeatersOff = new ActivityType("ICCHeatersOff");
+  var actTypeIccHeatersOff = getActivityType("ICCHeatersOff");
 
   CoexistenceGoal goal2n= new CoexistenceGoal.Builder()
       .named("turn off heaters for ICC image")
@@ -540,7 +544,7 @@ public class MerlInsightRules extends Problem {
 
     var goals = new ArrayList<Goal>();
 
-    goals.add(generateDSNVisibilityAllocationGoal());
+    //the dsn visibility activities from generateDSNVisibilityAllocationGoal are required for the following goals
 
     StateConstraintExpression sc1 = new StateConstraintExpression.Builder()
         .andBuilder()
@@ -594,7 +598,7 @@ public class MerlInsightRules extends Problem {
    https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/models/data/DataModel.java#L64
 */
 
-  var actTypeXbandActive = new ActivityType("XBandActive");
+  var actTypeXbandActive = getActivityType("XBandActive");
 
   CoexistenceGoal goal3a= new CoexistenceGoal.Builder()
       .named("xbandactivegoal")
@@ -624,7 +628,7 @@ public class MerlInsightRules extends Problem {
    https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L39
 */
 
-    var actTypeXbandPrep = new ActivityType("XBandPrep");
+    var actTypeXbandPrep = getActivityType("XBandPrep");
 
     CoexistenceGoal goal3b= new CoexistenceGoal.Builder()
         .named("xbandprepgoal")
@@ -651,7 +655,7 @@ public class MerlInsightRules extends Problem {
    ref: duration calculation from old decompositional parent act
    https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/insight/src/main/java/gov/nasa/jpl/aerie/insight/activities/comm/xband/XBandComm.java#L39
 */
-    var actTypeXbandCleanup= new ActivityType("XBandCleanup");
+    var actTypeXbandCleanup= getActivityType("XBandCleanup");
 
 
     CoexistenceGoal goal3c= new CoexistenceGoal.Builder()
@@ -682,7 +686,7 @@ public class MerlInsightRules extends Problem {
    https://github.jpl.nasa.gov/insight-mst/apgen_surface/blob/3f8c09da174315b57a28f08fa2a9df9688b6edc4/model/Master_activities.aaf#L1269
 
    */
-    var actTypeXbandCommched= new ActivityType("XBandCommSched");
+    var actTypeXbandCommched= getActivityType("XBandCommSched");
 
     var enveloppe = new Transformers.EnveloppeBuilder()
         .withinEach(expr)

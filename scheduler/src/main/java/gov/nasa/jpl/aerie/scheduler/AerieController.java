@@ -43,7 +43,7 @@ public class AerieController {
   private static final String IT_PLAN_BASENAME = "Plan_";
   private static final java.time.Duration TIMEOUT_HTTP = java.time.Duration.ofMinutes(10);
 
-  //TODO: populate these with answers from AERIE
+  //TODO: reconcile with aerie data model (eg different plans cannot hold the same activity instances, but scheduler plans can)
   private final Map<Plan, Long> planIds;
   private final Map<Plan, Map<String, AerieStateCache>> stateCaches;
   private final Map<Plan, Duration> planStartTimes;
@@ -66,27 +66,33 @@ public class AerieController {
   private final boolean isSessionAlive = true;
 
 
-  public AerieController(final String distantAerieURL,
-                         final int missionModelId,
-                         final boolean authenticationRequired,
-                         final PlanningHorizon planningHorizon,
-                         final MissionModelWrapper missionModel) {
-    this(distantAerieURL, missionModelId,planningHorizon,missionModel);
+  public AerieController(
+      final String distantAerieURL,
+      final int missionModelId,
+      final boolean authenticationRequired,
+      final PlanningHorizon planningHorizon,
+      final MissionModelWrapper missionModel)
+  {
+    this(distantAerieURL, missionModelId, planningHorizon, missionModel);
     this.authenticationRequired = authenticationRequired;
   }
 
-  public AerieController(final String distantAerieURL,
-                         final int missionModelId,
-                         final PlanningHorizon planningHorizon,
-                         final MissionModelWrapper missionModel) {
-    this(distantAerieURL, missionModelId, "", planningHorizon,missionModel);
+  public AerieController(
+      final String distantAerieURL,
+      final int missionModelId,
+      final PlanningHorizon planningHorizon,
+      final MissionModelWrapper missionModel)
+  {
+    this(distantAerieURL, missionModelId, "", planningHorizon, missionModel);
   }
 
-  public AerieController(final String distantAerieURL,
-                         final int missionModelId,
-                         final String planPrefix,
-                         final PlanningHorizon planningHorizon,
-                         final MissionModelWrapper missionModel) {
+  public AerieController(
+      final String distantAerieURL,
+      final int missionModelId,
+      final String planPrefix,
+      final PlanningHorizon planningHorizon,
+      final MissionModelWrapper missionModel)
+  {
     this.missionModelWrapper = missionModel;
     this.distantAerieURL = distantAerieURL;
     this.AMMOS_MISSION_MODEL_ID = missionModelId;
@@ -132,7 +138,7 @@ public class AerieController {
     }
   }
 
-  public Plan fetchPlan(final long planId){
+  public Plan fetchPlan(final long planId) {
     final var req = new FetchPlanRequest(planId);
     postRequest(req);
     return req.getPlan();
@@ -145,6 +151,7 @@ public class AerieController {
   }
 
   private boolean currentlyTryingToConnect = false;
+
   protected void authenticateIfNecessary() {
     currentlyTryingToConnect = true;
     if (authenticationRequired) {
@@ -172,7 +179,7 @@ public class AerieController {
   }
 
   protected boolean postRequest(GraphRequest request) {
-    if(!currentlyTryingToConnect) {
+    if (!currentlyTryingToConnect) {
       authenticateIfNecessary();
     }
     String jsonString = request.getRequest();
@@ -213,19 +220,19 @@ public class AerieController {
         GZIPInputStream body = new GZIPInputStream(response.body());
         Reader reader = new InputStreamReader(body, "UTF-8");
         Writer writer = new StringWriter();
-          char[] buffer = new char[10240];
-          int length = 0;
-          while ((length = reader.read(buffer)) > 0) {
-            writer.write(buffer, 0, length);
-          }
-          String bodystr = writer.toString();
-          System.out.println(bodystr);
-          JSONObject json = new JSONObject(bodystr);
-          return request.handleResponse(json);
+        char[] buffer = new char[10240];
+        int length = 0;
+        while ((length = reader.read(buffer)) > 0) {
+          writer.write(buffer, 0, length);
+        }
+        String bodystr = writer.toString();
+        System.out.println(bodystr);
+        JSONObject json = new JSONObject(bodystr);
+        return request.handleResponse(json);
       } catch (ZipException e) {
         //probably not in GZIP format
         e.printStackTrace();
-        if(response!=null) {
+        if (response != null) {
           System.out.println(response.body());
         }
         return false;
@@ -305,7 +312,12 @@ public class AerieController {
     return ret;
   }
 
-  public boolean initEmptyPlan(Plan plan, Duration horizonBegin, Duration horizonEnd, Map<String, AerieStateCache> cache) {
+  public boolean initEmptyPlan(
+      Plan plan,
+      Duration horizonBegin,
+      Duration horizonEnd,
+      Map<String, AerieStateCache> cache)
+  {
     boolean ret = true;
 
     CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
@@ -325,7 +337,7 @@ public class AerieController {
     boolean ret = true;
     var planId = planIds.get(plan);
     boolean result = true;
-    if(planId == null) {
+    if (planId == null) {
       CreatePlanRequest planRequest = new CreatePlanRequest(plan, horizonBegin, horizonEnd, cache);
       result = postRequest(planRequest);
     }
@@ -354,7 +366,36 @@ public class AerieController {
 
   }
 
-  public boolean sendActivityInstance(Plan plan, ActivityInstance act){
+  /**
+   * update the target plan container in merlin to be consistent with activities in the provided plan object
+   *
+   * abandons the plan update as soon as it encounters any failure
+   *
+   * @param planId the id of the plan to update in merlin
+   * @param plan the activity contents to store into merlin
+   * @return true iff all necessary updates and insertions succeeded
+   */
+  public boolean updatePlan(final long planId, final Plan plan) {
+    //NB: it appears this code is out of date with the available hasura db mutations!
+    //TODO: more efficient if we could do a batch-update/insert of all acts at once
+    if (planIds.get(plan) == null) {
+      System.out.println("Plan has never been sent to Aerie");
+      return false;
+    } else {
+      for (final var act : plan.getActivities()) {
+        final boolean success;
+        if (activityInstancesIds.containsKey(act)) {
+          success = updateActivity(act, plan);
+        } else {
+          success = sendActivityInstance(plan, act);
+        }
+        if (!success) return false;
+      }
+    }
+    return true;
+  }
+
+  public boolean sendActivityInstance(Plan plan, ActivityInstance act) {
     CreateActivityInstanceRequest actInstRequest = new CreateActivityInstanceRequest(act, plan);
     return postRequest(actInstRequest);
   }
@@ -414,11 +455,11 @@ public class AerieController {
   protected class FetchPlanRequest extends GraphRequest {
 
     public String getRequest() {
-      var req = "query { plan_by_pk(id:%d) { activities { start_offset type arguments } duration start_time }} ";
+      var req = "query { plan_by_pk(id:%d) { activities { id start_offset type arguments } duration start_time }} ";
       return String.format(req, id);
     }
 
-    public FetchPlanRequest(long id){
+    public FetchPlanRequest(long id) {
       this.id = id;
     }
 
@@ -434,7 +475,8 @@ public class AerieController {
       var jsonplan = ((JSONObject) response.get("data")).getJSONObject("plan_by_pk");
       var activities = jsonplan.getJSONArray("activities");
       this.plan = new PlanInMemory(missionModelWrapper);
-      for (int i = 0; i < activities.length(); i++){
+      addPlanId(plan, this.id);
+      for (int i = 0; i < activities.length(); i++) {
         var actInst = jsonToInstance(activities.getJSONObject(i));
         this.plan.add(actInst);
       }
@@ -442,43 +484,46 @@ public class AerieController {
     }
   }
 
-  private Parameter getParamName(List<Parameter> params, String name){
-    for(var param:params){
-      if(param.name().equals(name)){
+  private Parameter getParamName(List<Parameter> params, String name) {
+    for (var param : params) {
+      if (param.name().equals(name)) {
         return param;
       }
     }
     return null;
   }
 
-  private ActivityInstance jsonToInstance(JSONObject jsonActivity){
+  private ActivityInstance jsonToInstance(JSONObject jsonActivity) {
     String type = jsonActivity.getString("type");
     var actTypes = missionModelWrapper.getMissionModel().getTaskSpecificationTypes();
     var specType = actTypes.get(type);
-    if(specType == null){
+    if (specType == null) {
       throw new IllegalArgumentException("Activity type is not present in mission model");
     }
     var schedulerActType = missionModelWrapper.getActivityType(type);
-    if(schedulerActType == null){
+    if (schedulerActType == null) {
       throw new IllegalArgumentException("Activity type is not present in scheduler mission model wrapper");
     }
 
     ActivityInstance act = new ActivityInstance("fetched_" + java.util.UUID.randomUUID(), schedulerActType);
+    final var actPK = jsonActivity.getLong("id");
+    addActInstanceId(act, actPK);
+
     String start = jsonActivity.getString("start_offset");
     var params = jsonActivity.getJSONObject("arguments");
-    for(var paramName : params.keySet()){
+    for (var paramName : params.keySet()) {
       var visitor = new DemuxJson(paramName, params);
-      var paramSpec = getParamName(specType.getParameters(),paramName);
+      var paramSpec = getParamName(specType.getParameters(), paramName);
       var valueParam = paramSpec.schema().match(visitor);
       act.addParameter(paramName, valueParam);
     }
     act.setStartTime(DemuxJson.fromString(start));
-    var actDurationAsParam =act.getParameters().get("duration");
-    if(actDurationAsParam!= null){
-      act.setDuration((Duration)actDurationAsParam);
+    var actDurationAsParam = act.getParameters().get("duration");
+    if (actDurationAsParam != null) {
+      act.setDuration((Duration) actDurationAsParam);
       act.getParameters().remove("duration");
-    } else{
-      throw new IllegalArgumentException("Parameters with name \"duration\" has not been found, cannot set activity instance duration");
+    } else {
+      act.setDuration(Duration.ZERO);
     }
 
     return act;
@@ -720,7 +765,7 @@ public class AerieController {
     @Override
     public boolean handleResponse(JSONObject response) {
       int id = ((JSONObject) (((JSONObject) response.get("data")).get("delete_plan_by_pk"))).getInt("id");
-      if(planIds.containsValue(id)){
+      if (planIds.containsValue(id)) {
         planIds.values().remove(id);
       }
       return true;
@@ -743,11 +788,11 @@ public class AerieController {
     public String getRequest() {
       StringBuilder sbPlanRequest = new StringBuilder();
       sbPlanRequest.append("mutation { insert_plan_one(object : { model_id: ");
-      sbPlanRequest.append(""+AMMOS_MISSION_MODEL_ID);
+      sbPlanRequest.append("" + AMMOS_MISSION_MODEL_ID);
       sbPlanRequest.append(", start_time:\"");
       sbPlanRequest.append(horizonBegin);
       sbPlanRequest.append("\", duration:\"");
-      sbPlanRequest.append(horizonEnd.in(Duration.SECONDS)+"s");
+      sbPlanRequest.append(horizonEnd.in(Duration.SECONDS) + "s");
       sbPlanRequest.append("\", name:\"");
       sbPlanRequest.append(createPlanName());
       sbPlanRequest.append("\"}){ id }}");
@@ -795,9 +840,9 @@ public class AerieController {
                 instance.getEndTime()));
         assert (time.isSingleton());
         return getGraphlqlVersionOfParameter(sqParam.state.getValueAtTime(time.start));
-      } else if(param instanceof String s) {
-        return "\""+ s +"\"";
-      }else {
+      } else if (param instanceof String s) {
+        return "\"" + s + "\"";
+      } else {
         throw new RuntimeException("Unsupported parameter type");
       }
     }
@@ -819,14 +864,16 @@ public class AerieController {
 
 
       if (instance.getDuration() != null) {
-        sbParams.append("duration :" + ((int) instance.getDuration().in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS)) + ",");
+        sbParams.append("duration :" + (instance
+            .getDuration()
+            .in(gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECOND)) + ",");
         atLeastOne = true;
       }
       for (Map.Entry<String, Object> entry : instance.getParameters().entrySet()) {
         atLeastOne = true;
         String fakeParamName = entry.getKey();
         sbParams.append(fakeParamName
-                        +":"
+                        + ":"
                         + getGraphlqlVersionOfParameter(entry.getValue())
                         + ",");
 
@@ -849,29 +896,29 @@ public class AerieController {
     }
 
     public boolean handleResponse(JSONObject response) {
-        Long id =
-            ((JSONObject) (((JSONObject) response.get("data")).get("insert_activity_one"))).getLong(
-                "id");
-        addActInstanceId(instance, id);
-        return true;
+      Long id =
+          ((JSONObject) (((JSONObject) response.get("data")).get("insert_activity_one"))).getLong(
+              "id");
+      addActInstanceId(instance, id);
+      return true;
     }
 
   }
 
-  public boolean createSimulation(Plan plan){
+  public boolean createSimulation(Plan plan) {
     CreateSimulation req = new CreateSimulation(plan);
     return postRequest(req);
   }
 
-  protected class CreateSimulation extends GraphRequest{
+  protected class CreateSimulation extends GraphRequest {
 
     private Long id;
 
-    public CreateSimulation(Plan plan){
+    public CreateSimulation(Plan plan) {
       Long id = planIds.get(plan);
-      if(id== null){
+      if (id == null) {
 
-      } else{
+      } else {
         this.id = id;
       }
     }
@@ -935,7 +982,7 @@ public class AerieController {
         JSONArray values = stateNameValues.getJSONArray("values");
         for (int j = 0; j < values.length(); j++) {
           JSONObject xy = values.getJSONObject(j);
-          Duration elapsed = Duration.of((xy.getLong("x") / 1000000), Duration.SECONDS );
+          Duration elapsed = Duration.of((xy.getLong("x") / 1000000), Duration.SECONDS);
           Object value = xy.get("y");
           if (Double.class.equals(stateTypes.get(plan).get(name))) {
             value = xy.getDouble("y");

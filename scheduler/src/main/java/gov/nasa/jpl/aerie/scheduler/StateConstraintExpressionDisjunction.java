@@ -14,7 +14,7 @@ public class StateConstraintExpressionDisjunction extends StateConstraintExpress
     this(constraints, null);
   }
 
-  protected StateConstraintExpressionDisjunction(List<StateConstraintExpression> constraints, String name) {
+  public StateConstraintExpressionDisjunction(List<StateConstraintExpression> constraints, String name) {
     super(null, name);
 
     disjunction = new LinkedList<StateConstraintExpression>(constraints);

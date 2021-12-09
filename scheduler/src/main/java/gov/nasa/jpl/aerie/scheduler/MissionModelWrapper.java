@@ -35,13 +35,23 @@ public class MissionModelWrapper {
     this.simFacade = new SimulationFacade(planningHorizon, missionModel);
 
     //TODO: find cleaner way to handle built-in act types
-
     //TODO: find cleaner way to handle windows in general
     //special activity for displaying valid windows in visualization
     add(new ActivityType("Window"));
 
     //include special activity type for marking plan horizon
     add(new ActivityType("HorizonMarker"));
+
+    //add all activity types known to aerie to scheduler index
+    //TODO: reduce duplicate activity type abstractions between aerie and scheduler
+    if( missionModel != null ) {
+      missionModel.getTaskSpecificationTypes().keySet().stream()
+                  .map(ActivityType::new).forEach(this::add);
+    }
+  }
+
+  public MissionModelWrapper(PlanningHorizon horizon) {
+    this(null, horizon);
   }
 
   public MissionModelWrapper() {

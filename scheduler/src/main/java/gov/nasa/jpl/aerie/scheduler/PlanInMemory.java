@@ -85,6 +85,7 @@ public class PlanInMemory implements Plan {
               .add(act);
     actsByType.computeIfAbsent(type, k -> new java.util.LinkedList<ActivityInstance>())
               .add(act);
+    actsSet.add(act);
   }
 
   @Override
@@ -100,8 +101,9 @@ public class PlanInMemory implements Plan {
     actsByName.remove(act.getName());
     var acts = actsByTime.get(act.getStartTime());
     if (acts != null) acts.remove(act);
-    acts = actsByType.get(act.getType());
+    acts = actsByType.get(act.getType().getName());
     if (acts != null) acts.remove(act);
+    actsSet.remove(act);
   }
 
   @Override
@@ -141,6 +143,14 @@ public class PlanInMemory implements Plan {
   }
 
   /**
+   * {@inheritDoc}
+   */
+  @Override
+  public java.util.Set<ActivityInstance> getActivities() {
+    return java.util.Collections.unmodifiableSet(actsSet);
+  }
+
+  /**
    * container of all activity instances in plan, indexed by name
    */
   private java.util.HashMap<String, ActivityInstance> actsByName
@@ -157,6 +167,12 @@ public class PlanInMemory implements Plan {
    */
   private java.util.TreeMap<Duration, java.util.List<ActivityInstance>> actsByTime
       = new java.util.TreeMap<>();
+
+  /**
+   * container of all activity instances in plan
+   */
+  private java.util.HashSet<ActivityInstance> actsSet
+      = new java.util.HashSet<>();
 
   /**
    * {@inheritDoc}

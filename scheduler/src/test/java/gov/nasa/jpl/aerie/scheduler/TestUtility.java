@@ -29,12 +29,13 @@ public class TestUtility {
 
   }
 
-  public static MissionModel<?> getMerlinSightMissionModel(){
+  public static MissionModelWrapper getMerlinSightMissionModel(final PlanningHorizon horizon){
     final var builder = new MissionModelBuilder();
     final var configuration = InSightValueMappers.configuration().serializeValue(Configuration.defaultConfiguration());
     final var factory = new GeneratedMissionModelFactory();
     final var model = factory.instantiate(configuration, builder);
-    return builder.build(model, factory.getTaskSpecTypes());
+    final var mission = builder.build(model, factory.getTaskSpecTypes());
+    return new MissionModelWrapper(mission,horizon);
   }
 
   public static boolean activityStartingAtTime(Plan plan, Duration time, ActivityType activityType) {

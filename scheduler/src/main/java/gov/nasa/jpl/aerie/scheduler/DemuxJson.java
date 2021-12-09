@@ -4,9 +4,12 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.json.JSONObject;
 
+import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class DemuxJson implements ValueSchema.Visitor<Object> {
@@ -40,7 +43,7 @@ public class DemuxJson implements ValueSchema.Visitor<Object> {
 
   @Override
   public Object onDuration() {
-    return Duration.of(params.getLong(paramName), Duration.SECONDS);
+    return Duration.of(params.getLong(paramName), Duration.MICROSECOND);
 
   }
 
@@ -82,46 +85,32 @@ public class DemuxJson implements ValueSchema.Visitor<Object> {
   }
 
 
+  //TODO: resolve near dupl with scheduler-server...GraphQLParsers eg by elevating to merlin library somewhere
+  public static final Pattern intervalPattern = Pattern.compile(
+      "^(?<sign>[+-])?" //optional sign prefix, as in +322:21:15
+      + "(((?<hr>\\d+):)?" //optional hours field, as in  322:21:15
+      + "(?<min>\\d+):)?" //optional minutes field, as in 22:15
+      + "(?<sec>\\d+" //required seconds field, as in 15
+      + "(\\.\\d*)?)$"); //optional decimal sub-seconds, as in 15. or 15.111
 
-  static Duration fromString(String s){
-    var leftright = s.split(".");
-    String left = s, right=null;
-    if(leftright.length!=0){
-      if(leftright.length>2){
-        throw new IllegalArgumentException("One decimal point expected");
-      }
-      left = leftright[0];
-      right = leftright[1];
+  public static Duration fromString(final String in) {
+
+    final var matcher = intervalPattern.matcher(in);
+    if (!matcher.matches()) {
+      throw new DateTimeParseException("unable to parse HH:MM:SS.sss duration from \"" + in + "\"", in, 0);
     }
-
-    var pattern = Pattern.compile("(\\d*):(\\d\\d):(\\d\\d)");
-
-    var w = pattern.matcher(left);
-    Duration d = Duration.ZERO;
-    if(w.matches()){
-
-      var hours = Integer.valueOf(w.group(1));
-      d = d.plus(hours, Duration.HOURS);
-      var min= Integer.valueOf(w.group(2));
-      d = d.plus(min, Duration.MINUTE);
-      var sec= Integer.valueOf(w.group(3));
-      d = d.plus(sec, Duration.SECONDS);
-    } else{
-      //does not match
-      throw new IllegalArgumentException("Duration expected");
-    }
-    if(right!= null) {
-      var dec = Integer.valueOf(right);
-
-      if(right.length() == 3){
-        d = d.plus(dec, Duration.MILLISECOND);
-      } else if (right.length() == 6) {
-        d = d.plus(dec, Duration.MICROSECOND);
-      } else{
-        throw new IllegalArgumentException("Decimal precision should be 3 or 6");
-      }
-    }
-    return d;
+    final var signValues = Map.of("+",1,"-",-1);
+    final var sign = Optional.ofNullable(matcher.group("sign")).map(signValues::get).orElse(1);
+    final var hr = Optional.ofNullable(matcher.group("hr")).map(Integer::parseInt)
+                           .map(java.time.Duration::ofHours).orElse(java.time.Duration.ZERO);
+    final var min = Optional.ofNullable(matcher.group("min")).map(Integer::parseInt)
+                            .map(java.time.Duration::ofMinutes).orElse(java.time.Duration.ZERO);
+    final var sec = Optional.ofNullable(matcher.group("sec")).map(Double::parseDouble)
+                            .map(s -> (long) (s * 1000 * 1000))//seconds->millis->micros
+                            .map(us -> java.time.Duration.of(us, ChronoUnit.MICROS))
+                            .orElse(java.time.Duration.ZERO);
+    final var total = hr.plus(min).plus(sec).multipliedBy(sign);
+    return Duration.of(total.toNanos() / 1000, Duration.MICROSECOND);
   }
 
 

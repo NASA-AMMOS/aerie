@@ -14,7 +14,7 @@ import java.util.jar.JarFile;
 
 public class JarClassLoader {
 
-  public static Collection<Problem> loadProblemsFromJar(String pathToJar, MissionModel<?> missionModel)
+  public static Collection<Problem> loadProblemsFromJar(String pathToJar, MissionModelWrapper missionModel)
   throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException
   {
     try {
