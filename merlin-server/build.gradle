@@ -10,7 +10,9 @@ java {
 }
 
 test {
-  useJUnitPlatform()
+  useJUnitPlatform {
+    includeEngines 'jqwik', 'junit-jupiter'
+  }
 }
 
 application {
@@ -40,4 +42,5 @@ dependencies {
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
   testImplementation 'org.assertj:assertj-core:3.21.0'
   testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
+  testImplementation 'net.jqwik:jqwik:1.6.0'
 }

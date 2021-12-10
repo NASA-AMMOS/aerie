@@ -19,11 +19,12 @@ import org.apache.commons.lang3.tuple.Triple;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.SortedMap;
 import java.util.stream.Collectors;
 
 public final class PostgresResultsCellRepository implements ResultsCellRepository {
@@ -280,8 +281,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
     final Map<String, SerializedActivity> unfinishedActivities = Map.of();
 
-    // TODO: Events are not currently persisted in the database. When they are, this stub will need to be updated.
-    final var events = new ArrayList<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>>();
+    final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
+    final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
     return new SimulationResults(
         profiles.realProfiles(),
@@ -289,8 +290,29 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
         activities,
         unfinishedActivities,
         simulationStart,
+        topics,
         events
     );
+  }
+
+  private static List<Triple<Integer, String, ValueSchema>> getSimulationTopics(Connection connection, long datasetId)
+  throws SQLException
+  {
+    try (final var getSimulationTopicsAction = new GetSimulationTopicsAction(connection)) {
+      return getSimulationTopicsAction.get(datasetId);
+    }
+  }
+
+  private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  getSimulationEvents(
+      final Connection connection,
+      final long datasetId,
+      final Timestamp startTime
+  ) throws SQLException
+  {
+    try (final var getSimulationEventsAction = new GetSimulationEventsAction(connection)) {
+      return getSimulationEventsAction.get(datasetId, startTime);
+    }
   }
 
   private static Map<String, SimulatedActivity> getSimulatedActivities(
@@ -387,9 +409,36 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var profileSet = ProfileSet.of(results.realProfiles, results.discreteProfiles);
     ProfileRepository.postResourceProfiles(connection, datasetId, profileSet, simulationStart);
     postSimulatedActivities(connection, datasetId, results.simulatedActivities, simulationStart);
+    insertSimulationTopics(connection, datasetId, results.topics);
+    insertSimulationEvents(connection, datasetId, results.events, simulationStart);
 
     try (final var setSimulationStateAction = new SetSimulationStateAction(connection)) {
       setSimulationStateAction.apply(datasetId, new State.Success(results));
+    }
+  }
+
+  private static void insertSimulationTopics(
+      Connection connection,
+      long datasetId,
+      final List<Triple<Integer, String, ValueSchema>> topics) throws SQLException
+  {
+    try (
+        final var insertSimulationTopicsAction = new InsertSimulationTopicsAction(connection);
+    ) {
+      insertSimulationTopicsAction.apply(datasetId, topics);
+    }
+  }
+
+  private static void insertSimulationEvents(
+      Connection connection,
+      long datasetId,
+      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      Timestamp simulationStart) throws SQLException
+  {
+    try (
+        final var insertSimulationEventsAction = new InsertSimulationEventsAction(connection);
+    ) {
+        insertSimulationEventsAction.apply(datasetId, events, simulationStart);
     }
   }
 

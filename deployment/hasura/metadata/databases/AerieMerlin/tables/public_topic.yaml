@@ -1,0 +1,13 @@
+table:
+  name: topic
+  schema: public
+array_relationships:
+- name: events
+  using:
+    foreign_key_constraint_on:
+      columns:
+        - dataset_id
+        - topic_index
+      table:
+        name: event
+        schema: public

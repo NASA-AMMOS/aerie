@@ -14,3 +14,5 @@
 - "!include public_simulation_template.yaml"
 - "!include public_span.yaml"
 - "!include public_uploaded_file.yaml"
+- "!include public_topic.yaml"
+- "!include public_event.yaml"
