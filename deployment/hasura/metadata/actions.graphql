@@ -1,3 +1,19 @@
+type Mutation {
+  addExternalDataset(
+    planId: Int!
+    datasetStart: String!
+    profileSet: ProfileSet!
+  ): AddExternalDatasetResponse
+}
+
+type Query {
+  getActivityEffectiveArguments(
+    missionModelId: ID!
+    activityTypeName: String!
+    activityArguments: ActivityArguments!
+  ): EffectiveArgumentsResponse
+}
+
 type Query {
   resourceTypes(
     missionModelId: ID!
@@ -16,14 +32,6 @@ type Query {
     missionModelId: ID!
     activityArguments: ActivityArguments!
   ): ValidationResponse
-}
-
-type Query {
-  getActivityEffectiveArguments(
-    missionModelId: ID!
-    activityTypeName: String!
-    activityArguments: ActivityArguments!
-  ): EffectiveArgumentsResponse
 }
 
 enum MerlinSimulationStatus {
@@ -54,6 +62,10 @@ type EffectiveArgumentsResponse {
   errors: [String!]
 }
 
+type AddExternalDatasetResponse {
+  datasetId: Int!
+}
+
 scalar ResourceSchema
 
 scalar MerlinSimulationResults
@@ -61,3 +73,5 @@ scalar MerlinSimulationResults
 scalar MerlinSimulationFailureReason
 
 scalar ActivityArguments
+
+scalar ProfileSet

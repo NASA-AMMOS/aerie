@@ -66,13 +66,13 @@ public class ActivityExpression {
 
     Map<String, Object> parameters = new HashMap<String, Object>();
 
-    public B withParameter(String param, QueriableState<?> state, TimeExpression timeToQuery) {
-      parameters.put(param, new StateQueryParam(state, timeToQuery));
+    public <T> B withParameter(String param, QueriableState<T> state, TimeExpression timeToQuery) {
+      parameters.put(param, new StateQueryParam<T>(state, timeToQuery));
       return getThis();
     }
 
-    public B withParameter(String param, QueriableState<?> state) {
-      parameters.put(param, new StateQueryParam(state, TimeExpression.atStart()));
+    public <T> B withParameter(String param, QueriableState<T> state) {
+      parameters.put(param, new StateQueryParam<T>(state, TimeExpression.atStart()));
       return getThis();
     }
 
@@ -519,11 +519,16 @@ public class ActivityExpression {
       for (var param : parameters.entrySet()) {
         if (params.containsKey(param.getKey())) {
 
-          if (param.getValue() instanceof ExternalState<?>) {
+          if (param.getValue() instanceof StateQueryParam) {
+            var sqp =(StateQueryParam) param.getValue();
+            var timeOfQuery = sqp.timeExpr.computeTime(null,Window.between(act.getStartTime(), act.getEndTime()));
+            if(!timeOfQuery.isSingleton()){
+              throw new RuntimeException("TimeExpression must return Singleton Window for StateQuery parameters");
+            }
             match = params
                 .get(param.getKey())
-                .equals(((ExternalState<?>) param.getValue()).getValueAtTime(act.getStartTime()));
-          } else {
+                .equals(sqp.state.getValueAtTime(timeOfQuery.start));
+          }else {
             match = params.get(param.getKey()).equals(param.getValue());
           }
 

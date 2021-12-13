@@ -8,16 +8,17 @@ services:
       GQL_API_URL: http://localhost:8080/v1/graphql
       PORT: 9000
       POSTGRES_AERIE_MERLIN_DB: aerie_merlin
+      POSTGRES_AERIE_SCHED_DB: aerie_sched
       POSTGRES_AERIE_UI_DB: aerie_ui
       POSTGRES_HOST: postgres
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432
       POSTGRES_USER: aerie
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-gateway:develop"
+    image: "ghcr.io/nasa-ammos/aerie-gateway:develop"
     ports: ["9000:9000"]
     restart: always
     volumes:
-      - file_store:/app/files
+      - aerie_file_store:/app/files
   aerie_ui:
     depends_on: ["postgres"]
     environment:
@@ -26,6 +27,8 @@ services:
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+      SCHEDULER_CLIENT_URL: http://localhost:27193
+      SCHEDULER_SERVER_URL: http://scheduler:27193
     image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
     ports: ["80:80"]
     restart: always
@@ -33,6 +36,7 @@ services:
     depends_on: ["postgres"]
     environment:
       AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
+      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_sched
       AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
       HASURA_GRAPHQL_DEV_MODE: "true"
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
@@ -48,7 +52,7 @@ services:
     build:
       context: .
       dockerfile: scripts/dockerfiles/merlin.Dockerfile
-    depends_on: [ "postgres" ]
+    depends_on: ["postgres"]
     environment:
       MERLIN_PORT: 27183
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
@@ -58,10 +62,10 @@ services:
       MERLIN_DB_USER: "aerie"
       MERLIN_DB_PASSWORD: "aerie"
       MERLIN_DB: "aerie_merlin"
-    ports: [ "27183:27183"]
+    ports: ["27183:27183"]
     restart: always
     volumes:
-      - file_store:/usr/src/app/merlin_file_store
+      - aerie_file_store:/usr/src/app/merlin_file_store
   postgres:
     environment:
       POSTGRES_DB: postgres
@@ -73,7 +77,30 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
+  scheduler:
+    build:
+      context: .
+      dockerfile: scripts/dockerfiles/scheduler.Dockerfile
+    depends_on: ["postgres","merlin"]
+    environment:
+      MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
+      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
+      SCHED_DB: "aerie_sched"
+      SCHED_DB_PASSWORD: "aerie"
+      SCHED_DB_PORT: 5432
+      SCHED_DB_SERVER: "postgres"
+      SCHED_DB_USER: "aerie"
+      SCHED_LOCAL_STORE: /usr/src/app/sched_file_store
+      SCHED_LOGGING: "true"
+      SCHED_OUTPUT_MODE: UpdateInputPlanWithNewActivities
+      SCHED_PORT: 27193
+      SCHED_RULES_JAR: /usr/src/app/merlin_file_store/sched_rules.jar
+    ports: ["27193:27193"]
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store
 
 volumes:
-  file_store:
+  aerie_file_store:
+  mission_file_store:
   postgres_data:

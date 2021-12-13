@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 
 import java.util.List;
 
@@ -16,7 +17,9 @@ import java.util.List;
 //TODO: replace mission model with Merlin provided manifest
 public class MissionModelWrapper {
 
-  SimulationFacade simFacade;
+  private final SimulationFacade simFacade;
+
+  private final MissionModel<?> missionModel;
 
   /**
    * create a fresh new mission model
@@ -26,17 +29,29 @@ public class MissionModelWrapper {
    */
   public MissionModelWrapper(MissionModel<?> missionModel, PlanningHorizon planningHorizon) {
 
+    this.missionModel = missionModel;
+
     //TODO: change parametrization
-    simFacade = new SimulationFacade(planningHorizon, missionModel);
+    this.simFacade = new SimulationFacade(planningHorizon, missionModel);
 
     //TODO: find cleaner way to handle built-in act types
-
     //TODO: find cleaner way to handle windows in general
     //special activity for displaying valid windows in visualization
     add(new ActivityType("Window"));
 
     //include special activity type for marking plan horizon
     add(new ActivityType("HorizonMarker"));
+
+    //add all activity types known to aerie to scheduler index
+    //TODO: reduce duplicate activity type abstractions between aerie and scheduler
+    if( missionModel != null ) {
+      missionModel.getTaskSpecificationTypes().keySet().stream()
+                  .map(ActivityType::new).forEach(this::add);
+    }
+  }
+
+  public MissionModelWrapper(PlanningHorizon horizon) {
+    this(null, horizon);
   }
 
   public MissionModelWrapper() {
@@ -46,11 +61,28 @@ public class MissionModelWrapper {
   public ExternalState<Integer> getIntState(String name){
     return simFacade.getIntResource(name);
   }
+
+  public ExternalState<Duration> getDurState(String name){
+    return simFacade.getDurResource(name);
+  }
+
   public ExternalState<Double> getDoubleState(String name){
     return simFacade.getDoubleResource(name);
   }
   public ExternalState<Boolean> getBoolState(String name){
     return simFacade.getBooleanResource(name);
+  }
+
+  public ExternalState<String> getStringState(String name){
+    return simFacade.getStringResource(name);
+  }
+
+  public MissionModel<?> getMissionModel(){
+    return missionModel;
+  }
+
+  public SimulationFacade getSimFacade(){
+    return simFacade;
   }
 
   /**
@@ -64,6 +96,13 @@ public class MissionModelWrapper {
   public <T extends Comparable<T>> void add(StateDefinition<T> stateDef) {
   }
 
+  public PlanningHorizon getPlanningHorizon(){
+    return simFacade.getPlanningHorizon();
+  }
+
+  public SimulationFacade getSimulationFacade() {
+    return simFacade;
+  }
   /**
    * adds a new global constraint to the mission model
    *

@@ -9,11 +9,11 @@ import java.sql.SQLException;
 
 /*package-local*/ final class SetSimulationStateAction implements AutoCloseable {
   private final @Language("SQL") String sql = """
-        update dataset
+        update simulation_dataset
           set
             state = ?,
             reason = ?
-          where id = ?
+          where dataset_id = ?
         """;
 
   private final PreparedStatement statement;
@@ -22,29 +22,16 @@ import java.sql.SQLException;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public void apply(final long datasetId, final State simulationState) throws SQLException, NoSuchDatasetException {
-
-    final String state;
-    final String reason;
-    if (simulationState instanceof State.Success) {
-      state = "success";
-      reason = null;
-    } else if (simulationState instanceof State.Failed s) {
-      state = "failed";
-      reason = s.reason();
-    } else if (simulationState instanceof State.Incomplete) {
-      state = "incomplete";
-      reason = null;
-    } else {
-      throw new Error("Unrecognized simulation state");
-    }
-
-    this.statement.setString(1, state);
-    this.statement.setString(2, reason);
+  public void apply(final long datasetId, final State simulationState)
+  throws SQLException, NoSuchSimulationDatasetException
+  {
+    final var state = SimulationStateRecord.fromSimulationState(simulationState);
+    this.statement.setString(1, state.state());
+    this.statement.setString(2, state.reason());
     this.statement.setLong(3, datasetId);
 
     final var count = this.statement.executeUpdate();
-    if (count < 1) throw new NoSuchDatasetException(datasetId);
+    if (count < 1) throw new NoSuchSimulationDatasetException(datasetId);
     if (count > 1) throw new Error("More than one row affected by dataset update by primary key. Is the database corrupted?");
   }
 

@@ -1,0 +1,7 @@
+table:
+  name: simulation_template
+  schema: public
+object_relationships:
+- name: mission_model
+  using:
+    foreign_key_constraint_on: model_id

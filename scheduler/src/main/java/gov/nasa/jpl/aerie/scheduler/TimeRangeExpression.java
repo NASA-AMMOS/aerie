@@ -129,6 +129,11 @@ public class TimeRangeExpression {
     return tre;
   }
 
+  public static TimeRangeExpression of(Windows wins) {
+    TimeRangeExpression tre = new Builder().from(wins).build();
+    return tre;
+  }
+
   public static class Builder {
     List<Object> filtersAndTransformers = new ArrayList<Object>();
     List<StateConstraintExpression> stateExpr = new ArrayList<StateConstraintExpression>();

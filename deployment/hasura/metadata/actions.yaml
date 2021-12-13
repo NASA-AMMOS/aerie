@@ -1,4 +1,12 @@
 actions:
+- name: addExternalDataset
+  definition:
+    kind: synchronous
+    handler: http://merlin:27183/addExternalDataset
+- name: getActivityEffectiveArguments
+  definition:
+    kind: ""
+    handler: http://merlin:27183/getActivityEffectiveArguments
 - name: resourceTypes
   definition:
     kind: ""
@@ -11,10 +19,6 @@ actions:
   definition:
     kind: ""
     handler: http://merlin:27183/validateActivityArguments
-- name: getActivityEffectiveArguments
-  definition:
-    kind: ""
-    handler: http://merlin:27183/getActivityEffectiveArguments
 custom_types:
   enums:
   - name: MerlinSimulationStatus
@@ -33,8 +37,11 @@ custom_types:
   - name: ResourceType
   - name: MerlinSimulationResponse
   - name: ValidationResponse
+  - name: EffectiveArgumentsResponse
+  - name: AddExternalDatasetResponse
   scalars:
   - name: ResourceSchema
   - name: MerlinSimulationResults
   - name: MerlinSimulationFailureReason
   - name: ActivityArguments
+  - name: ProfileSet

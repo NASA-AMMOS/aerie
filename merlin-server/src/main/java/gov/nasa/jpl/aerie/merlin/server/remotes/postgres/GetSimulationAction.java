@@ -19,6 +19,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     select
           s.id,
           s.revision,
+          s.simulation_template_id,
           s.arguments
       from simulation as s
       where s.plan_id = ?
@@ -39,8 +40,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
       final var id = results.getLong(1);
       final var revision = results.getLong(2);
-      final var arguments = parseSimulationArguments(results.getCharacterStream(3));
-      return Optional.of(new SimulationRecord(id, revision, planId, arguments));
+      final var templateId$ =
+          results.getObject(3) == null ?
+              Optional.<Long>empty() :
+              Optional.of(results.getLong(3));
+      final var arguments = parseSimulationArguments(results.getCharacterStream(4));
+      return Optional.of(new SimulationRecord(id, revision, planId, templateId$, arguments));
   }
 
   private Map<String, SerializedValue> parseSimulationArguments(final Reader stream) {

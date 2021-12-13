@@ -1,12 +1,13 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.constraints.time.Windows;
+import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
+import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
+
 import java.util.List;
 import java.util.Map;
 
@@ -36,11 +37,6 @@ public class SimulationFacadeTest {
   private static final Duration t2 = horizon.toDur(t2h);
   private static final Duration tEnd = horizon.toDur(tEndh);
 
-  //scheduler-side mirrors of test activity types used
-  //TODO: should eventually mirror these from the mission model itself
-  private static final ActivityType actTypeBite = new ActivityType("BiteBanana");
-  private static final ActivityType actTypePeel = new ActivityType("PeelBanana");
-
   /** fetch reference to the fruit resource in the mission model **/
   private SimResource<Double> getFruitRes() {
     return facade.getDoubleResource("/fruit");
@@ -64,11 +60,7 @@ public class SimulationFacadeTest {
   @BeforeEach
   public void setUp() {
     missionModel = SimulationUtility.getMissionModel();
-
     wrappedMissionModel = new MissionModelWrapper(missionModel, horizon);
-    wrappedMissionModel.add(actTypeBite);
-    wrappedMissionModel.add(actTypePeel);
-
     facade = new SimulationFacade(horizon, missionModel);
   }
 
@@ -140,6 +132,8 @@ public class SimulationFacadeTest {
    **/
   private PlanInMemory makeTestPlanP0B1() {
     final var plan = makeEmptyPlan();
+    final var actTypeBite = wrappedMissionModel.getActivityType("BiteBanana");
+    final var actTypePeel = wrappedMissionModel.getActivityType("PeelBanana");
 
     var act1 = new ActivityInstance("PeelBanana1", actTypePeel, t1);
     act1.setParameters(Map.of("peelDirection", "fromStem"));

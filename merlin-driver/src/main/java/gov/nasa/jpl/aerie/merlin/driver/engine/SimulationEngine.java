@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.TreeMap;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -450,7 +450,14 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    final List<Pair<Duration, EventGraph<Triple<String, ValueSchema, SerializedValue>>>> serializedTimeline = new ArrayList<>();
+    final List<Triple<Integer, String, ValueSchema>> topics = new ArrayList<>();
+    final var serializableTopicToId = new HashMap<MissionModel.SerializableTopic<?>, Integer>();
+    for (final var serializableTopic : missionModel.getTopics()) {
+      serializableTopicToId.put(serializableTopic, topics.size());
+      topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
+    }
+
+    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -458,18 +465,20 @@ public final class SimulationEngine implements AutoCloseable {
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
         final var serializedEventGraph = commit.events().substitute(
             event -> {
-              EventGraph<Triple<String, ValueSchema, SerializedValue>> output = EventGraph.empty();
+              EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
               for (final var serializableTopic : missionModel.getTopics()) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
-                  output = EventGraph.concurrently(output, EventGraph.atom(Triple.of(serializableTopic.name(), serializableTopic.valueSchema(), serializedEvent.get())));
+                  output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
                 }
               }
               return output;
             }
         ).evaluate(new EventGraph.IdentityTrait<>(), EventGraph::atom);
         if (!(serializedEventGraph instanceof EventGraph.Empty)) {
-          serializedTimeline.add(Pair.of(time, serializedEventGraph));
+          serializedTimeline
+              .computeIfAbsent(time, x -> new ArrayList<>())
+              .add(serializedEventGraph);
         }
       }
     }
@@ -479,13 +488,17 @@ public final class SimulationEngine implements AutoCloseable {
                                  simulatedActivities,
                                  unsimulatedActivities,
                                  startTime,
+                                 topics,
                                  serializedTimeline);
   }
 
   private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
+    return event.extract(topicOfSerializableTopic(serializableTopic), serializableTopic.serializer());
+  }
+
+  private <EventType> Topic<EventType> topicOfSerializableTopic(MissionModel.SerializableTopic<EventType> serializableTopic) {
     // SAFETY: All queries available to the model are given to it by the MissionModelBuilder, which always constructs EngineQuery instances.
-    Topic<EventType> topic = ((EngineQuery<EventType, ?>) serializableTopic.query()).topic();
-    return event.extract(topic, serializableTopic.serializer());
+    return ((EngineQuery<EventType, ?>) serializableTopic.query()).topic();
   }
 
   private interface Translator<Target> {

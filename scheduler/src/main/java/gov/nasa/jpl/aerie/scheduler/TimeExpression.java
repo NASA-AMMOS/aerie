@@ -24,7 +24,7 @@ public abstract class TimeExpression {
 
 
   public static TimeExpression fromAnchor(TimeAnchor anchor) {
-    return new TimeExpressionRelative(anchor, true, DEF_NAME);
+    return new TimeExpressionRelativeFixed(anchor, true, DEF_NAME);
   }
 
   /**
@@ -60,63 +60,63 @@ public abstract class TimeExpression {
   }
 
   public static final TimeExpression atStart() {
-    return new TimeExpressionRelative(TimeAnchor.START, true, DEF_NAME);
+    return new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
   }
 
   public static final TimeExpression offsetByAfterStart(Duration dur) {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, true, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
     te.operations.put(Time.Operator.PLUS, dur);
     return te;
   }
 
 
   public static final TimeExpression offsetByBeforeStart(Duration dur) {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, true, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, true, DEF_NAME);
     te.operations.put(Time.Operator.MINUS, dur);
     return te;
   }
 
 
   public static final TimeExpression offsetByAfterEnd(Duration dur) {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, true, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true, DEF_NAME);
     te.operations.put(Time.Operator.PLUS, dur);
     return te;
   }
 
 
   public static final TimeExpression offsetByBeforeEnd(Duration dur) {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, true, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, true, DEF_NAME);
     te.operations.put(Time.Operator.MINUS, dur);
     return te;
   }
 
   public static final TimeExpression beforeEnd() {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false, DEF_NAME);
     te.operations.put(Time.Operator.MINUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static final TimeExpression beforeStart() {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false, DEF_NAME);
     te.operations.put(Time.Operator.MINUS,Duration.MAX_VALUE);
     return te;
   }
 
   public static final TimeExpression afterEnd() {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.END, false, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.END, false, DEF_NAME);
     te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 
   public static TimeExpression afterStart() {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false, DEF_NAME);
+    TimeExpression te = new TimeExpressionRelativeFixed(TimeAnchor.START, false, DEF_NAME);
     te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
     return te;
   }
 
-  public static final TimeExpression withinAfterStart(Duration dur) {
-    TimeExpression te = new TimeExpressionRelative(TimeAnchor.START, false, DEF_NAME);
-    te.operations.put(Time.Operator.PLUS, Duration.MAX_VALUE);
+  public static final TimeExpression endsBefore(TimeExpression expr){
+    TimeExpression te = new TimeExpressionBefore(expr,  DEF_NAME);
+    //te.operations.put(Time.Operator.MINUS,Duration.MAX_VALUE);
     return te;
   }
 
@@ -174,7 +174,7 @@ public abstract class TimeExpression {
         expr.operations = operations;
         return expr;
       } else if (fromAnchor != null) {
-        var expr = new TimeExpressionRelative(fromAnchor, interval, name);
+        var expr = new TimeExpressionRelativeFixed(fromAnchor, interval, name);
         expr.operations = operations;
         return expr;
       } else {

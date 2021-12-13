@@ -184,20 +184,123 @@ public class CardinalityGoal extends ActivityTemplateGoal {
       }
 
     }
-
-    return getConflictsDurAndOccur(plan, durToSchedule, nbToSchedule);
+    if(this.desiredActTemplate.parametricDur!= null){
+      return uncontrollableGetConflictsDurAndOccur(plan,durToSchedule,nbToSchedule);
+    } else if(this.desiredActTemplate.durationRange!= null){
+      return controllableGetConflictsDurAndOccur(plan, durToSchedule, nbToSchedule);
+    } else{
+      throw new RuntimeException("Must provide duration");
+    }
   }
 
 
-  private Collection<Conflict> getConflictsDurOnly(Plan plan) {
-    return null;
+  public Collection<Conflict> uncontrollableGetConflictsDurAndOccur(Plan plan, Duration durToSchedule, int nbToSchedule) {
+    Windows range = this.expr.computeRange(plan, Windows.forever());
+    final var conflicts = new LinkedList<Conflict>();
+
+    StateConstraintExpression actConstraints = this.getActivityStateConstraints();
+    StateConstraintExpression goalConstraints = this.getStateConstraints();
+
+    //TODO: what if there is no duration range ?
+    Windows rangeAfterConstraints = range;
+    if (actConstraints != null) {
+      var actCstWins = actConstraints.findWindows(plan, range);
+      rangeAfterConstraints.intersectWith(actCstWins);
+    }
+    if (goalConstraints != null) {
+      var goalCstWins = goalConstraints.findWindows(plan, rangeAfterConstraints);
+      rangeAfterConstraints.intersectWith(goalCstWins);
+    }
+    List<Window> rangesForSchedulings = StreamSupport
+        .stream(rangeAfterConstraints.spliterator(), false)
+        .collect(Collectors.toList());
+    Iterator<Window> itRanges = rangeAfterConstraints.iterator();
+    if(!itRanges.hasNext()) { return List.of(); }
+
+    Map<Window, List<ActivityInstance>> instancesCreated = new TreeMap<>();
+    Map<Window, List<ActivityCreationTemplate>> templatesCreated = new TreeMap<>();
+
+    for (var r : rangeAfterConstraints) {
+      instancesCreated.put(r, new ArrayList<>());
+      templatesCreated.put(r, new ArrayList<>());
+    }
+
+
+    var parametricDur = this.desiredActTemplate.parametricDur;
+    if (parametricDur==null){
+      throw new RuntimeException("Need at least one type of duration specification");
+    }
+
+    Duration scheduledDur = Duration.ZERO;
+    int scheduled = 0;
+    Window curRange = itRanges.next();
+    var start = curRange.start;
+    //while there is still missing some duration
+    while (scheduled < nbToSchedule) {
+      //if the current window can welcome an activity
+      var durWindow = curRange.end.minus(curRange.start);
+
+      var dur = (Duration) parametricDur.compute(curRange);
+
+      if (durWindow.compareTo(dur) >= 0) {
+        //schedule the smallest activity possible
+        ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
+        builderAct.basedOn(this.desiredActTemplate);
+        var inst = builderAct;
+        templatesCreated.get(curRange).add(inst.build());
+        instancesCreated.get(curRange).add(inst.duration(dur).startsIn(Window.between(start,start)).build().createActivity("act_" + scheduled));
+        scheduled += 1;
+        scheduledDur = scheduledDur.plus(dur);
+        durWindow = durWindow.minus(dur);
+        start = start.plus(dur);
+      } else {
+        curRange = itRanges.next();
+        start = curRange.start;
+      }
+
+    }
+
+    //if duration is still needed, we schedule more activities with max dur
+    itRanges = rangesForSchedulings.iterator();
+    curRange = itRanges.next();
+    while (scheduledDur.compareTo(durToSchedule) < 0) {
+      //if the current window can welcome an activity
+      var listActsScheduled = instancesCreated.get(curRange);
+      if (listActsScheduled.size() > 0) {
+        var lastAct = listActsScheduled.get(listActsScheduled.size() - 1);
+        start = lastAct.getEndTime();
+      }
+      var durWindow = curRange.end.minus(start);
+      Duration dur =  (Duration) parametricDur.compute(curRange);
+      if (durWindow.compareTo(dur) >= 0) {
+        //schedule the biggest activity possible to avoiding hitting maximum occurrence
+        ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
+        builderAct.basedOn(this.desiredActTemplate);
+        templatesCreated.get(curRange).add(builderAct.build());
+        builderAct.parametricDur=null;
+        instancesCreated.get(curRange).add(builderAct.duration(dur).startsIn(Window.at(start)).build().createActivity("act_" + scheduled));
+        scheduled += 1;
+        scheduledDur = scheduledDur.plus(dur);
+        durWindow = durWindow.minus(dur);
+        start = start.plus(dur);
+      } else {
+        if (itRanges.hasNext()) {
+          curRange = itRanges.next();
+          start = curRange.start;
+        } else {
+          break;
+        }
+      }
+    }
+    for (var a : templatesCreated.entrySet()) {
+      for (var template : a.getValue()) {
+        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(temporalContext), template));
+      }
+    }
+
+    //System.out.println(instancesCreated);
+    return conflicts;
   }
-
-
-  public Range<Time> binaryBreadth(Time start, Time end, List<Range<Time>> ranges) {
-    return null;
-  }
-
 
   //GREEDY STRATEGY for [nmin,nmax] and [durmin, durmax] for acts in [damin, damax]
   //schedule nmin acts of damin
@@ -206,10 +309,10 @@ public class CardinalityGoal extends ActivityTemplateGoal {
   //if durmin is not attained and if we have attained damax for all acts : schedule k (k-1 actually and then switch to exact dur)
   // acts of damax  until durmin is attained
 
-  public Collection<Conflict> getConflictsDurAndOccur(Plan plan, Duration durToSchedule, int nbToSchedule) {
+  public Collection<Conflict> controllableGetConflictsDurAndOccur(Plan plan, Duration durToSchedule, int nbToSchedule) {
     Windows range = this.expr.computeRange(plan, Windows.forever());
     final var conflicts = new LinkedList<Conflict>();
-
+    //TODO: we could take existing activities and extend them if they are controllable before we insert new ones
 
     StateConstraintExpression actConstraints = this.getActivityStateConstraints();
     StateConstraintExpression goalConstraints = this.getStateConstraints();
@@ -231,9 +334,11 @@ public class CardinalityGoal extends ActivityTemplateGoal {
     Iterator<Window> itRanges = rangeAfterConstraints.iterator();
 
     Map<Window, List<ActivityInstance>> instancesCreated = new TreeMap<>();
+    Map<Window, List<ActivityCreationTemplate>> templatesCreated = new TreeMap<>();
 
     for (var r : rangeAfterConstraints) {
-      instancesCreated.put(r, new ArrayList<ActivityInstance>());
+      instancesCreated.put(r, new ArrayList<>());
+      templatesCreated.put(r, new ArrayList<>());
     }
 
     Duration scheduledDur = Duration.ZERO;
@@ -250,9 +355,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         var dur = actPossibleDurations.start;
         ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
         builderAct.basedOn(this.desiredActTemplate);
-        builderAct.startsIn(Window.between(start,start));
-        var inst = builderAct.duration(dur).build().createActivity("act_" + scheduled);
-        instancesCreated.get(curRange).add(inst);
+        templatesCreated.get(curRange).add(builderAct.duration(dur).startsIn(Window.at(start)).build());
+        instancesCreated.get(curRange).add(builderAct.duration(dur).startsIn(Window.at(start)).build().createActivity("act_" + scheduled));
         scheduled += 1;
         scheduledDur = scheduledDur.plus(dur);
         durWindow = durWindow.minus(dur);
@@ -313,8 +417,8 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         ActivityCreationTemplate.Builder builderAct = new ActivityCreationTemplate.Builder();
         builderAct.basedOn(this.desiredActTemplate);
         builderAct.startsIn(Window.at(start));
-        var inst = builderAct.duration(dur).build().createActivity("act_" + scheduled);
-        instancesCreated.get(curRange).add(inst);
+        templatesCreated.get(curRange).add(builderAct.duration(dur).build());
+        instancesCreated.get(curRange).add(builderAct.duration(dur).startsIn(Window.at(start)).build().createActivity("act_" + scheduled));
         scheduled += 1;
         scheduledDur = scheduledDur.plus(dur);
         durWindow = durWindow.minus(dur);
@@ -328,9 +432,9 @@ public class CardinalityGoal extends ActivityTemplateGoal {
         }
       }
     }
-    for (var a : instancesCreated.entrySet()) {
-      for (var act : a.getValue()) {
-        conflicts.add(new MissingActivityInstanceConflict(this, act));
+    for (var a : templatesCreated.entrySet()) {
+      for (var template : a.getValue()) {
+        conflicts.add(new MissingActivityTemplateConflict(this, new Windows(temporalContext), template));
       }
     }
 

@@ -2,6 +2,13 @@
 
 This document provides detailed information about environment variables for each service in Aerie.
 
+- [Aerie Gateway](#aerie-gateway)
+- [Aerie UI](#aerie-ui)
+- [Hasura](#hasura)
+- [Merlin](#merlin)
+- [Postgres](#postgres)
+- [Scheduler](#scheduler)
+
 ## Aerie Gateway
 
 | Name                       | Description                                                            | Type     | Default                                        |
@@ -11,6 +18,7 @@ This document provides detailed information about environment variables for each
 | `GQL_API_URL`              | URL of GraphQL API for the GraphQL Playground.                         | `string` | http://localhost:8080/v1/graphql               |
 | `PORT`                     | Port the Gateway server listens on.                                    | `number` | 9000                                           |
 | `POSTGRES_AERIE_MERLIN_DB` | Name of Merlin Postgres database.                                      | `string` | aerie_merlin                                   |
+| `POSTGRES_AERIE_SCHED_DB`  | Name of scheduler Postgres database.                                   | `string` | aerie_sched                                    |
 | `POSTGRES_AERIE_UI_DB`     | Name of UI Postgres database.                                          | `string` | aerie_ui                                       |
 | `POSTGRES_HOST`            | Hostname of Postgres instance.                                         | `string` | localhost                                      |
 | `POSTGRES_PASSWORD`        | Password of Postgres instance.                                         | `string` | aerie                                          |
@@ -20,20 +28,23 @@ This document provides detailed information about environment variables for each
 
 ## Aerie UI
 
-| Name                 | Description                                                            | Type     | Default                          |
-| -------------------- | ---------------------------------------------------------------------- | -------- | -------------------------------- |
-| `AUTH_TYPE`          | Mode of authentication. Set to `none` to fully disable authentication. | `string` | cam                              |
-| `GATEWAY_CLIENT_URL` | Url of the Gateway as called from the client (i.e. web browser)        | `string` | http://localhost:9000            |
-| `GATEWAY_SERVER_URL` | Url of the Gateway as called from the server (i.e. Node.js container)  | `string` | http://localhost:9000            |
-| `HASURA_CLIENT_URL`  | Url of Hasura as called from the client (i.e. web browser)             | `string` | http://localhost:8080/v1/graphql |
-| `HASURA_SERVER_URL`  | Url of Hasura as called from the server (i.e. Node.js container)       | `string` | http://localhost:8080/v1/graphql |
+| Name                   | Description                                                                    | Type     | Default                          |
+| ---------------------- | ------------------------------------------------------------------------------ | -------- | -------------------------------- |
+| `AUTH_TYPE`            | Mode of authentication. Set to `none` to fully disable authentication.         | `string` | cam                              |
+| `GATEWAY_CLIENT_URL`   | Url of the Gateway as called from the client (i.e. web browser)                | `string` | http://localhost:9000            |
+| `GATEWAY_SERVER_URL`   | Url of the Gateway as called from the server (i.e. Node.js container)          | `string` | http://localhost:9000            |
+| `HASURA_CLIENT_URL`    | Url of Hasura as called from the client (i.e. web browser)                     | `string` | http://localhost:8080/v1/graphql |
+| `HASURA_SERVER_URL`    | Url of Hasura as called from the server (i.e. Node.js container)               | `string` | http://localhost:8080/v1/graphql |
+| `SCHEDULER_CLIENT_URL` | Url of the scheduler server as called from the client (i.e. web browser)       | `string` | http://localhost:27193           |
+| `SCHEDULER_SERVER_URL` | Url of the scheduler server as called from the server (i.e. Node.js container) | `string` | http://localhost:27193           |
 
 ## Hasura
 
-| Name                        | Description                          | Type     | Default                                           |
-| --------------------------- | ------------------------------------ | -------- | ------------------------------------------------- |
-| `AERIE_MERLIN_DATABASE_URL` | Url of the Merlin Postgres database. | `string` | postgres://aerie:aerie@postgres:5432/aerie_merlin |
-| `AERIE_UI_DATABASE_URL`     | Url of the UI Postgres database      | `string` | postgres://aerie:aerie@postgres:5432/aerie_ui     |
+| Name                        | Description                             | Type     | Default                                           |
+| --------------------------- | --------------------------------------- | -------- | ------------------------------------------------- |
+| `AERIE_MERLIN_DATABASE_URL` | Url of the Merlin Postgres database.    | `string` | postgres://aerie:aerie@postgres:5432/aerie_merlin |
+| `AERIE_SCHED_DATABASE_URL`  | Url of the scheduler Postgres database. | `string` | postgres://aerie:aerie@postgres:5432/aerie_sched  |
+| `AERIE_UI_DATABASE_URL`     | Url of the UI Postgres database         | `string` | postgres://aerie:aerie@postgres:5432/aerie_ui     |
 
 Additionally, Hasura provides documentation on it's own environment variables you can use to fine-tune your deployment:
 
@@ -42,19 +53,36 @@ Additionally, Hasura provides documentation on it's own environment variables yo
 
 ## Merlin
 
-| Name                 | Description                                                            | Type     | Default                          |
-| -------------------- | ---------------------------------------------------------------------- | -------- | -------------------------------- |
-| `MERLIN_PORT`        | Port number for the Merlin server                                      | `number` | 27183                            |
-| `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                              | `string` | /usr/src/app/merlin_file_store   |
-| `MERLIN_LOGGING`     | Whether or not you want Javalin to log server informaton               | `string` | true                             |
-| `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with                          | `string` | postgres                         |
-| `MERLIN_DB_PORT`     | The DB instance port number that Merlin will connect with              | `number` | 5432                             |
-| `MERLIN_DB_USER`     | Username of the DB instance                                            | `string` | aerie                            |
-| `MERLIN_DB_PASSWORD` | Password of the DB instance                                            | `string` | aerie                            |
-| `MERLIN_DB`          | The DB for Merlin.                                                     | `string` | aerie_merlin                     |
-
-
+| Name                 | Description                                               | Type     | Default                        |
+| -------------------- | --------------------------------------------------------- | -------- | ------------------------------ |
+| `MERLIN_PORT`        | Port number for the Merlin server                         | `number` | 27183                          |
+| `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container                 | `string` | /usr/src/app/merlin_file_store |
+| `MERLIN_LOGGING`     | Whether or not you want Javalin to log server information | `string` | true                           |
+| `MERLIN_DB_SERVER`   | The DB instance that Merlin will connect with             | `string` | postgres                       |
+| `MERLIN_DB_PORT`     | The DB instance port number that Merlin will connect with | `number` | 5432                           |
+| `MERLIN_DB_USER`     | Username of the DB instance                               | `string` | aerie                          |
+| `MERLIN_DB_PASSWORD` | Password of the DB instance                               | `string` | aerie                          |
+| `MERLIN_DB`          | The DB for Merlin.                                        | `string` | aerie_merlin                   |
 
 ## Postgres
 
 The default Aerie deployment uses the default Postgres environment. See the [Docker Postgres documentation](https://hub.docker.com/_/postgres) for more complete information on those environment variables and how to use them.
+
+## Scheduler
+
+| Name                 | Description                                                           | Type     | Default                                        |
+| -------------------- | --------------------------------------------------------------------- | -------- | ---------------------------------------------- |
+| `SCHED_PORT`         | Port number for the scheduler server                                  | `number` | 27193                                          |
+| `SCHED_LOCAL_STORE`  | Local storage for scheduler in the container                          | `string` | /usr/src/app/sched_file_store                  |
+| `SCHED_LOGGING`      | Whether or not you want Javalin to log server information             | `string` | true                                           |
+| `SCHED_DB_SERVER`    | The DB instance that scheduler will connect with                      | `string` | postgres                                       |
+| `SCHED_DB_PORT`      | The DB instance port number that scheduler will connect with          | `number` | 5432                                           |
+| `SCHED_DB_USER`      | Username of the DB instance                                           | `string` | aerie                                          |
+| `SCHED_DB_PASSWORD`  | Password of the DB instance                                           | `string` | aerie                                          |
+| `SCHED_DB`           | The DB for scheduler.                                                 | `string` | aerie_sched                                    |
+| `MERLIN_GRAPHQL_URL` | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                  |
+| `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                 |
+| `SCHED_RULES_JAR`    | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/sched_rules.jar |
+| `SCHED_OUTPUT_MODE`  | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities               |
+
+The Jar file to load scheduling rules from (until user input to database) is `/usr/src/app/merlin_file_store/sched_rules.jar`.

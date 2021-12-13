@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
 
@@ -53,6 +54,13 @@ public final class StubPlanService implements PlanService {
   public Map<String, Constraint> getConstraintsForPlan(final String planId)
   throws NoSuchPlanException {
     return Map.of();
+  }
+
+  @Override
+  public long addExternalDataset(final String id, final Timestamp datasetStart, final ProfileSet profileSet)
+  throws NoSuchPlanException
+  {
+    return 0;
   }
 
 }

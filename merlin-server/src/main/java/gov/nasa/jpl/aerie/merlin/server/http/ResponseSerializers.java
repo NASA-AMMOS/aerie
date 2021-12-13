@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.constraints.time.Window;
 import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -16,18 +17,26 @@ import gov.nasa.jpl.aerie.merlin.server.services.GetSimulationResultsAction;
 import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 
 import javax.json.Json;
 import javax.json.JsonValue;
 import javax.json.stream.JsonParsingException;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
+import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
+import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
 
 public final class ResponseSerializers {
   public static <T> JsonValue serializeNullable(final Function<T, JsonValue> serializer, final T value) {
@@ -113,6 +122,12 @@ public final class ResponseSerializers {
        .build();
   }
 
+  public static JsonValue serializeCreatedDatasetId(final long datasetId) {
+    return Json.createObjectBuilder()
+        .add("datasetId", datasetId)
+        .build();
+  }
+
   public static JsonValue serializeConstraintViolation(final Violation violation) {
     return Json
         .createObjectBuilder()
@@ -153,7 +168,58 @@ public final class ResponseSerializers {
             results.resourceSamples))
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
         .add("activities", serializeMap(ResponseSerializers::serializeSimulatedActivity, results.simulatedActivities))
+        .add("events", serializeSimulationEvents(results.events, topicsById(results.topics), results.startTime))
         .build();
+  }
+
+  private static Map<Integer, Pair<String, ValueSchema>> topicsById(List<Triple<Integer, String, ValueSchema>> topics) {
+    final Map<Integer, Pair<String, ValueSchema>> topicsById = new HashMap<>();
+    for (final var topic : topics) {
+      topicsById.put(topic.getLeft(), Pair.of(topic.getMiddle(), topic.getRight()));
+    }
+    return topicsById;
+  }
+
+  private static JsonValue serializeSimulationEvents(
+      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      final Map<Integer, Pair<String, ValueSchema>> topics,
+      final Instant startTime) {
+    var arrayBuilder = Json.createArrayBuilder();
+    for (final var eventPoint : events.entrySet()) {
+      final var transactionPoints = eventPoint.getValue();
+      for (final var eventGraph : transactionPoints) {
+        arrayBuilder = arrayBuilder.add(
+            Json.createObjectBuilder()
+                .add("time", serializeTimestamp(startTime.plus(eventPoint.getKey().in(Duration.MICROSECONDS), ChronoUnit.MICROS)))
+                .add("graph", serializeEventGraph(eventGraph, topics)).build());
+      }
+    }
+    return arrayBuilder.build();
+  }
+
+  private static JsonValue serializeEventGraph(
+      EventGraph<Pair<Integer, SerializedValue>> eventGraph,
+      final Map<Integer, Pair<String, ValueSchema>> topics) {
+    var objectBuilder = Json.createObjectBuilder();
+    if (eventGraph instanceof EventGraph.Atom<Pair<Integer, SerializedValue>> atom) {
+      final var event = atom.atom();
+      objectBuilder = objectBuilder
+          .add("type", "atom")
+          .add("value", serializedValueP.unparse(event.getRight()))
+          .add("schema", valueSchemaP.unparse(topics.get(event.getLeft()).getRight()))
+          .add("topic", stringP.unparse(topics.get(event.getLeft()).getLeft()));
+    } else if (eventGraph instanceof EventGraph.Sequentially<Pair<Integer, SerializedValue>> sequentially) {
+      objectBuilder = objectBuilder
+          .add("type", "sequentially")
+          .add("prefix", serializeEventGraph(sequentially.prefix(), topics))
+          .add("suffix", serializeEventGraph(sequentially.suffix(), topics));
+    } else if (eventGraph instanceof EventGraph.Concurrently<Pair<Integer, SerializedValue>> concurrently) {
+      objectBuilder = objectBuilder
+          .add("type", "concurrently")
+          .add("left", serializeEventGraph(concurrently.left(), topics))
+          .add("right", serializeEventGraph(concurrently.right(), topics));
+    }
+    return objectBuilder.build();
   }
 
   public static JsonValue serializeSimulationResultsResponse(final GetSimulationResultsAction.Response response) {

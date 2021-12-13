@@ -13,11 +13,11 @@ services:
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432
       POSTGRES_USER: aerie
-    image: "${AERIE_DOCKER_URL}/aerie-gateway:${DOCKER_TAG}"
+    image: "ghcr.io/nasa-ammos/aerie-gateway:${DOCKER_TAG}"
     ports: ["9000:9000"]
     restart: always
     volumes:
-      - file_store:/app/files
+      - aerie_file_store:/app/files
   aerie_ui:
     depends_on: ["postgres"]
     environment:
@@ -26,6 +26,8 @@ services:
       GATEWAY_SERVER_URL: http://aerie_gateway:9000
       HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+      SCHEDULER_CLIENT_URL: http://localhost:27193
+      SCHEDULER_SERVER_URL: http://scheduler:27193
     image: "${AERIE_DOCKER_URL}/aerie-ui:${DOCKER_TAG}"
     ports: ["80:80"]
     restart: always
@@ -45,12 +47,21 @@ services:
     volumes:
       - ./hasura/metadata:/hasura-metadata
   merlin:
-    depends_on: ["postgres"]
     image: "${AERIE_DOCKER_URL}/merlin:${DOCKER_TAG}"
+    depends_on: ["postgres"]
+    environment:
+      MERLIN_PORT: 27183
+      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
+      MERLIN_LOGGING: "true"
+      MERLIN_DB_SERVER: "postgres"
+      MERLIN_DB_PORT: 5432
+      MERLIN_DB_USER: "aerie"
+      MERLIN_DB_PASSWORD: "aerie"
+      MERLIN_DB: "aerie_merlin"
     ports: ["27183:27183"]
     restart: always
     volumes:
-      - file_store:/usr/src/app/merlin_file_store
+      - aerie_file_store:/usr/src/app/merlin_file_store
   postgres:
     environment:
       POSTGRES_DB: postgres
@@ -62,7 +73,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init-db:/docker-entrypoint-initdb.d
+  scheduler:
+    depends_on: ["postgres", "merlin"]
+    image: "${AERIE_DOCKER_URL}/scheduler:${DOCKER_TAG}"
+    ports: ["27193:27193"]
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store
 
 volumes:
-  file_store:
+  aerie_file_store:
+  mission_file_store:
   postgres_data:

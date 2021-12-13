@@ -9,6 +9,9 @@ object_relationships:
       table:
         name: simulation_dataset
         schema: public
+- name: simulation_template
+  using:
+    foreign_key_constraint_on: simulation_template_id
 - name: plan
   using:
     foreign_key_constraint_on: plan_id

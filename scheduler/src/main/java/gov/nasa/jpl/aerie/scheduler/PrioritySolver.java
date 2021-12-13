@@ -39,6 +39,7 @@ public class PrioritySolver implements Solver {
     this.problem = problem;
   }
 
+  //TODO: should probably be part of sched configuration; maybe even per rule
   public void checkSimBeforeInsertingActInPlan(){
     this.checkSimBeforeInsertingActivities = true;
   }
@@ -70,7 +71,7 @@ public class PrioritySolver implements Solver {
   }
 
   private SimulationFacade getSimFacade(){
-    return problem.getMissionModel().simFacade;
+    return problem.getMissionModel().getSimulationFacade();
   }
 
   private boolean checkAndInsertAct(ActivityInstance act){
@@ -87,6 +88,8 @@ public class PrioritySolver implements Solver {
     boolean allGood = true;
 
     for(var act: acts){
+      //if some parameters are left uninstantiated, this is the last moment to do it
+      act.instantiateVariableParameters();
       plan.add(act);
       if(checkSimBeforeInsertingActivities) {
         getSimFacade().simulatePlan(plan);
@@ -106,9 +109,6 @@ public class PrioritySolver implements Solver {
       }
     }
 
-  /**
-   * creates internal storage space to build up partial solutions in
-   **/
     if(!allGood) {
       plan.remove(acts);
     }
@@ -121,16 +121,24 @@ public class PrioritySolver implements Solver {
   public void initializePlan() {
     plan = new PlanInMemory(problem.getMissionModel());
 
+    //turn off simulation checking for initial plan contents (must accept user input regardless)
+    final var prevCheckFlag = this.checkSimBeforeInsertingActivities;
+    this.checkSimBeforeInsertingActivities = false;
     problem.getInitialPlan().getActivitiesByTime().stream()
       .filter( act -> (act.getStartTime()==null)
                || config.getHorizon().contains( act.getStartTime() ) )
       .forEach( act->{
         checkAndInsertAct(act);
       } );
+    this.checkSimBeforeInsertingActivities = prevCheckFlag;
 
     evaluation = new Evaluation();
     plan.addEvaluation(evaluation);
 
+    //if backed by real models, initialize the simulation states/resources/profiles for the plan so state queries work
+    if (problem.getMissionModel() != null && problem.getMissionModel().getMissionModel() != null) {
+      problem.getMissionModel().getSimulationFacade().simulatePlan(plan);
+    }
   }
 
   /**
@@ -500,11 +508,11 @@ private void satisfyOptionGoal(OptionGoal goal) {
         final var missingTemplate = (MissingActivityTemplateConflict) missing;
         //select the "best" time among the possibilities, and latest among ties
         //REVIEW: currently not handling preferences / ranked windows
-        final var startT = startWindows.maxTimePoint();
+        final var startT = startWindows.minTimePoint();
 
         //create the new activity instance (but don't place in schedule)
         //REVIEW: not yet handling multiple activities at a time
-        final var template = missingTemplate.getGoal().getActTemplate();
+        final var template = missingTemplate.getActTemplate();
         final var completeTemplate = new ActivityCreationTemplate.Builder()
             .basedOn(template).startsIn(Window.between(startT.get(), startT.get())).build();
         final var act = completeTemplate.createActivity(
@@ -659,6 +667,8 @@ private void satisfyOptionGoal(OptionGoal goal) {
     for (GlobalConstraint gc : constraints) {
       if (gc instanceof BinaryMutexConstraint) {
         tmp = ((BinaryMutexConstraint) gc).findWindows(plan, tmp, mac);
+      } else if (gc instanceof NAryMutexConstraint){
+        tmp = ((NAryMutexConstraint) gc).findWindows(plan, tmp, mac);
       }
     }
   return tmp;

@@ -13,6 +13,7 @@ begin;
   \ir tables/activity_type.sql
   \ir tables/plan.sql
   \ir tables/activity.sql
+  \ir tables/simulation_template.sql
   \ir tables/simulation.sql
 
   -- Uploaded datasets (or datasets generated from simulation).
@@ -20,6 +21,8 @@ begin;
   \ir tables/span.sql
   \ir tables/profile.sql
   \ir tables/profile_segment.sql
+  \ir tables/topic.sql
+  \ir tables/event.sql
 
   -- Analysis intents
   \ir tables/condition.sql
@@ -27,4 +30,5 @@ begin;
 
   \ir tables/mission_model_parameters.sql
   \ir tables/simulation_dataset.sql
+  \ir tables/plan_dataset.sql
 end;

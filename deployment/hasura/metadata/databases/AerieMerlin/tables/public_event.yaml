@@ -1,0 +1,3 @@
+table:
+  name: event
+  schema: public

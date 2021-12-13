@@ -29,8 +29,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.SynchronousSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.ThreadedSimulationAgent;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import io.javalin.Javalin;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -50,18 +48,17 @@ public final class AerieAppDriver {
         new SynchronousSimulationAgent(planController, missionModelController));
     final var simulationController = new CachedSimulationService(stores.results(), simulationAgent);
     final var simulationAction = new GetSimulationResultsAction(planController, missionModelController, simulationController);
-    final var merlinBindings = new MerlinBindings(missionModelController, simulationAction);
+    final var merlinBindings = new MerlinBindings(missionModelController, planController, simulationAction);
 
     // Configure an HTTP server.
     final var javalin = Javalin.create(config -> {
       config.showJavalinBanner = false;
       if (configuration.javalinLogging().isEnabled()) config.enableDevLogging();
-      config
-          .enableCorsForAllOrigins()
-          .registerPlugin(merlinBindings)
-          .registerPlugin(new LocalAppExceptionBindings())
-          .registerPlugin(new MissionModelRepositoryExceptionBindings())
-          .registerPlugin(new MissionModelExceptionBindings());
+      config.enableCorsForAllOrigins();
+      config.registerPlugin(merlinBindings);
+      config.registerPlugin(new LocalAppExceptionBindings());
+      config.registerPlugin(new MissionModelRepositoryExceptionBindings());
+      config.registerPlugin(new MissionModelExceptionBindings());
     });
 
     // Start the HTTP server.
@@ -98,22 +95,6 @@ public final class AerieAppDriver {
 
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);
-    }
-  }
-
-  private static Path makeMissionModelDataPath(final AppConfiguration configuration) {
-    try {
-      return Files.createDirectories(configuration.merlinFilesPath());
-    } catch (final IOException ex) {
-      throw new Error("Error creating merlin file store files directory", ex);
-    }
-  }
-
-  private static Path makeJarsPath(final AppConfiguration configuration) {
-    try {
-      return Files.createDirectories(configuration.merlinJarsPath());
-    } catch (final IOException ex) {
-      throw new Error("Error creating merlin file store jars directory", ex);
     }
   }
 

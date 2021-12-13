@@ -1,0 +1,51 @@
+plugins {
+  id 'java'
+  id 'application'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+test {
+  useJUnitPlatform()
+}
+
+application {
+  mainClass = 'gov.nasa.jpl.aerie.scheduler.server.SchedulerAppDriver'
+  applicationDefaultJvmArgs = ['-Xmx2g']
+}
+
+dependencies {
+  implementation project(':merlin-driver')
+  implementation project(':parsing-utilities')
+  implementation project(':contrib')
+  implementation project(':constraints')
+  implementation project(':scheduler')
+  implementation project(':merlin-server')
+
+  runtimeOnly project(':merlin-framework')
+
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'io.javalin:javalin:4.1.1'
+  implementation 'org.slf4j:slf4j-simple:1.7.26'
+  implementation 'org.eclipse:yasson:1.0.5'
+  implementation 'org.json:json:20171018'
+  implementation 'org.apache.bcel:bcel:6.5.0'
+
+  implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
+  implementation 'com.zaxxer:HikariCP:5.0.0'
+
+  testImplementation project(':foo-missionmodel')
+  testImplementation project(':merlin-framework')
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+  testImplementation 'org.assertj:assertj-core:3.21.0'
+  testImplementation 'javax.json.bind:javax.json.bind-api:1.0'
+  testImplementation 'org.glassfish:javax.json:1.1.4'
+}
+
+

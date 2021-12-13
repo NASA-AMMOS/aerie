@@ -122,7 +122,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       final var strideDur = actStartT.minus(prevStartT);
       if (strideDur.compareTo(recurrenceInterval.end) > 0) {
         //fill conflicts for all the missing activities in that long span
-        conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT));
+        conflicts.addAll(makeRecurrenceConflicts(prevStartT, actStartT, plan));
 
       } else {
         //REVIEW: will need to record associations to check for joint/sole
@@ -136,7 +136,7 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
 
     //fill in conflicts for all missing activities in the last span up to the
     //goal's own end time (also handles case of no matching acts at all)
-    conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT));
+    conflicts.addAll(makeRecurrenceConflicts(prevStartT, lastStartT, plan));
 
     return conflicts;
   }
@@ -166,9 +166,11 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
    * @param end IN the end time of the span to fill with conflicts
    */
   private java.util.Collection<MissingActivityConflict> makeRecurrenceConflicts(
-      Duration start, Duration end)
+      Duration start, Duration end, Plan plan)
   {
     final var conflicts = new java.util.LinkedList<MissingActivityConflict>();
+
+    var goalConstraint = this.stateConstraints;
 
     //determine how much flexibility there is in creating activities
     final var recurrenceFlexibility = recurrenceInterval.end.minus(
@@ -185,10 +187,13 @@ public class RecurrenceGoal extends ActivityTemplateGoal {
       //        it chooses the minimum. but it looks ugly. so for now passing
       //        a limited flexibility for creation
       final var minT = intervalT.minus(recurrenceFlexibility);
-
+      var interval =  new Windows(Window.between(minT,intervalT));
+      if(goalConstraint != null) {
+        interval.intersectWith(goalConstraint.findWindows(plan, new Windows(Window.between(start, end))));
+      }
       conflicts.add(new MissingActivityTemplateConflict(
           this, new Windows(
-          Window.between(minT, intervalT))));
+          interval),this.getActTemplate()));
     }
 
     return conflicts;

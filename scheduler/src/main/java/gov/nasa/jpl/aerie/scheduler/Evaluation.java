@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import java.util.Collections;
 import java.util.Objects;
 
 /**
@@ -95,6 +96,13 @@ public class Evaluation {
   public java.util.Collection<Goal> getGoals() {
     return goalEvals.keySet();
   }
+
+  /**
+   * fetch all goals and their current individual evaluation
+   *
+   * @return mapping from goals to their current individual evaluation (non-modifiable)
+   */
+  public java.util.Map<Goal,GoalEvaluation> getGoalEvaluations() { return Collections.unmodifiableMap(goalEvals); }
 
   /**
    * the set of all per-goal evaluations

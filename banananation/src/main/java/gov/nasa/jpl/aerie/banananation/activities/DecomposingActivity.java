@@ -36,7 +36,26 @@ public final class DecomposingActivity {
 
     @EffectModel
     public void run(final Mission mission) {
+      call(new GrandchildActivity(1));
       delay(15*24, HOURS);
+      call(new GrandchildActivity(2));
+    }
+  }
+
+  @ActivityType("grandchild")
+  public static final class GrandchildActivity {
+    @Parameter
+    public int counter = 0;
+
+    public GrandchildActivity() {}
+
+    public GrandchildActivity(final int counter) {
+      this.counter = counter;
+    }
+
+    @EffectModel
+    public void run(final Mission mission) {
+      delay(6*24, HOURS);
     }
   }
 }

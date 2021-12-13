@@ -2,6 +2,7 @@ def getDockerCompatibleTag(tag) {
   def fixedTag = tag.replaceAll('\\+', '-')
   return fixedTag
 }
+
 def getDockerImageName(folder) {
   files = findFiles(glob: "${DOCKERFILE_PATH}/*.*")
   def list = []
@@ -15,19 +16,6 @@ def getDockerImageName(folder) {
     }
   }
   return list
-}
-
-def getAWSTag(tag) {
-  if (tag ==~ /release-.*/) {
-    return "release"
-  }
-  if (tag ==~ /develop/) {
-    return "develop"
-  }
-  if (tag ==~ /staging/) {
-    return "staging"
-  }
-  return "unknown"
 }
 
 def getArtifactoryUrl() {
@@ -91,6 +79,7 @@ void setBuildStatus(String message, String state, String context) {
 
 // Save built image name:tag
 def buildImages = []
+
 // Save dockerfile name inside scipt/Dockerfiles
 def imageNames = []
 
@@ -103,18 +92,11 @@ pipeline {
   environment {
     ARTIFACT_TAG = "${getArtifactTag()}"
     ARTIFACTORY_URL = "${getArtifactoryUrl()}"
-    AWS_DEFAULT_REGION = 'us-gov-west-1'
-    AWS_ACCESS_KEY_ID = credentials('aerie-aws-access-key')
-    AWS_ECR = "448117317272.dkr.ecr.us-gov-west-1.amazonaws.com"
-    AWS_SECRET_ACCESS_KEY = credentials('aerie-aws-secret-access-key')
+    ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
     AERIE_SECRET_ACCESS_KEY = credentials('Aerie-Access-Token')
     DOCKER_TAG = "${getDockerCompatibleTag(ARTIFACT_TAG)}"
-    AWS_TAG = "${getAWSTag(DOCKER_TAG)}"
-    DOCKERFILE_DIR = "${env.WORKSPACE}/scripts/dockerfiles"
-    LD_LIBRARY_PATH = "/usr/local/lib64:/usr/local/lib:/usr/lib64:/usr/lib"
-    ARTIFACT_PATH = "${ARTIFACTORY_URL}/gov/nasa/jpl/aerie"
-    AWS_ECR_PATH = "${AWS_ECR}/aerie"
     DOCKERFILE_PATH = "scripts/dockerfiles"
+    DOCKERFILE_DIR = "${env.WORKSPACE}/${DOCKERFILE_PATH}"
   }
 
   stages {
@@ -173,6 +155,8 @@ pipeline {
             mkdir -p ${ASSEMBLE_PREP_DIR}/services
             cp merlin-server/build/distributions/*.tar \
                ${ASSEMBLE_PREP_DIR}/services/
+            cp scheduler-server/build/distributions/*.tar \
+               ${ASSEMBLE_PREP_DIR}/services/
 
             # For deployment
             cp -r ./deployment ${STAGING_DIR}
@@ -230,46 +214,6 @@ pipeline {
                   def image = docker.build("${tag_name}", "--progress plain -f ${DOCKERFILE_PATH}/${name}.Dockerfile --rm ." )
                   image.push()
                   buildImages.push(tag_name)
-                }
-              }
-            }
-          }
-        }
-        stage ('Deploy') {
-          when {
-            expression { GIT_BRANCH ==~ /(develop|staging|release-.*)/ }
-          }
-          steps {
-            echo 'Deployment stage started...'
-            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'mpsa-aws-test-account']]) {
-              script {
-                echo 'Logging out docker'
-                sh 'docker logout || true'
-                echo 'Logging into ECR'
-                sh('aws ecr get-login-password | docker login --username AWS --password-stdin https://$AWS_ECR')
-
-                def filenames = getDockerImageName(env.DOCKERFILE_DIR)
-                docker.withRegistry(AWS_ECR) {
-                  for (def name: imageNames) {
-                    def old_tag_name="$ARTIFACT_PATH/$name:$DOCKER_TAG"
-                    def new_tag_name="$AWS_ECR_PATH/$name:$AWS_TAG"
-                    def changeTagCmd = "docker tag $old_tag_name $new_tag_name"
-                    def pushCmd = "docker push $new_tag_name"
-
-                    // retag the image and push to aws
-                    sh changeTagCmd
-                    sh pushCmd
-                    buildImages.push(new_tag_name)
-                  }
-                  sleep 5
-                  try {
-                    sh '''
-                     aws ecs stop-task --cluster "aerie-${AWS_TAG}-cluster" --task $(aws ecs list-tasks --cluster "aerie-${AWS_TAG}-cluster" --output text --query taskArns[0])
-                    '''
-                  } catch (Exception e) {
-                    echo "Restarting failed since the task does not exist."
-                    echo e.getMessage()
-                  }
                 }
               }
             }

@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.MissionModelRepository.NoSuchMissionModelException;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
@@ -20,6 +21,7 @@ import javax.json.Json;
 import javax.json.stream.JsonParsingException;
 import javax.sql.DataSource;
 import java.io.StringReader;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -59,14 +61,29 @@ public final class PostgresPlanRepository implements PlanRepository {
     final var planId = toPlanId(id);
     try (final var connection = this.dataSource.getConnection()) {
       try (
-          final var getPlanAction = new GetPlanAction(connection);
           final var getSimulationAction = new GetSimulationAction(connection);
-          ) {
-        final var planRecord = getPlanAction.get(planId);
-        final var arguments = getSimulationAction
-            .get(planId)
-            .map(SimulationRecord::arguments)
-            .orElseGet(Map::of);
+          final var getSimulationTemplateAction = new GetSimulationTemplateAction(connection);
+      ) {
+        final var planRecord = getPlanRecord(connection, planId);
+
+        final Map<String, SerializedValue> arguments = new HashMap<>();
+        final var simRecord$ = getSimulationAction.get(planId);
+
+        if (simRecord$.isPresent()) {
+          final var simRecord = simRecord$.get();
+          final var templateId$ = simRecord.simulationTemplateId();
+
+          // Apply template arguments followed by simulation arguments.
+          // Overwriting of template arguments with sim. arguments is intentional here,
+          // and the resulting set of arguments is assumed to be complete
+          if (templateId$.isPresent()) {
+            getSimulationTemplateAction.get(templateId$.get()).ifPresent(simTemplateRecord -> {
+              arguments.putAll(simTemplateRecord.arguments());
+            });
+          }
+          arguments.putAll(simRecord.arguments());
+        }
+
         return new Plan(
             planRecord.name(),
             Long.toString(planRecord.missionModelId()),
@@ -188,6 +205,53 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
+  @Override
+  public long addExternalDataset(
+      final String id,
+      final Timestamp datasetStart,
+      final ProfileSet profileSet
+  ) throws NoSuchPlanException {
+    final var planId = toPlanId(id);
+    try (final var connection = this.dataSource.getConnection()) {
+      final var plan = getPlanRecord(connection, planId);
+      final var planDataset = createPlanDataset(connection, plan.id(), plan.startTime(), datasetStart);
+      ProfileRepository.postResourceProfiles(
+          connection,
+          planDataset.datasetId(),
+          profileSet,
+          datasetStart
+      );
+
+      return planDataset.datasetId();
+    } catch (final SQLException ex) {
+      throw new DatabaseException(
+          "Failed to add external dataset to plan with id `%s`".formatted(planId), ex);
+    }
+  }
+
+  private PlanRecord getPlanRecord(
+      final Connection connection,
+      final long planId
+  ) throws SQLException, NoSuchPlanException {
+    try (final var getPlanAction = new GetPlanAction(connection)) {
+      return getPlanAction.get(planId);
+    }
+  }
+
+  // TODO: This functionality is not required for the use-case
+  //       we are addressing at the time of creation, but it
+  //       will be necessary for our future use-cases of associating
+  //       multiple plans with an external dataset. At that time,
+  //       this function should be lifted to the PlanRepository interface
+  //       and hooked up to the merlin bindings
+  private static void useExternalDataset(
+      final Connection connection,
+      final PlanRecord plan,
+      final long datasetId
+  ) throws SQLException {
+    associatePlanWithDataset(connection, plan.id(), datasetId, plan.startTime());
+  }
+
   private static long toPlanId(final String id) throws NoSuchPlanException {
     try {
       return Long.parseLong(id, 10);
@@ -211,6 +275,28 @@ public final class PostgresPlanRepository implements PlanRepository {
       return Long.parseLong(modelId, 10);
     } catch (final NumberFormatException ex) {
       throw new NoSuchMissionModelException();
+    }
+  }
+
+  private static PlanDatasetRecord createPlanDataset(
+      final Connection connection,
+      final long planId,
+      final Timestamp planStart,
+      final Timestamp datasetStart
+  ) throws SQLException {
+    try (final var createPlanDatasetAction = new CreatePlanDatasetAction(connection)) {
+      return createPlanDatasetAction.apply(planId, planStart, datasetStart);
+    }
+  }
+
+  private static PlanDatasetRecord associatePlanWithDataset(
+      final Connection connection,
+      final long planId,
+      final long datasetId,
+      final Timestamp planStart
+  ) throws SQLException {
+    try (final var associatePlanDatasetAction = new AssociatePlanDatasetAction(connection)) {
+      return associatePlanDatasetAction.apply(planId, datasetId, planStart);
     }
   }
 

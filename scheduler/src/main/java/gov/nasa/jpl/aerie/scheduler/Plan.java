@@ -13,7 +13,7 @@ public interface Plan {
    *
    * @return the mission model that the plan is based on
    */
-  public MissionModelWrapper getMissionModel();
+  MissionModelWrapper getMissionModel();
 
   /**
    * adds the given activity instances to the scheduled plan solution
@@ -22,7 +22,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to schedule into the plan
    */
-  public void add(java.util.Collection<ActivityInstance> acts);
+  void add(java.util.Collection<ActivityInstance> acts);
 
   /**
    * adds the given activity instance to the scheduled plan solution
@@ -31,7 +31,7 @@ public interface Plan {
    *
    * @param act IN activity instance to schedule into the plan
    */
-  public void add(ActivityInstance act);
+  void add(ActivityInstance act);
   /**
    * adds the given activity instances to the scheduled plan solution
    *
@@ -39,7 +39,7 @@ public interface Plan {
    *
    * @param acts IN the set of activity instances to remove from the plan
    */
-  public void remove(java.util.Collection<ActivityInstance> acts);
+  void remove(java.util.Collection<ActivityInstance> acts);
 
   /**
    * removes the given activity instance to the scheduled plan solution
@@ -48,9 +48,9 @@ public interface Plan {
    *
    * @param act IN activity instance to remove from the plan
    */
-  public void remove(ActivityInstance act);
+  void remove(ActivityInstance act);
 
-  public void removeAllWindows();
+  void removeAllWindows();
 
 
   /**
@@ -58,14 +58,21 @@ public interface Plan {
    *
    * @return set of all activities in the plan ordered by start time
    */
-  public java.util.List<ActivityInstance> getActivitiesByTime();
+  java.util.List<ActivityInstance> getActivitiesByTime();
 
   /**
    * fetches activities in the plan by type
    *
    * @return map of all activities in the plan by type
    */
-  public java.util.Map<String, java.util.List<ActivityInstance>> getActivitiesByType();
+  java.util.Map<String, java.util.List<ActivityInstance>> getActivitiesByType();
+
+  /**
+   * fetches activities in the plan by type
+   *
+   * @return map of all activities in the plan by type
+   */
+  java.util.Set<ActivityInstance> getActivities();
 
   /**
    * finds activity instances in the plan that meet the given criteria
@@ -73,7 +80,7 @@ public interface Plan {
    * @param template IN the matching criteria to use on activity instances
    * @return collection of instances that match the given template
    */
-  public java.util.Collection<ActivityInstance> find(
+  java.util.Collection<ActivityInstance> find(
       ActivityExpression template);
 
   /**
@@ -84,13 +91,13 @@ public interface Plan {
    *
    * @param eval IN the new evaluation to add to the plan
    */
-  public void addEvaluation(Evaluation eval);
+  void addEvaluation(Evaluation eval);
 
   /**
    * fetches all of the evaluations posted to the plan
    *
    * @return container of all evaluations posted to the plan
    */
-  public java.util.Collection<Evaluation> getEvaluations();
+  java.util.Collection<Evaluation> getEvaluations();
 
 }

@@ -1,0 +1,4 @@
+
+#this jar file is copied (from the build/ tree) into the test resources to
+#allow testing of the jar loading capabilities. ignore for source control!
+src/test/resources/merlinsight-rules.jar
