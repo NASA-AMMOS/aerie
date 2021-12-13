@@ -24,7 +24,6 @@ This document provides detailed information about environment variables for each
 | `POSTGRES_PASSWORD`        | Password of Postgres instance.                                         | `string` | aerie                                          |
 | `POSTGRES_PORT`            | Port of Postgres instance.                                             | `number` | 5432                                           |
 | `POSTGRES_USER`            | User of Postgres instance.                                             | `string` | aerie                                          |
-| `VERSION`                  | Current release version of Aerie.                                      | `string` | 0.9.1                                          |
 
 ## Aerie UI
 
@@ -72,17 +71,15 @@ The default Aerie deployment uses the default Postgres environment. See the [Doc
 
 | Name                 | Description                                                           | Type     | Default                                        |
 | -------------------- | --------------------------------------------------------------------- | -------- | ---------------------------------------------- |
-| `SCHED_PORT`         | Port number for the scheduler server                                  | `number` | 27193                                          |
-| `SCHED_LOCAL_STORE`  | Local storage for scheduler in the container                          | `string` | /usr/src/app/sched_file_store                  |
-| `SCHED_LOGGING`      | Whether or not you want Javalin to log server information             | `string` | true                                           |
-| `SCHED_DB_SERVER`    | The DB instance that scheduler will connect with                      | `string` | postgres                                       |
-| `SCHED_DB_PORT`      | The DB instance port number that scheduler will connect with          | `number` | 5432                                           |
-| `SCHED_DB_USER`      | Username of the DB instance                                           | `string` | aerie                                          |
-| `SCHED_DB_PASSWORD`  | Password of the DB instance                                           | `string` | aerie                                          |
-| `SCHED_DB`           | The DB for scheduler.                                                 | `string` | aerie_sched                                    |
 | `MERLIN_GRAPHQL_URL` | URI of the Merlin graphql interface to call                           | `string` | http://hasura:8080/v1/graphql                  |
 | `MERLIN_LOCAL_STORE` | Local storage for Merlin in the container (for backdoor jar access)   | `string` | /usr/src/app/merlin_file_store                 |
-| `SCHED_RULES_JAR`    | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/sched_rules.jar |
+| `SCHED_DB`           | The DB for scheduler                                                  | `string` | aerie_sched                                    |
+| `SCHED_DB_PASSWORD`  | Password of the DB instance                                           | `string` | aerie                                          |
+| `SCHED_DB_PORT`      | The DB instance port number that scheduler will connect with          | `number` | 5432                                           |
+| `SCHED_DB_SERVER`    | The DB instance that scheduler will connect with                      | `string` | postgres                                       |
+| `SCHED_DB_USER`      | Username of the DB instance                                           | `string` | aerie                                          |
+| `SCHED_LOCAL_STORE`  | Local storage for scheduler in the container                          | `string` | /usr/src/app/sched_file_store                  |
+| `SCHED_LOGGING`      | Whether or not you want Javalin to log server information             | `string` | true                                           |
 | `SCHED_OUTPUT_MODE`  | how scheduler output is sent back to aerie                            | `string` | UpdateInputPlanWithNewActivities               |
-
-The Jar file to load scheduling rules from (until user input to database) is `/usr/src/app/merlin_file_store/sched_rules.jar`.
+| `SCHED_PORT`         | Port number for the scheduler server                                  | `number` | 27193                                          |
+| `SCHED_RULES_JAR`    | Jar file to load scheduling rules from (until user input to database) | `string` | /usr/src/app/merlin_file_store/sched_rules.jar |
