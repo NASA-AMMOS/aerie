@@ -12,7 +12,7 @@ allprojects {
   }
 
   group = 'gov.nasa.jpl.aerie'
-  version = '0.9.2'
+  version = '0.9.2-SNAPSHOT'
 
   gradle.projectsEvaluated {
     tasks.withType(JavaCompile) {
