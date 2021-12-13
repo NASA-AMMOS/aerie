@@ -2030,7 +2030,7 @@ Resources Types</p>
 <p>Operations on plans are validated to ensure consistency with the mission model-specific activity model with which they are associated. Stored plans shall contain activities whose parameter names and types are defined by the associated activity type.</p>
 <p class="page" id="Aerie-GraphQL-API-Software-Interface-Specification"></p><h1>Aerie GraphQL API</h1>
 <h2 id="purpose">Purpose</h2>
-<p>This document describes the Aerie GraphQL API, software interface provided by the Aerie 0.9.1 release.</p>
+<p>This document describes the Aerie GraphQL API, software interface provided by the Aerie 0.10.0 release.</p>
 <h2 id="terminology-and-notation">Terminology and Notation</h2>
 <p>No special notation is used in this document. See Appendix A for complete GraphQL Scheme definition.</p>
 <h2 id="interface-overview">Interface Overview</h2>
@@ -2781,17 +2781,17 @@ result = response.json()
 <p>Installation instructions are found in the Aerie repository <a href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment.md">deployment documentation</a>. If you have any questions or issues, don&#39;t hesitate to ask on <a href="https://app.slack.com/client/T024LMMEZ/C0163E42UBF">#mpsa-aerie-users</a>.</p>
 <h2 id="docker-containers">Docker Containers</h2>
 <p>Goto the <a href="https://artifactory.jpl.nasa.gov/artifactory/webapp/#/artifacts/browse/tree/General/docker-release-local/gov/nasa/jpl/aerie">Artifactory Aerie Docker repository</a> and log in with your JPL credentials. The latest released containers are:</p>
-<pre class="hljs">docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie<span class="hljs-regexp">/merlin/</span>release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-gateway/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-ui/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-code-server/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>
-docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-editor/release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span></pre><h2 id="example-docker-compose">Example Docker-Compose</h2>
+<pre class="hljs">docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie<span class="hljs-regexp">/merlin/</span>&lt;release-X.X.X&gt;
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-gateway/&lt;release-X.X.X&gt;
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-ui/&lt;release-X.X.X&gt;
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-code-server/&lt;release-X.X.X&gt;
+docker-release-local<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie-editor/&lt;release-X.X.X&gt;</pre><h2 id="example-docker-compose">Example Docker-Compose</h2>
 <p>An example Docker Compose file is available for deployment. You can use <a href="https://github.jpl.nasa.gov/Aerie/aerie/blob/develop/docs/deployment.md#customer-deployment">these instructions</a> to help you deploy.</p>
 <p><code>general-develop/gov/nasa/jpl/aerie/aerie-docker-compose.tar.gz</code></p>
 <h2 id="tars">TARs</h2>
 <p>If you just want the Aerie JAR files you can find them at:</p>
-<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>.tar.gz</pre><p>The Aerie Editor (Falcon) can be found at:</p>
-<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-editor-release-<span class="hljs-number">0.9</span>.<span class="hljs-number">1</span>.tar.gz</pre><h2 id="known-issues">Known Issues</h2>
+<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-&lt;release-X.X.X&gt;.tar.gz</pre><p>The Aerie Editor (Falcon) can be found at:</p>
+<pre class="hljs">general<span class="hljs-regexp">/gov/</span>nasa<span class="hljs-regexp">/jpl/</span>aerie/aerie-editor-&lt;release-X.X.X&gt;.tar.gz</pre><h2 id="known-issues">Known Issues</h2>
 <ol>
 <li><p>When using the IntelliJ IDE, upon a source file change, only the affected source files will be recompiled. This causes conflicts with the annotations processing being used for Activity Mapping. For now manually rebuilding every time is the solution.</p>
 </li>
@@ -2946,13 +2946,13 @@ These files will need to be shared between physical machines.</p>
   <span class="hljs-bullet">-</span> <span class="hljs-string">model_data:/usr/src/app/data</span></pre><h1 id="mission-model-development">Mission Model Development</h1>
 <p>Aerie provides four libraries that can be imported by a project from JPL Artifactory. They are,</p>
 <ul>
-<li><strong>contrib</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/contrib/0.9.1/</li>
-<li><strong>merlin-framework</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework/0.9.1/</li>
-<li><strong>merlin-framework-processor</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-processor/0.9.1/</li>
-<li><strong>merlin-framework-junit</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-junit/0.9.1/</li>
-<li><strong>merlin-sdk</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-sdk/0.9.1/</li>
-<li><strong>merlin-driver</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-driver/0.9.1/</li>
-<li><strong>parsing-tulities</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/parsin-utilities/0.9.1/</li>
+<li><strong>contrib</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/contrib</li>
+<li><strong>merlin-framework</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework</li>
+<li><strong>merlin-framework-processor</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-processor</li>
+<li><strong>merlin-framework-junit</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-framework-junit</li>
+<li><strong>merlin-sdk</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-sdk</li>
+<li><strong>merlin-driver</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/merlin-driver</li>
+<li><strong>parsing-tulities</strong> at maven-libs-release-local/gov/nasa/jpl/aerie/parsin-utilities</li>
 </ul>
 <h2 id="software-requirements">Software Requirements</h2>
 <table>
