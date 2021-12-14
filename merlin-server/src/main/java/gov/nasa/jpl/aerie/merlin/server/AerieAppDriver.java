@@ -88,10 +88,11 @@ public final class AerieAppDriver {
           new PostgresMissionModelRepository(hikariDataSource),
           new PostgresResultsCellRepository(hikariDataSource));
     } else if (store instanceof InMemoryStore c) {
+      final var inMemoryPlanRepository = new InMemoryPlanRepository();
       return new Stores(
-          new InMemoryPlanRepository(),
+          inMemoryPlanRepository,
           new InMemoryMissionModelRepository(),
-          new InMemoryResultsCellRepository());
+          new InMemoryResultsCellRepository(inMemoryPlanRepository));
 
     } else {
       throw new UnexpectedSubtypeError(Store.class, store);

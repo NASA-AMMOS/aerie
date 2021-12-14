@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.merlin.server.remotes;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
+import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.mocks.InMemoryPlanRepository;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,23 +14,40 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   public record Key(String planId, long planRevision) {}
 
   private final Map<InMemoryResultsCellRepository.Key, InMemoryCell> cells = new HashMap<>();
+  private final PlanRepository planRepository;
 
-
-  @Override
-  public ResultsProtocol.OwnerRole allocate(final String planId, final long planRevision) {
-    final var cell = new InMemoryCell();
-    this.cells.put(new InMemoryResultsCellRepository.Key(planId, planRevision), cell);
-    return cell;
+  public InMemoryResultsCellRepository(final PlanRepository planRepository) {
+    this.planRepository = planRepository;
   }
 
   @Override
-  public Optional<ResultsProtocol.ReaderRole> lookup(final String planId, final long planRevision) {
-    return Optional.ofNullable(this.cells.get(new InMemoryResultsCellRepository.Key(planId, planRevision)));
+  public ResultsProtocol.OwnerRole allocate(final String planId) {
+    try {
+      final var planRevision = planRepository.getPlanRevision(planId);
+      final var cell = new InMemoryCell(planId, planRevision);
+      this.cells.put(new InMemoryResultsCellRepository.Key(planId, planRevision), cell);
+      return cell;
+    } catch (final NoSuchPlanException ex) {
+      throw new Error("Cannot allocate simulation cell for nonexistent plan", ex);
+    }
   }
 
   @Override
-  public void deallocate(final String planId, final long planRevision) {
-    this.cells.remove(new InMemoryResultsCellRepository.Key(planId, planRevision));
+  public Optional<ResultsProtocol.ReaderRole> lookup(final String planId) {
+    try {
+      final var planRevision = planRepository.getPlanRevision(planId);
+      return Optional.ofNullable(this.cells.get(new InMemoryResultsCellRepository.Key(planId, planRevision)));
+    } catch (final NoSuchPlanException ex) {
+      throw new Error("Cannot allocate simulation cell for nonexistent plan", ex);
+    }
+  }
+
+  @Override
+  public void deallocate(final ResultsProtocol.OwnerRole resultsCell) {
+    if (!(resultsCell instanceof InMemoryCell cell)) {
+      throw new Error("Unable to deallocate results cell of unknown type");
+    }
+    this.cells.remove(new InMemoryResultsCellRepository.Key(cell.planId, cell.planRevision));
   }
 
   public boolean isEqualTo(final InMemoryResultsCellRepository other) {
@@ -56,6 +75,13 @@ public final class InMemoryResultsCellRepository implements ResultsCellRepositor
   public static final class InMemoryCell implements ResultsProtocol.OwnerRole {
     private volatile boolean canceled = false;
     private volatile ResultsProtocol.State state = new ResultsProtocol.State.Incomplete();
+    public final String planId;
+    public final long planRevision;
+
+    public InMemoryCell(final String planId, final long planRevision) {
+      this.planId = planId;
+      this.planRevision = planRevision;
+    }
 
     @Override
     public ResultsProtocol.State get() {

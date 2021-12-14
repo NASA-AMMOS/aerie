@@ -8,35 +8,62 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Optional;
 
-/*package-local*/ final class GetSimulationDatasetAction implements AutoCloseable {
+/*package-local*/ final class LookupSimulationDatasetAction implements AutoCloseable {
   private static final @Language("Sql") String sql = """
+    with
+      revisions as
+        ( select
+           s.id as sim_id,
+           s.revision as sim_revision,
+           t.revision as template_revision,
+           p.revision as plan_revision,
+           m.revision as model_revision
+         from simulation as s
+         left join simulation_template as t
+           on s.simulation_template_id = t.id
+         left join plan as p
+           on p.id = s.plan_id
+         left join mission_model as m
+           on m.id = p.model_id)
     select
-          d.simulation_id,
+          d.dataset_id,
           d.state,
           d.reason,
           d.canceled,
           d.offset_from_plan_start
       from simulation_dataset as d
+      left join revisions as r
+        on d.simulation_id = r.sim_id
       where
-        d.dataset_id = ?
+        d.simulation_id = ? and
+        d.simulation_revision = r.sim_revision and
+        d.plan_revision = r.plan_revision and
+        d.model_revision = r.model_revision and
+        (
+          d.simulation_template_revision = r.template_revision or
+          (
+            d.simulation_template_revision is null and
+            r.template_revision is null
+          )
+        )
     """;
 
   private final PreparedStatement statement;
 
-  public GetSimulationDatasetAction(final Connection connection) throws SQLException {
+  public LookupSimulationDatasetAction(final Connection connection) throws SQLException {
     this.statement = connection.prepareStatement(sql);
   }
 
   public Optional<SimulationDatasetRecord> get(
-      final long datasetId,
+      final long simulationId,
       final Timestamp planStart
   ) throws SQLException {
-    this.statement.setLong(1, datasetId);
+    this.statement.setLong(1, simulationId);
 
     final var results = this.statement.executeQuery();
     if (!results.next()) return Optional.empty();
 
-    final var simulationId = results.getLong(1);
+    final var datasetId = results.getLong(1);
     final var state = new SimulationStateRecord(
         results.getString(2),
         results.getString(3));

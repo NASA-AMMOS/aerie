@@ -5,9 +5,6 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 public final record SimulationDatasetRecord(
     long simulationId,
     long datasetId,
-    long simulationRevision,
-    long planRevision,
-    long modelRevision,
     SimulationStateRecord state,
     boolean canceled,
     Duration offsetFromPlanStart) {}

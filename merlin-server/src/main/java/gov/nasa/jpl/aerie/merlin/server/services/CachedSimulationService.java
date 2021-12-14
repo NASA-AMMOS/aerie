@@ -9,12 +9,12 @@ public record CachedSimulationService (
 ) implements SimulationService {
   @Override
   public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
-    final var cell$ = this.store.lookup(planId, planRevision);
+    final var cell$ = this.store.lookup(planId);
     if (cell$.isPresent()) {
       return cell$.get().get();
     } else {
       // Allocate a fresh cell.
-      final var cell = this.store.allocate(planId, planRevision);
+      final var cell = this.store.allocate(planId);
 
       // Split the cell into its two concurrent roles, and delegate the writer role to another process.
       final ResultsProtocol.ReaderRole reader;
@@ -25,7 +25,7 @@ public record CachedSimulationService (
         this.agent.simulate(planId, planRevision, writer);
       } catch (final InterruptedException ex) {
         // If we couldn't delegate, clean up the cell and return an Incomplete.
-        this.store.deallocate(planId, planRevision);
+        this.store.deallocate(cell);
         return new ResultsProtocol.State.Incomplete();
       }
 
