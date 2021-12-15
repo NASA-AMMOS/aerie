@@ -20,10 +20,10 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
     this.requestQueue = Objects.requireNonNull(requestQueue);
   }
 
-  public static ThreadedSimulationAgent spawn(final String threadName, final SimulationAgent simulationAction) {
+  public static ThreadedSimulationAgent spawn(final String threadName, final SimulationAgent simulationAgent) {
     final var requestQueue = new LinkedBlockingQueue<SimulationRequest>();
 
-    final var thread = new Thread(new Worker(requestQueue, simulationAction));
+    final var thread = new Thread(new Worker(requestQueue, simulationAgent));
     thread.setName(threadName);
     thread.start();
 
@@ -44,14 +44,14 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
   private static final class Worker implements Runnable {
     private final BlockingQueue<SimulationRequest> requestQueue;
-    private final SimulationAgent simulationAction;
+    private final SimulationAgent simulationAgent;
 
     public Worker(
         final BlockingQueue<SimulationRequest> requestQueue,
-        final SimulationAgent simulationAction)
+        final SimulationAgent simulationAgent)
     {
       this.requestQueue = Objects.requireNonNull(requestQueue);
-      this.simulationAction = Objects.requireNonNull(simulationAction);
+      this.simulationAgent = Objects.requireNonNull(simulationAgent);
     }
 
     @Override
@@ -62,7 +62,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
           if (request instanceof SimulationRequest.Simulate req) {
             try {
-              this.simulationAction.simulate(req.planId(), req.planRevision(), req.writer());
+              this.simulationAgent.simulate(req.planId(), req.planRevision(), req.writer());
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
               req.writer().failWith(ex.getMessage());
