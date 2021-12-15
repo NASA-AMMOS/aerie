@@ -255,7 +255,11 @@ public final class MissionModelProcessor implements Processor {
   throws InvalidMissionModelException
   {
     final var enumBoundedTypeParameters = new HashSet<String>();
-    // Check type parameters are bounded only by enum type or not at all
+    // Ensure type parameters are unbounded or bounded only by enum type.
+    // Supporting value mapper resolvers for types like:
+    // - `List<? extends Foo>` or
+    // - `List<? extends Map<? super Foo, ? extends Bar>>`
+    // is not straightforward.
     for (final var typeParameter : element.getTypeParameters()) {
       final var bounds = typeParameter.getBounds();
       for (final var bound : bounds) {
