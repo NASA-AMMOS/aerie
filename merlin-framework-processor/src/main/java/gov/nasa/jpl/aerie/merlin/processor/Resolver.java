@@ -95,7 +95,11 @@ public final class Resolver {
       if (pattern == null) return Optional.empty();
       if (!(pattern instanceof ClassPattern)) return Optional.empty();
 
-      // TODO: Currently we only allow enum bounds, but should expand at some point
+      // Only enum bounds are supported, but could expand at some point.
+      // Supporting value mapper resolvers for types like:
+      // - `List<? extends Foo>` or
+      // - `List<? extends Map<? super Foo, ? extends Bar>>`
+      // is not straightforward.
       final var patternType = elementUtils.getTypeElement(pattern.erasure().toString()).asType();
       final var enumType = typeUtils.erasure(elementUtils.getTypeElement("java.lang.Enum").asType());
       if (!typeUtils.isSubtype(patternType, enumType)) return Optional.empty();
