@@ -52,15 +52,6 @@ public final class StubPlanService implements PlanService {
   }
 
   @Override
-  public long getPlanRevision(final String planId) throws NoSuchPlanException {
-    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
-      throw new NoSuchPlanException(planId);
-    }
-
-    return 0;
-  }
-
-  @Override
   public RevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
     if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
       throw new NoSuchPlanException(planId);
