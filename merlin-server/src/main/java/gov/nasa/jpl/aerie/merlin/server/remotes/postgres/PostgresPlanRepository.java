@@ -57,8 +57,8 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Plan getPlan(final String id) throws NoSuchPlanException {
-    final var planId = toPlanId(id);
+  public Plan getPlan(final String planIdString) throws NoSuchPlanException {
+    final var planId = toPlanId(planIdString);
     try (final var connection = this.dataSource.getConnection()) {
       try (
           final var getSimulationAction = new GetSimulationAction(connection);
@@ -99,10 +99,10 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public long getPlanRevision(final String id) throws NoSuchPlanException {
+  public long getPlanRevision(final String planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getPlanRevisionAction = new GetPlanRevisionAction(connection)) {
-        return getPlanRevisionAction.get(toPlanId(id));
+        return getPlanRevisionAction.get(toPlanId(planId));
       }
     } catch (final SQLException ex) {
       throw new DatabaseException("Failed to get plan revision", ex);
@@ -174,12 +174,12 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public PlanTransaction updatePlan(final String id) throws NoSuchPlanException {
-    return new PostgresPlanTransaction(this.dataSource, toPlanId(id));
+  public PlanTransaction updatePlan(final String planId) throws NoSuchPlanException {
+    return new PostgresPlanTransaction(this.dataSource, toPlanId(planId));
   }
 
   @Override
-  public void deletePlan(final String id) {
+  public void deletePlan(final String planId) {
     throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
   }
 

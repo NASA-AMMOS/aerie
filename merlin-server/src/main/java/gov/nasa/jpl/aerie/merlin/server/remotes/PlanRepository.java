@@ -24,14 +24,14 @@ import java.util.Map;
 public interface PlanRepository {
   // Queries
   Map<String, Plan> getAllPlans();
-  Plan getPlan(String id) throws NoSuchPlanException;
-  long getPlanRevision(String id) throws NoSuchPlanException;
+  Plan getPlan(String planId) throws NoSuchPlanException;
+  long getPlanRevision(String planId) throws NoSuchPlanException;
   Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
 
   // Mutations
   CreatedPlan createPlan(NewPlan plan) throws MissionModelRepository.NoSuchMissionModelException;
-  PlanTransaction updatePlan(String id) throws NoSuchPlanException;
-  void deletePlan(String id) throws NoSuchPlanException;
+  PlanTransaction updatePlan(String planId) throws NoSuchPlanException;
+  void deletePlan(String planId) throws NoSuchPlanException;
 
   String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
   void deleteAllActivities(String planId) throws NoSuchPlanException;

@@ -99,18 +99,18 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public PlanTransaction updatePlan(final String id) {
-    return new MockPlanTransaction(id);
+  public PlanTransaction updatePlan(final String planId) {
+    return new MockPlanTransaction(planId);
   }
 
   @Override
-  public void deletePlan(final String id) throws NoSuchPlanException {
-    if (!this.plans.containsKey(id)) {
-      throw new NoSuchPlanException(id);
+  public void deletePlan(final String planId) throws NoSuchPlanException {
+    if (!this.plans.containsKey(planId)) {
+      throw new NoSuchPlanException(planId);
     }
 
-    this.deleteAllActivities(id);
-    this.plans.remove(id);
+    this.deleteAllActivities(planId);
+    this.plans.remove(planId);
   }
 
   @Override
