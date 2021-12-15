@@ -29,6 +29,11 @@ public final class LocalPlanService implements PlanService {
   }
 
   @Override
+  public RevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+    return this.planRepository.getPlanRevisionData(planId);
+  }
+
+  @Override
   public Map<String, Constraint> getConstraintsForPlan(final String planId) throws NoSuchPlanException {
     return this.planRepository.getAllConstraintsInPlan(planId);
   }

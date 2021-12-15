@@ -11,6 +11,7 @@ import java.util.Map;
 public interface PlanService {
   Plan getPlan(String planId) throws NoSuchPlanException;
   long getPlanRevision(String planId) throws NoSuchPlanException;
+  RevisionData getPlanRevisionData(String planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getConstraintsForPlan(String planId) throws NoSuchPlanException;
 
