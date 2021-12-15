@@ -47,7 +47,7 @@ public final class GetSimulationResultsAction {
   }
 
   public Response run(final String planId) throws NoSuchPlanException {
-    final var planRevision = this.planService.getPlanRevisionById(planId);
+    final var planRevision = this.planService.getPlanRevision(planId);
 
     final var response = this.simulationService.getSimulationResults(planId, planRevision);
 
@@ -68,7 +68,7 @@ public final class GetSimulationResultsAction {
   public Map<String, List<Violation>> getViolations(final String planId, final SimulationResults results)
   throws NoSuchPlanException
   {
-    final var plan = this.planService.getPlanById(planId);
+    final var plan = this.planService.getPlan(planId);
 
     final var constraintJsons = new HashMap<String, Constraint>();
 

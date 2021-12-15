@@ -27,9 +27,9 @@ public record SynchronousSimulationAgent (
   public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer) {
     final Plan plan;
     try {
-      plan = this.planService.getPlanById(planId);
+      plan = this.planService.getPlan(planId);
 
-      if (this.planService.getPlanRevisionById(planId) != planRevision) {
+      if (this.planService.getPlanRevision(planId) != planRevision) {
         writer.failWith("plan with id %s is no longer at revision %s".formatted(
             planId,
             planRevision));
