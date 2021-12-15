@@ -8,7 +8,7 @@ public record CachedSimulationService (
     SimulationAgent agent
 ) implements SimulationService {
   @Override
-  public ResultsProtocol.State getSimulationResults(final String planId, final long planRevision) {
+  public ResultsProtocol.State getSimulationResults(final String planId, final RevisionData revisionData) {
     final var cell$ = this.store.lookup(planId);
     if (cell$.isPresent()) {
       return cell$.get().get();
@@ -22,7 +22,7 @@ public record CachedSimulationService (
         final ResultsProtocol.WriterRole writer = cell;
         reader = cell;
 
-        this.agent.simulate(planId, planRevision, writer);
+        this.agent.simulate(planId, revisionData, writer);
       } catch (final InterruptedException ex) {
         // If we couldn't delegate, clean up the cell and return an Incomplete.
         this.store.deallocate(cell);

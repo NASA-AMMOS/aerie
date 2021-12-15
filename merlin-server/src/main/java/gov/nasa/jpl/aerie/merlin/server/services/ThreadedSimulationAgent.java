@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public final class ThreadedSimulationAgent implements SimulationAgent {
   private /*sealed*/ interface SimulationRequest {
-    record Simulate(String planId, long planRevision, ResultsProtocol.WriterRole writer) implements SimulationRequest {}
+    record Simulate(String planId, RevisionData revisionData, ResultsProtocol.WriterRole writer) implements SimulationRequest {}
 
     record Terminate() implements SimulationRequest {}
   }
@@ -31,10 +31,10 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
   }
 
   @Override
-  public void simulate(final String planId, final long planRevision, final ResultsProtocol.WriterRole writer)
+  public void simulate(final String planId, final RevisionData revisionData, final ResultsProtocol.WriterRole writer)
   throws InterruptedException
   {
-    this.requestQueue.put(new SimulationRequest.Simulate(planId, planRevision, writer));
+    this.requestQueue.put(new SimulationRequest.Simulate(planId, revisionData, writer));
   }
 
   public void terminate() throws InterruptedException {
@@ -62,7 +62,7 @@ public final class ThreadedSimulationAgent implements SimulationAgent {
 
           if (request instanceof SimulationRequest.Simulate req) {
             try {
-              this.simulationAgent.simulate(req.planId(), req.planRevision(), req.writer());
+              this.simulationAgent.simulate(req.planId(), req.revisionData(), req.writer());
             } catch (final Throwable ex) {
               ex.printStackTrace(System.err);
               req.writer().failWith(ex.getMessage());
