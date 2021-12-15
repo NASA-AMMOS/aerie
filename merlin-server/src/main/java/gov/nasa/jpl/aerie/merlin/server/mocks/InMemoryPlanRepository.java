@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -51,6 +52,15 @@ public final class InMemoryPlanRepository implements PlanRepository {
         .ofNullable(this.plans.get(planId))
         .orElseThrow(() -> new NoSuchPlanException(planId))
         .getLeft();
+  }
+
+  @Override
+  public InMemoryRevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+    return new InMemoryRevisionData(
+        Optional
+            .ofNullable(this.plans.get(planId))
+            .orElseThrow(() -> new NoSuchPlanException(planId))
+            .getLeft());
   }
 
   @Override

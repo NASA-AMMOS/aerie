@@ -110,6 +110,18 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
+  public PostgresPlanRevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+    try (final var connection = this.dataSource.getConnection()) {
+      try (final var getPlanRevisionDataAction = new GetPlanRevisionDataAction(connection)) {
+        return getPlanRevisionDataAction.get(toPlanId(planId))
+            .orElseThrow(() -> new NoSuchPlanException(planId));
+      }
+    } catch (final SQLException ex) {
+      throw new DatabaseException("Failed to get plan revision data", ex);
+    }
+  }
+
+  @Override
   public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getActivitiesAction = new GetActivitiesAction(connection)) {
