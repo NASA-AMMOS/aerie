@@ -530,14 +530,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     Modifier.FINAL)
                 .addCode(
                     activityType.effectModel()
-                        .map(effectModel -> switch (effectModel.getRight()) {
+                        .map(effectModel -> switch (effectModel.executor()) {
                           case Threaded -> CodeBlock
                               .builder()
                               .addStatement(
                                   "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
                                   gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                   "activity",
-                                  effectModel.getLeft(),
+                                  effectModel.methodName(),
                                   "model",
                                   "model")
                               .build();
@@ -548,7 +548,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                   "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
                                   gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                   "activity",
-                                  effectModel.getLeft(),
+                                  effectModel.methodName(),
                                   "model",
                                   "model")
                               .build();

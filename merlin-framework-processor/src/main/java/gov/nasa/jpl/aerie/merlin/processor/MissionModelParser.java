@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
@@ -341,7 +342,7 @@ import java.util.function.Predicate;
         .toList();
   }
 
-  private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)
+  private Optional<EffectModelRecord> getActivityEffectModel(final TypeElement activityTypeElement)
   {
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD) continue;
@@ -349,7 +350,7 @@ import java.util.function.Predicate;
       final var executorAnnotation = element.getAnnotation(ActivityType.EffectModel.class);
       if (executorAnnotation == null) continue;
 
-      return Optional.of(Pair.of(element.getSimpleName().toString(), executorAnnotation.value()));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value()));
     }
 
     return Optional.empty();
