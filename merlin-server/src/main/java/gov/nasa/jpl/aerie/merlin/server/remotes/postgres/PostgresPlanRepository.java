@@ -163,7 +163,7 @@ public final class PostgresPlanRepository implements PlanRepository {
                 activity.startTimestamp,
                 activity.type);
 
-            for (final var argument : activity.parameters.entrySet()) {
+            for (final var argument : activity.arguments.entrySet()) {
               // Add this argument to the staged batch of arguments.
               setActivityArgumentsAction.add(activityId, argument.getKey(), argument.getValue());
             }
@@ -328,7 +328,7 @@ public final class PostgresPlanRepository implements PlanRepository {
                                                        planStartTime.plusMicros(startOffsetInMicros),
                                                        arguments))),
                   untuple((String actId, ActivityInstance $) ->
-                              tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.parameters))));
+                              tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.arguments))));
 
       final var activities = new HashMap<String, ActivityInstance>();
       for (final var entry : parseJson(json, listP(activityRowP))) {

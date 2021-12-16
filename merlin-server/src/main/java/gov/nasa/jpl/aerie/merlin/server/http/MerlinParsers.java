@@ -84,7 +84,7 @@ public abstract class MerlinParsers {
       . map(Iso.of(
           untuple((type, startTimestamp, parameters) ->
               new ActivityInstance(type, startTimestamp, parameters)),
-          activity -> tuple(activity.type, activity.startTimestamp, activity.parameters)));
+          activity -> tuple(activity.type, activity.startTimestamp, activity.arguments)));
 
   public static final JsonParser<ActivityInstance> activityInstancePatchP
       = productP
@@ -94,7 +94,7 @@ public abstract class MerlinParsers {
       . map(Iso.of(
           untuple((type, startTimestamp, parameters) ->
               new ActivityInstance(type.orElse(null), startTimestamp.orElse(null), parameters.orElse(null))),
-          $ -> tuple(Optional.ofNullable($.type), Optional.ofNullable($.startTimestamp), Optional.ofNullable($.parameters))));
+          $ -> tuple(Optional.ofNullable($.type), Optional.ofNullable($.startTimestamp), Optional.ofNullable($.arguments))));
 
   public static final JsonParser<NewPlan> newPlanP
       = productP
@@ -142,7 +142,7 @@ public abstract class MerlinParsers {
       . map(Iso.of(
           untuple((defer, type, parameters) ->
               Pair.of(defer, new SerializedActivity(type, parameters.orElse(Collections.emptyMap())))),
-          $ -> tuple($.getLeft(), $.getRight().getTypeName(), Optional.of($.getRight().getParameters()))));
+          $ -> tuple($.getLeft(), $.getRight().getTypeName(), Optional.of($.getRight().getArguments()))));
 
   public static final JsonParser<CreateSimulationMessage> createSimulationMessageP
       = productP

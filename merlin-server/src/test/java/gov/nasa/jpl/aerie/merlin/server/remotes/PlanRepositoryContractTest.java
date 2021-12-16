@@ -66,7 +66,7 @@ public abstract class PlanRepositoryContractTest {
     // WHEN
     final ActivityInstance activity = new ActivityInstance();
     activity.type = "abc";
-    activity.parameters = Map.of("abc", SerializedValue.of(1));
+    activity.arguments = Map.of("abc", SerializedValue.of(1));
 
     final NewPlan newPlan = new NewPlan();
     newPlan.name = "new-plan";

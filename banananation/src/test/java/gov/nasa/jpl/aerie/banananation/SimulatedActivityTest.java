@@ -26,8 +26,8 @@ public final class SimulatedActivityTest {
 
     assertEquals(1, simulationResults.simulatedActivities.size());
     simulationResults.simulatedActivities.forEach( (id, act) -> {
-        assertEquals(1, act.parameters.size());
-        assertTrue(act.parameters.containsKey("peelDirection"));
+        assertEquals(1, act.arguments.size());
+        assertTrue(act.arguments.containsKey("peelDirection"));
     });
   }
 }

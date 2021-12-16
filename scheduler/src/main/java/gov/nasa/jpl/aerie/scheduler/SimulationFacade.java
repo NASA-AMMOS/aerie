@@ -408,7 +408,7 @@ public class SimulationFacade {
     final var startT = Duration.of(planStartT.until(driverActivity.start, ChronoUnit.MICROS), MICROSECONDS);
     final var endT = startT.plus(driverActivity.duration);
     return new gov.nasa.jpl.aerie.constraints.model.ActivityInstance(
-        id, driverActivity.type, driverActivity.parameters,
+        id, driverActivity.type, driverActivity.arguments,
         Window.betweenClosedOpen(startT, endT));
   }
 

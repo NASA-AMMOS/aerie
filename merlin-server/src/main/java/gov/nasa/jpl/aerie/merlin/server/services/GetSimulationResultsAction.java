@@ -96,7 +96,7 @@ public final class GetSimulationResultsAction {
       activities.add(new ActivityInstance(
           id,
           activity.type,
-          activity.parameters,
+          activity.arguments,
           Window.between(activityOffset, activityOffset.plus(activity.duration))));
     }
 

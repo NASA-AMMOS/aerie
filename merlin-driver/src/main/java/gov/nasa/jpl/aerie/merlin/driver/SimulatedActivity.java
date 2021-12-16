@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public final class SimulatedActivity {
   public final String type;
-  public final Map<String, SerializedValue> parameters;
+  public final Map<String, SerializedValue> arguments;
   public final Instant start;
   public final Duration duration;
   public final String parentId;
@@ -19,7 +19,7 @@ public final class SimulatedActivity {
 
   public SimulatedActivity(
       final String type,
-      final Map<String, SerializedValue> parameters,
+      final Map<String, SerializedValue> arguments,
       final Instant start,
       final Duration duration,
       final String parentId,
@@ -27,7 +27,7 @@ public final class SimulatedActivity {
       final Optional<String> directiveId
   ) {
     this.type = type;
-    this.parameters = parameters;
+    this.arguments = arguments;
     this.start = start;
     this.duration = duration;
     this.parentId = parentId;
@@ -40,7 +40,7 @@ public final class SimulatedActivity {
     return
         "SimulatedActivity "
         + "{ type=" + this.type
-        + ", parameters=" + this.parameters
+        + ", arguments=" + this.arguments
         + ", start=" + this.start
         + ", duration=" + this.duration
         + ", parentId=" + this.parentId

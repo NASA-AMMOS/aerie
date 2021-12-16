@@ -32,7 +32,7 @@ public final class PlanValidator {
     try {
       validationFailures = this.missionModelService.validateActivityParameters(
           missionModelId,
-          new SerializedActivity(activityInstance.type, activityInstance.parameters));
+          new SerializedActivity(activityInstance.type, activityInstance.arguments));
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       throw new Error("Unexpectedly nonexistent mission model, when this should have been validated earlier.", ex);
     }
