@@ -10,7 +10,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
@@ -23,13 +22,12 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.processing.Completion;
 import javax.annotation.processing.Filer;
@@ -381,7 +379,7 @@ public final class MissionModelProcessor implements Processor {
         .getActivityParameters(activityTypeElement);
   }
 
-  private Optional<Pair<String, ActivityType.Executor>>
+  private Optional<EffectModelRecord>
   getActivityEffectModel(final TypeElement activityTypeElement)
   {
     for (final var element : activityTypeElement.getEnclosedElements()) {
@@ -390,7 +388,7 @@ public final class MissionModelProcessor implements Processor {
       final var executorAnnotation = element.getAnnotation(ActivityType.EffectModel.class);
       if (executorAnnotation == null) continue;
 
-      return Optional.of(Pair.of(element.getSimpleName().toString(), executorAnnotation.value()));
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value()));
     }
 
     return Optional.empty();
@@ -669,14 +667,14 @@ public final class MissionModelProcessor implements Processor {
                         Modifier.FINAL)
                     .addCode(
                         activityType.effectModel
-                            .map(effectModel -> switch (effectModel.getRight()) {
+                            .map(effectModel -> switch (effectModel.executor()) {
                               case Threaded -> CodeBlock
                                   .builder()
                                   .addStatement(
                                       "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
                                       gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                       "activity",
-                                      effectModel.getLeft(),
+                                      effectModel.methodName(),
                                       "model",
                                       "model")
                                   .build();
@@ -687,7 +685,7 @@ public final class MissionModelProcessor implements Processor {
                                       "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
                                       gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                       "activity",
-                                      effectModel.getLeft(),
+                                      effectModel.methodName(),
                                       "model",
                                       "model")
                                   .build();

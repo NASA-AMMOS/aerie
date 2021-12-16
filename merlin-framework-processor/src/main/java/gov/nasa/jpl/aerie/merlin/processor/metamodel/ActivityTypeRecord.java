@@ -15,7 +15,7 @@ public final class ActivityTypeRecord {
   public final ActivityMapperRecord mapper;
   public final List<ActivityValidationRecord> validations;
   public final List<ActivityParameterRecord> parameters;
-  public final Optional<Pair<String, ActivityType.Executor>> effectModel;
+  public final Optional<EffectModelRecord> effectModel;
   public final ActivityDefaultsStyle activityDefaultsStyle;
 
   public ActivityTypeRecord(
@@ -24,7 +24,7 @@ public final class ActivityTypeRecord {
       final ActivityMapperRecord mapper,
       final List<ActivityValidationRecord> validations,
       final List<ActivityParameterRecord> parameters,
-      final Optional<Pair<String, ActivityType.Executor>> effectModel,
+      final Optional<EffectModelRecord> effectModel,
       final ActivityDefaultsStyle activityDefaultsStyle)
   {
     this.declaration = Objects.requireNonNull(declaration);
