@@ -11,7 +11,7 @@ import java.util.Optional;
 
 /*package-local*/ record SimulatedActivityRecord(
     String type,
-    Map<String, SerializedValue> parameters,
+    Map<String, SerializedValue> arguments,
     Instant start,
     Duration duration,
     Optional<Long> parentId,

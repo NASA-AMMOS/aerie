@@ -169,7 +169,7 @@ public final class SimulationDriver {
         final var directiveId = nextTask.getMiddle();
         final var specification = nextTask.getRight();
 
-        final var id = scheduler.spawn(specification.getTypeName(), specification.getParameters());
+        final var id = scheduler.spawn(specification.getTypeName(), specification.getArguments());
         this.taskToPlannedDirective.put(id, directiveId);
       }
 

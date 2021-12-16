@@ -69,7 +69,7 @@ public final class Fixtures {
 
     activityInstance.type = this.EXISTENT_ACTIVITY_TYPE_ID;
     activityInstance.startTimestamp = Timestamp.fromString("0000-111T22:33:44");
-    activityInstance.parameters = StubMissionModelService.VALID_ACTIVITY_INSTANCE.getParameters();
+    activityInstance.arguments = StubMissionModelService.VALID_ACTIVITY_INSTANCE.getArguments();
 
     return activityInstance;
   }

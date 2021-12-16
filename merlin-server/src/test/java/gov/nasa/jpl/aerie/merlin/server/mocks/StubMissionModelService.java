@@ -106,18 +106,18 @@ public final class StubMissionModelService implements MissionModelService {
   }
 
   @Override
-  public List<String> validateActivityParameters(final String missionModelId, final SerializedActivity activityParameters)
+  public List<String> validateActivityArguments(final String missionModelId, final SerializedActivity activity)
   throws NoSuchMissionModelException
   {
     if (!Objects.equals(missionModelId, EXISTENT_MISSION_MODEL_ID)) {
       throw new NoSuchMissionModelException(missionModelId);
     }
 
-    if (Objects.equals(activityParameters.getTypeName(), NONEXISTENT_ACTIVITY_INSTANCE.getTypeName())) {
+    if (Objects.equals(activity.getTypeName(), NONEXISTENT_ACTIVITY_INSTANCE.getTypeName())) {
       return NO_SUCH_ACTIVITY_TYPE_FAILURES;
-    } else if (Objects.equals(activityParameters, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
+    } else if (Objects.equals(activity, UNCONSTRUCTABLE_ACTIVITY_INSTANCE)) {
       return UNCONSTRUCTABLE_ACTIVITY_INSTANCE_FAILURES;
-    } else if (Objects.equals(activityParameters, INVALID_ACTIVITY_INSTANCE)) {
+    } else if (Objects.equals(activity, INVALID_ACTIVITY_INSTANCE)) {
       return INVALID_ACTIVITY_INSTANCE_FAILURES;
     } else {
       return Collections.emptyList();
