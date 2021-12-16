@@ -151,7 +151,7 @@ public final class ResponseSerializers {
     return Json
         .createObjectBuilder()
         .add("type", simulatedActivity.type)
-        .add("parameters", serializeArgumentMap(simulatedActivity.parameters))
+        .add("parameters", serializeArgumentMap(simulatedActivity.arguments))
         .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))

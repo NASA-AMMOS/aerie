@@ -106,7 +106,7 @@ public final class LocalMissionModelService implements MissionModelService {
     try {
       // TODO: [AERIE-1516] Teardown the missionModel after use to release any system resources (e.g. threads).
       return this.loadConfiguredMissionModel(missionModelId)
-                 .validateActivity(activityParameters.getTypeName(), activityParameters.getParameters());
+                 .validateActivity(activityParameters.getTypeName(), activityParameters.getArguments());
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       return List.of("unknown activity type");
     } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {
@@ -124,7 +124,7 @@ public final class LocalMissionModelService implements MissionModelService {
   {
     try {
       return this.loadConfiguredMissionModel(missionModelId)
-                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getParameters());
+                 .getActivityEffectiveArguments(activity.getTypeName(), activity.getArguments());
     } catch (final MissionModelFacade.NoSuchActivityTypeException ex) {
       throw new NoSuchActivityTypeException(activity.getTypeName(), ex);
     } catch (final MissionModelFacade.UnconstructableActivityInstanceException ex) {

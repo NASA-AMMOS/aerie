@@ -236,7 +236,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
 
       this.type.ifPresent(type -> activity.type = type);
       this.startTimestamp.ifPresent(startTimestamp -> activity.startTimestamp = startTimestamp);
-      this.parameters.ifPresent(parameters -> activity.parameters = parameters);
+      this.parameters.ifPresent(arguments -> activity.arguments = arguments);
 
       InMemoryPlanRepository.this.plans.put(this.planId, Pair.of(revision, plan));
     }

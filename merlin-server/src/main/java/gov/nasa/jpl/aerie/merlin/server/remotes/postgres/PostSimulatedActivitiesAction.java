@@ -49,7 +49,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
       setTimestamp(statement, 4, endTimestamp);
       setTimestamp(statement, 5, startTimestamp);
       statement.setString(6, act.type);
-      statement.setString(7, buildAttributes(act.directiveId, act.parameters));
+      statement.setString(7, buildAttributes(act.directiveId, act.arguments));
 
       statement.addBatch();
     }
