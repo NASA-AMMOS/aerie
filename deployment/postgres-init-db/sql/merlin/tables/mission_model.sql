@@ -50,11 +50,6 @@ language plpgsql as $$begin
   return new;
 end$$;
 
-create trigger increment_revision_on_update_mission_model_trigger
-after insert on mission_model
-for each row
-execute function increment_revision_on_update_mission_model();
-
 create function increment_revision_on_update_mission_model_jar()
 returns trigger
 security definer
@@ -66,3 +61,14 @@ language plpgsql as $$begin
 
   return new;
 end$$;
+
+create trigger increment_revision_on_update_mission_model_trigger
+after update on mission_model
+for each row
+when (pg_trigger_depth() < 1)
+execute function increment_revision_on_update_mission_model();
+
+create trigger increment_revision_on_update_mission_model_jar_trigger
+after update on uploaded_file
+for each row
+execute function increment_revision_on_update_mission_model_jar();
