@@ -43,28 +43,28 @@ public final class ThreadedTask implements Task {
       this.hostToTask.put(new TaskRequest.Resume(scheduler));
       final var response = this.taskToHost.take();
 
-      if (response instanceof TaskResponse.Success) {
-        final var status = ((TaskResponse.Success) response).status;
+      if (response instanceof TaskResponse.Success r) {
+        final var status = r.status;
 
         if (status instanceof TaskStatus.Completed) {
           this.lifecycle = Lifecycle.Terminated;
         }
 
         return status;
-      } else if (response instanceof TaskResponse.Failure) {
+      } else if (response instanceof TaskResponse.Failure r) {
         this.lifecycle = Lifecycle.Terminated;
 
         // We re-throw the received exception to avoid interfering with `catch` blocks
         //   that might be looking for this specific exception, but we add a new exception
         //   to its suppression list to provide a stack trace in this thread, too.
-        final var ex = ((TaskResponse.Failure) response).failure;
+        final var ex = r.failure;
         ex.addSuppressed(new TaskFailureException());
 
         // This exception shouldn't be a checked exception, but we have to prove it to Java.
-        if (ex instanceof RuntimeException) {
-          throw (RuntimeException) ex;
-        } else if (ex instanceof Error) {
-          throw (Error) ex;
+        if (ex instanceof RuntimeException runtimeException) {
+          throw runtimeException;
+        } else if (ex instanceof Error error) {
+          throw error;
         } else {
           throw new RuntimeException("Unexpected checked exception escaped from task thread", ex);
         }
@@ -127,8 +127,8 @@ public final class ThreadedTask implements Task {
     private boolean isAborting = false;
 
     public TaskResponse run(final TaskRequest request) {
-      if (request instanceof TaskRequest.Resume) {
-        final var scheduler = ((TaskRequest.Resume) request).scheduler;
+      if (request instanceof TaskRequest.Resume resume) {
+        final var scheduler = resume.scheduler;
 
         final var context = new ThreadedReactionContext(
             ThreadedTask.this.executor,
@@ -168,9 +168,9 @@ public final class ThreadedTask implements Task {
         throw new Error("Merlin task unexpectedly interrupted", ex);
       }
 
-      if (request instanceof TaskRequest.Resume) {
+      if (request instanceof TaskRequest.Resume resumeRequest) {
         // We've been told to continue executing.
-        return ((TaskRequest.Resume) request).scheduler;
+        return resumeRequest.scheduler;
       } else if (request instanceof TaskRequest.Abort) {
         // We've been told to bail out and release this thread ASAP.
         //
