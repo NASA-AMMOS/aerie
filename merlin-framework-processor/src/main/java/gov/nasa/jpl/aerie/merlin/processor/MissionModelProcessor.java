@@ -671,29 +671,20 @@ public final class MissionModelProcessor implements Processor {
                         Modifier.FINAL)
                     .addCode(
                         activityType.effectModel
-                            .map(effectModel -> switch (effectModel.executor()) {
-                              case Threaded -> CodeBlock
+                            .map(effectModel -> CodeBlock
                                   .builder()
                                   .addStatement(
-                                      "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
+                                      "return $T.$L(() -> $L.$L($L.model())).create($L.executor())",
                                       gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                      switch (effectModel.executor()) {
+                                        case Threaded -> "threaded";
+                                        case Replaying -> "replaying";
+                                      },
                                       "activity",
                                       effectModel.methodName(),
                                       "model",
                                       "model")
-                                  .build();
-
-                              case Replaying -> CodeBlock
-                                  .builder()
-                                  .addStatement(
-                                      "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
-                                      gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                      "activity",
-                                      effectModel.methodName(),
-                                      "model",
-                                      "model")
-                                  .build();
-                            })
+                                  .build())
                             .orElseGet(() -> CodeBlock
                                 .builder()
                                 .addStatement(
