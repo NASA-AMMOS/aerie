@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
+import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -51,6 +52,15 @@ public final class InMemoryPlanRepository implements PlanRepository {
         .ofNullable(this.plans.get(planId))
         .orElseThrow(() -> new NoSuchPlanException(planId))
         .getLeft();
+  }
+
+  @Override
+  public InMemoryRevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+    return new InMemoryRevisionData(
+        Optional
+            .ofNullable(this.plans.get(planId))
+            .orElseThrow(() -> new NoSuchPlanException(planId))
+            .getLeft());
   }
 
   @Override
@@ -99,18 +109,18 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public PlanTransaction updatePlan(final String id) {
-    return new MockPlanTransaction(id);
+  public PlanTransaction updatePlan(final String planId) {
+    return new MockPlanTransaction(planId);
   }
 
   @Override
-  public void deletePlan(final String id) throws NoSuchPlanException {
-    if (!this.plans.containsKey(id)) {
-      throw new NoSuchPlanException(id);
+  public void deletePlan(final String planId) throws NoSuchPlanException {
+    if (!this.plans.containsKey(planId)) {
+      throw new NoSuchPlanException(planId);
     }
 
-    this.deleteAllActivities(id);
-    this.plans.remove(id);
+    this.deleteAllActivities(planId);
+    this.plans.remove(planId);
   }
 
   @Override

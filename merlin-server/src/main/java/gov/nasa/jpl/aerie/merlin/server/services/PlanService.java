@@ -9,8 +9,8 @@ import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import java.util.Map;
 
 public interface PlanService {
-  Plan getPlanById(String id) throws NoSuchPlanException;
-  long getPlanRevisionById(String id) throws NoSuchPlanException;
+  Plan getPlan(String planId) throws NoSuchPlanException;
+  RevisionData getPlanRevisionData(String planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getConstraintsForPlan(String planId) throws NoSuchPlanException;
 

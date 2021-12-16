@@ -8,13 +8,23 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.PlanService;
+import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final class StubPlanService implements PlanService {
   public static final String EXISTENT_PLAN_ID = "abc";
   public static final Plan EXISTENT_PLAN;
+  public static final RevisionData REVISION_DATA =
+      new RevisionData() {
+        @Override
+        public MatchResult matches(final RevisionData other) {
+          if (Objects.equals(other, this)) return MatchResult.success();
+          return MatchResult.failure("Not the same revision data");
+        }
+      };
 
   public static final String EXISTENT_ACTIVITY_ID = "activity";
   public static final ActivityInstance EXISTENT_ACTIVITY;
@@ -33,21 +43,21 @@ public final class StubPlanService implements PlanService {
   }
 
 
-  public Plan getPlanById(final String id) throws NoSuchPlanException {
-    if (!Objects.equals(id, EXISTENT_PLAN_ID)) {
-      throw new NoSuchPlanException(id);
+  public Plan getPlan(final String planId) throws NoSuchPlanException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
     }
 
     return EXISTENT_PLAN;
   }
 
   @Override
-  public long getPlanRevisionById(final String id) throws NoSuchPlanException {
-    if (!Objects.equals(id, EXISTENT_PLAN_ID)) {
-      throw new NoSuchPlanException(id);
+  public RevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+    if (!Objects.equals(planId, EXISTENT_PLAN_ID)) {
+      throw new NoSuchPlanException(planId);
     }
 
-    return 0;
+    return REVISION_DATA;
   }
 
   @Override
