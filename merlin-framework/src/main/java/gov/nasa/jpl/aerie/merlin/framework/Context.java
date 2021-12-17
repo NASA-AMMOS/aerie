@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
@@ -34,13 +35,13 @@ public interface Context {
 
   interface TaskFactory { Task create(ExecutorService executor); }
 
-  String spawn(TaskFactory task);
-  String spawn(String type, Map<String, SerializedValue> arguments);
+  Scheduler.TaskIdentifier spawn(TaskFactory task);
+  Scheduler.TaskIdentifier spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration duration, TaskFactory task);
-  String defer(Duration duration, String type, Map<String, SerializedValue> arguments);
+  Scheduler.TaskIdentifier defer(Duration duration, TaskFactory task);
+  Scheduler.TaskIdentifier defer(Duration duration, String type, Map<String, SerializedValue> arguments);
 
   void delay(Duration duration);
-  void waitFor(String id);
+  void waitFor(Scheduler.TaskIdentifier id);
   void waitUntil(Condition condition);
 }

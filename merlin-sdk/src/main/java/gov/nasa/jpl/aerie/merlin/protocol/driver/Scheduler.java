@@ -11,9 +11,11 @@ public interface Scheduler {
 
   <Event> void emit(Event event, Query<? super Event, ?> query);
 
-  String spawn(Task task);
-  String spawn(String type, Map<String, SerializedValue> arguments);
+  TaskIdentifier spawn(Task task);
+  TaskIdentifier spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration delay, Task task);
-  String defer(Duration delay, String type, Map<String, SerializedValue> arguments);
+  TaskIdentifier defer(Duration delay, Task task);
+  TaskIdentifier defer(Duration delay, String type, Map<String, SerializedValue> arguments);
+
+  interface TaskIdentifier {}
 }

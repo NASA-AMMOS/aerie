@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine.JobId;
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -169,7 +170,7 @@ public final class SimulationDriver {
         final var directiveId = nextTask.getMiddle();
         final var specification = nextTask.getRight();
 
-        final var id = scheduler.spawn(specification.getTypeName(), specification.getArguments());
+        final var id = ((TaskId) scheduler.spawn(specification.getTypeName(), specification.getArguments())).id();
         this.taskToPlannedDirective.put(id, directiveId);
       }
 

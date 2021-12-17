@@ -30,12 +30,12 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public String spawn(final Task task) {
+      public TaskIdentifier spawn(final Task task) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+      public TaskIdentifier spawn(final String type, final Map<String, SerializedValue> arguments) {
         throw new UnsupportedOperationException();
       }
 
