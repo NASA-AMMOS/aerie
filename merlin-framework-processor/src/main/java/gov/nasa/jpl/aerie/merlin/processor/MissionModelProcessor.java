@@ -796,13 +796,19 @@ public final class MissionModelProcessor implements Processor {
                             MethodSpec
                                 .methodBuilder("call")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(TypeName.VOID)
+                                .returns(entry.effectModel.flatMap(EffectModelRecord::returnType)
+                                                          .map(TypeName::get)
+                                                          .orElse(TypeName.VOID))
                                 .addParameter(
                                     ClassName.get(entry.declaration),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "$T.waitFor(spawn($L))",
+                                    "$L$T.waitFor(spawn($L))",
+                                    entry.effectModel.flatMap(EffectModelRecord::returnType)
+                                                     .map(TypeName::get)
+                                                     .map(returnType -> "return (" + returnType + ") ")
+                                                     .orElse(""),
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "activity")
                                 .build())
