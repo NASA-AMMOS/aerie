@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.protocol.types;
 
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 
 public sealed interface TaskStatus {
@@ -7,7 +8,7 @@ public sealed interface TaskStatus {
 
   record Delayed(Duration delay) implements TaskStatus {}
 
-  record AwaitingTask(String target) implements TaskStatus {}
+  record AwaitingTask(Scheduler.TaskIdentifier target) implements TaskStatus {}
 
   record AwaitingCondition(Condition condition) implements TaskStatus {}
 
@@ -20,7 +21,7 @@ public sealed interface TaskStatus {
     return new Delayed(delay);
   }
 
-  static AwaitingTask awaiting(final String id) {
+  static AwaitingTask awaiting(final Scheduler.TaskIdentifier id) {
     return new AwaitingTask(id);
   }
 

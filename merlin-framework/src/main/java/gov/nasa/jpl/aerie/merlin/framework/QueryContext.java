@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Querier;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -43,22 +44,22 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public Scheduler.TaskIdentifier spawn(final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+  public Scheduler.TaskIdentifier spawn(final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities in a query-only context");
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
+  public Scheduler.TaskIdentifier defer(final Duration duration, final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+  public Scheduler.TaskIdentifier defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities in a query-only context");
   }
 
@@ -68,7 +69,7 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public void waitFor(final String id) {
+  public void waitFor(final Scheduler.TaskIdentifier id) {
     throw new IllegalStateException("Cannot yield in a query-only context");
   }
 

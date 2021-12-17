@@ -9,14 +9,13 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.RecursiveEventGraphEvaluator;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Selector;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Topic;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,7 +60,7 @@ public final class MissionModelBuilder implements Initializer {
   }
 
   @Override
-  public String daemon(final TaskFactory task) {
+  public Scheduler.TaskIdentifier daemon(final TaskFactory task) {
     return this.state.daemon(task);
   }
 
@@ -133,7 +132,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public String daemon(final TaskFactory task) {
+    public Scheduler.TaskIdentifier daemon(final TaskFactory task) {
       this.daemons.add(task);
       return null;  // TODO: get some way to refer to the daemon task
     }
@@ -190,7 +189,7 @@ public final class MissionModelBuilder implements Initializer {
     }
 
     @Override
-    public String daemon(final TaskFactory task) {
+    public Scheduler.TaskIdentifier daemon(final TaskFactory task) {
       throw new IllegalStateException("Daemons cannot be added after the schema is built");
     }
 

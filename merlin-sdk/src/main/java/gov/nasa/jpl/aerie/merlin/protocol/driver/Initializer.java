@@ -19,7 +19,7 @@ public interface Initializer {
       EffectTrait<Effect> trait,
       Function<Event, Effect> projection);
 
-  String daemon(TaskFactory factory);
+  Scheduler.TaskIdentifier daemon(TaskFactory factory);
 
   void resource(String name, Resource<?> resource);
 

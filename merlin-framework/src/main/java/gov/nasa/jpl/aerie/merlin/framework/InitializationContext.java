@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.framework;
 
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Applicator;
 import gov.nasa.jpl.aerie.merlin.protocol.model.EffectTrait;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
@@ -56,22 +57,22 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public Scheduler.TaskIdentifier spawn(final TaskFactory task) {
     return this.builder.daemon(() -> task.create(InitializationContext.this.executor));
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+  public Scheduler.TaskIdentifier spawn(final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities during initialization");
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
+  public Scheduler.TaskIdentifier defer(final Duration duration, final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks during initialization");
   }
 
   @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+  public Scheduler.TaskIdentifier defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities during initialization");
   }
 
@@ -81,7 +82,7 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public void waitFor(final String id) {
+  public void waitFor(final Scheduler.TaskIdentifier id) {
     throw new IllegalStateException("Cannot yield during initialization");
   }
 

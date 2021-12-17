@@ -244,7 +244,7 @@ public final class SimulationEngine implements AutoCloseable {
     } else if (status instanceof TaskStatus.AwaitingTask s) {
       this.tasks.put(task, progress.continueWith(state));
 
-      final var target = new TaskId(s.target());
+      final var target = (TaskId) s.target();
       final var targetExecution = this.tasks.get(target);
       if (targetExecution == null) {
         // TODO: Log that we saw a task ID that doesn't exist. Try to make this as visible as possible to users.
@@ -252,7 +252,7 @@ public final class SimulationEngine implements AutoCloseable {
       } else if (targetExecution instanceof ExecutionState.Terminated) {
         this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
       } else {
-        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(new TaskId(s.target()))));
+        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask((TaskId) s.target())));
       }
     } else if (status instanceof TaskStatus.AwaitingCondition s) {
       final var condition = ConditionId.generate();
@@ -620,28 +620,28 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public String spawn(final Task state) {
+    public TaskIdentifier spawn(final Task state) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
 
-      return task.id();
+      return task;
     }
 
     @Override
-    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    public TaskIdentifier spawn(final String type, final Map<String, SerializedValue> arguments) {
       final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
 
-      return task.id();
+      return task;
     }
 
     @Override
-    public String defer(final Duration delay, final Task state) {
+    public TaskIdentifier defer(final Duration delay, final Task state) {
       if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
       final var task = TaskId.generate();
@@ -650,11 +650,11 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
 
-      return task.id();
+      return task;
     }
 
     @Override
-    public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
+    public TaskIdentifier defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
       if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
       final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
@@ -662,7 +662,7 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
 
-      return task.id();
+      return task;
     }
   }
 

@@ -58,22 +58,22 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public Scheduler.TaskIdentifier spawn(final TaskFactory task) {
     return this.scheduler.spawn(task.create(this.executor));
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+  public Scheduler.TaskIdentifier spawn(final String type, final Map<String, SerializedValue> arguments) {
     return this.scheduler.spawn(type, arguments);
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
+  public Scheduler.TaskIdentifier defer(final Duration duration, final TaskFactory task) {
     return this.scheduler.defer(duration, task.create(this.executor));
   }
 
   @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+  public Scheduler.TaskIdentifier defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
     return this.scheduler.defer(duration, type, arguments);
   }
 
@@ -84,7 +84,7 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public void waitFor(final String id) {
+  public void waitFor(final Scheduler.TaskIdentifier id) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
   }

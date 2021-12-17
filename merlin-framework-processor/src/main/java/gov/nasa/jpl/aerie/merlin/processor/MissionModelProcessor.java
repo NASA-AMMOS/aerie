@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
+import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -725,7 +726,7 @@ public final class MissionModelProcessor implements Processor {
                             MethodSpec
                                 .methodBuilder("spawn")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
+                                .returns(Scheduler.TaskIdentifier.class)
                                 .addParameter(
                                     ClassName.get(entry.declaration),
                                     "activity",
@@ -744,7 +745,7 @@ public final class MissionModelProcessor implements Processor {
                             MethodSpec
                                 .methodBuilder("defer")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
+                                .returns(Scheduler.TaskIdentifier.class)
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
@@ -771,7 +772,7 @@ public final class MissionModelProcessor implements Processor {
                             MethodSpec
                                 .methodBuilder("defer")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
+                                .returns(Scheduler.TaskIdentifier.class)
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
