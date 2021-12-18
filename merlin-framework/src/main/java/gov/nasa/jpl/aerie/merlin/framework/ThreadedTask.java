@@ -6,29 +6,32 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 
 import java.util.Objects;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.function.Supplier;
 import java.util.concurrent.ExecutorService;
 
-public final class ThreadedTask implements Task {
+public final class ThreadedTask<ReturnType> implements Task {
   private final Scoped<Context> rootContext;
-  private final Runnable task;
+  private final Supplier<ReturnType> task;
   private final ExecutorService executor;
 
   private final ArrayBlockingQueue<TaskRequest> hostToTask = new ArrayBlockingQueue<>(1);
   private final ArrayBlockingQueue<TaskResponse> taskToHost = new ArrayBlockingQueue<>(1);
 
   private Lifecycle lifecycle = Lifecycle.Inactive;
+  private ReturnType returnValue;
 
-  public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Runnable task) {
+  public ThreadedTask(final ExecutorService executor, final Scoped<Context> rootContext, final Supplier<ReturnType> task) {
     this.rootContext = Objects.requireNonNull(rootContext);
     this.task = Objects.requireNonNull(task);
     this.executor = Objects.requireNonNull(executor);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public TaskStatus step(final Scheduler scheduler) {
     try {
       if (this.lifecycle == Lifecycle.Terminated) {
-        return TaskStatus.completed();
+        return TaskStatus.completed(this.returnValue);
       } else if (this.lifecycle == Lifecycle.Inactive) {
         this.lifecycle = Lifecycle.Running;
         beginAsync();
@@ -46,8 +49,10 @@ public final class ThreadedTask implements Task {
       if (response instanceof TaskResponse.Success successResponse) {
         final var status = successResponse.status;
 
-        if (status instanceof TaskStatus.Completed) {
+        if (status instanceof TaskStatus.Completed completed) {
           this.lifecycle = Lifecycle.Terminated;
+          // SAFETY: This TaskStatus is constructed by this class, using the same ReturnType.
+          this.returnValue = (ReturnType) completed.returnValue();
         }
 
         return status;
@@ -137,8 +142,8 @@ public final class ThreadedTask implements Task {
             this);
 
         try (final var restore = ThreadedTask.this.rootContext.set(context)) {
-          ThreadedTask.this.task.run();
-          return new TaskResponse.Success(TaskStatus.completed());
+          ThreadedTask.this.returnValue = ThreadedTask.this.task.get();
+          return new TaskResponse.Success(TaskStatus.completed(ThreadedTask.this.returnValue));
         } catch (final TaskAbort ex) {
           return new TaskResponse.Success(TaskStatus.completed());
         } catch (final Throwable ex) {

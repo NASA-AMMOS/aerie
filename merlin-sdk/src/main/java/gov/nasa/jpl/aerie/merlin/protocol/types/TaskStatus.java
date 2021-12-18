@@ -3,8 +3,10 @@ package gov.nasa.jpl.aerie.merlin.protocol.types;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 
+import java.util.Optional;
+
 public sealed interface TaskStatus {
-  record Completed() implements TaskStatus {}
+  record Completed<ReturnType>(Optional<TaskReturnValue<ReturnType>> returnValue) implements TaskStatus {}
 
   record Delayed(Duration delay) implements TaskStatus {}
 
@@ -13,8 +15,12 @@ public sealed interface TaskStatus {
   record AwaitingCondition(Condition condition) implements TaskStatus {}
 
 
-  static Completed completed() {
-    return new Completed();
+  static <ReturnType> Completed<ReturnType> completed(final ReturnType returnValue) {
+    return new Completed<>(Optional.of(new TaskReturnValue<>(returnValue)));
+  }
+
+  static Completed<Void> completed() {
+    return new Completed<>(Optional.empty());
   }
 
   static Delayed delayed(final Duration delay) {

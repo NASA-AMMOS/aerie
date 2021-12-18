@@ -19,6 +19,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.TaskReturnValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import org.apache.commons.lang3.tuple.Pair;
@@ -66,6 +67,11 @@ public final class SimulationEngine implements AutoCloseable {
   private final Map<TaskId, Set<TaskId>> taskChildren = new HashMap<>();
   /** The instantiated input provided to the task. Missing entries indicate tasks without input. */
   private final Map<TaskId, Directive<?, ?>> taskDirective = new HashMap<>();
+
+  /**
+   * Return values from tasks.
+   */
+  private final Map<TaskId, TaskReturnValue> taskReturns = new HashMap<>();
 
   /** Construct a task defined by the behavior of a model given a type and arguments. */
   public <Model>
@@ -233,11 +239,15 @@ public final class SimulationEngine implements AutoCloseable {
     // TODO: Report which cells this activity read from at this point in time. This is useful insight for any user.
 
     // Based on the task's return status, update its execution state and schedule its resumption.
-    if (status instanceof TaskStatus.Completed) {
+    if (status instanceof TaskStatus.Completed completed) {
       final var children = new LinkedList<>(this.taskChildren.getOrDefault(task, Collections.emptySet()));
 
       this.tasks.put(task, progress.completedAt(currentTime, children));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
+      final var returnValue = completed.returnValue();
+      if (returnValue.isPresent()) {
+        this.taskReturns.put(task, (TaskReturnValue) returnValue.get());
+      }
     } else if (status instanceof TaskStatus.Delayed s) {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
