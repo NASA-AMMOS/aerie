@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 public /*non-final*/ class ModelActions {
   protected ModelActions() {}
@@ -13,16 +14,36 @@ public /*non-final*/ class ModelActions {
   static final Scoped<Context> context = Scoped.create();
 
 
-  public static Context.TaskFactory threaded(final Runnable task) {
-    return executor -> new ThreadedTask(executor, ModelActions.context, task);
-  }
-  public static Context.TaskFactory replaying(final Runnable task) {
-    return executor -> new ReplayingTask(executor, ModelActions.context, task);
+  public static <T> Context.TaskFactory threaded(final Supplier<T> task) {
+    return executor -> new ThreadedTask<>(executor, ModelActions.context, task);
   }
 
+  public static Context.TaskFactory threaded(final Runnable task) {
+    return threaded(supplierOfRunnable(task));
+  }
+
+  public static <T> Context.TaskFactory replaying(final Supplier<T> task) {
+    return executor -> new ReplayingTask<>(executor, ModelActions.context, task);
+  }
+
+  public static Context.TaskFactory replaying(final Runnable task) {
+    return replaying(supplierOfRunnable(task));
+  }
+
+
+  public static <T> Scheduler.TaskIdentifier spawn(final Supplier<T> task) {
+    return spawn(threaded(task));
+  }
 
   public static Scheduler.TaskIdentifier spawn(final Runnable task) {
-    return spawn(threaded(task));
+    return spawn(supplierOfRunnable(task));
+  }
+
+  private static Supplier<Void> supplierOfRunnable(final Runnable task) {
+    return () -> {
+      task.run();
+      return null;
+    };
   }
 
   public static Scheduler.TaskIdentifier spawn(final Context.TaskFactory task) {
@@ -34,6 +55,10 @@ public /*non-final*/ class ModelActions {
   }
 
   public static void call(final Runnable task) {
+    call(threaded(task));
+  }
+
+  public static <T> void call(final Supplier<T> task) {
     call(threaded(task));
   }
 
