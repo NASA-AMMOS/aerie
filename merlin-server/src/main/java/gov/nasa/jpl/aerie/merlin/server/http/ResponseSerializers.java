@@ -148,14 +148,18 @@ public final class ResponseSerializers {
   }
 
   public static JsonValue serializeSimulatedActivity(final SimulatedActivity simulatedActivity) {
-    return Json
+    var res = Json
         .createObjectBuilder()
         .add("type", simulatedActivity.type)
         .add("parameters", serializeArgumentMap(simulatedActivity.arguments))
         .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
-        .add("children", serializeIterable(Json::createValue, simulatedActivity.childIds))
+        .add("children", serializeIterable(Json::createValue, simulatedActivity.childIds));
+    if (simulatedActivity.returnValue.isPresent()) {
+      res = res.add("returnValue", serializeArgument(simulatedActivity.returnValue.get()));
+    }
+    return res
         .build();
   }
 

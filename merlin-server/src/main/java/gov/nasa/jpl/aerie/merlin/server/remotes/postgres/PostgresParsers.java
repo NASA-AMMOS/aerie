@@ -14,7 +14,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Map;
-import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
@@ -60,11 +59,12 @@ public final class PostgresParsers {
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
-  public static final JsonParser<Pair<Optional<String>, Map<String, SerializedValue>>> activityAttributesP = productP
+  public static final JsonParser<ActivityAttributesRecord> activityAttributesP = productP
       .optionalField("directiveId", stringP)
       .field("arguments", activityArgumentsP)
+      .optionalField("return_value", serializedValueP)
         .map(Iso.of(
-            untuple((directiveId, arguments) -> Pair.of(directiveId, arguments)),
-            $ -> tuple($.getLeft(), $.getRight())
+            untuple(ActivityAttributesRecord::new),
+            $ -> tuple($.directiveId(), $.arguments(), $.returnValue())
         ));
 }
