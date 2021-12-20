@@ -1,10 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
-import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
-import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
@@ -16,7 +13,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.activityAttributesP;
@@ -55,19 +51,19 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
       final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
       final var duration = parseOffset(resultSet, 5, start);
       final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
-      final var directiveId = attributes.getLeft();
-      final var arguments = attributes.getRight();
+
       final var initialChildIds = new ArrayList<String>();
 
       activities.put(id, new SimulatedActivity(
           type,
-          arguments,
+          attributes.arguments(),
           start,
           duration,
           parentId,
           initialChildIds,
-          directiveId,
-          SerializedValue.UNIT)); // TODO: retrieve returnValue from database
+          attributes.directiveId(),
+          attributes.returnValue()
+      ));
     }
 
     // Since child IDs are not stored, we assign them by examining the parent ID of each activity
@@ -79,7 +75,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return activities;
   }
 
-  private Pair<Optional<String>, Map<String, SerializedValue>> parseActivityAttributes(final Reader jsonStream) {
+  private ActivityAttributesRecord parseActivityAttributes(final Reader jsonStream) {
     final var json = Json.createReader(jsonStream).readValue();
     return activityAttributesP
         .parse(json)

@@ -156,6 +156,7 @@ public final class ResponseSerializers {
         .add("duration", serializeDuration(simulatedActivity.duration))
         .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
         .add("children", serializeIterable(Json::createValue, simulatedActivity.childIds))
+        .add("returnValue", serializeArgument(simulatedActivity.returnValue))
         .build();
   }
 
