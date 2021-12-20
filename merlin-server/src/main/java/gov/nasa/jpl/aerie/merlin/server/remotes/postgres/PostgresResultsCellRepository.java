@@ -13,7 +13,6 @@ import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 
 import javax.sql.DataSource;
@@ -258,7 +257,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>
+  private static SortedMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>>
   getSimulationEvents(
       final Connection connection,
       final long datasetId,
@@ -388,7 +387,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void insertSimulationEvents(
       Connection connection,
       long datasetId,
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      Map<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>> events,
       Timestamp simulationStart) throws SQLException
   {
     try (

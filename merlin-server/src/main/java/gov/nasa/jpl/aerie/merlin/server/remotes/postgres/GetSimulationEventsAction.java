@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.intellij.lang.annotations.Language;
 
 import javax.json.Json;
@@ -30,6 +31,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           e.transaction_index,
           e.causal_time,
           e.topic_index,
+          e.task_id,
           e.value
         from event as e
         where
@@ -42,7 +44,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(this.sql);
   }
 
-  public SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> get(
+  public SortedMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>> get(
       final long datasetId,
       final Timestamp simulationStart) throws SQLException
   {
@@ -51,7 +53,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
 
     final var transactionsByTimePoint = readResultSet(resultSet, simulationStart);
 
-    final var eventPoints = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var eventPoints = new TreeMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>>();
     transactionsByTimePoint.forEach((time, transactions) -> {
       transactions.forEach(($, value) -> {
         try {
@@ -66,27 +68,25 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     return eventPoints;
   }
 
-  private static Map<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>
+  private static Map<Duration, SortedMap<Integer, List<Pair<String, Triple<Integer, SerializedValue, String>>>>>
   readResultSet(final ResultSet resultSet, final Timestamp simulationStart)
   throws SQLException {
-    final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, Pair<Integer, SerializedValue>>>>>();
+    final var nodesByTimePoint = new HashMap<Duration, SortedMap<Integer, List<Pair<String, Triple<Integer, SerializedValue, String>>>>>();
     while (resultSet.next()) {
       final var timePoint = parseOffset(resultSet, 1, simulationStart);
       final var transactionIndex = resultSet.getInt(2);
       final var causalTime = resultSet.getString(3);
       final var topicIndex = resultSet.getInt(4);
-      final var serializedValue = parseSerializedValue(resultSet.getString(5));
+      final String activeTask = resultSet.getString(5);
+      final var serializedValue = parseSerializedValue(resultSet.getString(6));
+
 
       nodesByTimePoint
           .computeIfAbsent(timePoint, x -> new TreeMap<>())
           .computeIfAbsent(transactionIndex, x -> new ArrayList<>())
           .add(Pair.of(
               causalTime,
-                   Pair.of(
-                       topicIndex,
-                       serializedValue
-                   )
-               )
+              Triple.of(topicIndex, serializedValue, activeTask))
           );
     }
     return nodesByTimePoint;

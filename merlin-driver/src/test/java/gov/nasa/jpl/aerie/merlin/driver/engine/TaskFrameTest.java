@@ -68,10 +68,11 @@ public final class TaskFrameTest {
       final TaskFrame<EventGraph<Integer>> frame,
       final EventGraph<Integer> graph
   ) {
+    final var taskId = TaskId.generate();
     if (graph instanceof EventGraph.Empty) {
       return;
     } else if (graph instanceof EventGraph.Atom<Integer> g) {
-      frame.emit(Event.create(topic, g.atom()));
+      frame.emit(Event.create(topic, g.atom(), taskId));
     } else if (graph instanceof EventGraph.Sequentially<Integer> g) {
       runGraph(topic, frame, g.prefix());
       runGraph(topic, frame, g.suffix());
@@ -100,26 +101,27 @@ public final class TaskFrameTest {
     cells.put(query, new Cell<>(applicator, algebra, selector, evaluator, new MutableObject<>(EventGraph.empty())));
 
     final var root = HistoryDecoratedGraph.decorate(graph);
-    TaskFrame.run(root, cells, (job, builder) -> checkHistory(topic, query, builder, job));
+    TaskFrame.run(root, cells, (job, builder) -> checkHistory(topic, query, builder, job, TaskId.generate()));
   }
 
   private void checkHistory(
       final Topic<Integer> topic,
       final Query<MutableObject<EventGraph<Integer>>> query,
       final TaskFrame<EventGraph<Pair<EventGraph<Integer>, Integer>>> frame,
-      final EventGraph<Pair<EventGraph<Integer>, Integer>> graph
+      final EventGraph<Pair<EventGraph<Integer>, Integer>> graph,
+      final TaskId activeTask
   ) {
     if (graph instanceof EventGraph.Empty) {
       return;
     } else if (graph instanceof EventGraph.Atom<Pair<EventGraph<Integer>, Integer>> g) {
       assertEquals(g.atom().getLeft().toString(), frame.getState(query).orElseThrow().toString());
-      frame.emit(Event.create(topic, g.atom().getRight()));
+      frame.emit(Event.create(topic, g.atom().getRight(), activeTask));
     } else if (graph instanceof EventGraph.Sequentially<Pair<EventGraph<Integer>, Integer>> g) {
-      checkHistory(topic, query, frame, g.prefix());
-      checkHistory(topic, query, frame, g.suffix());
+      checkHistory(topic, query, frame, g.prefix(), activeTask);
+      checkHistory(topic, query, frame, g.suffix(), activeTask);
     } else if (graph instanceof EventGraph.Concurrently<Pair<EventGraph<Integer>, Integer>> g) {
       frame.signal(g.right());
-      checkHistory(topic, query, frame, g.left());
+      checkHistory(topic, query, frame, g.left(), activeTask);
     } else {
       throw new IllegalArgumentException();
     }

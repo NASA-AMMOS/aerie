@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EffectExpressionDisplay;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.Event;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
@@ -13,7 +14,6 @@ import net.jqwik.api.Label;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import org.apache.commons.lang3.tuple.Pair;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -49,17 +49,18 @@ class EventGraphFlattenerTest {
   void testSubgraph() throws EventGraphFlattener.InvalidTagException {
     final var topic1 = new Topic<String>();
     final var topic2 = new Topic<String>();
+    final var taskId = TaskId.generate();
 
     final var eventGraph = EventGraph.concurrently(
-        EventGraph.atom(Event.create(topic1, "a")),
+        EventGraph.atom(Event.create(topic1, "a", taskId)),
         EventGraph.sequentially(
-            EventGraph.atom(Event.create(topic2, "x")),
+            EventGraph.atom(Event.create(topic2, "x", taskId)),
             EventGraph.sequentially(
                 EventGraph.concurrently(
-                    EventGraph.atom(Event.create(topic1, "y")),
-                    EventGraph.atom(Event.create(topic2, "z"))
+                    EventGraph.atom(Event.create(topic1, "y", taskId)),
+                    EventGraph.atom(Event.create(topic2, "z", taskId))
                 ),
-                EventGraph.atom(Event.create(topic1, "w"))
+                EventGraph.atom(Event.create(topic1, "w", taskId))
             )
         ));
     final var recursiveEventGraphEvaluator = new RecursiveEventGraphEvaluator();
@@ -152,8 +153,8 @@ class EventGraphFlattenerTest {
   // with two branches in their history. We exclude such graphs from generation.
   @Provide("fanoutWithTopics")
   public static Arbitrary<EventGraph<Event>> fanoutGraphs() {
-
-    return eventGraphs(Arbitraries.integers().map(x -> Event.create(TOPICS.get(Math.abs(x) % TOPICS.size()), x))).filter(
+    final var activeTask = TaskId.generate();
+    return eventGraphs(Arbitraries.integers().map(x -> Event.create(TOPICS.get(Math.abs(x) % TOPICS.size()), x, activeTask))).filter(
         EventGraphFlattenerTest::isFanoutGraph);
   }
 

@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 public final class SimulationResults {
   public final Instant startTime;
@@ -23,7 +24,7 @@ public final class SimulationResults {
   public final Map<String, SimulatedActivity> simulatedActivities;
   public final Map<String, SerializedActivity> unfinishedActivities;
   public final List<Triple<Integer, String, ValueSchema>> topics;
-  public final Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events;
+  public final SortedMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>> events;
 
     public SimulationResults(
         final Map<String, List<Pair<Duration, RealDynamics>>> realProfiles,
@@ -32,7 +33,7 @@ public final class SimulationResults {
         final Map<String, SerializedActivity> unfinishedActivities,
         final Instant startTime,
         final List<Triple<Integer, String, ValueSchema>> topics,
-        final SortedMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events)
+        final SortedMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>> events)
   {
     this.startTime = startTime;
     this.realProfiles = realProfiles;
