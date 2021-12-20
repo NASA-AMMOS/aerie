@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -46,7 +45,7 @@ public final class MissionModelTest {
     @Test
     public void shouldGetActivityTypeList() throws MissionModelFacade.MissionModelContractException {
         // GIVEN
-        final Map<String, ActivityType> expectedTypes = Map.of(
+      final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
                 "foo",
                 List.of(
@@ -54,7 +53,7 @@ public final class MissionModelTest {
                     new Parameter("y", ValueSchema.STRING),
                     new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
                 List.of(),
-                Optional.empty()
+                ValueSchema.UNIT
             ));
 
         // WHEN
@@ -67,14 +66,14 @@ public final class MissionModelTest {
     @Test
     public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException {
         // GIVEN
-        final ActivityType expectedType = new ActivityType(
+      final ActivityType expectedType = new ActivityType(
             "foo",
             List.of(
                 new Parameter("x", ValueSchema.INT),
                 new Parameter("y", ValueSchema.STRING),
                 new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
             List.of(),
-            Optional.empty()
+            ValueSchema.UNIT
         );
 
         // WHEN
