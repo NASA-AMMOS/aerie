@@ -1,6 +1,14 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
-import java.util.List;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
-public final record ActivityType(String name, List<Parameter> parameters, List<String> requiredParameters) { }
+import java.util.List;
+import java.util.Optional;
+
+public final record ActivityType(
+    String name,
+    List<Parameter> parameters,
+    List<String> requiredParameters,
+    ValueSchema returnTypeValueSchema
+) { }

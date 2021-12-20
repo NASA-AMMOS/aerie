@@ -4,16 +4,19 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.EffectModelRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public interface ActivityMapperInstantiator {
@@ -71,6 +74,19 @@ public interface ActivityMapperInstantiator {
             "return $L",
             "parameters")
         .build();
+  }
+
+  default MethodSpec makeGetReturnValueSchemaMethod(final ActivityTypeRecord activityType) {
+    return MethodSpec.methodBuilder("getReturnValueSchema")
+                     .addModifiers(Modifier.PUBLIC)
+                     .addAnnotation(Override.class)
+                     .returns(ValueSchema.class)
+                     .addStatement(
+                         activityType.effectModel
+                             .flatMap(EffectModelRecord::returnType)
+                             .map(x -> "return this.effectModelReturnTypeMapper.getValueSchema()")
+                             .orElse("return ValueSchema.UNIT"))
+                     .build();
   }
 
   default MethodSpec makeGetArgumentsMethod(final ActivityTypeRecord activityType) {

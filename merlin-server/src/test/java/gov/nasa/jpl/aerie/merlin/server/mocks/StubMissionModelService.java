@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 
 public final class StubMissionModelService implements MissionModelService {
@@ -28,7 +29,9 @@ public final class StubMissionModelService implements MissionModelService {
   public static final String NONEXISTENT_ACTIVITY_TYPE = "no-activity";
   public static final ActivityType EXISTENT_ACTIVITY = new ActivityType(
       EXISTENT_ACTIVITY_TYPE,
-      List.of(new Parameter("Param", ValueSchema.STRING)), List.of());
+      List.of(new Parameter("Param", ValueSchema.STRING)),
+      List.of(),
+      Optional.empty());
 
   public static final SerializedActivity VALID_ACTIVITY_INSTANCE = new SerializedActivity(
       EXISTENT_ACTIVITY_TYPE,

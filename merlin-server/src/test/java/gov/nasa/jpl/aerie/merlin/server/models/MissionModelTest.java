@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -51,7 +52,10 @@ public final class MissionModelTest {
                 List.of(
                     new Parameter("x", ValueSchema.INT),
                     new Parameter("y", ValueSchema.STRING),
-                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of()));
+                    new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+                List.of(),
+                Optional.empty()
+            ));
 
         // WHEN
         final Map<String, ActivityType> typeList = unconfiguredMissionModel.getActivityTypes();
@@ -68,7 +72,10 @@ public final class MissionModelTest {
             List.of(
                 new Parameter("x", ValueSchema.INT),
                 new Parameter("y", ValueSchema.STRING),
-                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))), List.of());
+                new Parameter("vecs", ValueSchema.ofSeries(ValueSchema.ofSeries(ValueSchema.REAL)))),
+            List.of(),
+            Optional.empty()
+        );
 
         // WHEN
         final ActivityType type = unconfiguredMissionModel.getActivityType(expectedType.name());

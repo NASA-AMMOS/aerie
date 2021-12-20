@@ -214,6 +214,7 @@ public abstract class ValueSchema {
   public static final ValueSchema STRING = ofString();
   public static final ValueSchema DURATION = ofDuration();
   public static final ValueSchema PATH = ofPath();
+  public static final ValueSchema UNIT = ofUnit();
 
   /**
    * Provides a default case on top of the base Visitor.
