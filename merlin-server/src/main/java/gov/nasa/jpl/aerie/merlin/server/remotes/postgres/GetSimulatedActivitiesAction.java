@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.apache.commons.lang3.tuple.Pair;
 import org.intellij.lang.annotations.Language;
@@ -65,7 +66,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
           duration,
           parentId,
           initialChildIds,
-          directiveId));
+          directiveId,
+          Optional.empty())); // TODO: retrieve returnValue from database
     }
 
     // Since child IDs are not stored, we assign them by examining the parent ID of each activity

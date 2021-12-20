@@ -444,6 +444,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var activityId = taskToPlannedDirective.get(task.id());
 
       if (state instanceof ExecutionState.Terminated e) {
+        final var taskReturnValue = taskReturns.get(task);
         simulatedActivities.put(activityId, new SimulatedActivity(
             directive.getType(),
             directive.getArguments(),
@@ -451,7 +452,8 @@ public final class SimulationEngine implements AutoCloseable {
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
+            directive.directiveType().serializeReturnValue(taskReturnValue.returnValue())
         ));
       } else {
         unsimulatedActivities.put(activityId, new SerializedActivity(

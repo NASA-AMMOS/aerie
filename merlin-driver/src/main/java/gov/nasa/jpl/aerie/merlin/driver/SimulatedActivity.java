@@ -2,6 +2,8 @@ package gov.nasa.jpl.aerie.merlin.driver;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,6 +18,7 @@ public final class SimulatedActivity {
   public final String parentId;
   public final List<String> childIds;
   public final Optional<String> directiveId;
+  public final Optional<SerializedValue> returnValue;
 
   public SimulatedActivity(
       final String type,
@@ -24,8 +27,9 @@ public final class SimulatedActivity {
       final Duration duration,
       final String parentId,
       final List<String> childIds,
-      final Optional<String> directiveId
-  ) {
+      final Optional<String> directiveId,
+      final Optional<SerializedValue> returnValue
+      ) {
     this.type = type;
     this.arguments = arguments;
     this.start = start;
@@ -33,6 +37,7 @@ public final class SimulatedActivity {
     this.parentId = parentId;
     this.childIds = childIds;
     this.directiveId = directiveId;
+    this.returnValue = returnValue;
   }
 
   @Override
