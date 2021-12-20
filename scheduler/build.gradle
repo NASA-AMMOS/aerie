@@ -9,6 +9,20 @@ java {
   }
 }
 
+// These four classes are temporarily excluded given the mission model
+// upon which they rely has been removed from the aerie repository.
+// These classes will be refactored by [AERIE-1617].
+sourceSets {
+  test {
+    java {
+      exclude 'gov/nasa/jpl/aerie/scheduler/MerlinSightTestUtility.java'
+      exclude 'gov/nasa/jpl/aerie/scheduler/MerlInsightRulesTest.java'
+      exclude 'gov/nasa/jpl/aerie/scheduler/AerieControllerTest.java'
+      exclude 'gov/nasa/jpl/aerie/scheduler/LoadRulesFromJarTest.java'
+    }
+  }
+}
+
 def nameMerlinSightJar = "merlinsight-rules.jar"
 def testResourceDir = "src/test/resources"
 task merlinsightjar(type: Jar, dependsOn: compileTestJava)  {
@@ -54,7 +68,6 @@ dependencies {
   testImplementation project(':constraints')
   testImplementation project(':contrib')
   testImplementation project(':banananation')
-  testImplementation project(':insight')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
   testImplementation 'com.google.guava:guava-testlib:31.0.1-jre'
   testImplementation 'com.google.truth.extensions:truth-java8-extension:1.1.3'
