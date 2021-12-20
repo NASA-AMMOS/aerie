@@ -48,6 +48,11 @@ public final class ThreadedTaskTest {
       public TaskIdentifier defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
         throw new UnsupportedOperationException();
       }
+
+      @Override
+      public Object getTaskReturnValue(final TaskIdentifier taskId) {
+        throw new UnsupportedOperationException();
+      }
     };
 
     final var pool = Executors.newCachedThreadPool();

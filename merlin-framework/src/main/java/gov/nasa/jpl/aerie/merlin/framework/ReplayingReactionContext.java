@@ -105,10 +105,13 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public void waitFor(final Scheduler.TaskIdentifier id) {
+  public Object waitFor(final Scheduler.TaskIdentifier id) {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
+    });
+    return this.memory.doOnce(() -> {
+      return this.scheduler.getTaskReturnValue(id);
     });
   }
 

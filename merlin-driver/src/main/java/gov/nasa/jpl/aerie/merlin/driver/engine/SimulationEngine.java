@@ -676,6 +676,13 @@ public final class SimulationEngine implements AutoCloseable {
 
       return task;
     }
+
+    @Override
+    public Object getTaskReturnValue(final TaskIdentifier taskId) {
+      final var taskReturnValue = SimulationEngine.this.taskReturns.get(((TaskId) taskId));
+      if (taskReturnValue == null) return null;
+      return taskReturnValue.returnValue();
+    }
   }
 
   /** A representation of a job processable by the {@link SimulationEngine}. */
