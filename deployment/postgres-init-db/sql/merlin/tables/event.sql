@@ -7,6 +7,7 @@ create table event
 
   value jsonb,
   topic_index integer not null,
+  task_id text not null,
 
   constraint event_natural_key
     primary key (dataset_id, real_time, causal_time),

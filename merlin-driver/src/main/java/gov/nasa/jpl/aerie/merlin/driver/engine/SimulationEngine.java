@@ -469,7 +469,10 @@ public final class SimulationEngine implements AutoCloseable {
       topics.add(Triple.of(topics.size(), serializableTopic.name(), serializableTopic.valueSchema()));
     }
 
-    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>>();
+    final var serializedTimeline = new TreeMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>>();
+
+    final var taskIdToActivityId = new HashMap<String, String>();
+
     var time = Duration.ZERO;
     for (var point : timeline.points()) {
       if (point instanceof TemporalEventSource.TimePoint.Delta delta) {
@@ -477,11 +480,21 @@ public final class SimulationEngine implements AutoCloseable {
       } else if (point instanceof TemporalEventSource.TimePoint.Commit commit) {
         final var serializedEventGraph = commit.events().substitute(
             event -> {
-              EventGraph<Pair<Integer, SerializedValue>> output = EventGraph.empty();
+              EventGraph<Triple<Integer, SerializedValue, String>> output = EventGraph.empty();
               for (final var serializableTopic : missionModel.getTopics()) {
                 Optional<SerializedValue> serializedEvent = trySerializeEvent(event, serializableTopic);
                 if (serializedEvent.isPresent()) {
-                  output = EventGraph.concurrently(output, EventGraph.atom(Pair.of(serializableTopicToId.get(serializableTopic), serializedEvent.get())));
+                  final var eventTask = event.activeTask();
+                  var activityId = taskIdToActivityId.get(eventTask.id());
+                  if (activityId == null) {
+                    if (engine.taskDirective.containsKey(eventTask)) {
+                      activityId = taskToPlannedDirective.get(eventTask.id());
+                    } else {
+                      activityId = eventTask.id();
+                    }
+                    taskIdToActivityId.put(eventTask.id(), activityId);
+                  }
+                  output = EventGraph.concurrently(output, EventGraph.atom(Triple.of(serializableTopicToId.get(serializableTopic), serializedEvent.get(), activityId)));
                 }
               }
               return output;
@@ -626,7 +639,7 @@ public final class SimulationEngine implements AutoCloseable {
       final var topic = ((EngineQuery<? super EventType, ?>) token).topic();
 
       // Append this event to the timeline.
-      this.frame.emit(Event.create(topic, event));
+      this.frame.emit(Event.create(topic, event, this.activeTask));
 
       SimulationEngine.this.invalidateTopic(topic, this.currentTime);
     }

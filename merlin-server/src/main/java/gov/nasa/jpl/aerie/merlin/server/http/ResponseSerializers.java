@@ -30,6 +30,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -185,7 +186,7 @@ public final class ResponseSerializers {
   }
 
   private static JsonValue serializeSimulationEvents(
-      Map<Duration, List<EventGraph<Pair<Integer, SerializedValue>>>> events,
+      SortedMap<Duration, List<EventGraph<Triple<Integer, SerializedValue, String>>>> events,
       final Map<Integer, Pair<String, ValueSchema>> topics,
       final Instant startTime) {
     var arrayBuilder = Json.createArrayBuilder();
@@ -202,22 +203,23 @@ public final class ResponseSerializers {
   }
 
   private static JsonValue serializeEventGraph(
-      EventGraph<Pair<Integer, SerializedValue>> eventGraph,
+      EventGraph<Triple<Integer, SerializedValue, String>> eventGraph,
       final Map<Integer, Pair<String, ValueSchema>> topics) {
     var objectBuilder = Json.createObjectBuilder();
-    if (eventGraph instanceof EventGraph.Atom<Pair<Integer, SerializedValue>> atom) {
+    if (eventGraph instanceof EventGraph.Atom<Triple<Integer, SerializedValue, String>> atom) {
       final var event = atom.atom();
       objectBuilder = objectBuilder
           .add("type", "atom")
-          .add("value", serializedValueP.unparse(event.getRight()))
+          .add("value", serializedValueP.unparse(event.getMiddle()))
           .add("schema", valueSchemaP.unparse(topics.get(event.getLeft()).getRight()))
-          .add("topic", stringP.unparse(topics.get(event.getLeft()).getLeft()));
-    } else if (eventGraph instanceof EventGraph.Sequentially<Pair<Integer, SerializedValue>> sequentially) {
+          .add("topic", stringP.unparse(topics.get(event.getLeft()).getLeft()))
+          .add("task_id", stringP.unparse(event.getRight()));
+    } else if (eventGraph instanceof EventGraph.Sequentially<Triple<Integer, SerializedValue, String>> sequentially) {
       objectBuilder = objectBuilder
           .add("type", "sequentially")
           .add("prefix", serializeEventGraph(sequentially.prefix(), topics))
           .add("suffix", serializeEventGraph(sequentially.suffix(), topics));
-    } else if (eventGraph instanceof EventGraph.Concurrently<Pair<Integer, SerializedValue>> concurrently) {
+    } else if (eventGraph instanceof EventGraph.Concurrently<Triple<Integer, SerializedValue, String>> concurrently) {
       objectBuilder = objectBuilder
           .add("type", "concurrently")
           .add("left", serializeEventGraph(concurrently.left(), topics))
