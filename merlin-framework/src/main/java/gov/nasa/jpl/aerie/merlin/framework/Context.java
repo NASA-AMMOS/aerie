@@ -42,6 +42,6 @@ public interface Context {
   Scheduler.TaskIdentifier defer(Duration duration, String type, Map<String, SerializedValue> arguments);
 
   void delay(Duration duration);
-  void waitFor(Scheduler.TaskIdentifier id);
+  Object waitFor(Scheduler.TaskIdentifier id);
   void waitUntil(Condition condition);
 }

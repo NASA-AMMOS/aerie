@@ -58,12 +58,13 @@ public /*non-final*/ class ModelActions {
     call(threaded(task));
   }
 
-  public static <T> void call(final Supplier<T> task) {
-    call(threaded(task));
+  @SuppressWarnings("unchecked")
+  public static <T> T call(final Supplier<T> task) {
+    return (T) call(threaded(task));
   }
 
-  public static void call(final Context.TaskFactory task) {
-    waitFor(spawn(task));
+  public static Object call(final Context.TaskFactory task) {
+    return waitFor(spawn(task));
   }
 
   public static void call(final String type, final Map<String, SerializedValue> arguments) {
@@ -103,8 +104,8 @@ public /*non-final*/ class ModelActions {
     delay(unit.times(quantity));
   }
 
-  public static void waitFor(final Scheduler.TaskIdentifier id) {
-    context.get().waitFor(id);
+  public static Object waitFor(final Scheduler.TaskIdentifier id) {
+    return context.get().waitFor(id);
   }
 
   public static void waitUntil(final Condition condition) {

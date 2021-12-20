@@ -84,9 +84,10 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public void waitFor(final Scheduler.TaskIdentifier id) {
+  public Object waitFor(final Scheduler.TaskIdentifier id) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
+    return this.scheduler.getTaskReturnValue(id);
   }
 
   @Override

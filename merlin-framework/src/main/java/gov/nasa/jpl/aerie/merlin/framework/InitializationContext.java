@@ -82,7 +82,7 @@ public final class InitializationContext implements Context {
   }
 
   @Override
-  public void waitFor(final Scheduler.TaskIdentifier id) {
+  public Object waitFor(final Scheduler.TaskIdentifier id) {
     throw new IllegalStateException("Cannot yield during initialization");
   }
 

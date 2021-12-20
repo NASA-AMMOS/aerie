@@ -18,4 +18,5 @@ public interface Scheduler {
   TaskIdentifier defer(Duration delay, String type, Map<String, SerializedValue> arguments);
 
   interface TaskIdentifier {}
+  Object getTaskReturnValue(TaskIdentifier taskId);
 }
