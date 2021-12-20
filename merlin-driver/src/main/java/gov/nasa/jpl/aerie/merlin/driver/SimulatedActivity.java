@@ -16,6 +16,7 @@ public final class SimulatedActivity {
   public final ActivityInstanceId parentId;
   public final List<ActivityInstanceId> childIds;
   public final Optional<ActivityInstanceId> directiveId;
+  public final SerializedValue computedAttributes;
 
   public SimulatedActivity(
       final String type,
@@ -24,7 +25,8 @@ public final class SimulatedActivity {
       final Duration duration,
       final ActivityInstanceId parentId,
       final List<ActivityInstanceId> childIds,
-      final Optional<ActivityInstanceId> directiveId
+      final Optional<ActivityInstanceId> directiveId,
+      final SerializedValue computedAttributes
   ) {
     this.type = type;
     this.arguments = arguments;
@@ -33,6 +35,7 @@ public final class SimulatedActivity {
     this.parentId = parentId;
     this.childIds = childIds;
     this.directiveId = directiveId;
+    this.computedAttributes = computedAttributes;
   }
 
   @Override

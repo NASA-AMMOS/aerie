@@ -472,7 +472,8 @@ public final class SimulationEngine implements AutoCloseable {
             e.joinOffset().minus(e.startOffset()),
             activityParents.get(activityId),
             activityChildren.getOrDefault(activityId, Collections.emptyList()),
-            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId)
+            (activityParents.containsKey(activityId)) ? Optional.empty() : Optional.of(activityId),
+            serializeReturnValue(directive, e.returnValue())
         ));
       } else {
         unsimulatedActivities.put(activityId, new SerializedActivity(
@@ -522,6 +523,16 @@ public final class SimulationEngine implements AutoCloseable {
                                  topics,
                                  serializedTimeline);
   }
+
+  @SuppressWarnings("unchecked")
+  private static <DirectiveReturn, TaskReturn> SerializedValue serializeReturnValue(
+      final Directive<?, ?, DirectiveReturn> directive,
+      final TaskReturn taskReturnValue
+  ) {
+    // SAFETY: Tasks always return the same type as the TaskSpecType that declares them
+    return directive.directiveType().serializeReturnValue((DirectiveReturn) taskReturnValue);
+  }
+
 
   private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
     return event.extract(topicOfSerializableTopic(serializableTopic), serializableTopic.serializer());

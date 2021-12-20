@@ -290,7 +290,8 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             record.duration(),
             record.parentId().map(pgIdToSimId::get).orElse(null),
             record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-            record.directiveId()
+            record.directiveId(),
+            SerializedValue.of("VOID") // TODO retrieve return value from database
         ));
       }
 

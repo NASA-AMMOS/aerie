@@ -47,7 +47,7 @@ public final class MissionModelTest {
     @Test
     public void shouldGetActivityTypeList() throws MissionModelFacade.MissionModelContractException {
         // GIVEN
-        final Map<String, ActivityType> expectedTypes = Map.of(
+      final Map<String, ActivityType> expectedTypes = Map.of(
             "foo", new ActivityType(
                 "foo",
                 List.of(
@@ -68,7 +68,7 @@ public final class MissionModelTest {
     @Test
     public void shouldGetActivityType() throws MissionModelFacade.NoSuchActivityTypeException, MissionModelFacade.MissionModelContractException {
         // GIVEN
-        final ActivityType expectedType = new ActivityType(
+      final ActivityType expectedType = new ActivityType(
             "foo",
             List.of(
                 new Parameter("x", ValueSchema.INT),
