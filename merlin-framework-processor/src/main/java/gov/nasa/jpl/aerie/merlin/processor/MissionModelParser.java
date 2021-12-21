@@ -25,6 +25,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.lang.annotation.Annotation;
@@ -350,7 +352,14 @@ import java.util.function.Predicate;
       final var executorAnnotation = element.getAnnotation(ActivityType.EffectModel.class);
       if (executorAnnotation == null) continue;
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value()));
+      if (!(element instanceof ExecutableElement executableElement)) continue;
+
+      final var returnType = executableElement.getReturnType();
+      final var nonVoidReturnType = returnType.getKind() == TypeKind.VOID
+          ? Optional.<TypeMirror>empty()
+          : Optional.of(returnType);
+
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType));
     }
 
     return Optional.empty();
