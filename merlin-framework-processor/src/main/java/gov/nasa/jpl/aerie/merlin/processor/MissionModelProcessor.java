@@ -661,6 +661,7 @@ public final class MissionModelProcessor implements Processor {
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetRequiredParametersMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetParametersMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetReturnValueSchemaMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeSerializeReturnValueMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetArgumentsMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateMethod(activityType))
             .addMethod(
@@ -842,6 +843,7 @@ public final class MissionModelProcessor implements Processor {
                                 .build(),
                             MethodSpec
                                 .methodBuilder("call")
+                                .addAnnotation(AnnotationSpec.builder(SuppressWarnings.class).addMember("value", CodeBlock.of("\"unchecked\"")).build())
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(entry.effectModel.flatMap(EffectModelRecord::returnType)
                                                           .map(TypeName::get)
@@ -854,8 +856,8 @@ public final class MissionModelProcessor implements Processor {
                                     "$L$T.waitFor(spawn($L))",
                                     entry.effectModel.flatMap(EffectModelRecord::returnType)
                                                      .map(TypeName::get)
-                                                     .map(returnType -> "return (" + returnType + ") ")
-                                                     .orElse(""),
+                                                     .map(returnType -> CodeBlock.of("return ($T) ", returnType))
+                                                     .orElse(CodeBlock.of("")),
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "activity")
                                 .build())
