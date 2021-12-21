@@ -25,6 +25,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import java.util.HashMap;
@@ -584,6 +585,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   public Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType) {
     return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
         .addMethod(makeGetReturnValueSchemaMethod())
+        .addMethod(makeSerializeReturnValueMethod(activityType))
         .addMethod(
             MethodSpec
                 .methodBuilder("createTask")
@@ -642,6 +644,23 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                      .addAnnotation(Override.class)
                      .returns(ValueSchema.class)
                      .addStatement("return this." + COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME + ".getValueSchema()")
+                     .build();
+  }
+
+  private static MethodSpec makeSerializeReturnValueMethod(final ActivityTypeRecord activityType) {
+    return MethodSpec.methodBuilder("serializeReturnValue")
+                     .addModifiers(Modifier.PUBLIC)
+                     .addAnnotation(Override.class)
+                     .returns(SerializedValue.class)
+                     .addParameter(
+                         activityType.effectModel()
+                             .flatMap(EffectModelRecord::returnType)
+                             .map(TypeName::get)
+                             .orElse(TypeName.get(VoidEnum.class)).box(),
+                         "returnValue",
+                         Modifier.FINAL)
+                     .addStatement(
+                         "return this." + COMPUTED_ATTRIBUTES_VALUE_MAPPER_FIELD_NAME + ".serializeValue(returnValue)")
                      .build();
   }
 

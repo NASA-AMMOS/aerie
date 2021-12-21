@@ -20,6 +20,7 @@ public interface TaskSpecType<Model, Specification, Return> {
 
   Task<Return> createTask(Model model, Specification taskSpec);
   ValueSchema getReturnValueSchema();
+  SerializedValue serializeReturnValue(Return returnValue);
 
   class UnconstructableTaskSpecException extends Exception {}
 }
