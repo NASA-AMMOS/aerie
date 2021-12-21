@@ -46,6 +46,8 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
@@ -389,7 +391,14 @@ public final class MissionModelProcessor implements Processor {
       final var executorAnnotation = element.getAnnotation(ActivityType.EffectModel.class);
       if (executorAnnotation == null) continue;
 
-      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value()));
+      if (!(element instanceof ExecutableElement executableElement)) continue;
+
+      final var returnType = executableElement.getReturnType();
+      final Optional<TypeMirror> nonVoidReturnType = returnType.getKind() == TypeKind.VOID
+          ? Optional.empty()
+          : Optional.of(returnType);
+
+      return Optional.of(new EffectModelRecord(element.getSimpleName().toString(), executorAnnotation.value(), nonVoidReturnType));
     }
 
     return Optional.empty();
@@ -545,6 +554,20 @@ public final class MissionModelProcessor implements Processor {
   {
     final var maybeMapperBlocks = buildParameterMapperBlocks(missionModel, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
+    final var effectModelReturnType = activityType.effectModel.flatMap(EffectModelRecord::returnType);
+    final Optional<CodeBlock> effectModelReturnMapperBlock =
+        effectModelReturnType
+            .flatMap(returnType ->  new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules)
+                  .instantiateNullableMapperFor(returnType));
+    if (effectModelReturnType.isPresent() && effectModelReturnMapperBlock.isEmpty()) {
+      messager.printMessage(
+          Diagnostic.Kind.ERROR,
+          "Failed to generate value mapper for effect model return type "
+          + effectModelReturnType.get()
+          + " of activity "
+          + activityType.name);
+      return Optional.empty();
+    }
     final var mapperBlocks = maybeMapperBlocks.get();
 
     final var typeSpec =
@@ -580,6 +603,18 @@ public final class MissionModelProcessor implements Processor {
                         .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                         .build())
                     .collect(Collectors.toList()))
+            .addFields(
+                effectModelReturnType
+                    .stream()
+                    .map(returnType -> FieldSpec
+                        .builder(
+                            ParameterizedTypeName.get(
+                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ValueMapper.class),
+                                TypeName.get(returnType).box()),
+                            "effectModelReturnTypeMapper")
+                        .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                        .build())
+                    .collect(Collectors.toList()))
             .addMethod(
                 MethodSpec
                     .constructorBuilder()
@@ -601,6 +636,17 @@ public final class MissionModelProcessor implements Processor {
                                     "this.mapper_$L =\n$L",
                                     parameter.name,
                                     mapperBlocks.get(parameter.name)))
+                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                            .build())
+                    .addCode(
+                        effectModelReturnMapperBlock
+                            .stream()
+                            .map(mapperBlock -> CodeBlock
+                                .builder()
+                                .addStatement(
+                                    "this.effectModelReturnTypeMapper =\n$L",
+                                    mapperBlock
+                                ))
                             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
                             .build())
                     .build())
