@@ -1,5 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.processor.instantiators;
 
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -9,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
+import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 
 import javax.lang.model.element.ElementKind;
@@ -86,6 +89,31 @@ public interface ActivityMapperInstantiator {
                              .flatMap(EffectModelRecord::returnType)
                              .map(x -> "return this.effectModelReturnTypeMapper.getValueSchema()")
                              .orElse("return ValueSchema.UNIT"))
+                     .build();
+  }
+
+  default MethodSpec makeSerializeReturnValueMethod(final ActivityTypeRecord activityType) {
+    return MethodSpec.methodBuilder("serializeReturnValue")
+                     .addModifiers(Modifier.PUBLIC)
+                     .addAnnotation(Override.class)
+                     .addAnnotation(
+                         AnnotationSpec
+                             .builder(SuppressWarnings.class)
+                             .addMember("value", CodeBlock.of("\"unchecked\""))
+                             .build())
+                     .returns(SerializedValue.class)
+                     .addParameter(
+                         Object.class,
+                         "returnValue",
+                         Modifier.FINAL)
+                     .addStatement(
+                         activityType.effectModel
+                             .flatMap(EffectModelRecord::returnType)
+                             .map(TypeName::get)
+                             .map(returnType -> CodeBlock.of(
+                                 "return this.effectModelReturnTypeMapper.serializeValue(($T) returnValue)",
+                                 returnType))
+                             .orElse(CodeBlock.of("return SerializedValue.UNIT")))
                      .build();
   }
 

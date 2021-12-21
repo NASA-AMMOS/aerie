@@ -665,6 +665,7 @@ public final class MissionModelProcessor implements Processor {
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetRequiredParametersMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetParametersMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetReturnValueSchemaMethod(activityType))
+            .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeSerializeReturnValueMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeGetArgumentsMethod(activityType))
             .addMethod(getMapperInstantiator(activityType.activityDefaultsStyle).makeInstantiateMethod(activityType))
             .addMethod(
