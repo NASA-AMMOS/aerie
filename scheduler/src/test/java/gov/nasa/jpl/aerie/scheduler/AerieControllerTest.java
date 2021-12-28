@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 
 public class AerieControllerTest {
   private final PlanningHorizon horizon = new PlanningHorizon(new Time(0), new Time(100000));
-  private final MissionModelWrapper missionModel = TestUtility.getMerlinSightMissionModel(horizon);
-  private final String URL_AERIE = TestUtility.LOCAL_AERIE;
-  private final int MISSION_MODEL_ID = TestUtility.latest;
+  private final MissionModelWrapper missionModel = MerlinSightTestUtility.getMerlinSightMissionModel(horizon);
+  private final String URL_AERIE = MerlinSightTestUtility.LOCAL_AERIE;
+  private final int MISSION_MODEL_ID = MerlinSightTestUtility.latest;
 
   /**
    * This test is here as a demonstration of how the AerieController can be used
@@ -40,10 +40,7 @@ public class AerieControllerTest {
     controller.sendActivityInstance(localPlan, actinstance);
 
     Plan fetchedPlan = controller.fetchPlan(controller.getPlanId(localPlan));
-    TestUtility.printPlan(fetchedPlan);
+    MerlinSightTestUtility.printPlan(fetchedPlan);
     assert(fetchedPlan.getActivitiesByTime().get(0).equalsInProperties(actinstance));
-
   }
-
-
 }

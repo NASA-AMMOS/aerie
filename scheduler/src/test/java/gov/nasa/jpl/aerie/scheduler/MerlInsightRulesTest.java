@@ -9,10 +9,10 @@ public class MerlInsightRulesTest {
   @BeforeEach
   void setUp(){
     planningHorizon = new PlanningHorizon(new Time(0), new Time(10000));
-    rules = new MerlInsightRules(TestUtility.getMerlinSightMissionModel(planningHorizon));
+    rules = new MerlInsightRules(MerlinSightTestUtility.getMerlinSightMissionModel(planningHorizon));
     missionModelWrapper = rules.getMissionModel();
     missionModelWrapper.getSimulationFacade().simulatePlan(makeEmptyPlan());
-    controller = new AerieController(TestUtility.LOCAL_AERIE, TestUtility.latest, false, planningHorizon, missionModelWrapper);
+    controller = new AerieController(MerlinSightTestUtility.LOCAL_AERIE, MerlinSightTestUtility.latest, false, planningHorizon, missionModelWrapper);
     smallProblem = new Problem(missionModelWrapper);
   }
 
@@ -32,13 +32,13 @@ public class MerlInsightRulesTest {
     solver.checkSimBeforeInsertingActInPlan();
     var plan = solver.getNextSolution();
     solver.printEvaluation();
-    TestUtility.printPlan(plan.get());
+    MerlinSightTestUtility.printPlan(plan.get());
     if(controller.isLocalAerieUp()) {
       controller.initEmptyPlan(plan.get(), planningHorizon.getStartAerie(), planningHorizon.getEndAerie(), null);
       controller.createSimulation(plan.get());
       controller.sendPlan(plan.get(), planningHorizon.getStartAerie(), planningHorizon.getEndAerie(), null);
     } else{
-      System.out.println("Not sending plan because there is no local instance of Aerie present at " + TestUtility.LOCAL_AERIE);
+      System.out.println("Not sending plan because there is no local instance of Aerie present at " + MerlinSightTestUtility.LOCAL_AERIE);
     }
   }
 
