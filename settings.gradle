@@ -11,7 +11,6 @@ include 'contrib'
 // Mission Model
 include 'banananation'
 include 'foo-missionmodel'
-include 'insight'
 
 // Service support
 include 'parsing-utilities'
