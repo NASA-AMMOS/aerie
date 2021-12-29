@@ -1,16 +1,17 @@
 # Building Aerie
 
-- [Compile Libraries](##compile-libraries)
-- [Build Docker Images](##build-docker-images)
+- [Prerequisites](#prerequisites)
+- [Compile](#compile)
+- [Docker](#docker)
 
-## Pre-Requisites
+## Prerequisites
 
-| Name    | Version | Notes        | Download                 |
-|---------|---------|--------------|--------------------------|
-| OpenJDK | Temurin 17 (LTS)  | HotSpot JVM  | https://adoptium.net/ |
-| Gradle  | 7.2     | Build system | https://gradle.org       |
+| Name    | Version          | Notes        | Download              |
+| ------- | ---------------- | ------------ | --------------------- |
+| OpenJDK | Temurin 17 (LTS) | HotSpot JVM  | https://adoptium.net/ |
+| Gradle  | 7.2              | Build system | https://gradle.org    |
 
-## Compile Libraries
+## Compile
 
 ### Building
 
@@ -25,13 +26,13 @@ Run `gradle test`.
 Run `gradle dependencyUpdates` to view a report of the project dependencies that are have updates available or are
 up-to-date.
 
-## Working With Docker
+## Docker
 
-The docker-compse.yml in the Aerie root directory deploys Aerie locally. All but one of the docker images are pulled
+The docker-compose.yml in the Aerie root directory deploys Aerie locally. All but one of the docker images are pulled
 from the SNAPSHOT docker image repository containing the latest development from the Aerie project repositories.
 The `merlin` container is sourced by building the container anew using the build products output from the Gradle build
 process. This is evidenced by the `build:` directive in the `merlin`
-section in docker-compse.yml.
+section in docker-compose.yml.
 
 ### Docker Compose Build
 
@@ -99,17 +100,17 @@ attach a debugger to the `merlin` container one should edit their docker-compose
 the `JAVA_OPTS` environment variable as shown below.
 
 ```yaml
-  merlin:
-    build:
-      context: .
-      dockerfile: merlin-server/Dockerfile
-    depends_on: [ "postgres" ]
-    ports: [ "27183:27183", "5005:5005" ]
-    restart: always
-    volumes:
-      - aerie_file_store:/usr/src/app/merlin_file_store
-    environment:
-      JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
+merlin:
+  build:
+    context: .
+    dockerfile: merlin-server/Dockerfile
+  depends_on: ["postgres"]
+  ports: ["27183:27183", "5005:5005"]
+  restart: always
+  volumes:
+    - aerie_file_store:/usr/src/app/merlin_file_store
+  environment:
+    JAVA_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005"
 ```
 
 The above environment variable will suspend the launching of the merlin-server until a dubugger connects on the assigned
@@ -118,9 +119,9 @@ port 5005.
 In IntelliJ create a new "Remote JVM Debug" configuration via Run > Edit Configurations. The default configuration
 should already be setup with
 
-* Port:5005,
-* Host:localhost,
-* Command Line arguments for remote JVM: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005.
+- Port:5005,
+- Host:localhost,
+- Command Line arguments for remote JVM: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=\*:5005.
 
 Once configured having the debugger attach while using Aerie is as simple as running `docker compose up` and running the
 debugger (nominally within IntelliJ).
