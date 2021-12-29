@@ -102,7 +102,7 @@ the `JAVA_OPTS` environment variable as shown below.
   merlin:
     build:
       context: .
-      dockerfile: scripts/dockerfiles/merlin.Dockerfile
+      dockerfile: merlin-server/Dockerfile
     depends_on: [ "postgres" ]
     ports: [ "27183:27183", "5005:5005" ]
     restart: always

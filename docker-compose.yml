@@ -51,7 +51,7 @@ services:
   merlin:
     build:
       context: .
-      dockerfile: scripts/dockerfiles/merlin.Dockerfile
+      dockerfile: merlin-server/Dockerfile
     depends_on: ["postgres"]
     environment:
       MERLIN_PORT: 27183
@@ -80,8 +80,8 @@ services:
   scheduler:
     build:
       context: .
-      dockerfile: scripts/dockerfiles/scheduler.Dockerfile
-    depends_on: ["postgres","merlin"]
+      dockerfile: scheduler/Dockerfile
+    depends_on: ["postgres", "merlin"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
       MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store

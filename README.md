@@ -1,4 +1,4 @@
-[![Build Status](https://cae-jenkins2.jpl.nasa.gov/buildStatus/icon?job=MPSA/SEQ/normal_builds/aerie/develop)](https://cae-jenkins2.jpl.nasa.gov/job/MPSA/job/SEQ/job/normal_builds/job/aerie/job/develop)
+![ci](https://github.com/NASA-AMMOS/aerie/actions/workflows/ci.yml/badge.svg)
 
 # Aerie
 
