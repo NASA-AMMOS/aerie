@@ -1,5 +1,6 @@
 plugins {
   id 'java-library'
+  id 'maven-publish'
 }
 
 java {
@@ -24,4 +25,25 @@ dependencies {
   testImplementation 'org.assertj:assertj-core:3.21.0'
 
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = "GitHubPackages"
+        url = "https://maven.pkg.github.com/nasa-ammos/aerie"
+        credentials {
+          username = System.getenv("GITHUB_ACTOR")
+          password = System.getenv("GITHUB_TOKEN")
+        }
+      }
+    }
+  }
 }

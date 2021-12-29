@@ -32,14 +32,12 @@ publishing {
 
   publishing {
     repositories {
-      if (project.hasProperty('jplArtifactoryUsername')) {
-        maven {
-          name = 'jplSnapshots'
-          url = "https://artifactory.jpl.nasa.gov:443/artifactory/maven-libs-snapshot-local"
-          credentials {
-            username jplArtifactoryUsername
-            password jplArtifactoryPassword
-          }
+      maven {
+        name = "GitHubPackages"
+        url = "https://maven.pkg.github.com/nasa-ammos/aerie"
+        credentials {
+          username = System.getenv("GITHUB_ACTOR")
+          password = System.getenv("GITHUB_TOKEN")
         }
       }
     }

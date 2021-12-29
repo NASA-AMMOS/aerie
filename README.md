@@ -1,4 +1,4 @@
-![ci](https://github.com/NASA-AMMOS/aerie/actions/workflows/ci.yml/badge.svg)
+![publish](https://github.com/NASA-AMMOS/aerie/actions/workflows/publish.yml/badge.svg)
 
 # Aerie
 
