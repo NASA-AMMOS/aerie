@@ -45,7 +45,7 @@ jobs:
         id: aerieMerlin
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/aerie-merlin
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-merlin
       - name: Build and push aerie-merlin Docker image
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v2
@@ -60,7 +60,7 @@ jobs:
         id: aerieScheduler
         uses: docker/metadata-action@v3
         with:
-          images: ${{ env.REGISTRY }}/aerie-scheduler
+          images: ${{ env.REGISTRY }}/nasa-ammos/aerie-scheduler
       - name: Build and push aerie-scheduler Docker image
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v2
