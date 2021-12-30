@@ -6,8 +6,8 @@ A suite of software tools and services created to support activity planning and 
 
 ## Getting Started
 
-- To deploy an existing set of Aerie images from Artifactory see the [deployment documentation](./docs/deployment.md).
-- To get started running Aerie locally for development purposes see [building documentation](./docs/building.md).
+- To deploy Aerie see the documentation in the [deployment directory](./deployment).
+- To run Aerie locally for development purposes see [building documentation](./docs/building.md).
 
 ## Contributing
 

@@ -21,9 +21,10 @@ Each container has environment variables that can be used to fine-tune your depl
 
 ## Starting the Services
 
+Download this [deployment](../deployment) directory on your local machine, then do:
+
 ```sh
 cd deployment
-docker login artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie
 docker-compose up --build --detach
 ```
 
@@ -41,4 +42,5 @@ docker-compose down
 
 ## Troubleshooting
 
-- When logging into Docker Artifactory you need to specify your JPL username/password. If you don't have access please contact someone from the Aerie team via the [#mpsa-aerie-users](https://app.slack.com/client/T024LMMEZ/C0163E42UBF) Slack channel.
+- Make sure you are starting all the Docker containers in a clean environment. This means before starting the services make sure all containers are removed, all images are removed, and all volumes are removed.
+- If you are having trouble and cannot find the answer here, please contact someone from the Aerie team via the [#mpsa-aerie-users](https://app.slack.com/client/T024LMMEZ/C0163E42UBF) Slack channel.
