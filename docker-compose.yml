@@ -50,8 +50,8 @@ services:
       - ./deployment/hasura/metadata:/hasura-metadata
   merlin:
     build:
-      context: .
-      dockerfile: merlin-server/Dockerfile
+      context: ./merlin-server
+      dockerfile: Dockerfile
     depends_on: ["postgres"]
     environment:
       MERLIN_PORT: 27183
@@ -79,8 +79,8 @@ services:
       - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
   scheduler:
     build:
-      context: .
-      dockerfile: scheduler/Dockerfile
+      context: ./scheduler-server
+      dockerfile: Dockerfile
     depends_on: ["postgres", "merlin"]
     environment:
       MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
