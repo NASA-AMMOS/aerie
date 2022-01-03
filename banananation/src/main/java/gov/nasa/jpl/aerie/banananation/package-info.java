@@ -17,10 +17,14 @@
 @WithActivityType(DecomposingActivity.ChildActivity.class)
 @WithActivityType(DecomposingActivity.GrandchildActivity.class)
 @WithActivityType(BakeBananaBreadActivity.class)
+@WithActivityType(BananaPhotographer.class)
+@WithActivityType(BananaPhotographer.TakePicture.class)
+@WithActivityType(BananaPhotographer.MakeGif.class)
 
 package gov.nasa.jpl.aerie.banananation;
 
 import gov.nasa.jpl.aerie.banananation.activities.BakeBananaBreadActivity;
+import gov.nasa.jpl.aerie.banananation.activities.BananaPhotographer;
 import gov.nasa.jpl.aerie.banananation.activities.BiteBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.GrowBananaActivity;
 import gov.nasa.jpl.aerie.banananation.activities.DecomposingActivity;
