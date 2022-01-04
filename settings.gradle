@@ -22,3 +22,6 @@ include 'scheduler-server'
 // Command-line interface direct to services
 include 'constraints'
 include 'scheduler'
+
+// DB tests
+include 'db-tests'

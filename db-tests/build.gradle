@@ -1,0 +1,23 @@
+plugins {
+  id 'java-library'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+test {
+  useJUnitPlatform()
+}
+
+dependencies {
+  testImplementation 'org.assertj:assertj-core:3.21.0'
+  testImplementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
+  testImplementation 'org.postgresql:postgresql:42.2.5'
+  testImplementation 'com.zaxxer:HikariCP:5.0.0'
+  testImplementation 'junit:junit:4.13.2'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+}
