@@ -13,11 +13,47 @@ services:
       POSTGRES_PASSWORD: aerie
       POSTGRES_PORT: 5432
       POSTGRES_USER: aerie
-    image: "artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie/aerie-gateway:release-0.9.2"
+    image: "ghcr.io/nasa-ammos/aerie-gateway:latest"
     ports: ["9000:9000"]
     restart: always
     volumes:
       - aerie_file_store:/app/files
+  aerie_merlin:
+    depends_on: ["postgres"]
+    environment:
+      MERLIN_DB: "aerie_merlin"
+      MERLIN_DB_PASSWORD: "aerie"
+      MERLIN_DB_PORT: 5432
+      MERLIN_DB_SERVER: "postgres"
+      MERLIN_DB_USER: "aerie"
+      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
+      MERLIN_LOGGING: "true"
+      MERLIN_PORT: 27183
+    image: "ghcr.io/nasa-ammos/aerie-merlin:latest"
+    ports: ["27183:27183"]
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store
+  aerie_scheduler:
+    depends_on: ["postgres", "merlin"]
+    environment:
+      MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
+      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
+      SCHED_DB: "aerie_sched"
+      SCHED_DB_PASSWORD: "aerie"
+      SCHED_DB_PORT: 5432
+      SCHED_DB_SERVER: "postgres"
+      SCHED_DB_USER: "aerie"
+      SCHED_LOCAL_STORE: /usr/src/app/sched_file_store
+      SCHED_LOGGING: "true"
+      SCHED_OUTPUT_MODE: UpdateInputPlanWithNewActivities
+      SCHED_PORT: 27193
+      SCHED_RULES_JAR: /usr/src/app/merlin_file_store/sched_rules.jar
+    image: "ghcr.io/nasa-ammos/aerie-scheduler:latest"
+    ports: ["27193:27193"]
+    restart: always
+    volumes:
+      - aerie_file_store:/usr/src/app/merlin_file_store
   aerie_ui:
     depends_on: ["postgres"]
     environment:
@@ -28,7 +64,7 @@ services:
       HASURA_SERVER_URL: http://hasura:8080/v1/graphql
       SCHEDULER_CLIENT_URL: http://localhost:27193
       SCHEDULER_SERVER_URL: http://scheduler:27193
-    image: "artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie/aerie-ui:release-0.9.2"
+    image: "ghcr.io/nasa-ammos/aerie-ui:latest"
     ports: ["80:80"]
     restart: always
   hasura:
@@ -46,22 +82,6 @@ services:
     restart: always
     volumes:
       - ./hasura/metadata:/hasura-metadata
-  merlin:
-    image: "artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie/merlin:release-0.9.2"
-    depends_on: ["postgres"]
-    environment:
-      MERLIN_PORT: 27183
-      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
-      MERLIN_LOGGING: "true"
-      MERLIN_DB_SERVER: "postgres"
-      MERLIN_DB_PORT: 5432
-      MERLIN_DB_USER: "aerie"
-      MERLIN_DB_PASSWORD: "aerie"
-      MERLIN_DB: "aerie_merlin"
-    ports: ["27183:27183"]
-    restart: always
-    volumes:
-      - aerie_file_store:/usr/src/app/merlin_file_store
   postgres:
     environment:
       POSTGRES_DB: postgres
@@ -73,26 +93,6 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init-db:/docker-entrypoint-initdb.d
-  scheduler:
-    depends_on: ["postgres", "merlin"]
-    environment:
-      MERLIN_GRAPHQL_URL: http://hasura:8080/v1/graphql
-      MERLIN_LOCAL_STORE: /usr/src/app/merlin_file_store
-      SCHED_DB: "aerie_sched"
-      SCHED_DB_PASSWORD: "aerie"
-      SCHED_DB_PORT: 5432
-      SCHED_DB_SERVER: "postgres"
-      SCHED_DB_USER: "aerie"
-      SCHED_LOCAL_STORE: /usr/src/app/sched_file_store
-      SCHED_LOGGING: "true"
-      SCHED_OUTPUT_MODE: UpdateInputPlanWithNewActivities
-      SCHED_PORT: 27193
-      SCHED_RULES_JAR: /usr/src/app/merlin_file_store/sched_rules.jar
-    image: "artifactory.jpl.nasa.gov:16003/gov/nasa/jpl/aerie/scheduler:release-0.9.2"
-    ports: ["27193:27193"]
-    restart: always
-    volumes:
-      - aerie_file_store:/usr/src/app/merlin_file_store
 
 volumes:
   aerie_file_store:

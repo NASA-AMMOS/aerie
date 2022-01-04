@@ -19,36 +19,7 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/app/files
-  aerie_ui:
-    depends_on: ["postgres"]
-    environment:
-      AUTH_TYPE: cam
-      GATEWAY_CLIENT_URL: http://localhost:9000
-      GATEWAY_SERVER_URL: http://aerie_gateway:9000
-      HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
-      HASURA_SERVER_URL: http://hasura:8080/v1/graphql
-      SCHEDULER_CLIENT_URL: http://localhost:27193
-      SCHEDULER_SERVER_URL: http://scheduler:27193
-    image: "artifactory.jpl.nasa.gov:16001/gov/nasa/jpl/aerie/aerie-ui:develop"
-    ports: ["80:80"]
-    restart: always
-  hasura:
-    depends_on: ["postgres"]
-    environment:
-      AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
-      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_sched
-      AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_hasura
-      HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
-    image: "hasura/graphql-engine:v2.0.10.cli-migrations-v3"
-    ports: ["8080:8080"]
-    restart: always
-    volumes:
-      - ./deployment/hasura/metadata:/hasura-metadata
-  merlin:
+  aerie_merlin:
     build:
       context: ./merlin-server
       dockerfile: Dockerfile
@@ -66,18 +37,7 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
-  postgres:
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-    image: postgres:14.1
-    ports: ["5432:5432"]
-    restart: always
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
-  scheduler:
+  aerie_scheduler:
     build:
       context: ./scheduler-server
       dockerfile: Dockerfile
@@ -99,6 +59,46 @@ services:
     restart: always
     volumes:
       - aerie_file_store:/usr/src/app/merlin_file_store
+  aerie_ui:
+    depends_on: ["postgres"]
+    environment:
+      AUTH_TYPE: cam
+      GATEWAY_CLIENT_URL: http://localhost:9000
+      GATEWAY_SERVER_URL: http://aerie_gateway:9000
+      HASURA_CLIENT_URL: http://localhost:8080/v1/graphql
+      HASURA_SERVER_URL: http://hasura:8080/v1/graphql
+      SCHEDULER_CLIENT_URL: http://localhost:27193
+      SCHEDULER_SERVER_URL: http://scheduler:27193
+    image: "ghcr.io/nasa-ammos/aerie-ui:develop"
+    ports: ["80:80"]
+    restart: always
+  hasura:
+    depends_on: ["postgres"]
+    environment:
+      AERIE_MERLIN_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_merlin
+      AERIE_SCHED_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_sched
+      AERIE_UI_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_ui
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://aerie:aerie@postgres:5432/aerie_hasura
+      HASURA_GRAPHQL_METADATA_DIR: /hasura-metadata
+    image: "hasura/graphql-engine:v2.0.10.cli-migrations-v3"
+    ports: ["8080:8080"]
+    restart: always
+    volumes:
+      - ./deployment/hasura/metadata:/hasura-metadata
+  postgres:
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    image: postgres:14.1
+    ports: ["5432:5432"]
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployment/postgres-init-db:/docker-entrypoint-initdb.d
 
 volumes:
   aerie_file_store:
