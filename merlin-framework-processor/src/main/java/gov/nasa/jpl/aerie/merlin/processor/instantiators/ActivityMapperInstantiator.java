@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import gov.nasa.jpl.aerie.merlin.processor.ActivityDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -143,5 +144,14 @@ public interface ActivityMapperInstantiator {
                     parameter.name))
             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
             .build());
+  }
+
+  static ActivityMapperInstantiator make(final ActivityDefaultsStyle style) {
+    return switch (style) {
+      case AllStaticallyDefined -> new AllStaticallyDefinedInstantiator();
+      case NoneDefined -> new NoneDefinedInstantiator();
+      case AllDefined -> new AllDefinedInstantiator();
+      case SomeStaticallyDefined -> new SomeStaticallyDefinedInstantiator();
+    };
   }
 }
