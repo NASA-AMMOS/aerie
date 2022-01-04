@@ -3,7 +3,8 @@ package gov.nasa.jpl.aerie.merlin.processor;
 import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
-import gov.nasa.jpl.aerie.merlin.processor.instantiators.ActivityMapperInstantiator;
+import gov.nasa.jpl.aerie.merlin.processor.generator.ActivityMapperMethodMaker;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
@@ -319,8 +320,8 @@ import java.util.Set;
 
   private List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
   {
-    return ActivityMapperInstantiator.make(this.getActivityDefaultsStyle(activityTypeElement))
-        .getActivityParameters(activityTypeElement);
+    return ActivityMapperMethodMaker.make(this.getActivityDefaultsStyle(activityTypeElement))
+                                    .getActivityParameters(activityTypeElement);
   }
 
   private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)
