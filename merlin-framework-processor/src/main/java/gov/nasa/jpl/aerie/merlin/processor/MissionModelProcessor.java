@@ -10,7 +10,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
@@ -65,6 +64,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class MissionModelProcessor implements Processor {
+
+  private final Set<Element> foundActivityTypes = new HashSet<>();
+  private final Set<Element> ownedActivityTypes = new HashSet<>();
+
+  // Effectively final, late-initialized
   private Messager messager = null;
   private Filer filer = null;
   private Elements elementUtils = null;
@@ -75,7 +79,7 @@ public final class MissionModelProcessor implements Processor {
     return Set.of();
   }
 
-  // Elements marked by these annotations will be treated as processing roots.
+  /** Elements marked by these annotations will be treated as processing roots. */
   @Override
   public Set<String> getSupportedAnnotationTypes() {
     return Set.of(
@@ -96,12 +100,9 @@ public final class MissionModelProcessor implements Processor {
     this.typeUtils = processingEnv.getTypeUtils();
   }
 
-  private final Set<Element> foundActivityTypes = new HashSet<>();
-  private final Set<Element> ownedActivityTypes = new HashSet<>();
-
   @Override
   public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-    /// Accumulate any information added in this round.
+    // Accumulate any information added in this round.
     this.foundActivityTypes.addAll(roundEnv.getElementsAnnotatedWith(ActivityType.class));
 
     // Iterate over all elements annotated with @MissionModel
@@ -127,7 +128,6 @@ public final class MissionModelProcessor implements Processor {
           this.messager.printMessage(
               Diagnostic.Kind.NOTE,
               "Generating " + generatedFile.packageName + "." + generatedFile.typeSpec.name);
-
           generatedFile.writeTo(this.filer);
         }
       } catch (final InvalidMissionModelException ex) {
@@ -169,7 +169,7 @@ public final class MissionModelProcessor implements Processor {
       }
     }
 
-    /// Allow other annotation processors to process the framework annotations.
+    // Allow other annotation processors to process the framework annotations.
     return false;
   }
 
@@ -183,7 +183,7 @@ public final class MissionModelProcessor implements Processor {
     return Collections::emptyIterator;
   }
 
-  private ActivityMapperInstantiator getMapperInstantiator(final ActivityDefaultsStyle style) {
+  private static ActivityMapperInstantiator getMapperInstantiator(final ActivityDefaultsStyle style) {
     return switch (style) {
       case AllStaticallyDefined -> new AllStaticallyDefinedInstantiator();
       case NoneDefined -> new NoneDefinedInstantiator();
@@ -192,9 +192,7 @@ public final class MissionModelProcessor implements Processor {
     };
   }
 
-  private MissionModelRecord
-
-  parseMissionModel(final PackageElement missionModelElement)
+  private MissionModelRecord parseMissionModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var topLevelModel = this.getMissionModelModel(missionModelElement);
@@ -213,8 +211,7 @@ public final class MissionModelProcessor implements Processor {
     return new MissionModelRecord(missionModelElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
   }
 
-  private List<TypeRule>
-  parseValueMappers(final TypeElement factory)
+  private List<TypeRule> parseValueMappers(final TypeElement factory)
   throws InvalidMissionModelException
   {
     final var valueMappers = new ArrayList<TypeRule>();
@@ -228,8 +225,7 @@ public final class MissionModelProcessor implements Processor {
     return valueMappers;
   }
 
-  private TypeRule
-  parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
+  private TypeRule parseValueMapperMethod(final ExecutableElement element, final ClassName factory)
   throws InvalidMissionModelException
   {
     if (!element.getModifiers().containsAll(Set.of(Modifier.PUBLIC, Modifier.STATIC))) {
@@ -250,8 +246,7 @@ public final class MissionModelProcessor implements Processor {
     return new TypeRule(head, enumBoundedTypeParameters, parameters, factory, method);
   }
 
-  private Set<String>
-  getEnumBoundedTypeParameters(final ExecutableElement element)
+  private Set<String> getEnumBoundedTypeParameters(final ExecutableElement element)
   throws InvalidMissionModelException
   {
     final var enumBoundedTypeParameters = new HashSet<String>();
@@ -281,8 +276,7 @@ public final class MissionModelProcessor implements Processor {
     return enumBoundedTypeParameters;
   }
 
-  private ActivityTypeRecord
-  parseActivityType(final PackageElement missionModelElement, final TypeElement activityTypeElement)
+  private ActivityTypeRecord parseActivityType(final PackageElement missionModelElement, final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {
     final var name = this.getActivityTypeName(activityTypeElement);
@@ -319,8 +313,7 @@ public final class MissionModelProcessor implements Processor {
     return ActivityDefaultsStyle.NoneDefined; // No default arguments provided
   }
 
-  private String
-  getActivityTypeName(final TypeElement activityTypeElement)
+  private String getActivityTypeName(final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror = this
@@ -339,8 +332,7 @@ public final class MissionModelProcessor implements Processor {
     return (String) nameAttribute.getValue();
   }
 
-  private ActivityMapperRecord
-  getActivityMapper(final PackageElement missionModelElement, final TypeElement activityTypeElement)
+  private ActivityMapperRecord getActivityMapper(final PackageElement missionModelElement, final TypeElement activityTypeElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror = this.getAnnotationMirrorByType(activityTypeElement, ActivityType.WithMapper.class);
@@ -362,8 +354,7 @@ public final class MissionModelProcessor implements Processor {
         ClassName.get((TypeElement) mapperType.asElement()));
   }
 
-  private List<ActivityValidationRecord>
-  getActivityValidations(final TypeElement activityTypeElement)
+  private List<ActivityValidationRecord> getActivityValidations(final TypeElement activityTypeElement)
   {
     final var validations = new ArrayList<ActivityValidationRecord>();
 
@@ -385,8 +376,7 @@ public final class MissionModelProcessor implements Processor {
         .getActivityParameters(activityTypeElement);
   }
 
-  private Optional<Pair<String, ActivityType.Executor>>
-  getActivityEffectModel(final TypeElement activityTypeElement)
+  private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)
   {
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD) continue;
@@ -400,8 +390,7 @@ public final class MissionModelProcessor implements Processor {
     return Optional.empty();
   }
 
-  private List<TypeElement>
-  getMissionModelMapperClasses(final PackageElement missionModelElement)
+  private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var mapperClassElements = new ArrayList<TypeElement>();
@@ -424,8 +413,7 @@ public final class MissionModelProcessor implements Processor {
     return mapperClassElements;
   }
 
-  private List<TypeElement>
-  getMissionModelActivityTypes(final PackageElement missionModelElement)
+  private List<TypeElement> getMissionModelActivityTypes(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var activityTypeElements = new ArrayList<TypeElement>();
@@ -452,8 +440,7 @@ public final class MissionModelProcessor implements Processor {
     return activityTypeElements;
   }
 
-  private TypeElement
-  getMissionModelModel(final PackageElement missionModelElement)
+  private TypeElement getMissionModelModel(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror = this
@@ -483,8 +470,7 @@ public final class MissionModelProcessor implements Processor {
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
-  private Optional<TypeElement>
-  getMissionModelConfiguration(final PackageElement missionModelElement)
+  private Optional<TypeElement> getMissionModelConfiguration(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
@@ -503,18 +489,7 @@ public final class MissionModelProcessor implements Processor {
     return Optional.of((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
   }
 
-  private String
-  getRecordInstantiatorWithParams(final String declarationName, final List<ActivityParameterRecord> params)
-  {
-    return "new "
-           + declarationName
-           + "("
-           + params.stream().map(parameter -> parameter.name + ".get()").collect(Collectors.joining(", "))
-           + ")";
-  }
-
-  private Optional<Map<String, CodeBlock>>
-  buildParameterMapperBlocks(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
+  private Optional<Map<String, CodeBlock>> buildParameterMapperBlocks(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
   {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
     var failed = false;
@@ -545,8 +520,7 @@ public final class MissionModelProcessor implements Processor {
     return mapperBlock.get();
   }
 
-  private Optional<JavaFile>
-  generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
+  private Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
   {
     final var maybeMapperBlocks = buildParameterMapperBlocks(missionModel, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
@@ -1057,8 +1031,7 @@ public final class MissionModelProcessor implements Processor {
   }
 
 
-  private List<AnnotationMirror>
-  getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass)
+  private List<AnnotationMirror> getRepeatableAnnotation(final Element element, final Class<? extends Annotation> annotationClass)
   {
     final var containerClass = annotationClass.getAnnotation(Repeatable.class).value();
 
@@ -1085,8 +1058,7 @@ public final class MissionModelProcessor implements Processor {
     return mirrors;
   }
 
-  private Optional<AnnotationValue>
-  getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName)
+  private Optional<AnnotationValue> getAnnotationAttribute(final AnnotationMirror annotationMirror, final String attributeName)
   {
     for (final var entry : annotationMirror.getElementValues().entrySet()) {
       if (Objects.equals(attributeName, entry.getKey().getSimpleName().toString())) {
@@ -1097,8 +1069,7 @@ public final class MissionModelProcessor implements Processor {
     return Optional.empty();
   }
 
-  private Optional<AnnotationMirror>
-  getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass)
+  private Optional<AnnotationMirror> getAnnotationMirrorByType(final Element element, final Class<? extends Annotation> annotationClass)
   {
     final var annotationType = this.elementUtils
         .getTypeElement(annotationClass.getCanonicalName())
