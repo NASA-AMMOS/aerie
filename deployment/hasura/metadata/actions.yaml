@@ -2,23 +2,23 @@ actions:
 - name: addExternalDataset
   definition:
     kind: synchronous
-    handler: http://merlin:27183/addExternalDataset
+    handler: http://aerie_merlin:27183/addExternalDataset
 - name: getActivityEffectiveArguments
   definition:
     kind: ""
-    handler: http://merlin:27183/getActivityEffectiveArguments
+    handler: http://aerie_merlin:27183/getActivityEffectiveArguments
 - name: resourceTypes
   definition:
     kind: ""
-    handler: http://merlin:27183/resourceTypes
+    handler: http://aerie_merlin:27183/resourceTypes
 - name: simulate
   definition:
     kind: ""
-    handler: http://merlin:27183/getSimulationResults
+    handler: http://aerie_merlin:27183/getSimulationResults
 - name: validateActivityArguments
   definition:
     kind: ""
-    handler: http://merlin:27183/validateActivityArguments
+    handler: http://aerie_merlin:27183/validateActivityArguments
 custom_types:
   enums:
   - name: MerlinSimulationStatus
