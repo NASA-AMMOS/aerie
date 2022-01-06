@@ -5,9 +5,9 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 
 import javax.lang.model.element.ElementKind;
@@ -17,17 +17,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public interface ActivityMapperMethodMaker {
+public interface MapperMethodMaker {
 
-  MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType);
+  MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType);
 
-  default List<String> getParametersWithDefaults(final ActivityTypeRecord activityType) {
-    return activityType.parameters.stream().map(p -> p.name).toList();
+  default List<String> getParametersWithDefaults(final SpecificationTypeRecord specType) {
+    return specType.parameters().stream().map(p -> p.name).toList();
   }
 
-  default MethodSpec makeGetRequiredParametersMethod(final ActivityTypeRecord activityType) {
-    final var optionalParams = getParametersWithDefaults(activityType);
-    final var requiredParams = activityType.parameters.stream().filter(p -> !optionalParams.contains(p.name)).toList();
+  default MethodSpec makeGetRequiredParametersMethod(final SpecificationTypeRecord specType) {
+    final var optionalParams = getParametersWithDefaults(specType);
+    final var requiredParams = specType.parameters().stream().filter(p -> !optionalParams.contains(p.name)).toList();
 
     return MethodSpec.methodBuilder("getRequiredParameters")
         .addModifiers(Modifier.PUBLIC)
@@ -42,7 +42,7 @@ public interface ActivityMapperMethodMaker {
         .build();
   }
 
-  default MethodSpec makeGetParametersMethod(final ActivityTypeRecord activityType) {
+  default MethodSpec makeGetParametersMethod(final SpecificationTypeRecord specType) {
     return MethodSpec.methodBuilder("getParameters")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
@@ -56,7 +56,7 @@ public interface ActivityMapperMethodMaker {
                 java.util.ArrayList.class,
                 Parameter.class))
         .addCode(
-            activityType.parameters
+            specType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -74,7 +74,7 @@ public interface ActivityMapperMethodMaker {
         .build();
   }
 
-  default MethodSpec makeGetArgumentsMethod(final ActivityTypeRecord activityType) {
+  default MethodSpec makeGetArgumentsMethod(final SpecificationTypeRecord specType) {
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -84,8 +84,8 @@ public interface ActivityMapperMethodMaker {
             String.class,
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
-            TypeName.get(activityType.declaration.asType()),
-            "activity",
+            TypeName.get(specType.declaration().asType()),
+            specType.specificationName(),
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -95,7 +95,7 @@ public interface ActivityMapperMethodMaker {
                 String.class,
                 gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addCode(
-            activityType.parameters
+            specType.parameters()
                 .stream()
                 .map(parameter -> CodeBlock
                     .builder()
@@ -104,7 +104,7 @@ public interface ActivityMapperMethodMaker {
                         "arguments",
                         parameter.name,
                         parameter.name,
-                        "activity",
+                        specType.specificationName(),
                         parameter.name
                     ))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -115,23 +115,23 @@ public interface ActivityMapperMethodMaker {
         .build();
   }
 
-  default List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
+  default List<ParameterRecord> getParameters(final TypeElement activityTypeElement)
   {
-    final var parameters = new ArrayList<ActivityParameterRecord>();
+    final var parameters = new ArrayList<ParameterRecord>();
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getKind() != ElementKind.FIELD) continue;
       if (element.getModifiers().contains(Modifier.STATIC)) continue;
       final var name = element.getSimpleName().toString();
       final var type = element.asType();
-      parameters.add(new ActivityParameterRecord(name, type, element));
+      parameters.add(new ParameterRecord(name, type, element));
     }
     return parameters;
   }
 
-  static MethodSpec.Builder makeArgumentPresentCheck(final MethodSpec.Builder methodBuilder, final ActivityTypeRecord activityType) {
+  static MethodSpec.Builder makeArgumentPresentCheck(final MethodSpec.Builder methodBuilder, final SpecificationTypeRecord specType) {
     // Ensure all parameters are non-null
     return methodBuilder.addCode(
-        activityType.parameters
+        specType.parameters()
             .stream()
             .map(parameter -> CodeBlock
                 .builder()
@@ -139,14 +139,14 @@ public interface ActivityMapperMethodMaker {
                     "if (!$L.isPresent()) throw new $T(\"$L\", \"$L\", this.mapper_$L.getValueSchema())",
                     parameter.name,
                     MissingArgumentException.class,
-                    activityType.name,
+                    specType.name(),
                     parameter.name,
                     parameter.name))
             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
             .build());
   }
 
-  static ActivityMapperMethodMaker make(final ActivityDefaultsStyle style) {
+  static MapperMethodMaker make(final ActivityDefaultsStyle style) {
     return switch (style) {
       case AllStaticallyDefined -> new AllStaticallyDefinedMethodMaker();
       case NoneDefined -> new NoneDefinedMethodMaker();
