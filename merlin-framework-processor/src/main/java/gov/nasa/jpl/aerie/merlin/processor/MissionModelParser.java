@@ -8,7 +8,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
@@ -302,9 +302,9 @@ import java.util.Set;
         ClassName.get((TypeElement) mapperType.asElement()));
   }
 
-  private List<ActivityValidationRecord> getActivityValidations(final TypeElement activityTypeElement)
+  private List<ParameterValidationRecord> getActivityValidations(final TypeElement activityTypeElement)
   {
-    final var validations = new ArrayList<ActivityValidationRecord>();
+    final var validations = new ArrayList<ParameterValidationRecord>();
 
     for (final var element : activityTypeElement.getEnclosedElements()) {
       if (element.getAnnotation(ActivityType.Validation.class) == null) continue;
@@ -312,7 +312,7 @@ import java.util.Set;
       final var name = element.getSimpleName().toString();
       final var message = element.getAnnotation(ActivityType.Validation.class).value();
 
-      validations.add(new ActivityValidationRecord(name, message));
+      validations.add(new ParameterValidationRecord(name, message));
     }
 
     return validations;
