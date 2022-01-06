@@ -7,4 +7,5 @@ public record SpecificationTypeRecord(
     String specificationName,
     String name,
     TypeElement declaration,
-    List<ParameterRecord> parameters) { }
+    List<ParameterRecord> parameters,
+    List<ParameterValidationRecord> validations) { }

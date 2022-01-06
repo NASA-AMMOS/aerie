@@ -10,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.TypeRule;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -88,7 +89,7 @@ import java.util.Set;
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
-  private Optional<TypeElement> getMissionModelConfigurationType(final PackageElement missionModelElement)
+  private Optional<SpecificationTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
@@ -104,7 +105,11 @@ import java.util.Set;
           attribute);
     }
 
-    return Optional.of((TypeElement) ((DeclaredType) attribute.getValue()).asElement());
+    final var declaration = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
+    final var name = declaration.getSimpleName().toString();
+    final var parameters = getParameters(declaration);
+    // TODO validation list is empty, not parsing those yet
+    return Optional.of(new SpecificationTypeRecord("configuration", name, declaration, parameters, List.of()));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -232,7 +237,7 @@ import java.util.Set;
     final var name = this.getActivityTypeName(activityTypeElement);
     final var mapper = this.getActivityMapper(missionModelElement, activityTypeElement);
     final var validations = this.getActivityValidations(activityTypeElement);
-    final var parameters = this.getActivityParameters(activityTypeElement);
+    final var parameters = this.getParameters(activityTypeElement);
     final var effectModel = this.getActivityEffectModel(activityTypeElement);
 
     /*
@@ -318,10 +323,10 @@ import java.util.Set;
     return validations;
   }
 
-  private List<ParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
+  private List<ParameterRecord> getParameters(final TypeElement specTypeElement)
   {
-    return MapperMethodMaker.make(this.getActivityDefaultsStyle(activityTypeElement))
-                            .getParameters(activityTypeElement);
+    return MapperMethodMaker.make(this.getActivityDefaultsStyle(specTypeElement))
+                            .getParameters(specTypeElement);
   }
 
   private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)

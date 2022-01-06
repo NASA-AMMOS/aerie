@@ -13,12 +13,12 @@ public final class MissionModelRecord {
   public final TypeElement topLevelModel;
   public final List<TypeRule> typeRules;
   public final List<ActivityTypeRecord> activityTypes;
-  public final Optional<TypeElement> modelConfigurationType;
+  public final Optional<SpecificationTypeRecord> modelConfigurationType;
 
   public MissionModelRecord(
       final PackageElement $package,
       final TypeElement topLevelModel,
-      final Optional<TypeElement> modelConfigurationType,
+      final Optional<SpecificationTypeRecord> modelConfigurationType,
       final List<TypeRule> typeRules,
       final List<ActivityTypeRecord> activityTypes)
   {

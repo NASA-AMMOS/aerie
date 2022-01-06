@@ -136,7 +136,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addStatement(
                                     "final var $L = $L",
                                     "configMapper",
-                                    generateConfigurationMapperBlock(missionModel, configElem))
+                                    generateConfigurationMapperBlock(missionModel, configElem.declaration()))
                                 .addStatement(
                                     "final var $L = $L.deserializeValue($L).getSuccessOrThrow()",
                                     "deserializedConfig",
@@ -184,7 +184,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addStatement("return $L.getValueSchema().asStruct().map(parameterMap ->\n"+
                                               "parameterMap.keySet().stream().map(name -> new $T(name, parameterMap.get(name))).toList())\n"+
                                               ".orElse($T.of())",
-                                    generateConfigurationMapperBlock(missionModel, configElem),
+                                    generateConfigurationMapperBlock(missionModel, configElem.declaration()),
                                     Parameter.class,
                                     List.class)
                                 .build())
@@ -391,7 +391,12 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
     final var mapperBlocks = maybeMapperBlocks.get();
     final var mapperMethodMaker = MapperMethodMaker.make(activityType.activityDefaultsStyle);
-    final var specType = new SpecificationTypeRecord("activity", activityType.name, activityType.declaration, activityType.parameters);
+    final var specType = new SpecificationTypeRecord(
+        "activity",
+        activityType.name,
+        activityType.declaration,
+        activityType.parameters,
+        activityType.validations);
 
     final var typeSpec =
         TypeSpec
