@@ -12,7 +12,7 @@ public final class ActivityTypeRecord {
   public final TypeElement declaration;
   public final String name;
   public final ActivityMapperRecord mapper;
-  public final List<ActivityValidationRecord> validations;
+  public final List<ParameterValidationRecord> validations;
   public final List<ParameterRecord> parameters;
   public final Optional<Pair<String, ActivityType.Executor>> effectModel;
   public final ActivityDefaultsStyle activityDefaultsStyle;
@@ -21,7 +21,7 @@ public final class ActivityTypeRecord {
       final TypeElement declaration,
       final String name,
       final ActivityMapperRecord mapper,
-      final List<ActivityValidationRecord> validations,
+      final List<ParameterValidationRecord> validations,
       final List<ParameterRecord> parameters,
       final Optional<Pair<String, ActivityType.Executor>> effectModel,
       final ActivityDefaultsStyle activityDefaultsStyle)
