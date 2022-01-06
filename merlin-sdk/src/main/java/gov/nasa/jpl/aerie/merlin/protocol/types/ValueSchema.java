@@ -195,6 +195,19 @@ public abstract class ValueSchema {
     };
   }
 
+  /**
+   * Creates a {@link ValueSchema} representing the Unit type.
+   *
+   * @return A new {@link ValueSchema} representing the Unit type.
+   */
+  public static ValueSchema ofUnit() {
+    return new ValueSchema() {
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onVariant(List.of(new Variant("Unit", "UNIT")));
+      }
+    };
+  }
+
   public static final ValueSchema REAL = ofReal();
   public static final ValueSchema INT = ofInt();
   public static final ValueSchema BOOLEAN = ofBoolean();

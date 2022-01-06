@@ -25,7 +25,8 @@ import java.util.Optional;
  * pattern on a class closed to extension allows us to guarantee that no ambiguity occurs.
  */
 public abstract class SerializedValue {
-  static public SerializedValue NULL = SerializedValue.ofNull();
+  public static final SerializedValue NULL = SerializedValue.ofNull();
+  public static final SerializedValue UNIT = SerializedValue.ofUnit();
 
 
   // Closed type family -- the only legal subclasses are those defined within the body of
@@ -75,6 +76,20 @@ public abstract class SerializedValue {
       @Override
       public <T> T match(final Visitor<T> visitor) {
         return visitor.onNull();
+      }
+    };
+  }
+
+  /**
+   * Creates a {@link SerializedValue} containing the UNIT value.
+   *
+   * @return A new {@link SerializedValue} containing the UNIT value.
+   */
+  private static SerializedValue ofUnit() {
+    return new SerializedValue() {
+      @Override
+      public <T> T match(final Visitor<T> visitor) {
+        return visitor.onString("UNIT");
       }
     };
   }
