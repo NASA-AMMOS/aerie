@@ -8,6 +8,7 @@ import com.squareup.javapoet.TypeName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.processor.TypePattern;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -15,33 +16,33 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class AllStaticallyDefinedMethodMaker implements ActivityMapperMethodMaker {
+public class AllStaticallyDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
-  public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
-    var activityTypeName = activityType.declaration.getSimpleName().toString();
+  public MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType) {
+    var activityTypeName = specType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
-                                  .addModifiers(Modifier.PUBLIC)
-                                  .addAnnotation(Override.class)
-                                  .returns(TypeName.get(activityType.declaration.asType()))
-                                  .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
-                                  .addParameter(
-                                      ParameterizedTypeName.get(
-                                          java.util.Map.class,
-                                          String.class,
-                                          gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
-                                      "arguments",
-                                      Modifier.FINAL);
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(TypeName.get(specType.declaration().asType()))
+        .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+        .addParameter(
+            ParameterizedTypeName.get(
+                java.util.Map.class,
+                String.class,
+                gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class),
+            "arguments",
+            Modifier.FINAL);
 
-    for (final var element : activityType.declaration.getEnclosedElements()) {
+    for (final var element : specType.declaration().getEnclosedElements()) {
       if (element.getKind() != ElementKind.METHOD && element.getKind() != ElementKind.CONSTRUCTOR) continue;
       if (element.getAnnotation(ActivityType.Template.class) == null) continue;
       var templateName = element.getSimpleName().toString();
       methodBuilder = methodBuilder.addStatement("final var template = $L.$L()", activityTypeName, templateName);
 
       methodBuilder = methodBuilder.addCode(
-          activityType.parameters
+          specType.parameters()
               .stream()
               .map(parameter -> CodeBlock
                   .builder()
@@ -61,7 +62,7 @@ public class AllStaticallyDefinedMethodMaker implements ActivityMapperMethodMake
         methodBuilder = methodBuilder.beginControlFlow("for (final var $L : $L.entrySet())", "entry", "arguments")
             .beginControlFlow("switch ($L.getKey())", "entry")
             .addCode(
-                activityType.parameters
+                specType.parameters()
                     .stream()
                     .map(parameter -> CodeBlock
                         .builder()
@@ -93,14 +94,14 @@ public class AllStaticallyDefinedMethodMaker implements ActivityMapperMethodMake
       break;
     }
 
-    methodBuilder = ActivityMapperMethodMaker
-        .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n");
+    methodBuilder = MapperMethodMaker
+        .makeArgumentPresentCheck(methodBuilder, specType).addCode("\n");
 
     // Add return statement with instantiation of class with parameters
     methodBuilder = methodBuilder.addStatement(
         "return new $T($L)",
-        activityType.declaration,
-        activityType.parameters.stream().map(
+        specType.declaration(),
+        specType.parameters().stream().map(
             parameter -> parameter.name + ".get()").collect(Collectors.joining(", ")));
 
     return methodBuilder.build();

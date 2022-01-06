@@ -15,6 +15,7 @@ import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -130,7 +131,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addCode("\n")
                     .addCode(
                         missionModel.modelConfiguration
-                            .map(configElem -> CodeBlock  // if configuration is provided
+                            .map(configElem -> CodeBlock // if configuration is provided
                                 .builder()
                                 .addStatement(
                                     "final var $L = $L",
@@ -151,7 +152,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "registrar",
                                     "deserializedConfig")
                                 .build())
-                            .orElseGet(() -> CodeBlock  // if configuration is not provided
+                            .orElseGet(() -> CodeBlock // if configuration is not provided
                                 .builder()
                                 .addStatement(
                                     "final var $L = $T.initializing($L, $L, () -> new $T($L))",
@@ -389,7 +390,8 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
     final var maybeMapperBlocks = generateParameterMapperBlocks(missionModel, activityType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
     final var mapperBlocks = maybeMapperBlocks.get();
-    final var activityMapperMethodMaker = ActivityMapperMethodMaker.make(activityType.activityDefaultsStyle);
+    final var mapperMethodMaker = MapperMethodMaker.make(activityType.activityDefaultsStyle);
+    final var specType = new SpecificationTypeRecord("activity", activityType.name, activityType.declaration, activityType.parameters);
 
     final var typeSpec =
         TypeSpec
@@ -456,10 +458,10 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .returns(String.class)
                     .addStatement("return $S", activityType.name)
                     .build())
-            .addMethod(activityMapperMethodMaker.makeGetRequiredParametersMethod(activityType))
-            .addMethod(activityMapperMethodMaker.makeGetParametersMethod(activityType))
-            .addMethod(activityMapperMethodMaker.makeGetArgumentsMethod(activityType))
-            .addMethod(activityMapperMethodMaker.makeInstantiateMethod(activityType))
+            .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod(specType))
+            .addMethod(mapperMethodMaker.makeGetParametersMethod(specType))
+            .addMethod(mapperMethodMaker.makeGetArgumentsMethod(specType))
+            .addMethod(mapperMethodMaker.makeInstantiateMethod(specType))
             .addMethod(
                 MethodSpec
                     .methodBuilder("getValidationFailures")

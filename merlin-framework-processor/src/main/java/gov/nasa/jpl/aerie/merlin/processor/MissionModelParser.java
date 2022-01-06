@@ -3,10 +3,10 @@ package gov.nasa.jpl.aerie.merlin.processor;
 import com.squareup.javapoet.ClassName;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
-import gov.nasa.jpl.aerie.merlin.processor.generator.ActivityMapperMethodMaker;
+import gov.nasa.jpl.aerie.merlin.processor.generator.MapperMethodMaker;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
-import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityParameterRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityValidationRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
@@ -318,10 +318,10 @@ import java.util.Set;
     return validations;
   }
 
-  private List<ActivityParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
+  private List<ParameterRecord> getActivityParameters(final TypeElement activityTypeElement)
   {
-    return ActivityMapperMethodMaker.make(this.getActivityDefaultsStyle(activityTypeElement))
-                                    .getActivityParameters(activityTypeElement);
+    return MapperMethodMaker.make(this.getActivityDefaultsStyle(activityTypeElement))
+                            .getParameters(activityTypeElement);
   }
 
   private Optional<Pair<String, ActivityType.Executor>> getActivityEffectModel(final TypeElement activityTypeElement)
