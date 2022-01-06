@@ -45,7 +45,7 @@ import java.util.Set;
   throws InvalidMissionModelException
   {
     final var topLevelModel = this.getMissionModelModel(missionModelElement);
-    final var modelConfiguration = this.getMissionModelConfiguration(missionModelElement);
+    final var modelConfigurationType = this.getMissionModelConfigurationType(missionModelElement);
     final var activityTypes = new ArrayList<ActivityTypeRecord>();
     final var typeRules = new ArrayList<TypeRule>();
 
@@ -57,7 +57,7 @@ import java.util.Set;
       activityTypes.add(this.parseActivityType(missionModelElement, activityTypeElement));
     }
 
-    return new MissionModelRecord(missionModelElement, topLevelModel, modelConfiguration, typeRules, activityTypes);
+    return new MissionModelRecord(missionModelElement, topLevelModel, modelConfigurationType, typeRules, activityTypes);
   }
 
   private TypeElement getMissionModelModel(final PackageElement missionModelElement)
@@ -88,7 +88,7 @@ import java.util.Set;
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
-  private Optional<TypeElement> getMissionModelConfiguration(final PackageElement missionModelElement)
+  private Optional<TypeElement> getMissionModelConfigurationType(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
