@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.processor;
+package gov.nasa.jpl.aerie.merlin.processor.metamodel;
 
 /**
  * An activity defaults "style" refers to how an activity's

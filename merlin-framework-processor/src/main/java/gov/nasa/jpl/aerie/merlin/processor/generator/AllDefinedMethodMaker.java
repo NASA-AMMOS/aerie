@@ -1,4 +1,4 @@
-package gov.nasa.jpl.aerie.merlin.processor.instantiators;
+package gov.nasa.jpl.aerie.merlin.processor.generator;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class AllDefinedInstantiator implements ActivityMapperInstantiator {
+public class AllDefinedMethodMaker implements ActivityMapperMethodMaker {
 
   @Override
   public MethodSpec makeInstantiateMethod(final ActivityTypeRecord activityType) {
@@ -89,7 +89,7 @@ public class AllDefinedInstantiator implements ActivityMapperInstantiator {
         .endControlFlow()
         .endControlFlow().addCode("\n");
 
-    methodBuilder = ActivityMapperInstantiator
+    methodBuilder = ActivityMapperMethodMaker
         .makeArgumentPresentCheck(methodBuilder, activityType).addCode("\n").addStatement("return template");
 
     return methodBuilder.build();
