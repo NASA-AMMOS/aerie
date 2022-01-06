@@ -130,7 +130,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         gov.nasa.jpl.aerie.merlin.framework.RootModel.class)
                     .addCode("\n")
                     .addCode(
-                        missionModel.modelConfiguration
+                        missionModel.modelConfigurationType
                             .map(configElem -> CodeBlock // if configuration is provided
                                 .builder()
                                 .addStatement(
@@ -178,7 +178,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     .addAnnotation(Override.class)
                     .returns(ParameterizedTypeName.get(List.class, Parameter.class))
                     .addCode(
-                        missionModel.modelConfiguration
+                        missionModel.modelConfigurationType
                             .map(configElem -> CodeBlock // if configuration is provided
                                 .builder()
                                 .addStatement("return $L.getValueSchema().asStruct().map(parameterMap ->\n"+
