@@ -7,13 +7,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class ActivityInstance {
-  public final String id;
+  public final long id;
   public final String type;
   public final Map<String, SerializedValue> parameters;
   public final Window window;
 
   public ActivityInstance(
-      final String id,
+      final long id,
       final String type,
       final Map<String, SerializedValue> parameters,
       final Window window

@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
@@ -12,7 +13,6 @@ import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class StubPlanService implements PlanService {
   public static final String EXISTENT_PLAN_ID = "abc";
@@ -26,7 +26,7 @@ public final class StubPlanService implements PlanService {
         }
       };
 
-  public static final String EXISTENT_ACTIVITY_ID = "activity";
+  public static final ActivityInstanceId EXISTENT_ACTIVITY_ID = new ActivityInstanceId(10157);
   public static final ActivityInstance EXISTENT_ACTIVITY;
 
   static {

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -27,7 +28,7 @@ public final class MissionModelFacade {
   }
 
   public SimulationResults simulate(
-      final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
       final Duration simulationDuration,
       final Instant startTime
   ) {

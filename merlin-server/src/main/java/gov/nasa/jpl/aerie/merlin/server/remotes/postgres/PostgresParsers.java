@@ -4,6 +4,7 @@ import com.impossibl.postgres.api.data.Interval;
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.json.Unit;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -20,9 +21,9 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.chooseP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.literalP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.mapP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
-import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 import static gov.nasa.jpl.aerie.merlin.server.http.ValueSchemaJsonParser.valueSchemaP;
 
@@ -60,8 +61,8 @@ public final class PostgresParsers {
   public static final JsonParser<Map<String, SerializedValue>> activityArgumentsP = mapP(serializedValueP);
   public static final JsonParser<Map<String, SerializedValue>> simulationArgumentsP = mapP(serializedValueP);
 
-  public static final JsonParser<Pair<Optional<String>, Map<String, SerializedValue>>> activityAttributesP = productP
-      .optionalField("directiveId", stringP)
+  public static final JsonParser<Pair<Optional<ActivityInstanceId>, Map<String, SerializedValue>>> activityAttributesP = productP
+      .optionalField("directiveId", activityInstanceIdP)
       .field("arguments", activityArgumentsP)
         .map(Iso.of(
             untuple((directiveId, arguments) -> Pair.of(directiveId, arguments)),

@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
@@ -31,9 +32,9 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     this.statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
   }
 
-  public Map<String, Long> apply(
+  public Map<ActivityInstanceId, Long> apply(
       final long datasetId,
-      final Map<String, SimulatedActivity> simulatedActivities,
+      final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
     final var ids = simulatedActivities.keySet().stream().toList();
@@ -57,7 +58,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     statement.executeBatch();
     final var resultSet = statement.getGeneratedKeys();
 
-    final var simIdToPostgresId = new HashMap<String, Long>(ids.size());
+    final var simIdToPostgresId = new HashMap<ActivityInstanceId, Long>(ids.size());
     for (final var id : ids) {
       if (!resultSet.next()) throw new Error("Not enough generated IDs returned from batch insertion.");
       simIdToPostgresId.put(id, resultSet.getLong(1));
@@ -66,7 +67,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     return simIdToPostgresId;
   }
 
-  private String buildAttributes(final Optional<String> directiveId, final Map<String, SerializedValue> arguments) {
+  private String buildAttributes(final Optional<ActivityInstanceId> directiveId, final Map<String, SerializedValue> arguments) {
     return activityAttributesP.unparse(Pair.of(directiveId, arguments)).toString();
   }
 

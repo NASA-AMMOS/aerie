@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.json.JsonEncoding;
 import gov.nasa.jpl.aerie.merlin.framework.RootModel;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +17,6 @@ import javax.json.Json;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.MICROSECONDS;
 import static gov.nasa.jpl.aerie.merlin.protocol.types.Duration.SECONDS;
@@ -64,8 +64,9 @@ public class SimulateMapSchedule {
     }
   }
 
-  private static Map<String, Pair<Duration, SerializedActivity>> loadSchedule() {
-    final var schedule = new HashMap<String, Pair<Duration, SerializedActivity>>();
+  private static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> loadSchedule() {
+    final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
+    long counter = 0;
 
     final var planJson = Json.createReader(SimulateMapSchedule.class.getResourceAsStream("plan.json")).readValue();
     for (final var scheduledActivity : planJson.asJsonArray()) {
@@ -78,7 +79,7 @@ public class SimulateMapSchedule {
       }
 
       schedule.put(
-          UUID.randomUUID().toString(),
+          new ActivityInstanceId(counter++),
           Pair.of(
               duration(deferInMicroseconds, MICROSECONDS),
               new SerializedActivity(activityType, arguments)));

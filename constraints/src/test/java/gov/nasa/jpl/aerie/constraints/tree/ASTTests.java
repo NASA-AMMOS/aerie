@@ -152,7 +152,7 @@ public class ASTTests {
   @Test
   public void testRealParameter() {
     final var act = new ActivityInstance(
-        "1",
+        1,
         "typeA",
         Map.of("p1", SerializedValue.of(2)),
         Window.between(0, 10, SECONDS));
@@ -293,9 +293,9 @@ public class ASTTests {
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),
         List.of(
-            new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 6, SECONDS)),
-            new ActivityInstance("2", "TypeB", Map.of(), Window.between(5, 7, SECONDS)),
-            new ActivityInstance("3", "TypeA", Map.of(), Window.between(9, 10, SECONDS))
+            new ActivityInstance(1, "TypeA", Map.of(), Window.between(4, 6, SECONDS)),
+            new ActivityInstance(2, "TypeB", Map.of(), Window.between(5, 7, SECONDS)),
+            new ActivityInstance(3, "TypeA", Map.of(), Window.between(9, 10, SECONDS))
         ),
         Map.of(),
         Map.of()
@@ -309,8 +309,8 @@ public class ASTTests {
     ).evaluate(simResults, Map.of());
 
     final var expected = List.of(
-        new Violation(List.of("1"), List.of(), new Windows(Window.between(4, 6, SECONDS))),
-        new Violation(List.of("3"), List.of(), new Windows(Window.between(4, 6, SECONDS))));
+        new Violation(List.of(1L), List.of(), new Windows(Window.between(4, 6, SECONDS))),
+        new Violation(List.of(3L), List.of(), new Windows(Window.between(4, 6, SECONDS))));
 
     assertEquivalent(expected, result);
   }
@@ -320,9 +320,9 @@ public class ASTTests {
     final var simResults = new SimulationResults(
         Window.between(0, 20, SECONDS),
         List.of(
-            new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 6, SECONDS)),
-            new ActivityInstance("2", "TypeB", Map.of(), Window.between(5, 7, SECONDS)),
-            new  ActivityInstance("3", "TypeA", Map.of(), Window.between(9, 10, SECONDS))
+            new ActivityInstance(1, "TypeA", Map.of(), Window.between(4, 6, SECONDS)),
+            new ActivityInstance(2, "TypeB", Map.of(), Window.between(5, 7, SECONDS)),
+            new  ActivityInstance(3, "TypeA", Map.of(), Window.between(9, 10, SECONDS))
         ),
         Map.of(),
         Map.of()
@@ -342,8 +342,8 @@ public class ASTTests {
     // We expect two violations because there are two activities of TypeA
     // The details of the violation will be the same, since we are using a supplier
     final var expected = List.of(
-        new Violation(List.of("1", "2"), List.of(), new Windows(Window.between(4, 6, SECONDS))),
-        new Violation(List.of("3", "2"), List.of(), new Windows(Window.between(4, 6, SECONDS))));
+        new Violation(List.of(1L, 2L), List.of(), new Windows(Window.between(4, 6, SECONDS))),
+        new Violation(List.of(3L, 2L), List.of(), new Windows(Window.between(4, 6, SECONDS))));
 
     assertEquivalent(expected, result);
   }
@@ -377,7 +377,12 @@ public class ASTTests {
     );
 
     final var environment = Map.of(
-        "act", new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 8, SECONDS))
+        "act",
+        new ActivityInstance(
+            1,
+            "TypeA",
+            Map.of(),
+            Window.between(4, 8, SECONDS))
     );
 
     final var result = new During("act").evaluate(simResults, environment);
@@ -397,7 +402,12 @@ public class ASTTests {
     );
 
     final var environment = Map.of(
-        "act", new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 8, SECONDS))
+        "act",
+        new ActivityInstance(
+            1,
+            "TypeA",
+            Map.of(),
+            Window.between(4, 8, SECONDS))
     );
 
     final var result = new StartOf("act").evaluate(simResults, environment);
@@ -417,7 +427,12 @@ public class ASTTests {
     );
 
     final var environment = Map.of(
-        "act", new ActivityInstance("1", "TypeA", Map.of(), Window.between(4, 8, SECONDS))
+        "act",
+        new ActivityInstance(
+            1,
+            "TypeA",
+            Map.of(),
+            Window.between(4, 8, SECONDS))
     );
 
     final var result = new EndOf("act").evaluate(simResults, environment);

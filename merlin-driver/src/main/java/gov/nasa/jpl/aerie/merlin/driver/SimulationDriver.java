@@ -23,7 +23,7 @@ public final class SimulationDriver {
   public static <Model>
   SimulationResults simulate(
       final MissionModel<Model> missionModel,
-      final Map<String, Pair<Duration, SerializedActivity>> schedule,
+      final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule,
       final Instant startTime,
       final Duration simulationDuration
   ) {
@@ -129,23 +129,23 @@ public final class SimulationDriver {
   }
 
   private static final class ControlTask implements Task {
-    private final Map<String, Pair<Duration, SerializedActivity>> schedule;
+    private final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule;
 
     /* The directive that caused a task (if any). */
     // Non-final because we replace it with an empty map when extracted by a client.
-    private Map<String, String> taskToPlannedDirective = new HashMap<>();
+    private Map<String, ActivityInstanceId> taskToPlannedDirective = new HashMap<>();
 
-    private final PriorityQueue<Triple<Duration, String, SerializedActivity>> scheduledTasks
+    private final PriorityQueue<Triple<Duration, ActivityInstanceId, SerializedActivity>> scheduledTasks
         = new PriorityQueue<>(Comparator.comparing(Triple::getLeft));
 
     private Duration currentTime = Duration.ZERO;
 
-    public ControlTask(final Map<String, Pair<Duration, SerializedActivity>> schedule) {
+    public ControlTask(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule) {
       this.schedule = Objects.requireNonNull(schedule);
       this.reset();
     }
 
-    public Map<String, String> extractTaskToPlannedDirective() {
+    public Map<String, ActivityInstanceId> extractTaskToPlannedDirective() {
       final var taskToPlannedDirective = this.taskToPlannedDirective;
       this.taskToPlannedDirective = new HashMap<>();
       return taskToPlannedDirective;

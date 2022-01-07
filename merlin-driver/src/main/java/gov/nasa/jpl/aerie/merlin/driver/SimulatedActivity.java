@@ -13,18 +13,18 @@ public final class SimulatedActivity {
   public final Map<String, SerializedValue> parameters;
   public final Instant start;
   public final Duration duration;
-  public final String parentId;
-  public final List<String> childIds;
-  public final Optional<String> directiveId;
+  public final ActivityInstanceId parentId;
+  public final List<ActivityInstanceId> childIds;
+  public final Optional<ActivityInstanceId> directiveId;
 
   public SimulatedActivity(
       final String type,
       final Map<String, SerializedValue> parameters,
       final Instant start,
       final Duration duration,
-      final String parentId,
-      final List<String> childIds,
-      final Optional<String> directiveId
+      final ActivityInstanceId parentId,
+      final List<ActivityInstanceId> childIds,
+      final Optional<ActivityInstanceId> directiveId
   ) {
     this.type = type;
     this.parameters = parameters;

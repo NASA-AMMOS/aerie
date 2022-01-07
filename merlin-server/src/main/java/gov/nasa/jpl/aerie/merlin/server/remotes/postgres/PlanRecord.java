@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 
@@ -12,5 +13,5 @@ public final record PlanRecord(
     long missionModelId,
     Timestamp startTime,
     Timestamp endTime,
-    Map<String, ActivityInstance> activities
+    Map<ActivityInstanceId, ActivityInstance> activities
 ) {}

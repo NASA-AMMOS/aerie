@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Objects;
 
 public final class Violation {
-  public final List<String> activityInstanceIds;
+  public final List<Long> activityInstanceIds;
   public final List<String> resourceNames;
   public final Windows violationWindows;
 
-  public Violation(final List<String> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
+  public Violation(final List<Long> activityInstanceIds, final List<String> resourceNames, final Windows violationWindows) {
     this.activityInstanceIds = new ArrayList<>(activityInstanceIds);
     this.resourceNames = new ArrayList<>(resourceNames);
     this.violationWindows = violationWindows;
@@ -25,7 +25,7 @@ public final class Violation {
     return new Violation(List.copyOf(this.activityInstanceIds), List.copyOf(this.resourceNames), new Windows(violationWindows));
   }
 
-  public void addActivityId(final String activityId) {
+  public void addActivityId(final long activityId) {
     this.activityInstanceIds.add(0, activityId);
   }
 

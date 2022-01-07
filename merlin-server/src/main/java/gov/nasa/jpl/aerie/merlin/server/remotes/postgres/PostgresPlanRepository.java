@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -36,6 +37,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.activityInstanceIdP;
 import static gov.nasa.jpl.aerie.merlin.server.http.SerializedValueJsonParser.serializedValueP;
 
 public final class PostgresPlanRepository implements PlanRepository {
@@ -122,7 +124,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     try (final var connection = this.dataSource.getConnection()) {
       try (final var getActivitiesAction = new GetActivitiesAction(connection)) {
         return getActivitiesAction.get(toPlanId(planId));
@@ -150,14 +152,14 @@ public final class PostgresPlanRepository implements PlanRepository {
             plan.startTimestamp,
             plan.endTimestamp);
 
-        final List<String> activityIds;
+        final List<ActivityInstanceId> activityIds;
         if (plan.activityInstances == null) {
           activityIds = new ArrayList<>();
         } else {
           activityIds = new ArrayList<>(plan.activityInstances.size());
 
           for (final var activity : plan.activityInstances) {
-            final long activityId = createActivityAction.apply(
+            final var activityId = createActivityAction.apply(
                 planId,
                 plan.startTimestamp,
                 activity.startTimestamp,
@@ -168,7 +170,7 @@ public final class PostgresPlanRepository implements PlanRepository {
               setActivityArgumentsAction.add(activityId, argument.getKey(), argument.getValue());
             }
 
-            activityIds.add(Long.toString(activityId));
+            activityIds.add(new ActivityInstanceId(activityId));
           }
 
           // Insert all the accumulated arguments for all activities at once.
@@ -196,7 +198,7 @@ public final class PostgresPlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createActivity(final String planId, final ActivityInstance activity) {
+  public ActivityInstanceId createActivity(final String planId, final ActivityInstance activity) {
     throw new NotImplementedException("If this is needed on the Postgres repository then implement it");
   }
 
@@ -312,11 +314,11 @@ public final class PostgresPlanRepository implements PlanRepository {
     }
   }
 
-  /*package-local*/ static Map<String, ActivityInstance> parseActivitiesJson(final String json, final Timestamp planStartTime) {
+  /*package-local*/ static Map<ActivityInstanceId, ActivityInstance> parseActivitiesJson(final String json, final Timestamp planStartTime) {
     try {
       final var activityRowP =
           productP
-              .field("id", longP.map(Iso.of($ -> Long.toString($), $ -> Long.parseLong($))))
+              .field("id", activityInstanceIdP)
               .field("start_offset_in_micros", longP)
               .field("type", stringP)
               .field("arguments", mapP(serializedValueP))
@@ -327,10 +329,10 @@ public final class PostgresPlanRepository implements PlanRepository {
                                   new ActivityInstance(type,
                                                        planStartTime.plusMicros(startOffsetInMicros),
                                                        arguments))),
-                  untuple((String actId, ActivityInstance $) ->
+                  untuple((ActivityInstanceId actId, ActivityInstance $) ->
                               tuple(actId, planStartTime.microsUntil($.startTimestamp), $.type, $.parameters))));
 
-      final var activities = new HashMap<String, ActivityInstance>();
+      final var activities = new HashMap<ActivityInstanceId, ActivityInstance>();
       for (final var entry : parseJson(json, listP(activityRowP))) {
         activities.put(entry.getKey(), entry.getValue());
       }
