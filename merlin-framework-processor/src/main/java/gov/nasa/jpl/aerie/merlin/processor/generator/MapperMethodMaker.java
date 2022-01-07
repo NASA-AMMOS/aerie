@@ -4,8 +4,12 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
+import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -75,6 +79,7 @@ public interface MapperMethodMaker {
   }
 
   default MethodSpec makeGetArgumentsMethod(final SpecificationTypeRecord specType) {
+    final var metaName = getMetaName(specType);
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -85,7 +90,7 @@ public interface MapperMethodMaker {
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
             TypeName.get(specType.declaration().asType()),
-            specType.specificationName(),
+            metaName,
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -104,7 +109,7 @@ public interface MapperMethodMaker {
                         "arguments",
                         parameter.name,
                         parameter.name,
-                        specType.specificationName(),
+                        metaName,
                         parameter.name
                     ))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -112,6 +117,43 @@ public interface MapperMethodMaker {
         .addStatement(
             "return $L",
             "arguments")
+        .build();
+  }
+
+  default MethodSpec makeGetValidationFailures(final SpecificationTypeRecord specType) {
+    final var metaName = getMetaName(specType);
+    return MethodSpec
+        .methodBuilder("getValidationFailures")
+        .addModifiers(Modifier.PUBLIC)
+        .addAnnotation(Override.class)
+        .returns(ParameterizedTypeName.get(
+            java.util.List.class,
+            String.class))
+        .addParameter(
+            TypeName.get(specType.declaration().asType()),
+            metaName,
+            Modifier.FINAL)
+        .addStatement(
+            "final var $L = new $T()",
+            "failures",
+            ParameterizedTypeName.get(
+                java.util.ArrayList.class,
+                String.class))
+        .addCode(
+            specType.validations()
+                .stream()
+                .map(validation -> CodeBlock
+                    .builder()
+                    .addStatement(
+                        "if (!$L.$L()) failures.add($S)",
+                        metaName,
+                        validation.methodName,
+                        validation.failureMessage))
+                .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                .build())
+        .addStatement(
+            "return $L",
+            "failures")
         .build();
   }
 
@@ -136,14 +178,35 @@ public interface MapperMethodMaker {
             .map(parameter -> CodeBlock
                 .builder()
                 .addStatement(
-                    "if (!$L.isPresent()) throw new $T(\"$L\", \"$L\", this.mapper_$L.getValueSchema())",
+                    "if (!$L.isPresent()) throw new $T(\"$L\", \"$L\", \"$L\", this.mapper_$L.getValueSchema())",
                     parameter.name,
                     MissingArgumentException.class,
+                    getMetaName(specType),
                     specType.name(),
                     parameter.name,
                     parameter.name))
             .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
             .build());
+  }
+
+  static String getMetaName(final SpecificationTypeRecord specType) {
+    // TODO currently only 2 permitted classes (activity and config. type records),
+    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
+    if (specType instanceof ActivityTypeRecord) {
+      return "activity";
+    } else { // is instanceof ConfigurationTypeRecord
+      return "configuration";
+    }
+  }
+
+  static Class<?> getInstantiateException(final SpecificationTypeRecord specType) {
+    // TODO currently only 2 permitted classes (activity and config. type records),
+    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
+    if (specType instanceof ActivityTypeRecord) {
+      return TaskSpecType.UnconstructableTaskSpecException.class;
+    } else { // is instanceof ConfigurationTypeRecord
+      return ConfigurationType.UnconstructableConfigurationException.class;
+    }
   }
 
   static MapperMethodMaker make(final ActivityDefaultsStyle style) {

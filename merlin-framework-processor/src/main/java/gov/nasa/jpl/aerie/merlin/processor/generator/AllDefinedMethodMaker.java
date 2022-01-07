@@ -16,18 +16,21 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class AllDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
   public MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(specType);
+
     // Create instantiate Method header
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(specType.declaration().asType()))
-        .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+        .addException(exceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -72,7 +75,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
                         parameter.name,
                         parameter.name,
                         "entry",
-                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                        exceptionClass)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -84,7 +87,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                    exceptionClass)
                 .unindent()
                 .build())
         .endControlFlow()
@@ -98,6 +101,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
   public MethodSpec makeGetArgumentsMethod(final SpecificationTypeRecord specType) {
+    final var metaName = MapperMethodMaker.getMetaName(specType);
     return MethodSpec
         .methodBuilder("getArguments")
         .addModifiers(Modifier.PUBLIC)
@@ -108,7 +112,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
             gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue.class))
         .addParameter(
             TypeName.get(specType.declaration().asType()),
-            specType.specificationName(),
+            metaName,
             Modifier.FINAL)
         .addStatement(
             "final var $L = new $T()",
@@ -127,7 +131,7 @@ public class AllDefinedMethodMaker implements MapperMethodMaker {
                         "arguments",
                         parameter.name,
                         parameter.name,
-                        specType.specificationName(),
+                        metaName,
                         parameter.name
                     ))
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))

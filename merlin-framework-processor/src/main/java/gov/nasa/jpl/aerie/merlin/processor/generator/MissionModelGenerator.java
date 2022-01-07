@@ -14,8 +14,10 @@ import com.squareup.javapoet.WildcardTypeName;
 import gov.nasa.jpl.aerie.merlin.processor.MissionModelProcessor;
 import gov.nasa.jpl.aerie.merlin.processor.Resolver;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.MissionModelRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.SpecificationTypeRecord;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MerlinPlugin;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
@@ -68,6 +70,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
   }
 
   /** Generate `GeneratedMissionModelFactory` class. */
+  public Optional<JavaFile> generateMissionModelConfigurationMapper(final MissionModelRecord missionModel, final ConfigurationTypeRecord configType) {
+    return generateCommonMapperMethods(missionModel, configType).map(typeSpec -> JavaFile
+        .builder(configType.mapper().name.packageName(), typeSpec)
+        .skipJavaLangImports(true)
+        .build());
+  }
+
+  /** Generate `GeneratedMissionModelFactory` class. */
   public JavaFile generateMissionModelFactory(final MissionModelRecord missionModel) {
     final var typeName = missionModel.getFactoryName();
 
@@ -86,6 +96,16 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                     ParameterizedTypeName.get(
                         ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
                         ClassName.get(missionModel.topLevelModel))))
+            .addMethod(
+                MethodSpec
+                    .methodBuilder("getConfigurationType")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(ParameterizedTypeName.get(
+                        ClassName.get(Optional.class),
+                        ClassName.get(ConfigurationType.class)))
+                    .addStatement("return $T.activityTypes", missionModel.getTypesName())
+                    .build())
             .addMethod(
                 MethodSpec
                     .methodBuilder("getTaskSpecTypes")
@@ -229,13 +249,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(String.class)
                                 .addParameter(
-                                    ClassName.get(entry.declaration),
+                                    ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
                                     "final var $L = new $T()",
                                     "mapper",
-                                    entry.mapper.name)
+                                    entry.mapper().name)
                                 .addStatement(
                                     "return $T.spawn($L.getName(), $L.getArguments($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
@@ -255,13 +275,13 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         .addModifiers(Modifier.FINAL)
                                         .build())
                                 .addParameter(
-                                    ClassName.get(entry.declaration),
+                                    ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
                                     "final var $L = new $T()",
                                     "mapper",
-                                    entry.mapper.name)
+                                    entry.mapper().name)
                                 .addStatement(
                                     "return $T.defer($L, $L.getName(), $L.getArguments($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
@@ -289,7 +309,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                         .addModifiers(Modifier.FINAL)
                                         .build())
                                 .addParameter(
-                                    ClassName.get(entry.declaration),
+                                    ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
@@ -303,7 +323,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                                 .returns(TypeName.VOID)
                                 .addParameter(
-                                    ClassName.get(entry.declaration),
+                                    ClassName.get(entry.declaration()),
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
@@ -352,7 +372,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                         List.class,
                         missionModel.activityTypes
                             .stream()
-                            .map(activityType -> CodeBlock.builder().add("new $T()", activityType.mapper.name))
+                            .map(activityType -> CodeBlock.builder().add("new $T()", activityType.mapper().name))
                             .reduce((x, y) -> x.add(",\n$L", y.build()))
                             .orElse(CodeBlock.builder())
                             .build())
@@ -384,186 +404,161 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
         .build();
   }
 
-  /** Generate `${activity_name}Mapper` class. */
-  public Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
-  {
-    final var maybeMapperBlocks = generateParameterMapperBlocks(missionModel, activityType);
+  /** Generate common `${activity_name}Mapper` methods. */
+  public Optional<TypeSpec> generateCommonMapperMethods(final MissionModelRecord missionModel, final SpecificationTypeRecord specType) {
+    final var maybeMapperBlocks = generateParameterMapperBlocks(missionModel, specType);
     if (maybeMapperBlocks.isEmpty()) return Optional.empty();
+
     final var mapperBlocks = maybeMapperBlocks.get();
-    final var mapperMethodMaker = MapperMethodMaker.make(activityType.activityDefaultsStyle);
-    final var specType = new SpecificationTypeRecord(
-        "activity",
-        activityType.name,
-        activityType.declaration,
-        activityType.parameters,
-        activityType.validations);
+    final var mapperMethodMaker = MapperMethodMaker.make(specType.defaultsStyle());
 
-    final var typeSpec =
-        TypeSpec
-            .classBuilder(activityType.mapper.name)
-            // The location of the missionModel package determines where to put this class.
-            .addOriginatingElement(missionModel.$package)
-            // The fields and methods of the activity determines the overall behavior of this class.
-            .addOriginatingElement(activityType.declaration)
-            // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
-            .addAnnotation(
-                AnnotationSpec
-                    .builder(javax.annotation.processing.Generated.class)
-                    .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
+    // TODO currently only 2 permitted classes (activity and config. type records),
+    //  this should be changed to a switch expression once sealed class pattern-matching switch expressions exist
+    final TypeName superInterface;
+    if (specType instanceof ActivityTypeRecord) {
+      superInterface = ParameterizedTypeName.get(
+          ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
+          ParameterizedTypeName.get(
+              ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+              ClassName.get(missionModel.topLevelModel)),
+          ClassName.get(specType.declaration()));
+    } else { // is instanceof ConfigurationTypeRecord
+      superInterface = ParameterizedTypeName.get(
+          ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType.class),
+          ClassName.get(specType.declaration()));
+    }
+
+    return Optional.of(TypeSpec
+        .classBuilder(specType.mapper().name)
+        // The location of the missionModel package determines where to put this class.
+        .addOriginatingElement(missionModel.$package)
+        // The fields and methods of the activity determines the overall behavior of this class.
+        .addOriginatingElement(specType.declaration())
+        // TODO: Add an originating element for each of the mapper rulesets associated with the mission model.
+        .addAnnotation(
+            AnnotationSpec
+                .builder(javax.annotation.processing.Generated.class)
+                .addMember("value", "$S", MissionModelProcessor.class.getCanonicalName())
+                .build())
+        .addSuperinterface(superInterface)
+        .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+        .addFields(
+            specType.parameters()
+                .stream()
+                .map(parameter -> FieldSpec
+                    .builder(
+                        ParameterizedTypeName.get(
+                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ValueMapper.class),
+                            TypeName.get(parameter.type).box()),
+                        "mapper_" + parameter.name)
+                    .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
                     .build())
-            .addSuperinterface(
-                ParameterizedTypeName.get(
-                    ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.class),
-                    ParameterizedTypeName.get(
-                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                        ClassName.get(missionModel.topLevelModel)),
-                    ClassName.get(activityType.declaration)))
-            .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-            .addFields(
-                activityType.parameters
-                    .stream()
-                    .map(parameter -> FieldSpec
-                        .builder(
-                            ParameterizedTypeName.get(
-                                ClassName.get(gov.nasa.jpl.aerie.merlin.framework.ValueMapper.class),
-                                TypeName.get(parameter.type).box()),
-                            "mapper_" + parameter.name)
-                        .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+                .collect(Collectors.toList()))
+        .addMethod(
+            MethodSpec
+                .constructorBuilder()
+                .addModifiers(Modifier.PUBLIC)
+                /* Suppress unchecked warnings because the resolver has to
+                    put some big casting in for Class parameters
+                 */
+                .addAnnotation(
+                    AnnotationSpec
+                        .builder(SuppressWarnings.class)
+                        .addMember("value", "$S", "unchecked")
                         .build())
-                    .collect(Collectors.toList()))
-            .addMethod(
-                MethodSpec
-                    .constructorBuilder()
-                    .addModifiers(Modifier.PUBLIC)
-                    /* Suppress unchecked warnings because the resolver has to
-                        put some big casting in for Class parameters
-                     */
-                    .addAnnotation(
-                        AnnotationSpec
-                            .builder(SuppressWarnings.class)
-                            .addMember("value", "$S", "unchecked")
-                            .build())
-                    .addCode(
-                        activityType.parameters
-                            .stream()
-                            .map(parameter -> CodeBlock
-                                .builder()
-                                .addStatement(
-                                    "this.mapper_$L =\n$L",
-                                    parameter.name,
-                                    mapperBlocks.get(parameter.name)))
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                            .build())
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("getName")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(String.class)
-                    .addStatement("return $S", activityType.name)
-                    .build())
-            .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod(specType))
-            .addMethod(mapperMethodMaker.makeGetParametersMethod(specType))
-            .addMethod(mapperMethodMaker.makeGetArgumentsMethod(specType))
-            .addMethod(mapperMethodMaker.makeInstantiateMethod(specType))
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("getValidationFailures")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ParameterizedTypeName.get(
-                        java.util.List.class,
-                        String.class))
-                    .addParameter(
-                        TypeName.get(activityType.declaration.asType()),
-                        "activity",
-                        Modifier.FINAL)
-                    .addStatement(
-                        "final var $L = new $T()",
-                        "failures",
-                        ParameterizedTypeName.get(
-                            java.util.ArrayList.class,
-                            String.class))
-                    .addCode(
-                        activityType.validations
-                            .stream()
-                            .map(validation -> CodeBlock
-                                .builder()
-                                .addStatement(
-                                    "if (!$L.$L()) failures.add($S)",
-                                    "activity",
-                                    validation.methodName,
-                                    validation.failureMessage))
-                            .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
-                            .build())
-                    .addStatement(
-                        "return $L",
-                        "failures")
-                    .build())
-            .addMethod(
-                MethodSpec
-                    .methodBuilder("createTask")
-                    .addModifiers(Modifier.PUBLIC)
-                    .addAnnotation(Override.class)
-                    .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class))
-                    .addParameter(
-                        ParameterizedTypeName.get(
-                            ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
-                            ClassName.get(missionModel.topLevelModel)),
-                        "model",
-                        Modifier.FINAL)
-                    .addParameter(
-                        TypeName.get(activityType.declaration.asType()),
-                        "activity",
-                        Modifier.FINAL)
-                    .addCode(
-                        activityType.effectModel
-                            .map(effectModel -> switch (effectModel.getRight()) {
-                              case Threaded -> CodeBlock
-                                  .builder()
-                                  .addStatement(
-                                      "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
-                                      gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                      "activity",
-                                      effectModel.getLeft(),
-                                      "model",
-                                      "model")
-                                  .build();
-
-                              case Replaying -> CodeBlock
-                                  .builder()
-                                  .addStatement(
-                                      "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
-                                      gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
-                                      "activity",
-                                      effectModel.getLeft(),
-                                      "model",
-                                      "model")
-                                  .build();
-                            })
-                            .orElseGet(() -> CodeBlock
-                                .builder()
-                                .addStatement(
-                                    "return new $T($$ -> {})",
-                                    gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
-                                .build()))
-                    .build())
-            .build();
-
-    return Optional.of(JavaFile
-        .builder(activityType.mapper.name.packageName(), typeSpec)
-        .skipJavaLangImports(true)
+                .addCode(
+                    specType.parameters()
+                        .stream()
+                        .map(parameter -> CodeBlock
+                            .builder()
+                            .addStatement(
+                                "this.mapper_$L =\n$L",
+                                parameter.name,
+                                mapperBlocks.get(parameter.name)))
+                        .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
+                        .build())
+                .build())
+        .addMethod(
+            MethodSpec
+                .methodBuilder("getName")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(String.class)
+                .addStatement("return $S", specType.name())
+                .build())
+        .addMethod(mapperMethodMaker.makeGetRequiredParametersMethod(specType))
+        .addMethod(mapperMethodMaker.makeGetParametersMethod(specType))
+        .addMethod(mapperMethodMaker.makeGetArgumentsMethod(specType))
+        .addMethod(mapperMethodMaker.makeInstantiateMethod(specType))
+        .addMethod(mapperMethodMaker.makeGetValidationFailures(specType))
         .build());
   }
 
-  private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final ActivityTypeRecord activityType)
+  /** Generate `${activity_name}Mapper` class. */
+  public Optional<JavaFile> generateActivityMapper(final MissionModelRecord missionModel, final ActivityTypeRecord activityType) {
+    return generateCommonMapperMethods(missionModel, activityType).map(typeSpec -> typeSpec.toBuilder()
+        .addMethod(
+            MethodSpec
+                .methodBuilder("createTask")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class)
+                .returns(ClassName.get(gov.nasa.jpl.aerie.merlin.protocol.model.Task.class))
+                .addParameter(
+                    ParameterizedTypeName.get(
+                        ClassName.get(gov.nasa.jpl.aerie.merlin.framework.RootModel.class),
+                        ClassName.get(missionModel.topLevelModel)),
+                    "model",
+                    Modifier.FINAL)
+                .addParameter(
+                    TypeName.get(activityType.declaration().asType()),
+                    "activity",
+                    Modifier.FINAL)
+                .addCode(
+                    activityType.effectModel()
+                        .map(effectModel -> switch (effectModel.getRight()) {
+                          case Threaded -> CodeBlock
+                              .builder()
+                              .addStatement(
+                                  "return $T.threaded(() -> $L.$L($L.model())).create($L.executor())",
+                                  gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                  "activity",
+                                  effectModel.getLeft(),
+                                  "model",
+                                  "model")
+                              .build();
+
+                          case Replaying -> CodeBlock
+                              .builder()
+                              .addStatement(
+                                  "return $T.replaying(() -> $L.$L($L.model())).create($L.executor())",
+                                  gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                  "activity",
+                                  effectModel.getLeft(),
+                                  "model",
+                                  "model")
+                              .build();
+                        })
+                        .orElseGet(() -> CodeBlock
+                            .builder()
+                            .addStatement(
+                                "return new $T($$ -> {})",
+                                gov.nasa.jpl.aerie.merlin.framework.OneShotTask.class)
+                            .build()))
+                .build())
+        .build())
+        .map(typeSpec -> JavaFile
+            .builder(activityType.mapper().name.packageName(), typeSpec)
+            .skipJavaLangImports(true)
+            .build());
+  }
+
+  private Optional<Map<String, CodeBlock>> generateParameterMapperBlocks(final MissionModelRecord missionModel, final SpecificationTypeRecord specType)
   {
     final var resolver = new Resolver(this.typeUtils, this.elementUtils, missionModel.typeRules);
     var failed = false;
     final var mapperBlocks = new HashMap<String, CodeBlock>();
 
-    for (final var parameter : activityType.parameters) {
+    for (final var parameter : specType.parameters()) {
       final var mapperBlock = resolver.instantiateNullableMapperFor(parameter.type);
       if (mapperBlock.isPresent()) {
         mapperBlocks.put(parameter.name, mapperBlock.get());

@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.framework.annotations.MissionModel;
 import gov.nasa.jpl.aerie.merlin.processor.generator.MapperMethodMaker;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityDefaultsStyle;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityMapperRecord;
+import gov.nasa.jpl.aerie.merlin.processor.metamodel.ConfigurationTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ActivityTypeRecord;
 import gov.nasa.jpl.aerie.merlin.processor.metamodel.ParameterValidationRecord;
@@ -89,7 +90,7 @@ import java.util.Set;
     return (TypeElement) ((DeclaredType) modelAttribute.getValue()).asElement();
   }
 
-  private Optional<SpecificationTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
+  private Optional<ConfigurationTypeRecord> getMissionModelConfigurationType(final PackageElement missionModelElement)
   throws InvalidMissionModelException
   {
     final var annotationMirror =
@@ -108,8 +109,10 @@ import java.util.Set;
     final var declaration = (TypeElement) ((DeclaredType) attribute.getValue()).asElement();
     final var name = declaration.getSimpleName().toString();
     final var parameters = getParameters(declaration);
-    // TODO validation list is empty, not parsing those yet
-    return Optional.of(new SpecificationTypeRecord("configuration", name, declaration, parameters, List.of()));
+    final List<ParameterValidationRecord> validations = List.of(); // TODO validation list is empty, not parsing those yet
+    final var mapper = getActivityMapper(missionModelElement, declaration);
+    final var defaultsStyle = getActivityDefaultsStyle(declaration);
+    return Optional.of(new ConfigurationTypeRecord(name, declaration, parameters, List.of(), mapper, defaultsStyle));
   }
 
   private List<TypeElement> getMissionModelMapperClasses(final PackageElement missionModelElement)
@@ -251,8 +254,7 @@ import java.util.Set;
      */
     final var activityDefaultsStyle = this.getActivityDefaultsStyle(activityTypeElement);
 
-    return new ActivityTypeRecord(activityTypeElement, name, mapper,
-                                  validations, parameters, effectModel, activityDefaultsStyle);
+    return new ActivityTypeRecord(name, activityTypeElement, parameters, validations, mapper, activityDefaultsStyle, effectModel);
   }
 
   private ActivityDefaultsStyle getActivityDefaultsStyle(final TypeElement activityTypeElement)
