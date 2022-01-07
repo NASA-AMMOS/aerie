@@ -22,13 +22,14 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
 
   @Override
   public MethodSpec makeInstantiateMethod(final SpecificationTypeRecord specType) {
+    final var exceptionClass = MapperMethodMaker.getInstantiateException(specType);
     var activityTypeName = specType.declaration().getSimpleName().toString();
 
     var methodBuilder = MethodSpec.methodBuilder("instantiate")
         .addModifiers(Modifier.PUBLIC)
         .addAnnotation(Override.class)
         .returns(TypeName.get(specType.declaration().asType()))
-        .addException(gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+        .addException(exceptionClass)
         .addParameter(
             ParameterizedTypeName.get(
                 java.util.Map.class,
@@ -79,7 +80,7 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
                         parameter.name,
                         parameter.name,
                         "entry",
-                        gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                        exceptionClass)
                     .addStatement("break")
                     .unindent())
                 .reduce(CodeBlock.builder(), (x, y) -> x.add(y.build()))
@@ -91,7 +92,7 @@ public class SomeStaticallyDefinedMethodMaker implements MapperMethodMaker {
                 .indent()
                 .addStatement(
                     "throw new $T()",
-                    gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType.UnconstructableTaskSpecException.class)
+                    exceptionClass)
                 .unindent()
                 .build())
         .endControlFlow()
