@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -28,21 +29,21 @@ public interface PlanRepository {
   Plan getPlan(String planId) throws NoSuchPlanException;
   long getPlanRevision(String planId) throws NoSuchPlanException;
   RevisionData getPlanRevisionData(String planId) throws NoSuchPlanException;
-  Map<String, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
+  Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(String planId) throws NoSuchPlanException;
 
   // Mutations
   CreatedPlan createPlan(NewPlan plan) throws MissionModelRepository.NoSuchMissionModelException;
   PlanTransaction updatePlan(String planId) throws NoSuchPlanException;
   void deletePlan(String planId) throws NoSuchPlanException;
 
-  String createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
+  ActivityInstanceId createActivity(String planId, ActivityInstance activity) throws NoSuchPlanException;
   void deleteAllActivities(String planId) throws NoSuchPlanException;
 
   Map<String, Constraint> getAllConstraintsInPlan(String planId) throws NoSuchPlanException;
 
   long addExternalDataset(String planId, Timestamp datasetStart, ProfileSet profileSet) throws NoSuchPlanException;
 
-  record CreatedPlan(String planId, List<String> activityIds) {}
+  record CreatedPlan(String planId, List<ActivityInstanceId> activityIds) {}
 
   interface PlanTransaction {
     void commit() throws NoSuchPlanException;

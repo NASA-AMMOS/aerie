@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.json.JsonParseResult.FailureReason;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -154,9 +155,19 @@ public final class ResponseSerializers {
         .add("parameters", serializeArgumentMap(simulatedActivity.parameters))
         .add("startTimestamp", serializeTimestamp(simulatedActivity.start))
         .add("duration", serializeDuration(simulatedActivity.duration))
-        .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId))
-        .add("children", serializeIterable(Json::createValue, simulatedActivity.childIds))
+        .add("parent", serializeNullable(Json::createValue, simulatedActivity.parentId.id()))
+        .add("children", serializeIterable((id -> Json.createValue(id.id())), simulatedActivity.childIds))
         .build();
+  }
+
+  public static JsonValue serializeSimulatedActivities(final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities) {
+    return serializeMap(
+        ResponseSerializers::serializeSimulatedActivity,
+        simulatedActivities
+            .entrySet()
+            .stream()
+            .collect(
+                Collectors.toMap(e -> Long.toString(e.getKey().id()), Map.Entry::getValue)));
   }
 
   public static JsonValue serializeSimulationResults(final SimulationResults results, final Map<String, List<Violation>> violations) {
@@ -167,7 +178,7 @@ public final class ResponseSerializers {
             elements -> serializeIterable(ResponseSerializers::serializeSample, elements),
             results.resourceSamples))
         .add("constraints", serializeMap(v -> serializeIterable(ResponseSerializers::serializeConstraintViolation, v), violations))
-        .add("activities", serializeMap(ResponseSerializers::serializeSimulatedActivity, results.simulatedActivities))
+        .add("activities", serializeSimulatedActivities(results.simulatedActivities))
         .add("events", serializeSimulationEvents(results.events, topicsById(results.topics), results.startTime))
         .build();
   }

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 
 public final class Plan {
@@ -11,7 +12,7 @@ public final class Plan {
   public String missionModelId;
   public Timestamp startTimestamp;
   public Timestamp endTimestamp;
-  public Map<String, ActivityInstance> activityInstances;
+  public Map<ActivityInstanceId, ActivityInstance> activityInstances;
   public Map<String, SerializedValue> configuration = new HashMap<>();
 
   public Plan() {}
@@ -37,7 +38,7 @@ public final class Plan {
       final String missionModelId,
       final Timestamp startTimestamp,
       final Timestamp endTimestamp,
-      final Map<String, ActivityInstance> activityInstances,
+      final Map<ActivityInstanceId, ActivityInstance> activityInstances,
       final Map<String, SerializedValue> configuration
   ) {
     this.name = name;

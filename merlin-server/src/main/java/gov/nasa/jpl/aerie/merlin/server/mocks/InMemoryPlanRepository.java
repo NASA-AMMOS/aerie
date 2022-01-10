@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.mocks;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
@@ -10,7 +11,6 @@ import gov.nasa.jpl.aerie.merlin.server.models.Plan;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
-import gov.nasa.jpl.aerie.merlin.server.services.RevisionData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
@@ -90,13 +90,13 @@ public final class InMemoryPlanRepository implements PlanRepository {
     plan.missionModelId = newPlan.missionModelId;
     plan.activityInstances = new HashMap<>();
 
-    final List<String> activityIds;
+    final List<ActivityInstanceId> activityIds;
     if (newPlan.activityInstances == null) {
       activityIds = new ArrayList<>();
     } else {
       activityIds = new ArrayList<>(newPlan.activityInstances.size());
       for (final var activity : newPlan.activityInstances) {
-        final String activityId = Objects.toString(this.nextActivityId++);
+        final ActivityInstanceId activityId = new ActivityInstanceId(this.nextActivityId++);
 
         activityIds.add(activityId);
         plan.activityInstances.put(activityId, new ActivityInstance(activity));
@@ -124,14 +124,14 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public String createActivity(final String planId, final ActivityInstance activity) throws NoSuchPlanException {
+  public ActivityInstanceId createActivity(final String planId, final ActivityInstance activity) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
     final var plan = entry.getRight();
     final var revision = entry.getLeft() + 1;
 
-    final String activityId = Objects.toString(this.nextActivityId++);
+    final ActivityInstanceId activityId = new ActivityInstanceId(this.nextActivityId++);
     plan.activityInstances.put(activityId, new ActivityInstance(activity));
     this.plans.put(planId, Pair.of(revision, plan));
 

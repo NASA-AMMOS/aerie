@@ -16,6 +16,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.model.Condition;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -38,6 +39,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * A representation of the work remaining to do during a simulation, and its accumulated results.
@@ -368,7 +370,7 @@ public final class SimulationEngine implements AutoCloseable {
       final SimulationEngine engine,
       final Instant startTime,
       final Duration elapsedTime,
-      final Map<String, String> taskToPlannedDirective,
+      final Map<String, ActivityInstanceId> taskToPlannedDirective,
       final TemporalEventSource timeline,
       final MissionModel<?> missionModel) {
     final var realProfiles = new HashMap<String, List<Pair<Duration, RealDynamics>>>();
@@ -398,14 +400,23 @@ public final class SimulationEngine implements AutoCloseable {
       }
     }
 
-    engine.tasks.forEach((task, state) -> {
+    final var usedActivityInstanceIds =
+        taskToPlannedDirective
+            .values()
+            .stream()
+            .map(ActivityInstanceId::id)
+            .collect(Collectors.toSet());
+    var counter = 1L;
+    for (final var task : engine.tasks.keySet()) {
       final var directive = engine.taskDirective.get(task);
-      if (directive == null) return;
+      if (directive == null) continue;
+      if (taskToPlannedDirective.containsKey(task.id())) continue;
 
-      taskToPlannedDirective.computeIfAbsent(task.id(), id -> id);
-    });
+      while (usedActivityInstanceIds.contains(counter)) counter++;
+      taskToPlannedDirective.put(task.id(), new ActivityInstanceId(counter++));
+    }
 
-    final var activityParents = new HashMap<String, String>();
+    final var activityParents = new HashMap<ActivityInstanceId, ActivityInstanceId>();
     engine.tasks.forEach((task, state) -> {
       final var directive = engine.taskDirective.get(task);
       if (directive == null) return;
@@ -420,13 +431,13 @@ public final class SimulationEngine implements AutoCloseable {
       }
     });
 
-    final var activityChildren = new HashMap<String, List<String>>();
+    final var activityChildren = new HashMap<ActivityInstanceId, List<ActivityInstanceId>>();
     activityParents.forEach((task, parent) -> {
       activityChildren.computeIfAbsent(parent, $ -> new LinkedList<>()).add(task);
     });
 
-    final var simulatedActivities = new HashMap<String, SimulatedActivity>();
-    final var unsimulatedActivities = new HashMap<String, SerializedActivity>();
+    final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>();
+    final var unsimulatedActivities = new HashMap<ActivityInstanceId, SerializedActivity>();
     engine.tasks.forEach((task, state) -> {
       final var directive = engine.taskDirective.get(task);
       if (directive == null) return;

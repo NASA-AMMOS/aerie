@@ -6,6 +6,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -14,7 +15,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public final class SimulationUtility {
   private static MissionModel<?> makeMissionModel(final MissionModelBuilder builder, final SerializedValue config) {
@@ -25,7 +25,7 @@ public final class SimulationUtility {
   }
 
   public static SimulationResults
-  simulate(final Map<String, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
+  simulate(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
     final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);
@@ -40,11 +40,14 @@ public final class SimulationUtility {
   }
 
   @SafeVarargs
-  public static Map<String, Pair<Duration, SerializedActivity>> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
-    final var schedule = new HashMap<String, Pair<Duration, SerializedActivity>>();
+  public static Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> buildSchedule(final Pair<Duration, SerializedActivity>... activitySpecs) {
+    final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
+    long counter = 0;
 
     for (final var activitySpec : activitySpecs) {
-      schedule.put(UUID.randomUUID().toString(), activitySpec);
+      schedule.put(
+          new ActivityInstanceId(counter++),
+          activitySpec);
     }
 
     return schedule;

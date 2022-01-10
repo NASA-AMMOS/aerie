@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.EventGraph;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -234,7 +235,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     final var activities = getSimulatedActivities(connection, simulationDatasetRecord.datasetId(), startTimestamp);
 
     // TODO: Currently we don't store unfinished activities, but when we do we'll have to update this
-    final Map<String, SerializedActivity> unfinishedActivities = Map.of();
+    final Map<ActivityInstanceId, SerializedActivity> unfinishedActivities = Map.of();
 
     final var topics = getSimulationTopics(connection, simulationDatasetRecord.datasetId());
     final var events = getSimulationEvents(connection, simulationDatasetRecord.datasetId(), startTimestamp);
@@ -270,60 +271,60 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static Map<String, SimulatedActivity> getSimulatedActivities(
+  private static Map<ActivityInstanceId, SimulatedActivity> getSimulatedActivities(
       final Connection connection,
       final long datasetId,
       final Timestamp startTime
   ) throws SQLException {
     try (final var getSimulatedActivitiesAction = new GetSimulatedActivitiesAction(connection)) {
-      final var activities = getSimulatedActivitiesAction.get(datasetId, startTime);
-      final var pgIdToSimId = liftDirectiveIds(activities);
+      final var activityRecords = getSimulatedActivitiesAction.get(datasetId, startTime);
+      final var pgIdToSimId = liftDirectiveIds(activityRecords);
 
       // Remap all activity IDs to reflect lifted directive IDs
-      final var processedActivities = new HashMap<String, SimulatedActivity>(activities.size());
-      for (final var entry : activities.entrySet()) {
-        final var id = entry.getKey();
-        final var activity = entry.getValue();
+      final var simulatedActivities = new HashMap<ActivityInstanceId, SimulatedActivity>(activityRecords.size());
+      for (final var entry : activityRecords.entrySet()) {
+        final var pgId = entry.getKey();
+        final var record = entry.getValue();
 
-        processedActivities.put(pgIdToSimId.get(id), new SimulatedActivity(
-            activity.type,
-            activity.parameters,
-            activity.start,
-            activity.duration,
-            pgIdToSimId.get(activity.parentId),
-            activity.childIds.stream().map(pgIdToSimId::get).collect(Collectors.toList()),
-            activity.directiveId
+        simulatedActivities.put(pgIdToSimId.get(pgId), new SimulatedActivity(
+            record.type(),
+            record.parameters(),
+            record.start(),
+            record.duration(),
+            pgIdToSimId.get(record.parentId()),
+            record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
+            record.directiveId()
         ));
       }
 
-      return processedActivities;
+      return simulatedActivities;
     }
   }
 
-  private static HashMap<String, String> liftDirectiveIds(final Map<String, SimulatedActivity> activities) {
-    final var pgIdToSimId = new HashMap<String, String>(activities.size());
-    final var simIds = new HashSet<String>(activities.size());
+  private static HashMap<Long, ActivityInstanceId> liftDirectiveIds(final Map<Long, SimulatedActivityRecord> activityRecords) {
+    final var pgIdToSimId = new HashMap<Long, ActivityInstanceId>(activityRecords.size());
+    final var simIds = new HashSet<Long>(activityRecords.size());
 
-    for (final var id : activities.keySet()) {
-      final var activity = activities.get(id);
-      if (activity.directiveId.isEmpty()) continue;
+    for (final var id : activityRecords.keySet()) {
+      final var record = activityRecords.get(id);
+      if (record.directiveId().isEmpty()) continue;
 
-      final var directiveId = activity.directiveId.get();
+      final var directiveId = record.directiveId().get();
       pgIdToSimId.put(id, directiveId);
-      simIds.add(directiveId);
+      simIds.add(directiveId.id());
     }
 
-    var counter = 1;
-    for (final var id : activities.keySet()) {
-      final var activity = activities.get(id);
-      if (activity.directiveId.isPresent()) continue;
+    var counter = 1L;
+    for (final var id : activityRecords.keySet()) {
+      final var record = activityRecords.get(id);
+      if (record.directiveId().isPresent()) continue;
 
-      String newId;
+      long newId;
       do {
-        newId = Integer.toString(counter++);
+        newId = counter++;
       } while (simIds.contains(newId));
 
-      pgIdToSimId.put(id, newId);
+      pgIdToSimId.put(id, new ActivityInstanceId(newId));
       simIds.add(newId);
     }
     return pgIdToSimId;
@@ -400,7 +401,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static void postSimulatedActivities(
       final Connection connection,
       final long datasetId,
-      final Map<String, SimulatedActivity> simulatedActivities,
+      final Map<ActivityInstanceId, SimulatedActivity> simulatedActivities,
       final Timestamp simulationStart
   ) throws SQLException {
     try (

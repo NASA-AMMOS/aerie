@@ -17,6 +17,7 @@ import gov.nasa.jpl.aerie.merlin.driver.SimulatedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.framework.ValueMapper;
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.RealDynamics;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
@@ -180,7 +181,8 @@ public class SimulationFacade {
   public void simulatePlan(Plan plan) {
 
     final var actsInPlan = plan.getActivitiesByTime();
-    final var schedule = new HashMap<String, Pair<Duration, SerializedActivity>>();
+    final var schedule = new HashMap<ActivityInstanceId, Pair<Duration, SerializedActivity>>();
+    long counter = 0;
 
     for (final var act : actsInPlan) {
 
@@ -191,7 +193,7 @@ public class SimulationFacade {
       } else{
         System.out.println("Warning : activity has no duration parameter");
       }
-      schedule.put(act.getName(), Pair.of(
+      schedule.put(new ActivityInstanceId(counter++), Pair.of(
           act.getStartTime(),
           new SerializedActivity(act.getType().getName(), params)));
     }
@@ -387,7 +389,7 @@ public class SimulationFacade {
     return new gov.nasa.jpl.aerie.constraints.model.SimulationResults(
         Window.between(Duration.ZERO, planDuration),
         driverResults.simulatedActivities.entrySet().stream()
-                                         .map(e -> convertToConstraintModelActivityInstance(e.getKey(), e.getValue()))
+                                         .map(e -> convertToConstraintModelActivityInstance(e.getKey().id(), e.getValue()))
                                          .collect(Collectors.toList()),
         Maps.transformValues(driverResults.realProfiles, this::convertToConstraintModelLinearProfile),
         Maps.transformValues(driverResults.discreteProfiles, this::convertToConstraintModelDiscreteProfile)
@@ -402,7 +404,7 @@ public class SimulationFacade {
    * @return an activity instance suitable for a constraint model SimulationResult
    */
   private gov.nasa.jpl.aerie.constraints.model.ActivityInstance convertToConstraintModelActivityInstance(
-      String id, SimulatedActivity driverActivity)
+      long id, SimulatedActivity driverActivity)
   {
     final var planStartT = this.planningHorizon.getStartHuginn().toInstant();
     final var startT = Duration.of(planStartT.until(driverActivity.start, ChronoUnit.MICROS), MICROSECONDS);
