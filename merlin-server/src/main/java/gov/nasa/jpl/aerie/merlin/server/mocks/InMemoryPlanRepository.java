@@ -220,13 +220,13 @@ public final class InMemoryPlanRepository implements PlanRepository {
 
   private class MockActivityTransaction implements ActivityTransaction {
     private final String planId;
-    private final String activityId;
+    private final ActivityInstanceId activityId;
 
     private Optional<String> type = Optional.empty();
     private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
-    public MockActivityTransaction(final String planId, final String activityId) {
+    public MockActivityTransaction(final String planId, final ActivityInstanceId activityId) {
       this.planId = planId;
       this.activityId = activityId;
     }
