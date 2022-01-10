@@ -15,6 +15,8 @@ public record HasuraAction<I extends HasuraAction.Input>(String name, I input, S
   public record ActivityInput(String missionModelId,
                               String activityTypeName,
                               Map<String, SerializedValue> arguments) implements Input {}
+  public record MissionModelArgumentsInput(String missionModelId,
+                              Map<String, SerializedValue> arguments) implements Input {}
   public record UploadExternalDatasetInput(String planId,
                                            Timestamp datasetStart,
                                            ProfileSet profileSet) implements Input {}
