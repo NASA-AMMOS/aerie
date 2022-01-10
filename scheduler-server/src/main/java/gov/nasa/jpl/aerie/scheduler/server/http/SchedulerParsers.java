@@ -11,6 +11,7 @@ import static gov.nasa.jpl.aerie.json.BasicParsers.productP;
 import static gov.nasa.jpl.aerie.json.BasicParsers.stringP;
 import static gov.nasa.jpl.aerie.json.Uncurry.tuple;
 import static gov.nasa.jpl.aerie.json.Uncurry.untuple;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.planIdP;
 
 /**
  * json parsers for data objects used in the scheduler service endpoints
@@ -52,7 +53,7 @@ public class SchedulerParsers {
    * parser for a hasura action that accepts a plan id as its sole input, along with normal hasura session details
    */
   public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
-      = hasuraActionP(productP.field("planId", stringP))
+      = hasuraActionP(productP.field("planId", planIdP))
       .map(Iso.of(
           untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
           action -> tuple(action.name(), action.input().planId(), action.session())));

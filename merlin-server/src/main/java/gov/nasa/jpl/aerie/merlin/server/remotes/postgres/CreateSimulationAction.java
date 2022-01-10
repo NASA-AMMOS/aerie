@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -24,8 +25,8 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public SimulationRecord apply(final long planId, final Map<String, SerializedValue> arguments) throws SQLException, FailedInsertException {
-    this.statement.setLong(1, planId);
+  public SimulationRecord apply(final PlanId planId, final Map<String, SerializedValue> arguments) throws SQLException, FailedInsertException {
+    this.statement.setLong(1, planId.id());
     this.statement.setString(2, simulationArgumentsP.unparse(arguments).toString());
 
     final var results = statement.executeQuery();

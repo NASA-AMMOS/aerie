@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.NewPlan;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.PlanRepository;
@@ -22,12 +23,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public final class InMemoryPlanRepository implements PlanRepository {
-  private final Map<String, Pair<Long, Plan>> plans = new HashMap<>();
+  private final Map<PlanId, Pair<Long, Plan>> plans = new HashMap<>();
   private int nextPlanId = 0;
   private int nextActivityId = 0;
 
   @Override
-  public Map<String, Plan> getAllPlans() {
+  public Map<PlanId, Plan> getAllPlans() {
     return this.plans
         .entrySet()
         .stream()
@@ -37,7 +38,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Plan getPlan(final String planId) throws NoSuchPlanException {
+  public Plan getPlan(final PlanId planId) throws NoSuchPlanException {
     final Plan plan = Optional
         .ofNullable(this.plans.get(planId))
         .orElseThrow(() -> new NoSuchPlanException(planId))
@@ -47,7 +48,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public long getPlanRevision(final String planId) throws NoSuchPlanException {
+  public long getPlanRevision(final PlanId planId) throws NoSuchPlanException {
     return Optional
         .ofNullable(this.plans.get(planId))
         .orElseThrow(() -> new NoSuchPlanException(planId))
@@ -55,7 +56,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public InMemoryRevisionData getPlanRevisionData(final String planId) throws NoSuchPlanException {
+  public InMemoryRevisionData getPlanRevisionData(final PlanId planId) throws NoSuchPlanException {
     return new InMemoryRevisionData(
         Optional
             .ofNullable(this.plans.get(planId))
@@ -64,7 +65,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final String planId) throws NoSuchPlanException {
+  public Map<ActivityInstanceId, ActivityInstance> getAllActivitiesInPlan(final PlanId planId) throws NoSuchPlanException {
     final Plan plan = this.plans.get(planId).getRight();
     if (plan == null) {
       throw new NoSuchPlanException(planId);
@@ -80,7 +81,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
 
   @Override
   public CreatedPlan createPlan(final NewPlan newPlan) {
-    final String planId = Objects.toString(this.nextPlanId++);
+    final PlanId planId = new PlanId(this.nextPlanId++);
 
     final Plan plan = new Plan();
     plan.name = newPlan.name;
@@ -109,12 +110,12 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public PlanTransaction updatePlan(final String planId) {
+  public PlanTransaction updatePlan(final PlanId planId) {
     return new MockPlanTransaction(planId);
   }
 
   @Override
-  public void deletePlan(final String planId) throws NoSuchPlanException {
+  public void deletePlan(final PlanId planId) throws NoSuchPlanException {
     if (!this.plans.containsKey(planId)) {
       throw new NoSuchPlanException(planId);
     }
@@ -124,7 +125,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public ActivityInstanceId createActivity(final String planId, final ActivityInstance activity) throws NoSuchPlanException {
+  public ActivityInstanceId createActivity(final PlanId planId, final ActivityInstance activity) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
@@ -139,7 +140,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public void deleteAllActivities(final String planId) throws NoSuchPlanException {
+  public void deleteAllActivities(final PlanId planId) throws NoSuchPlanException {
     final var entry = this.plans.get(planId);
     if (entry == null) throw new NoSuchPlanException(planId);
 
@@ -151,19 +152,19 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   @Override
-  public Map<String, Constraint> getAllConstraintsInPlan(final String planId) throws NoSuchPlanException {
+  public Map<String, Constraint> getAllConstraintsInPlan(final PlanId planId) throws NoSuchPlanException {
     return Map.of();
   }
 
   @Override
-  public long addExternalDataset(final String planId, final Timestamp datasetStart, final ProfileSet profileSet)
+  public long addExternalDataset(final PlanId planId, final Timestamp datasetStart, final ProfileSet profileSet)
   throws NoSuchPlanException
   {
     return 0;
   }
 
   private class MockPlanTransaction implements PlanTransaction {
-    private final String planId;
+    private final PlanId planId;
 
     private Optional<String> name = Optional.empty();
     private Optional<Timestamp> startTimestamp = Optional.empty();
@@ -171,7 +172,7 @@ public final class InMemoryPlanRepository implements PlanRepository {
     private Optional<Map<String, SerializedValue>> configuration = Optional.empty();
     private Optional<String> missionModelId = Optional.empty();
 
-    public MockPlanTransaction(final String planId) {
+    public MockPlanTransaction(final PlanId planId) {
       this.planId = planId;
     }
 
@@ -219,14 +220,14 @@ public final class InMemoryPlanRepository implements PlanRepository {
   }
 
   private class MockActivityTransaction implements ActivityTransaction {
-    private final String planId;
+    private final PlanId planId;
     private final ActivityInstanceId activityId;
 
     private Optional<String> type = Optional.empty();
     private Optional<Timestamp> startTimestamp = Optional.empty();
     private Optional<Map<String, SerializedValue>> parameters = Optional.empty();
 
-    public MockActivityTransaction(final String planId, final ActivityInstanceId activityId) {
+    public MockActivityTransaction(final PlanId planId, final ActivityInstanceId activityId) {
       this.planId = planId;
       this.activityId = activityId;
     }

@@ -8,6 +8,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraAction;
 import gov.nasa.jpl.aerie.merlin.server.models.HasuraMissionModelEvent;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.services.UnexpectedSubtypeError;
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,6 +75,12 @@ public abstract class MerlinParsers {
           ActivityInstanceId::new,
           ActivityInstanceId::id));
 
+  public static final JsonParser<PlanId> planIdP
+      = longP
+      . map(Iso.of(
+          PlanId::new,
+          PlanId::id));
+
   private static final JsonParser<HasuraAction.Session> hasuraActionSessionP
       = productP
       . field("x-hasura-role", stringP)
@@ -96,7 +103,7 @@ public abstract class MerlinParsers {
           $ -> tuple($.name(), $.input().missionModelId(), $.session())));
 
   public static final JsonParser<HasuraAction<HasuraAction.PlanInput>> hasuraPlanActionP
-      = hasuraActionP(productP.field("planId", stringP))
+      = hasuraActionP(productP.field("planId", planIdP))
       . map(Iso.of(
           untuple((name, planId, session) -> new HasuraAction<>(name, new HasuraAction.PlanInput(planId), session)),
           $ -> tuple($.name(), $.input().planId(), $.session())));
@@ -135,7 +142,7 @@ public abstract class MerlinParsers {
 
   public static final JsonParser<HasuraAction.UploadExternalDatasetInput> hasuraUploadExternalDatasetActionP
       = productP
-      . field("planId", stringP)
+      . field("planId", planIdP)
       . field("datasetStart", timestampP)
       . field("profileSet", profileSetP)
       . map(Iso.of(

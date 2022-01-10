@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -52,12 +53,12 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresPlanRepo
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<String, Plan> get() throws SQLException {
+  public Map<PlanId, Plan> get() throws SQLException {
     try (final var results = this.statement.executeQuery()) {
-      final var plans = new HashMap<String, Plan>();
+      final var plans = new HashMap<PlanId, Plan>();
 
       while (results.next()) {
-        final var id = Long.toString(results.getLong(1));
+        final var id = new PlanId(results.getLong(1));
 
         final var name = results.getString(2);
         final var missionModelId = Long.toString(results.getLong(3));

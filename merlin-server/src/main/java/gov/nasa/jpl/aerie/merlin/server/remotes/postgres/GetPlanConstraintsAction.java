@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import org.intellij.lang.annotations.Language;
 
 import java.sql.Connection;
@@ -29,13 +30,13 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<String, Constraint> get(final long planId)
+  public Map<String, Constraint> get(final PlanId planId)
   throws SQLException, NoSuchPlanException
   {
-    this.statement.setLong(1, planId);
+    this.statement.setLong(1, planId.id());
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new NoSuchPlanException(Long.toString(planId));
+      if (!results.next()) throw new NoSuchPlanException(planId);
 
       final var constraints = new HashMap<String, Constraint>();
       do {

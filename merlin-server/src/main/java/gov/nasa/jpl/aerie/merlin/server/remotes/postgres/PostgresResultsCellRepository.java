@@ -11,6 +11,7 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol;
 import gov.nasa.jpl.aerie.merlin.server.ResultsProtocol.State;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.ProfileSet;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import gov.nasa.jpl.aerie.merlin.server.remotes.ResultsCellRepository;
@@ -36,9 +37,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public ResultsProtocol.OwnerRole allocate(final String planIdString) {
-    // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
-    final var planId = Long.parseLong(planIdString);
+  public ResultsProtocol.OwnerRole allocate(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
       final var planStart = getPlan(connection, planId).startTime();
       // TODO: At the time of writing, simulation starts at the plan start every time
@@ -72,9 +71,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   }
 
   @Override
-  public Optional<ResultsProtocol.ReaderRole> lookup(final String planIdString) {
-    // TODO: We should really address the fact that the plan ID is a string in merlin, but stored as a long
-    final var planId = Long.parseLong(planIdString);
+  public Optional<ResultsProtocol.ReaderRole> lookup(final PlanId planId) {
     try (final var connection = this.dataSource.getConnection()) {
       final var planStart = getPlan(connection, planId).startTime();
 
@@ -117,7 +114,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   /* Database accessors */
   private static Optional<SimulationRecord> getSimulation(
       final Connection connection,
-      final long planId
+      final PlanId planId
   ) throws SQLException
   {
     try (final var getSimulationAction = new GetSimulationAction(connection)) {
@@ -149,7 +146,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static SimulationRecord createSimulation(
       final Connection connection,
-      final long planId,
+      final PlanId planId,
       final Map<String, SerializedValue> arguments
   ) throws SQLException
   {
@@ -203,7 +200,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static Optional<State> getSimulationState(
       final Connection connection,
       final long datasetId,
-      final long planId,
+      final PlanId planId,
       final Timestamp planStart
   ) throws SQLException {
     final var record$ = getSimulationDatasetRecord(
@@ -225,7 +222,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static SimulationResults getSimulationResults(
       final Connection connection,
       final SimulationDatasetRecord simulationDatasetRecord,
-      final long planId
+      final PlanId planId
   ) throws SQLException {
     final var simulationWindow = getSimulationWindow(connection, simulationDatasetRecord, planId);
     final var startTimestamp = simulationWindow.start();
@@ -333,7 +330,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
   private static Window getSimulationWindow(
       final Connection connection,
       final SimulationDatasetRecord simulationDatasetRecord,
-      final long planId
+      final PlanId planId
   ) throws SQLException {
     try {
       final var plan = getPlan(connection, planId);
@@ -348,7 +345,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
   private static PlanRecord getPlan(
       final Connection connection,
-      final long planId
+      final PlanId planId
   ) throws SQLException, NoSuchPlanException {
     try (final var getPlanAction = new GetPlanAction(connection)) {
       return getPlanAction.get(planId);

@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -42,16 +43,16 @@ import java.util.function.Supplier;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public ActivityInstance get(final long planId, final long activityId)
+  public ActivityInstance get(final PlanId planId, final long activityId)
   throws SQLException, NoSuchPlanException, NoSuchActivityInstanceException
   {
-    this.statement.setLong(1, planId);
+    this.statement.setLong(1, planId.id());
     this.statement.setLong(2, activityId);
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new NoSuchPlanException(Long.toString(planId));
+      if (!results.next()) throw new NoSuchPlanException(planId);
       requireColumnNonNull(results, 1, () -> new NoSuchActivityInstanceException(
-          Long.toString(planId),
+          planId,
           new ActivityInstanceId(activityId)));
 
       final var startTimestamp = Timestamp.fromString(results.getString(2));

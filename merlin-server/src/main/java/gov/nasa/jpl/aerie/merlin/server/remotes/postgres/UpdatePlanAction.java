@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
@@ -21,7 +22,7 @@ import java.util.List;
   }
 
   public void apply(
-      final long planId,
+      final PlanId planId,
       final @Nullable String name,
       final @Nullable Timestamp startTime,
       final @Nullable Timestamp endTime
@@ -34,7 +35,7 @@ import java.util.List;
       }
 
       final var count = statement.executeUpdate();
-      if (count != 1) throw new NoSuchPlanException(Long.toString(planId));
+      if (count != 1) throw new NoSuchPlanException(planId);
     }
   }
 
@@ -46,7 +47,7 @@ import java.util.List;
   public record GeneratedSql(String sql, List<ArgumentSetter> argumentSetters) {}
 
   public static GeneratedSql generateSql(
-      final long planId,
+      final PlanId planId,
       final @Nullable String name,
       final @Nullable Timestamp startTime,
       final @Nullable Timestamp endTime

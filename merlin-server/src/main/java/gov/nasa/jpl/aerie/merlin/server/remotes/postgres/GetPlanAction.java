@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.Plan;
+import gov.nasa.jpl.aerie.merlin.server.models.PlanId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -51,11 +52,11 @@ import java.util.Map;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public PlanRecord get(final long planId) throws SQLException, NoSuchPlanException {
-    this.statement.setLong(1, planId);
+  public PlanRecord get(final PlanId planId) throws SQLException, NoSuchPlanException {
+    this.statement.setLong(1, planId.id());
 
     try (final var results = this.statement.executeQuery()) {
-      if (!results.next()) throw new NoSuchPlanException(Long.toString(planId));
+      if (!results.next()) throw new NoSuchPlanException(planId);
 
       final var name = results.getString(1);
       final var revision = results.getLong(2);
