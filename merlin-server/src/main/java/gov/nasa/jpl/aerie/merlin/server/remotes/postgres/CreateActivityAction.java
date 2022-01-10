@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.server.models.Timestamp;
 import org.intellij.lang.annotations.Language;
 
@@ -22,7 +23,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     this.statement = connection.prepareStatement(sql);
   }
 
-  public long apply(
+  public ActivityInstanceId apply(
       final long planId,
       final Timestamp planStartTime,
       final Timestamp activityStartTime,
@@ -36,7 +37,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PreparedStatemen
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) throw new FailedInsertException("activity");
 
-      return results.getLong(1);
+      return new ActivityInstanceId(results.getLong(1));
     }
   }
 

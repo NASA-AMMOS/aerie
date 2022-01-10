@@ -170,7 +170,7 @@ public final class PostgresPlanRepository implements PlanRepository {
               setActivityArgumentsAction.add(activityId, argument.getKey(), argument.getValue());
             }
 
-            activityIds.add(new ActivityInstanceId(activityId));
+            activityIds.add(activityId);
           }
 
           // Insert all the accumulated arguments for all activities at once.
@@ -271,14 +271,6 @@ public final class PostgresPlanRepository implements PlanRepository {
       return Long.parseLong(id, 10);
     } catch (final NumberFormatException ex) {
       throw new NoSuchPlanException(id);
-    }
-  }
-
-  private static long toActivityId(final String planId, final String id) throws NoSuchActivityInstanceException {
-    try {
-      return Long.parseLong(id, 10);
-    } catch (final NumberFormatException ex) {
-      throw new NoSuchActivityInstanceException(planId, id);
     }
   }
 

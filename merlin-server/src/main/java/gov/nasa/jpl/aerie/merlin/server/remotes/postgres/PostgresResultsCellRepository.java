@@ -301,9 +301,9 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
     }
   }
 
-  private static HashMap<Long, ActivityInstanceId> liftDirectiveIds(final Map<Long, SimulatedActivityRecord> activityRecords) {
-    final var pgIdToSimId = new HashMap<Long, ActivityInstanceId>(activityRecords.size());
-    final var simIds = new HashSet<Long>(activityRecords.size());
+  private static HashMap<ActivityInstanceId, ActivityInstanceId> liftDirectiveIds(final Map<ActivityInstanceId, SimulatedActivityRecord> activityRecords) {
+    final var pgIdToSimId = new HashMap<ActivityInstanceId, ActivityInstanceId>(activityRecords.size());
+    final var simIds = new HashSet<ActivityInstanceId>(activityRecords.size());
 
     for (final var id : activityRecords.keySet()) {
       final var record = activityRecords.get(id);
@@ -311,7 +311,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
 
       final var directiveId = record.directiveId().get();
       pgIdToSimId.put(id, directiveId);
-      simIds.add(directiveId.id());
+      simIds.add(directiveId);
     }
 
     var counter = 1L;
@@ -319,12 +319,12 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
       final var record = activityRecords.get(id);
       if (record.directiveId().isPresent()) continue;
 
-      long newId;
+      ActivityInstanceId newId;
       do {
-        newId = counter++;
+        newId = new ActivityInstanceId(counter++);
       } while (simIds.contains(newId));
 
-      pgIdToSimId.put(id, new ActivityInstanceId(newId));
+      pgIdToSimId.put(id, newId);
       simIds.add(newId);
     }
     return pgIdToSimId;

@@ -41,22 +41,22 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     this.statement = connection.prepareStatement(sql);
   }
 
-  public Map<Long, SimulatedActivityRecord> get(final long datasetId, final Timestamp simulationStart) throws SQLException {
-    final var activities = new HashMap<Long, SimulatedActivityRecord>();
+  public Map<ActivityInstanceId, SimulatedActivityRecord> get(final long datasetId, final Timestamp simulationStart) throws SQLException {
+    final var activities = new HashMap<ActivityInstanceId, SimulatedActivityRecord>();
 
     this.statement.setLong(1, datasetId);
     final var resultSet = statement.executeQuery();
     while (resultSet.next()) {
-      final var id = resultSet.getLong(1);
+      final var id = new ActivityInstanceId(resultSet.getLong(1));
       final var type = resultSet.getString(2);
-      final var parentId = resultSet.getLong(3);
+      final var parentId = new ActivityInstanceId(resultSet.getLong(3));
       final var startOffset = parseOffset(resultSet, 4, simulationStart);
       final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
       final var duration = parseOffset(resultSet, 5, start);
       final var attributes = parseActivityAttributes(resultSet.getCharacterStream(6));
       final var directiveId = attributes.getLeft();
       final var arguments = attributes.getRight();
-      final var initialChildIds = new ArrayList<Long>();
+      final var initialChildIds = new ArrayList<ActivityInstanceId>();
 
       activities.put(id, new SimulatedActivityRecord(
           type,

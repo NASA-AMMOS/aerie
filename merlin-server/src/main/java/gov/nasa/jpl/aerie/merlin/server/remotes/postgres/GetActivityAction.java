@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.merlin.server.remotes.postgres;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.models.ActivityInstance;
@@ -41,17 +42,17 @@ import java.util.function.Supplier;
     this.statement = connection.prepareStatement(sql);
   }
 
-  public ActivityInstance get(final long planId, final long activityId)
+  public ActivityInstance get(final long planId, final ActivityInstanceId activityId)
   throws SQLException, NoSuchPlanException, NoSuchActivityInstanceException
   {
     this.statement.setLong(1, planId);
-    this.statement.setLong(2, activityId);
+    this.statement.setLong(2, activityId.id());
 
     try (final var results = this.statement.executeQuery()) {
       if (!results.next()) throw new NoSuchPlanException(Long.toString(planId));
       requireColumnNonNull(results, 1, () -> new NoSuchActivityInstanceException(
           Long.toString(planId),
-          Long.toString(activityId)));
+          activityId));
 
       final var startTimestamp = Timestamp.fromString(results.getString(2));
       final var type = results.getString(3);
