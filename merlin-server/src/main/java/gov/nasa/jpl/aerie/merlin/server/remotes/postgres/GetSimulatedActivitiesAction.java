@@ -10,6 +10,7 @@ import javax.json.Json;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -49,7 +50,7 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     while (resultSet.next()) {
       final var id = resultSet.getLong(1);
       final var type = resultSet.getString(2);
-      final var parentId = resultSet.getLong(3);
+      final var parentId = readOptionalLong(resultSet, 3);
       final var startOffset = parseOffset(resultSet, 4, simulationStart);
       final var start = simulationStart.toInstant().plus(startOffset.in(MICROSECONDS), ChronoUnit.MICROS);
       final var duration = parseOffset(resultSet, 5, start);
@@ -69,12 +70,18 @@ import static gov.nasa.jpl.aerie.merlin.server.remotes.postgres.PostgresParsers.
     }
 
     // Since child IDs are not stored, we assign them by examining the parent ID of each activity
-    activities.forEach((id, activity) -> {
-      if (activity.parentId() == null) return;
-      activities.get(activity.parentId()).childIds().add(id);
-    });
+    activities.forEach(
+        (id, activity) -> activity
+            .parentId()
+            .ifPresent(parentId -> activities.get(parentId).childIds().add(id)));
 
     return activities;
+  }
+
+  private Optional<Long> readOptionalLong(final ResultSet resultSet, final int index) throws SQLException {
+    final var value = resultSet.getLong(index);
+    if (resultSet.wasNull()) return Optional.empty();
+    return Optional.of(value);
   }
 
   private Pair<Optional<ActivityInstanceId>, Map<String, SerializedValue>> parseActivityAttributes(final Reader jsonStream) {
