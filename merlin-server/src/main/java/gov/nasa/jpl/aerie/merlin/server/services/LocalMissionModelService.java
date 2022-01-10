@@ -139,6 +139,24 @@ public final class LocalMissionModelService implements MissionModelService {
     return loadUnconfiguredMissionModel(missionModelId).getParameters();
   }
 
+  @Override
+  public Map<String, SerializedValue> getModelEffectiveArguments(final String missionModelId, final Map<String, SerializedValue> arguments)
+  throws NoSuchMissionModelException,
+         MissingArgumentException,
+         MissionModelLoadException,
+         UnconstructableMissionModelConfigurationException,
+         UnconfigurableMissionModelException
+  {
+    try {
+      return this.loadConfiguredMissionModel(missionModelId)
+                 .getEffectiveArguments(arguments);
+    } catch (final MissionModelFacade.UnconfigurableMissionModelException ex) {
+      throw new UnconfigurableMissionModelException(ex);
+    } catch (final MissionModelFacade.UnconstructableMissionModelConfigurationException ex) {
+      throw new UnconstructableMissionModelConfigurationException(ex);
+    }
+}
+
   /**
    * Validate that a set of activity parameters conforms to the expectations of a named mission model.
    *

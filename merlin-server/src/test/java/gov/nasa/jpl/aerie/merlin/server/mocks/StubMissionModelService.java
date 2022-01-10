@@ -2,6 +2,7 @@ package gov.nasa.jpl.aerie.merlin.server.mocks;
 
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.types.MissingArgumentException;
 import gov.nasa.jpl.aerie.merlin.protocol.types.Parameter;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
 import gov.nasa.jpl.aerie.merlin.protocol.types.ValueSchema;
@@ -9,6 +10,7 @@ import gov.nasa.jpl.aerie.merlin.server.models.ActivityType;
 import gov.nasa.jpl.aerie.merlin.server.models.Constraint;
 import gov.nasa.jpl.aerie.merlin.server.models.MissionModelJar;
 import gov.nasa.jpl.aerie.merlin.server.services.CreateSimulationMessage;
+import gov.nasa.jpl.aerie.merlin.server.services.LocalMissionModelService;
 import gov.nasa.jpl.aerie.merlin.server.services.MissionModelService;
 
 import java.nio.file.Path;
@@ -133,6 +135,15 @@ public final class StubMissionModelService implements MissionModelService {
   @Override
   public List<Parameter> getModelParameters(final String missionModelId) {
     return List.of();
+  }
+
+  @Override
+  public Map<String, SerializedValue> getModelEffectiveArguments(
+      final String missionModelId,
+      final Map<String, SerializedValue> arguments)
+  throws MissingArgumentException, LocalMissionModelService.MissionModelLoadException
+  {
+    return Map.of();
   }
 
   @Override
