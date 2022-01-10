@@ -291,7 +291,7 @@ public final class PostgresResultsCellRepository implements ResultsCellRepositor
             record.parameters(),
             record.start(),
             record.duration(),
-            pgIdToSimId.get(record.parentId()),
+            record.parentId().map(pgIdToSimId::get).orElse(null),
             record.childIds().stream().map(pgIdToSimId::get).collect(Collectors.toList()),
             record.directiveId()
         ));

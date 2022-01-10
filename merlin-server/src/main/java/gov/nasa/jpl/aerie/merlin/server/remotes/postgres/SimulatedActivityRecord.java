@@ -14,7 +14,7 @@ import java.util.Optional;
     Map<String, SerializedValue> parameters,
     Instant start,
     Duration duration,
-    Long parentId,
+    Optional<Long> parentId,
     List<Long> childIds,
     Optional<ActivityInstanceId> directiveId
 ) {}
