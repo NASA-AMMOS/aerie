@@ -4,6 +4,7 @@ import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationDriver;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.MissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
@@ -98,6 +99,30 @@ public final class MissionModelFacade {
     }
   }
 
+  /** Get mission model configuration effective arguments. */
+  public Map<String, SerializedValue> getEffectiveArguments(final Map<String, SerializedValue> arguments)
+  throws UnconfigurableMissionModelException, MissingArgumentException, UnconstructableMissionModelConfigurationException
+  {
+    final var configType = this.missionModel.getConfigurationType()
+        .orElseThrow(UnconfigurableMissionModelException::new);
+    return getEffectiveArguments(configType, arguments);
+  }
+
+  private static <Config> Map<String, SerializedValue> getEffectiveArguments(
+      final ConfigurationType<Config> configurationType,
+      final Map<String, SerializedValue> arguments)
+  throws MissingArgumentException, UnconstructableMissionModelConfigurationException
+  {
+    try {
+      final var config = configurationType.instantiate(arguments);
+      return configurationType.getArguments(config);
+    } catch (final ConfigurationType.UnconstructableConfigurationException e) {
+      throw new UnconstructableMissionModelConfigurationException(
+          "Unknown failure when deserializing configuration -- do the parameters match the schema?",
+          e);
+    }
+  }
+
   public static final class Unconfigured<Model> {
     private final MissionModelFactory<Model> factory;
 
@@ -148,6 +173,14 @@ public final class MissionModelFacade {
     }
 
     public UnconstructableActivityInstanceException(final String message, final Throwable cause) {
+      super(message, cause);
+    }
+  }
+
+  public static class UnconfigurableMissionModelException extends Exception {}
+
+  public static class UnconstructableMissionModelConfigurationException extends Exception {
+    public UnconstructableMissionModelConfigurationException(final String message, final Throwable cause) {
       super(message, cause);
     }
   }
