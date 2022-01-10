@@ -5,6 +5,7 @@ import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Initializer;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Query;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
+import gov.nasa.jpl.aerie.merlin.protocol.model.ConfigurationType;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Resource;
 import gov.nasa.jpl.aerie.merlin.protocol.model.Task;
 import gov.nasa.jpl.aerie.merlin.protocol.model.TaskSpecType;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 public final class MissionModel<Model> {
@@ -26,6 +28,7 @@ public final class MissionModel<Model> {
   private final Map<String, Resource<?>> resources;
   private final List<SerializableTopic<?>> topics;
   private final Map<String, TaskSpecType<Model, ?>> taskSpecTypes;
+  private final Optional<ConfigurationType<?>> configurationType;
   private final List<Initializer.TaskFactory> daemons;
 
   public MissionModel(
@@ -34,18 +37,24 @@ public final class MissionModel<Model> {
       final Map<String, Resource<?>> resources,
       final List<SerializableTopic<?>> topics,
       final List<Initializer.TaskFactory> daemons,
+      final Optional<ConfigurationType<?>> configurationType,
       final Map<String, TaskSpecType<Model, ?>> taskSpecTypes)
   {
     this.model = Objects.requireNonNull(model);
     this.initialCells = Objects.requireNonNull(initialCells);
     this.resources = Collections.unmodifiableMap(resources);
     this.topics = Collections.unmodifiableList(topics);
+    this.configurationType = Objects.requireNonNull(configurationType);
     this.taskSpecTypes = Collections.unmodifiableMap(taskSpecTypes);
     this.daemons = Collections.unmodifiableList(daemons);
   }
 
   public Model getModel() {
     return this.model;
+  }
+
+  public Optional<ConfigurationType<?>> getConfigurationType() {
+    return this.configurationType;
   }
 
   public Map<String, TaskSpecType<Model, ?>> getTaskSpecificationTypes() {
