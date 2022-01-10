@@ -19,6 +19,7 @@ import java.util.List;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraActivityActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraExternalDatasetActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelActionP;
+import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelArgumentsActionP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraMissionModelEventTriggerP;
 import static gov.nasa.jpl.aerie.merlin.server.http.MerlinParsers.hasuraPlanActionP;
 import static io.javalin.apibuilder.ApiBuilder.before;
@@ -72,6 +73,9 @@ public final class MerlinBindings implements Plugin {
       });
       path("validateActivityArguments", () -> {
         post(this::validateActivityArguments);
+      });
+      path("getModelEffectiveArguments", () -> {
+        post(this::getModelEffectiveArguments);
       });
       path("getActivityEffectiveArguments", () -> {
         post(this::getActivityEffectiveArguments);
@@ -162,6 +166,29 @@ public final class MerlinBindings implements Plugin {
       final var failures = this.missionModelService.validateActivityParameters(missionModelId, serializedActivity);
 
       ctx.result(ResponseSerializers.serializeFailures(failures).toString());
+    } catch (final MissionModelService.NoSuchMissionModelException ex) {
+      ctx.status(404);
+    } catch (final InvalidJsonException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidJsonException(ex).toString());
+    } catch (final InvalidEntityException ex) {
+      ctx.status(400).result(ResponseSerializers.serializeInvalidEntityException(ex).toString());
+    }
+  }
+
+  private void getModelEffectiveArguments(final Context ctx) {
+    try {
+      final var input = parseJson(ctx.body(), hasuraMissionModelArgumentsActionP).input();
+
+      final var missionModelId = input.missionModelId();
+      final var arguments = this.missionModelService.getModelEffectiveArguments(missionModelId, input.arguments());
+
+      ctx.result(ResponseSerializers.serializeEffectiveArgumentMap(arguments).toString());
+    } catch (final MissingArgumentException ex) {
+      ctx.status(200)
+         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
+    } catch (final MissionModelService.UnconfigurableMissionModelException | MissionModelService.UnconstructableMissionModelConfigurationException ex) {
+      ctx.status(400)
+         .result(ResponseSerializers.serializeFailures(List.of(ex.getMessage())).toString());
     } catch (final MissionModelService.NoSuchMissionModelException ex) {
       ctx.status(404);
     } catch (final InvalidJsonException ex) {

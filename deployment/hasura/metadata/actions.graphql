@@ -7,6 +7,13 @@ type Mutation {
 }
 
 type Query {
+  getModelEffectiveArguments(
+    missionModelId: ID!
+    modelArguments: ModelArguments!
+  ): EffectiveArgumentsResponse
+}
+
+type Query {
   getActivityEffectiveArguments(
     missionModelId: ID!
     activityTypeName: String!
@@ -71,6 +78,8 @@ scalar ResourceSchema
 scalar MerlinSimulationResults
 
 scalar MerlinSimulationFailureReason
+
+scalar ModelArguments
 
 scalar ActivityArguments
 
