@@ -4,7 +4,6 @@ import gov.nasa.jpl.aerie.json.Iso;
 import gov.nasa.jpl.aerie.json.JsonParser;
 import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.protocol.types.SerializedValue;
-import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchActivityInstanceException;
 import gov.nasa.jpl.aerie.merlin.server.exceptions.NoSuchPlanException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidEntityException;
 import gov.nasa.jpl.aerie.merlin.server.http.InvalidJsonException;
@@ -271,14 +270,6 @@ public final class PostgresPlanRepository implements PlanRepository {
       return Long.parseLong(id, 10);
     } catch (final NumberFormatException ex) {
       throw new NoSuchPlanException(id);
-    }
-  }
-
-  private static long toActivityId(final String planId, final String id) throws NoSuchActivityInstanceException {
-    try {
-      return Long.parseLong(id, 10);
-    } catch (final NumberFormatException ex) {
-      throw new NoSuchActivityInstanceException(planId, id);
     }
   }
 
