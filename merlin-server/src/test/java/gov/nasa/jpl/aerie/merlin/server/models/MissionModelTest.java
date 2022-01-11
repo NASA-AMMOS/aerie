@@ -1,6 +1,7 @@
 package gov.nasa.jpl.aerie.merlin.server.models;
 
 import gov.nasa.jpl.aerie.foomissionmodel.Configuration;
+import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
@@ -26,7 +27,7 @@ public final class MissionModelTest {
     @BeforeEach
     public void initialize() throws MissionModelFacade.MissionModelContractException {
         final var configuration = new Configuration();
-        final var serializedConfig = FooValueMappers.configuration().serializeValue(configuration);
+        final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(configuration));
         this.missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
         this.unconfiguredMissionModel = new MissionModelFacade.Unconfigured<>(new GeneratedMissionModelFactory());
     }

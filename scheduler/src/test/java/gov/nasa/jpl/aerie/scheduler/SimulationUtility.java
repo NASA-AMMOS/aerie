@@ -1,7 +1,7 @@
 package gov.nasa.jpl.aerie.scheduler;
 
 import gov.nasa.jpl.aerie.banananation.Configuration;
-import gov.nasa.jpl.aerie.banananation.ConfigurationValueMapper;
+import gov.nasa.jpl.aerie.banananation.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
@@ -20,7 +20,7 @@ public final class SimulationUtility {
 
   public static MissionModel<?> getMissionModel(){
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, Path.of("/etc/hosts"));
-    final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);
+    final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(config));
     return makeMissionModel(new MissionModelBuilder(), serializedConfig);
   }
 

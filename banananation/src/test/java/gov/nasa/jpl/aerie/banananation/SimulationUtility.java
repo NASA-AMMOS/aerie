@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.banananation;
 
+import gov.nasa.jpl.aerie.banananation.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.banananation.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModelBuilder;
@@ -28,7 +29,7 @@ public final class SimulationUtility {
   simulate(final Map<ActivityInstanceId, Pair<Duration, SerializedActivity>> schedule, final Duration simulationDuration) {
     final var dataPath = Path.of(SimulationUtility.class.getClassLoader().getResource("data/lorem_ipsum.txt").getPath());
     final var config = new Configuration(Configuration.DEFAULT_PLANT_COUNT, Configuration.DEFAULT_PRODUCER, dataPath);
-    final var serializedConfig = new ConfigurationValueMapper().serializeValue(config);
+    final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(config));
     final var missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
     final var startTime = Instant.now();
 

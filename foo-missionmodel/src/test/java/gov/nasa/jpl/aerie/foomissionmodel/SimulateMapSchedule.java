@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
+import gov.nasa.jpl.aerie.foomissionmodel.generated.ConfigurationMapper;
 import gov.nasa.jpl.aerie.foomissionmodel.generated.GeneratedMissionModelFactory;
 import gov.nasa.jpl.aerie.foomissionmodel.mappers.FooValueMappers;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
@@ -37,7 +38,7 @@ public class SimulateMapSchedule {
   private static
   void simulateWithMapSchedule() {
     final var config = new Configuration();
-    final var serializedConfig = FooValueMappers.configuration().serializeValue(config);
+    final var serializedConfig = SerializedValue.of(new ConfigurationMapper().getArguments(config));
     final var missionModel = makeMissionModel(new MissionModelBuilder(), serializedConfig);
 
     try {
