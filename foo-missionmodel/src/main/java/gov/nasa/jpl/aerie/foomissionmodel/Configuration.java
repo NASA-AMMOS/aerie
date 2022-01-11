@@ -1,8 +1,11 @@
 package gov.nasa.jpl.aerie.foomissionmodel;
 
-public class Configuration {
+import gov.nasa.jpl.aerie.merlin.framework.annotations.ActivityType;
 
-  public final Double sinkRate;
+public final class Configuration {
+
+  @ActivityType.Parameter
+  public Double sinkRate;
 
   public Configuration(final Double sinkRate) {
     this.sinkRate = sinkRate;

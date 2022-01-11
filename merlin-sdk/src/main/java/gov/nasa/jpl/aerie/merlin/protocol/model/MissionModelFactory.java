@@ -10,5 +10,11 @@ import java.util.Map;
 public interface MissionModelFactory<Model> {
   Map<String, TaskSpecType<Model, ?>> getTaskSpecTypes();
   List<Parameter> getParameters();
-  Model instantiate(SerializedValue configuration, Initializer builder);
+  Model instantiate(SerializedValue configuration, Initializer builder) throws MissionModelInstantiationException;
+
+  final class MissionModelInstantiationException extends RuntimeException {
+    public MissionModelInstantiationException(final Throwable cause) {
+      super(cause);
+    }
+  }
 }
