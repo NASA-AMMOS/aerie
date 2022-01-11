@@ -1,5 +1,6 @@
 package gov.nasa.jpl.aerie.scheduler;
 
+import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
@@ -65,6 +66,7 @@ public class StepSimulation {
     actToId = new HashMap<>();
     lastSimResults = null;
     this.engine = new SimulationEngine();
+    activitiesInserted.clear();
 
       /* The top-level simulation timeline. */
       this.timeline = new TemporalEventSource();
@@ -89,21 +91,37 @@ public class StepSimulation {
       }
   }
 
-  public boolean simulateActivity(SerializedActivity activity, Duration startTime, String name){
+  public void simulateActivity(SerializedActivity activity, Duration startTime, String name){
     if(startTime.shorterThan(curTime) || resetEveryTime){
+      var toBeReinserted = new LinkedHashMap<Duration, Pair<SerializedActivity, String>>();
+      toBeReinserted.putAll(activitiesInserted);
       initSimulation();
-      insertAllPreviouslyInsertedActs();
+      insertAllActsBefore(toBeReinserted, startTime);
+      simulateAct(activity, startTime,name);
+      insertAllActsAfter(toBeReinserted, startTime);
     }
-    return simulateAct(activity, startTime,name);
+    simulateAct(activity, startTime,name);
   }
 
-  private void insertAllPreviouslyInsertedActs(){
-    for(var acts : activitiesInserted.entrySet()){
-     // System.out.println("Inserting at " + acts.getKey());
-      var startTime = acts.getKey();
-      var act = acts.getValue().getLeft();
-      var name = acts.getValue().getRight();
-      this.simulateAct(act, startTime, name);
+  private void insertAllActsBefore(LinkedHashMap<Duration, Pair<SerializedActivity, String>> acts, Duration startTime){
+    for(var act : acts.entrySet()){
+      var start = act.getKey();
+      var activity = act.getValue().getLeft();
+      var name = act.getValue().getRight();
+      if(start.shorterThan(startTime)) {
+        this.simulateAct(activity, startTime, name);
+      }
+    }
+  }
+
+  private void insertAllActsAfter(LinkedHashMap<Duration, Pair<SerializedActivity, String>> acts, Duration startTime){
+    for(var act : acts.entrySet()){
+      var start = act.getKey();
+      var activity = act.getValue().getLeft();
+      var name = act.getValue().getRight();
+      if(start.longerThan(startTime) || start.isEqualTo(startTime)) {
+        this.simulateAct(activity, startTime, name);
+      }
     }
   }
 
@@ -114,7 +132,7 @@ public class StepSimulation {
           engine,
           Instant.now(),
           curTime,
-          new HashMap<String, String>(),
+          new HashMap<String, ActivityInstanceId>(),
           timeline,
           missionModel);
     }
@@ -128,7 +146,7 @@ public class StepSimulation {
           engine,
           Instant.now(),
           endTime,
-          new HashMap<String, String>(),
+          new HashMap<String, ActivityInstanceId>(),
           timeline,
           missionModel);
     }
@@ -136,7 +154,7 @@ public class StepSimulation {
   }
 
 
-  private boolean simulateAct(SerializedActivity activity, Duration startTime, String name){
+  private void simulateAct(SerializedActivity activity, Duration startTime, String name){
 
     final var schedule = Map.of(name, Pair.of(startTime, activity));
 
@@ -163,8 +181,6 @@ public class StepSimulation {
     }
     areLastSimResultsDirty = true;
     activitiesInserted.put(startTime, Pair.of(activity, name));
-
-    return engine.isTaskComplete(control);
   }
 
   public Duration getActivityDuration(SerializedActivity act){
