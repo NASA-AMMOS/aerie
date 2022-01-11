@@ -6,10 +6,18 @@
 
 ## Prerequisites
 
-| Name    | Version          | Notes        | Download              |
-| ------- | ---------------- | ------------ | --------------------- |
-| OpenJDK | Temurin 17 (LTS) | HotSpot JVM  | https://adoptium.net/ |
-| Gradle  | 7.2              | Build system | https://gradle.org    |
+### Building
+
+| Name    | Version          | Notes        | Download             |
+| ------- | ---------------- | ------------ | -------------------- |
+| OpenJDK | Temurin 17 (LTS) | HotSpot JVM  | https://adoptium.net |
+| Gradle  | 7.2              | Build system | https://gradle.org   |
+
+### Testing
+
+| Name       | Version | Notes                      | Download                   |
+| ---------- | ------- | -------------------------- | -------------------------- |
+| PostgreSQL | 14.1    | Database management system | https://www.postgresql.org |
 
 ## Compile
 
