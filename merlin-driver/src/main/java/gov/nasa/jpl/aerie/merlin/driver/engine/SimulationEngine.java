@@ -503,6 +503,14 @@ public final class SimulationEngine implements AutoCloseable {
                                  serializedTimeline);
   }
 
+  public Duration getTaskDuration(TaskId id){
+    var state = tasks.get(id);
+    if (state instanceof ExecutionState.Terminated e) {
+      return e.joinOffset().minus(e.startOffset());
+    }
+    return null;
+  }
+
   private <EventType> Optional<SerializedValue> trySerializeEvent(Event event, MissionModel.SerializableTopic<EventType> serializableTopic) {
     return event.extract(topicOfSerializableTopic(serializableTopic), serializableTopic.serializer());
   }
