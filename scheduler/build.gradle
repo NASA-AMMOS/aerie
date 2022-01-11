@@ -52,7 +52,7 @@ dependencies {
   compileOnly project(':merlin-driver')
   compileOnly project(':constraints')
   compileOnly project(':contrib')
-  compileOnly project(':banananation')
+  compileOnly project(':examples:banananation')
 
   implementation 'com.google.guava:guava:31.0.1-jre'
   implementation 'org.json:json:20211205'
@@ -67,7 +67,7 @@ dependencies {
   testImplementation project(':merlin-framework-junit')
   testImplementation project(':constraints')
   testImplementation project(':contrib')
-  testImplementation project(':banananation')
+  testImplementation project(':examples:banananation')
   testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
   testImplementation 'com.google.guava:guava-testlib:31.0.1-jre'
   testImplementation 'com.google.truth.extensions:truth-java8-extension:1.1.3'

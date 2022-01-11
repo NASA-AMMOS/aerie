@@ -37,7 +37,7 @@ dependencies {
   implementation 'com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9'
   implementation 'com.zaxxer:HikariCP:5.0.0'
 
-  testImplementation project(':foo-missionmodel')
+  testImplementation project(':examples:foo-missionmodel')
   testImplementation project(':merlin-framework')
   testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
   testImplementation 'org.assertj:assertj-core:3.21.0'
