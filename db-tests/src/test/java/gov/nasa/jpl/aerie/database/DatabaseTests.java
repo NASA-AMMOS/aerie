@@ -1,9 +1,11 @@
+package gov.nasa.jpl.aerie.database;
+
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.junit.Assume;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -14,9 +16,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+
+record PlanDatasetRecord(int plan_id, int dataset_id) {}
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -41,7 +47,7 @@ class DatabaseTests {
 
       // Handle the case where we cannot connect to postgres by skipping the tests
       final var errors = new String(proc.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-      Assume.assumeFalse(errors.contains("Connection refused"));
+      Assumptions.assumeFalse(errors.contains("Connection refused"));
       proc.waitFor();
       proc.destroy();
     }
@@ -82,7 +88,7 @@ class DatabaseTests {
   // Teardown test database
   @AfterAll
   void afterAll() throws SQLException, IOException, InterruptedException {
-    Assume.assumeNotNull(connection);
+    Assumptions.assumeTrue(connection != null);
     connection.close();
 
     // Clear out all data from the database on test conclusion
@@ -126,7 +132,7 @@ class DatabaseTests {
     }
   }
 
-  int insertMissionModel(int fileId) throws SQLException {
+  int insertMissionModel(final int fileId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
@@ -151,15 +157,19 @@ class DatabaseTests {
     }
   }
 
-  int insertPlan(int missionModelId) throws SQLException {
+  int insertPlan(final int missionModelId) throws SQLException {
+    return insertPlan(missionModelId, "2020-1-1 00:00:00");
+  }
+
+  int insertPlan(final int missionModelId, final String start_time) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
               """
                   INSERT INTO plan (name, model_id, duration, start_time)
-                  VALUES ('test-plan-%s', '%s', '0', '2020-1-1 00:00:00')
+                  VALUES ('test-plan-%s', '%s', '0', '%s')
                   RETURNING id;"""
-                  .formatted(UUID.randomUUID().toString(), missionModelId)
+                  .formatted(UUID.randomUUID().toString(), missionModelId, start_time)
           );
       res.next();
       return res.getInt("id");
@@ -176,7 +186,7 @@ class DatabaseTests {
     }
   }
 
-  int insertActivity(int planId) throws SQLException {
+  int insertActivity(final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
@@ -202,7 +212,7 @@ class DatabaseTests {
     }
   }
 
-  int insertSimulationTemplate(int modelId) throws SQLException {
+  int insertSimulationTemplate(final int modelId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
@@ -227,7 +237,7 @@ class DatabaseTests {
     }
   }
 
-  int insertSimulation(int simulationTemplateId, int planId) throws SQLException {
+  int insertSimulation(final int simulationTemplateId, final int planId) throws SQLException {
     try (final var statement = connection.createStatement()) {
       final var res = statement
           .executeQuery(
@@ -252,12 +262,62 @@ class DatabaseTests {
     }
   }
 
+  int insertDataset() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement
+          .executeQuery(
+              """
+                  INSERT INTO dataset
+                  DEFAULT VALUES
+                  RETURNING id;"""
+          );
+      res.next();
+      return res.getInt("id");
+    }
+  }
+
+  void clearDatasets() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement
+          .executeUpdate(
+              """
+                  TRUNCATE dataset CASCADE;"""
+          );
+    }
+  }
+
+  PlanDatasetRecord insertPlanDataset(final int planId) throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      final var res = statement
+          .executeQuery(
+              """
+                  INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
+                  VALUES ('%s', '0')
+                  RETURNING plan_id, dataset_id;"""
+                  .formatted(planId)
+          );
+      res.next();
+      return new PlanDatasetRecord(res.getInt("plan_id"), res.getInt("dataset_id"));
+    }
+  }
+
+  void clearPlanDatasets() throws SQLException {
+    try (final var statement = connection.createStatement()) {
+      statement
+          .executeUpdate(
+              """
+                  TRUNCATE plan_dataset CASCADE;"""
+          );
+    }
+  }
+
   int fileId;
   int missionModelId;
   int planId;
   int activityId;
   int simulationTemplateId;
   int simulationId;
+  PlanDatasetRecord planDatasetRecord;
 
   @BeforeEach
   void beforeEach() throws SQLException {
@@ -267,6 +327,7 @@ class DatabaseTests {
     activityId = insertActivity(planId);
     simulationTemplateId = insertSimulationTemplate(missionModelId);
     simulationId = insertSimulation(simulationTemplateId, planId);
+    planDatasetRecord = insertPlanDataset(planId);
   }
 
   @AfterEach
@@ -277,6 +338,8 @@ class DatabaseTests {
     clearActivities();
     clearSimulationTemplates();
     clearSimulations();
+    clearDatasets();
+    clearPlanDatasets();
   }
 
   @Nested
@@ -575,6 +638,128 @@ class DatabaseTests {
       updatedRes.close();
 
       assertEquals(initialRevision + 1, updatedRevision);
+    }
+  }
+
+  @Nested
+  class PlanDatasetTriggers {
+    @Test
+    void shouldCreateDefaultDatasetOnPlanDatasetInsertWithNullDatasetId() throws SQLException {
+      final var res = connection.createStatement()
+          .executeQuery(
+              """
+                  INSERT INTO plan_dataset (plan_id, offset_from_plan_start)
+                  VALUES (%s, '0')
+                  RETURNING dataset_id;"""
+                  .formatted(planId)
+          );
+      res.next();
+      final var newDatasetId = res.getInt("dataset_id");
+      assertFalse(res.wasNull());
+      res.close();
+
+
+      final var datasetRes = connection.createStatement()
+          .executeQuery(
+              """
+                  SELECT * FROM dataset
+                  WHERE id = %s;"""
+                  .formatted(newDatasetId)
+          );
+
+      datasetRes.next();
+      assertEquals(newDatasetId, datasetRes.getInt("id"));
+      assertEquals(0, datasetRes.getInt("revision"));
+      datasetRes.close();
+    }
+
+    @Test
+    void shouldCalculatePlanDatasetOffsetOnPlanDatasetInsertWithNonNullDatasetId() throws SQLException {
+
+      final var planRes = connection.createStatement()
+          .executeQuery(
+              """
+                  SELECT * from plan
+                  WHERE id = %s;"""
+                  .formatted(planDatasetRecord.plan_id())
+          );
+      planRes.next();
+      final var planStartTime = planRes.getTimestamp("start_time");
+      planRes.close();
+
+      final var planDatasetSelectRes = connection.createStatement()
+          .executeQuery(
+              """
+                  SELECT * FROM plan_dataset
+                  WHERE plan_id = %s and dataset_id = %s;"""
+                  .formatted(planDatasetRecord.plan_id(), planDatasetRecord.dataset_id())
+          );
+      planDatasetSelectRes.next();
+      final var offsetFromPlanStart = Duration.parse(planDatasetSelectRes.getString("offset_from_plan_start"));
+      planDatasetSelectRes.close();
+      assertEquals(Duration.ofMillis(0), offsetFromPlanStart);
+
+      final var newPlanId = insertPlan(missionModelId, "2020-1-1 01:00:00");
+
+      final var newPlanRes = connection.createStatement()
+          .executeQuery(
+              """
+                  SELECT * from plan
+                  WHERE id = %s;"""
+                  .formatted(newPlanId)
+          );
+      newPlanRes.next();
+      final var newPlanStartTime = newPlanRes.getTimestamp("start_time");
+      newPlanRes.close();
+
+      final var planDatasetInsertRes = connection.createStatement()
+          .executeQuery(
+              """
+                  INSERT INTO plan_dataset (plan_id, dataset_id)
+                  VALUES (%s, %s)
+                  RETURNING *;"""
+                  .formatted(newPlanId, planDatasetRecord.dataset_id())
+          );
+      planDatasetInsertRes.next();
+      final var newOffsetFromPlanStart = Duration.parse(planDatasetInsertRes.getString("offset_from_plan_start"));
+      planDatasetInsertRes.close();
+
+      final var calculatedOffset = offsetFromPlanStart.minus(Duration.ofMillis(newPlanStartTime.getTime() - planStartTime.getTime()));
+
+      assertEquals(calculatedOffset, newOffsetFromPlanStart);
+    }
+
+    @Test
+    void shouldDeleteDatasetWithNoAssociatedPlansOnPlanDatasetDelete() throws SQLException {
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery(
+            """
+                SELECT COUNT(*) FROM dataset
+                WHERE id = %s;"""
+                .formatted(planDatasetRecord.dataset_id())
+        );
+        res.next();
+        assertEquals(1, res.getInt(1));
+      }
+
+      try (final var statement = connection.createStatement()) {
+        statement.executeUpdate(
+            """
+                DELETE FROM plan_dataset
+                WHERE plan_id = %s and dataset_id = %s;"""
+                .formatted(planDatasetRecord.plan_id(), planDatasetRecord.dataset_id())
+        );
+      }
+      try (final var statement = connection.createStatement()) {
+        final var res = statement.executeQuery(
+            """
+                SELECT COUNT(*) FROM dataset
+                WHERE id = %s;"""
+                .formatted(planDatasetRecord.dataset_id())
+        );
+        res.next();
+        assertEquals(0, res.getInt(1));
+      }
     }
   }
 }

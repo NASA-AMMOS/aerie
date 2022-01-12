@@ -38,6 +38,10 @@ language plpgsql as $$begin
 return new;
 end$$;
 
+-- To calculate this offset, we are going to grab any existing plan dataset with
+-- the same associated dataset, add the offset to the plan start time to find the
+-- start time of the dataset, and then subtract out the NEW plan start time to
+-- determine the offset in the NEW plan dataset
 create or replace function calculate_offset()
 returns trigger
 security definer
@@ -55,7 +59,7 @@ begin
   -- If no reference exists, raise an exception
   if reference is null
   then
-    raise exception 'Nonexistent dataset_id --> %', dataset_id
+    raise exception 'Nonexistent dataset_id --> %', new.dataset_id
           using hint = 'dataset_id must already be associated with a plan.';
   end if;
 
