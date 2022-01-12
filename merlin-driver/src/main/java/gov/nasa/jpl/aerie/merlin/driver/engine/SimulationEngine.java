@@ -244,18 +244,22 @@ public final class SimulationEngine implements AutoCloseable {
       this.tasks.put(task, progress.continueWith(state));
       this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime.plus(s.delay())));
     } else if (status instanceof TaskStatus.AwaitingTask s) {
-      this.tasks.put(task, progress.continueWith(state));
+      final var childId = TaskId.generate();
+      this.tasks.put(childId, new ExecutionState.InProgress(currentTime, s.task()));
+      this.taskParent.put(childId, task);
+      this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(childId);
+      frame.signal(JobId.forTask(childId));
 
-      final var target = new TaskId(s.target());
-      final var targetExecution = this.tasks.get(target);
-      if (targetExecution == null) {
-        // TODO: Log that we saw a task ID that doesn't exist. Try to make this as visible as possible to users.
-        // pass -- nonexistent tasks will never complete
-      } else if (targetExecution instanceof ExecutionState.Terminated) {
-        this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(currentTime));
-      } else {
-        this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(new TaskId(s.target()))));
-      }
+      this.tasks.put(task, progress.continueWith(state));
+      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(childId)));
+    } else if (status instanceof TaskStatus.AwaitingDirective s) {
+      final var childId = initiateTaskFromInput(model, new SerializedActivity(s.type(), s.arguments()));
+      this.taskParent.put(childId, task);
+      this.taskChildren.computeIfAbsent(task, $ -> new HashSet<>()).add(childId);
+      frame.signal(JobId.forTask(childId));
+
+      this.tasks.put(task, progress.continueWith(state));
+      this.waitingTasks.subscribeQuery(task, Set.of(SignalId.forTask(childId)));
     } else if (status instanceof TaskStatus.AwaitingCondition s) {
       final var condition = ConditionId.generate();
       this.conditions.put(condition, s.condition());
@@ -631,28 +635,24 @@ public final class SimulationEngine implements AutoCloseable {
     }
 
     @Override
-    public String spawn(final Task state) {
+    public void spawn(final Task state) {
       final var task = TaskId.generate();
       SimulationEngine.this.tasks.put(task, new ExecutionState.InProgress(this.currentTime, state));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
-
-      return task.id();
     }
 
     @Override
-    public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+    public void spawn(final String type, final Map<String, SerializedValue> arguments) {
       final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       this.frame.signal(JobId.forTask(task));
-
-      return task.id();
     }
 
     @Override
-    public String defer(final Duration delay, final Task state) {
+    public void defer(final Duration delay, final Task state) {
       if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
       final var task = TaskId.generate();
@@ -660,20 +660,16 @@ public final class SimulationEngine implements AutoCloseable {
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
-
-      return task.id();
     }
 
     @Override
-    public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
+    public void defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
       if (delay.isNegative()) throw new IllegalArgumentException("Cannot schedule a task in the past");
 
       final var task = initiateTaskFromInput(this.model, new SerializedActivity(type, arguments));
       SimulationEngine.this.taskParent.put(task, this.activeTask);
       SimulationEngine.this.taskChildren.computeIfAbsent(this.activeTask, $ -> new HashSet<>()).add(task);
       SimulationEngine.this.scheduledJobs.schedule(JobId.forTask(task), SubInstant.Tasks.at(this.currentTime.plus(delay)));
-
-      return task.id();
     }
   }
 

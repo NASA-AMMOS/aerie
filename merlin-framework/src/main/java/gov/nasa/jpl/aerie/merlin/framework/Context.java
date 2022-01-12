@@ -34,13 +34,15 @@ public interface Context {
 
   interface TaskFactory { Task create(ExecutorService executor); }
 
-  String spawn(TaskFactory task);
-  String spawn(String type, Map<String, SerializedValue> arguments);
+  void spawn(TaskFactory task);
+  void spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration duration, TaskFactory task);
-  String defer(Duration duration, String type, Map<String, SerializedValue> arguments);
+  void call(TaskFactory task);
+  void call(String type, Map<String, SerializedValue> arguments);
+
+  void defer(Duration duration, TaskFactory task);
+  void defer(Duration duration, String type, Map<String, SerializedValue> arguments);
 
   void delay(Duration duration);
-  void waitFor(String id);
   void waitUntil(Condition condition);
 }

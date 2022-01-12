@@ -30,22 +30,22 @@ public final class ThreadedTaskTest {
       }
 
       @Override
-      public String spawn(final Task task) {
+      public void spawn(final Task task) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+      public void spawn(final String type, final Map<String, SerializedValue> arguments) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public String defer(final Duration delay, final Task task) {
+      public void defer(final Duration delay, final Task task) {
         throw new UnsupportedOperationException();
       }
 
       @Override
-      public String defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
+      public void defer(final Duration delay, final String type, final Map<String, SerializedValue> arguments) {
         throw new UnsupportedOperationException();
       }
     };

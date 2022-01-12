@@ -11,9 +11,9 @@ public interface Scheduler {
 
   <Event> void emit(Event event, Query<? super Event, ?> query);
 
-  String spawn(Task task);
-  String spawn(String type, Map<String, SerializedValue> arguments);
+  void spawn(Task task);
+  void spawn(String type, Map<String, SerializedValue> arguments);
 
-  String defer(Duration delay, Task task);
-  String defer(Duration delay, String type, Map<String, SerializedValue> arguments);
+  void defer(Duration delay, Task task);
+  void defer(Duration delay, String type, Map<String, SerializedValue> arguments);
 }

@@ -58,35 +58,41 @@ final class ThreadedReactionContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
-    return this.scheduler.spawn(task.create(this.executor));
+  public void spawn(final TaskFactory task) {
+    this.scheduler.spawn(task.create(this.executor));
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-    return this.scheduler.spawn(type, arguments);
+  public void spawn(final String type, final Map<String, SerializedValue> arguments) {
+    this.scheduler.spawn(type, arguments);
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
-    return this.scheduler.defer(duration, task.create(this.executor));
+  public void call(final TaskFactory task) {
+    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler = this.handle.yield(TaskStatus.awaiting(task.create(this.executor)));
   }
 
   @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.scheduler.defer(duration, type, arguments);
+  public void call(final String type, final Map<String, SerializedValue> arguments) {
+    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+    this.scheduler = this.handle.yield(TaskStatus.awaiting(type, arguments));
+  }
+
+  @Override
+  public void defer(final Duration duration, final TaskFactory task) {
+    this.scheduler.defer(duration, task.create(this.executor));
+  }
+
+  @Override
+  public void defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    this.scheduler.defer(duration, type, arguments);
   }
 
   @Override
   public void delay(final Duration duration) {
     this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
     this.scheduler = this.handle.yield(TaskStatus.delayed(duration));
-  }
-
-  @Override
-  public void waitFor(final String id) {
-    this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-    this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
   }
 
   @Override

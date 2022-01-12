@@ -43,32 +43,37 @@ public final class QueryContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
+  public void spawn(final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
+  public void spawn(final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities in a query-only context");
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
+  public void call(final TaskFactory task) {
+    throw new IllegalStateException("Cannot yield in a query-only context");
+  }
+
+  @Override
+  public void call(final String type, final Map<String, SerializedValue> arguments) {
+    throw new IllegalStateException("Cannot yield in a query-only context");
+  }
+
+  @Override
+  public void defer(final Duration duration, final TaskFactory task) {
     throw new IllegalStateException("Cannot schedule tasks in a query-only context");
   }
 
   @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+  public void defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
     throw new IllegalStateException("Cannot schedule activities in a query-only context");
   }
 
   @Override
   public void delay(final Duration duration) {
-    throw new IllegalStateException("Cannot yield in a query-only context");
-  }
-
-  @Override
-  public void waitFor(final String id) {
     throw new IllegalStateException("Cannot yield in a query-only context");
   }
 

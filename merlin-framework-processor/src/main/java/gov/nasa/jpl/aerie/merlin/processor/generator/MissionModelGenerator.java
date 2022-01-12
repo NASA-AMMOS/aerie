@@ -226,7 +226,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("spawn")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
                                 .addParameter(
                                     ClassName.get(entry.declaration),
                                     "activity",
@@ -236,7 +235,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "mapper",
                                     entry.mapper.name)
                                 .addStatement(
-                                    "return $T.spawn($L.getName(), $L.getArguments($L))",
+                                    "$T.spawn($L.getName(), $L.getArguments($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "mapper",
                                     "mapper",
@@ -245,7 +244,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("defer")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
@@ -262,7 +260,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "mapper",
                                     entry.mapper.name)
                                 .addStatement(
-                                    "return $T.defer($L, $L.getName(), $L.getArguments($L))",
+                                    "$T.defer($L, $L.getName(), $L.getArguments($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
                                     "duration",
                                     "mapper",
@@ -272,7 +270,6 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                             MethodSpec
                                 .methodBuilder("defer")
                                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                                .returns(String.class)
                                 .addParameter(
                                     ParameterSpec
                                         .builder(
@@ -292,7 +289,7 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "return defer($L.times($L), $L)",
+                                    "defer($L.times($L), $L)",
                                     "unit",
                                     "quantity",
                                     "activity")
@@ -306,8 +303,14 @@ public record MissionModelGenerator(Elements elementUtils, Types typeUtils, Mess
                                     "activity",
                                     Modifier.FINAL)
                                 .addStatement(
-                                    "$T.waitFor(spawn($L))",
+                                    "final var $L = new $T()",
+                                    "mapper",
+                                    entry.mapper.name)
+                                .addStatement(
+                                    "$T.call($L.getName(), $L.getArguments($L))",
                                     gov.nasa.jpl.aerie.merlin.framework.ModelActions.class,
+                                    "mapper",
+                                    "mapper",
                                     "activity")
                                 .build())
                         .stream())

@@ -69,31 +69,39 @@ final class ReplayingReactionContext implements Context {
   }
 
   @Override
-  public String spawn(final TaskFactory task) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.spawn(task.create(this.executor));
+  public void spawn(final TaskFactory task) {
+    this.memory.doOnce(() -> this.scheduler.spawn(task.create(this.executor)));
+  }
+
+  @Override
+  public void spawn(final String type, final Map<String, SerializedValue> arguments) {
+    this.memory.doOnce(() -> this.scheduler.spawn(type, arguments));
+  }
+
+  @Override
+  public void call(final TaskFactory task) {
+    this.memory.doOnce(() -> {
+      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+      this.scheduler = this.handle.yield(TaskStatus.awaiting(task.create(this.executor)));
     });
   }
 
   @Override
-  public String spawn(final String type, final Map<String, SerializedValue> arguments) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.spawn(type, arguments);
+  public void call(final String type, final Map<String, SerializedValue> arguments) {
+    this.memory.doOnce(() -> {
+      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
+      this.scheduler = this.handle.yield(TaskStatus.awaiting(type, arguments));
     });
   }
 
   @Override
-  public String defer(final Duration duration, final TaskFactory task) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.defer(duration, task.create(this.executor));
-    });
+  public void defer(final Duration duration, final TaskFactory task) {
+    this.memory.doOnce(() -> this.scheduler.defer(duration, task.create(this.executor)));
   }
 
   @Override
-  public String defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
-    return this.memory.doOnce(() -> {
-      return this.scheduler.defer(duration, type, arguments);
-    });
+  public void defer(final Duration duration, final String type, final Map<String, SerializedValue> arguments) {
+    this.memory.doOnce(() -> this.scheduler.defer(duration, type, arguments));
   }
 
   @Override
@@ -101,14 +109,6 @@ final class ReplayingReactionContext implements Context {
     this.memory.doOnce(() -> {
       this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
       this.scheduler = this.handle.yield(TaskStatus.delayed(duration));
-    });
-  }
-
-  @Override
-  public void waitFor(final String id) {
-    this.memory.doOnce(() -> {
-      this.scheduler = null;  // Relinquish the current scheduler before yielding, in case an exception is thrown.
-      this.scheduler = this.handle.yield(TaskStatus.awaiting(id));
     });
   }
 
