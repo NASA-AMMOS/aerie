@@ -1,11 +1,9 @@
 package gov.nasa.jpl.aerie.scheduler;
 
-import gov.nasa.jpl.aerie.merlin.driver.ActivityInstanceId;
 import gov.nasa.jpl.aerie.merlin.driver.MissionModel;
 import gov.nasa.jpl.aerie.merlin.driver.SerializedActivity;
 import gov.nasa.jpl.aerie.merlin.driver.SimulationResults;
 import gov.nasa.jpl.aerie.merlin.driver.engine.SimulationEngine;
-import gov.nasa.jpl.aerie.merlin.driver.engine.TaskId;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.LiveCells;
 import gov.nasa.jpl.aerie.merlin.driver.timeline.TemporalEventSource;
 import gov.nasa.jpl.aerie.merlin.protocol.driver.Scheduler;
@@ -14,17 +12,20 @@ import gov.nasa.jpl.aerie.merlin.protocol.types.Duration;
 import gov.nasa.jpl.aerie.merlin.protocol.types.TaskStatus;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-public class StepSimulation {
+public class IncrementalSimulationDriver {
 
   private Duration curTime;
   private SimulationEngine engine;
@@ -32,137 +33,116 @@ public class StepSimulation {
   private TemporalEventSource timeline;
   private MissionModel<?> missionModel;
 
-  //used for looking up durations
-  private Map<SerializedActivity, TaskId> actToId;
+  //mapping each activity name to its task id (in String form) in the simulation engine
+  private Map<String, String> actToId;
 
   //boolean stating whether the simulation results should be regenerated
   private boolean areLastSimResultsDirty;
 
   //simulation results so far
   private SimulationResults lastSimResults;
-
-  //should the simulation be resetted everytime an activity is simulated
-  private boolean resetEveryTime;
+  //cached simulation results cover the period [Duration.ZERO, lastSimResultsEnd]
+  private Duration lastSimResultsEnd = Duration.ZERO;
 
   //map from activity start time to serialized activity and its name
-  private LinkedHashMap<Duration, Pair<SerializedActivity, String>> activitiesInserted;
+  private List<SimulatedActivity> activitiesInserted = new ArrayList<>();
 
-  /*when we really want to reset the whole simulation*/
-  public void clearActInserted(){
-    activitiesInserted.clear();
+  record SimulatedActivity(Duration start, SerializedActivity activity, String name) implements Comparable<SimulatedActivity> {
+    @Override
+    public int compareTo(@NotNull final SimulatedActivity o) {
+      return start.compareTo(o.start);
+    }
   }
 
-  public StepSimulation(MissionModel<?> missionModel){
+  public IncrementalSimulationDriver(MissionModel<?> missionModel){
     this.missionModel = missionModel;
-    resetEveryTime = false;
-    activitiesInserted = new LinkedHashMap<>();
+    initSimulation();
   }
 
-  public void resetEveryTime(){
-    resetEveryTime= true;
-  }
-
-  public void initSimulation(){
+  private void initSimulation(){
     actToId = new HashMap<>();
     lastSimResults = null;
     this.engine = new SimulationEngine();
     activitiesInserted.clear();
 
-      /* The top-level simulation timeline. */
-      this.timeline = new TemporalEventSource();
-      areLastSimResultsDirty = false;
-      this.cells = new LiveCells(timeline, missionModel.getInitialCells());
-      /* The current real time. */
-      curTime = Duration.ZERO;
+    /* The top-level simulation timeline. */
+    this.timeline = new TemporalEventSource();
+    areLastSimResultsDirty = false;
+    this.cells = new LiveCells(timeline, missionModel.getInitialCells());
+    /* The current real time. */
+    curTime = Duration.ZERO;
 
-      // Begin tracking all resources.
-      for (final var entry : missionModel.getResources().entrySet()) {
-        final var name = entry.getKey();
-        final var resource = entry.getValue();
-        engine.trackResource(name, resource, curTime);
-      }
+    // Begin tracking all resources.
+    for (final var entry : missionModel.getResources().entrySet()) {
+      final var name = entry.getKey();
+      final var resource = entry.getValue();
+      engine.trackResource(name, resource, curTime);
+    }
 
-      // Start daemon task(s) immediately, before anything else happens.
-      {
-        final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
-        final var commit = engine.performJobs(Set.of(SimulationEngine.JobId.forTask(daemon)),
-                                              cells, curTime, Duration.MAX_VALUE, missionModel);
-        timeline.add(commit);
-      }
+    // Start daemon task(s) immediately, before anything else happens.
+    {
+      final var daemon = engine.initiateTaskFromSource(missionModel::getDaemon);
+      final var commit = engine.performJobs(Set.of(SimulationEngine.JobId.forTask(daemon)),
+                                            cells, curTime, Duration.MAX_VALUE, missionModel);
+      timeline.add(commit);
+    }
   }
 
-  public void simulateActivity(SerializedActivity activity, Duration startTime, String name){
-    if(startTime.shorterThan(curTime) || resetEveryTime){
-      var toBeReinserted = new LinkedHashMap<Duration, Pair<SerializedActivity, String>>();
-      toBeReinserted.putAll(activitiesInserted);
+  public void simulateActivity(SerializedActivity activity, Duration startTime, String nameAct){
+    var testAct = new SimulatedActivity(startTime, activity, nameAct);
+    if(startTime.noLongerThan(curTime)){
+      var toBeInserted = new ArrayList<>(activitiesInserted);
+      toBeInserted.add(testAct);
       initSimulation();
-      insertAllActsBefore(toBeReinserted, startTime);
-      simulateAct(activity, startTime,name);
-      insertAllActsAfter(toBeReinserted, startTime);
-    }
-    simulateAct(activity, startTime,name);
-  }
-
-  private void insertAllActsBefore(LinkedHashMap<Duration, Pair<SerializedActivity, String>> acts, Duration startTime){
-    for(var act : acts.entrySet()){
-      var start = act.getKey();
-      var activity = act.getValue().getLeft();
-      var name = act.getValue().getRight();
-      if(start.shorterThan(startTime)) {
-        this.simulateAct(activity, startTime, name);
-      }
+      simulateManyActs(toBeInserted);
+    } else {
+      simulateAct(testAct);
     }
   }
 
-  private void insertAllActsAfter(LinkedHashMap<Duration, Pair<SerializedActivity, String>> acts, Duration startTime){
-    for(var act : acts.entrySet()){
-      var start = act.getKey();
-      var activity = act.getValue().getLeft();
-      var name = act.getValue().getRight();
-      if(start.longerThan(startTime) || start.isEqualTo(startTime)) {
-        this.simulateAct(activity, startTime, name);
-      }
-    }
-  }
 
-  //WARNING computes the results for the whole horizon until current time them from beginning
+  /**
+   * Get the simulation results from the Duration.ZERO to the current simulation time point
+   * @return the simulation results
+   */
   public SimulationResults getSimulationResults(){
-    if(areLastSimResultsDirty || lastSimResults == null) {
-      lastSimResults = engine.computeResults(
-          engine,
-          Instant.now(),
-          curTime,
-          new HashMap<String, ActivityInstanceId>(),
-          timeline,
-          missionModel);
-    }
-    return lastSimResults;
+    return getSimulationResultsUntil(curTime);
   }
 
-  //WARNING computes the results for the whole horizon until current time them from beginning
-  public SimulationResults getSimulationResultsUntil(Duration endTime){
-    if(areLastSimResultsDirty || lastSimResults == null) {
+  /**
+   * Get the simulation results from the Duration.ZERO to a specified end time point.
+   * The provided simulation results might cover more than the required time period.
+   * @return the simulation results
+   */  public SimulationResults getSimulationResultsUntil(Duration endTime){
+    //if previous results cover a bigger period, we return do not regenerate
+    if(areLastSimResultsDirty || lastSimResults == null || endTime.longerThan(lastSimResultsEnd)) {
       lastSimResults = engine.computeResults(
           engine,
           Instant.now(),
           endTime,
-          new HashMap<String, ActivityInstanceId>(),
+          new HashMap<>(),
           timeline,
           missionModel);
+      lastSimResultsEnd = endTime;
+      //while sim results may not be up to date with curTime, a regeneration has taken place after the last insertion
+      areLastSimResultsDirty = false;
     }
     return lastSimResults;
   }
 
+  private ControlTask buildControlTask(ArrayList<SimulatedActivity> acts){
+    final var schedule = acts.stream().collect(Collectors.toMap( e -> e.name, e->Pair.of(e.start, e.activity)));
+    return new ControlTask(schedule, curTime);
+  }
 
-  private void simulateAct(SerializedActivity activity, Duration startTime, String name){
+  private ControlTask buildControlTask(SimulatedActivity simAct){
+    final var schedule = Map.of(simAct.name, Pair.of(simAct.start, simAct.activity));
+    return new ControlTask(schedule, curTime);
+  }
 
-    final var schedule = Map.of(name, Pair.of(startTime, activity));
-
-    final var controlTask = new ControlTask(schedule, curTime);
+  private void simulateControlTask(ControlTask controlTask){
     // Schedule the control task.
     final var control = engine.initiateTask(curTime, controlTask);
-    actToId.put(activity, control);
-
     engine.scheduleTask(control, curTime);
 
     while (!engine.isTaskComplete(control)) {
@@ -180,16 +160,27 @@ public class StepSimulation {
       timeline.add(commit);
     }
     areLastSimResultsDirty = true;
-    activitiesInserted.put(startTime, Pair.of(activity, name));
   }
 
-  public Duration getActivityDuration(SerializedActivity act){
-    //peek into engine
-    return engine.getTaskDuration(actToId.get(act));
+  private void simulateManyActs(ArrayList<SimulatedActivity> acts){
+    final var controlTask = buildControlTask(acts);
+    simulateControlTask(controlTask);
+    activitiesInserted.addAll(acts);
   }
 
-  public boolean activityHasFinished(SerializedActivity act){
-    return engine.isTaskComplete(actToId.get(act));
+  private void simulateAct(SimulatedActivity simAct){
+    final var controlTask = buildControlTask(simAct);
+    simulateControlTask(controlTask);
+    activitiesInserted.add(simAct);
+  }
+
+  /**
+   * Returns the duration of a terminated simulated activity
+   * @param actName the activity name
+   * @return its duration if the activity has been simulated and has finished simulating, an IllegalArgumentException otherwise
+   */
+  public Duration getTerminatedActivityDuration(String actName){
+    return engine.getTaskDuration(actToId.get(actName));
   }
 
   private final class ControlTask implements Task {
@@ -202,7 +193,7 @@ public class StepSimulation {
     private final PriorityQueue<Triple<Duration, String, SerializedActivity>> scheduledTasks
         = new PriorityQueue<>(Comparator.comparing(Triple::getLeft));
 
-    private Duration currentTime = Duration.ZERO;
+    private Duration currentTime;
 
     public ControlTask(final Map<String, Pair<Duration, SerializedActivity>> schedule, Duration curTime) {
       this.schedule = Objects.requireNonNull(schedule);
@@ -233,11 +224,10 @@ public class StepSimulation {
 
         final var directiveId = nextTask.getMiddle();
         final var specification = nextTask.getRight();
-
         final var id = scheduler.spawn(specification.getTypeName(), specification.getParameters());
+        actToId.put(nextTask.getMiddle(), id);
         this.taskToPlannedDirective.put(id, directiveId);
       }
-
       return TaskStatus.completed();
     }
 

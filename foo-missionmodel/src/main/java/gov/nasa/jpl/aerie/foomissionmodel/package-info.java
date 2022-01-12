@@ -4,8 +4,8 @@
 
 @WithMappers(BasicValueMappers.class)
 @WithMappers(FooValueMappers.class)
-@WithActivityType(BasicActivity.class)
 
+@WithActivityType(BasicActivity.class)
 @WithActivityType(FooActivity.class)
 @WithActivityType(BarActivity.class)
 @WithActivityType(DecompositionTestActivities.ParentActivity.class)
