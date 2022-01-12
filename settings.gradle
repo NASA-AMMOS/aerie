@@ -25,3 +25,5 @@ include ':db-tests'
 // Example mission models
 include ':examples:banananation'
 include ':examples:foo-missionmodel'
+include ':examples:config-with-defaults'
+include ':examples:config-without-defaults'
